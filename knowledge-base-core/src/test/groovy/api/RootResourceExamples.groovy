@@ -1,15 +1,14 @@
+import groovyx.net.http.*
 import io.vertx.groovy.core.Vertx
 import knowledgebase.core.ApiVerticle
-import knowledgebase.core.Launcher
 import org.junit.Before
 import org.junit.Test
-import groovyx.net.http.*
 
 import java.util.concurrent.CompletableFuture
 
 public class RootResourceExamples {
 
-    final apiRoot = new URL('http://localhost:9401/knowledgebase')
+
 
     @Before
     public void before() {
@@ -20,9 +19,13 @@ public class RootResourceExamples {
 
     @Test
     void providesJson() {
-        get(apiRoot).message = 'Welcome to the Folio Knowledge Base'
+        assert get(apiRoot()).message == 'Welcome to the Folio Knowledge Base'
     }
-    
+
+    def apiRoot() {
+        new URL('http://localhost:9401/knowledge-base')
+    }
+
     static get(url) {
         def http = new HTTPBuilder(url)
 

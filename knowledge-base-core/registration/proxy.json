@@ -1,0 +1,17 @@
+{
+  "id" : "knowledge-base-core",
+  "name" : "Core Knowledge Base Module",
+  "provides" : [ {
+    "id" : "knowledge-base-core",
+    "version" : "0.1"
+  } ],
+  "routingEntries" : [
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/knowledge-base",
+      "level": "30",
+      "type": "request-response"
+    }]
+}

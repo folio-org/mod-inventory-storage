@@ -15,6 +15,6 @@ class RootResource {
     public static void handleRoot(RoutingContext routingContext) {
         JsonResponse.success(routingContext.response(),
                 new JsonObject()
-                        .put("Message", "Welcome to the Folio Knowledge Base"))
+                        .put("message", "Welcome to the Folio Knowledge Base"))
     }
 }
