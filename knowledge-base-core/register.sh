@@ -16,6 +16,5 @@ curl -w '\n' -X POST -D - \
      -d @./registration/activate.json  \
      http://localhost:9130/_/proxy/tenants/our/modules
 
-curl -w '\n' -D -  \
-     -H "X-Okapi-Tenant: our" \
-     http://localhost:9130/knowledge-base
+source ./registration/root-request.sh
+
