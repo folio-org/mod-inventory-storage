@@ -16,5 +16,3 @@ curl -w '\n' -X POST -D - \
      -d @./registration/activate.json  \
      http://localhost:9130/_/proxy/tenants/our/modules
 
-source ./registration/root-request.sh
-

@@ -1,20 +1,23 @@
 package knowledgebase.core
 
-import io.vertx.core.AbstractVerticle
+import io.vertx.lang.groovy.GroovyVerticle
 import io.vertx.core.Future
-import io.vertx.core.http.HttpServer
-import io.vertx.ext.web.Router
+import io.vertx.groovy.core.http.HttpServer
+import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.core.Vertx
+import knowledgebase.core.api.resource.InstanceResource
+import knowledgebase.core.storage.Storage
 import knowledgebase.core.util.WebRequestDiagnostics
+import knowledgebase.core.api.resource.RootResource
 
 import java.util.concurrent.CompletableFuture
 
-public class ApiVerticle extends AbstractVerticle {
+public class ApiVerticle extends GroovyVerticle {
 
     private HttpServer server;
 
     public static void deploy(Vertx vertx, CompletableFuture deployed) {
-        vertx.deployVerticle("knowledgebase.core.ApiVerticle", { res ->
+        vertx.deployVerticle("groovy:knowledgebase.core.ApiVerticle", { res ->
             if (res.succeeded()) {
                 deployed.complete(null);
             } else {
@@ -23,12 +26,12 @@ public class ApiVerticle extends AbstractVerticle {
         });
     }
 
-    public static void deploy(Vertx vertx) {
+    public static CompletableFuture<Void> deploy(Vertx vertx) {
         def deployed = new CompletableFuture()
 
         deploy(vertx, deployed)
 
-        deployed.join()
+        deployed
     }
 
     @Override
@@ -40,6 +43,7 @@ public class ApiVerticle extends AbstractVerticle {
         router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
         RootResource.register(router)
+        InstanceResource.register(router, Storage.collectionProvider.instanceCollection)
 
         server.requestHandler(router.&accept)
                 .listen(9401,

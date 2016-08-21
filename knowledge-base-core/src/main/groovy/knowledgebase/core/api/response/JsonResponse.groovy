@@ -1,4 +1,4 @@
-package knowledgebase.core.util
+package knowledgebase.core.api.response
 
 import io.vertx.core.json.Json
 

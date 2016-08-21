@@ -1,15 +1,16 @@
-package knowledgebase.core
+
+package knowledgebase.core.api.resource
 
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
-import io.vertx.ext.web.Router
-import io.vertx.ext.web.RoutingContext
-import knowledgebase.core.util.JsonResponse
-import knowledgebase.core.util.ResourceMap
+import io.vertx.groovy.ext.web.Router
+import io.vertx.groovy.ext.web.RoutingContext
+import knowledgebase.core.api.ResourceMap
+import knowledgebase.core.api.response.JsonResponse
 
 class RootResource {
     static def register(Router router) {
-        router.route(HttpMethod.GET, ResourceMap.rootResource()).handler(RootResource.&handleRoot)
+        router.route(HttpMethod.GET, ResourceMap.root()).handler(RootResource.&handleRoot)
     }
 
     public static void handleRoot(RoutingContext routingContext) {

@@ -61,16 +61,46 @@ Content-Length: 81
 
 Run `./register.sh` from the root directory.
 
-The last output, which is the response from a test request to the module, should be something similar to:
+The last output should be something similar to:
 
 ```
-HTTP/1.1 200 OK
-content-type: application/json
-X-Okapi-Trace: GET knowledge-base-core:200 65744us
-Transfer-Encoding: chunked
+HTTP/1.1 201 Created
+Content-Type: application/json
+Location: /_/discovery/modules/knowledge-base-core/localhost-9401
+Content-Length: 104
 
 {
-  "message" : "Welcome to the Folio Knowledge Base"
+  "instId" : "localhost-9401",
+  "srvcId" : "knowledge-base-core",
+  "url" : "http://localhost:9401"
+}
+HTTP/1.1 201 Created
+Content-Type: application/json
+Location: /_/proxy/modules/knowledge-base-core
+Content-Length: 375
+
+{
+  "id" : "knowledge-base-core",
+  "name" : "Core Knowledge Base Module",
+  "provides" : [ {
+    "id" : "knowledge-base-core",
+    "version" : "0.1"
+  } ],
+  "routingEntries" : [ {
+    "methods" : [ "GET", "POST" ],
+    "path" : "/knowledge-base",
+    "level" : "30",
+    "type" : "request-response",
+    "permissionsRequired" : null,
+    "permissionsDesired" : null
+  } ]
+}
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 34
+
+{
+  "id" : "knowledge-base-core"
 }
 ```
 
@@ -93,4 +123,12 @@ These run as part of a standard build. To run them separately use `gradle test`
 Make sure that Okapi is running, the test tenant has been created and the modules registered (see the section about running the module with Okapi).
 
 Use `gradle testOkapi` to run them.
+
+## Both Together
+
+The script sets up the test tenant and registers the modules with Okapi, so only need to ensure that Okapi is running prior to running it.
+
+Currently, some of the lower level tests run twice during execution.
+
+Use `source full-test.sh` to set up the test tenant, register the modules and run the suite of tests both directly and via Okapi.
 
