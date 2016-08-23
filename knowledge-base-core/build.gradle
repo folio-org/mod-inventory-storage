@@ -21,7 +21,13 @@ dependencies {
     testCompile 'org.apache.commons:commons-io:1.3.2'
 }
 
-task testOkapi(type: Test) {
+task testApiDirect(type: Test) {
+    include '**/api/**'
+}
+
+task testApiViaOkapi(type: Test) {
+    include '**/api/**'
+
     systemProperty 'okapi.use', 'true'
     systemProperty 'okapi.address', 'http://localhost:9130'
 }

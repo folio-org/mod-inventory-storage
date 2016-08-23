@@ -122,19 +122,17 @@ The modules should not be started before running the tests, the tests start an i
 
 ## Direct
 
-These run as part of a standard build. To run them separately use `gradle test`
+These run as part of a standard build. To run them separately use `gradle testApiDirect`
 
 ## Via Okapi
 
 Make sure that Okapi is running, the test tenant has been created and the modules registered (see the section about running the module with Okapi).
 
-Use `gradle testOkapi` to run them.
+Use `gradle testApiViaOkapi` to run the API tests only via Okapi Proxy.
 
 ## Both Together
 
 The script sets up the test tenant and registers the modules with Okapi, so only need to ensure that Okapi is running prior to running it.
-
-Currently, some of the lower level tests run twice during execution.
 
 Use `source full-test.sh` to set up the test tenant, register the modules and run the suite of tests both directly and via Okapi.
 

@@ -3,4 +3,4 @@
 ./setup-okapi.sh
 ./register.sh
 
-gradle clean test testOkapi
+gradle clean test testApiViaOkapi
