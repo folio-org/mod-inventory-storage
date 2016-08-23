@@ -1,5 +1,6 @@
 package api
 
+import com.github.jsonldjava.core.JsonLdProcessor
 import io.vertx.core.json.JsonObject
 import knowledgebase.core.domain.Instance
 import knowledgebase.core.storage.Storage
@@ -27,8 +28,7 @@ class InstanceApiExamples extends Specification {
                 .put("identifiers", [[namespace:"asin", value:"B00LD69QGO"],
                                      [namespace:"isbn", value:"1785032666"]]);
 
-            def locationOfNewInstance = HttpClient.postToCreate(World.instanceApiRoot(),
-                    newInstanceRequest.encodePrettily())
+            def locationOfNewInstance = createNewInstanceViaApi(newInstanceRequest)
 
             def newInstance = HttpClient.get(locationOfNewInstance)
         then:
@@ -38,9 +38,11 @@ class InstanceApiExamples extends Specification {
             assert newInstance.identifiers[1].namespace == "isbn"
             assert newInstance.identifiers[1].value == "1785032666"
 
-            assert newInstance.links.self.contains(World.apiRoot().toString())
-            assert HttpClient.canGet(newInstance.links.self)
+            selfLinkShouldRespectWayResourceWasReached(newInstance)
+            selfLinkShouldBeReachable(newInstance)
+            instanceExpressesDublinCoreMetadata(newInstance)
     }
+
 
     void "Find all instances and navigate to them"() {
         given:
@@ -60,19 +62,21 @@ class InstanceApiExamples extends Specification {
             assert firstInstance.identifiers[0].namespace == 'isbn'
             assert firstInstance.identifiers[0].value == '9781473619777'
 
-            assert firstInstance.links.self.contains(World.apiRoot().toString())
-            assert HttpClient.canGet(firstInstance.links.self)
+            selfLinkShouldRespectWayResourceWasReached(firstInstance)
+            selfLinkShouldBeReachable(firstInstance)
+            instanceExpressesDublinCoreMetadata(firstInstance)
 
             def secondInstance = instancesFromApi[1]
-    
+
             assert secondInstance.title == "Nod"
             assert secondInstance.links.self == "${World.instanceApiRoot()}/${instances[1].id}"
-    
+
             assert secondInstance.identifiers[0].namespace == 'asin'
             assert secondInstance.identifiers[0].value == 'B01D1PLMDO'
-    
-            assert secondInstance.links.self.contains(World.apiRoot().toString())
-            assert HttpClient.canGet(secondInstance.links.self)
+
+            selfLinkShouldRespectWayResourceWasReached(secondInstance)
+            selfLinkShouldBeReachable(secondInstance)
+            instanceExpressesDublinCoreMetadata(secondInstance)
     }
 
     void "Find by partial title"() {
@@ -85,12 +89,14 @@ class InstanceApiExamples extends Specification {
 
         then:
             assert instancesFromApi.size() == 1
-            def firstInstance = instancesFromApi[0]
 
-            assert firstInstance.title == "A Long Way to a Small Angry Planet"
+            def onlyInstance = instancesFromApi[0]
 
-            assert firstInstance.links.self.contains(World.apiRoot().toString())
-            assert HttpClient.canGet(firstInstance.links.self)
+            assert onlyInstance.title == "A Long Way to a Small Angry Planet"
+
+            selfLinkShouldRespectWayResourceWasReached(onlyInstance)
+            selfLinkShouldBeReachable(onlyInstance)
+            instanceExpressesDublinCoreMetadata(onlyInstance)
     }
 
     void "Find by isbn identifier"() {
@@ -103,12 +109,13 @@ class InstanceApiExamples extends Specification {
 
         then:
             assert instancesFromApi.size() == 1
-            def firstInstance = instancesFromApi[0]
+            def onlyInstance = instancesFromApi[0]
 
-            assert firstInstance.title == "A Long Way to a Small Angry Planet"
+            assert onlyInstance.title == "A Long Way to a Small Angry Planet"
 
-            assert firstInstance.links.self.contains(World.apiRoot().toString())
-            assert HttpClient.canGet(firstInstance.links.self)
+            selfLinkShouldRespectWayResourceWasReached(onlyInstance)
+            selfLinkShouldBeReachable(onlyInstance)
+            instanceExpressesDublinCoreMetadata(onlyInstance)
     }
 
     void "Cannot find an unknown resource"() {
@@ -146,7 +153,30 @@ class InstanceApiExamples extends Specification {
         HttpClient.getByQuery(World.instanceApiRoot(), [partialTitle: partialTitle])
     }
 
-    def findInstanceByIdentifier(String namespace, String value) {
+    private def findInstanceByIdentifier(String namespace, String value) {
         HttpClient.getByQuery(World.instanceApiRoot(), [(namespace): value])
+    }
+
+    private void instanceExpressesDublinCoreMetadata(instance) {
+        def expandedLinkedData = JsonLdProcessor.expand(instance)
+        assert expandedLinkedData.empty == false: "No Linked Data present"
+        assert LinkedDataValue(expandedLinkedData, "http://purl.org/dc/terms/title") == instance.title
+    }
+
+    private URL createNewInstanceViaApi(JsonObject instanceRequest) {
+        new URL(HttpClient.postToCreate(World.instanceApiRoot(),
+                instanceRequest.encodePrettily()))
+    }
+
+    private void selfLinkShouldBeReachable(instance) {
+        assert HttpClient.canGet(instance.links.self)
+    }
+
+    private void selfLinkShouldRespectWayResourceWasReached(instance) {
+        assert instance.links.self.contains(World.apiRoot().toString())
+    }
+
+    private static String LinkedDataValue(List<Object> expanded, String field) {
+        expanded[0][field][0]?."@value"
     }
 }

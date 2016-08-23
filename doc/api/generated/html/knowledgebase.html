@@ -160,6 +160,10 @@
     "$ref":"title"
   }
 }</code></pre><p><strong>Example</strong>:</p><pre><code>[{
+  "@context" : {
+    "dcterms": "http://purl.org/dc/terms/",
+    "title": "dcterms:title"
+  },
   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
   "links": {
     "self": "http://localhost:9401/knowledge-base/instance/09a55a92-b43c-499b-ae22-f3594a23ccd6"
@@ -171,7 +175,12 @@
     "namespace": "ybp",
     "value": "1"
   }]
-}, {
+},
+  {
+  "@context" : {
+    "dcterms": "http://purl.org/dc/terms/",
+    "title": "dcterms:title"
+  },
   "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
   "links": {
     "self": "http://localhost:9401/knowledge-base/instance/64b1cebb-d42b-4c8b-b684-b9226d9cf0ad"
@@ -224,6 +233,10 @@
     "value": "1"
   }]
 }</code></pre></div><div class="tab-pane" id="instance_post_response"><h2>HTTP status code <a href="http://httpstatus.es/201" target="_blank">201</a></h2><p>Returns a newly created item, with server-controlled fields like &#39;id&#39; populated</p><h3>Headers</h3><ul><li><strong>Location</strong>: <em>(string)</em><p>URI to the created instance item</p></li></ul><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Example</strong>:</p><pre><code>{
+  "@context" : {
+    "dcterms": "http://purl.org/dc/terms/",
+    "title": "dcterms:title"
+  },
   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
   "links": {
     "self": "http://localhost:9401/knowledge-base/instance/cd28da0f-a3e4-465c-82f1-acade4e8e170"

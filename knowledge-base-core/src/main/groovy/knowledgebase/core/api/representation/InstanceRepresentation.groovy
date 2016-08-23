@@ -8,6 +8,11 @@ class InstanceRepresentation {
     static toMap(Instance instance, HttpServerRequest request) {
         def representation = [:]
 
+        representation."@context" = [
+                "dcterms": "http://purl.org/dc/terms/",
+                "title": "dcterms:title"
+        ]
+
         representation.title = instance.title
         representation.links = ['self' : ResourceMap.instanceAbsolute("/${instance.id}", request)]
 
