@@ -1,0 +1,52 @@
+#%RAML 0.8
+title: Knowledge Base
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9401
+
+documentation:
+  - title: Knowledge Base API
+    content: <b>Defines the baseline resources provided by a knowledge base module implementation</b>
+    
+schemas:
+ - resource: !include schema/instance.json
+ - resources: !include schema/instances.json
+
+traits:
+ - secured: !include traits/auth.raml
+ - language: !include traits/language.raml
+
+resourceTypes:
+ - collection: !include types/collection.raml
+
+/knowledge-base:
+/instance:
+  displayName: Instances
+  type:
+    collection:
+      exampleCollection: !include  examples/instances_get.json
+      schemaCollection: resources
+      schemaItem: resource
+      exampleItem: !include  examples/instance_get.json
+
+  get:
+    queryParameters:
+      partialName:
+        displayName: Partial Title
+        type: string
+        description: text to search for within the title of instances
+        example: partialTitle="Advanced Manufacturing"
+        required: false
+      identifier:
+        displayName: Identifier
+        type: string
+        description: identifier to search instances for
+        example: isbn="9781466636897"
+        required: false
+  post:
+    body:
+      application/json:
+        schema: !include schema/instance_create.json
+        example: !include  examples/instance_post.json
+    responses:
+      201:

@@ -36,3 +36,9 @@ In order to know what kind of resource to expect when following a link, known re
 There is a (very limited) set of sample data which can be used to populate the modules.
 
 With the modules running, this can be imported by running `./create-sample-data.sh`.
+
+# API Documentation
+
+API documentation is provided in the form of RAML and JSON.Schema files in the doc/api directory.
+
+This can be used to generate HTML and Markdown documentation (in doc/api/generated), by running `./generate-documentation` from the root directory. 
