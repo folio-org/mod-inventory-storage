@@ -3,6 +3,10 @@
 
 Folio compatible Knowledge Base and Cataloguing module suite.
 
+# Further Documentation
+
+This readme is intended to get these modules up and running, for further information on what they do, see the [guide](doc/guide.md)
+
 # Prerequisites
 
 - Java 8 JDK

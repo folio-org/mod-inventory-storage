@@ -1,11 +1,12 @@
 package support
 
-import groovyx.net.http.URIBuilder
 import knowledgebase.core.Launcher
 import knowledgebase.core.storage.Storage
 
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+
+import static support.HttpClient.get
 
 class World {
     static reset() {
@@ -21,11 +22,7 @@ class World {
     }
 
     static URL instanceApiRoot() {
-        apiPath('instance')
-    }
-
-    private static URL apiPath(String resourceName) {
-        new URIBuilder(apiRoot()).setPath("/knowledge-base/${resourceName}").toURL()
+        new URL(get(World.apiRoot()).links.instances)
     }
 
     static URL apiRoot() {

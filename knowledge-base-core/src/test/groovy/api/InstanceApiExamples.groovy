@@ -89,6 +89,7 @@ class InstanceApiExamples extends Specification {
 
             assert firstInstance.title == "A Long Way to a Small Angry Planet"
 
+            assert firstInstance.links.self.contains(World.apiRoot().toString())
             assert HttpClient.canGet(firstInstance.links.self)
     }
 
@@ -106,6 +107,7 @@ class InstanceApiExamples extends Specification {
 
             assert firstInstance.title == "A Long Way to a Small Angry Planet"
 
+            assert firstInstance.links.self.contains(World.apiRoot().toString())
             assert HttpClient.canGet(firstInstance.links.self)
     }
 

@@ -14,8 +14,13 @@ class RootResource {
     }
 
     public static void handleRoot(RoutingContext routingContext) {
+        def links = [:]
+
+        links << ['instances' : ResourceMap.instanceAbsolute("", routingContext.request())]
+
         JsonResponse.success(routingContext.response(),
                 new JsonObject()
-                        .put("message", "Welcome to the Folio Knowledge Base"))
+                        .put("message", "Welcome to the Folio Knowledge Base")
+                        .put("links", links))
     }
 }

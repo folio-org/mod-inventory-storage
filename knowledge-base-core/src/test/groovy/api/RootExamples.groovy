@@ -3,6 +3,7 @@ package api
 import spock.lang.Specification
 import support.World
 
+import static support.HttpClient.canGet
 import static support.HttpClient.get
 
 public class RootExamples extends Specification {
@@ -21,6 +22,8 @@ public class RootExamples extends Specification {
 
         then:
             assert response.message == 'Welcome to the Folio Knowledge Base'
+            assert response.links.instances.contains(World.apiRoot().toString())
+            assert canGet(response.links.instances)
     }
 
 }
