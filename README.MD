@@ -12,6 +12,7 @@ This readme is intended to get these modules up and running, for further informa
 - Java 8 JDK
 - Gradle 3.0
 - Groovy 2.4.7
+- MongoDB 3.2.9
 - SDKMan (http://sdkman.io/, recommended for installing Gradle and Groovy)
 - NPM 3.10.3 (for tools to generate documentation)
 
