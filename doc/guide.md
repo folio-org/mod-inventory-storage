@@ -31,3 +31,8 @@ In order to know what kind of resource to expect when following a link, known re
 | `self` | How another party can refer to this resource | Required by all none root resources |
 | `instances` | Refers to the collection of instances resource, used for searching for and creating new instances ||
 
+# Sample Data
+
+There is a (very limited) set of sample data which can be used to populate the modules.
+
+With the modules running, this can be imported by running `./create-sample-data.sh`.
