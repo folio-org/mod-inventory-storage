@@ -5,3 +5,4 @@ build/
 .gradle/
 metrics/
 *.log
+doc/api/generated/
