@@ -1,12 +1,18 @@
 package api
 
+import com.github.jsonldjava.core.DocumentLoader
+import com.github.jsonldjava.core.JsonLdOptions
 import com.github.jsonldjava.core.JsonLdProcessor
 import io.vertx.core.json.JsonObject
 import knowledgebase.core.domain.Instance
 import knowledgebase.core.storage.Storage
+import org.apache.http.impl.client.cache.CachingHttpClientBuilder
+import org.apache.http.message.BasicHeader
 import spock.lang.Specification
 import support.HttpClient
 import support.World
+
+import javax.print.Doc
 
 class InstanceApiExamples extends Specification {
 
@@ -157,12 +163,6 @@ class InstanceApiExamples extends Specification {
         HttpClient.getByQuery(World.instanceApiRoot(), [(namespace): value])
     }
 
-    private void instanceExpressesDublinCoreMetadata(instance) {
-        def expandedLinkedData = JsonLdProcessor.expand(instance)
-        assert expandedLinkedData.empty == false: "No Linked Data present"
-        assert LinkedDataValue(expandedLinkedData, "http://purl.org/dc/terms/title") == instance.title
-    }
-
     private URL createNewInstanceViaApi(JsonObject instanceRequest) {
         new URL(HttpClient.postToCreate(World.instanceApiRoot(),
                 instanceRequest.encodePrettily()))
@@ -174,6 +174,25 @@ class InstanceApiExamples extends Specification {
 
     private void selfLinkShouldRespectWayResourceWasReached(instance) {
         assert instance.links.self.contains(World.apiRoot().toString())
+    }
+
+    private void instanceExpressesDublinCoreMetadata(instance) {
+
+        def options = new JsonLdOptions()
+        def documentLoader = new DocumentLoader()
+        def httpClient = CachingHttpClientBuilder
+            .create()
+            .setDefaultHeaders([ new BasicHeader('X-Okapi-Tenant', "our") ])
+            .build()
+
+        documentLoader.setHttpClient(httpClient)
+
+        options.setDocumentLoader(documentLoader)
+
+        def expandedLinkedData = JsonLdProcessor.expand(instance, options)
+
+        assert expandedLinkedData.empty == false: "No Linked Data present"
+        assert LinkedDataValue(expandedLinkedData, "http://purl.org/dc/terms/title") == instance.title
     }
 
     private static String LinkedDataValue(List<Object> expanded, String field) {

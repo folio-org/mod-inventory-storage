@@ -9,6 +9,8 @@ class JsonResponse {
         response.putHeader "content-type", "application/json"
         response.putHeader "content-length", Integer.toString(json.length())
 
+        println("Response: ${json}")
+
         response.end json
     }
 }

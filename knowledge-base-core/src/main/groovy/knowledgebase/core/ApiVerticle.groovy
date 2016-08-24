@@ -6,6 +6,7 @@ import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.core.Vertx
 import knowledgebase.core.api.resource.InstanceResource
+import knowledgebase.core.api.resource.MetadataContextResource
 import knowledgebase.core.storage.Storage
 import knowledgebase.core.util.WebRequestDiagnostics
 import knowledgebase.core.api.resource.RootResource
@@ -43,6 +44,7 @@ public class ApiVerticle extends GroovyVerticle {
         router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
         RootResource.register(router)
+        MetadataContextResource.register(router)
         InstanceResource.register(router, Storage.collectionProvider.instanceCollection)
 
         server.requestHandler(router.&accept)

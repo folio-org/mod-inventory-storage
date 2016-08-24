@@ -8,11 +8,13 @@ http://localhost:9401
 
 ## /knowledge-base
 
-## Instances
+### /knowledge-base/instance
 Collection of instance items.
-
-### /instance
 
 * **get**: Retrieve a list of instance items.
 * **post**: Create a new instance item.
+
+### /knowledge-base/instance/metadata
+
+* **get**: 
 
