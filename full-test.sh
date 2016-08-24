@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-./setup-okapi.sh
+./create-tenant.sh
 ./register.sh
 
 gradle clean test testApiViaOkapi
+
+./unregister.sh
+./delete-tenant.sh

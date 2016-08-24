@@ -2,7 +2,7 @@
 
 cd knowledge-base-core
 
-./register.sh
+./unregister.sh
 
 cd ..
 

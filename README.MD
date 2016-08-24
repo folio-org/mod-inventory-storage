@@ -46,7 +46,7 @@ Make sure that [Okapi](https://github.com/sling-incubator/okapi) is running on i
 
 ### Preparing a Tenant
 
-Run `./setup-okapi.sh` from the root directory to set up a test tenant (named our).
+Run `./create-tenant.sh` from the root directory to set up a test tenant (named our).
 
 The output should be something similar to:
 
@@ -62,6 +62,8 @@ Content-Length: 81
   "description" : "Our Own Library"
 }
 ```
+
+The tenant can be deleted by running `./delete-tenant.sh`.
 
 ### Registering the Modules With Okapi
 
