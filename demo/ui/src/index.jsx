@@ -12,18 +12,18 @@ const store = createStore(reducer);
 store.dispatch({
     type: 'INITIAL_STATE',
     state: {
-        instances: [
-            {id: 1, text: 'ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN'},
-            {id: 2, text: 'ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.'},
-        ],
-        partialNameFilter: "LIBRARY"
+        instances: [{id: 1, title: 'ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN'}],
+        partialNameFilter: ""
     }
 });
 
 store.dispatch({
-    type: 'CHANGE_FILTER',
-    newFilter: "RESEARCH"
-    });
+    type: 'REPLACE_INSTANCES',
+    instances: [
+            {id: 1, title: 'ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN'},
+            {id: 2, title: 'ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.'}
+        ]
+});
 
 ReactDOM.render(
     <Provider store={store}>

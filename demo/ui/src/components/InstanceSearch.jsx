@@ -2,25 +2,29 @@ import React from 'react';
 import Instance from './Instance';
 import {connect} from 'react-redux';
 
-import * as actionCreators from '../action_creators';
+import { changeFilter } from '../action_creators';
 
 export default class InstanceSearch extends React.Component {
     render() {
+        let newFilter
+
         return <div>
             <section className="instancesearch">
                 <section className="main">
-                    <label htmlFor="partialNameFilter">Partial Name: </label>
-                    <input className="partialNameFilter"
-                           defaultValue={this.props.partialNameFilter}
-                           onChange={(event) => this.props.changeFilter(event.target.value) }
-                            />
-                    <button className="search" disabled="true">Search</button>
+                    <form onSubmit={e => {
+                        e.preventDefault()
+                        this.props.onSearchSubmit(newFilter.value)
+                    }}>
+                        <label htmlFor="partialNameFilter">Partial Name: </label>
+                        <input className="partialNameFilter" ref = {node => { newFilter = node }}
+                               defaultValue={this.props.partialNameFilter} />
+                        <button className="search">Search</button>
+                    </form>
                     <ul className="results">
                         {this.props.instances
-                            .filter(item => item.get('text').indexOf( this.props.partialNameFilter ) != -1 )
                             .map(item =>
-                            <Instance key={item.get('text')}
-                                      text={item.get('text')} />
+                            <Instance key={item.get('title')}
+                                      title={item.get('title')} />
                         )}
                         </ul>
                 </section>
@@ -29,11 +33,21 @@ export default class InstanceSearch extends React.Component {
     }
 };
 
-function mapStateToProps(state) {
+const getVisibleInstances = (instances, filter) => {
+    return instances.filter(instance => instance.get('title').indexOf(filter) != -1 )
+}
+
+const mapStateToProps = (state) => {
     return {
-        instances: state.get('instances'),
+        instances: getVisibleInstances(state.get('instances'), state.get('partialNameFilter')),
         partialNameFilter: state.get('partialNameFilter')
     };
 }
 
-export const InstanceSearchContainer = connect(mapStateToProps, actionCreators)(InstanceSearch);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        onSearchSubmit: (newFilter) => dispatch(changeFilter(newFilter))
+    }
+}
+
+export const InstanceSearchContainer = connect(mapStateToProps, mapDispatchToProps)(InstanceSearch);
