@@ -13,8 +13,9 @@ This readme is intended to get these modules up and running, for further informa
 - Gradle 3.0
 - Groovy 2.4.7
 - MongoDB 3.2.9
+- Node 6.4.0 (for the demo UI)
+- NPM 3.10.3 (for the demo UI and documentation generation)
 - SDKMan (http://sdkman.io/, recommended for installing Gradle and Groovy)
-- NPM 3.10.3 (for tools to generate documentation)
 
 # Preparation
 
