@@ -2,15 +2,15 @@ var webpack = require('webpack');
 
 module.exports = {
     entry: [
-        'webpack-dev-server/client?http://localhost:8080', // Setting the URL for the hot reload
+        'webpack-dev-server/client?http://localhost:9501', // Setting the URL for the hot reload
         'webpack/hot/only-dev-server', // Reload only the dev server
-        './src/index.js'
+        './src/index.jsx'
     ],
     module: {
         loaders: [{
             test: /\.jsx?$/,
             exclude: /node_modules/,
-            loader: 'react-hot' // Include the react-hot loader
+            loader: 'react-hot!babel'
         }]
     },
     resolve: {
@@ -22,6 +22,7 @@ module.exports = {
         filename: 'bundle.js'
     },
     devServer: {
+        port: 9501,
         contentBase: './dist',
         hot: true
     },
