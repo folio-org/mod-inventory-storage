@@ -1,5 +1,9 @@
 import {Map, fromJS} from 'immutable';
 
+import {
+    CHANGE_FILTER, REQUEST_INSTANCES, RECEIVE_INSTANCES
+} from '../action_creators'
+
 function setState(state, newState) {
     return state.merge(newState);
 }
@@ -17,10 +21,12 @@ export default function(state = Map(), action) {
         case 'INITIAL_STATE':
             return setState(state, action.state);
         case 'REPLACE_INSTANCES':
+        case 'RECEIVE_INSTANCES':
             return replaceInstances(state, action.instances)
 
-        case 'CHANGE_FILTER':
+        case CHANGE_FILTER:
             return changeFilter(state, action.newFilter)
     }
     return state;
 }
+

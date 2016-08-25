@@ -2,7 +2,7 @@ import React from 'react';
 import Instance from './Instance';
 import {connect} from 'react-redux';
 
-import { changeFilter } from '../action_creators';
+import { changeFilter, fetchInstances } from '../action_creators';
 
 export default class InstanceSearch extends React.Component {
     render() {
@@ -33,20 +33,19 @@ export default class InstanceSearch extends React.Component {
     }
 };
 
-const getVisibleInstances = (instances, filter) => {
-    return instances.filter(instance => instance.get('title').indexOf(filter) != -1 )
-}
-
 const mapStateToProps = (state) => {
     return {
-        instances: getVisibleInstances(state.get('instances'), state.get('partialNameFilter')),
+        instances: state.get('instances'),
         partialNameFilter: state.get('partialNameFilter')
     };
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        onSearchSubmit: (newFilter) => dispatch(changeFilter(newFilter))
+        onSearchSubmit: (newFilter) => {
+            dispatch(changeFilter(newFilter));
+            dispatch(fetchInstances(newFilter));
+        }
     }
 }
 
