@@ -115,7 +115,9 @@ Content-Length: 34
 
 ### Root Address
 
-[http://localhost:9130/knowledge-base] will go to the root resource.
+[http://localhost:9310/knowledge-base] will go to the root resource for the knowledge base module via Okapi. Access via Okapi requires passing the X-Okapi-Tenant header (see the Okapi guide above for details).
+
+Whereas [http://localhost:9401/knowledge-base] will go to the root resource for the knowledge base module directly.
 
 # Running the Tests
 
