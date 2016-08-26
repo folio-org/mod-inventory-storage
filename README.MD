@@ -29,7 +29,7 @@ run `gradle build` from the root directory
 
 Run `./start.sh` from the root directory. To stop them, run `./stop.sh` from the root directory.
 
-#Using the Knowledge Base Core Module
+# Using the Knowledge Base Core Module
 
 ## Standalone
 
@@ -140,4 +140,14 @@ Use `gradle testApiViaOkapi` to run the API tests only via Okapi Proxy.
 The script sets up the test tenant and registers the modules with Okapi, so only need to ensure that Okapi is running prior to running it.
 
 Use `source full-test.sh` to set up the test tenant, register the modules and run the suite of tests both directly and via Okapi.
+
+# Demo User Interface
+
+There is a basic demo user interface provided, which allows for searching instances by partial title.
+
+This demo requires Node and NPM to be installed. 
+
+Both, webpack and webpack-dev-server needd to be installed globally. This can be done by running ```npm install -g webpack webpack-dev-server```
+
+Once this is done, use the ```./start-demo.sh``` and ```./stop-demo.sh``` to start and stop the module, set up some sample data, prepare Okapi and run the UI.
 
