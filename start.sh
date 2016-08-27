@@ -6,3 +6,9 @@ cd knowledge-base-core
 
 cd ..
 
+cd catalogue-core
+
+./start.sh
+
+cd ..
+

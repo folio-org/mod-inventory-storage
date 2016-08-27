@@ -1,2 +1,2 @@
 include 'knowledge-base-core'
-
+include 'catalogue-core'
