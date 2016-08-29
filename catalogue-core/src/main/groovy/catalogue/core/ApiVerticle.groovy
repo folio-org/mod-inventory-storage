@@ -7,7 +7,7 @@ import io.vertx.core.Future
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.core.Vertx
-import catalogue.core.util.WebRequestDiagnostics
+import catalogue.core.support.WebRequestDiagnostics
 import catalogue.core.api.resource.RootResource
 
 import java.util.concurrent.CompletableFuture

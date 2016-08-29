@@ -14,6 +14,8 @@ class HttpClient {
 
         try {
             http.request(Method.GET) { req ->
+                println "\nTest Http Client GET from: ${url}\n"
+
                 headers.'X-Okapi-Tenant' = "our"
 
                 response.success = { resp, body ->
@@ -24,22 +26,23 @@ class HttpClient {
                     println "Failed to access ${url}"
                     println "Status Code: ${resp.statusLine}"
                     resp.headers.each { println "${it.name} : ${it.value}" }
+                    println ""
 
                     if(body instanceof InputStream) {
-                        println "Body: ${IOUtils.toString(body)}"
+                        println "Body: ${IOUtils.toString(body)}\n"
                     }
                     else {
-                        println "Body: ${body}"
+                        println "Body: ${body}\n"
                     }
                     null
                 }
             }
         }
         catch (ConnectException ex) {
-            println "Failed to connect to ${url} error: ${ex}"
+            println "Failed to connect to ${url} error: ${ex}\n"
         }
         catch (ResponseParseException ex) {
-            println "Failed to access ${url} error: ${ex}"
+            println "Failed to access ${url} error: ${ex}\n"
         }
         catch (HttpResponseException ex) {
             parseResponseException(url, ex)
@@ -51,6 +54,8 @@ class HttpClient {
 
         try {
             http.request(Method.GET) { req ->
+                println "\nTest Http Client GET from: ${url}\n"
+
                 headers.'X-Okapi-Tenant' = "our"
 
                 response.success = { resp, body ->
@@ -63,10 +68,10 @@ class HttpClient {
             }
         }
         catch (ConnectException ex) {
-            println "Failed to connect to ${url} error: ${ex}"
+            println "Failed to connect to ${url} error: ${ex}\n"
         }
         catch (ResponseParseException ex) {
-            println "Failed to access ${url} error: ${ex}"
+            println "Failed to access ${url} error: ${ex}\n"
         }
         catch (HttpResponseException ex) {
             parseResponseException(url, ex)
@@ -77,34 +82,6 @@ class HttpClient {
         get(url) != null
     }
 
-
-
-    static post(url, bodyToSend = null) {
-        if(url == null)
-            throw new IllegalArgumentException("url is null")
-
-        def http = new HTTPBuilder(url)
-
-        try {
-            http.request(Method.POST, ContentType.JSON) { req ->
-                body = bodyToSend
-
-                response.success = { resp, responseBody ->
-                    responseBody
-                }
-            }
-        }
-        catch (ConnectException ex) {
-            println "Failed to access ${url} error: ${ex})"
-        }
-        catch (ResponseParseException ex) {
-            println "Failed to access ${url} error: ${ex})"
-        }
-        catch (HttpResponseException ex) {
-            parseResponseException(url, ex)
-        }
-    }
-
     static def String postToCreate(URL url, bodyToSend = null) {
         if(url == null)
             throw new IllegalArgumentException("url is null")
@@ -113,55 +90,24 @@ class HttpClient {
 
         try {
             http.request(Method.POST, ContentType.JSON) { req ->
+                println "\nTest Http Client POST to: ${url}\n"
+
                 body = bodyToSend
                 headers.'X-Okapi-Tenant' = "our"
 
                 response.success = { resp ->
                     println "Status Code: ${resp.status}"
+                    println "Location: ${resp.headers.location}\n"
+
                     resp.headers.location.toString()
                 }
             }
         }
         catch (ConnectException ex) {
-            println "Failed to access ${url} error: ${ex})"
+            println "Failed to access ${url} error: ${ex})\n"
         }
         catch (ResponseParseException ex) {
-            println "Failed to access ${url} error: ${ex})"
-        }
-        catch (HttpResponseException ex) {
-            parseResponseException(url, ex)
-        }
-    }
-
-    static def getByQuery(URL url, Map<String, Object> query) {
-        def http = new HTTPBuilder(url)
-
-        try {
-            http.request(Method.GET) { req ->
-                headers.'X-Okapi-Tenant' = "our"
-                uri.query = query
-
-                response.success = { resp, body ->
-                    body
-                }
-
-                response.failure = { resp, body ->
-                    println "Failed to access ${url}"
-                    println "Status Code: ${resp.statusLine}"
-                    resp.headers.each { println "${it.name} : ${it.value}" }
-
-                    if(body != null) {
-                        println "Body: ${IOUtils.toString(body)}"
-                    }
-                    null
-                }
-            }
-        }
-        catch (ConnectException ex) {
-            println "Failed to connect to ${url} error: ${ex}"
-        }
-        catch (ResponseParseException ex) {
-            println "Failed to access ${url} error: ${ex}"
+            println "Failed to access ${url} error: ${ex})\n"
         }
         catch (HttpResponseException ex) {
             parseResponseException(url, ex)
@@ -169,7 +115,7 @@ class HttpClient {
     }
 
     private static void parseResponseException(URL url, HttpResponseException ex) {
-        println "Failed to access ${url} error: ${ex}"
+        println "Failed to access ${url} error: ${ex} (More information below)\n"
         printf "Headers: %s \n", ex.getResponse().getAllHeaders()
         printf "Content Type: %s \n", ex.getResponse().getContentType()
         printf "Status Code: %s \n", ex.getResponse().getStatus()

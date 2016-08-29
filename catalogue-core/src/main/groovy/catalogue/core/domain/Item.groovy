@@ -4,20 +4,23 @@ class Item {
 
     final String id
     final String title
+    final instanceLocation
 
-    def Item(String id, String title) {
+    def Item(String id, String title, String instanceLocation) {
         this.id = id
         this.title = title
+        this.instanceLocation = instanceLocation
     }
 
-    def Item(String title) {
-        this(null, title)
+    def Item(String title, String instanceLocation) {
+        this(null, title, instanceLocation)
     }
 
     Map toMap() {
         def instanceMap = [:]
         instanceMap.id = this.id
         instanceMap.title = this.title
+        instanceMap.instanceLocation = this.instanceLocation
         instanceMap
     }
 

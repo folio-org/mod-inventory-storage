@@ -2,18 +2,73 @@ package api
 
 import catalogue.core.domain.Item
 import catalogue.core.storage.Storage
+import io.vertx.core.json.JsonObject
 import spock.lang.Specification
+import support.FakeKnowledgeBase
 import support.HttpClient
 import support.World
+
+import java.util.concurrent.CompletableFuture
+
+import static support.HttpClient.get
 
 class ItemApiExamples extends Specification {
 
     def setupSpec() {
+        def vertx = World.startVertx()
+
+        def fakeDeployed = new CompletableFuture<Void>()
+
+        FakeKnowledgeBase.deploy(vertx, fakeDeployed)
+
         World.startApi()
+
+        fakeDeployed.join()
     }
 
     def cleanupSpec() {
-        World.stopApi()
+        World.stopVertx()
+    }
+
+    void "Create a new instance"() {
+        given:
+            World.reset()
+
+        when:
+            JsonObject existingInstance = new JsonObject()
+                .put("title", "The End of the World Running Club")
+                .put("identifiers", [[namespace:"asin", value:"B00LD69QGO"],
+                                     [namespace:"isbn", value:"1785032666"]]);
+
+            def locationOfInstance = registerInstanceWithFakeKnowledgeBase(existingInstance)
+
+            JsonObject newItemRequest = new JsonObject()
+                .put("instance", locationOfInstance.toString())
+
+            def locationOfNewItem = createNewItemViaApi(newItemRequest)
+
+            def newItem = HttpClient.get(locationOfNewItem)
+        then:
+        assert newItem.title == "The End of the World Running Club"
+
+        selfLinkShouldRespectWayResourceWasReached(newItem)
+        selfLinkShouldBeReachable(newItem)
+
+        assert newItem.links.instance == locationOfInstance.toString()
+    }
+
+    URL createNewItemViaApi(JsonObject itemRequest) {
+        new URL(HttpClient.postToCreate(World.itemApiRoot(),
+                itemRequest.encodePrettily()))
+    }
+
+    URL registerInstanceWithFakeKnowledgeBase(JsonObject instanceRequest) {
+        new URL(HttpClient.postToCreate(GetFakeKnowledgeBaseInstanceUrl(),
+                instanceRequest.encodePrettily()))
+    }
+
+    private URL GetFakeKnowledgeBaseInstanceUrl() {
+        new URL(get(FakeKnowledgeBase.address).links.instances)
     }
 
     void "Find all instances and navigate to them"() {
@@ -60,9 +115,9 @@ class ItemApiExamples extends Specification {
     private static someItems() {
         def itemCollection = Storage.itemCollection
 
-        def firstItem = new Item("A Long Way to a Small Angry Planet")
+        def firstItem = new Item("A Long Way to a Small Angry Planet", "")
 
-        def secondItem = new Item("Nod")
+        def secondItem = new Item("Nod", "")
 
         itemCollection.add([firstItem, secondItem])
     }

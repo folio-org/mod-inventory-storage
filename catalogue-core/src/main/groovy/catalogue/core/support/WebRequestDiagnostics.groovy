@@ -1,4 +1,4 @@
-package catalogue.core.util
+package catalogue.core.support
 
 import io.vertx.groovy.ext.web.RoutingContext
 

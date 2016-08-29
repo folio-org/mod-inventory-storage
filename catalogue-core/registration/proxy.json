@@ -8,7 +8,7 @@
   "routingEntries" : [
     {
       "methods": [
-        "GET"
+        "GET", "POST"
       ],
       "path": "/catalogue",
       "level": "30",
