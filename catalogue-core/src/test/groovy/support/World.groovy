@@ -1,10 +1,13 @@
 package support
 
 import catalogue.core.Launcher
+import catalogue.core.storage.Storage
+
+import static support.HttpClient.get
 
 class World {
     static reset() {
-
+        Storage.clear()
     }
 
     static def startApi() {
@@ -13,6 +16,10 @@ class World {
 
     static def stopApi() {
         Launcher.stop()
+    }
+
+    static URL itemApiRoot() {
+        new URL(get(World.apiRoot()).links.items)
     }
 
     static URL apiRoot() {

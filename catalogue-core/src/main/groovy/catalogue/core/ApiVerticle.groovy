@@ -1,5 +1,7 @@
 package catalogue.core
 
+import catalogue.core.api.resource.ItemResource
+import catalogue.core.storage.Storage
 import io.vertx.lang.groovy.GroovyVerticle
 import io.vertx.core.Future
 import io.vertx.groovy.core.http.HttpServer
@@ -41,6 +43,7 @@ public class ApiVerticle extends GroovyVerticle {
         router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
         RootResource.register(router)
+        ItemResource.register(router, Storage.collectionProvider.itemCollection)
 
         server.requestHandler(router.&accept)
                 .listen(9402,
