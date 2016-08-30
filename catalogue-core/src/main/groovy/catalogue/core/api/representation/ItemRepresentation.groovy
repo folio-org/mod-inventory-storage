@@ -9,6 +9,7 @@ class ItemRepresentation {
         def representation = [:]
 
         representation.title = item.title
+
         representation.links = [
             'self' : ResourceMap.itemAbsolute("/${item.id}", request),
             'instance' : item.instanceLocation

@@ -85,7 +85,7 @@ class InstanceApiExamples extends Specification {
             instanceExpressesDublinCoreMetadata(secondInstance)
     }
 
-    void "Find by partial title"() {
+    void "Find by part of a title"() {
         given:
             World.reset()
             someInstances()

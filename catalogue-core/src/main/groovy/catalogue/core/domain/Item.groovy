@@ -4,7 +4,7 @@ class Item {
 
     final String id
     final String title
-    final instanceLocation
+    final String instanceLocation
 
     def Item(String id, String title, String instanceLocation) {
         this.id = id

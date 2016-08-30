@@ -10,10 +10,10 @@ import org.apache.commons.io.IOUtils
 class HttpClient {
 
     static get(url) {
-        def http = new HTTPBuilder(url)
+        def requestBuilder = new HTTPBuilder(url)
 
         try {
-            http.request(Method.GET) { req ->
+            requestBuilder.request(Method.GET) { req ->
                 println "\nTest Http Client GET from: ${url}\n"
 
                 headers.'X-Okapi-Tenant' = "our"
@@ -50,10 +50,10 @@ class HttpClient {
     }
 
     static getExpectingFailure(url, Closure onFailure) {
-        def http = new HTTPBuilder(url)
+        def requestBuilder = new HTTPBuilder(url)
 
         try {
-            http.request(Method.GET) { req ->
+            requestBuilder.request(Method.GET) { req ->
                 println "\nTest Http Client GET from: ${url}\n"
 
                 headers.'X-Okapi-Tenant' = "our"
@@ -108,6 +108,42 @@ class HttpClient {
         }
         catch (ResponseParseException ex) {
             println "Failed to access ${url} error: ${ex})\n"
+        }
+        catch (HttpResponseException ex) {
+            parseResponseException(url, ex)
+        }
+    }
+
+    static def getByQuery(URL url, Map<String, Object> query) {
+        def requestBuilder = new HTTPBuilder(url)
+
+        try {
+            requestBuilder.request(Method.GET) { req ->
+                println "\nTest Http Client POST to: ${requestBuilder.uri}\n"
+                headers.'X-Okapi-Tenant' = "our"
+                uri.query = query
+
+                response.success = { resp, body ->
+                    body
+                }
+
+                response.failure = { resp, body ->
+                    println "Failed to access ${url}"
+                    println "Status Code: ${resp.statusLine}"
+                    resp.headers.each { println "${it.name} : ${it.value}" }
+
+                    if(body != null) {
+                        println "Body: ${IOUtils.toString(body)}"
+                    }
+                    null
+                }
+            }
+        }
+        catch (ConnectException ex) {
+            println "Failed to connect to ${url} error: ${ex}\n"
+        }
+        catch (ResponseParseException ex) {
+            println "Failed to access ${url} error: ${ex}\n"
         }
         catch (HttpResponseException ex) {
             parseResponseException(url, ex)

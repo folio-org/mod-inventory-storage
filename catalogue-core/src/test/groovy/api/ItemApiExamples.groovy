@@ -108,16 +108,39 @@ class ItemApiExamples extends Specification {
             assert status.toString().contains("404")
     }
 
+    void "Find by part of a title"() {
+        given:
+            World.reset()
+            someItems()
+
+        when:
+            def matchingItems = findItemsByPartialTitle("Long Way")
+
+        then:
+            assert matchingItems.size() == 1
+
+            def onlyItem = matchingItems[0]
+
+            assert onlyItem.title == "A Long Way to a Small Angry Planet"
+
+            selfLinkShouldRespectWayResourceWasReached(onlyItem)
+            selfLinkShouldBeReachable(onlyItem)
+    }
+
     private static findAllItems() {
         HttpClient.get(World.itemApiRoot())
+    }
+
+    private def findItemsByPartialTitle(String partialTitle) {
+        HttpClient.getByQuery(World.itemApiRoot(), [partialTitle: partialTitle])
     }
 
     private static someItems() {
         def itemCollection = Storage.itemCollection
 
-        def firstItem = new Item("A Long Way to a Small Angry Planet", "")
+        def firstItem = new Item("A Long Way to a Small Angry Planet", "http://books.com/small-angry")
 
-        def secondItem = new Item("Nod", "")
+        def secondItem = new Item("Nod", "http://books.com/nod")
 
         itemCollection.add([firstItem, secondItem])
     }

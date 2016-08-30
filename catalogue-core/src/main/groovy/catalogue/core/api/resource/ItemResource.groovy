@@ -20,11 +20,11 @@ class ItemResource {
 
         router.route(ResourceMap.item().toString() + "*").handler(BodyHandler.create())
 
-        router.route(HttpMethod.GET, ResourceMap.item()).handler(findAll(instanceCollection));
+        router.route(HttpMethod.GET, ResourceMap.item()).handler(find(instanceCollection));
 
         router.route(HttpMethod.POST, ResourceMap.item()).handler(create(instanceCollection));
 
-        router.route(HttpMethod.GET, ResourceMap.item('/:id')).handler(find(instanceCollection));
+        router.route(HttpMethod.GET, ResourceMap.item('/:id')).handler(findById(instanceCollection));
     }
 
     static Closure create(ItemCollection itemCollection) {
@@ -54,16 +54,42 @@ class ItemResource {
         }
     }
 
-    private static Closure findAll(ItemCollection itemCollection) {
+    private static Closure find(ItemCollection itemCollection) {
         { routingContext ->
-            itemCollection.findAll({ result ->
-                JsonResponse.success(routingContext.response(),
-                        result.collect { item -> ItemRepresentation.toMap(item, routingContext.request()) })
-            })
+
+            def firstSearchTerm = firstQueryParameter(routingContext)
+
+            switch (firstSearchTerm) {
+                case "partialTitle":
+                    itemCollection.findByTitle(queryParameterValue(routingContext, firstSearchTerm), { result ->
+                        JsonResponse.success(routingContext.response(),
+                                result.collect { item -> ItemRepresentation.toMap(item, routingContext.request()) })
+                    })
+                    break;
+
+                default:
+                    itemCollection.findAll({ result ->
+                        JsonResponse.success(routingContext.response(),
+                                result.collect { item -> ItemRepresentation.toMap(item, routingContext.request()) })
+                    })
+            }
         }
     }
 
-    private static Closure find(ItemCollection itemCollection) {
+    private static String firstQueryParameter(routingContext) {
+        if(routingContext.request().params().size() > 0) {
+            routingContext.request().params().names().iterator().next()
+        }
+        else {
+            null
+        }
+    }
+
+    private static String queryParameterValue(RoutingContext routingContext, String parameter) {
+        routingContext.request().getParam(parameter)
+    }
+
+    private static Closure findById(ItemCollection itemCollection) {
         { routingContext ->
             itemCollection.findById(routingContext.request().getParam("id"), { result ->
                 if(result == null) {

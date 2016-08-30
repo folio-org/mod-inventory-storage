@@ -3,8 +3,10 @@ package catalogue.core.storage.memory
 import catalogue.core.domain.Item
 import catalogue.core.domain.ItemCollection
 
+import java.util.regex.Pattern
+
 class InMemoryItemCollection
-        implements ItemCollection {
+         implements ItemCollection {
 
     private final collection = new InMemoryCollection<Item>()
 
@@ -52,5 +54,14 @@ class InMemoryItemCollection
     @Override
     void findAll(Closure resultCallback) {
         collection.all(resultCallback)
+    }
+
+    @Override
+    def findByTitle(String partialTitle, Closure completionCallback) {
+        return collection.find({
+            Pattern.compile(
+                    Pattern.quote(partialTitle),
+                    Pattern.CASE_INSENSITIVE).matcher(it.title).find()
+        }, completionCallback)
     }
 }
