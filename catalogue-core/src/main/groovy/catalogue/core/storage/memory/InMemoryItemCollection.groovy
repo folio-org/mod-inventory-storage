@@ -13,7 +13,7 @@ class InMemoryItemCollection
     @Override
     List<Item> add(List<Item> itemsToAdd) {
         def addedInstances = itemsToAdd.collect() {
-            new Item(UUID.randomUUID().toString(), it.title, it.instanceLocation)
+            it.copyWithNewId(UUID.randomUUID().toString())
         }
 
         collection.add(addedInstances)
@@ -26,8 +26,7 @@ class InMemoryItemCollection
 
     @Override
     Item add(Item item) {
-        def addedInstance = new Item(UUID.randomUUID().toString(), item.title, item.instanceLocation)
-        collection.add(addedInstance)
+        collection.add(item.copyWithNewId(UUID.randomUUID().toString()))
     }
 
     @Override
@@ -42,8 +41,7 @@ class InMemoryItemCollection
 
     @Override
     void add(Item item, Closure resultCallback) {
-        def addedInstance = new Item(UUID.randomUUID().toString(), item.title, item.instanceLocation)
-        collection.add(addedInstance, resultCallback)
+        collection.add(item.copyWithNewId(UUID.randomUUID().toString()), resultCallback)
     }
 
     @Override

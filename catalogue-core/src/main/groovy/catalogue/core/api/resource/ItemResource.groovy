@@ -18,13 +18,11 @@ class ItemResource {
 
     public static void register(Router router, ItemCollection instanceCollection) {
 
-        router.route(ResourceMap.item().toString() + "*").handler(BodyHandler.create())
+        router.get(ResourceMap.item()).handler(find(instanceCollection));
+        router.get(ResourceMap.item('/:id')).handler(findById(instanceCollection));
 
-        router.route(HttpMethod.GET, ResourceMap.item()).handler(find(instanceCollection));
-
-        router.route(HttpMethod.POST, ResourceMap.item()).handler(create(instanceCollection));
-
-        router.route(HttpMethod.GET, ResourceMap.item('/:id')).handler(findById(instanceCollection));
+        router.post(ResourceMap.item().toString() + "*").handler(BodyHandler.create())
+        router.post(ResourceMap.item()).handler(create(instanceCollection));
     }
 
     static Closure create(ItemCollection itemCollection) {
@@ -40,7 +38,7 @@ class ItemResource {
 
                     def instance = new JsonObject(buffer.getString(0, buffer.length()))
 
-                    def itemToCreate = new Item(instance.getString("title"), body.instance)
+                    def itemToCreate = new Item(instance.getString("title"), body.instance, body.barcode)
 
                     itemCollection.add(itemToCreate, { item ->
                         RedirectResponse.created(routingContext.response(),

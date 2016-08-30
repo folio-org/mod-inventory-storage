@@ -16,9 +16,9 @@ import java.util.concurrent.CompletableFuture
 class ItemCollectionExamples {
 
     final ItemCollection collection
-    private final Item smallAngryPlanet = new Item("Long Way to a Small Angry Planet", "http://books.com/small-angry")
-    private final Item nod = new Item("Nod", "http://books.com/nod")
-    private final Item uprooted = new Item("Uprooted", "http://books.com/uprooted")
+    private final Item smallAngryPlanet = new Item("Long Way to a Small Angry Planet", "http://books.com/small-angry", "036000291452")
+    private final Item nod = new Item("Nod", "http://books.com/nod", "565578437802")
+    private final Item uprooted = new Item("Uprooted", "http://books.com/uprooted", "657670342075")
 
     public ItemCollectionExamples(ItemCollection collection) {
         this.collection = collection
@@ -55,7 +55,11 @@ class ItemCollectionExamples {
 
         assert allItems.size() == 3
 
-        assert collection.findAll().every { it.id != null }
+        assert allItems.every { it.id != null }
+
+        assert allItems.every { it.title != null }
+        assert allItems.every { it.instanceLocation != null }
+        assert allItems.every { it.barcode != null }
 
         assert allItems.any { it.title == "Long Way to a Small Angry Planet" }
         assert allItems.any { it.title == "Nod" }
@@ -65,26 +69,35 @@ class ItemCollectionExamples {
     @Test
     void instancesCanBeFoundById() {
         def addedItem = collection.add(smallAngryPlanet)
-        def otherAddedItem = collection.add(nod)
+        def otherAddedItem = collection.add(this.nod)
 
-        assert collection.findById(addedItem.id).title == "Long Way to a Small Angry Planet"
-        assert collection.findById(addedItem.id).instanceLocation == "http://books.com/small-angry"
+        def foundSmallAngryPlant = collection.findById(addedItem.id)
 
-        assert collection.findById(otherAddedItem.id).title == "Nod"
-        assert collection.findById(otherAddedItem.id).instanceLocation == "http://books.com/nod"
+        assert foundSmallAngryPlant.title == "Long Way to a Small Angry Planet"
+        assert foundSmallAngryPlant.instanceLocation == "http://books.com/small-angry"
+        assert foundSmallAngryPlant.barcode == "036000291452"
+
+        def foundNod = collection.findById(otherAddedItem.id)
+
+        assert foundNod.title == "Nod"
+        assert foundNod.instanceLocation == "http://books.com/nod"
+        assert foundNod.barcode == "565578437802"
     }
 
     @Test
     void multipleItemsCanBeAddedTogether() {
         collection.add([nod, uprooted])
 
-        def allResources = collection.findAll()
+        def allItems = collection.findAll()
 
-        assert allResources.size() == 2
-        assert allResources.every { it.id != null }
+        assert allItems.size() == 2
+        assert allItems.every { it.id != null }
+        assert allItems.every { it.title != null }
+        assert allItems.every { it.instanceLocation != null }
+        assert allItems.every { it.barcode != null }
 
-        assert allResources.any { it.title == "Nod" }
-        assert allResources.any { it.title == "Uprooted" }
+        assert allItems.any { it.title == "Nod" }
+        assert allItems.any { it.title == "Uprooted" }
     }
 
     @Test
@@ -106,15 +119,18 @@ class ItemCollectionExamples {
 
         collection.findAll(World.complete(findFuture))
 
-        def allResources = World.getOnCompletion(findFuture)
+        def allItems = World.getOnCompletion(findFuture)
 
-        assert allResources.size() == 3
+        assert allItems.size() == 3
 
-        assert collection.findAll().every { it.id != null }
+        assert allItems.every { it.id != null }
+        assert allItems.every { it.title != null }
+        assert allItems.every { it.instanceLocation != null }
+        assert allItems.every { it.barcode != null }
 
-        assert allResources.any { it.title == "Long Way to a Small Angry Planet" }
-        assert allResources.any { it.title == "Nod" }
-        assert allResources.any { it.title == "Uprooted" }
+        assert allItems.any { it.title == "Long Way to a Small Angry Planet" }
+        assert allItems.any { it.title == "Nod" }
+        assert allItems.any { it.title == "Uprooted" }
     }
 
     @Test
@@ -132,9 +148,12 @@ class ItemCollectionExamples {
 
         collection.findAll(World.complete(findAllFuture))
 
-        def allResources = World.getOnCompletion(findAllFuture)
+        def allItems = World.getOnCompletion(findAllFuture)
 
-        assert allResources.every { it.id != null }
+        assert allItems.every { it.id != null }
+        assert allItems.every { it.title != null }
+        assert allItems.every { it.instanceLocation != null }
+        assert allItems.every { it.barcode != null }
 
         def findFuture = new CompletableFuture<Item>()
         def otherFindFuture = new CompletableFuture<Item>()
@@ -147,8 +166,10 @@ class ItemCollectionExamples {
 
         assert foundItem.title == "Long Way to a Small Angry Planet"
         assert foundItem.instanceLocation == "http://books.com/small-angry"
+        assert foundItem.barcode == "036000291452"
 
         assert otherFoundItem.title == "Nod"
         assert otherFoundItem.instanceLocation == "http://books.com/nod"
+        assert otherFoundItem.barcode == "565578437802"
     }
 }

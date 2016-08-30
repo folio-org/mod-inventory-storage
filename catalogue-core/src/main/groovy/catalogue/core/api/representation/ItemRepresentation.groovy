@@ -9,6 +9,7 @@ class ItemRepresentation {
         def representation = [:]
 
         representation.title = item.title
+        representation.barcode = item.barcode
 
         representation.links = [
             'self' : ResourceMap.itemAbsolute("/${item.id}", request),

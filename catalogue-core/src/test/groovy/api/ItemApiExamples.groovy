@@ -30,7 +30,7 @@ class ItemApiExamples extends Specification {
         World.stopVertx()
     }
 
-    void "Create a new instance"() {
+    void "Create a new item"() {
         given:
             World.reset()
 
@@ -43,18 +43,21 @@ class ItemApiExamples extends Specification {
             def locationOfInstance = registerInstanceWithFakeKnowledgeBase(existingInstance)
 
             JsonObject newItemRequest = new JsonObject()
+                .put("barcode", "564323765087")
                 .put("instance", locationOfInstance.toString())
 
             def locationOfNewItem = createNewItemViaApi(newItemRequest)
 
             def newItem = HttpClient.get(locationOfNewItem)
+
         then:
-        assert newItem.title == "The End of the World Running Club"
+            assert newItem.title == "The End of the World Running Club"
+            assert newItem.links.instance == locationOfInstance.toString()
+            assert newItem.barcode == "564323765087"
 
-        selfLinkShouldRespectWayResourceWasReached(newItem)
-        selfLinkShouldBeReachable(newItem)
+            selfLinkShouldRespectWayResourceWasReached(newItem)
+            selfLinkShouldBeReachable(newItem)
 
-        assert newItem.links.instance == locationOfInstance.toString()
     }
 
     URL createNewItemViaApi(JsonObject itemRequest) {
@@ -87,6 +90,9 @@ class ItemApiExamples extends Specification {
 
             assert firstItem.title == "A Long Way to a Small Angry Planet"
             assert secondItem.title == "Nod"
+
+            assert firstItem.barcode != null
+            assert secondItem.barcode != null
 
             selfLinkShouldRespectWayResourceWasReached(firstItem)
             selfLinkShouldRespectWayResourceWasReached(secondItem)
@@ -122,6 +128,7 @@ class ItemApiExamples extends Specification {
             def onlyItem = matchingItems[0]
 
             assert onlyItem.title == "A Long Way to a Small Angry Planet"
+            assert onlyItem.barcode != null
 
             selfLinkShouldRespectWayResourceWasReached(onlyItem)
             selfLinkShouldBeReachable(onlyItem)
@@ -138,9 +145,9 @@ class ItemApiExamples extends Specification {
     private static someItems() {
         def itemCollection = Storage.itemCollection
 
-        def firstItem = new Item("A Long Way to a Small Angry Planet", "http://books.com/small-angry")
+        def firstItem = new Item("A Long Way to a Small Angry Planet", "http://books.com/small-angry", "687954039561")
 
-        def secondItem = new Item("Nod", "http://books.com/nod")
+        def secondItem = new Item("Nod", "http://books.com/nod", "675478965475")
 
         itemCollection.add([firstItem, secondItem])
     }
