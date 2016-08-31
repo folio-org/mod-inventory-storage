@@ -29,7 +29,7 @@ run `gradle build` from the root directory
 
 Run `./start.sh` from the root directory. To stop them, run `./stop.sh` from the root directory.
 
-# Using the Knowledge Base Core Module
+# Using the Modules 
 
 ## Standalone
 
@@ -37,7 +37,9 @@ Run the modules (see above)
 
 ### Root Address
 
-[http://localhost:9401/knowledge-base] will take you to the root resource.
+[http://localhost:9401/knowledge-base](http://localhost:9401/knowledge-base) will take you to the root resource for the knowledge base module.
+
+[http://localhost:9402/catalogue](http://localhost:9402/catalogue) will take you to the root resource for the catalogue module.
 
 ## With Okapi
 
@@ -115,9 +117,11 @@ Content-Length: 34
 
 ### Root Address
 
-[http://localhost:9310/knowledge-base] will go to the root resource for the knowledge base module via Okapi. Access via Okapi requires passing the X-Okapi-Tenant header (see the Okapi guide above for details).
+Access via Okapi requires passing the X-Okapi-Tenant header (see the Okapi guide above for details).
 
-Whereas [http://localhost:9401/knowledge-base] will go to the root resource for the knowledge base module directly.
+[http://localhost:9310/knowledge-base](http://localhost:9310/knowledge-base) will go to the root resource for the knowledge base module via Okapi.
+
+[http://localhost:9310/catalogue](http://localhost:9310/catalogue) will go to the root resource for the catalogue module via Okapi.
 
 # Running the Tests
 
