@@ -4,9 +4,9 @@
 
 ./register.sh
 
-./create-sample-data.sh
-
 ./start.sh
+
+./create-sample-data.sh
 
 cd demo/ui
 

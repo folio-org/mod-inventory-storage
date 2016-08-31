@@ -12,3 +12,4 @@ cd catalogue-core
 
 cd ..
 
+sleep 2
