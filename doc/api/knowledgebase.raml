@@ -9,8 +9,8 @@ documentation:
     content: <b>Defines the baseline resources provided by a knowledge base module implementation</b>
     
 schemas:
- - resource: !include schema/instance.json
- - resources: !include schema/instances.json
+ - instance: !include schema/instance.json
+ - instances: !include schema/instances.json
 
 traits:
  - secured: !include traits/auth.raml
@@ -25,8 +25,8 @@ resourceTypes:
       type:
         collection:
           exampleCollection: !include  examples/instances_get.json
-          schemaCollection: resources
-          schemaItem: resource
+          schemaCollection: instances
+          schemaItem: instance
           exampleItem: !include  examples/instance_get.json
 
       get:

@@ -7,34 +7,22 @@
       "title": {
         "type": "string"
       },
-      "identifiers": {
-        "type": "array",
-        "minItems": 1,
-        "items": {
-          "type": "object",
-          "properties": {
-            "namespace": {
-              "type": "string"
-            },
-            "value": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "namespace",
-            "value"
-          ]
-        }
+      "barcode": {
+        "type": "string"
       },
       "links": {
         "type": "object",
         "properties": {
           "self": {
             "type": "string"
+          },
+          "instance": {
+            "type": "string"
           }
         },
         "required": [
-          "self"
+          "self",
+          "instance"
         ]
       }
     },

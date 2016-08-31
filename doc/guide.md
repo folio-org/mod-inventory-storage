@@ -29,7 +29,9 @@ In order to know what kind of resource to expect when following a link, known re
 | Relationship | Description | Notes |
 |:------------:|-------------|----------|
 | `self` | How another party can refer to this resource | Required by all none root resources |
-| `instances` | Refers to the collection of instances resource, used for searching for and creating new instances ||
+| `instances` | Refers to the collection of instance resources, used for searching for and creating new instances ||
+| `items` | Refers to the collection of item resources, used for searching for and creating new items ||
+| `instance` | Refers to the instance an item is based upon ||
 
 # Sample Data
 

@@ -1,0 +1,45 @@
+#%RAML 0.8
+title: Catalogue
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost:9402
+
+documentation:
+  - title: Catalogue API
+    content: <b>Defines the baseline resources provided by a catalogue module implementation</b>
+    
+schemas:
+ - item: !include schema/item.json
+ - items: !include schema/items.json
+
+traits:
+ - secured: !include traits/auth.raml
+ - language: !include traits/language.raml
+
+resourceTypes:
+ - collection: !include types/collection.raml
+
+/catalogue:
+    /item:
+      displayName: Items
+      type:
+        collection:
+          exampleCollection: !include  examples/items_get.json
+          schemaCollection: item
+          schemaItem: items
+          exampleItem: !include  examples/item_get.json
+      get:
+        queryParameters:
+          partialName:
+            displayName: Partial Title
+            type: string
+            description: text to search for within the title of items
+            example: partialTitle="Small Angry Planet"
+            required: false
+      post:
+        body:
+          application/json:
+            schema: !include schema/item_create.json
+            example: !include  examples/item_post.json
+        responses:
+          201:

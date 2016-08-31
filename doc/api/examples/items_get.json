@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Nod",
+    "barcode": "456743454532",
+    "links": {
+      "self": "http://localhost:9402/catalogue/item/1c5faa78-191f-443f-a151-a2c6c01ff03e",
+      "instance": "http://localhost:9401/knowledge-base/instance/8ef8b47a-2c30-4676-9ce7-e7376a61c4af"
+    }
+  },
+  {
+    "title": "Uprooted",
+    "barcode": "645398607547",
+    "links": {
+      "self": "http://localhost:9402/catalogue/item/eff7ff5a-5dd6-4e27-aebd-f471925c8b68",
+      "instance": "http://localhost:9401/knowledge-base/instance/30f7732d-b003-4d42-b7b8-8916e19a8fc5"
+    }
+  }
+]
