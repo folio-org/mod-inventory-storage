@@ -38,10 +38,7 @@ class MongoItemCollection<T> {
     T add(T item) {
         CompletableFuture<T> future = new CompletableFuture<T>()
 
-        add(item, {
-            println("Callback from Add!")
-            future.complete(it)
-        } )
+        add(item, { future.complete(it) } )
 
         future.get(timeoutDuration, timeoutUnit)
     }
@@ -52,8 +49,6 @@ class MongoItemCollection<T> {
         SingleResultCallback<Void> callback = new SingleResultCallback<Void>() {
             @Override
             public void onResult(final Void result, final Throwable t) {
-                println("Callback from Add!")
-
                 T insertedItem = fromDocument(document)
 
                 resultCallback(insertedItem)

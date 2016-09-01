@@ -45,10 +45,10 @@ class ItemResource {
                                 ResourceMap.itemAbsolute("/${item.id}", routingContext.request()))
                     })
                 })
-            })
-            .end()
-
-
+            }).exceptionHandler({ throwable ->
+                ClientErrorResponse.badRequest(routingContext.response(),
+                        "Failed to reach instance location - ${body.instance}")
+            }).end()
         }
     }
 

@@ -60,18 +60,20 @@ class ItemApiExamples extends Specification {
 
     }
 
-    URL createNewItemViaApi(JsonObject itemRequest) {
-        new URL(HttpClient.postToCreate(World.itemApiRoot(),
-                itemRequest.encodePrettily()))
-    }
+    void "Creating a new item with unreachable instance fails"() {
+        given:
+            World.reset()
 
-    URL registerInstanceWithFakeKnowledgeBase(JsonObject instanceRequest) {
-        new URL(HttpClient.postToCreate(GetFakeKnowledgeBaseInstanceUrl(),
-                instanceRequest.encodePrettily()))
-    }
+        when:
+            JsonObject newItemRequest = new JsonObject()
+                .put("barcode", "564323765087")
+                .put("instance", "http://somenonexistingdomain.com/instance/54532344")
 
-    private URL GetFakeKnowledgeBaseInstanceUrl() {
-        new URL(get(FakeKnowledgeBase.address).links.instances)
+            def response = HttpClient.post(World.itemApiRoot(),
+                newItemRequest.encodePrettily())
+
+        then:
+            assert response.status == 400
     }
 
     void "Find all instances and navigate to them"() {
@@ -158,5 +160,19 @@ class ItemApiExamples extends Specification {
 
     private void selfLinkShouldRespectWayResourceWasReached(instance) {
         assert instance.links.self.contains(World.apiRoot().toString())
+    }
+
+    URL createNewItemViaApi(JsonObject itemRequest) {
+        new URL(HttpClient.postToCreate(World.itemApiRoot(),
+                itemRequest.encodePrettily()))
+    }
+
+    URL registerInstanceWithFakeKnowledgeBase(JsonObject instanceRequest) {
+        new URL(HttpClient.postToCreate(GetFakeKnowledgeBaseInstanceUrl(),
+                instanceRequest.encodePrettily()))
+    }
+
+    private URL GetFakeKnowledgeBaseInstanceUrl() {
+        new URL(get(FakeKnowledgeBase.address).links.instances)
     }
 }

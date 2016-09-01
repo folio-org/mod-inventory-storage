@@ -7,4 +7,10 @@ class ClientErrorResponse {
         response.setStatusCode(404)
         response.end()
     }
+
+    static badRequest(HttpServerResponse response, String reason) {
+        response.setStatusCode(400)
+        response.putHeader "content-type", "text/plain"
+        response.end(reason)
+    }
 }
