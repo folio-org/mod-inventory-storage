@@ -9,8 +9,12 @@ import org.bson.Document
 import org.bson.types.ObjectId
 
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 class MongoItemCollection<T> {
+
+    private final TimeUnit timeoutUnit = TimeUnit.MILLISECONDS
+    private final int timeoutDuration = 1000
 
     final MongoCollection<Document> collection
 
@@ -34,9 +38,12 @@ class MongoItemCollection<T> {
     T add(T item) {
         CompletableFuture<T> future = new CompletableFuture<T>()
 
-        add(item, { future.complete(it) } )
+        add(item, {
+            println("Callback from Add!")
+            future.complete(it)
+        } )
 
-        future.get()
+        future.get(timeoutDuration, timeoutUnit)
     }
 
     void add(T item, Closure resultCallback) {
@@ -45,6 +52,8 @@ class MongoItemCollection<T> {
         SingleResultCallback<Void> callback = new SingleResultCallback<Void>() {
             @Override
             public void onResult(final Void result, final Throwable t) {
+                println("Callback from Add!")
+
                 T insertedItem = fromDocument(document)
 
                 resultCallback(insertedItem)
@@ -65,7 +74,7 @@ class MongoItemCollection<T> {
 
         find(filter, { future.complete(it) })
 
-        future.get()
+        future.get(timeoutDuration, timeoutUnit)
     }
 
     void find(filter, resultCallback) {
@@ -84,7 +93,7 @@ class MongoItemCollection<T> {
 
         findOne(filter, { future.complete(it) })
 
-        future.get()
+        future.get(timeoutDuration, timeoutUnit)
     }
 
     void findOne(filter, Closure resultCallback) {
@@ -103,7 +112,7 @@ class MongoItemCollection<T> {
 
         findById(id, { future.complete(it) })
 
-        future.get()
+        future.get(timeoutDuration, timeoutUnit)
     }
 
     void findById(id, Closure resultCallback) {
@@ -115,7 +124,7 @@ class MongoItemCollection<T> {
 
         findAll({ future.complete(it) })
 
-        future.get()
+        future.get(timeoutDuration, timeoutUnit)
     }
 
     void findAll(Closure resultCallback) {
@@ -137,7 +146,7 @@ class MongoItemCollection<T> {
 
         update(id, updates, { future.complete() })
 
-        future.get()
+        future.get(timeoutDuration, timeoutUnit)
     }
 
    void update(id, updates, Closure completionCallback) {
@@ -168,6 +177,6 @@ class MongoItemCollection<T> {
 
         collection.drop(callback)
 
-        future.get()
+        future.get(timeoutDuration, timeoutUnit)
     }
 }

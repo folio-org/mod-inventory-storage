@@ -10,6 +10,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeoutException
 
 import static support.World.getOnCompletion
 import static support.World.complete
@@ -30,7 +31,14 @@ class InstanceCollectionExamples {
 
     @Before
     public void before() {
-        collection.empty()
+        try {
+            collection.empty()
+        }
+        catch(TimeoutException ex) {
+            println "Timeout occurred whilst preparing the collection."
+            println "For out of process persistence mechanisms, this could mean they aren't running or have failed."
+            println "Exception details: ${ex.toString()}"
+        }
     }
 
     @Test
@@ -40,6 +48,8 @@ class InstanceCollectionExamples {
         collection.add(new Instance("Uprooted"))
 
         collection.empty()
+
+        assert true
 
         assert collection.findAll().size() == 0
     }
