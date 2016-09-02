@@ -156,7 +156,5 @@ There is a basic demo user interface provided, which allows for searching instan
 
 This demo requires Node and NPM to be installed. 
 
-Both, webpack and webpack-dev-server needd to be installed globally. This can be done by running ```npm install -g webpack webpack-dev-server```
-
-Once this is done, use the ```./start-demo.sh``` and ```./stop-demo.sh``` to start and stop the module, set up some sample data, prepare Okapi and run the UI.
+Use ```./start-demo.sh``` and ```./stop-demo.sh``` to start and stop the modules, set up some sample data, prepare Okapi and run the UI (this installs a few npmrelated modules globally).
 

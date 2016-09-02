@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+npm install -g webpack
+
+npm install -g webpack-dev-server
+
 ./create-tenant.sh
 
 ./register.sh
