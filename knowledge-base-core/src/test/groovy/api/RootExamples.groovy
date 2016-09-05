@@ -8,11 +8,11 @@ import static support.HttpClient.get
 
 public class RootExamples extends Specification {
 
-    def setup() {
+    def setupSpec() {
         World.startApi()
     }
 
-    def teardown() {
+    def cleanupSpec() {
         World.stopApi()
     }
 

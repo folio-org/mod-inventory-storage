@@ -86,8 +86,16 @@ class FakeKnowledgeBase extends GroovyVerticle {
     }
 
     @Override
-    public void stop() {
-        server.close();
+    public void stop(Future stopped) {
+        println "Stopping fake knowledge base"
+        server.close({ result ->
+            if (result.succeeded()) {
+                println "Stopped listening on ${server.actualPort()}"
+                stopped.complete();
+            } else {
+                stopped.fail(result.cause());
+            }
+        });
     }
 
     private static def getMapFromBody(RoutingContext routingContext) {

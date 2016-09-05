@@ -35,7 +35,7 @@ public class ApiVerticle extends GroovyVerticle {
     }
 
     @Override
-    public void start(Future deployed) {
+    public void start(Future started) {
         server = vertx.createHttpServer()
 
         def router = Router.router(vertx)
@@ -49,16 +49,24 @@ public class ApiVerticle extends GroovyVerticle {
                 .listen(9402,
                 { result ->
                     if (result.succeeded()) {
-                        printf "Listening on %s \n", server.actualPort()
-                        deployed.complete();
+                        println "Listening on ${server.actualPort()}"
+                        started.complete();
                     } else {
-                        deployed.fail(result.cause());
+                        started.fail(result.cause());
                     }
                 })
     }
 
     @Override
-    public void stop() {
-        server.close();
+    public void stop(Future stopped) {
+        println "Stopping catalogue API"
+        server.close({ result ->
+            if (result.succeeded()) {
+                println "Stopped listening on ${server.actualPort()}"
+                stopped.complete();
+            } else {
+                stopped.fail(result.cause());
+            }
+        });
     }
 }

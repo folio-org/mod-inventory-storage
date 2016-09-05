@@ -60,7 +60,14 @@ public class ApiVerticle extends GroovyVerticle {
     }
 
     @Override
-    public void stop() {
-        server.close();
+    public void stop(Future stopped) {
+        server.close({ result ->
+            if (result.succeeded()) {
+                println "Stopped listening"
+                stopped.complete();
+            } else {
+                stopped.fail(result.cause());
+            }
+        });
     }
 }

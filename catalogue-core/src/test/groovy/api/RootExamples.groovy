@@ -7,12 +7,12 @@ import static support.HttpClient.get
 
 public class RootExamples extends Specification {
 
-    def setup() {
+    def setupSpec() {
         World.startVertx()
         World.startApi()
     }
 
-    def teardown() {
+    def cleanupSpec() {
         World.stopVertx()
     }
 
