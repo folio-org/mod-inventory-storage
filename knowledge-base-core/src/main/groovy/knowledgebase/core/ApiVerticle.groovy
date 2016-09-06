@@ -15,59 +15,59 @@ import java.util.concurrent.CompletableFuture
 
 public class ApiVerticle extends GroovyVerticle {
 
-    private HttpServer server;
+  private HttpServer server;
 
-    public static void deploy(Vertx vertx, CompletableFuture deployed) {
-        vertx.deployVerticle("groovy:knowledgebase.core.ApiVerticle", { res ->
-            if (res.succeeded()) {
-                deployed.complete(null);
-            } else {
-                deployed.completeExceptionally(res.cause());
-            }
-        });
-    }
+  public static void deploy(Vertx vertx, CompletableFuture deployed) {
+    vertx.deployVerticle("groovy:knowledgebase.core.ApiVerticle", { res ->
+      if (res.succeeded()) {
+        deployed.complete(null);
+      } else {
+        deployed.completeExceptionally(res.cause());
+      }
+    });
+  }
 
-    public static CompletableFuture<Void> deploy(Vertx vertx) {
-        def deployed = new CompletableFuture()
+  public static CompletableFuture<Void> deploy(Vertx vertx) {
+    def deployed = new CompletableFuture()
 
-        deploy(vertx, deployed)
+    deploy(vertx, deployed)
 
-        deployed
-    }
+    deployed
+  }
 
-    @Override
-    public void start(Future deployed) {
-        server = vertx.createHttpServer()
+  @Override
+  public void start(Future deployed) {
+    server = vertx.createHttpServer()
 
-        def router = Router.router(vertx)
+    def router = Router.router(vertx)
 
-        router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
+    router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-        RootResource.register(router)
-        MetadataContextResource.register(router)
-        InstanceResource.register(router, Storage.collectionProvider.instanceCollection)
+    RootResource.register(router)
+    MetadataContextResource.register(router)
+    InstanceResource.register(router, Storage.collectionProvider.instanceCollection)
 
-        server.requestHandler(router.&accept)
-                .listen(9401,
-                { result ->
-                    if (result.succeeded()) {
-                        printf "Listening on %s \n", server.actualPort()
-                        deployed.complete();
-                    } else {
-                        deployed.fail(result.cause());
-                    }
-                })
-    }
+    server.requestHandler(router.&accept)
+      .listen(9401,
+      { result ->
+        if (result.succeeded()) {
+          printf "Listening on %s \n", server.actualPort()
+          deployed.complete();
+        } else {
+          deployed.fail(result.cause());
+        }
+      })
+  }
 
-    @Override
-    public void stop(Future stopped) {
-        server.close({ result ->
-            if (result.succeeded()) {
-                println "Stopped listening"
-                stopped.complete();
-            } else {
-                stopped.fail(result.cause());
-            }
-        });
-    }
+  @Override
+  public void stop(Future stopped) {
+    server.close({ result ->
+      if (result.succeeded()) {
+        println "Stopped listening"
+        stopped.complete();
+      } else {
+        stopped.fail(result.cause());
+      }
+    });
+  }
 }

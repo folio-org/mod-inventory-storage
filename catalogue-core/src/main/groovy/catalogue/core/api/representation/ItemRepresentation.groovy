@@ -5,17 +5,17 @@ import io.vertx.groovy.core.http.HttpServerRequest
 import catalogue.core.api.ResourceMap
 
 class ItemRepresentation {
-    static toMap(Item item, HttpServerRequest request) {
-        def representation = [:]
+  static toMap(Item item, HttpServerRequest request) {
+    def representation = [:]
 
-        representation.title = item.title
-        representation.barcode = item.barcode
+    representation.title = item.title
+    representation.barcode = item.barcode
 
-        representation.links = [
-            'self' : ResourceMap.itemAbsolute("/${item.id}", request),
-            'instance' : item.instanceLocation
-            ]
+    representation.links = [
+      'self'    : ResourceMap.itemAbsolute("/${item.id}", request),
+      'instance': item.instanceLocation
+    ]
 
-        representation
-    }
+    representation
+  }
 }

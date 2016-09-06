@@ -13,165 +13,162 @@ import java.util.concurrent.TimeUnit
 
 class MongoItemCollection<T> {
 
-    private final TimeUnit timeoutUnit = TimeUnit.MILLISECONDS
-    private final int timeoutDuration = 1000
+  private final TimeUnit timeoutUnit = TimeUnit.MILLISECONDS
+  private final int timeoutDuration = 1000
 
-    final MongoCollection<Document> collection
+  final MongoCollection<Document> collection
 
-    private final Closure fromDocument
-    private final Closure toMap
+  private final Closure fromDocument
+  private final Closure toMap
 
-    def MongoItemCollection(
-            String databaseName,
-            String collectionName,
-            Closure fromDocument,
-            Closure toMap)
-    {
-        this.fromDocument = fromDocument
-        this.toMap = toMap
+  def MongoItemCollection(
+    String databaseName,
+    String collectionName,
+    Closure fromDocument,
+    Closure toMap) {
+    this.fromDocument = fromDocument
+    this.toMap = toMap
 
-        collection = MongoClients.create()
-                .getDatabase(databaseName)
-                .getCollection(collectionName)
+    collection = MongoClients.create()
+      .getDatabase(databaseName)
+      .getCollection(collectionName)
+  }
+
+  T add(T item) {
+    CompletableFuture<T> future = new CompletableFuture<T>()
+
+    add(item, { future.complete(it) })
+
+    future.get(timeoutDuration, timeoutUnit)
+  }
+
+  void add(T item, Closure resultCallback) {
+    Document document = new Document(toMap(item))
+
+    SingleResultCallback<Void> callback = new SingleResultCallback<Void>() {
+      @Override
+      public void onResult(final Void result, final Throwable t) {
+        T insertedItem = fromDocument(document)
+
+        resultCallback(insertedItem)
+      }
     }
 
-    T add(T item) {
-        CompletableFuture<T> future = new CompletableFuture<T>()
+    collection.insertOne(document, callback)
+  }
 
-        add(item, { future.complete(it) } )
+  T add(List<T> items) {
+    //TODO: Replace with proper batching
+    items.collect({ it -> add(it) })
+  }
 
-        future.get(timeoutDuration, timeoutUnit)
+  List<T> find(filter) {
+    CompletableFuture<T> future = new CompletableFuture<T>()
+
+    find(filter, { future.complete(it) })
+
+    future.get(timeoutDuration, timeoutUnit)
+  }
+
+  void find(filter, resultCallback) {
+    SingleResultCallback<Document> callback = new SingleResultCallback<List<Document>>() {
+      @Override
+      public void onResult(final List<Document> documents, final Throwable t) {
+        resultCallback(documents.collect({ fromDocument(it) }))
+      }
     }
 
-    void add(T item, Closure resultCallback) {
-        Document document = new Document(toMap(item))
+    collection.find(filter).into(new ArrayList<Document>(), callback)
+  }
 
-        SingleResultCallback<Void> callback = new SingleResultCallback<Void>() {
-            @Override
-            public void onResult(final Void result, final Throwable t) {
-                T insertedItem = fromDocument(document)
+  T findOne(filter) {
+    CompletableFuture<T> future = new CompletableFuture<T>()
 
-                resultCallback(insertedItem)
-            }
+    findOne(filter, { future.complete(it) })
+
+    future.get(timeoutDuration, timeoutUnit)
+  }
+
+  void findOne(filter, Closure resultCallback) {
+    SingleResultCallback<Document> callback = new SingleResultCallback<Document>() {
+      @Override
+      public void onResult(final Document document, final Throwable t) {
+        resultCallback(fromDocument(document))
+      }
+    }
+
+    collection.find(filter).first(callback)
+  }
+
+  T findById(id) {
+    CompletableFuture<T> future = new CompletableFuture<T>()
+
+    findById(id, { future.complete(it) })
+
+    future.get(timeoutDuration, timeoutUnit)
+  }
+
+  void findById(id, Closure resultCallback) {
+    findOne(Filters.eq("_id", new ObjectId(id)), resultCallback)
+  }
+
+  List<T> findAll() {
+    CompletableFuture<T> future = new CompletableFuture<T>()
+
+    findAll({ future.complete(it) })
+
+    future.get(timeoutDuration, timeoutUnit)
+  }
+
+  void findAll(Closure resultCallback) {
+    SingleResultCallback<Document> callback = new SingleResultCallback<List<Document>>() {
+      @Override
+      public void onResult(final List<Document> documents, final Throwable t) {
+
+        def collect = documents.collect({ fromDocument(it) })
+
+        resultCallback(collect)
+      }
+    }
+
+    collection.find().into(new ArrayList<Document>(), callback)
+  }
+
+  void update(id, updates) {
+    CompletableFuture<Void> future = new CompletableFuture<Void>()
+
+    update(id, updates, { future.complete() })
+
+    future.get(timeoutDuration, timeoutUnit)
+  }
+
+  void update(id, updates, Closure completionCallback) {
+    SingleResultCallback<UpdateResult> callback = new SingleResultCallback<UpdateResult>() {
+      @Override
+      public void onResult(final UpdateResult updateResult, final Throwable t) {
+        if (updateResult.modifiedCount == 1) {
+          completionCallback()
         }
-
-        collection.insertOne(document, callback)
+      }
     }
 
-    T add(List<T> items)
-    {
-        //TODO: Replace with proper batching
-        items.collect({it -> add(it)})
+    collection.updateOne(
+      Filters.eq("_id", new ObjectId(id)),
+      updates, callback)
+  }
+
+  void empty() {
+    CompletableFuture<Void> future = new CompletableFuture<Void>()
+
+    SingleResultCallback<Void> callback = new SingleResultCallback<Void>() {
+      @Override
+      public void onResult(final Void result, final Throwable t) {
+        future.complete()
+      }
     }
 
-    List<T> find(filter) {
-        CompletableFuture<T> future = new CompletableFuture<T>()
+    collection.drop(callback)
 
-        find(filter, { future.complete(it) })
-
-        future.get(timeoutDuration, timeoutUnit)
-    }
-
-    void find(filter, resultCallback) {
-        SingleResultCallback<Document> callback = new SingleResultCallback<List<Document>>() {
-            @Override
-            public void onResult(final List<Document> documents, final Throwable t) {
-                resultCallback(documents.collect({ fromDocument(it) }))
-            }
-        }
-
-        collection.find(filter).into(new ArrayList<Document>(), callback)
-    }
-
-    T findOne(filter) {
-        CompletableFuture<T> future = new CompletableFuture<T>()
-
-        findOne(filter, { future.complete(it) })
-
-        future.get(timeoutDuration, timeoutUnit)
-    }
-
-    void findOne(filter, Closure resultCallback) {
-        SingleResultCallback<Document> callback = new SingleResultCallback<Document>() {
-            @Override
-            public void onResult(final Document document, final Throwable t) {
-                resultCallback(fromDocument(document))
-            }
-        }
-
-        collection.find(filter).first(callback)
-    }
-
-    T findById(id) {
-        CompletableFuture<T> future = new CompletableFuture<T>()
-
-        findById(id, { future.complete(it) })
-
-        future.get(timeoutDuration, timeoutUnit)
-    }
-
-    void findById(id, Closure resultCallback) {
-        findOne(Filters.eq("_id", new ObjectId(id)), resultCallback)
-    }
-
-    List<T> findAll() {
-        CompletableFuture<T> future = new CompletableFuture<T>()
-
-        findAll({ future.complete(it) })
-
-        future.get(timeoutDuration, timeoutUnit)
-    }
-
-    void findAll(Closure resultCallback) {
-        SingleResultCallback<Document> callback = new SingleResultCallback<List<Document>>() {
-            @Override
-            public void onResult(final List<Document> documents, final Throwable t) {
-
-                def collect = documents.collect({ fromDocument(it) })
-
-                resultCallback(collect)
-            }
-        }
-
-        collection.find().into(new ArrayList<Document>(), callback)
-    }
-
-    void update(id, updates) {
-        CompletableFuture<Void> future = new CompletableFuture<Void>()
-
-        update(id, updates, { future.complete() })
-
-        future.get(timeoutDuration, timeoutUnit)
-    }
-
-   void update(id, updates, Closure completionCallback) {
-       SingleResultCallback<UpdateResult> callback = new SingleResultCallback<UpdateResult>() {
-           @Override
-           public void onResult(final UpdateResult updateResult, final Throwable t) {
-               if(updateResult.modifiedCount == 1) {
-                   completionCallback()
-               }
-           }
-       }
-
-       collection.updateOne(
-           Filters.eq("_id", new ObjectId(id)),
-           updates, callback)
-   }
-
-    void empty()
-    {
-        CompletableFuture<Void> future = new CompletableFuture<Void>()
-
-        SingleResultCallback<Void> callback = new SingleResultCallback<Void>() {
-            @Override
-            public void onResult(final Void result, final Throwable t) {
-                future.complete()
-            }
-        }
-
-        collection.drop(callback)
-
-        future.get(timeoutDuration, timeoutUnit)
-    }
+    future.get(timeoutDuration, timeoutUnit)
+  }
 }

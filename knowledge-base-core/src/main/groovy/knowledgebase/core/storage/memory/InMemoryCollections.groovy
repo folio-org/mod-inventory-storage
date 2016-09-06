@@ -4,14 +4,14 @@ import knowledgebase.core.domain.CollectionProvider
 import knowledgebase.core.domain.InstanceCollection
 
 class InMemoryCollections implements CollectionProvider {
-    private final InMemoryInstanceCollection instanceCollection
+  private final InMemoryInstanceCollection instanceCollection
 
-    def InMemoryCollections() {
-        instanceCollection = new InMemoryInstanceCollection()
-    }
+  def InMemoryCollections() {
+    instanceCollection = new InMemoryInstanceCollection()
+  }
 
-    @Override
-    InstanceCollection getInstanceCollection() {
-        instanceCollection
-    }
+  @Override
+  InstanceCollection getInstanceCollection() {
+    instanceCollection
+  }
 }

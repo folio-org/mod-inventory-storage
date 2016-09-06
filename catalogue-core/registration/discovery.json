@@ -1,5 +1,5 @@
 {
-  "srvcId" : "catalogue-core",
-  "instId" : "localhost-9402",
-  "url" : "http://localhost:9402"
+  "srvcId": "catalogue-core",
+  "instId": "localhost-9402",
+  "url": "http://localhost:9402"
 }

@@ -1,17 +1,21 @@
 {
-  "id" : "catalogue-core",
-  "name" : "Core Catalogue Module",
-  "provides" : [ {
-    "id" : "catalogue-core",
-    "version" : "0.1"
-  } ],
-  "routingEntries" : [
+  "id": "catalogue-core",
+  "name": "Core Catalogue Module",
+  "provides": [
+    {
+      "id": "catalogue-core",
+      "version": "0.1"
+    }
+  ],
+  "routingEntries": [
     {
       "methods": [
-        "GET", "POST"
+        "GET",
+        "POST"
       ],
       "path": "/catalogue",
       "level": "30",
       "type": "request-response"
-    }]
+    }
+  ]
 }

@@ -14,59 +14,59 @@ import java.util.concurrent.CompletableFuture
 
 public class ApiVerticle extends GroovyVerticle {
 
-    private HttpServer server;
+  private HttpServer server;
 
-    public static void deploy(Vertx vertx, CompletableFuture deployed) {
-        vertx.deployVerticle("groovy:catalogue.core.ApiVerticle", { res ->
-            if (res.succeeded()) {
-                deployed.complete(null);
-            } else {
-                deployed.completeExceptionally(res.cause());
-            }
-        });
-    }
+  public static void deploy(Vertx vertx, CompletableFuture deployed) {
+    vertx.deployVerticle("groovy:catalogue.core.ApiVerticle", { res ->
+      if (res.succeeded()) {
+        deployed.complete(null);
+      } else {
+        deployed.completeExceptionally(res.cause());
+      }
+    });
+  }
 
-    public static CompletableFuture<Void> deploy(Vertx vertx) {
-        def deployed = new CompletableFuture()
+  public static CompletableFuture<Void> deploy(Vertx vertx) {
+    def deployed = new CompletableFuture()
 
-        deploy(vertx, deployed)
+    deploy(vertx, deployed)
 
-        deployed
-    }
+    deployed
+  }
 
-    @Override
-    public void start(Future started) {
-        server = vertx.createHttpServer()
+  @Override
+  public void start(Future started) {
+    server = vertx.createHttpServer()
 
-        def router = Router.router(vertx)
+    def router = Router.router(vertx)
 
-        router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
+    router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-        RootResource.register(router)
-        ItemResource.register(router, Storage.collectionProvider.itemCollection)
+    RootResource.register(router)
+    ItemResource.register(router, Storage.collectionProvider.itemCollection)
 
-        server.requestHandler(router.&accept)
-                .listen(9402,
-                { result ->
-                    if (result.succeeded()) {
-                        println "Listening on ${server.actualPort()}"
-                        started.complete();
-                    } else {
-                        started.fail(result.cause());
-                    }
-                })
-    }
+    server.requestHandler(router.&accept)
+      .listen(9402,
+      { result ->
+        if (result.succeeded()) {
+          println "Listening on ${server.actualPort()}"
+          started.complete();
+        } else {
+          started.fail(result.cause());
+        }
+      })
+  }
 
-    @Override
-    public void stop(Future stopped) {
-        println "Stopping catalogue API"
-        server.close({ result ->
-            if (result.succeeded()) {
-                println "Stopped listening on ${server.actualPort()}"
-                stopped.complete();
-            } else {
-                stopped.fail(result.cause());
-            }
-        });
-    }
+  @Override
+  public void stop(Future stopped) {
+    println "Stopping catalogue API"
+    server.close({ result ->
+      if (result.succeeded()) {
+        println "Stopped listening on ${server.actualPort()}"
+        stopped.complete();
+      } else {
+        stopped.fail(result.cause());
+      }
+    });
+  }
 }

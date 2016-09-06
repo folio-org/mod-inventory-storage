@@ -1,14 +1,17 @@
 {
-  "@context" : "http://localhost:9130/knowledge-base/instance/context",
+  "@context": "http://localhost:9130/knowledge-base/instance/context",
   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
   "links": {
     "self": "http://localhost:9401/knowledge-base/instance/cd28da0f-a3e4-465c-82f1-acade4e8e170"
   },
-  "identifiers": [{
-    "namespace": "isbn",
-    "value": "9781466636897"
-  }, {
-    "namespace": "ybp",
-    "value": "1"
-  }]
+  "identifiers": [
+    {
+      "namespace": "isbn",
+      "value": "9781466636897"
+    },
+    {
+      "namespace": "ybp",
+      "value": "1"
+    }
+  ]
 }

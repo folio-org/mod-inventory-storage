@@ -1,4 +1,3 @@
-
 package catalogue.core.api.resource
 
 import io.vertx.core.http.HttpMethod
@@ -9,18 +8,18 @@ import catalogue.core.api.ResourceMap
 import catalogue.core.api.response.JsonResponse
 
 class RootResource {
-    static def register(Router router) {
-        router.route(HttpMethod.GET, ResourceMap.root()).handler(RootResource.&handleRoot)
-    }
+  static def register(Router router) {
+    router.route(HttpMethod.GET, ResourceMap.root()).handler(RootResource.&handleRoot)
+  }
 
-    public static void handleRoot(RoutingContext routingContext) {
-        def links = [:]
+  public static void handleRoot(RoutingContext routingContext) {
+    def links = [:]
 
-        links << ['items' : ResourceMap.itemAbsolute("", routingContext.request())]
+    links << ['items': ResourceMap.itemAbsolute("", routingContext.request())]
 
-        JsonResponse.success(routingContext.response(),
-                new JsonObject()
-                        .put("message", "Welcome to the Folio Catalogue Module")
-                        .put("links", links))
-    }
+    JsonResponse.success(routingContext.response(),
+      new JsonObject()
+        .put("message", "Welcome to the Folio Catalogue Module")
+        .put("links", links))
+  }
 }

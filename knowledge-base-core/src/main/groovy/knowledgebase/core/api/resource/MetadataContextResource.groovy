@@ -6,21 +6,21 @@ import knowledgebase.core.api.ResourceMap
 import knowledgebase.core.api.response.JsonResponse
 
 class MetadataContextResource {
-    public static void register(Router router) {
+  public static void register(Router router) {
 
-        def instanceMetadataRoute = router.route(HttpMethod.GET, ResourceMap.instanceMetadata())
+    def instanceMetadataRoute = router.route(HttpMethod.GET, ResourceMap.instanceMetadata())
 
-        def representation = [:]
+    def representation = [:]
 
-        representation."@context" = [
-            "dcterms": "http://purl.org/dc/terms/",
-            "title": "dcterms:title"
-        ]
+    representation."@context" = [
+      "dcterms": "http://purl.org/dc/terms/",
+      "title"  : "dcterms:title"
+    ]
 
-        instanceMetadataRoute.handler({ routingContext ->
-            JsonResponse.success(routingContext.response(),
-                representation)
-        })
+    instanceMetadataRoute.handler({ routingContext ->
+      JsonResponse.success(routingContext.response(),
+        representation)
+    })
 
-    }
+  }
 }

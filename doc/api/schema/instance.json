@@ -25,15 +25,15 @@
       }
     },
     "links": {
-        "type": "object",
-        "properties": {
-          "self": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "self"
-        ]
+      "type": "object",
+      "properties": {
+        "self": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "self"
+      ]
     }
   },
   "required": [

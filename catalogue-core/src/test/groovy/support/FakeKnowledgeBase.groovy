@@ -16,94 +16,93 @@ import io.vertx.lang.groovy.GroovyVerticle
 import java.util.concurrent.CompletableFuture
 
 class FakeKnowledgeBase extends GroovyVerticle {
-    public static final String address = 'http://localhost:9491/knowledge-base'
+  public static final String address = 'http://localhost:9491/knowledge-base'
 
-    private HttpServer server;
-    private Map<String, JsonObject> instances = [:];
+  private HttpServer server;
+  private Map<String, JsonObject> instances = [:];
 
-    public static void deploy(Vertx vertx, CompletableFuture deployed) {
-        vertx.deployVerticle("groovy:support.FakeKnowledgeBase", { res ->
-            if (res.succeeded()) {
-                deployed.complete(null);
-            } else {
-                deployed.completeExceptionally(res.cause());
-            }
-        });
-    }
+  public static void deploy(Vertx vertx, CompletableFuture deployed) {
+    vertx.deployVerticle("groovy:support.FakeKnowledgeBase", { res ->
+      if (res.succeeded()) {
+        deployed.complete(null);
+      } else {
+        deployed.completeExceptionally(res.cause());
+      }
+    });
+  }
 
-    @Override
-    public void start(Future deployed) {
-        server = vertx.createHttpServer()
+  @Override
+  public void start(Future deployed) {
+    server = vertx.createHttpServer()
 
-        def router = Router.router(vertx)
+    def router = Router.router(vertx)
 
-        router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
+    router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-        router.route('/knowledge-base/instance/*').handler(BodyHandler.create())
+    router.route('/knowledge-base/instance/*').handler(BodyHandler.create())
 
-        def homeRoute = router.route(HttpMethod.GET, '/knowledge-base')
+    def homeRoute = router.route(HttpMethod.GET, '/knowledge-base')
 
-        homeRoute.handler({ routingContext ->
-            def links = [:]
+    homeRoute.handler({ routingContext ->
+      def links = [:]
 
-            links << ['instances' : address + "/instance"]
+      links << ['instances': address + "/instance"]
 
-            JsonResponse.success(routingContext.response(),
-                    new JsonObject()
-                            .put("message", "Welcome to the Folio Knowledge Base")
-                            .put("links", links))
-        });
+      JsonResponse.success(routingContext.response(),
+        new JsonObject()
+          .put("message", "Welcome to the Folio Knowledge Base")
+          .put("links", links))
+    });
 
-        def getInstanceRoute = router.route(HttpMethod.GET, '/knowledge-base/instance/:id')
+    def getInstanceRoute = router.route(HttpMethod.GET, '/knowledge-base/instance/:id')
 
-        getInstanceRoute.handler({ routingContext ->
-            JsonResponse.success(routingContext.response(),
-                    instances[routingContext.request().getParam("id")])
-        });
+    getInstanceRoute.handler({ routingContext ->
+      JsonResponse.success(routingContext.response(),
+        instances[routingContext.request().getParam("id")])
+    });
 
-        def createInstanceRoute = router.route(HttpMethod.POST, '/knowledge-base/instance')
+    def createInstanceRoute = router.route(HttpMethod.POST, '/knowledge-base/instance')
 
-        createInstanceRoute.handler({ routingContext ->
-            def body = getMapFromBody(routingContext)
+    createInstanceRoute.handler({ routingContext ->
+      def body = getMapFromBody(routingContext)
 
-            def id = UUID.randomUUID().toString()
+      def id = UUID.randomUUID().toString()
 
-            instances.put(id, new JsonObject(body))
+      instances.put(id, new JsonObject(body))
 
-            RedirectResponse.created(routingContext.response(),
-                address + "/instance/${id}")
-            })
+      RedirectResponse.created(routingContext.response(),
+        address + "/instance/${id}")
+    })
 
-        server.requestHandler(router.&accept)
-                .listen(9491,
-                { result ->
-                    if (result.succeeded()) {
-                        deployed.complete();
-                    } else {
-                        deployed.fail(result.cause());
-                    }
-                })
-    }
-
-    @Override
-    public void stop(Future stopped) {
-        println "Stopping fake knowledge base"
-        server.close({ result ->
-            if (result.succeeded()) {
-                println "Stopped listening on ${server.actualPort()}"
-                stopped.complete();
-            } else {
-                stopped.fail(result.cause());
-            }
-        });
-    }
-
-    private static def getMapFromBody(RoutingContext routingContext) {
-        if (routingContext.bodyAsString.trim()) {
-            routingContext.getBodyAsJson()
+    server.requestHandler(router.&accept)
+      .listen(9491,
+      { result ->
+        if (result.succeeded()) {
+          deployed.complete();
+        } else {
+          deployed.fail(result.cause());
         }
-        else {
-            new HashMap<String, Object>()
-        }
+      })
+  }
+
+  @Override
+  public void stop(Future stopped) {
+    println "Stopping fake knowledge base"
+    server.close({ result ->
+      if (result.succeeded()) {
+        println "Stopped listening on ${server.actualPort()}"
+        stopped.complete();
+      } else {
+        stopped.fail(result.cause());
+      }
+    });
+  }
+
+  private static def getMapFromBody(RoutingContext routingContext) {
+    if (routingContext.bodyAsString.trim()) {
+      routingContext.getBodyAsJson()
+    } else {
+      new HashMap<String, Object>()
     }
+  }
 }

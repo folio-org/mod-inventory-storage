@@ -5,14 +5,14 @@ import knowledgebase.core.domain.InstanceCollection
 
 class MongoCollections implements CollectionProvider {
 
-    final String databaseName
+  final String databaseName
 
-    def MongoCollections(String databaseName) {
-        this.databaseName = databaseName
-    }
+  def MongoCollections(String databaseName) {
+    this.databaseName = databaseName
+  }
 
-    @Override
-    InstanceCollection getInstanceCollection() {
-        new MongoInstanceCollection(databaseName)
-    }
+  @Override
+  InstanceCollection getInstanceCollection() {
+    new MongoInstanceCollection(databaseName)
+  }
 }
