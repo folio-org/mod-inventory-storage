@@ -32,108 +32,108 @@ class ItemApiExamples extends Specification {
 
   void "Create a new item"() {
     given:
-    World.reset()
+      World.reset()
 
     when:
-    JsonObject existingInstance = new JsonObject()
-      .put("title", "The End of the World Running Club")
-      .put("identifiers", [[namespace: "asin", value: "B00LD69QGO"],
+      JsonObject existingInstance = new JsonObject()
+        .put("title", "The End of the World Running Club")
+        .put("identifiers", [[namespace: "asin", value: "B00LD69QGO"],
                            [namespace: "isbn", value: "1785032666"]]);
 
-    def locationOfInstance = registerInstanceWithFakeKnowledgeBase(existingInstance)
+      def locationOfInstance = registerInstanceWithFakeKnowledgeBase(existingInstance)
 
-    JsonObject newItemRequest = new JsonObject()
-      .put("barcode", "564323765087")
-      .put("instance", locationOfInstance.toString())
+      JsonObject newItemRequest = new JsonObject()
+        .put("barcode", "564323765087")
+        .put("instance", locationOfInstance.toString())
 
-    def locationOfNewItem = createNewItemViaApi(newItemRequest)
+      def locationOfNewItem = createNewItemViaApi(newItemRequest)
 
-    def newItem = HttpClient.get(locationOfNewItem)
+      def newItem = HttpClient.get(locationOfNewItem)
 
     then:
-    assert newItem.title == "The End of the World Running Club"
-    assert newItem.links.instance == locationOfInstance.toString()
-    assert newItem.barcode == "564323765087"
+      assert newItem.title == "The End of the World Running Club"
+      assert newItem.links.instance == locationOfInstance.toString()
+      assert newItem.barcode == "564323765087"
 
-    selfLinkShouldRespectWayResourceWasReached(newItem)
-    selfLinkShouldBeReachable(newItem)
+      selfLinkShouldRespectWayResourceWasReached(newItem)
+      selfLinkShouldBeReachable(newItem)
 
   }
 
   void "Creating a new item with unreachable instance fails"() {
     given:
-    World.reset()
+      World.reset()
 
     when:
-    JsonObject newItemRequest = new JsonObject()
-      .put("barcode", "564323765087")
-      .put("instance", "http://somenonexistingdomain.com/instance/54532344")
+      JsonObject newItemRequest = new JsonObject()
+        .put("barcode", "564323765087")
+        .put("instance", "http://somenonexistingdomain.com/instance/54532344")
 
-    def response = HttpClient.post(World.itemApiRoot(),
-      newItemRequest.encodePrettily())
+      def response = HttpClient.post(World.itemApiRoot(),
+        newItemRequest.encodePrettily())
 
     then:
-    assert response.status == 400
+      assert response.status == 400
   }
 
   void "Find all instances and navigate to them"() {
     given:
-    World.reset()
-    someItems()
+      World.reset()
+      someItems()
 
     when:
-    def itemsFromApi = findAllItems()
+      def itemsFromApi = findAllItems()
 
     then:
-    assert itemsFromApi.size() == 2
+      assert itemsFromApi.size() == 2
 
-    def firstItem = itemsFromApi[0]
-    def secondItem = itemsFromApi[1]
+      def firstItem = itemsFromApi[0]
+      def secondItem = itemsFromApi[1]
 
-    assert firstItem.title == "A Long Way to a Small Angry Planet"
-    assert secondItem.title == "Nod"
+      assert firstItem.title == "A Long Way to a Small Angry Planet"
+      assert secondItem.title == "Nod"
 
-    assert firstItem.barcode != null
-    assert secondItem.barcode != null
+      assert firstItem.barcode != null
+      assert secondItem.barcode != null
 
-    selfLinkShouldRespectWayResourceWasReached(firstItem)
-    selfLinkShouldRespectWayResourceWasReached(secondItem)
+      selfLinkShouldRespectWayResourceWasReached(firstItem)
+      selfLinkShouldRespectWayResourceWasReached(secondItem)
 
-    selfLinkShouldBeReachable(firstItem)
-    selfLinkShouldBeReachable(secondItem)
+      selfLinkShouldBeReachable(firstItem)
+      selfLinkShouldBeReachable(secondItem)
   }
 
   void "Cannot find an unknown item"() {
     given:
-    World.reset()
+      World.reset()
 
     when:
-    def status;
-    HttpClient.getExpectingFailure(World.itemApiRoot().toString() + "/${UUID.randomUUID()}",
-      { resp, body -> status = resp.statusLine })
+      def status;
+      HttpClient.getExpectingFailure(World.itemApiRoot().toString() + "/${UUID.randomUUID()}",
+        { resp, body -> status = resp.statusLine })
 
     then:
-    assert status.toString().contains("404")
+      assert status.toString().contains("404")
   }
 
   void "Find by part of a title"() {
     given:
-    World.reset()
-    someItems()
+      World.reset()
+      someItems()
 
     when:
-    def matchingItems = findItemsByPartialTitle("Long Way")
+      def matchingItems = findItemsByPartialTitle("Long Way")
 
     then:
-    assert matchingItems.size() == 1
+      assert matchingItems.size() == 1
 
-    def onlyItem = matchingItems[0]
+      def onlyItem = matchingItems[0]
 
-    assert onlyItem.title == "A Long Way to a Small Angry Planet"
-    assert onlyItem.barcode != null
+      assert onlyItem.title == "A Long Way to a Small Angry Planet"
+      assert onlyItem.barcode != null
 
-    selfLinkShouldRespectWayResourceWasReached(onlyItem)
-    selfLinkShouldBeReachable(onlyItem)
+      selfLinkShouldRespectWayResourceWasReached(onlyItem)
+      selfLinkShouldBeReachable(onlyItem)
   }
 
   private static findAllItems() {
@@ -159,7 +159,7 @@ class ItemApiExamples extends Specification {
   }
 
   private void selfLinkShouldRespectWayResourceWasReached(instance) {
-    assert instance.links.self.contains(World.apiRoot().toString())
+    assert instance.links.self.contains(World.catalogueApiRoot().toString())
   }
 
   URL createNewItemViaApi(JsonObject itemRequest) {

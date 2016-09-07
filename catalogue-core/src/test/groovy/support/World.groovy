@@ -11,6 +11,7 @@ import static support.HttpClient.get
 
 class World {
   private static vertx
+  public static final testPortToUse = 9402
 
   static reset() {
     Storage.clear()
@@ -22,7 +23,7 @@ class World {
   }
 
   static def startApi() {
-    ApiVerticle.deploy(vertx).join()
+    ApiVerticle.deploy(vertx, ["port": testPortToUse]).join()
   }
 
   static def stopVertx() {
@@ -42,11 +43,12 @@ class World {
   }
 
   static URL itemApiRoot() {
-    new URL(get(World.apiRoot()).links.items)
+    new URL(get(World.catalogueApiRoot()).links.items)
   }
 
-  static URL apiRoot() {
-    def directAddress = new URL('http://localhost:9402/catalogue')
+  static URL catalogueApiRoot() {
+    def directAddress = new URL("http://localhost:${testPortToUse}/catalogue")
+
     def useOkapi = (System.getProperty("okapi.use") ?: "").toBoolean()
 
     useOkapi ? new URL(System.getProperty("okapi.address") + '/catalogue') : directAddress

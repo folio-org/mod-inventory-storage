@@ -23,7 +23,7 @@ public class Launcher {
 
     println "Server Starting"
 
-    ApiVerticle.deploy(vertx).join()
+    ApiVerticle.deploy(vertx, ["port" : Integer.parseInt(System.getProperty("catalogue.api.port"))]).join()
 
     println "Server Started"
   }

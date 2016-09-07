@@ -18,10 +18,10 @@ public class RootExamples extends Specification {
 
   void "Root provides a JSON response"() {
     when:
-    def response = get(World.apiRoot())
+      def response = get(World.catalogueApiRoot())
 
     then:
-    assert response.message == 'Welcome to the Folio Catalogue Module'
+      assert response.message == 'Welcome to the Folio Catalogue Module'
   }
 
 }
