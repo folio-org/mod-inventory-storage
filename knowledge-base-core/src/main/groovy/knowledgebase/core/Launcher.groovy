@@ -19,11 +19,17 @@ public class Launcher {
   }
 
   public static start() {
+    def port = Integer.getInteger("knowledgebase.api.port")
+
+    if(port == null) {
+      println("Warning: No port provided, using default")
+    }
+
     vertx = Vertx.vertx()
 
     println "Server Starting"
 
-    ApiVerticle.deploy(vertx, ["port" : Integer.parseInt(System.getProperty("knowledgebase.api.port"))]).join()
+    ApiVerticle.deploy(vertx, ["port" : port]).join()
 
     println "Server Started"
   }
