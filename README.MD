@@ -124,9 +124,9 @@ Content-Length: 34
 
 Access via Okapi requires passing the X-Okapi-Tenant header (see the Okapi guide above for details).
 
-[http://localhost:9310/knowledge-base](http://localhost:9310/knowledge-base) will go to the root resource for the knowledge base module via Okapi.
+[http://localhost:9130/knowledge-base](http://localhost:9130/knowledge-base) will go to the root resource for the knowledge base module via Okapi.
 
-[http://localhost:9310/catalogue](http://localhost:9310/catalogue) will go to the root resource for the catalogue module via Okapi.
+[http://localhost:9130/catalogue](http://localhost:9130/catalogue) will go to the root resource for the catalogue module via Okapi.
 
 # Running the Tests
 
