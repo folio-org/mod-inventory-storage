@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 
+port=${1:-9401}
+
+discoveryjson=$(cat ./registration/discovery.json)
+
+#execute twice as need to replace two occurrences
+discoveryjson="${discoveryjson/porthere/$port}"
+discoveryjson="${discoveryjson/porthere/$port}"
+
+echo "${discoveryjson}"
+
 curl -w '\n' -X POST -D -   \
      -H "Content-type: application/json"   \
-     -d @./registration/discovery.json \
+     -d "${discoveryjson}" \
      http://localhost:9130/_/discovery/modules
 
 curl -w '\n' -D - -s \
