@@ -9,11 +9,12 @@ import static support.HttpClient.get
 public class RootExamples extends Specification {
 
   def setupSpec() {
+    World.startVertx()
     World.startApi()
   }
 
   def cleanupSpec() {
-    World.stopApi()
+    World.stopVertx()
   }
 
   void "Root provides a JSON response"() {

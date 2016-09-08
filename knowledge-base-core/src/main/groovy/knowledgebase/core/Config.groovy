@@ -1,5 +1,17 @@
 package knowledgebase.core
 
 class Config {
-  final static apiBaseAddress = 'http://localhost:9401/'
+  private static Integer port;
+
+  static Integer getPort() {
+    port
+  }
+
+  static String getApiBaseAddress() {
+    "http://localhost:${port}/"
+  }
+
+  static def initialiseFrom(Map<String, Object> map) {
+    port = map.port
+  }
 }

@@ -17,8 +17,8 @@ public class ApiVerticle extends GroovyVerticle {
 
   private HttpServer server;
 
-  public static void deploy(Vertx vertx, CompletableFuture deployed) {
-    vertx.deployVerticle("groovy:knowledgebase.core.ApiVerticle", { res ->
+  public static void deploy(Vertx vertx, Map options, CompletableFuture deployed) {
+    vertx.deployVerticle("groovy:knowledgebase.core.ApiVerticle", ["config" : options], { res ->
       if (res.succeeded()) {
         deployed.complete(null);
       } else {
@@ -27,17 +27,18 @@ public class ApiVerticle extends GroovyVerticle {
     });
   }
 
-  public static CompletableFuture<Void> deploy(Vertx vertx) {
+  public static CompletableFuture<Void> deploy(Vertx vertx, Map config) {
     def deployed = new CompletableFuture()
 
-    deploy(vertx, deployed)
+    deploy(vertx, config, deployed)
 
     deployed
   }
 
   @Override
-  public void start(Future deployed) {
-    server = vertx.createHttpServer()
+  public void start(Future started) {
+
+    Config.initialiseFrom(vertx.getOrCreateContext().config())
 
     def router = Router.router(vertx)
 
@@ -47,23 +48,28 @@ public class ApiVerticle extends GroovyVerticle {
     MetadataContextResource.register(router)
     InstanceResource.register(router, Storage.collectionProvider.instanceCollection)
 
-    server.requestHandler(router.&accept)
-      .listen(9401,
-      { result ->
-        if (result.succeeded()) {
-          printf "Listening on %s \n", server.actualPort()
-          deployed.complete();
-        } else {
-          deployed.fail(result.cause());
-        }
-      })
+    server = vertx.createHttpServer()
+
+    def handler = { result ->
+      if (result.succeeded()) {
+        println "Listening on ${server.actualPort()}"
+        started.complete();
+      } else {
+        started.fail(result.cause());
+      }
+    }
+
+    server = vertx.createHttpServer()
+
+    server.requestHandler(router.&accept).listen(Config.port ?: 9401, handler)
   }
 
   @Override
   public void stop(Future stopped) {
+    println "Stopping knowledge base API"
     server.close({ result ->
       if (result.succeeded()) {
-        println "Stopped listening"
+        println "Stopped listening on ${server.actualPort()}"
         stopped.complete();
       } else {
         stopped.fail(result.cause());

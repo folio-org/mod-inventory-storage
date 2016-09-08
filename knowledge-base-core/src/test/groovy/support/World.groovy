@@ -1,5 +1,7 @@
 package support
 
+import io.vertx.groovy.core.Vertx
+import knowledgebase.core.ApiVerticle
 import knowledgebase.core.Launcher
 import knowledgebase.core.storage.Storage
 
@@ -9,16 +11,36 @@ import java.util.concurrent.TimeUnit
 import static support.HttpClient.get
 
 class World {
+  private static vertx
+  public static final testPortToUse = 9401
+
   static reset() {
     Storage.clear()
   }
 
-  static def startApi() {
-    Launcher.start()
+  static def startVertx() {
+    vertx = Vertx.vertx()
+    vertx
   }
 
-  static def stopApi() {
-    Launcher.stop()
+  static def startApi() {
+    ApiVerticle.deploy(vertx, ["port": testPortToUse]).join()
+  }
+
+  static def stopVertx() {
+    if (vertx != null) {
+      def stopped = new CompletableFuture()
+
+      vertx.close({ res ->
+        if (res.succeeded()) {
+          stopped.complete(null);
+        } else {
+          stopped.completeExceptionally(res.cause());
+        }
+      })
+
+      stopped.join()
+    }
   }
 
   static URL instanceApiRoot() {
@@ -26,7 +48,8 @@ class World {
   }
 
   static URL apiRoot() {
-    def directAddress = new URL('http://localhost:9401/knowledge-base')
+    def directAddress = new URL("http://localhost:${testPortToUse}/knowledge-base")
+
     def useOkapi = (System.getProperty("okapi.use") ?: "").toBoolean()
 
     useOkapi ? new URL(System.getProperty("okapi.address") + '/knowledge-base') : directAddress

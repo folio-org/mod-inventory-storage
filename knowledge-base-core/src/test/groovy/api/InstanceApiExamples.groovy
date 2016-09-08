@@ -17,11 +17,12 @@ import javax.print.Doc
 class InstanceApiExamples extends Specification {
 
   def setupSpec() {
+    World.startVertx()
     World.startApi()
   }
 
   def cleanupSpec() {
-    World.stopApi()
+    World.stopVertx()
   }
 
   void "Create a new instance"() {
