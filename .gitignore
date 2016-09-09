@@ -7,3 +7,4 @@ metrics/
 *.log
 doc/api/generated/
 node_modules/
+/stop-demo.sh

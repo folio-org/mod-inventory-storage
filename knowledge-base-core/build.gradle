@@ -30,7 +30,13 @@ task testApiViaOkapi(type: Test) {
   include '**/api/**'
 
   systemProperty 'okapi.use', 'true'
-  systemProperty 'okapi.address', 'http://localhost:9130'
+
+  if(System.getProperty('okapi.address') == null) {
+    systemProperty 'okapi.address', 'http://localhost:9130'
+  }
+  else {
+    systemProperty 'okapi.address', System.getProperty('okapi.address')
+  }
 }
 
 jar {

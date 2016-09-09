@@ -148,7 +148,11 @@ Use `gradle testApiViaOkapi` to run the API tests only via Okapi Proxy.
 
 The script sets up the test tenant and registers the modules with Okapi, so only need to ensure that Okapi is running prior to running it.
 
-Use `source full-test.sh` to set up the test tenant, register the modules and run the suite of tests both directly and via Okapi.
+Use `./full-test.sh` to set up the test tenant, register the modules and run the suite of tests both directly and via Okapi.
+
+An optional parameter can be provided (either the host name or ip address) in order to use a different address to initially contact Okapi.
+
+This can be used (often in conjunction with the start-okapi.sh script), in order to use an address other than localhost (At the moment this registration scripts assume that Okapi is also reachable via localhost, so this currently only works for additional addresses rather than a remote Okapi). 
 
 # Demo User Interface
 

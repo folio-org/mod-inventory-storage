@@ -20,3 +20,4 @@ java  \
       -Dokapiurl="${okapi_proxy_address}" \
       -Dloglevel=DEBUG \
       -jar ./okapi-core/target/okapi-core-fat.jar dev
+

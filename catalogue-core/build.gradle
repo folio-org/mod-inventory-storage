@@ -20,6 +20,12 @@ dependencies {
 
 }
 
+//task printProps << {
+//  println "Okapi Address (via property): " + project.findProperty('okapi.address')
+//  println "Okapi Address (via system property): " + System.getProperty('okapi.address')
+//  println "System property set:" + System.hasProperty('okapi.address')
+//}
+
 task testApiDirect(type: Test) {
   include '**/api/**'
 }
@@ -28,7 +34,13 @@ task testApiViaOkapi(type: Test) {
   include '**/api/**'
 
   systemProperty 'okapi.use', 'true'
-  systemProperty 'okapi.address', 'http://localhost:9130'
+
+  if(System.getProperty('okapi.address') == null) {
+    systemProperty 'okapi.address', 'http://localhost:9130'
+  }
+  else {
+    systemProperty 'okapi.address', System.getProperty('okapi.address')
+  }
 }
 
 jar {

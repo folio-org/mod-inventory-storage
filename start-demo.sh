@@ -7,7 +7,7 @@ catalogueport=${2:-9402}
 
 ./register.sh ${kbport} ${catalogueport}
 
-./start-with-sample-data.sh ${kbport} ${catalogueport}
+./start-registered.sh ${kbport} ${catalogueport}
 
 cd demo/ui
 

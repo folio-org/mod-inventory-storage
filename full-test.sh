@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
-kbport=${1:-9601}
-catalogueport=${2:-9602}
+okapiaddress=${1:-localhost}
+kbport=${2:-9601}
+catalogueport=${3:-9602}
 
 ./create-tenant.sh
 
 ./register.sh ${kbport} ${catalogueport}
 
-gradle clean test testApiViaOkapi
+gradle -Dokapi.address="http://${okapiaddress}:9130" clean test testApiViaOkapi
 
 ./unregister.sh ${kbport} ${catalogueport}
 
