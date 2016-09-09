@@ -30,8 +30,21 @@ class ResourceMap {
   }
 
   private static String appendToAbsolute(HttpServerRequest request, String path) {
+    absoluteRoot(request) + path
+  }
+
+  private static String absoluteRoot(HttpServerRequest request) {
     def okapiLocation = request.getHeader("X-Okapi-Url");
 
-    (okapiLocation ?: Config.apiBaseAddress) + path
+    appendTrailingSlash(okapiLocation ?: Config.apiBaseAddress)
+  }
+
+  private static String appendTrailingSlash(String host) {
+    if(host[-1] != '/') {
+      host + '/'
+    }
+    else {
+      host
+    }
   }
 }
