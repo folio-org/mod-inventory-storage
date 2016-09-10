@@ -21,6 +21,7 @@ This readme is intended to get these modules up and running. For further informa
 - Node 6.4.0 (for the demo UI)
 - NPM 3.10.3 (for the demo UI and documentation generation)
 - SDKMan (http://sdkman.io/, recommended for installing Gradle and Groovy)
+- Docker 1.12
 
 # Preparation
 
