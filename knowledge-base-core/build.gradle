@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
 
-mainClassName = "knowledgebase.core.Launcher"
+mainClassName = "org.folio.knowledgebase.core.Launcher"
 
 repositories {
   mavenCentral()

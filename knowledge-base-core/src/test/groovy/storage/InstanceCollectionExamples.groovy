@@ -1,9 +1,9 @@
 package storage
 
-import knowledgebase.core.domain.Instance
-import knowledgebase.core.domain.InstanceCollection
-import knowledgebase.core.storage.memory.InMemoryInstanceCollection
-import knowledgebase.core.storage.mongo.MongoInstanceCollection
+import org.folio.knowledgebase.core.domain.Instance
+import org.folio.knowledgebase.core.domain.InstanceCollection
+import org.folio.knowledgebase.core.storage.memory.InMemoryInstanceCollection
+import org.folio.knowledgebase.core.storage.mongo.MongoInstanceCollection
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

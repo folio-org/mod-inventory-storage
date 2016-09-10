@@ -4,15 +4,13 @@ import com.github.jsonldjava.core.DocumentLoader
 import com.github.jsonldjava.core.JsonLdOptions
 import com.github.jsonldjava.core.JsonLdProcessor
 import io.vertx.core.json.JsonObject
-import knowledgebase.core.domain.Instance
-import knowledgebase.core.storage.Storage
+import org.folio.knowledgebase.core.domain.Instance
+import org.folio.knowledgebase.core.storage.Storage
 import org.apache.http.impl.client.cache.CachingHttpClientBuilder
 import org.apache.http.message.BasicHeader
 import spock.lang.Specification
 import support.HttpClient
 import support.World
-
-import javax.print.Doc
 
 class InstanceApiExamples extends Specification {
 

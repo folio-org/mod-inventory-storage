@@ -1,9 +1,8 @@
 package support
 
 import io.vertx.groovy.core.Vertx
-import knowledgebase.core.ApiVerticle
-import knowledgebase.core.Launcher
-import knowledgebase.core.storage.Storage
+import org.folio.knowledgebase.core.ApiVerticle
+import org.folio.knowledgebase.core.storage.Storage
 
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
