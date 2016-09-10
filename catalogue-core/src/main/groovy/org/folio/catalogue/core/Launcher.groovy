@@ -1,4 +1,4 @@
-package catalogue.core
+package org.folio.catalogue.core
 
 import io.vertx.groovy.core.Vertx
 

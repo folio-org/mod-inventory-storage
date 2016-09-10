@@ -1,4 +1,4 @@
-package catalogue.core.storage.memory
+package org.folio.catalogue.core.storage.memory
 
 //TODO: truly asynchronous implementation
 class InMemoryCollection<T> {

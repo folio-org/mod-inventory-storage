@@ -1,6 +1,6 @@
-package catalogue.core.api
+package org.folio.catalogue.core.api
 
-import catalogue.core.Config
+import org.folio.catalogue.core.Config
 import io.vertx.groovy.core.http.HttpServerRequest
 
 class ResourceMap {

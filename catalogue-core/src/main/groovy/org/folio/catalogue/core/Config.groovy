@@ -1,4 +1,4 @@
-package catalogue.core
+package org.folio.catalogue.core
 
 class Config {
   private static Integer port;

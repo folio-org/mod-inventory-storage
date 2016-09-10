@@ -1,7 +1,7 @@
 package api
 
-import catalogue.core.domain.Item
-import catalogue.core.storage.Storage
+import org.folio.catalogue.core.domain.Item
+import org.folio.catalogue.core.storage.Storage
 import io.vertx.core.json.JsonObject
 import spock.lang.Specification
 import support.FakeKnowledgeBase

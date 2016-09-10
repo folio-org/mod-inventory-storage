@@ -1,7 +1,7 @@
 package support
 
-import catalogue.core.ApiVerticle
-import catalogue.core.storage.Storage
+import org.folio.catalogue.core.ApiVerticle
+import org.folio.catalogue.core.storage.Storage
 import io.vertx.groovy.core.Vertx
 
 import java.util.concurrent.CompletableFuture

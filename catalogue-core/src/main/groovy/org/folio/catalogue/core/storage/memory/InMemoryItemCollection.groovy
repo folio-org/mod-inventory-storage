@@ -1,7 +1,7 @@
-package catalogue.core.storage.memory
+package org.folio.catalogue.core.storage.memory
 
-import catalogue.core.domain.Item
-import catalogue.core.domain.ItemCollection
+import org.folio.catalogue.core.domain.Item
+import org.folio.catalogue.core.domain.ItemCollection
 
 import java.util.regex.Pattern
 

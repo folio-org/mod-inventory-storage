@@ -1,4 +1,4 @@
-package catalogue.core.api.response
+package org.folio.catalogue.core.api.response
 
 import io.vertx.core.json.Json
 

@@ -1,8 +1,8 @@
 package support
 
-import catalogue.core.api.response.JsonResponse
-import catalogue.core.api.response.RedirectResponse
-import catalogue.core.support.WebRequestDiagnostics
+import org.folio.catalogue.core.api.response.JsonResponse
+import org.folio.catalogue.core.api.response.RedirectResponse
+import org.folio.catalogue.core.support.WebRequestDiagnostics
 import io.vertx.core.Future
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject

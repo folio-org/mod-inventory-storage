@@ -1,8 +1,8 @@
-package catalogue.core.api.representation
+package org.folio.catalogue.core.api.representation
 
-import catalogue.core.domain.Item
+import org.folio.catalogue.core.domain.Item
 import io.vertx.groovy.core.http.HttpServerRequest
-import catalogue.core.api.ResourceMap
+import org.folio.catalogue.core.api.ResourceMap
 
 class ItemRepresentation {
   static toMap(Item item, HttpServerRequest request) {

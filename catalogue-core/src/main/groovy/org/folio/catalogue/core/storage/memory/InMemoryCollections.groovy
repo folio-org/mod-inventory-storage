@@ -1,7 +1,7 @@
-package catalogue.core.storage.memory
+package org.folio.catalogue.core.storage.memory
 
-import catalogue.core.domain.CollectionProvider
-import catalogue.core.domain.ItemCollection
+import org.folio.catalogue.core.domain.CollectionProvider
+import org.folio.catalogue.core.domain.ItemCollection
 
 class InMemoryCollections implements CollectionProvider {
   private final InMemoryItemCollection instanceCollection

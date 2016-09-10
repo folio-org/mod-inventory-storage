@@ -1,13 +1,13 @@
 package storage
 
-import catalogue.core.domain.Item
+import org.folio.catalogue.core.domain.Item
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
-import catalogue.core.domain.ItemCollection
-import catalogue.core.storage.memory.InMemoryItemCollection
+import org.folio.catalogue.core.domain.ItemCollection
+import org.folio.catalogue.core.storage.memory.InMemoryItemCollection
 import support.World
 
 import java.util.concurrent.CompletableFuture

@@ -1,8 +1,8 @@
-package catalogue.core.storage
+package org.folio.catalogue.core.storage
 
-import catalogue.core.domain.CollectionProvider
-import catalogue.core.domain.ItemCollection
-import catalogue.core.storage.memory.InMemoryCollections
+import org.folio.catalogue.core.storage.memory.InMemoryCollections
+import org.folio.catalogue.core.domain.CollectionProvider
+import org.folio.catalogue.core.domain.ItemCollection
 
 class Storage {
   private static CollectionProvider collectionProvider = new InMemoryCollections()

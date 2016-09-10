@@ -1,18 +1,17 @@
-package catalogue.core.api.resource
-
-import catalogue.core.api.ResourceMap
-import catalogue.core.api.representation.ItemRepresentation
-import catalogue.core.api.response.ClientErrorResponse
-import catalogue.core.api.response.JsonResponse
-import catalogue.core.api.response.RedirectResponse
-import catalogue.core.domain.Item
-import catalogue.core.domain.ItemCollection
+package org.folio.catalogue.core.api.resource
 
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
+import org.folio.catalogue.core.api.ResourceMap
+import org.folio.catalogue.core.api.representation.ItemRepresentation
+import org.folio.catalogue.core.api.response.ClientErrorResponse
+import org.folio.catalogue.core.api.response.JsonResponse
+import org.folio.catalogue.core.api.response.RedirectResponse
+import org.folio.catalogue.core.domain.Item
+import org.folio.catalogue.core.domain.ItemCollection
 
 class ItemResource {
 
