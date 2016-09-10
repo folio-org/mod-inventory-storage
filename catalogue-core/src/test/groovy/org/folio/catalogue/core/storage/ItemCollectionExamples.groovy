@@ -1,4 +1,4 @@
-package storage
+package org.folio.catalogue.core.storage
 
 import org.folio.catalogue.core.domain.Item
 import org.junit.Before
