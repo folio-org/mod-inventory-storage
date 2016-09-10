@@ -55,6 +55,7 @@ public class ApiVerticle extends GroovyVerticle {
     def handler = { result ->
       if (result.succeeded()) {
         println "Listening on ${server.actualPort()}"
+        println(Config.toString())
         started.complete();
       } else {
         started.fail(result.cause());

@@ -1,4 +1,4 @@
-package storage
+package org.folio.knowledgebase.core.storage
 
 import org.folio.knowledgebase.core.domain.Instance
 import org.folio.knowledgebase.core.domain.InstanceCollection
@@ -48,8 +48,6 @@ class InstanceCollectionExamples {
     collection.add(new Instance("Uprooted"))
 
     collection.empty()
-
-    assert true
 
     assert collection.findAll().size() == 0
   }
