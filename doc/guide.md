@@ -8,7 +8,7 @@ This guide is intended to provide an introduction to the capabilities of the var
 
 Many of the resources provided by these modules use links to express relationships with other resources (including themselves).
 
-They are represented by an links object, where the name of each field is the relationship and the value the absolute URL to that resource.
+They are represented by a links object, where the name of each field is the relationship and the value the absolute URL to that resource.
 
 For example, the root of the knowledge base core module provides something similar to:
 
@@ -28,7 +28,7 @@ In order to know what kind of resource to expect when following a link, known re
 
 | Relationship | Description | Notes |
 |:------------:|-------------|----------|
-| `self` | How another party can refer to this resource | Required by all none root resources |
+| `self` | How another party can refer to this resource | Required by all non-root resources |
 | `instances` | Refers to the collection of instance resources, used for searching for and creating new instances ||
 | `items` | Refers to the collection of item resources, used for searching for and creating new items ||
 | `instance` | Refers to the instance an item is based upon ||

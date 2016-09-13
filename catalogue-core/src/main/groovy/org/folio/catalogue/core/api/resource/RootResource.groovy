@@ -19,7 +19,7 @@ class RootResource {
 
     JsonResponse.success(routingContext.response(),
       new JsonObject()
-        .put("message", "Welcome to the Folio Catalogue Module")
+        .put("message", "Welcome to the FOLIO Catalogue Module")
         .put("links", links))
   }
 }
