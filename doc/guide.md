@@ -8,7 +8,7 @@ This guide is intended to provide an introduction to the capabilities of the var
 
 Many of the resources provided by these modules use links to express relationships with other resources (including themselves).
 
-They are represented by an links object, where the name of each field is the relationship and the value the absolute URL to that resource. 
+They are represented by an links object, where the name of each field is the relationship and the value the absolute URL to that resource.
 
 For example, the root of the knowledge base core module provides something similar to:
 
@@ -43,4 +43,4 @@ With the modules running, this can be imported by running `./create-sample-data.
 
 API documentation is provided in the form of RAML and JSON.Schema files in the doc/api directory.
 
-This can be used to generate HTML and Markdown documentation (in doc/api/generated), by running `./generate-documentation` from the root directory. 
+This can be used to generate HTML and Markdown documentation (in doc/api/generated), by running `./generate-documentation` from the root directory.

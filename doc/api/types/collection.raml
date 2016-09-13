@@ -1,5 +1,5 @@
-#the raml making use of this collection must include the following 
-#traits: 
+#the raml making use of this collection must include the following
+#traits:
 # - orderable: !include traits/orderable.raml
 # - pageable:  !include traits/pageable.raml
 # - searchable: !include traits/searchable.raml
@@ -8,7 +8,7 @@
       is: [secured, language]
 
       get:
-        description: Retrieve a list of <<resourcePathName|!singularize>> items.     
+        description: Retrieve a list of <<resourcePathName|!singularize>> items.
         responses:
           200:
             description: "Returns a list of <<resourcePathName|!singularize>> items"
@@ -54,4 +54,3 @@
               text/plain:
                 example: "Internal server error, contact administrator"
 
- 

@@ -34,7 +34,7 @@ run `gradle build` from the root directory
 
 Run `./start.sh` from the root directory. To stop them, run `./stop.sh` from the root directory.
 
-# Using the Modules 
+# Using the Modules
 
 ## Standalone
 
@@ -154,7 +154,7 @@ Use `source full-test.sh` to set up the test tenant, register the modules and ru
 
 There is a basic demo user interface provided, which allows for searching instances by partial title.
 
-This demo requires Node and NPM to be installed. 
+This demo requires Node and NPM to be installed.
 
 Use ```./start-demo.sh``` and ```./stop-demo.sh``` to start and stop the modules, set up some sample data, prepare Okapi and run the UI (this installs a few npmrelated modules globally).
 
