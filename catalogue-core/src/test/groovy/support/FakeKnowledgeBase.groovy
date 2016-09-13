@@ -50,7 +50,7 @@ class FakeKnowledgeBase extends GroovyVerticle {
 
       JsonResponse.success(routingContext.response(),
         new JsonObject()
-          .put("message", "Welcome to the Folio Knowledge Base")
+          .put("message", "Welcome to the FOLIO Knowledge Base")
           .put("links", links))
     });
 

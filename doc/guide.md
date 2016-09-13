@@ -1,6 +1,6 @@
 # Introduction
 
-This guide is intended to provide an introduction to the capabilities of the various Folio compatible Knowledge Base and Cataloguing modules provided here.
+This guide is intended to provide an introduction to the capabilities of the various FOLIO compatible Knowledge Base and Cataloguing modules provided here.
 
 # General
 
@@ -14,7 +14,7 @@ For example, the root of the knowledge base core module provides something simil
 
 ```
 {
-  "message" : "Welcome to the Folio Knowledge Base",
+  "message" : "Welcome to the FOLIO Knowledge Base",
   "links" : {
     "instances" : "http://localhost:9130/knowledge-base/instance"
   }

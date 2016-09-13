@@ -21,7 +21,7 @@ public class RootExamples extends Specification {
       def response = get(World.catalogueApiRoot())
 
     then:
-      assert response.message == 'Welcome to the Folio Catalogue Module'
+      assert response.message == 'Welcome to the FOLIO Catalogue Module'
   }
 
 }
