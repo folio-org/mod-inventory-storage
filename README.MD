@@ -50,7 +50,7 @@ Run the modules (see above).
 
 Run the modules (see above).
 
-Make sure that [Okapi](https://github.com/folio-org/okapi) is running on it's default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for details) for details).
+Make sure that [Okapi](https://github.com/folio-org/okapi) is running on it's default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for details).
 
 ### Preparing a Tenant
 
