@@ -6,11 +6,11 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 #Goal
 
-Folio compatible Knowledge Base and Cataloguing module suite.
+FOLIO compatible Knowledge Base and Cataloguing module suite.
 
 # Further Documentation
 
-This readme is intended to get these modules up and running, for further information on what they do, see the [guide](doc/guide.md)
+This readme is intended to get these modules up and running. For further information on what they do, see the [guide](doc/guide.md)
 
 # Prerequisites
 
@@ -34,11 +34,11 @@ run `gradle build` from the root directory
 
 Run `./start.sh` from the root directory. To stop them, run `./stop.sh` from the root directory.
 
-# Using the Modules 
+# Using the Modules
 
 ## Standalone
 
-Run the modules (see above)
+Run the modules (see above).
 
 ### Root Address
 
@@ -48,9 +48,9 @@ Run the modules (see above)
 
 ## With Okapi
 
-Run the modules (see above)
+Run the modules (see above).
 
-Make sure that [Okapi](https://github.com/folio-org/okapi) is running on it's default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for details) for details).
+Make sure that [Okapi](https://github.com/folio-org/okapi) is running on it's default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for details).
 
 ### Preparing a Tenant
 
@@ -130,9 +130,9 @@ Access via Okapi requires passing the X-Okapi-Tenant header (see the Okapi guide
 
 # Running the Tests
 
-The tests can either be run direct or via Okapi (not all tests are affected by this).
+The tests can either be run directly or via Okapi (not all tests are affected by this).
 
-The modules should not be started before running the tests, the tests start an instance during setup.
+The modules should not be started before running the tests. The tests start an instance during setup.
 
 ## Direct
 
@@ -154,7 +154,7 @@ Use `source full-test.sh` to set up the test tenant, register the modules and ru
 
 There is a basic demo user interface provided, which allows for searching instances by partial title.
 
-This demo requires Node and NPM to be installed. 
+This demo requires Node and NPM to be installed.
 
-Use ```./start-demo.sh``` and ```./stop-demo.sh``` to start and stop the modules, set up some sample data, prepare Okapi and run the UI (this installs a few npmrelated modules globally).
+Use ```./start-demo.sh``` and ```./stop-demo.sh``` to start and stop the modules, set up some sample data, prepare Okapi and run the UI (this installs a few NPM-related modules globally).
 

@@ -1,5 +1,5 @@
-#the raml making use of this collection must include the following 
-#traits: 
+#the raml making use of this collection must include the following
+#traits:
 # - orderable: !include traits/orderable.raml
 # - pageable:  !include traits/pageable.raml
 # - searchable: !include traits/searchable.raml
@@ -8,7 +8,7 @@
       is: [secured, language]
 
       get:
-        description: Retrieve a list of <<resourcePathName|!singularize>> items.     
+        description: Retrieve a list of <<resourcePathName|!singularize>> items.
         responses:
           200:
             description: "Returns a list of <<resourcePathName|!singularize>> items"
@@ -17,12 +17,12 @@
                 schema: <<schemaCollection>>
                 example: <<exampleCollection>>
           400:
-            description: "Bad request, e.g malformed request body or query parameter. Details of the error (e.g name of the parameter or line/character number with malformed data) provided in the response."
+            description: "Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response."
             body:
               text/plain:
                 example: "unable to list <<resourcePathName>> -- malformed parameter 'query', syntax error at column 6"
           500:
-            description: "Internal server error, e.g due to misconfiguration"
+            description: "Internal server error, e.g. due to misconfiguration"
             body:
               text/plain:
                 example: "internal server error, contact administrator"
@@ -54,4 +54,3 @@
               text/plain:
                 example: "Internal server error, contact administrator"
 
- 

@@ -22,7 +22,7 @@ public class RootExamples extends Specification {
     def response = get(World.apiRoot())
 
     then:
-    assert response.message == 'Welcome to the Folio Knowledge Base'
+    assert response.message == 'Welcome to the FOLIO Knowledge Base'
     assert response.links.instances.contains(World.apiRoot().toString())
     assert canGet(response.links.instances)
   }

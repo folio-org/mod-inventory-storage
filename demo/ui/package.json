@@ -8,12 +8,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/folio-org/metadata.git"
+    "url": "git+https://github.com/folio-org/mod-metadata.git"
   },
   "author": "Marc Johnson",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/folio-org/metadata/issues"
+    "url": "https://github.com/folio-org/mod-metadata/issues"
   },
   "babel": {
     "presets": [
@@ -21,7 +21,7 @@
       "react"
     ]
   },
-  "homepage": "https://github.com/folio-org/metadata#readme",
+  "homepage": "https://github.com/folio-org/mod-metadata#readme",
   "devDependencies": {
     "babel-core": "^6.14.0",
     "babel-loader": "^6.2.5",
