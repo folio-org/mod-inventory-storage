@@ -2,6 +2,8 @@
 FOLIO Metadata Module Suite Contributors (sorted by surname)
 =============================================================
 
+* **[Filipe Bento](https://github.com/fmbento)
+
 * **[David Crossley](https://github.com/dcrossleyau)**
 
 * **[Marc Johnson](https://github.com/marc-johnson)**
