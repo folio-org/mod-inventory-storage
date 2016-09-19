@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-kbport=${1:-9401}
-catalogueport=${2:-9402}
+knowledgebase_root_address=${1:-http://localhost:9130/knowledge-base}
+catalogue_root_address=${2:-http://localhost:9130/catalogue}
 
 cd knowledge-base-core/sample-data
 
-./import.sh ${kbport}
+./import.sh ${knowledgebase_root_address}
 
 cd ../..
 
 cd catalogue-core/sample-data
 
-./import.sh ${catalogueport} ${kbport}
+./import.sh ${catalogue_root_address} ${knowledgebase_root_address}
 
 cd ../..
 

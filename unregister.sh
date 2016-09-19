@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-kbport=${1:-9401}
-catalogueport=${2:-9402}
+knowledgebase_instance_id=${1:-localhost-9401}
+catalogue_instance_id=${2:-localhost-9402}
 
 cd knowledge-base-core
 
-./unregister.sh ${kbport}
+./unregister.sh ${knowledgebase_instance_id}
 
 cd ..
 
 cd catalogue-core
 
-./unregister.sh ${catalogueport}
+./unregister.sh ${catalogue_instance_id}
 
 cd ..
 

@@ -1,5 +1,5 @@
 {
   "srvcId": "catalogue-core",
-  "instId": "localhost-porthere",
-  "url": "http://localhost:porthere"
+  "instId": "instanceidhere",
+  "url": "directaddresshere"
 }

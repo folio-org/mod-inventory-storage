@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-kbport=${1:-9401}
-catalogueport=${2:-9402}
+okapi_proxy_address=${1:-http://localhost:9130}
+
+knowledgebase_direct_address=${2:-http://localhost:9401}
+catalogue_direct_address=${3:-http://localhost:9402}
 
 ./create-tenant.sh
 
-./register.sh ${kbport} ${catalogueport}
+./register.sh ${knowledgebase_direct_address} ${catalogue_direct_address}
 
-./start-with-sample-data.sh ${kbport} ${catalogueport}
+./start-docker.sh
 

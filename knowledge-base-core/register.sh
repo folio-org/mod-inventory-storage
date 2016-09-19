@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
 
-port=${1:-9401}
+knowledgebase_direct_address=${1:-http://localhost:9401/knowledge-base}
+knowledge_base_instance_id=${2:-localhost-9401}
+okapi_proxy_address=${3:-http://localhost:9130}
 
-discoveryjson=$(cat ./registration/discovery.json)
+discovery_json=$(cat ./registration/discovery.json)
 
-#execute twice as need to replace two occurrences
-discoveryjson="${discoveryjson/porthere/$port}"
-discoveryjson="${discoveryjson/porthere/$port}"
+discovery_json="${discovery_json/directaddresshere/$knowledgebase_direct_address}"
+discovery_json="${discovery_json/instanceidhere/$knowledge_base_instance_id}"
 
-echo "${discoveryjson}"
+echo "${discovery_json}"
 
 curl -w '\n' -X POST -D -   \
      -H "Content-type: application/json"   \
-     -d "${discoveryjson}" \
-     http://localhost:9130/_/discovery/modules
+     -d "${discovery_json}" \
+     "${okapi_proxy_address}/_/discovery/modules"
 
 curl -w '\n' -D - -s \
      -X POST \
      -H "Content-type: application/json" \
      -d @./registration/proxy.json  \
-     http://localhost:9130/_/proxy/modules
+     "${okapi_proxy_address}/_/proxy/modules"
 
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
      -d @./registration/activate.json  \
-     http://localhost:9130/_/proxy/tenants/our/modules
-
+     "${okapi_proxy_address}/_/proxy/tenants/our/modules"

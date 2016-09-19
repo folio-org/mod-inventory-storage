@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-kbport=${1:-9401}
-catalogueport=${2:-9402}
+okapi_proxy_address=${1:-http://localhost:9130}
 
-./start-registered.sh ${kbport} ${catalogueport}
+./start-with-sample-data.sh ${okapi_proxy_address}
 
 cd demo/ui
 

@@ -1,5 +1,5 @@
 {
   "srvcId": "knowledge-base-core",
-  "instId": "localhost-porthere",
-  "url": "http://localhost:porthere"
+  "instId": "instanceidhere",
+  "url": "directaddresshere"
 }

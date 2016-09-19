@@ -1,38 +1,42 @@
 #!/usr/bin/env bash
 
-catalogueport=${1:-9402}
-kbport=${2:-9401}
+catalogue_root_address=${1:-http://localhost:9130/catalogue}
+knowledgebase_root_address=${2:-http://localhost:9130/knowledge-base}
 
-createinstanceoutput=$(curl -w '\n' -X POST -D - \
+create_instance_output=$(curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
+     -H "X-Okapi-Tenant: our" \
      -d @./nod-instance.json \
-     http://localhost:${kbport}/knowledge-base/instance)
+     "${knowledgebase_root_address}/instance")
 
-instancelocation=$(echo "${createinstanceoutput}" | tr -d '\r' | sed -En 's/^Location: (.*)/\1/p')
+instance_location=$(echo "${create_instance_output}" | tr -d '\r' | sed -En 's/^Location: (.*)/\1/p')
 
-createitemjson=$(cat ./nod-item.json)
+create_item_json=$(cat ./nod-item.json)
 
-createitemjson="${createitemjson/InstanceLocationHere/$instancelocation}"
+create_item_json="${create_item_json/InstanceLocationHere/$instance_location}"
 
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
-     -d "$createitemjson" \
-     http://localhost:${catalogueport}/catalogue/item
+     -H "X-Okapi-Tenant: our" \
+     -d "${create_item_json}" \
+     "${catalogue_root_address}/item"
 
 #--------------------------
 
-createinstanceoutput=$(curl -w '\n' -X POST -D - \
+create_instance_output=$(curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
+     -H "X-Okapi-Tenant: our" \
      -d @./uprooted-instance.json \
-     http://localhost:${kbport}/knowledge-base/instance)
+     "${knowledgebase_root_address}/instance")
 
-instancelocation=$(echo "${createinstanceoutput}" | tr -d '\r' | sed -En 's/^Location: (.*)/\1/p')
+instance_location=$(echo "${create_instance_output}" | tr -d '\r' | sed -En 's/^Location: (.*)/\1/p')
 
-createitemjson=$(cat ./uprooted-item.json)
+create_item_json=$(cat ./uprooted-item.json)
 
-createitemjson="${createitemjson/InstanceLocationHere/$instancelocation}"
+create_item_json="${create_item_json/InstanceLocationHere/$instance_location}"
 
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
-     -d "$createitemjson" \
-     http://localhost:${catalogueport}/catalogue/item
+     -H "X-Okapi-Tenant: our" \
+     -d "${create_item_json}" \
+     "${catalogue_root_address}/item"

@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
-port=${1:-9401}
+knowledgebase_root_address=${1:-http://localhost:9130/knowledge-base}
 
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
+     -H "X-Okapi-Tenant: our" \
      -d @./advancing-library-education.json \
-     http://localhost:${port}/knowledge-base/instance
+     "${knowledgebase_root_address}/instance"
 
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
+     -H "X-Okapi-Tenant: our" \
      -d @./advancing-research-methods.json \
-     http://localhost:${port}/knowledge-base/instance
+     "${knowledgebase_root_address}/instance"
 

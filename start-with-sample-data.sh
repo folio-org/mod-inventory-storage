@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-kbport=${1:-9401}
-catalogueport=${2:-9402}
+okapi_proxy_address=${1:-http://localhost:9130}
 
-./start.sh ${kbport} ${catalogueport}
+knowledgebase_proxied_address="${okapi_proxy_address}/knowledge-base"
+catalogue_proxied_address="${okapi_proxy_address}/catalogue"
+
+./start-registered.sh ${okapi_proxy_address}
 
 sleep 15
 
-./create-sample-data.sh ${kbport} ${catalogueport}
+./create-sample-data.sh ${knowledgebase_proxied_address} ${catalogue_proxied_address}
 

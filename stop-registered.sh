@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-kbport=${1:-9401}
-catalogueport=${2:-9402}
+knowledgebase_instance_id=${1:-localhost-9401}
+catalogue_instance_id=${2:-localhost-9402}
 
-./stop.sh
+./stop-docker.sh
 
-./unregister.sh ${kbport} ${catalogueport}
+./unregister.sh ${knowledgebase_instance_id} ${catalogue_instance_id}
 
 ./delete-tenant.sh
-
