@@ -1,5 +1,6 @@
 package support
 
+import org.folio.catalogue.core.api.response.ClientErrorResponse
 import org.folio.catalogue.core.api.response.JsonResponse
 import org.folio.catalogue.core.api.response.RedirectResponse
 import org.folio.catalogue.core.support.WebRequestDiagnostics
@@ -37,6 +38,7 @@ class FakeKnowledgeBase extends GroovyVerticle {
 
     def router = Router.router(vertx)
 
+    router.route().handler(FakeKnowledgeBase.&checkTenantHeader)
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
     router.route('/knowledge-base/instance/*').handler(BodyHandler.create())
@@ -103,6 +105,17 @@ class FakeKnowledgeBase extends GroovyVerticle {
       routingContext.getBodyAsJson()
     } else {
       new HashMap<String, Object>()
+    }
+  }
+
+  private static void checkTenantHeader(RoutingContext routingContext) {
+    def tenant = routingContext.request().getHeader("X-Okapi-Tenant");
+
+    if(tenant != null) {
+      routingContext.next()
+    }
+    else {
+      ClientErrorResponse.forbidden(routingContext.response(), "Missing Tenant")
     }
   }
 }

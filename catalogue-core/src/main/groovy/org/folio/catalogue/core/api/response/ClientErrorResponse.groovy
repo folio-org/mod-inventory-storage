@@ -13,4 +13,10 @@ class ClientErrorResponse {
     response.putHeader "content-type", "text/plain"
     response.end(reason)
   }
+
+  static forbidden(HttpServerResponse response, String reason) {
+    response.setStatusCode(403)
+    response.putHeader "content-type", "text/plain"
+    response.end(reason)
+  }
 }

@@ -163,8 +163,10 @@ class ItemApiExamples extends Specification {
   }
 
   URL createNewItemViaApi(JsonObject itemRequest) {
-    new URL(HttpClient.postToCreate(World.itemApiRoot(),
-      itemRequest.encodePrettily()))
+    def create = HttpClient.postToCreate(World.itemApiRoot(),
+            itemRequest.encodePrettily())
+
+    new URL(create)
   }
 
   URL registerInstanceWithFakeKnowledgeBase(JsonObject instanceRequest) {

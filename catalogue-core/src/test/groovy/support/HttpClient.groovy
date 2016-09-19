@@ -191,8 +191,11 @@ class HttpClient {
 
   private static void parseResponseException(URL url, HttpResponseException ex) {
     println "Failed to access ${url} error: ${ex} (More information below)\n"
-    printf "Headers: %s \n", ex.getResponse().getAllHeaders()
-    printf "Content Type: %s \n", ex.getResponse().getContentType()
-    printf "Status Code: %s \n", ex.getResponse().getStatus()
+    println "Headers:"
+    println "${ex.response.allHeaders}"
+    println "Content Type: ${ex.response.contentType}"
+    println "Status Code: ${ex.response.status}"
+//    Haven't worked out how to parse the body yet
+//    println "Body: ${ex.response.data}"
   }
 }

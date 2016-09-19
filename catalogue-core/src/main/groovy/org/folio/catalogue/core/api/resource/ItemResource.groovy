@@ -1,10 +1,12 @@
 package org.folio.catalogue.core.api.resource
 
+import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
+import org.apache.commons.lang.StringUtils
 import org.folio.catalogue.core.api.ResourceMap
 import org.folio.catalogue.core.api.representation.ItemRepresentation
 import org.folio.catalogue.core.api.response.ClientErrorResponse
@@ -14,6 +16,7 @@ import org.folio.catalogue.core.domain.Item
 import org.folio.catalogue.core.domain.ItemCollection
 
 class ItemResource {
+  static private final String TENANT_HEADER_NAME = "X-Okapi-Tenant"
 
   public static void register(Router router, ItemCollection instanceCollection) {
 
@@ -26,29 +29,49 @@ class ItemResource {
 
   static Closure create(ItemCollection itemCollection) {
     { routingContext ->
+      String tenant = routingContext.request().getHeader(TENANT_HEADER_NAME);
+
       def client = routingContext.vertx().createHttpClient()
 
       def body = getMapFromBody(routingContext)
 
       client.requestAbs(HttpMethod.GET, body.instance, { response ->
         response.bodyHandler({ buffer ->
-          System.out.println("Response (" + buffer.length() + "): ");
-          System.out.println(buffer.getString(0, buffer.length()));
+          def status = "${response.statusCode()}"
+          def instanceBody = "${buffer.getString(0, buffer.length())}"
 
-          def instance = new JsonObject(buffer.getString(0, buffer.length()))
+          printDiagnostics(body.instance, status, instanceBody)
 
-          def itemToCreate = new Item(instance.getString("title"), body.instance, body.barcode)
+          if(Integer.parseInt(status) == HttpResponseStatus.OK.code())
+          {
+            def instance = new JsonObject(instanceBody)
 
-          itemCollection.add(itemToCreate, { item ->
-            RedirectResponse.created(routingContext.response(),
-              ResourceMap.itemAbsolute("/${item.id}", routingContext.request()))
-          })
+            def itemToCreate = new Item(instance.getString("title"), body.instance, body.barcode)
+
+            itemCollection.add(itemToCreate, { item ->
+              RedirectResponse.created(routingContext.response(),
+                ResourceMap.itemAbsolute("/${item.id}", routingContext.request()))
+            })
+          }
+          else {
+            ClientErrorResponse.badRequest(routingContext.response(),
+                    "Request to reach instance at ${body.instance} failed: ${status} : ${instanceBody}")
+          }
         })
-      }).exceptionHandler({ throwable ->
+      }).putHeader(TENANT_HEADER_NAME, tenant)
+        .exceptionHandler({ throwable ->
         ClientErrorResponse.badRequest(routingContext.response(),
           "Failed to reach instance location - ${body.instance}")
       }).end()
     }
+  }
+
+  private static void printDiagnostics(location, status, body) {
+    println "Response Received from instance resource - ${location}"
+    println StringUtils.repeat("-", 25)
+    println "Status Code: ${status}"
+    println "Body: ${body}"
+    println StringUtils.repeat("-", 25)
   }
 
   private static Closure find(ItemCollection itemCollection) {
