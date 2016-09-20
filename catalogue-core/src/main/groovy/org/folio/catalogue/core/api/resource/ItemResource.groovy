@@ -29,7 +29,8 @@ class ItemResource {
 
   static Closure create(ItemCollection itemCollection) {
     { routingContext ->
-      String tenant = routingContext.request().getHeader(TENANT_HEADER_NAME);
+
+      String tenant = routingContext.request().getHeader(TENANT_HEADER_NAME) ?: "";
 
       def client = routingContext.vertx().createHttpClient()
 
@@ -42,27 +43,27 @@ class ItemResource {
 
           printDiagnostics(body.instance, status, instanceBody)
 
-          if(Integer.parseInt(status) == HttpResponseStatus.OK.code())
-          {
+          if (Integer.parseInt(status) == HttpResponseStatus.OK.code()) {
             def instance = new JsonObject(instanceBody)
 
             def itemToCreate = new Item(instance.getString("title"), body.instance, body.barcode)
 
             itemCollection.add(itemToCreate, { item ->
               RedirectResponse.created(routingContext.response(),
-                ResourceMap.itemAbsolute("/${item.id}", routingContext.request()))
+                      ResourceMap.itemAbsolute("/${item.id}", routingContext.request()))
             })
-          }
-          else {
+          } else {
             ClientErrorResponse.badRequest(routingContext.response(),
                     "Request to reach instance at ${body.instance} failed: ${status} : ${instanceBody}")
           }
         })
-      }).putHeader(TENANT_HEADER_NAME, tenant)
-        .exceptionHandler({ throwable ->
+      })
+      .exceptionHandler({ throwable ->
         ClientErrorResponse.badRequest(routingContext.response(),
-          "Failed to reach instance location - ${body.instance}")
-      }).end()
+                "Failed to reach instance location - ${body.instance}")
+      })
+      .putHeader(TENANT_HEADER_NAME, tenant)
+      .end()
     }
   }
 
