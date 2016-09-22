@@ -4,14 +4,14 @@ import io.vertx.core.http.HttpMethod
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
-import org.folio.knowledgebase.core.api.response.RedirectResponse
+import org.folio.metadata.common.api.response.RedirectResponse
 import org.folio.knowledgebase.core.domain.Instance
 import org.folio.knowledgebase.core.domain.InstanceCollection
 
 import org.folio.knowledgebase.core.api.representation.InstanceRepresentation
 import org.folio.knowledgebase.core.api.ResourceMap
-import org.folio.knowledgebase.core.api.response.ClientErrorResponse
-import org.folio.knowledgebase.core.api.response.JsonResponse
+import org.folio.metadata.common.api.response.ClientErrorResponse
+import org.folio.metadata.common.api.response.JsonResponse
 
 class InstanceResource {
   public static void register(Router router, InstanceCollection instanceCollection) {

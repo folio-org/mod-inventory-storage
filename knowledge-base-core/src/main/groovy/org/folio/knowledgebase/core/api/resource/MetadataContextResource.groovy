@@ -3,7 +3,7 @@ package org.folio.knowledgebase.core.api.resource
 import io.vertx.core.http.HttpMethod
 import io.vertx.groovy.ext.web.Router
 import org.folio.knowledgebase.core.api.ResourceMap
-import org.folio.knowledgebase.core.api.response.JsonResponse
+import org.folio.metadata.common.api.response.JsonResponse
 
 class MetadataContextResource {
   public static void register(Router router) {

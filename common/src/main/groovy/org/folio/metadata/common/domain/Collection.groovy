@@ -1,4 +1,4 @@
-package org.folio.catalogue.core.domain
+package org.folio.metadata.common.domain
 
 interface Collection<T> {
   void empty()

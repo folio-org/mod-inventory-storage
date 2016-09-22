@@ -1,7 +1,10 @@
 package org.folio.knowledgebase.core.domain
 
-interface InstanceCollection extends ItemCollection<Instance>,
-  BatchItemCollection<Instance> {
+import org.folio.metadata.common.domain.BatchCollection
+import org.folio.metadata.common.domain.Collection
+
+interface InstanceCollection extends Collection<Instance>,
+  BatchCollection<Instance> {
   List<Instance> findByPartialTitle(String partialName)
 
   List<Instance> findByIdentifier(String namespace, String identifier)

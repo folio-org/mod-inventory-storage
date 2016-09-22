@@ -5,7 +5,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import org.folio.catalogue.core.api.ResourceMap
-import org.folio.catalogue.core.api.response.JsonResponse
+import org.folio.metadata.common.api.response.JsonResponse
 
 class RootResource {
   static def register(Router router) {

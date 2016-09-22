@@ -1,8 +1,8 @@
-package org.folio.knowledgebase.core.storage.mongo
+package org.folio.metadata.common.storage.mongo
 
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoClients
-import com.mongodb.async.client.MongoCollection
+import com.mongodb.async.client.MongoCollection as Collection
 import com.mongodb.client.model.Filters
 import com.mongodb.client.result.UpdateResult
 import org.bson.Document
@@ -11,17 +11,17 @@ import org.bson.types.ObjectId
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
-class MongoItemCollection<T> {
+class MongoCollection<T> {
 
   private final TimeUnit timeoutUnit = TimeUnit.MILLISECONDS
   private final int timeoutDuration = 1000
 
-  final MongoCollection<Document> collection
+  final Collection<Document> collection
 
   private final Closure fromDocument
   private final Closure toMap
 
-  def MongoItemCollection(
+  def MongoCollection(
     String databaseName,
     String collectionName,
     Closure fromDocument,

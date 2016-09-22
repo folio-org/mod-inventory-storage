@@ -2,6 +2,7 @@ package org.folio.catalogue.core.storage.memory
 
 import org.folio.catalogue.core.domain.Item
 import org.folio.catalogue.core.domain.ItemCollection
+import org.folio.metadata.common.storage.memory.InMemoryCollection
 
 import java.util.regex.Pattern
 

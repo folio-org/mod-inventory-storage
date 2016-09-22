@@ -1,7 +1,7 @@
-package org.folio.knowledgebase.core.storage.memory
+package org.folio.metadata.common.storage.memory
 
 //TODO: truly asynchronous implementation
-class InMemoryItemCollection<T> {
+class InMemoryCollection<T> {
 
   public final List<T> items = new ArrayList<T>()
 

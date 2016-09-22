@@ -9,9 +9,9 @@ import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.apache.commons.lang.StringUtils
 import org.folio.catalogue.core.api.ResourceMap
 import org.folio.catalogue.core.api.representation.ItemRepresentation
-import org.folio.catalogue.core.api.response.ClientErrorResponse
-import org.folio.catalogue.core.api.response.JsonResponse
-import org.folio.catalogue.core.api.response.RedirectResponse
+import org.folio.metadata.common.api.response.ClientErrorResponse
+import org.folio.metadata.common.api.response.JsonResponse
+import org.folio.metadata.common.api.response.RedirectResponse
 import org.folio.catalogue.core.domain.Item
 import org.folio.catalogue.core.domain.ItemCollection
 

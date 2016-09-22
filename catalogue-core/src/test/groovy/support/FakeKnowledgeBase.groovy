@@ -1,9 +1,9 @@
 package support
 
-import org.folio.catalogue.core.api.response.ClientErrorResponse
-import org.folio.catalogue.core.api.response.JsonResponse
-import org.folio.catalogue.core.api.response.RedirectResponse
-import org.folio.catalogue.core.support.WebRequestDiagnostics
+import org.folio.metadata.common.api.response.JsonResponse
+import org.folio.metadata.common.api.response.RedirectResponse
+import org.folio.metadata.common.api.response.ClientErrorResponse
+import org.folio.metadata.common.WebRequestDiagnostics
 import io.vertx.core.Future
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject

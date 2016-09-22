@@ -8,6 +8,7 @@ repositories {
 }
 
 dependencies {
+  compile project(':common')
   compile 'io.vertx:vertx-core:3.3.2'
   compile "io.vertx:vertx-lang-groovy:3.3.2"
   compile 'org.codehaus.groovy:groovy-all:2.4.7'

@@ -1,4 +1,4 @@
-package org.folio.knowledgebase.core.api.response
+package org.folio.metadata.common.api.response
 
 import io.vertx.core.json.Json
 

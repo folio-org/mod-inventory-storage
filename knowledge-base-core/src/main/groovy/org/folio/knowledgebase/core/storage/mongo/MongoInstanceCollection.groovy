@@ -4,15 +4,16 @@ import com.mongodb.client.model.Filters
 import org.folio.knowledgebase.core.domain.InstanceCollection
 import org.bson.Document
 import org.folio.knowledgebase.core.domain.Instance
+import org.folio.metadata.common.storage.mongo.MongoCollection
 
 import java.util.regex.Pattern
 
 class MongoInstanceCollection implements InstanceCollection {
 
-  final MongoItemCollection collection
+  final MongoCollection collection
 
   def MongoInstanceCollection(String databaseName) {
-    collection = new MongoItemCollection(databaseName, 'instance', this.&fromDoc, this.&toMap)
+    collection = new MongoCollection(databaseName, 'instance', this.&fromDoc, this.&toMap)
   }
 
   @Override

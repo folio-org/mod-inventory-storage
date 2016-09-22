@@ -1,4 +1,4 @@
-package org.folio.knowledgebase.core.util
+package org.folio.metadata.common
 
 import io.vertx.groovy.ext.web.RoutingContext
 

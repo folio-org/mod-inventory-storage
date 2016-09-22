@@ -1,14 +1,15 @@
 package org.folio.catalogue.core
 
-import org.folio.catalogue.core.api.resource.ItemResource
-import org.folio.catalogue.core.storage.Storage
 import io.vertx.lang.groovy.GroovyVerticle
 import io.vertx.core.Future
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.core.Vertx
-import org.folio.catalogue.core.support.WebRequestDiagnostics
+
+import org.folio.catalogue.core.api.resource.ItemResource
+import org.folio.catalogue.core.storage.Storage
 import org.folio.catalogue.core.api.resource.RootResource
+import org.folio.metadata.common.WebRequestDiagnostics
 
 import java.util.concurrent.CompletableFuture
 
@@ -18,7 +19,7 @@ public class ApiVerticle extends GroovyVerticle {
 
   public static void deploy(Vertx vertx, Map config, CompletableFuture deployed) {
     def options = ["config": config, "worker": true]
-    
+
     vertx.deployVerticle("groovy:org.folio.catalogue.core.ApiVerticle", options, { res ->
       if (res.succeeded()) {
         deployed.complete(null);

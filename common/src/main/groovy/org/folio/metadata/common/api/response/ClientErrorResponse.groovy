@@ -1,4 +1,4 @@
-package org.folio.catalogue.core.api.response
+package org.folio.metadata.common.api.response
 
 import io.vertx.groovy.core.http.HttpServerResponse
 

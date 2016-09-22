@@ -9,7 +9,7 @@ import org.folio.knowledgebase.core.api.resource.MetadataContextResource
 import org.folio.knowledgebase.core.api.resource.InstanceResource
 import org.folio.knowledgebase.core.api.resource.RootResource
 import org.folio.knowledgebase.core.storage.Storage
-import org.folio.knowledgebase.core.util.WebRequestDiagnostics
+import org.folio.metadata.common.WebRequestDiagnostics
 
 import java.util.concurrent.CompletableFuture
 

@@ -2,13 +2,14 @@ package org.folio.knowledgebase.core.storage.memory
 
 import org.folio.knowledgebase.core.domain.InstanceCollection
 import org.folio.knowledgebase.core.domain.Instance
+import org.folio.metadata.common.storage.memory.InMemoryCollection
 
 import java.util.regex.Pattern
 
 class InMemoryInstanceCollection
   implements InstanceCollection {
 
-  private final collection = new InMemoryItemCollection<Instance>()
+  private final collection = new InMemoryCollection<Instance>()
 
   @Override
   List<Instance> findByPartialTitle(String partialTitle) {

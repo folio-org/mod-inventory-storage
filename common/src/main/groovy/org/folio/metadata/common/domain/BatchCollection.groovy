@@ -1,6 +1,6 @@
-package org.folio.knowledgebase.core.domain
+package org.folio.metadata.common.domain
 
-interface BatchItemCollection<T> {
+interface BatchCollection<T> {
   List<T> add(List<T> items)
 //    void add(List<T> collection, Closure resultCallback)
 }
