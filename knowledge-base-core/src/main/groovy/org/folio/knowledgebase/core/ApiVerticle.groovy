@@ -17,8 +17,10 @@ public class ApiVerticle extends GroovyVerticle {
 
   private HttpServer server;
 
-  public static void deploy(Vertx vertx, Map options, CompletableFuture deployed) {
-    vertx.deployVerticle("groovy:org.folio.knowledgebase.core.ApiVerticle", ["config" : options], { res ->
+  public static void deploy(Vertx vertx, Map config, CompletableFuture deployed) {
+    def options = ["config": config, "worker": true]
+
+    vertx.deployVerticle("groovy:org.folio.knowledgebase.core.ApiVerticle", options, { res ->
       if (res.succeeded()) {
         deployed.complete(null);
       } else {

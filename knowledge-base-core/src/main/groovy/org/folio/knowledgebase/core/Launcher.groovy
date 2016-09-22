@@ -29,9 +29,9 @@ public class Launcher {
 
     println "Server Starting"
 
-    ApiVerticle.deploy(vertx, ["port" : port]).join()
+    def deploy = ApiVerticle.deploy(vertx, ["port" : port])
 
-    println "Server Started"
+    deploy.thenAccept({ println "Server Started" })
   }
 
   public static stop() {
