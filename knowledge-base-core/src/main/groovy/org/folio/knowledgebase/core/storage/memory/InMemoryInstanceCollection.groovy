@@ -12,7 +12,7 @@ class InMemoryInstanceCollection
   private final collection = new InMemoryCollection<Instance>()
 
   @Override
-  List<Instance> findByPartialTitle(String partialTitle) {
+  List<Instance> findByTitle(String partialTitle) {
     collection.find {
       Pattern.compile(
         Pattern.quote(partialTitle),
@@ -30,8 +30,8 @@ class InMemoryInstanceCollection
   }
 
   @Override
-  void findByPartialTitle(String partialTitle, Closure resultCallback) {
-    def results = findByPartialTitle(partialTitle)
+  void findByTitle(String partialTitle, Closure resultCallback) {
+    def results = findByTitle(partialTitle)
     resultCallback(results)
   }
 

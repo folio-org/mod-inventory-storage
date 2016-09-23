@@ -22,18 +22,18 @@ class MongoInstanceCollection implements InstanceCollection {
   }
 
   @Override
-  Instance add(Instance item) {
-    collection.add(item)
+  Instance add(Instance instance) {
+    collection.add(instance)
   }
 
   @Override
-  List<Instance> add(List<Instance> items) {
-    collection.add(items)
+  List<Instance> add(List<Instance> instances) {
+    collection.add(instances)
   }
 
   @Override
-  void add(Instance item, Closure resultCallback) {
-    collection.add(item, resultCallback)
+  void add(Instance instance, Closure resultCallback) {
+    collection.add(instance, resultCallback)
   }
 
   @Override
@@ -42,14 +42,14 @@ class MongoInstanceCollection implements InstanceCollection {
   }
 
   @Override
-  List<Instance> findByPartialTitle(String partialName) {
-    collection.find(Filters.regex("title", java.util.regex.Pattern.compile(partialName,
+  List<Instance> findByTitle(String partialTitle) {
+    collection.find(Filters.regex("title", java.util.regex.Pattern.compile(partialTitle,
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)))
   }
 
   @Override
-  void findByPartialTitle(String partialName, Closure resultCallback) {
-    collection.find(Filters.regex("title", java.util.regex.Pattern.compile(partialName,
+  void findByTitle(String partialTitle, Closure resultCallback) {
+    collection.find(Filters.regex("title", java.util.regex.Pattern.compile(partialTitle,
       Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)), resultCallback)
   }
 

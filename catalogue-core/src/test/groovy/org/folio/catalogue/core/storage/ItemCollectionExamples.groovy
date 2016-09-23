@@ -1,6 +1,7 @@
 package org.folio.catalogue.core.storage
 
 import org.folio.catalogue.core.domain.Item
+import org.folio.catalogue.core.storage.mongo.MongoItemCollection
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -11,6 +12,11 @@ import org.folio.catalogue.core.storage.memory.InMemoryItemCollection
 import support.World
 
 import java.util.concurrent.CompletableFuture
+
+import static support.World.complete
+import static support.World.complete
+import static support.World.getOnCompletion
+import static support.World.getOnCompletion
 
 @RunWith(value = Parameterized.class)
 class ItemCollectionExamples {
@@ -27,7 +33,7 @@ class ItemCollectionExamples {
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection data() {
-    [new InMemoryItemCollection()]
+    [new InMemoryItemCollection(), new MongoItemCollection("catalogueCoreTest")]
   }
 
   @Before
@@ -68,7 +74,7 @@ class ItemCollectionExamples {
   }
 
   @Test
-  void instancesCanBeFoundById() {
+  void itemsCanBeFoundById() {
     def addedItem = collection.add(smallAngryPlanet)
     def otherAddedItem = collection.add(this.nod)
 
@@ -102,7 +108,7 @@ class ItemCollectionExamples {
   }
 
   @Test
-  void resourcesCanBeAddedAsynchronously() {
+  void itemsCanBeAddedAsynchronously() {
 
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
@@ -135,7 +141,7 @@ class ItemCollectionExamples {
   }
 
   @Test
-  void resourcesCanBeFoundByIdAsynchronously() {
+  void itemsCanBeFoundByIdAsynchronously() {
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
 
@@ -172,5 +178,22 @@ class ItemCollectionExamples {
     assert otherFoundItem.title == "Nod"
     assert otherFoundItem.instanceLocation == "http://books.com/nod"
     assert otherFoundItem.barcode == "565578437802"
+  }
+
+  @Test
+  void itemsCanBeFoundByByPartialNameAsynchronously() {
+
+    def addedSmallAngryPlanet = collection.add(smallAngryPlanet)
+    collection.add(nod)
+    collection.add(uprooted)
+
+    def findFuture = new CompletableFuture<List<Item>>()
+
+    collection.findByTitle("Small Angry", complete(findFuture))
+
+    def findByNameResults = getOnCompletion(findFuture)
+
+    assert findByNameResults.size() == 1
+    assert findByNameResults[0].id == addedSmallAngryPlanet.id
   }
 }

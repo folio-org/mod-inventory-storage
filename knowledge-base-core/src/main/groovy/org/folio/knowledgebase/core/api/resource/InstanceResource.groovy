@@ -59,7 +59,7 @@ class InstanceResource {
         })
       }
 
-      responders.partialTitle = findResponder.rcurry(instanceCollection.&findByPartialTitle)
+      responders.partialTitle = findResponder.rcurry(instanceCollection.&findByTitle)
       responders.isbn = findResponder.rcurry(instanceCollection.&findByIdentifier.curry('isbn'))
       responders.all = { context, term ->
         instanceCollection.findAll({ result ->

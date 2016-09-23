@@ -115,7 +115,7 @@ class InstanceCollectionExamples {
 
     resource = collection.add(resource)
 
-    def findByNameResults = collection.findByPartialTitle("Small Angry")
+    def findByNameResults = collection.findByTitle("Small Angry")
 
     assert findByNameResults.size() == 1
     assert findByNameResults[0].id == resource.id
@@ -220,7 +220,7 @@ class InstanceCollectionExamples {
 
     def findFuture = new CompletableFuture<List<Instance>>()
 
-    collection.findByPartialTitle("Small Angry", complete(findFuture))
+    collection.findByTitle("Small Angry", complete(findFuture))
 
     def findByNameResults = getOnCompletion(findFuture)
 

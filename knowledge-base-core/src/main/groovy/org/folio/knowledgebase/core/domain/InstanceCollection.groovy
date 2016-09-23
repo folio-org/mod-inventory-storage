@@ -5,11 +5,11 @@ import org.folio.metadata.common.domain.Collection
 
 interface InstanceCollection extends Collection<Instance>,
   BatchCollection<Instance> {
-  List<Instance> findByPartialTitle(String partialName)
+  List<Instance> findByTitle(String partialName)
 
   List<Instance> findByIdentifier(String namespace, String identifier)
 
-  void findByPartialTitle(String partialName, Closure resultCallback)
+  void findByTitle(String partialName, Closure resultCallback)
 
   void findByIdentifier(String namespace, String identifier, Closure resultCallback)
 }
