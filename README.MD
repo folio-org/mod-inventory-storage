@@ -130,29 +130,19 @@ Access via Okapi requires passing the X-Okapi-Tenant header (see the Okapi guide
 
 # Running the Tests
 
-The tests can either be run directly or via Okapi (not all tests are affected by this).
+The best way to run the tests is to run ./full-test.sh. Okapi needs to be already running, without changing the address it uses (unlike when running Okapi for running the modules in Docker containers).
 
-The modules should not be started before running the tests. The tests start an instance during setup.
+The modules should *not* be started before running the tests, as this can cause confusing results. The tests start an instance themselves during setup.
 
-## Direct
+The script performs the following steps: 
+1. Creates a test tenant 
+2. Registers the modules with Okapi (they run on a different port than usual during the tests) 
+3. Builds and runs the tests (API tests run both directly and via Okapi Proxy) 
+4. Deregister the modules from Okapi 5. Deletes the test tenant
 
-These run as part of a standard build. To run them separately use `gradle testApiDirect`
+Due to the clean up output (steps 4 and 5) being quite verbose (will be improved in future versions), it is necessary to scroll up in the output to see the test results.
 
-## Via Okapi
-
-Make sure that Okapi is running, the test tenant has been created and the modules registered (see the section about running the module with Okapi).
-
-Use `gradle testApiViaOkapi` to run the API tests only via Okapi Proxy.
-
-## Both Together
-
-The script sets up the test tenant and registers the modules with Okapi, so only need to ensure that Okapi is running prior to running it.
-
-Use `./full-test.sh` to set up the test tenant, register the modules and run the suite of tests both directly and via Okapi.
-
-An optional parameter can be provided (either the host name or ip address) in order to use a different address to initially contact Okapi.
-
-This can be used (often in conjunction with the start-okapi.sh script), in order to use an address other than localhost (At the moment this registration scripts assume that Okapi is also reachable via localhost, so this currently only works for additional addresses rather than a remote Okapi). 
+If Okapi is running with a different okapiurl property set (like can be done with the `start-okapi.sh` script), then the same URL needs to be provided to this script for the tests to pass.   
 
 # Demo User Interface
 

@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+  #!/usr/bin/env bash
 
-okapiaddress=${1:-localhost}
+okapiaddress=${1:-http://localhost:9130}
 kbport=${2:-9601}
 catalogueport=${3:-9602}
 
@@ -8,7 +8,7 @@ catalogueport=${3:-9602}
 
 ./register.sh ${kbport} ${catalogueport}
 
-gradle -Dokapi.address="http://${okapiaddress}:9130" clean test testApiViaOkapi
+gradle -Dokapi.address="${okapiaddress}" clean test testApiViaOkapi
 
 ./unregister.sh ${kbport} ${catalogueport}
 

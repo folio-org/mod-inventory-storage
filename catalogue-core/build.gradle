@@ -30,12 +30,11 @@ task testApiViaOkapi(type: Test) {
 
   systemProperty 'okapi.use', 'true'
 
-  if(System.getProperty('okapi.address') == null) {
-    systemProperty 'okapi.address', 'http://localhost:9130'
-  }
-  else {
-    systemProperty 'okapi.address', System.getProperty('okapi.address')
-  }
+  def okapiAddress = System.getProperty('okapi.address') ?: 'http://localhost:9130'
+
+  println "Using ${okapiAddress} as Okapi Proxy to communicate with modules"
+
+  systemProperty 'okapi.address', okapiAddress
 }
 
 jar {
