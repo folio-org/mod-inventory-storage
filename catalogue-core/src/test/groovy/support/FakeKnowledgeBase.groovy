@@ -23,7 +23,7 @@ class FakeKnowledgeBase extends GroovyVerticle {
   private Map<String, JsonObject> instances = [:];
 
   public static void deploy(Vertx vertx, CompletableFuture deployed) {
-    vertx.deployVerticle("groovy:support.FakeKnowledgeBase", { res ->
+    vertx.deployVerticle("groovy:support.FakeKnowledgeBase", [ "worker" : true ], { res ->
       if (res.succeeded()) {
         deployed.complete(null);
       } else {
