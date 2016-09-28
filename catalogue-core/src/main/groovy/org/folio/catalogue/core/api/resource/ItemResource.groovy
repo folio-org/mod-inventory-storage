@@ -3,6 +3,7 @@ package org.folio.catalogue.core.api.resource
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.JsonObject
+import io.vertx.groovy.core.http.HttpClient
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
@@ -30,41 +31,75 @@ class ItemResource {
   static Closure create(ItemCollection itemCollection) {
     { routingContext ->
 
-      String tenant = routingContext.request().getHeader(TENANT_HEADER_NAME) ?: "";
+      def requestBody = getMapFromBody(routingContext)
 
-      def client = routingContext.vertx().createHttpClient()
+      def onFailureResponse = { status, responseBody ->
+        ClientErrorResponse.badRequest(routingContext.response(),
+          "Request to reach instance at ${requestBody.instance} failed: ${status} : ${responseBody}")
+      }
 
-      def body = getMapFromBody(routingContext)
+      def onException = {
+        ClientErrorResponse.badRequest(routingContext.response(),
+          "Failed to reach instance location - ${requestBody.instance}")
+      }
 
-      client.requestAbs(HttpMethod.GET, body.instance, { response ->
+      getResource(
+        routingContext,
+        onResponse(
+          onOkResponse(routingContext, itemCollection, requestBody),
+          onFailureResponse, requestBody.instance),
+        onException,
+        requestBody.instance)
+    }
+  }
+
+  private static Closure onOkResponse(RoutingContext routingContext, ItemCollection itemCollection, requestBody) {
+    { responseBody ->
+      def instance = new JsonObject(responseBody)
+
+      def itemToCreate = new Item(instance.getString("title"), requestBody.instance, requestBody.barcode)
+
+      itemCollection.add(itemToCreate, { item ->
+        RedirectResponse.created(routingContext.response(),
+          ResourceMap.itemAbsolute("/${item.id}", routingContext.request()))
+      })
+    }
+  }
+
+  private static Closure onResponse(Closure onOkResponse, Closure onFailureResponse, location) {
+      { response ->
         response.bodyHandler({ buffer ->
           def status = "${response.statusCode()}"
-          def instanceBody = "${buffer.getString(0, buffer.length())}"
+          def responseBody = "${buffer.getString(0, buffer.length())}"
 
-          printDiagnostics(body.instance, status, instanceBody)
+          printDiagnostics(location, status, responseBody)
 
-          if (Integer.parseInt(status) == HttpResponseStatus.OK.code()) {
-            def instance = new JsonObject(instanceBody)
-
-            def itemToCreate = new Item(instance.getString("title"), body.instance, body.barcode)
-
-            itemCollection.add(itemToCreate, { item ->
-              RedirectResponse.created(routingContext.response(),
-                      ResourceMap.itemAbsolute("/${item.id}", routingContext.request()))
-            })
+          if (isOkResponse(status)) {
+            onOkResponse(responseBody)
           } else {
-            ClientErrorResponse.badRequest(routingContext.response(),
-                    "Request to reach instance at ${body.instance} failed: ${status} : ${instanceBody}")
+            onFailureResponse(status, responseBody)
           }
         })
-      })
-      .exceptionHandler({ throwable ->
-        ClientErrorResponse.badRequest(routingContext.response(),
-                "Failed to reach instance location - ${body.instance}")
-      })
-      .putHeader(TENANT_HEADER_NAME, tenant)
+      }
+  }
+
+  private static boolean isOkResponse(GString status) {
+    Integer.parseInt(status) == HttpResponseStatus.OK.code()
+  }
+
+  private static getResource(RoutingContext routingContext, Closure onResponse, Closure onException, location) {
+    createHttpClient(routingContext).requestAbs(HttpMethod.GET, location, onResponse)
+      .exceptionHandler(onException)
+      .putHeader(TENANT_HEADER_NAME, getTenantHeader(routingContext))
       .end()
-    }
+  }
+
+  private static String getTenantHeader(RoutingContext routingContext) {
+    routingContext.request().getHeader(TENANT_HEADER_NAME) ?: ""
+  }
+
+  private static HttpClient createHttpClient(RoutingContext routingContext) {
+    routingContext.vertx().createHttpClient()
   }
 
   private static void printDiagnostics(location, status, body) {
@@ -74,6 +109,10 @@ class ItemResource {
     println "Body: ${body}"
     println StringUtils.repeat("-", 25)
   }
+
+
+
+
 
   private static Closure find(ItemCollection itemCollection) {
     { routingContext ->
