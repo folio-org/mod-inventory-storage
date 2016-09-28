@@ -18,13 +18,13 @@ import org.folio.catalogue.core.domain.ItemCollection
 class ItemResource {
   static private final String TENANT_HEADER_NAME = "X-Okapi-Tenant"
 
-  public static void register(Router router, ItemCollection instanceCollection) {
+  public static void register(Router router, ItemCollection itemCollection) {
 
-    router.get(ResourceMap.item()).handler(find(instanceCollection));
-    router.get(ResourceMap.item('/:id')).handler(findById(instanceCollection));
+    router.get(ResourceMap.item()).handler(find(itemCollection));
+    router.get(ResourceMap.item('/:id')).handler(findById(itemCollection));
 
     router.post(ResourceMap.item().toString() + "*").handler(BodyHandler.create())
-    router.post(ResourceMap.item()).handler(create(instanceCollection));
+    router.post(ResourceMap.item()).handler(create(itemCollection));
   }
 
   static Closure create(ItemCollection itemCollection) {
