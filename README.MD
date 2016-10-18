@@ -189,3 +189,11 @@ This demo uses the modules running in Docker containers.
 # Operating System Support
 
 Most of the development for these modules, thus far, has been performed on OS X, with some on Ubuntu. Feedback for these, and particularly other operating systems is very welcome.
+
+# Additional information
+
+The guide and other [documentation](doc) for this module.
+
+Other [modules](http://dev.folio.org/source-code/#server-side).
+
+Other FOLIO Developer documentation is at [dev.folio.org](http://dev.folio.org/)
