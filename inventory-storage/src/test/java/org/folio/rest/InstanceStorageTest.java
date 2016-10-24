@@ -1,8 +1,13 @@
 package org.folio.rest;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.rest.tools.utils.NetworkUtils;
@@ -16,7 +21,9 @@ import org.junit.runners.MethodSorters;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -95,7 +102,25 @@ public class InstanceStorageTest {
   }
 
   @Test
-  public void exampleTest(TestContext context) {
-    context.assertTrue(true);
+  public void shouldListAllInstancesTest(TestContext context) throws MalformedURLException {
+
+    //TODO: Create the instance, uses canned data at the moment
+
+    Async async = context.async();
+
+    HttpMethod method = HttpMethod.GET;
+    HttpClient client = vertx.createHttpClient();
+
+    URL getInstancesUrl = new URL("http", "localhost", port, "/instance_storage/instance");
+
+    System.out.println("Getting Instances");
+    System.out.println(getInstancesUrl);
+
+    client.getAbs(getInstancesUrl.toString(), httpClientResponse -> {
+      System.out.println("Response Received");
+
+      context.assertTrue(true);
+      async.complete();
+    }).end();
   }
 }
