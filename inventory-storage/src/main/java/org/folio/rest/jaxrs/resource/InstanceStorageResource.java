@@ -42,7 +42,7 @@ public interface InstanceStorageResource {
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
-        String lang, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
         throws Exception
     ;
 
@@ -85,7 +85,7 @@ public interface InstanceStorageResource {
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
-        String lang, Instances entity, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        String lang, Instance entity, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
         throws Exception
     ;
 
@@ -132,7 +132,7 @@ public interface InstanceStorageResource {
          *     }
          *     
          */
-        public static InstanceStorageResource.GetInstanceStorageInstanceResponse withJsonOK(Instance entity) {
+        public static InstanceStorageResource.GetInstanceStorageInstanceResponse withJsonOK(Instances entity) {
             Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", "application/json");
             responseBuilder.entity(entity);
             return new InstanceStorageResource.GetInstanceStorageInstanceResponse(responseBuilder.build());

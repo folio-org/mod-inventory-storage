@@ -32,13 +32,7 @@ public class Item {
     @JsonProperty("instance_id")
     @NotNull
     private String instanceId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("title")
-    @NotNull
     private String title;
     /**
      * 
@@ -107,8 +101,6 @@ public class Item {
 
     /**
      * 
-     * (Required)
-     * 
      * @return
      *     The title
      */
@@ -118,8 +110,6 @@ public class Item {
     }
 
     /**
-     * 
-     * (Required)
      * 
      * @param title
      *     The title

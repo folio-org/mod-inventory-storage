@@ -42,7 +42,7 @@ public interface ItemStorageResource {
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
-        String lang, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
         throws Exception
     ;
 
@@ -77,7 +77,7 @@ public interface ItemStorageResource {
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
-        String lang, Items entity, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        String lang, Item entity, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
         throws Exception
     ;
 
@@ -124,7 +124,7 @@ public interface ItemStorageResource {
          *     ]
          *     
          */
-        public static ItemStorageResource.GetItemStorageItemResponse withJsonOK(Item entity) {
+        public static ItemStorageResource.GetItemStorageItemResponse withJsonOK(Items entity) {
             Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", "application/json");
             responseBuilder.entity(entity);
             return new ItemStorageResource.GetItemStorageItemResponse(responseBuilder.build());
