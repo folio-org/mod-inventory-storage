@@ -1,0 +1,34 @@
+#%RAML 0.8
+title: Item Storage
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Item Storage API
+    content: <b>Storage for items in the inventory</b>
+
+schemas:
+ - item: !include schema/item.json
+ - items: !include schema/items.json
+
+traits:
+ - secured: !include https://raw.githubusercontent.com/folio-org/raml/master/traits/auth.raml
+ - language: !include https://raw.githubusercontent.com/folio-org/raml/master/traits/language.raml
+
+resourceTypes:
+ - collection: !include https://raw.githubusercontent.com/folio-org/raml/master/rtypes/collection.raml
+ - collection-item: !include https://raw.githubusercontent.com/folio-org/raml/master/rtypes/item-collection.raml
+
+/item_storage:
+    /item:
+      displayName: Items
+      type:
+        collection:
+          exampleCollection: !include  examples/items_get.json
+          schemaCollection: item
+          schemaItem: items
+          exampleItem: !include  examples/item_get.json
+      get:
+      post:
+      /{itemId}:
