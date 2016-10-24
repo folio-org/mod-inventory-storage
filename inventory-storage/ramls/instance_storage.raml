@@ -1,0 +1,34 @@
+#%RAML 0.8
+title: Instance Storage
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Instance Storage API
+    content: <b>Storage for instances in the inventory</b>
+
+schemas:
+ - instance: !include schema/instance.json
+ - instances: !include schema/instances.json
+
+traits:
+ - secured: !include https://raw.githubusercontent.com/folio-org/raml/master/traits/auth.raml
+ - language: !include https://raw.githubusercontent.com/folio-org/raml/master/traits/language.raml
+
+resourceTypes:
+ - collection: !include https://raw.githubusercontent.com/folio-org/raml/master/rtypes/collection.raml
+ - collection-item: !include https://raw.githubusercontent.com/folio-org/raml/master/rtypes/item-collection.raml
+
+/instance_storage:
+    /instance:
+      displayName: Instances
+      type:
+        collection:
+          exampleCollection: !include  examples/instance_get.json
+          schemaCollection: instance
+          schemaItem: instances
+          exampleItem: !include  examples/instance_get.json
+      get:
+      post:
+      /{instanceId}:

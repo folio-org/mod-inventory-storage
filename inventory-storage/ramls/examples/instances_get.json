@@ -1,13 +1,7 @@
 [
   {
-    "@context": {
-      "dcterms": "http://purl.org/dc/terms/",
-      "title": "dcterms:title"
-    },
+    "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
     "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-    "links": {
-      "self": "http://localhost:9401/knowledge-base/instance/09a55a92-b43c-499b-ae22-f3594a23ccd6"
-    },
     "identifiers": [
       {
         "namespace": "isbn",
@@ -20,14 +14,8 @@
     ]
   },
   {
-    "@context": {
-      "dcterms": "http://purl.org/dc/terms/",
-      "title": "dcterms:title"
-    },
+    "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
     "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
-    "links": {
-      "self": "http://localhost:9401/knowledge-base/instance/64b1cebb-d42b-4c8b-b684-b9226d9cf0ad"
-    },
     "identifiers": [
       {
         "namespace": "isbn",
