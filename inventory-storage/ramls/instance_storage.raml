@@ -32,3 +32,16 @@ resourceTypes:
       get:
       post:
       /{instanceId}:
+        get:
+          responses:
+            200:
+              body:
+#                type: instance
+          description: |
+            Get Instance by InstanceId
+            Instances are stored and accessed by a hash of key properties. The rules which govern
+            how instance hashes are computed are business rules and defined in the service layer.
+            the storage layer only knows how to insert or retrieve instance records by ID.
+          headers:
+            X-Tenant:
+              example: tennantID1234

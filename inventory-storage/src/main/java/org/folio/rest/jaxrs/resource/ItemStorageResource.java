@@ -131,7 +131,7 @@ public interface ItemStorageResource {
         }
 
         /**
-         * Bad request, e.g malformed request body or query parameter. Details of the error (e.g name of the parameter or line/character number with malformed data) provided in the response. e.g. unable to list item -- malformed parameter 'query', syntax error at column 6
+         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. unable to list item -- malformed parameter 'query', syntax error at column 6
          * 
          * @param entity
          *     unable to list item -- malformed parameter 'query', syntax error at column 6
@@ -143,7 +143,7 @@ public interface ItemStorageResource {
         }
 
         /**
-         * Internal server error, e.g due to misconfiguration e.g. internal server error, contact administrator
+         * Internal server error, e.g. due to misconfiguration e.g. internal server error, contact administrator
          * 
          * @param entity
          *     internal server error, contact administrator
@@ -192,7 +192,7 @@ public interface ItemStorageResource {
         }
 
         /**
-         * Bad request, e.g malformed request body or query parameter. Details of the error (e.g name of the parameter or line/character number with malformed data) provided in the response. e.g. "unable to add item -- malformed JSON at 13:3"
+         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. "unable to add item -- malformed JSON at 13:3"
          * 
          * 
          * @param entity

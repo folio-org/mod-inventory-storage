@@ -1,12 +1,15 @@
 
 package org.folio.rest.jaxrs.resource;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
@@ -89,6 +92,53 @@ public interface InstanceStorageResource {
         throws Exception
     ;
 
+    /**
+     * Get Instance by InstanceId
+     * Instances are stored and accessed by a hash of key properties. The rules which govern
+     * how instance hashes are computed are business rules and defined in the service layer.
+     * the storage layer only knows how to insert or retrieve instance records by ID.
+     * 
+     * 
+     * @param instanceId
+     *     
+     * @param xTenant
+     *      e.g. tennantID1234
+     * @param vertxContext
+     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
+     * @param asyncResultHandler
+     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
+     */
+    @GET
+    @Path("instance/{instanceId}")
+    @Validate
+    void getInstanceStorageInstanceByInstanceId(
+        @PathParam("instanceId")
+        @NotNull
+        String instanceId,
+        @HeaderParam("X-Tenant")
+        String xTenant, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    ;
+
+    public class GetInstanceStorageInstanceByInstanceIdResponse
+        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
+    {
+
+
+        private GetInstanceStorageInstanceByInstanceIdResponse(Response delegate) {
+            super(delegate);
+        }
+
+        /**
+         * 
+         */
+        public static InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse withOK() {
+            Response.ResponseBuilder responseBuilder = Response.status(200);
+            return new InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+    }
+
     public class GetInstanceStorageInstanceResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
@@ -139,7 +189,7 @@ public interface InstanceStorageResource {
         }
 
         /**
-         * Bad request, e.g malformed request body or query parameter. Details of the error (e.g name of the parameter or line/character number with malformed data) provided in the response. e.g. unable to list instance -- malformed parameter 'query', syntax error at column 6
+         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. unable to list instance -- malformed parameter 'query', syntax error at column 6
          * 
          * @param entity
          *     unable to list instance -- malformed parameter 'query', syntax error at column 6
@@ -151,7 +201,7 @@ public interface InstanceStorageResource {
         }
 
         /**
-         * Internal server error, e.g due to misconfiguration e.g. internal server error, contact administrator
+         * Internal server error, e.g. due to misconfiguration e.g. internal server error, contact administrator
          * 
          * @param entity
          *     internal server error, contact administrator
@@ -216,7 +266,7 @@ public interface InstanceStorageResource {
         }
 
         /**
-         * Bad request, e.g malformed request body or query parameter. Details of the error (e.g name of the parameter or line/character number with malformed data) provided in the response. e.g. "unable to add instance -- malformed JSON at 13:3"
+         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. "unable to add instance -- malformed JSON at 13:3"
          * 
          * 
          * @param entity
