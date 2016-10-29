@@ -1,8 +1,18 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath group:'org.springframework.boot', name:'spring-boot-gradle-plugin', version:'1.4.1.RELEASE'
+  }
+}
+
 plugins {
   id 'java'
+  id 'groovy'
   id 'application'
-  id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
+
 
 repositories {
   mavenCentral()
@@ -11,32 +21,69 @@ repositories {
 //  }
 }
 
+apply plugin: 'spring-boot'
+
+// Integration test config for this file was mostly taken from
+// https://www.petrikainulainen.net/programming/gradle/getting-started-with-gradle-integration-testing/
 
 version = '3.3.3'
-
 sourceCompatibility = '1.8'
-mainClassName = 'io.vertx.core.Launcher'
+// mainClassName = 'io.vertx.core.Launcher'
+
+
+sourceSets {
+    integrationTest {
+        groovy {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/integration-test/groovy')
+        }
+        resources.srcDir file('src/integration-test/resources')
+    }
+}
+
+//Configures the compile and runtime configurations for our integration tests
+//and includes the dependencies of the test task.
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+}
 
 dependencies {
   compile "io.vertx:vertx-core:$version"
   compile "io.vertx:vertx-lang-groovy:$version"
-  compile "org.springframework.boot:spring-boot-starter"
+  compile 'log4j:log4j:1.2.17'
+  testCompile 'junit:junit:4.11'
+  integrationTestCompile 'org.assertj:assertj-core:3.0.0'
 }
 
 processResources {
   from 'src/main/groovy'
 }
 
-shadowJar {
-  classifier = 'fat'
-  manifest {
-    attributes 'Main-Verticle': 'InstanceStorageVerticle.groovy'
-  }
-  mergeServiceFiles {
-    include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
-  }
-}
+// shadowJar butts heads with spring boot quite badly comment out for now, need to find a way to launch verticles from SB
+// 
+// shadowJar {
+//   classifier = 'fat'
+//   manifest {
+//     attributes 'Main-Verticle': 'InstanceStorageVerticle.groovy'
+//   }
+//   mergeServiceFiles {
+//     include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+//   }
+// }
+
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '2.8'
+  gradleVersion = '3.1'
+}
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+tasks.withType(Test) {
+    reports.html.destination = file("${reporting.baseDir}/${name}")
 }
