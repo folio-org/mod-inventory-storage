@@ -53,19 +53,16 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     
 
     // This is sample code from the Virt.x async mongoClient -- it's groovy code tho, so will not work here, suspect without it this would be very verbose
+    JsonObject document = new JsonObject().put("title", "The Hobbit");
 
-    // def document = [
-    //   title:"The Hobbit"
-    // ]
-
-    // mongoClient.save("books", document, { res ->
-    //   if (res.succeeded()) {
-    //   def id = res.result()
-    //   println("Saved book with id ${id}")
-    //   } else {
-    //     res.cause().printStackTrace()
-    //   }
-    // })
+    mongoClient.save("books", document, { res ->
+      if (res.succeeded()) {
+        String id = res.result()
+        println("Saved book with id ${id}")
+      } else {
+        res.cause().printStackTrace()
+      }
+    })
 
     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStorageInstanceResponse.withPlainInternalServerError("Not implemented")));
   }
