@@ -21,6 +21,11 @@
       <artifactId>junit</artifactId>
       <version>4.12</version>
     </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-mongo-client</artifactId>
+      <version>3.3.3</version>
+    </dependency>
   </dependencies>
 
   <properties>

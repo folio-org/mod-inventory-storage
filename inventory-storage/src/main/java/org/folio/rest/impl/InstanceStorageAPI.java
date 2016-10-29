@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import io.vertx.groovy.ext.mongo.MongoClient
+
+
 public class InstanceStorageAPI implements InstanceStorageResource {
 
   @Override
@@ -44,8 +47,27 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                                           Map<String, String> okapiHeaders, 
                                           Handler<AsyncResult<Response>> asyncResultHandler, 
                                           Context vertxContext) throws Exception {
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStorageInstanceResponse
-      .withPlainInternalServerError("Not implemented")));
+
+    java.util.Map<java.lang.String, java.lang.Object> mongo_config = new java.util.HashMap<java.lang.String, java.lang.Object>()
+    MongoClient client = MongoClient.createShared(vertxContext.owner(), config, "instance-storage-pool")
+    
+
+    // This is sample code from the Virt.x async mongoClient -- it's groovy code tho, so will not work here, suspect without it this would be very verbose
+
+    // def document = [
+    //   title:"The Hobbit"
+    // ]
+
+    // mongoClient.save("books", document, { res ->
+    //   if (res.succeeded()) {
+    //   def id = res.result()
+    //   println("Saved book with id ${id}")
+    //   } else {
+    //     res.cause().printStackTrace()
+    //   }
+    // })
+
+    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStorageInstanceResponse.withPlainInternalServerError("Not implemented")));
   }
 
   @Override
