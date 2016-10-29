@@ -53,6 +53,9 @@ dependencies {
   compile "io.vertx:vertx-core:$version"
   compile "io.vertx:vertx-lang-groovy:$version"
   compile 'log4j:log4j:1.2.17'
+  compile 'org.springframework.boot:spring-boot-starter-web'
+  compile 'org.springframework.boot:spring-boot-starter-test'
+  compile 'org.springframework.boot:spring-boot-starter-actuator'
   testCompile 'junit:junit:4.11'
   integrationTestCompile 'org.assertj:assertj-core:3.0.0'
 }
