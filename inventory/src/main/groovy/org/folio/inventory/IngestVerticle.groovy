@@ -2,15 +2,11 @@ package org.folio.inventory
 
 import io.vertx.core.Future
 import io.vertx.groovy.core.Vertx
-import io.vertx.groovy.core.buffer.Buffer
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
-import io.vertx.groovy.ext.web.handler.BodyHandler
 import io.vertx.lang.groovy.GroovyVerticle
-import org.folio.inventory.domain.Item
-import org.folio.inventory.org.folio.inventory.ingest.ModsParser
+import org.folio.inventory.org.folio.inventory.api.resources.ingest.ModsIngestion
 import org.folio.metadata.common.WebRequestDiagnostics
-import org.folio.metadata.common.api.response.JsonResponse
 
 import java.util.concurrent.CompletableFuture
 
@@ -45,19 +41,7 @@ public class IngestVerticle extends GroovyVerticle {
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-    router.post("/ingest" + "*").handler(BodyHandler.create())
-
-    router.post("/ingest/mods").handler({ routingContext ->
-      routingContext.fileUploads().each { f ->
-
-        //Definitely shouldn't be blocking for large files
-        Buffer uploadedFile = vertx.fileSystem().readFileBlocking(f.uploadedFileName());
-
-        Item item = new ModsParser().parseRecord(uploadedFile.toString())
-
-        JsonResponse.success(routingContext.response(), item)
-      }
-    })
+    new ModsIngestion().register(router)
 
     def handler = { result ->
       if (result.succeeded()) {

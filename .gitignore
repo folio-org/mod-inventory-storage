@@ -9,3 +9,4 @@ doc/api/generated/
 node_modules/
 **/docker/tmp
 target/
+file-uploads/
