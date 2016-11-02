@@ -32,10 +32,13 @@ class ModIngestExamples extends Specification {
 
     when:
 
-    def response = ingestRecord(new URL("http://localhost:9603/ingest/mods"), singleModsRecord)
+    def body = ingestRecord(new URL("http://localhost:9603/ingest/mods"), singleModsRecord)
 
     then:
-      assert response.status == 200
+      assert body != null
+      assert body.id != null
+      assert body.title == "'Edward Samuel: ei Oes a'i Waith', an essay submitted for competition at the National Eisteddfod held at Corwen, 1919; together ..., 1919."
+      assert body.barcode == "78584457"
   }
 
   def startVertx() {
@@ -77,18 +80,18 @@ class ModIngestExamples extends Specification {
 
         req.entity = new MultipartEntityBuilder().addBinaryBody("record", recordToIngest).build()
 
-        response.success = { resp ->
+        response.success = { resp, body ->
           println "Status Code: ${resp.status}"
           println "Location: ${resp.headers.location}\n"
 
-          resp
+          body
         }
 
         response.failure = { resp ->
           println "Status Code: ${resp.status}"
           println "Location: ${resp.headers.location}\n"
 
-          resp
+          null
         }
       }
     }

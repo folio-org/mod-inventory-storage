@@ -7,6 +7,8 @@ import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import io.vertx.lang.groovy.GroovyVerticle
+import org.folio.inventory.domain.Item
+import org.folio.inventory.org.folio.inventory.ingest.ModsParser
 import org.folio.metadata.common.WebRequestDiagnostics
 import org.folio.metadata.common.api.response.JsonResponse
 
@@ -51,13 +53,9 @@ public class IngestVerticle extends GroovyVerticle {
         //Definitely shouldn't be blocking for large files
         Buffer uploadedFile = vertx.fileSystem().readFileBlocking(f.uploadedFileName());
 
-        def response = [:]
+        Item item = new ModsParser().parseRecord(uploadedFile.toString())
 
-        response.put("Filename", f.fileName())
-        response.put("Size", f.size())
-        response.put("Contents", uploadedFile.toString())
-
-        JsonResponse.success(routingContext.response(), response)
+        JsonResponse.success(routingContext.response(), item)
       }
     })
 
@@ -76,6 +74,7 @@ public class IngestVerticle extends GroovyVerticle {
 
     server.requestHandler(router.&accept).listen(config.port ?: 9403, handler)
   }
+
 
   @Override
   public void stop(Future stopped) {
