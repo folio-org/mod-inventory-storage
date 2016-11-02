@@ -1,0 +1,87 @@
+<mods version="3.5" xmlns="http://www.loc.gov/mods/v3" xmlns:h="http://copac.ac.uk/schemas/holdings/v1" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<recordInfo>
+		<recordIdentifier source="UkMaC">1500000</recordIdentifier>
+		<recordCreationDate encoding="iso8601">20140804</recordCreationDate>
+	</recordInfo>
+	<typeOfResource manuscript="yes">text</typeOfResource>
+	<originInfo>
+		<issuance>monographic</issuance>
+	</originInfo>
+	<originInfo>
+		<dateIssued encoding="marc">1919</dateIssued>
+		<place>
+			<placeTerm authority="marccountry" type="code">xxk</placeTerm>
+		</place>
+	</originInfo>
+	<titleInfo>
+		<title>&apos;Edward Samuel: ei Oes a&apos;i Waith&apos;, an essay submitted for competition at the National Eisteddfod held at Corwen, 1919; together ..., 1919.</title>
+	</titleInfo>
+	<extension>
+		<modsCollection>
+			<mods version="3.5">
+				<recordInfo>
+					<recordIdentifier source="UkMaC">78584457</recordIdentifier>
+					<recordIdentifier source="WlAbNL">005518804</recordIdentifier>
+					<recordCreationDate encoding="iso8601">20140804</recordCreationDate>
+				</recordInfo>
+				<typeOfResource manuscript="yes">text</typeOfResource>
+				<originInfo>
+					<issuance>monographic</issuance>
+				</originInfo>
+				<originInfo>
+					<dateIssued encoding="marc">1919</dateIssued>
+					<place>
+						<placeTerm authority="marccountry" type="code">xxk</placeTerm>
+					</place>
+				</originInfo>
+				<recordInfo>
+					<recordContentSource authority="marcorg">WlAbNL</recordContentSource>
+					<languageOfCataloging>
+						<languageTerm authority="iso639-2b" type="code">eng</languageTerm>
+					</languageOfCataloging>
+				</recordInfo>
+				<titleInfo>
+					<title>&apos;Edward Samuel: ei Oes a&apos;i Waith&apos;, an essay submitted for competition at the National Eisteddfod held at Corwen, 1919; together ..., 1919.</title>
+				</titleInfo>
+				<abstract displayLabel="Summary">&apos;Edward Samuel: ei Oes a&apos;i Waith&apos;, an essay submitted for competition at the National Eisteddfod held at Corwen, 1919; together with material collected towards the essay.</abstract>
+				<note type="preferred citation">11.</note>
+				<physicalDescription>
+					<form authority="marcform">print</form>
+				</physicalDescription>
+				<language>
+					<languageTerm authority="iso639-2b" type="code">eng</languageTerm>
+					<languageTerm type="text">English</languageTerm>
+				</language>
+				<location>
+					<holdingExternal>
+						<h:localHolds>
+							<h:org coords="52.41435,-4.06846" copacCode="nlw" displayName="National Library of Wales / Llyfrgell Genedlaethol Cymru" postcode="SY23 3BU">WlAbNL</h:org>
+							<h:objId>78584457</h:objId>
+							<h:holds>
+								<h:item>
+									<h:loc coords="52.41435,-4.06846" heldBy="National Library of Wales / Llyfrgell Genedlaethol Cymru" heldByShortName="National Library of Wales">Contact the National Library of Wales / Llyfrgell Genedlaethol Cymru</h:loc>
+								</h:item>
+							</h:holds>
+						</h:localHolds>
+					</holdingExternal>
+				</location>
+				<extension>
+					<cpc:flags xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1">
+						<cpc:flag>copbok</cpc:flag>
+						<cpc:flag>copman</cpc:flag>
+						<cpc:flag>m21bk</cpc:flag>
+						<cpc:flag>rtypt</cpc:flag>
+					</cpc:flags>
+				</extension>
+			</mods>
+		</modsCollection>
+		<cpc:omitted-note xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1"/>
+	</extension>
+	<physicalDescription xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1">
+		<form authority="marcform">print</form>
+	</physicalDescription>
+	<language xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1">
+		<languageTerm authority="iso639-2b" type="code">eng</languageTerm>
+		<languageTerm type="text">English</languageTerm>
+	</language>
+</mods>
