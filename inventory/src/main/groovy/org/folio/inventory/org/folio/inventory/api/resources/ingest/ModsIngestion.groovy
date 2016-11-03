@@ -6,6 +6,7 @@ import org.folio.inventory.domain.Item
 import org.folio.inventory.org.folio.inventory.ingest.ModsParser
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
+import org.folio.metadata.common.api.response.ServerErrorResponse
 
 class ModsIngestion {
   public static void register(Router router) {
@@ -19,15 +20,21 @@ class ModsIngestion {
         return
       }
 
-      routingContext.fileUploads().each { f ->
-        def modsFileBuffer = routingContext.vertx().fileSystem().readFileBlocking(f.uploadedFileName()).toString()
+      def uploadedFileName = routingContext.fileUploads().toList().first().uploadedFileName()
 
-        Item item = new ModsParser().parseRecord(modsFileBuffer.toString())
+      routingContext.vertx().fileSystem().readFile(uploadedFileName, { result ->
+        if(result.succeeded()) {
+          def uploadedFileContents = result.result().toString()
 
-        JsonResponse.success(routingContext.response(), item)
-      }
+          Item item = new ModsParser().parseRecord(uploadedFileContents)
+
+          JsonResponse.success(routingContext.response(), item)
+        }
+        else {
+          ServerErrorResponse.internalError(routingContext.response(), result.cause().toString())
+        }
+      })
     })
-
   }
 
   private static String relativeModsIngestPath() {

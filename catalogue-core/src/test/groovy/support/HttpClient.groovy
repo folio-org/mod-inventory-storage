@@ -38,10 +38,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to connect to ${url} error: ${ex}\n"
+      println "Failed to connect to ${url} internalError: ${ex}\n"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex}\n"
+      println "Failed to access ${url} internalError: ${ex}\n"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -67,10 +67,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to connect to ${url} error: ${ex}\n"
+      println "Failed to connect to ${url} internalError: ${ex}\n"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex}\n"
+      println "Failed to access ${url} internalError: ${ex}\n"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -103,10 +103,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to access ${url} error: ${ex})\n"
+      println "Failed to access ${url} internalError: ${ex})\n"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex})\n"
+      println "Failed to access ${url} internalError: ${ex})\n"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -142,10 +142,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to access ${url} error: ${ex})\n"
+      println "Failed to access ${url} internalError: ${ex})\n"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex})\n"
+      println "Failed to access ${url} internalError: ${ex})\n"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -179,10 +179,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to connect to ${url} error: ${ex}\n"
+      println "Failed to connect to ${url} internalError: ${ex}\n"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex}\n"
+      println "Failed to access ${url} internalError: ${ex}\n"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -190,7 +190,7 @@ class HttpClient {
   }
 
   private static void parseResponseException(URL url, HttpResponseException ex) {
-    println "Failed to access ${url} error: ${ex} (More information below)\n"
+    println "Failed to access ${url} internalError: ${ex} (More information below)\n"
     println "Headers:"
     println "${ex.response.allHeaders}"
     println "Content Type: ${ex.response.contentType}"

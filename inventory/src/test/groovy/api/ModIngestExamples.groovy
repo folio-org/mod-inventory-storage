@@ -116,13 +116,13 @@ class ModIngestExamples extends Specification {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to access ${url} error: ${ex})\n"
+      println "Failed to access ${url} internalError: ${ex})\n"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex})\n"
+      println "Failed to access ${url} internalError: ${ex})\n"
     }
     catch (HttpResponseException ex) {
-      println "Failed to access ${url} error: ${ex})\n"
+      println "Failed to access ${url} internalError: ${ex})\n"
     }
   }
 
