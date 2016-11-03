@@ -32,13 +32,27 @@ class ModIngestExamples extends Specification {
 
     when:
 
-    def body = ingestRecord(new URL("http://localhost:9603/ingest/mods"), singleModsRecord)
+    def (resp, body) = ingestRecord(new URL("http://localhost:9603/ingest/mods"), [singleModsRecord])
 
     then:
+      assert resp.status == 200
       assert body != null
       assert body.id != null
       assert body.title == "'Edward Samuel: ei Oes a'i Waith', an essay submitted for competition at the National Eisteddfod held at Corwen, 1919; together ..., 1919."
       assert body.barcode == "78584457"
+  }
+
+  void "Refuse ingest for multiple files"() {
+    given:
+      def singleModsRecord = loadFileFromResource("mods-single-record.xml")
+
+    when:
+      def (resp, body) = ingestRecord(new URL("http://localhost:9603/ingest/mods"),
+        [singleModsRecord, singleModsRecord])
+
+    then:
+      assert resp.status == 400
+      assert body == "Cannot ingest multiple files in a single request"
   }
 
   def startVertx() {
@@ -65,7 +79,7 @@ class ModIngestExamples extends Specification {
     }
   }
 
-  static def ingestRecord(URL url, File recordToIngest) {
+  static def ingestRecord(URL url, List<File> recordsToIngest) {
     if (url == null)
       throw new IllegalArgumentException("url is null")
 
@@ -78,20 +92,26 @@ class ModIngestExamples extends Specification {
         headers.'X-Okapi-Tenant' = "our"
         requestContentType = 'multipart/form-data'
 
-        req.entity = new MultipartEntityBuilder().addBinaryBody("record", recordToIngest).build()
+        def multipartBuilder = new MultipartEntityBuilder()
+
+        recordsToIngest.each {
+          multipartBuilder.addBinaryBody("record", it)
+        }
+
+        req.entity = multipartBuilder.build()
 
         response.success = { resp, body ->
           println "Status Code: ${resp.status}"
           println "Location: ${resp.headers.location}\n"
 
-          body
+          new Tuple2(resp, body)
         }
 
-        response.failure = { resp ->
+        response.failure = { resp, body ->
           println "Status Code: ${resp.status}"
           println "Location: ${resp.headers.location}\n"
 
-          null
+          new Tuple(resp, body.getText())
         }
       }
     }

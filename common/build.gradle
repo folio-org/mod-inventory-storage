@@ -10,6 +10,7 @@ dependencies {
   compile 'org.codehaus.groovy:groovy-all:2.4.7'
   compile 'io.vertx:vertx-web:3.3.2'
   compile 'org.mongodb:mongodb-driver-async:3.3.0'
+  compile 'org.apache.httpcomponents:httpclient-osgi:4.5.2'
 }
 
 task wrapper(type: Wrapper) {
