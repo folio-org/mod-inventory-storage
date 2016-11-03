@@ -4,6 +4,7 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.folio.inventory.domain.Item
 import org.folio.inventory.org.folio.inventory.ingest.ModsParser
+import org.folio.inventory.storage.memory.InMemoryItemCollection
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.ServerErrorResponse
@@ -26,9 +27,10 @@ class ModsIngestion {
         if(result.succeeded()) {
           def uploadedFileContents = result.result().toString()
 
-          Item item = new ModsParser().parseRecord(uploadedFileContents)
+          def newItem = new ModsParser().parseRecord(uploadedFileContents)
 
-          JsonResponse.success(routingContext.response(), item)
+          new InMemoryItemCollection().add(newItem,
+            { JsonResponse.success(routingContext.response(), it) })
         }
         else {
           ServerErrorResponse.internalError(routingContext.response(), result.cause().toString())

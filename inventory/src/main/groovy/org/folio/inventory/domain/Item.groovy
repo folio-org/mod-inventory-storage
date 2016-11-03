@@ -14,4 +14,8 @@ class Item {
     this.title = title
     this.barcode = barcode
   }
+
+  def Item copyWithNewId(String id) {
+    new Item(id, title, barcode)
+  }
 }
