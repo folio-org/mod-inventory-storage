@@ -1,5 +1,6 @@
 package api
 
+import org.folio.metadata.common.VertxAssistant
 import spock.lang.Specification
 import support.World
 

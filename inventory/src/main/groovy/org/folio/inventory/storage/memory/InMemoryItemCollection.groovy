@@ -12,35 +12,6 @@ class InMemoryItemCollection
   private final collection = new InMemoryCollection<Item>()
 
   @Override
-  List<Item> add(List<Item> itemsToAdd) {
-    def addedInstances = itemsToAdd.collect() {
-      it.copyWithNewId(UUID.randomUUID().toString())
-    }
-
-    collection.add(addedInstances)
-  }
-
-  @Override
-  void empty() {
-    collection.empty()
-  }
-
-  @Override
-  Item add(Item item) {
-    collection.add(item.copyWithNewId(UUID.randomUUID().toString()))
-  }
-
-  @Override
-  List<Item> findAll() {
-    collection.all()
-  }
-
-  @Override
-  Item findById(String id) {
-    collection.findOne { it.id == id }
-  }
-
-  @Override
   void add(Item item, Closure resultCallback) {
     collection.add(item.copyWithNewId(UUID.randomUUID().toString()), resultCallback)
   }
@@ -53,6 +24,12 @@ class InMemoryItemCollection
   @Override
   void findAll(Closure resultCallback) {
     collection.all(resultCallback)
+  }
+
+  @Override
+  void empty(Closure resultCallback) {
+    collection.empty()
+    resultCallback()
   }
 
   @Override

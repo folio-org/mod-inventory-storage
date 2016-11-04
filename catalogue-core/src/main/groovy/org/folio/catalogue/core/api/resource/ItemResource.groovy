@@ -110,10 +110,6 @@ class ItemResource {
     println StringUtils.repeat("-", 25)
   }
 
-
-
-
-
   private static Closure find(ItemCollection itemCollection) {
     { routingContext ->
 

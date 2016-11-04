@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture
 import static support.HttpClient.get
 
 class ItemApiExamples extends Specification {
-
   def setupSpec() {
     def vertx = World.startVertx()
 
