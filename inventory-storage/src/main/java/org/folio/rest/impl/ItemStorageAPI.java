@@ -8,8 +8,10 @@ import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
 
 import javax.validation.constraints.Pattern;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.PathParam;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,4 +32,25 @@ public class ItemStorageAPI implements ItemStorageResource {
     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.GetItemStorageItemResponse
       .withPlainInternalServerError("Not implemented")));
   }
+
+  @Override
+   public void postItemStorageItemByItemId(
+        @PathParam("itemId")
+        @NotNull
+        String itemId, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    {
+
+    }
+
+    @Override
+        public void getItemStorageItemByItemId(
+        @PathParam("itemId")
+        @NotNull
+        String itemId, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    {
+
+    }
+    
 }

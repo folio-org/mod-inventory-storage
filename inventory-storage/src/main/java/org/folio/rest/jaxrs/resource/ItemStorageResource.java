@@ -1,12 +1,14 @@
 
 package org.folio.rest.jaxrs.resource;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
@@ -81,6 +83,55 @@ public interface ItemStorageResource {
         throws Exception
     ;
 
+    /**
+     * 
+     * @param itemId
+     *     
+     * @param vertxContext
+     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
+     * @param asyncResultHandler
+     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
+     */
+    @GET
+    @Path("item/{itemId}")
+    @Validate
+    void getItemStorageItemByItemId(
+        @PathParam("itemId")
+        @NotNull
+        String itemId, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    ;
+
+    /**
+     * 
+     * @param itemId
+     *     
+     * @param vertxContext
+     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
+     * @param asyncResultHandler
+     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
+     */
+    @POST
+    @Path("item/{itemId}")
+    @Validate
+    void postItemStorageItemByItemId(
+        @PathParam("itemId")
+        @NotNull
+        String itemId, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    ;
+
+    public class GetItemStorageItemByItemIdResponse
+        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
+    {
+
+
+        private GetItemStorageItemByItemIdResponse(Response delegate) {
+            super(delegate);
+        }
+
+    }
+
     public class GetItemStorageItemResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
@@ -152,6 +203,17 @@ public interface ItemStorageResource {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new ItemStorageResource.GetItemStorageItemResponse(responseBuilder.build());
+        }
+
+    }
+
+    public class PostItemStorageItemByItemIdResponse
+        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
+    {
+
+
+        private PostItemStorageItemByItemIdResponse(Response delegate) {
+            super(delegate);
         }
 
     }
