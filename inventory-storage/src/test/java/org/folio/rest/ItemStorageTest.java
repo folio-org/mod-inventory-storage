@@ -26,9 +26,12 @@ import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpClientRequest;
 import java.net.MalformedURLException;
 import java.net.URL;
 import io.vertx.ext.unit.Async;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.Handler;
 import java.util.UUID;
     
 @RunWith(VertxUnitRunner.class)
@@ -115,19 +118,33 @@ public class ItemStorageTest {
     HttpMethod method = HttpMethod.GET;
     HttpClient client = vertx.createHttpClient();
 
-    String url = String.format("/instance_storage/item/%s",id.toString());
+    String url = String.format("/item_storage/item/%s",id.toString());
     URL getItemUrl = new URL("http", "localhost", port, url);
 
     System.out.println("Getting Item");
     System.out.println(getItemUrl);
 
-    client.getAbs(getItemUrl.toString(), httpClientResponse -> {
-      System.out.println("Response Received");
+    HttpClientRequest request = client.getAbs(getItemUrl.toString(), response -> {
 
-      context.assertTrue(true);
-      async.complete();
-    }).end();
+	    final int statusCode = response.statusCode();                    
+	    response.bodyHandler(new Handler<Buffer>() {
+		    @Override
+		    public void handle(Buffer body) {
+
+			JsonObject restResponse = new JsonObject(body.getString(0,body.length()));
+
+			System.out.println("Response Received");
+			System.out.println(restResponse.toString());
+
+			context.assertEquals(restResponse.getString("title") , "Refactoring");
+			async.complete();
+			
+			}
+		});
+	});
+
+    request.headers().add("Accept","application/json");
+    request.end();
   }
 
-  
 }

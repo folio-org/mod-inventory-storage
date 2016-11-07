@@ -32,5 +32,9 @@ resourceTypes:
       get:
       post:
       /{itemId}:
+        type:
+          collection-item:
+            exampleItem: !include examples/item_get.json
+            schema: item
         get:
         post:
