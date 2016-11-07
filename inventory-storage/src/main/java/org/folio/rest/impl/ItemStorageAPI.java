@@ -6,6 +6,7 @@ import io.vertx.core.Handler;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
+import org.folio.rest.tools.utils.OutStream;
 
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.NotNull;
@@ -30,8 +31,12 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   @Override
   public void postItemStorageItem(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Item entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.GetItemStorageItemResponse
-      .withPlainInternalServerError("Not implemented")));
+      
+      OutStream stream = new OutStream();
+      stream.setData(entity);
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+								     ItemStorageResource.PostItemStorageItemResponse
+								     .withJsonCreated("I dont know please dont shoot me",stream)));
   }
 
   @Override
