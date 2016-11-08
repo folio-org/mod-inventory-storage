@@ -104,7 +104,7 @@ public class ItemStorageTest {
       }
     }
   }
-
+   
   @Test
   public void exampleTest(TestContext context) {
     context.assertTrue(true);
@@ -146,7 +146,7 @@ public class ItemStorageTest {
     request.end();
   }
 
-  @Test
+@Test
   public void postDataTest(TestContext context) throws MalformedURLException {
 
     Async async = context.async();
@@ -185,6 +185,83 @@ public class ItemStorageTest {
     request.headers().add("Accept","application/json");
     request.headers().add("Content-type","application/json");
     request.end(post.encodePrettily());
-  }  
+  }
+   
+  @Test
+  public void postGetDataTest(TestContext context) throws MalformedURLException {
 
+    System.out.println("POST GET DATA TEST");
+    Async async = context.async();
+    HttpClient client = vertx.createHttpClient();
+
+    URL postItemUrl = new URL("http", "localhost", port, "/item_storage/item");
+
+    System.out.println("Posting Item");
+    System.out.println(postItemUrl);
+
+    JsonObject post = new JsonObject();
+    post.put("title", "Refactoring");
+    post.put("barcode", "31415");
+    post.put("instance_id", "MadeUp");
+    
+    HttpClientRequest postRequest = client.postAbs(postItemUrl.toString(), response -> {
+
+	    final int statusCode = response.statusCode();                    
+	    response.bodyHandler(new Handler<Buffer>() {
+		    @Override
+		    public void handle(Buffer body) {
+
+			JsonObject restResponse = new JsonObject(body.getString(0,body.length()));
+
+			System.out.println("POST Response Received");
+			System.out.println(restResponse.toString());
+
+			context.assertEquals(restResponse.getString("title") , "Refactoring");
+			
+			String id = restResponse.getString("id");
+			String url = String.format("/item_storage/item/%s",id);
+			
+			System.out.println("Id received " + restResponse.getString("id"));
+
+			 
+			 try{
+			     URL getItemUrl = new URL("http", "localhost", port, url);
+
+			     System.out.println("Getting Item");
+			     System.out.println(getItemUrl);
+
+			     HttpClientRequest getRequest = client.getAbs(getItemUrl.toString(), response -> {
+
+				     final int statusCode = response.statusCode();                    
+				     response.bodyHandler(new Handler<Buffer>() {
+					     @Override
+					     public void handle(Buffer body) {
+
+						 JsonObject restResponse = new JsonObject(body.getString(0,body.length()));
+
+						 System.out.println("GET Response Received");
+						 System.out.println(restResponse.toString());
+
+						 context.assertEquals(restResponse.getString("id") , id);
+						 async.complete();
+			
+					     }
+					 });
+				 });
+
+			     getRequest.headers().add("Accept","application/json");
+			     getRequest.end();
+			     
+			 }catch(MalformedURLException ex){
+			     System.out.println("EXCEPTION HAPPENED");
+			 }
+		    }
+		});
+	});
+  
+    postRequest.headers().add("Accept","application/json");
+    postRequest.headers().add("Content-type","application/json");
+    postRequest.end(post.encodePrettily());
+
+  }
 }

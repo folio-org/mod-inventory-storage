@@ -17,8 +17,13 @@ import javax.ws.rs.QueryParam;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
 
 public class ItemStorageAPI implements ItemStorageResource {
+
+    public Map<String,Item> storage = new HashMap<String,Item>();
+    
   @Override
   public void getItemStorageItem(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
     List<Item> items = new ArrayList<Item>();
@@ -33,7 +38,11 @@ public class ItemStorageAPI implements ItemStorageResource {
   public void postItemStorageItem(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Item entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
       
       OutStream stream = new OutStream();
-      stream.setData(entity);
+      UUID id = UUID.randomUUID();
+      String idString = id.toString();
+      entity.setId(idString);
+      storage.put(idString,entity);
+      stream.setData(storage.get(idString));
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
 								     ItemStorageResource.PostItemStorageItemResponse
 								     .withJsonCreated("I dont know please dont shoot me",stream)));
