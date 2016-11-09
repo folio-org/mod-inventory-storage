@@ -18,6 +18,6 @@ class WaitForAllFutures {
   }
 
   void waitForCompletion() {
-    waitForCompletion(CompletableFuture.allOf(*allFutures))
+    CompletableFuture.allOf(*allFutures).join()
   }
 }

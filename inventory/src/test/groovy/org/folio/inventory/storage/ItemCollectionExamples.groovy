@@ -2,29 +2,16 @@ package org.folio.inventory.storage
 
 import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
-import org.folio.inventory.storage.external.ExternalStorageModuleItemCollection
-import org.folio.inventory.storage.memory.InMemoryItemCollection
-import org.folio.metadata.common.VertxAssistant
 import org.folio.metadata.common.WaitForAllFutures
-import org.junit.AfterClass
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import support.FakeInventoryStorageModule
 
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 
 import static org.folio.metadata.common.FutureAssistance.*
 
-@RunWith(value = Parameterized.class)
-class ItemCollectionExamples {
-
-  private static VertxAssistant vertxAssistant;
-
-  final ItemCollection collection
+abstract class ItemCollectionExamples {
+  private final ItemCollection collection
 
   private final Item smallAngryPlanet = new Item("Long Way to a Small Angry Planet", "036000291452")
   private final Item nod = new Item("Nod", "565578437802")
@@ -32,34 +19,6 @@ class ItemCollectionExamples {
 
   public ItemCollectionExamples(ItemCollection collection) {
     this.collection = collection
-  }
-
-  @Parameterized.Parameters(name = "{0}")
-  public static Collection data() {
-    vertxAssistant = new VertxAssistant()
-    vertxAssistant.start()
-
-    [
-      new InMemoryItemCollection(),
-      new ExternalStorageModuleItemCollection(vertxAssistant.vertx)
-    ]
-  }
-
-  @BeforeClass()
-  public static void beforeAll() {
-    // HACK: This is nasty, because one case needs vertx,
-    // we need to initialise it at the beginning
-    // and parameterised doesn't have a nice cleanup mechanism
-    def deployed = new CompletableFuture()
-
-    vertxAssistant.deployGroovyVerticle(FakeInventoryStorageModule.class.name, deployed)
-
-    deployed.get(20000, TimeUnit.MILLISECONDS)
-  }
-
-  @AfterClass()
-  public static void afterAll() {
-    vertxAssistant.stop()
   }
 
   @Before
@@ -77,7 +36,7 @@ class ItemCollectionExamples {
 
     def emptied = new CompletableFuture()
 
-    collection.empty( complete(emptied) )
+    collection.empty(complete(emptied))
 
     waitForCompletion(emptied)
 
@@ -92,17 +51,7 @@ class ItemCollectionExamples {
 
   @Test
   void itemsCanBeAdded() {
-    def firstAddFuture = new CompletableFuture<Item>()
-    def secondAddFuture = new CompletableFuture<Item>()
-    def thirdAddFuture = new CompletableFuture<Item>()
-
-    collection.add(smallAngryPlanet, complete(firstAddFuture))
-    collection.add(nod, complete(secondAddFuture))
-    collection.add(uprooted, complete(thirdAddFuture))
-
-    def allAddsFuture = CompletableFuture.allOf(firstAddFuture, secondAddFuture, thirdAddFuture)
-
-    getOnCompletion(allAddsFuture)
+    addAllExamples()
 
     def findFuture = new CompletableFuture<List<Item>>()
 
