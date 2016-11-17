@@ -144,8 +144,6 @@ class ExternalStorageModuleItemCollection
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", "not-blank")
       .end()
-
-    completionCallback()
   }
 
   @Override
