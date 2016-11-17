@@ -30,11 +30,16 @@ class ModsIngestion {
 
           def storage = new InMemoryItemCollection()
 
-          def items = new ModsParser().parseRecords(uploadedFileContents)
+          def records = new ModsParser().parseRecords(uploadedFileContents)
 
           def waitForAll = new WaitForAllFutures<Item>()
 
-          items.each { storage.add(it, waitForAll.notifyComplete()) }
+          records.stream()
+            .map({ new Item(UUID.randomUUID().toString(),
+                            it.title,
+                            it.barcode)
+            })
+            .forEach({ storage.add(it, waitForAll.notifyComplete()) })
 
           waitForAll.then({ JsonResponse.success(routingContext.response(), it) })
         }

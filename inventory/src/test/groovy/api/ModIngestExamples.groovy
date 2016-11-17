@@ -33,7 +33,7 @@ class ModIngestExamples extends Specification {
 
     when:
 
-    def (resp, body) = ingestRecord(new URL("http://localhost:9603/parsing/mods"), [modsFile])
+    def (resp, body) = ingestFile(new URL("http://localhost:9603/parsing/mods"), [modsFile])
 
     then:
       assert resp.status == 200
@@ -82,7 +82,7 @@ class ModIngestExamples extends Specification {
       def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
 
     when:
-      def (resp, body) = ingestRecord(new URL("http://localhost:9603/parsing/mods"),
+      def (resp, body) = ingestFile(new URL("http://localhost:9603/parsing/mods"),
         [modsFile, modsFile])
 
     then:
@@ -114,7 +114,7 @@ class ModIngestExamples extends Specification {
     }
   }
 
-  static def ingestRecord(URL url, List<File> recordsToIngest) {
+  static def ingestFile(URL url, List<File> recordsToIngest) {
     if (url == null)
       throw new IllegalArgumentException("url is null")
 
