@@ -4,9 +4,9 @@ import java.util.concurrent.CompletableFuture
 
 import static org.folio.metadata.common.FutureAssistance.*
 
-class WaitForAllFutures {
+class WaitForAllFutures<T> {
 
-  private allFutures = new ArrayList<CompletableFuture>()
+  private allFutures = new ArrayList<CompletableFuture<T>>()
 
   Closure notifyComplete() {
 
@@ -19,5 +19,9 @@ class WaitForAllFutures {
 
   void waitForCompletion() {
     CompletableFuture.allOf(*allFutures).join()
+  }
+
+  void then(Closure action) {
+    CompletableFuture.allOf(*allFutures).thenApply(action(allFutures.collect({ it.get() })))
   }
 }

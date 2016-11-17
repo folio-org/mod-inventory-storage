@@ -3,8 +3,9 @@ package org.folio.inventory.org.folio.inventory.api.resources.ingest
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.folio.inventory.domain.Item
-import org.folio.inventory.org.folio.inventory.ingest.ModsParser
+import org.folio.inventory.org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.storage.memory.InMemoryItemCollection
+import org.folio.metadata.common.WaitForAllFutures
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.ServerErrorResponse
@@ -17,7 +18,7 @@ class ModsIngestion {
 
       if(routingContext.fileUploads().size() > 1) {
         ClientErrorResponse.badRequest(routingContext.response(),
-          "Cannot ingest multiple files in a single request")
+          "Cannot parsing multiple files in a single request")
         return
       }
 
@@ -27,10 +28,15 @@ class ModsIngestion {
         if(result.succeeded()) {
           def uploadedFileContents = result.result().toString()
 
-          def newItem = new ModsParser().parseRecord(uploadedFileContents)
+          def storage = new InMemoryItemCollection()
 
-          new InMemoryItemCollection().add(newItem,
-            { JsonResponse.success(routingContext.response(), it) })
+          def items = new ModsParser().parseRecords(uploadedFileContents)
+
+          def waitForAll = new WaitForAllFutures<Item>()
+
+          items.each { storage.add(it, waitForAll.notifyComplete()) }
+
+          waitForAll.then({ JsonResponse.success(routingContext.response(), it) })
         }
         else {
           ServerErrorResponse.internalError(routingContext.response(), result.cause().toString())
@@ -40,6 +46,6 @@ class ModsIngestion {
   }
 
   private static String relativeModsIngestPath() {
-    "/ingest/mods"
+    "/parsing/mods"
   }
 }

@@ -18,4 +18,9 @@ class Item {
   def Item copyWithNewId(String id) {
     new Item(id, title, barcode)
   }
+
+  @Override
+  public String toString() {
+    println ("ID: ${id}, Title: ${title}, Barcode: ${barcode}")
+  }
 }

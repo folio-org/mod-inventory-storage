@@ -4,6 +4,7 @@ import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.Method
 import groovyx.net.http.ResponseParseException
+import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.folio.inventory.IngestVerticle
@@ -26,33 +27,67 @@ class ModIngestExamples extends Specification {
     stopVertx()
   }
 
-  void "Ingest a single MODS record"() {
+  void "Ingest some MODS records"() {
     given:
-      def singleModsRecord = loadFileFromResource("mods-single-record.xml")
+      def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
 
     when:
 
-    def (resp, body) = ingestRecord(new URL("http://localhost:9603/ingest/mods"), [singleModsRecord])
+    def (resp, body) = ingestRecord(new URL("http://localhost:9603/parsing/mods"), [modsFile])
 
     then:
       assert resp.status == 200
       assert body != null
-      assert body.id != null
-      assert body.title == "'Edward Samuel: ei Oes a'i Waith', an essay submitted for competition at the National Eisteddfod held at Corwen, 1919; together ..., 1919."
-      assert body.barcode == "78584457"
+
+      List<JsonObject> items = body
+
+      assert items.size() == 5
+      assert items.every({ it.id != null })
+      assert items.every({ it.title != null })
+      assert items.every({ it.barcode != null })
+
+      assert items.any({
+        matches(it,
+          "California: its gold and its inhabitants, by the author of 'Seven years on the Slave coast of Africa'.",
+          "69228882")
+      })
+
+      assert items.any({
+        matches(it,
+          "Studien zur Geschichte der Notenschrift.",
+          "69247446")
+      })
+
+      assert items.any({
+        matches(it,
+          "Essays on C.S. Lewis and George MacDonald",
+          "53556908")
+      })
+
+      assert items.any({
+        matches(it,
+          "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman [W. Dunlop].",
+          "69077747")
+      })
+
+      assert items.any({
+        matches(it,
+          "Edward McGuire, RHA",
+          "22169083")
+      })
   }
 
   void "Refuse ingest for multiple files"() {
     given:
-      def singleModsRecord = loadFileFromResource("mods-single-record.xml")
+      def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
 
     when:
-      def (resp, body) = ingestRecord(new URL("http://localhost:9603/ingest/mods"),
-        [singleModsRecord, singleModsRecord])
+      def (resp, body) = ingestRecord(new URL("http://localhost:9603/parsing/mods"),
+        [modsFile, modsFile])
 
     then:
       assert resp.status == 400
-      assert body == "Cannot ingest multiple files in a single request"
+      assert body == "Cannot parsing multiple files in a single request"
   }
 
   def startVertx() {
@@ -130,6 +165,11 @@ class ModIngestExamples extends Specification {
     ClassLoader classLoader = getClass().getClassLoader();
 
     new File(classLoader.getResource(filename).getFile())
+  }
+
+  private boolean matches(record, String expectedTitle, String expectedBarcode) {
+    record.title == expectedTitle &&
+      record.barcode == expectedBarcode
   }
 
 }
