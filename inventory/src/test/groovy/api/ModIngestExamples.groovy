@@ -8,7 +8,9 @@ import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.folio.inventory.IngestVerticle
+import org.folio.metadata.common.testing.HttpClient
 import spock.lang.Specification
+import spock.util.concurrent.PollingConditions
 
 import java.util.concurrent.CompletableFuture
 
@@ -29,52 +31,80 @@ class ModIngestExamples extends Specification {
 
   void "Ingest some MODS records"() {
     given:
-      def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
+      def modsFile = loadFileFromResource(
+        "mods/multiple-example-mods-records.xml")
 
     when:
-
-    def (resp, body) = ingestFile(new URL("http://localhost:9603/parsing/mods"), [modsFile])
+      def (ingestResponse, body) = ingestFile(
+        new URL("http://localhost:9603/ingest/mods"), [modsFile])
 
     then:
-      assert resp.status == 200
-      assert body != null
+      def statusLocation = ingestResponse.headers.location.toString()
+      assert ingestResponse.status == 202
+      assert statusLocation != null
 
-      List<JsonObject> items = body
+      def conditions = new PollingConditions(
+        timeout: 10, initialDelay: 1.0, factor: 1.25)
 
-      assert items.size() == 5
-      assert items.every({ it.id != null })
-      assert items.every({ it.title != null })
-      assert items.every({ it.barcode != null })
+      conditions.eventually {
+        ingestJobHasCompleted(statusLocation)
+        expectedItemsCreatedFromIngest(statusLocation)
+      }
+  }
 
-      assert items.any({
-        matches(it,
-          "California: its gold and its inhabitants, by the author of 'Seven years on the Slave coast of Africa'.",
-          "69228882")
-      })
+  def ingestJobHasCompleted(String statusLocation) {
+    def client = new HttpClient()
 
-      assert items.any({
-        matches(it,
-          "Studien zur Geschichte der Notenschrift.",
-          "69247446")
-      })
+    def (resp, body) = client.get(statusLocation)
 
-      assert items.any({
-        matches(it,
-          "Essays on C.S. Lewis and George MacDonald",
-          "53556908")
-      })
+    assert resp.status == 200
+    assert body.status == "completed"
+  }
 
-      assert items.any({
-        matches(it,
-          "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman [W. Dunlop].",
-          "69077747")
-      })
+  def expectedItemsCreatedFromIngest(String statusLocation) {
+    def client = new HttpClient()
 
-      assert items.any({
-        matches(it,
-          "Edward McGuire, RHA",
-          "22169083")
-      })
+    def (resp, body) = client.get(statusLocation)
+
+    assert resp.status == 200
+    assert body.items != null
+
+    List<JsonObject> items = body.items
+
+    assert items.size() == 5
+    assert items.every({ it.id != null })
+    assert items.every({ it.title != null })
+    assert items.every({ it.barcode != null })
+
+    assert items.any({
+      matches(it,
+        "California: its gold and its inhabitants, by the author of 'Seven years on the Slave coast of Africa'.",
+        "69228882")
+    })
+
+    assert items.any({
+      matches(it,
+        "Studien zur Geschichte der Notenschrift.",
+        "69247446")
+    })
+
+    assert items.any({
+      matches(it,
+        "Essays on C.S. Lewis and George MacDonald",
+        "53556908")
+    })
+
+    assert items.any({
+      matches(it,
+        "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman [W. Dunlop].",
+        "69077747")
+    })
+
+    assert items.any({
+      matches(it,
+        "Edward McGuire, RHA",
+        "22169083")
+    })
   }
 
   void "Refuse ingest for multiple files"() {
@@ -82,7 +112,7 @@ class ModIngestExamples extends Specification {
       def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
 
     when:
-      def (resp, body) = ingestFile(new URL("http://localhost:9603/parsing/mods"),
+      def (resp, body) = ingestFile(new URL("http://localhost:9603/ingest/mods"),
         [modsFile, modsFile])
 
     then:
@@ -114,7 +144,7 @@ class ModIngestExamples extends Specification {
     }
   }
 
-  static def ingestFile(URL url, List<File> recordsToIngest) {
+  static Tuple ingestFile(URL url, List<File> recordsToIngest) {
     if (url == null)
       throw new IllegalArgumentException("url is null")
 
@@ -146,7 +176,7 @@ class ModIngestExamples extends Specification {
           println "Status Code: ${resp.status}"
           println "Location: ${resp.headers.location}\n"
 
-          new Tuple(resp, body.getText())
+          new Tuple2(resp, body.getText())
         }
       }
     }
