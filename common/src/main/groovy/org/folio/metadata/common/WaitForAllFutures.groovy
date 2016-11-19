@@ -20,8 +20,4 @@ class WaitForAllFutures<T> {
   void waitForCompletion() {
     CompletableFuture.allOf(*allFutures).join()
   }
-
-  void then(Closure action) {
-    CompletableFuture.allOf(*allFutures).thenApply(action(allFutures.collect({ it.get() })))
-  }
 }
