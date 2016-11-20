@@ -32,7 +32,7 @@ class IngestMessageProcessor {
 
     records.stream()
       .map({
-      new Instance(UUID.randomUUID().toString(), it.title)
+      new Instance(it.title)
     })
     .forEach({ instanceCollection.add(it, allInstances.receive()) })
 
@@ -40,7 +40,6 @@ class IngestMessageProcessor {
       records.stream()
         .map({ record ->
         new Item(
-          UUID.randomUUID().toString(),
           record.title,
           record.barcode,
           instances.find({ it.title == record.title })?.id)

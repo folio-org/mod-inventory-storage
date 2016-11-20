@@ -6,23 +6,23 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
-import org.folio.inventory.domain.Item
-import org.folio.inventory.domain.ItemCollection
+import org.folio.inventory.domain.Instance
+import org.folio.inventory.domain.InstanceCollection
 
 import java.util.regex.Pattern
 
-class ExternalStorageModuleItemCollection
-  implements ItemCollection {
+class ExternalStorageModuleInstanceCollection
+  implements InstanceCollection {
 
   private final Vertx vertx
 
-  def ExternalStorageModuleItemCollection(final Vertx vertx) {
+  def ExternalStorageModuleInstanceCollection(final Vertx vertx) {
     this.vertx = vertx
   }
 
   @Override
-  void add(Item item, Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/items"
+  void add(Instance instance, Closure resultCallback) {
+    String location = "http://localhost:9492/inventory-storage/instances"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -36,31 +36,29 @@ class ExternalStorageModuleItemCollection
 
     Handler<Throwable> onException = { println "Exception: ${it}" }
 
-    def itemToSend = [:]
+    def instanceToSend = [:]
 
-    itemToSend.put("title", item.title)
-    itemToSend.put("barcode", item.barcode)
-    itemToSend.put("instanceId", item.instanceId)
+    instanceToSend.put("title", instance.title)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", "not-blank")
-      .end(Json.encodePrettily(itemToSend))
+      .end(Json.encodePrettily(instanceToSend))
   }
 
   @Override
   void findById(String id, Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/items/${id}"
+    String location = "http://localhost:9492/inventory-storage/instances/${id}"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        def itemFromServer = new JsonObject(responseBody)
+        def instanceFromServer = new JsonObject(responseBody)
 
-        def foundItem = mapFromJson(itemFromServer)
+        def foundInstance = mapFromJson(instanceFromServer)
 
-        resultCallback(foundItem)
+        resultCallback(foundInstance)
       })
     }
 
@@ -75,21 +73,21 @@ class ExternalStorageModuleItemCollection
 
   @Override
   void findAll(Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/items"
+    String location = "http://localhost:9492/inventory-storage/instances"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        JsonArray itemsFromServer = new JsonArray(responseBody)
+        JsonArray instances = new JsonArray(responseBody)
 
-        def foundItems = new ArrayList<Item>()
+        def foundInstances = new ArrayList<Instance>()
 
-        itemsFromServer.each {
-          foundItems.add(mapFromJson(it))
+        instances.each {
+          foundInstances.add(mapFromJson(it))
         }
 
-        resultCallback(foundItems)
+        resultCallback(foundInstances)
       })
     }
 
@@ -103,7 +101,7 @@ class ExternalStorageModuleItemCollection
 
   @Override
   void empty(Closure completionCallback) {
-    String location = "http://localhost:9492/inventory-storage/items"
+    String location = "http://localhost:9492/inventory-storage/instances"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -134,11 +132,9 @@ class ExternalStorageModuleItemCollection
     }
   }
 
-  private Item mapFromJson(JsonObject itemFromServer) {
-    new Item(
-      itemFromServer.getString("id"),
-      itemFromServer.getString("title"),
-      itemFromServer.getString("barcode"),
-      itemFromServer.getString("instanceId"))
+  private Instance mapFromJson(JsonObject instanceFromServer) {
+    new Instance(
+      instanceFromServer.getString("id"),
+      instanceFromServer.getString("title"))
   }
 }

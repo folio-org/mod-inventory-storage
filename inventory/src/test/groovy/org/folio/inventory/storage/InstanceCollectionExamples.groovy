@@ -3,7 +3,6 @@ package org.folio.inventory.storage
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.InstanceCollection
 import org.folio.inventory.domain.Item
-import org.folio.inventory.domain.ItemCollection
 import org.folio.metadata.common.WaitForAllFutures
 import org.junit.Before
 import org.junit.Test

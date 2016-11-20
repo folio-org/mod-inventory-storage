@@ -29,6 +29,12 @@ jar {
   }
 }
 
+test {
+  //Gradle runs tests designed to be run in a suite twice
+  //See: https://discuss.gradle.org/t/how-to-prevent-junit-test-suite-classes-from-being-ran-twice/7107/4
+  exclude '**/External**CollectionExamples.class'
+}
+
 task fatJar(type: Jar) {
   manifest {
     attributes 'Main-Class': mainClassName
