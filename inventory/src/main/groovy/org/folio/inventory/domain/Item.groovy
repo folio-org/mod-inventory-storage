@@ -21,6 +21,6 @@ class Item {
 
   @Override
   public String toString() {
-    println ("ID: ${id}, Title: ${title}, Barcode: ${barcode}")
+    println ("Item ID: ${id}, Title: ${title}, Barcode: ${barcode}")
   }
 }

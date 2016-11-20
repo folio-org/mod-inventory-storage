@@ -1,12 +1,10 @@
 package api
 
-import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import org.folio.inventory.InventoryVerticle
 import org.folio.metadata.common.testing.HttpClient
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
-
 import java.util.concurrent.CompletableFuture
 
 class ModIngestExamples extends Specification {
@@ -31,7 +29,7 @@ class ModIngestExamples extends Specification {
         "mods/multiple-example-mods-records.xml")
 
     when:
-      def (ingestResponse, body) = beginIngest([modsFile])
+      def (ingestResponse, _) = beginIngest([modsFile])
 
     then:
       def statusLocation = ingestResponse.headers.location.toString()
@@ -44,6 +42,7 @@ class ModIngestExamples extends Specification {
       conditions.eventually {
         ingestJobHasCompleted(statusLocation)
         expectedItemsCreatedFromIngest()
+        expectedInstancesCreatedFromIngest()
       }
   }
 
@@ -71,49 +70,84 @@ class ModIngestExamples extends Specification {
   private expectedItemsCreatedFromIngest() {
     def client = new HttpClient()
 
-    def (resp, body) = client.get(new URL("http://localhost:9603/inventory/items"))
+    def (resp, items) = client.get(new URL("http://localhost:9603/inventory/items"))
 
     assert resp.status == 200
-    assert body.items != null
 
-    List<JsonObject> items = body
-
+    assert items != null
     assert items.size() == 5
     assert items.every({ it.id != null })
     assert items.every({ it.title != null })
     assert items.every({ it.barcode != null })
 
     assert items.any({
-      matches(it,
+      itemMatches(it,
         "California: its gold and its inhabitants, by the author of 'Seven years on the Slave coast of Africa'.",
         "69228882")
     })
 
     assert items.any({
-      matches(it,
+      itemMatches(it,
         "Studien zur Geschichte der Notenschrift.",
         "69247446")
     })
 
     assert items.any({
-      matches(it,
+      itemMatches(it,
         "Essays on C.S. Lewis and George MacDonald",
         "53556908")
     })
 
     assert items.any({
-      matches(it,
+      itemMatches(it,
         "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman [W. Dunlop].",
         "69077747")
     })
 
     assert items.any({
-      matches(it,
+      itemMatches(it,
         "Edward McGuire, RHA",
         "22169083")
     })
   }
 
+  private expectedInstancesCreatedFromIngest() {
+    def client = new HttpClient()
+
+    def (resp, instances) = client.get(new URL("http://localhost:9603/inventory/instances"))
+
+    assert resp.status == 200
+    assert instances != null
+
+    assert instances.size() == 5
+    assert instances.every({ it.id != null })
+    assert instances.every({ it.title != null })
+
+    assert instances.any({
+      instanceMatches(it,
+        "California: its gold and its inhabitants, by the author of 'Seven years on the Slave coast of Africa'.")
+    })
+
+    assert instances.any({
+      instanceMatches(it,
+        "Studien zur Geschichte der Notenschrift.")
+    })
+
+    assert instances.any({
+      instanceMatches(it,
+        "Essays on C.S. Lewis and George MacDonald")
+    })
+
+    assert instances.any({
+      instanceMatches(it,
+        "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman [W. Dunlop].")
+    })
+
+    assert instances.any({
+      instanceMatches(it,
+        "Edward McGuire, RHA")
+    })
+  }
 
   private startVertx() {
     vertx = Vertx.vertx()
@@ -150,9 +184,12 @@ class ModIngestExamples extends Specification {
     new File(classLoader.getResource(filename).getFile())
   }
 
-  private boolean matches(record, String expectedTitle, String expectedBarcode) {
+  private boolean itemMatches(record, String expectedTitle, String expectedBarcode) {
     record.title == expectedTitle &&
       record.barcode == expectedBarcode
   }
 
+  private boolean instanceMatches(record, String expectedTitle) {
+    record.title == expectedTitle
+  }
 }

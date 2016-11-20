@@ -6,6 +6,7 @@ import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
 import io.vertx.lang.groovy.GroovyVerticle
 import org.folio.inventory.org.folio.inventory.IngestMessageProcessor
+import org.folio.inventory.org.folio.inventory.api.resources.Instances
 import org.folio.inventory.org.folio.inventory.api.resources.Items
 import org.folio.inventory.org.folio.inventory.api.resources.ingest.ModsIngestion
 import org.folio.inventory.storage.memory.InMemoryItemCollection
@@ -51,6 +52,7 @@ public class InventoryVerticle extends GroovyVerticle {
 
     new ModsIngestion(itemCollection).register(router)
     new Items(itemCollection).register(router)
+    new Instances(itemCollection).register(router)
 
     def handler = { result ->
       if (result.succeeded()) {
@@ -66,10 +68,6 @@ public class InventoryVerticle extends GroovyVerticle {
     def config = vertx.getOrCreateContext().config()
 
     server.requestHandler(router.&accept).listen(config.port ?: 9403, handler)
-
-
-
-
   }
 
   @Override
