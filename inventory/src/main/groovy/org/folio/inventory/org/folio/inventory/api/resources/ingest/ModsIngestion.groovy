@@ -1,5 +1,6 @@
 package org.folio.inventory.org.folio.inventory.api.resources.ingest
 
+import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.file.FileSystem
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
@@ -54,17 +55,15 @@ class ModsIngestion {
         if (result.succeeded()) {
           def uploadedFileContents = result.result().toString()
 
-
           def records = new ModsParser().parseRecords(uploadedFileContents)
 
-          def collectAll = new CollectAll<Item>()
+          def convertedRecords = records.collect {
+            ["title": "${it.title}", "barcode":"${it.barcode}" ]
+          }
 
-          records.stream()
-            .map({
-            new Item(UUID.randomUUID().toString(),
-              it.title,
-              it.barcode)
-          }).forEach({ itemCollection.add(it, collectAll.receive()) })
+          routingContext.vertx().eventBus().send(
+            "org.folio.inventory.ingest.records.process",
+            new JsonObject(["records" : convertedRecords]))
 
           RedirectResponse.accepted(routingContext.response(),
             statusLocation(routingContext))

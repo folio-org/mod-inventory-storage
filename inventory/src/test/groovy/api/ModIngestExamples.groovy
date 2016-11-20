@@ -7,7 +7,7 @@ import groovyx.net.http.ResponseParseException
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import org.apache.http.entity.mime.MultipartEntityBuilder
-import org.folio.inventory.ApiVerticle
+import org.folio.inventory.InventoryVerticle
 import org.folio.metadata.common.testing.HttpClient
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
@@ -22,7 +22,7 @@ class ModIngestExamples extends Specification {
 
   def setupSpec() {
     startVertx()
-    startIngestVerticle()
+    startInventoryVerticle()
   }
 
   def cleanupSpec() {
@@ -124,8 +124,8 @@ class ModIngestExamples extends Specification {
     vertx = Vertx.vertx()
   }
 
-  def startIngestVerticle() {
-    ApiVerticle.deploy(vertx, ["port": testPortToUse]).join()
+  def startInventoryVerticle() {
+    InventoryVerticle.deploy(vertx, ["port": testPortToUse]).join()
   }
 
   def stopVertx() {
