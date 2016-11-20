@@ -7,7 +7,7 @@ import groovyx.net.http.ResponseParseException
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import org.apache.http.entity.mime.MultipartEntityBuilder
-import org.folio.inventory.IngestVerticle
+import org.folio.inventory.ApiVerticle
 import org.folio.metadata.common.testing.HttpClient
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
@@ -36,7 +36,7 @@ class ModIngestExamples extends Specification {
 
     when:
       def (ingestResponse, body) = ingestFile(
-        new URL("http://localhost:9603/ingest/mods"), [modsFile])
+        new URL("http://localhost:9603/inventory/ingest/mods"), [modsFile])
 
     then:
       def statusLocation = ingestResponse.headers.location.toString()
@@ -48,7 +48,7 @@ class ModIngestExamples extends Specification {
 
       conditions.eventually {
         ingestJobHasCompleted(statusLocation)
-        expectedItemsCreatedFromIngest(statusLocation)
+        expectedItemsCreatedFromIngest()
       }
   }
 
@@ -61,15 +61,15 @@ class ModIngestExamples extends Specification {
     assert body.status == "completed"
   }
 
-  def expectedItemsCreatedFromIngest(String statusLocation) {
+  def expectedItemsCreatedFromIngest() {
     def client = new HttpClient()
 
-    def (resp, body) = client.get(statusLocation)
+    def (resp, body) = client.get(new URL("http://localhost:9603/inventory/items"))
 
     assert resp.status == 200
     assert body.items != null
 
-    List<JsonObject> items = body.items
+    List<JsonObject> items = body
 
     assert items.size() == 5
     assert items.every({ it.id != null })
@@ -112,7 +112,7 @@ class ModIngestExamples extends Specification {
       def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
 
     when:
-      def (resp, body) = ingestFile(new URL("http://localhost:9603/ingest/mods"),
+      def (resp, body) = ingestFile(new URL("http://localhost:9603/inventory/ingest/mods"),
         [modsFile, modsFile])
 
     then:
@@ -125,7 +125,7 @@ class ModIngestExamples extends Specification {
   }
 
   def startIngestVerticle() {
-    IngestVerticle.deploy(vertx, ["port": testPortToUse]).join()
+    ApiVerticle.deploy(vertx, ["port": testPortToUse]).join()
   }
 
   def stopVertx() {

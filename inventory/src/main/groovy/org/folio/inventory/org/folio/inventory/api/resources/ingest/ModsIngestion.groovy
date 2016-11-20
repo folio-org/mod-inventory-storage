@@ -5,6 +5,7 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.folio.inventory.domain.Item
+import org.folio.inventory.domain.ItemCollection
 import org.folio.inventory.org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.storage.memory.InMemoryItemCollection
 import org.folio.metadata.common.CollectAll
@@ -14,12 +15,16 @@ import org.folio.metadata.common.api.response.RedirectResponse
 import org.folio.metadata.common.api.response.ServerErrorResponse
 
 class ModsIngestion {
-  private InMemoryItemCollection itemCollection = new InMemoryItemCollection()
+  private final InMemoryItemCollection itemCollection
+
+  ModsIngestion(ItemCollection itemCollection) {
+    this.itemCollection = itemCollection
+  }
 
   public void register(Router router) {
     router.post(relativeModsIngestPath() + "*").handler(BodyHandler.create())
     router.post(relativeModsIngestPath()).handler(this.&ingest)
-    router.get("/ingest/mods/status").handler(this.&status)
+    router.get(relativeModsIngestPath() + "/status").handler(this.&status)
   }
 
   private ingest(RoutingContext routingContext) {
@@ -35,7 +40,7 @@ class ModsIngestion {
   private status(RoutingContext routingContext) {
     itemCollection.findAll {
       JsonResponse.success(routingContext.response(),
-        ["status":"completed", "items": it ])
+        ["status":"completed", "Items": it ])
     }
   }
 
@@ -74,10 +79,9 @@ class ModsIngestion {
   private String statusLocation(RoutingContext routingContext) {
 
     def scheme = routingContext.request().scheme()
-    def currentUri = routingContext.request().uri()
     def host = routingContext.request().host()
 
-    "${scheme}://${host}${currentUri}/status"
+    "${scheme}://${host}${relativeModsIngestPath()}/status"
   }
 
   private String uploadFileName(RoutingContext routingContext) {
@@ -86,6 +90,6 @@ class ModsIngestion {
   }
 
   private static String relativeModsIngestPath() {
-    "/ingest/mods"
+    "/inventory/ingest/mods"
   }
 }

@@ -5,19 +5,21 @@ import io.vertx.groovy.core.Vertx
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
 import io.vertx.lang.groovy.GroovyVerticle
+import org.folio.inventory.org.folio.inventory.api.resources.Items
 import org.folio.inventory.org.folio.inventory.api.resources.ingest.ModsIngestion
+import org.folio.inventory.storage.memory.InMemoryItemCollection
 import org.folio.metadata.common.WebRequestDiagnostics
 
 import java.util.concurrent.CompletableFuture
 
-public class IngestVerticle extends GroovyVerticle {
+public class ApiVerticle extends GroovyVerticle {
 
   private HttpServer server;
 
   public static void deploy(Vertx vertx, Map config, CompletableFuture deployed) {
     def options = ["config": config, "worker": true]
 
-    vertx.deployVerticle("groovy:org.folio.inventory.IngestVerticle", options, { res ->
+    vertx.deployVerticle("groovy:org.folio.inventory.ApiVerticle", options, { res ->
       if (res.succeeded()) {
         deployed.complete(null);
       } else {
@@ -41,7 +43,10 @@ public class IngestVerticle extends GroovyVerticle {
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-    new ModsIngestion().register(router)
+    def itemCollection = new InMemoryItemCollection()
+
+    new ModsIngestion(itemCollection).register(router)
+    new Items(itemCollection).register(router)
 
     def handler = { result ->
       if (result.succeeded()) {
@@ -58,8 +63,7 @@ public class IngestVerticle extends GroovyVerticle {
 
     server.requestHandler(router.&accept).listen(config.port ?: 9403, handler)
   }
-
-
+  
   @Override
   public void stop(Future stopped) {
     println "Stopping inventory module"
