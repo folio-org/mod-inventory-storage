@@ -1,12 +1,7 @@
 package api
 
-import groovyx.net.http.HTTPBuilder
-import groovyx.net.http.HttpResponseException
-import groovyx.net.http.Method
-import groovyx.net.http.ResponseParseException
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
-import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.folio.inventory.InventoryVerticle
 import org.folio.metadata.common.testing.HttpClient
 import spock.lang.Specification
@@ -19,6 +14,7 @@ class ModIngestExamples extends Specification {
   public static final testPortToUse = 9603
 
   private Vertx vertx;
+  private final HttpClient client = new HttpClient()
 
   def setupSpec() {
     startVertx()
@@ -35,8 +31,7 @@ class ModIngestExamples extends Specification {
         "mods/multiple-example-mods-records.xml")
 
     when:
-      def (ingestResponse, body) = ingestFile(
-        new URL("http://localhost:9603/inventory/ingest/mods"), [modsFile])
+      def (ingestResponse, body) = beginIngest([modsFile])
 
     then:
       def statusLocation = ingestResponse.headers.location.toString()
@@ -52,7 +47,19 @@ class ModIngestExamples extends Specification {
       }
   }
 
-  def ingestJobHasCompleted(String statusLocation) {
+  void "Refuse ingest for multiple files"() {
+    given:
+      def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
+
+    when:
+      def (resp, body) = beginIngest([modsFile, modsFile])
+
+    then:
+      assert resp.status == 400
+      assert body == "Cannot parsing multiple files in a single request"
+  }
+
+  private ingestJobHasCompleted(String statusLocation) {
     def client = new HttpClient()
 
     def (resp, body) = client.get(statusLocation)
@@ -61,7 +68,7 @@ class ModIngestExamples extends Specification {
     assert body.status == "completed"
   }
 
-  def expectedItemsCreatedFromIngest() {
+  private expectedItemsCreatedFromIngest() {
     def client = new HttpClient()
 
     def (resp, body) = client.get(new URL("http://localhost:9603/inventory/items"))
@@ -107,28 +114,16 @@ class ModIngestExamples extends Specification {
     })
   }
 
-  void "Refuse ingest for multiple files"() {
-    given:
-      def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
 
-    when:
-      def (resp, body) = ingestFile(new URL("http://localhost:9603/inventory/ingest/mods"),
-        [modsFile, modsFile])
-
-    then:
-      assert resp.status == 400
-      assert body == "Cannot parsing multiple files in a single request"
-  }
-
-  def startVertx() {
+  private startVertx() {
     vertx = Vertx.vertx()
   }
 
-  def startInventoryVerticle() {
+  private startInventoryVerticle() {
     InventoryVerticle.deploy(vertx, ["port": testPortToUse]).join()
   }
 
-  def stopVertx() {
+  private stopVertx() {
     if (vertx != null) {
       def stopped = new CompletableFuture()
 
@@ -144,51 +139,9 @@ class ModIngestExamples extends Specification {
     }
   }
 
-  static Tuple ingestFile(URL url, List<File> recordsToIngest) {
-    if (url == null)
-      throw new IllegalArgumentException("url is null")
-
-    def http = new HTTPBuilder(url)
-
-    try {
-      http.request(Method.POST) { req ->
-        println "\nTest Http Client POST to: ${url}\n"
-
-        headers.'X-Okapi-Tenant' = "our"
-        requestContentType = 'multipart/form-data'
-
-        def multipartBuilder = new MultipartEntityBuilder()
-
-        recordsToIngest.each {
-          multipartBuilder.addBinaryBody("record", it)
-        }
-
-        req.entity = multipartBuilder.build()
-
-        response.success = { resp, body ->
-          println "Status Code: ${resp.status}"
-          println "Location: ${resp.headers.location}\n"
-
-          new Tuple2(resp, body)
-        }
-
-        response.failure = { resp, body ->
-          println "Status Code: ${resp.status}"
-          println "Location: ${resp.headers.location}\n"
-
-          new Tuple2(resp, body.getText())
-        }
-      }
-    }
-    catch (ConnectException ex) {
-      println "Failed to access ${url} internalError: ${ex})\n"
-    }
-    catch (ResponseParseException ex) {
-      println "Failed to access ${url} internalError: ${ex})\n"
-    }
-    catch (HttpResponseException ex) {
-      println "Failed to access ${url} internalError: ${ex})\n"
-    }
+  private beginIngest(List<File> files) {
+    client.uploadFile(new URL("http://localhost:9603/inventory/ingest/mods"),
+      files, "record")
   }
 
   private File loadFileFromResource(String filename) {

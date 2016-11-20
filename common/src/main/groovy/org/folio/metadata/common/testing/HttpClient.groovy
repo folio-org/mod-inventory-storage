@@ -2,6 +2,7 @@ package org.folio.metadata.common.testing
 
 import groovyx.net.http.*
 import org.apache.commons.io.IOUtils
+import org.apache.http.entity.mime.MultipartEntityBuilder
 
 class HttpClient {
 
@@ -41,6 +42,53 @@ class HttpClient {
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
+    }
+  }
+
+  Tuple uploadFile(URL url, List<File> recordsToIngest, String partName) {
+    if (url == null)
+      throw new IllegalArgumentException("url is null")
+
+    def http = new HTTPBuilder(url)
+
+    try {
+      http.request(Method.POST) { req ->
+        println "\nTest Http Client POST to: ${url}\n"
+
+        headers.'X-Okapi-Tenant' = "our"
+        requestContentType = 'multipart/form-data'
+
+        def multipartBuilder = new MultipartEntityBuilder()
+
+        recordsToIngest.each {
+          multipartBuilder.addBinaryBody(partName, it)
+        }
+
+        req.entity = multipartBuilder.build()
+
+        response.success = { resp, body ->
+          println "Status Code: ${resp.status}"
+          println "Location: ${resp.headers.location}\n"
+
+          new Tuple2(resp, body)
+        }
+
+        response.failure = { resp, body ->
+          println "Status Code: ${resp.status}"
+          println "Location: ${resp.headers.location}\n"
+
+          new Tuple2(resp, body.getText())
+        }
+      }
+    }
+    catch (ConnectException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
+    }
+    catch (ResponseParseException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
+    }
+    catch (HttpResponseException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
     }
   }
 
