@@ -41,8 +41,8 @@ class ModIngestExamples extends Specification {
 
       conditions.eventually {
         ingestJobHasCompleted(statusLocation)
-        expectedItemsCreatedFromIngest()
         expectedInstancesCreatedFromIngest()
+        expectedItemsCreatedFromIngest()
       }
   }
 
@@ -70,7 +70,8 @@ class ModIngestExamples extends Specification {
   private expectedItemsCreatedFromIngest() {
     def client = new HttpClient()
 
-    def (resp, items) = client.get(new URL("http://localhost:9603/inventory/items"))
+    def (resp, items) = client.get(
+      new URL("http://localhost:9603/inventory/items"))
 
     assert resp.status == 200
 
@@ -79,6 +80,7 @@ class ModIngestExamples extends Specification {
     assert items.every({ it.id != null })
     assert items.every({ it.title != null })
     assert items.every({ it.barcode != null })
+    assert items.every({ it.instanceId != null })
 
     assert items.any({
       itemMatches(it,
@@ -109,6 +111,17 @@ class ModIngestExamples extends Specification {
         "Edward McGuire, RHA",
         "22169083")
     })
+
+    items.stream().forEach({ itemHasCorrectInstanceRelationship(it) })
+  }
+
+  private itemHasCorrectInstanceRelationship(item) {
+    def (resp, instance) = client.get(
+      new URL("http://localhost:9603/inventory/instances/${item.instanceId}"))
+
+    assert resp.status == 200
+    assert instance != null
+    assert instance.title == item.title
   }
 
   private expectedInstancesCreatedFromIngest() {

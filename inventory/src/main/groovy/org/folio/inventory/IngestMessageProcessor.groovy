@@ -1,4 +1,4 @@
-package org.folio.inventory.org.folio.inventory
+package org.folio.inventory
 
 import io.vertx.groovy.core.eventbus.EventBus
 import io.vertx.groovy.core.eventbus.Message
@@ -32,16 +32,20 @@ class IngestMessageProcessor {
 
     records.stream()
       .map({
-      new Item(UUID.randomUUID().toString(),
-        it.title,
-        it.barcode)
-    })
-      .forEach({ itemCollection.add(it, allItems.receive()) })
-
-    records.stream()
-      .map({
       new Instance(UUID.randomUUID().toString(), it.title)
     })
-      .forEach({ instanceCollection.add(it, allInstances.receive()) })
+    .forEach({ instanceCollection.add(it, allInstances.receive()) })
+
+    allInstances.collect ({ instances ->
+      records.stream()
+        .map({ record ->
+        new Item(
+          UUID.randomUUID().toString(),
+          record.title,
+          record.barcode,
+          instances.find({ it.title == record.title })?.id)
+      })
+      .forEach({ itemCollection.add(it, allItems.receive()) })
+    })
   }
 }

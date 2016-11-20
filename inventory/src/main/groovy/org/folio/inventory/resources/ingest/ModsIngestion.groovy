@@ -1,15 +1,13 @@
-package org.folio.inventory.org.folio.inventory.api.resources.ingest
+package org.folio.inventory.resources.ingest
 
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.file.FileSystem
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
-import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
-import org.folio.inventory.org.folio.inventory.parsing.ModsParser
+import org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.storage.memory.InMemoryItemCollection
-import org.folio.metadata.common.CollectAll
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.RedirectResponse

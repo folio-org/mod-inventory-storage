@@ -1,16 +1,16 @@
-package org.folio.inventory.org.folio.inventory.api.resources
+package org.folio.inventory.resources
 
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
-import org.folio.inventory.domain.InstanceCollection
+import org.folio.inventory.domain.ItemCollection
 import org.folio.metadata.common.api.response.JsonResponse
 
-class Instances {
+class Items {
 
-  private final InstanceCollection instanceCollection
+  private final ItemCollection itemCollection
 
-  Instances(InstanceCollection instanceCollection) {
-    this.instanceCollection = instanceCollection
+  Items(ItemCollection itemCollection) {
+    this.itemCollection = itemCollection
   }
 
   public void register(Router router) {
@@ -18,12 +18,12 @@ class Instances {
   }
 
   void getAll(RoutingContext routingContext) {
-    instanceCollection.findAll {
+    itemCollection.findAll {
       JsonResponse.success(routingContext.response(), it)
     }
   }
 
   private static String relativeItemsPath() {
-    "/inventory/instances"
+    "/inventory/items"
   }
 }

@@ -22,22 +22,13 @@ class ExternalStorageModuleItemCollection
 
   @Override
   void add(Item item, Closure resultCallback) {
-    println("Making create request to external storage")
-
     String location = "http://localhost:9492/inventory-storage/item"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
-        def status = "${response.statusCode()}"
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        println "Create Response: ${responseBody}"
-
-        def itemFromServer = new JsonObject(responseBody)
-
-        def createdItem = new Item(itemFromServer.getString("id"),
-          itemFromServer.getString("title"),
-          itemFromServer.getString("barcode"))
+        def createdItem = mapFromJson(new JsonObject(responseBody))
 
         resultCallback(createdItem)
       })
@@ -49,6 +40,7 @@ class ExternalStorageModuleItemCollection
 
     itemToSend.put("title", item.title)
     itemToSend.put("barcode", item.barcode)
+    itemToSend.put("instanceId", item.instanceId)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
@@ -64,16 +56,11 @@ class ExternalStorageModuleItemCollection
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
-        def status = "${response.statusCode()}"
         def responseBody = "${buffer.getString(0, buffer.length())}"
-
-        println "Get by ID Response: ${responseBody}"
 
         def itemFromServer = new JsonObject(responseBody)
 
-        def foundItem = new Item(itemFromServer.getString("id"),
-          itemFromServer.getString("title"),
-          itemFromServer.getString("barcode"))
+        def foundItem = mapFromJson(itemFromServer)
 
         resultCallback(foundItem)
       })
@@ -87,6 +74,7 @@ class ExternalStorageModuleItemCollection
       .end()
   }
 
+
   @Override
   void findAll(Closure resultCallback) {
     println("Making get all request to external storage")
@@ -95,23 +83,14 @@ class ExternalStorageModuleItemCollection
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
-        def status = "${response.statusCode()}"
         def responseBody = "${buffer.getString(0, buffer.length())}"
-
-        println "Get All Response: ${responseBody}"
 
         JsonArray itemsFromServer = new JsonArray(responseBody)
 
         def foundItems = new ArrayList<Item>()
 
         itemsFromServer.each {
-          println "Each item from all: $it"
-
-          def foundItem = new Item(it.getString("id"),
-            it.getString("title"),
-            it.getString("barcode"))
-
-          foundItems.add(foundItem)
+          foundItems.add(mapFromJson(it))
         }
 
         resultCallback(foundItems)
@@ -159,5 +138,13 @@ class ExternalStorageModuleItemCollection
 
       resultCallback(results)
     }
+  }
+
+  private Item mapFromJson(JsonObject itemFromServer) {
+    new Item(
+      itemFromServer.getString("id"),
+      itemFromServer.getString("title"),
+      itemFromServer.getString("barcode"),
+      itemFromServer.getString("instanceId"))
   }
 }

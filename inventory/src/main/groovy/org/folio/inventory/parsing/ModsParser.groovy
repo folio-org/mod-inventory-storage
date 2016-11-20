@@ -1,4 +1,4 @@
-package org.folio.inventory.org.folio.inventory.parsing
+package org.folio.inventory.parsing
 
 class ModsParser {
   public Set<Map<String, String>> parseRecords(String xml) {

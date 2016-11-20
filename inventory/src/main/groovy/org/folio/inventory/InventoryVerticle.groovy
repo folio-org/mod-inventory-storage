@@ -5,10 +5,9 @@ import io.vertx.groovy.core.Vertx
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
 import io.vertx.lang.groovy.GroovyVerticle
-import org.folio.inventory.org.folio.inventory.IngestMessageProcessor
-import org.folio.inventory.org.folio.inventory.api.resources.Instances
-import org.folio.inventory.org.folio.inventory.api.resources.Items
-import org.folio.inventory.org.folio.inventory.api.resources.ingest.ModsIngestion
+import org.folio.inventory.resources.Instances
+import org.folio.inventory.resources.Items
+import org.folio.inventory.resources.ingest.ModsIngestion
 import org.folio.inventory.storage.memory.InMemoryInstanceCollection
 import org.folio.inventory.storage.memory.InMemoryItemCollection
 import org.folio.metadata.common.WebRequestDiagnostics

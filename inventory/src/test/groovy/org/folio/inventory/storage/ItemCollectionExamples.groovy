@@ -13,9 +13,15 @@ import static org.folio.metadata.common.FutureAssistance.*
 abstract class ItemCollectionExamples {
   private final ItemCollection collection
 
-  private final Item smallAngryPlanet = new Item("Long Way to a Small Angry Planet", "036000291452")
-  private final Item nod = new Item("Nod", "565578437802")
-  private final Item uprooted = new Item("Uprooted", "657670342075")
+  private final Item smallAngryPlanet =
+    new Item("Long Way to a Small Angry Planet", "036000291452",
+      UUID.randomUUID().toString())
+
+  private final Item nod = new Item("Nod", "565578437802",
+      UUID.randomUUID().toString())
+
+  private final Item uprooted = new Item("Uprooted", "657670342075",
+      UUID.randomUUID().toString())
 
   public ItemCollectionExamples(ItemCollection collection) {
     this.collection = collection
@@ -64,10 +70,16 @@ abstract class ItemCollectionExamples {
     assert allItems.every { it.id != null }
     assert allItems.every { it.title != null }
     assert allItems.every { it.barcode != null }
+    assert allItems.every { it.instanceId != null }
 
-    assert allItems.any { it.title == "Long Way to a Small Angry Planet" }
-    assert allItems.any { it.title == "Nod" }
-    assert allItems.any { it.title == "Uprooted" }
+    assert allItems.any { it.title == "Long Way to a Small Angry Planet" &&
+      it.barcode == "036000291452" }
+
+    assert allItems.any { it.title == "Nod" &&
+      it.barcode == "565578437802" }
+
+    assert allItems.any { it.title == "Uprooted" &&
+      it.barcode == "657670342075" }
   }
 
   @Test
@@ -90,11 +102,13 @@ abstract class ItemCollectionExamples {
     def foundItem = getOnCompletion(findFuture)
     def otherFoundItem = getOnCompletion(otherFindFuture)
 
-    assert foundItem.title == "Long Way to a Small Angry Planet"
-    assert foundItem.barcode == "036000291452"
+    assert foundItem.title == smallAngryPlanet.title
+    assert foundItem.barcode == smallAngryPlanet.barcode
+    assert foundItem.instanceId == smallAngryPlanet.instanceId
 
-    assert otherFoundItem.title == "Nod"
-    assert otherFoundItem.barcode == "565578437802"
+    assert otherFoundItem.title == nod.title
+    assert otherFoundItem.barcode == nod.barcode
+    assert otherFoundItem.instanceId == nod.instanceId
   }
 
   @Test

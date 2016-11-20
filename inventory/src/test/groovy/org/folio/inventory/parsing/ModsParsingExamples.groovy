@@ -1,6 +1,5 @@
 package org.folio.inventory.parsing
 
-import org.folio.inventory.org.folio.inventory.parsing.ModsParser
 import org.junit.Test
 
 class ModsParsingExamples {
