@@ -38,6 +38,11 @@ class MongoItemCollection implements ItemCollection {
   }
 
   @Override
+  void empty(Closure completionCallback) {
+    collection.empty(completionCallback)
+  }
+
+  @Override
   void add(Item item, Closure resultCallback) {
     collection.add(item, resultCallback)
   }

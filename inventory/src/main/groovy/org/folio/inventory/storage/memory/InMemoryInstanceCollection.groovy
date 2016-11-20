@@ -1,18 +1,18 @@
 package org.folio.inventory.storage.memory
 
-import org.folio.inventory.domain.Item
-import org.folio.inventory.domain.ItemCollection
+import org.folio.inventory.domain.Instance
+import org.folio.inventory.domain.InstanceCollection
 import org.folio.metadata.common.storage.memory.InMemoryCollection
 
 import java.util.regex.Pattern
 
-class InMemoryItemCollection
-  implements ItemCollection {
+class InMemoryInstanceCollection
+  implements InstanceCollection {
 
-  private final collection = new InMemoryCollection<Item>()
+  private final collection = new InMemoryCollection<Instance>()
 
   @Override
-  void add(Item item, Closure resultCallback) {
+  void add(Instance item, Closure resultCallback) {
     collection.add(item.copyWithNewId(UUID.randomUUID().toString()), resultCallback)
   }
 

@@ -9,6 +9,7 @@ import org.folio.inventory.org.folio.inventory.IngestMessageProcessor
 import org.folio.inventory.org.folio.inventory.api.resources.Instances
 import org.folio.inventory.org.folio.inventory.api.resources.Items
 import org.folio.inventory.org.folio.inventory.api.resources.ingest.ModsIngestion
+import org.folio.inventory.storage.memory.InMemoryInstanceCollection
 import org.folio.inventory.storage.memory.InMemoryItemCollection
 import org.folio.metadata.common.WebRequestDiagnostics
 
@@ -45,16 +46,18 @@ public class InventoryVerticle extends GroovyVerticle {
     def eventBus = vertx.eventBus()
 
     def itemCollection = new InMemoryItemCollection()
+    def instanceCollection = new InMemoryInstanceCollection()
 
-    new IngestMessageProcessor(itemCollection).register(eventBus)
+    new IngestMessageProcessor(itemCollection, instanceCollection)
+      .register(eventBus)
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
     new ModsIngestion(itemCollection).register(router)
     new Items(itemCollection).register(router)
-    new Instances(itemCollection).register(router)
+    new Instances(instanceCollection).register(router)
 
-    def handler = { result ->
+    def onHttpServerStart = { result ->
       if (result.succeeded()) {
         println "Listening on ${server.actualPort()}"
         started.complete();
@@ -67,7 +70,7 @@ public class InventoryVerticle extends GroovyVerticle {
 
     def config = vertx.getOrCreateContext().config()
 
-    server.requestHandler(router.&accept).listen(config.port ?: 9403, handler)
+    server.requestHandler(router.&accept).listen(config.port ?: 9403, onHttpServerStart)
   }
 
   @Override

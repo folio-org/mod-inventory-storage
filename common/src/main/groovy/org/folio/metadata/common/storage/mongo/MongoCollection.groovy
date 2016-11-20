@@ -171,4 +171,15 @@ class MongoCollection<T> {
 
     future.get(timeoutDuration, timeoutUnit)
   }
+
+  void empty(Closure completionCallback) {
+    SingleResultCallback<Void> callback = new SingleResultCallback<Void>() {
+      @Override
+      public void onResult(final Void result, final Throwable t) {
+        completionCallback()
+      }
+    }
+
+    collection.drop(callback)
+  }
 }

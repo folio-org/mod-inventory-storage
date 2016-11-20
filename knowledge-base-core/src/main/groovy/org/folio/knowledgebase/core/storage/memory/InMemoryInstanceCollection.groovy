@@ -72,6 +72,11 @@ class InMemoryInstanceCollection
   }
 
   @Override
+  void empty(Closure completionCallback) {
+    collection.empty(completionCallback)
+  }
+
+  @Override
   void add(Instance item, Closure resultCallback) {
     def addedInstance = new Instance(UUID.randomUUID().toString(), item.title, item.identifiers)
     collection.add(addedInstance, resultCallback)

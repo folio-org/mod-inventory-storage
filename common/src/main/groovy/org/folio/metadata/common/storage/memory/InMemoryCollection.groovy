@@ -47,4 +47,9 @@ class InMemoryCollection<T> {
   void empty() {
     items.clear()
   }
+
+  void empty(Closure completionCallback) {
+    items.clear()
+    completionCallback()
+  }
 }
