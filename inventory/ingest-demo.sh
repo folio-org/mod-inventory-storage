@@ -17,3 +17,4 @@ cd sample-data
 
 cd ..
 
+rm -f file-uploads/*
