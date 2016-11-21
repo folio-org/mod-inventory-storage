@@ -13,8 +13,8 @@ class Instance {
     this.title = title
   }
 
-  def Instance copyWithNewId(String id) {
-    new Instance(id, title)
+  def Instance copyWithNewId(String newId) {
+    new Instance(newId, this.title)
   }
 
   @Override

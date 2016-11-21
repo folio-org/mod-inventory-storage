@@ -28,8 +28,7 @@ class InMemoryInstanceCollection
 
   @Override
   void empty(Closure completionCallback) {
-    collection.empty()
-    completionCallback()
+    collection.empty(completionCallback)
   }
 
   @Override

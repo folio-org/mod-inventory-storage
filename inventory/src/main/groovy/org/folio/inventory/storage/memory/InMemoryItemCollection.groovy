@@ -28,8 +28,7 @@ class InMemoryItemCollection
 
   @Override
   void empty(Closure completionCallback) {
-    collection.empty()
-    completionCallback()
+    collection.empty(completionCallback)
   }
 
   @Override

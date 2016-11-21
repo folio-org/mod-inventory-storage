@@ -8,6 +8,7 @@ import io.vertx.lang.groovy.GroovyVerticle
 import org.folio.inventory.resources.Instances
 import org.folio.inventory.resources.Items
 import org.folio.inventory.resources.ingest.ModsIngestion
+import org.folio.inventory.storage.memory.InMemoryIngestJobCollection
 import org.folio.inventory.storage.memory.InMemoryInstanceCollection
 import org.folio.inventory.storage.memory.InMemoryItemCollection
 import org.folio.metadata.common.WebRequestDiagnostics
@@ -42,17 +43,22 @@ public class InventoryVerticle extends GroovyVerticle {
   public void start(Future started) {
 
     def router = Router.router(vertx)
+
+    server = vertx.createHttpServer()
+
     def eventBus = vertx.eventBus()
 
     def itemCollection = new InMemoryItemCollection()
     def instanceCollection = new InMemoryInstanceCollection()
+    def ingestJobCollection = new InMemoryIngestJobCollection()
 
-    new IngestMessageProcessor(itemCollection, instanceCollection)
+    new IngestMessageProcessor(
+      itemCollection, instanceCollection, ingestJobCollection)
       .register(eventBus)
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-    new ModsIngestion(itemCollection).register(router)
+    new ModsIngestion(ingestJobCollection).register(router)
     new Items(itemCollection).register(router)
     new Instances(instanceCollection).register(router)
 
@@ -65,11 +71,10 @@ public class InventoryVerticle extends GroovyVerticle {
       }
     }
 
-    server = vertx.createHttpServer()
-
     def config = vertx.getOrCreateContext().config()
 
-    server.requestHandler(router.&accept).listen(config.port ?: 9403, onHttpServerStart)
+    server.requestHandler(router.&accept)
+      .listen(config.port ?: 9403, onHttpServerStart)
   }
 
   @Override

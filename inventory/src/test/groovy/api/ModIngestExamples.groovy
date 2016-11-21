@@ -55,7 +55,7 @@ class ModIngestExamples extends Specification {
 
     then:
       assert resp.status == 400
-      assert body == "Cannot parsing multiple files in a single request"
+      assert body == "Cannot parse multiple files in a single request"
   }
 
   private ingestJobHasCompleted(String statusLocation) {
@@ -64,7 +64,7 @@ class ModIngestExamples extends Specification {
     def (resp, body) = client.get(statusLocation)
 
     assert resp.status == 200
-    assert body.status == "completed"
+    assert body.status == "Completed"
   }
 
   private expectedItemsCreatedFromIngest() {

@@ -17,8 +17,8 @@ class Item {
     this.instanceId = instanceId
   }
 
-  def Item copyWithNewId(String id) {
-    new Item(id, title, barcode, instanceId)
+  def Item copyWithNewId(String newId) {
+    new Item(newId, this.title, this.barcode, this.instanceId)
   }
 
   @Override

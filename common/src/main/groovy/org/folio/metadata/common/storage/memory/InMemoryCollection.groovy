@@ -39,6 +39,12 @@ class InMemoryCollection<T> {
     resultCallback(item)
   }
 
+  void replace(T item, completionCallback) {
+    items.removeIf({ it.id == item.id })
+    items.add(item)
+    completionCallback()
+  }
+
   List<T> add(List<T> itemsToAdd) {
     items.addAll(itemsToAdd)
     itemsToAdd
