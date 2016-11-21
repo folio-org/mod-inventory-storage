@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.folio.rest.persist.PostgresClient;
+
 public class ItemStorageAPI implements ItemStorageResource {
 
     public Map<String,Item> storage = new HashMap<String,Item>();
@@ -46,6 +48,44 @@ public class ItemStorageAPI implements ItemStorageResource {
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
 								     ItemStorageResource.PostItemStorageItemResponse
 								     .withJsonCreated("I dont know please dont shoot me",stream)));
+      /*
+  try {
+      System.out.println("sending... Item");
+      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner());
+
+      vertxContext.runOnContext(v -> {
+
+        try {
+          postgresClient.save("Table-name", entity,
+                  reply -> {
+                    try {
+                      Item p = entity;
+                      p.setId(reply.result());
+                      OutStream stream = new OutStream();
+                      stream.setData(p);
+		      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+								     ItemStorageResource.PostItemStorageItemResponse
+								     .withJsonCreated(reply.result(),stream)));
+                      } catch (Exception e) {
+                      e.printStackTrace();
+		      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+								     ItemStorageResource.PostItemStorageItemResponse
+								     .withPlainInternalServerError());
+                    }
+                  });
+        } catch (Exception e) {
+          e.printStackTrace();
+	  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+								     ItemStorageResource.PostItemStorageItemResponse
+								     .withPlainInternalServerError());
+        }
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+								     ItemStorageResource.PostItemStorageItemResponse
+								     .withPlainInternalServerError());
+     }*/
   }
 
   @Override
