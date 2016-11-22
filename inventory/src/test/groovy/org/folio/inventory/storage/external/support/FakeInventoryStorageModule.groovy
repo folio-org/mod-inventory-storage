@@ -27,6 +27,10 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
   @Override
   public void start(Future deployed) {
+
+    def expectedTenant = vertx.getOrCreateContext().config()
+      .get("expectedTenant", "")
+
     server = vertx.createHttpServer()
 
     def router = Router.router(vertx)
@@ -45,7 +49,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     router.route('/inventory-storage/instances/*').handler(BodyHandler.create())
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
-    router.route().handler(this.&checkTenantHeader)
+    router.route().handler(this.&checkTenantHeader.rcurry(expectedTenant))
 
     router.route(HttpMethod.GET, '/inventory-storage/items/:id')
       .handler(this.&getItem);
@@ -95,7 +99,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     storedItems.put(id, newItem)
 
-    JsonResponse.success(routingContext.response(),
+    JsonResponse.created(routingContext.response(),
       storedItems[id])
   }
 
@@ -126,7 +130,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     storedInstances.put(id, newItem)
 
-    JsonResponse.success(routingContext.response(),
+    JsonResponse.created(routingContext.response(),
       storedInstances[id])
   }
 
@@ -161,14 +165,25 @@ class FakeInventoryStorageModule extends GroovyVerticle {
       routingContext.bodyAsString.trim()
   }
 
-  private static void checkTenantHeader(RoutingContext routingContext) {
+  private static void checkTenantHeader(RoutingContext routingContext,
+                                        String expectedTenant) {
+
     def tenant = routingContext.request().getHeader("X-Okapi-Tenant");
 
-    if(tenant != null) {
-      routingContext.next()
-    }
-    else {
-      ClientErrorResponse.forbidden(routingContext.response(), "Missing Tenant")
+    switch (tenant) {
+      case expectedTenant:
+        routingContext.next()
+        break
+
+      case null:
+        ClientErrorResponse.forbidden(routingContext.response(),
+          "Missing Tenant")
+        break
+
+      default:
+        ClientErrorResponse.forbidden(routingContext.response(),
+          "Incorrect Tenant, expected: ${expectedTenant}, received: ${tenant}")
+        break
     }
   }
 }

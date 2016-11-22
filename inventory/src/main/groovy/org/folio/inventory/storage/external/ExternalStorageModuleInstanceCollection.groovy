@@ -6,6 +6,7 @@ import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
+import io.vertx.groovy.core.http.HttpClientResponse
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.InstanceCollection
 
@@ -31,13 +32,19 @@ class ExternalStorageModuleInstanceCollection
 
     String location = storageModuleAddress + "/instances"
 
-    def onResponse = { response ->
+    def onResponse = { HttpClientResponse response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        def createdItem = mapFromJson(new JsonObject(responseBody))
+        if(response.statusCode() == 201) {
+          def createdInstance = mapFromJson(new JsonObject(responseBody))
 
-        resultCallback(createdItem)
+          resultCallback(createdInstance)
+        }
+        else {
+          println("Create item failed, reason: ${responseBody}")
+          resultCallback(null)
+        }
       })
     }
 

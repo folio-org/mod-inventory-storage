@@ -1,6 +1,7 @@
 package org.folio.metadata.common
 
 import io.vertx.groovy.core.Vertx
+
 import java.util.concurrent.CompletableFuture
 
 class VertxAssistant {
@@ -11,7 +12,7 @@ class VertxAssistant {
     closure(vertx)
   }
 
-  Vertx start() {
+  void start() {
     if(vertx == null) {
       this.vertx = Vertx.vertx()
     }
@@ -34,18 +35,28 @@ class VertxAssistant {
     }
   }
 
-  void deployGroovyVerticle(String verticleClass, CompletableFuture<String> deployed) {
+  void deployGroovyVerticle(String verticleClass,
+                            Map<String, Object> config,
+                            CompletableFuture<String> deployed) {
+
     def startTime = System.currentTimeMillis()
 
-    vertx.deployVerticle("groovy:" + verticleClass, ["worker": true ], { res ->
-      if (res.succeeded()) {
-        def elapsedTime = System.currentTimeMillis() - startTime
-        println("${verticleClass} deployed in ${elapsedTime} milliseconds")
-        deployed.complete(res.result());
-      } else {
-        deployed.completeExceptionally(res.cause());
-      }
-    });
+    def options = [:]
+
+    options.config = config
+    options.worker = true
+
+    vertx.deployVerticle("groovy:" + verticleClass,
+      options,
+      { res ->
+        if (res.succeeded()) {
+          def elapsedTime = System.currentTimeMillis() - startTime
+          println("${verticleClass} deployed in ${elapsedTime} milliseconds")
+          deployed.complete(res.result());
+        } else {
+          deployed.completeExceptionally(res.cause());
+        }
+      });
   }
 
   void undeployVerticle(String deploymentId, CompletableFuture deployed) {

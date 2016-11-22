@@ -41,6 +41,7 @@ public class ExternalStorageSuite {
 
     vertxAssistant.deployGroovyVerticle(
       FakeInventoryStorageModule.class.name,
+      ["expectedTenant" : expectedTenant],
       deployed)
 
     storageModuleDeploymentId = deployed.get(20000, TimeUnit.MILLISECONDS)

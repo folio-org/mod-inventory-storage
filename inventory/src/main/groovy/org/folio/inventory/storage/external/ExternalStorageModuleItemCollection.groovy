@@ -1,11 +1,13 @@
 package org.folio.inventory.storage.external
 
 import io.vertx.core.Handler
+import io.vertx.core.http.HttpClientRequest
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
+import io.vertx.groovy.core.http.HttpClientResponse
 import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
 
@@ -30,13 +32,19 @@ class ExternalStorageModuleItemCollection
   void add(Item item, Closure resultCallback) {
     String location = storageAddress + "/items"
 
-    def onResponse = { response ->
+    def onResponse = { HttpClientResponse response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        def createdItem = mapFromJson(new JsonObject(responseBody))
+        if(response.statusCode() == 201) {
+          def createdItem = mapFromJson(new JsonObject(responseBody))
 
-        resultCallback(createdItem)
+          resultCallback(createdItem)
+        }
+        else {
+          println("Create item failed, reason: ${responseBody}")
+          resultCallback(null)
+        }
       })
     }
 
