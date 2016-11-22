@@ -16,11 +16,14 @@ class ExternalStorageModuleInstanceCollection
 
   private final Vertx vertx
   private final String storageModuleAddress
+  private final String tenant
 
   def ExternalStorageModuleInstanceCollection(Vertx vertx,
-                                              String storageModuleAddress) {
+                                              String storageModuleAddress,
+                                              String tenant) {
     this.vertx = vertx
     this.storageModuleAddress = storageModuleAddress
+    this.tenant = tenant
   }
 
   @Override
@@ -46,7 +49,7 @@ class ExternalStorageModuleInstanceCollection
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
-      .putHeader("X-Okapi-Tenant", "not-blank")
+      .putHeader("X-Okapi-Tenant", tenant)
       .end(Json.encodePrettily(instanceToSend))
   }
 
@@ -70,7 +73,7 @@ class ExternalStorageModuleInstanceCollection
 
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
       .exceptionHandler(onException)
-      .putHeader("X-Okapi-Tenant", "not-blank")
+      .putHeader("X-Okapi-Tenant", tenant)
       .end()
   }
 
@@ -99,7 +102,7 @@ class ExternalStorageModuleInstanceCollection
 
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
       .exceptionHandler(onException)
-      .putHeader("X-Okapi-Tenant", "not-blank")
+      .putHeader("X-Okapi-Tenant", tenant)
       .end()
   }
 
@@ -117,7 +120,7 @@ class ExternalStorageModuleInstanceCollection
 
     vertx.createHttpClient().requestAbs(HttpMethod.DELETE, location, onResponse)
       .exceptionHandler(onException)
-      .putHeader("X-Okapi-Tenant", "not-blank")
+      .putHeader("X-Okapi-Tenant", tenant)
       .end()
   }
 

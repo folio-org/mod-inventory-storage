@@ -29,6 +29,10 @@ public class ExternalStorageSuite {
     FakeInventoryStorageModule.address
   }
 
+  static String getExpectedTenant() {
+    "not-blank"
+  }
+
   @BeforeClass
   static void beforeAll() {
     vertxAssistant.start()
