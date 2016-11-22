@@ -1,4 +1,4 @@
-package support
+package org.folio.inventory.storage.external.support
 
 import io.vertx.core.Future
 import io.vertx.core.http.HttpMethod

@@ -1,4 +1,4 @@
-package org.folio.inventory.storage
+package org.folio.inventory.storage.memory
 
 import org.folio.inventory.domain.Item
 import org.folio.inventory.resources.ingest.IngestJob

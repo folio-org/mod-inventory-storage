@@ -1,6 +1,6 @@
-package org.folio.inventory.storage
+package org.folio.inventory.storage.external
 
-import org.folio.inventory.storage.external.ExternalStorageModuleInstanceCollection
+import org.folio.inventory.storage.InstanceCollectionExamples
 
 class ExternalInstanceCollectionExamples extends InstanceCollectionExamples {
   ExternalInstanceCollectionExamples() {
