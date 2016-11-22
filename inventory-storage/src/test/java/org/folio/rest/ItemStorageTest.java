@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -18,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.persist.PostgresClient;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -42,13 +44,24 @@ public class ItemStorageTest {
   private static int port;
   private static ArrayList<String> urls;
 
+  private static void setupPostgres() throws Exception {
+    PostgresClient.setIsEmbedded(true);
+    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
+  }
+
   @BeforeClass
-  public static void before() throws InterruptedException, ExecutionException, TimeoutException {
+  public static void before(TestContext context) throws InterruptedException, ExecutionException, TimeoutException {
     vertx = Vertx.vertx();
 
     // find a free port and use it to deploy the verticle
     port = NetworkUtils.nextFreePort();
 
+    try {
+      setupPostgres();
+    } catch (Exception e) {
+      context.fail(e);
+    }
+    
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
     vertx.deployVerticle(RestVerticle.class.getName(), options);
 
@@ -67,6 +80,21 @@ public class ItemStorageTest {
         } catch (InterruptedException e1) {}
       }
     }
+
+    Async async = context.async(1);
+    PostgresClient.getInstance(vertx).mutate(
+        "CREATE SCHEMA test; create table test.item (_id SERIAL PRIMARY KEY,jsonb JSONB NOT NULL)",
+        res -> {
+          if(res.succeeded()){
+            async.countDown();
+            System.out.println("item table created");
+          }
+          else{
+            System.out.println("item table NOT created");
+            Assert.fail("item table NOT created " + res.cause().getMessage());
+            async.complete();
+          }
+});
   }
 
   @AfterClass
@@ -109,15 +137,14 @@ public class ItemStorageTest {
   public void exampleTest(TestContext context) {
     context.assertTrue(true);
   }
-
+    /* 
   @Test
   public void getDataTest(TestContext context) throws MalformedURLException {
 
     Async async = context.async();
-    UUID id = UUID.randomUUID();
-      HttpClient client = vertx.createHttpClient();
+    HttpClient client = vertx.createHttpClient();
 
-    String url = String.format("/item_storage/item/%s",id.toString());
+    String url = String.format("/item_storage/item/%s","79");
     URL getItemUrl = new URL("http", "localhost", port, url);
 
     System.out.println("Getting Item");
@@ -133,7 +160,7 @@ public class ItemStorageTest {
 			JsonObject restResponse = new JsonObject(body.getString(0,body.length()));
 
 			System.out.println("Response Received");
-			System.out.println(restResponse.toString());
+			System.out.println("REST RESPONSE: " + restResponse.toString());
 
 			context.assertEquals(restResponse.getString("title") , "Refactoring");
 			async.complete();
@@ -145,7 +172,8 @@ public class ItemStorageTest {
     request.headers().add("Accept","application/json");
     request.end();
   }
-
+    
+    
 @Test
   public void postDataTest(TestContext context) throws MalformedURLException {
 
@@ -159,6 +187,7 @@ public class ItemStorageTest {
     System.out.println(postItemUrl);
 
     JsonObject post = new JsonObject();
+    post.put("id","79");
     post.put("title", "Refactoring");
     post.put("barcode", "31415");
     post.put("instance_id", "MadeUp");
@@ -185,13 +214,16 @@ public class ItemStorageTest {
     request.headers().add("Accept","application/json");
     request.headers().add("Content-type","application/json");
     request.end(post.encodePrettily());
+ 
   }
-   
+    */
+    
   @Test
   public void postGetDataTest(TestContext context) throws MalformedURLException {
 
     System.out.println("POST GET DATA TEST");
     Async async = context.async();
+    String uuid = UUID.randomUUID().toString();
     HttpClient client = vertx.createHttpClient();
 
     URL postItemUrl = new URL("http", "localhost", port, "/item_storage/item");
@@ -200,6 +232,7 @@ public class ItemStorageTest {
     System.out.println(postItemUrl);
 
     JsonObject post = new JsonObject();
+    post.put("id", uuid);
     post.put("title", "Refactoring");
     post.put("barcode", "31415");
     post.put("instance_id", "MadeUp");
@@ -222,8 +255,7 @@ public class ItemStorageTest {
 			String url = String.format("/item_storage/item/%s",id);
 			
 			System.out.println("Id received " + restResponse.getString("id"));
-
-			 
+		 
 			 try{
 			     URL getItemUrl = new URL("http", "localhost", port, url);
 
@@ -264,4 +296,5 @@ public class ItemStorageTest {
     postRequest.end(post.encodePrettily());
 
   }
+    
 }

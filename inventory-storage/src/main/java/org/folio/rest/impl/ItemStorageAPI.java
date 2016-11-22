@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Criteria;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -38,54 +40,42 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   @Override
   public void postItemStorageItem(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Item entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-      
-      OutStream stream = new OutStream();
-      UUID id = UUID.randomUUID();
-      String idString = id.toString();
-      entity.setId(idString);
-      storage.put(idString,entity);
-      stream.setData(storage.get(idString));
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-								     ItemStorageResource.PostItemStorageItemResponse
-								     .withJsonCreated("I dont know please dont shoot me",stream)));
-      /*
-  try {
-      System.out.println("sending... Item");
-      PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner());
+      try {
+	  System.out.println("sending... Item");
+	  PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner());
 
-      vertxContext.runOnContext(v -> {
+	  vertxContext.runOnContext(v -> {
 
-        try {
-          postgresClient.save("Table-name", entity,
-                  reply -> {
-                    try {
-                      Item p = entity;
-                      p.setId(reply.result());
-                      OutStream stream = new OutStream();
-                      stream.setData(p);
+		  try {
+		      postgresClient.save("test.item", entity,
+					  reply -> {
+					      try {
+						  Item p = entity;
+						  OutStream stream = new OutStream();
+						  stream.setData(p);
+						  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+														 ItemStorageResource.PostItemStorageItemResponse
+														 .withJsonCreated(reply.result(),stream)));
+					      } catch (Exception e) {
+						  e.printStackTrace();
+						  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+														 ItemStorageResource.PostItemStorageItemResponse
+														 .withPlainInternalServerError("Error")));
+					      }
+					  });
+		  } catch (Exception e) {
+		      e.printStackTrace();
 		      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-								     ItemStorageResource.PostItemStorageItemResponse
-								     .withJsonCreated(reply.result(),stream)));
-                      } catch (Exception e) {
-                      e.printStackTrace();
-		      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-								     ItemStorageResource.PostItemStorageItemResponse
-								     .withPlainInternalServerError());
-                    }
-                  });
-        } catch (Exception e) {
-          e.printStackTrace();
+										     ItemStorageResource.PostItemStorageItemResponse
+										     .withPlainInternalServerError("Error")));
+		  }
+	      });
+      } catch (Exception e) {
+	  e.printStackTrace();
 	  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-								     ItemStorageResource.PostItemStorageItemResponse
-								     .withPlainInternalServerError());
-        }
-      });
-    } catch (Exception e) {
-      e.printStackTrace();
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-								     ItemStorageResource.PostItemStorageItemResponse
-								     .withPlainInternalServerError());
-     }*/
+									 ItemStorageResource.PostItemStorageItemResponse
+									 .withPlainInternalServerError("Error")));
+      }
   }
 
   @Override
@@ -112,13 +102,54 @@ public class ItemStorageAPI implements ItemStorageResource {
         @Pattern(regexp = "[a-zA-Z]{2}")
         String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
         throws Exception
-    {
-	Item item = new Item();
-	item.setId(itemId);
-	item.setTitle("Refactoring");
-	item.setBarcode("31415");
-	asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.GetItemStorageItemByItemIdResponse
-								       .withJsonOK(item)));
+    {	
+	Criteria a = new Criteria();
+	a.addField("'id'");
+	a.setOperation("=");
+	a.setValue(itemId);
+	Criterion criterion = new Criterion(a);
+	try {
+	    System.out.println("getting... Item");
+	    PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner());
+
+	    vertxContext.runOnContext(v -> {
+
+		    try {
+			postgresClient.get("test.item", Item.class, criterion , false,
+					   reply -> {
+					       try {
+						   List<Item> itemList = (List<Item>)reply.result()[0];
+						   if(itemList.size() == 1) {
+						       Item item = itemList.get(0);
+						       item.setId(itemId);
+						       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+														      ItemStorageResource.GetItemStorageItemByItemIdResponse.
+														      withJsonOK(item)));
+						   }
+						   else {
+						       throw new Exception(itemList.size() + " results returned");
+						   }
+		  
+					       } catch (Exception e) {
+						   e.printStackTrace();
+						   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+														  ItemStorageResource.GetItemStorageItemByItemIdResponse.
+														  withPlainInternalServerError("Error")));
+					       }
+					   });
+		    } catch (Exception e) {
+			e.printStackTrace();
+			asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+										       ItemStorageResource.GetItemStorageItemByItemIdResponse.
+										       withPlainInternalServerError("Error")));
+		    }
+		});
+	} catch (Exception e) {
+	    e.printStackTrace();
+	    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+									   ItemStorageResource.GetItemStorageItemByItemIdResponse.
+									   withPlainInternalServerError("Error")));
+	}
     }
 
     @Override
