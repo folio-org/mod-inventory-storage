@@ -19,28 +19,34 @@ import java.util.concurrent.TimeUnit;
 
 public class ExternalStorageSuite {
   private static final VertxAssistant vertxAssistant = new VertxAssistant();
-  private static String deploymentId
+  private static String storageModuleDeploymentId
 
   public static useVertx(Closure action) {
     vertxAssistant.useVertx(action)
   }
 
+  static String getStorageAddress() {
+    FakeInventoryStorageModule.address
+  }
+
   @BeforeClass
-  public static void beforeAll() {
+  static void beforeAll() {
     vertxAssistant.start()
 
     def deployed = new CompletableFuture()
 
-    vertxAssistant.deployGroovyVerticle(FakeInventoryStorageModule.class.name, deployed)
+    vertxAssistant.deployGroovyVerticle(
+      FakeInventoryStorageModule.class.name,
+      deployed)
 
-    deploymentId = deployed.get(20000, TimeUnit.MILLISECONDS)
+    storageModuleDeploymentId = deployed.get(20000, TimeUnit.MILLISECONDS)
   }
 
   @AfterClass()
-  public static void afterAll() {
+  static void afterAll() {
     def undeployed = new CompletableFuture()
 
-    vertxAssistant.undeployVerticle(deploymentId, undeployed)
+    vertxAssistant.undeployVerticle(storageModuleDeploymentId, undeployed)
 
     undeployed.get(20000, TimeUnit.MILLISECONDS)
 

@@ -48,7 +48,8 @@ class ModIngestExamples extends Specification {
 
   void "Refuse ingest for multiple files"() {
     given:
-      def modsFile = loadFileFromResource("mods/multiple-example-mods-records.xml")
+      def modsFile =
+        loadFileFromResource("mods/multiple-example-mods-records.xml")
 
     when:
       def (resp, body) = beginIngest([modsFile, modsFile])
@@ -197,7 +198,11 @@ class ModIngestExamples extends Specification {
     new File(classLoader.getResource(filename).getFile())
   }
 
-  private boolean itemMatches(record, String expectedTitle, String expectedBarcode) {
+  private boolean itemMatches(
+    record,
+    String expectedTitle,
+    String expectedBarcode) {
+
     record.title == expectedTitle &&
       record.barcode == expectedBarcode
   }

@@ -14,12 +14,16 @@ import org.folio.metadata.common.api.response.JsonResponse
 
 class FakeInventoryStorageModule extends GroovyVerticle {
   private static final int PORT_TO_USE = 9492
+  private static final String address = "http://localhost:${PORT_TO_USE}/inventory-storage"
 
-  public static final String address = "http://localhost:${PORT_TO_USE}/inventory-storage"
   private final Map<String, JsonObject> storedItems = [:];
   private final Map<String, JsonObject> storedInstances = [:];
 
   private HttpServer server;
+
+  static def String getAddress() {
+    address
+  }
 
   @Override
   public void start(Future deployed) {
@@ -28,7 +32,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def router = Router.router(vertx)
 
     server.requestHandler(router.&accept)
-      .listen(9492,
+      .listen(PORT_TO_USE,
       { result ->
         if (result.succeeded()) {
           deployed.complete();
@@ -144,11 +148,17 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   }
 
   private static def getMapFromBody(RoutingContext routingContext) {
-    if (routingContext.bodyAsString != null && routingContext.bodyAsString.trim()) {
+    if (hasBody(routingContext)) {
+
       routingContext.getBodyAsJson()
     } else {
       new HashMap<String, Object>()
     }
+  }
+
+  private static boolean hasBody(RoutingContext routingContext) {
+    routingContext.bodyAsString != null &&
+      routingContext.bodyAsString.trim()
   }
 
   private static void checkTenantHeader(RoutingContext routingContext) {

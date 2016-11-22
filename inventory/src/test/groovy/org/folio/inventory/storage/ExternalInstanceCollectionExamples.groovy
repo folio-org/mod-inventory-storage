@@ -4,6 +4,9 @@ import org.folio.inventory.storage.external.ExternalStorageModuleInstanceCollect
 
 class ExternalInstanceCollectionExamples extends InstanceCollectionExamples {
   ExternalInstanceCollectionExamples() {
-    super(ExternalStorageSuite.useVertx {new ExternalStorageModuleInstanceCollection(it) })
+    super(ExternalStorageSuite.useVertx {
+      new ExternalStorageModuleInstanceCollection(it,
+        ExternalStorageSuite.storageAddress)
+    })
   }
 }

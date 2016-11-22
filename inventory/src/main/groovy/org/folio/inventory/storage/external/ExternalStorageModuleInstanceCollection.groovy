@@ -15,14 +15,18 @@ class ExternalStorageModuleInstanceCollection
   implements InstanceCollection {
 
   private final Vertx vertx
+  private final String storageModuleAddress
 
-  def ExternalStorageModuleInstanceCollection(final Vertx vertx) {
+  def ExternalStorageModuleInstanceCollection(Vertx vertx,
+                                              String storageModuleAddress) {
     this.vertx = vertx
+    this.storageModuleAddress = storageModuleAddress
   }
 
   @Override
   void add(Instance instance, Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/instances"
+
+    String location = storageModuleAddress + "/instances"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -48,7 +52,7 @@ class ExternalStorageModuleInstanceCollection
 
   @Override
   void findById(String id, Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/instances/${id}"
+    String location = storageModuleAddress + "/instances/${id}"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -73,7 +77,7 @@ class ExternalStorageModuleInstanceCollection
 
   @Override
   void findAll(Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/instances"
+    String location = storageModuleAddress + "/instances"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -101,7 +105,7 @@ class ExternalStorageModuleInstanceCollection
 
   @Override
   void empty(Closure completionCallback) {
-    String location = "http://localhost:9492/inventory-storage/instances"
+    String location = storageModuleAddress + "/instances"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->

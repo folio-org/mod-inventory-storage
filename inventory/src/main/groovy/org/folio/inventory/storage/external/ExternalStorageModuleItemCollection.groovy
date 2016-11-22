@@ -15,14 +15,17 @@ class ExternalStorageModuleItemCollection
   implements ItemCollection {
 
   private final Vertx vertx
+  private final String storageAddress
 
-  def ExternalStorageModuleItemCollection(final Vertx vertx) {
+  def ExternalStorageModuleItemCollection(Vertx vertx,
+                                          String storageAddress) {
     this.vertx = vertx
+    this.storageAddress = storageAddress
   }
 
   @Override
   void add(Item item, Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/items"
+    String location = storageAddress + "/items"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -50,7 +53,7 @@ class ExternalStorageModuleItemCollection
 
   @Override
   void findById(String id, Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/items/${id}"
+    String location = storageAddress + "/items/${id}"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -75,7 +78,7 @@ class ExternalStorageModuleItemCollection
 
   @Override
   void findAll(Closure resultCallback) {
-    String location = "http://localhost:9492/inventory-storage/items"
+    String location = storageAddress + "/items"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -103,7 +106,7 @@ class ExternalStorageModuleItemCollection
 
   @Override
   void empty(Closure completionCallback) {
-    String location = "http://localhost:9492/inventory-storage/items"
+    String location = storageAddress + "/items"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
