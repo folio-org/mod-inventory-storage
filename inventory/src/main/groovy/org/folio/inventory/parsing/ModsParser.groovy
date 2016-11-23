@@ -1,18 +1,25 @@
 package org.folio.inventory.parsing
 
 class ModsParser {
-  public Set<Map<String, String>> parseRecords(String xml) {
 
-    def modsRecord = new XmlSlurper().parseText(xml)
+  private final CharacterEncoding characterEncoding
 
-    def Set<Map<String, String>> records = []
+  ModsParser(CharacterEncoding characterEncoding) {
+    this.characterEncoding = characterEncoding
+  }
+
+  public List<Map<String, String>> parseRecords(String xml) {
+
+    def modsRecord = new XmlSlurper()
+      .parseText(xml)
+
+    def records = []
 
     modsRecord.mods.each {
-      def title = it.titleInfo.title.text()
+      def title = characterEncoding.decode(it.titleInfo.title.text())
       def barcode = it.location.holdingExternal.localHolds.objId.toString()
 
       def record = [:]
-
       record.put("title", title)
       record.put("barcode", barcode)
 

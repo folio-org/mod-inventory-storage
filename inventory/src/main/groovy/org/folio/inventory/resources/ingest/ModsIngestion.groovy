@@ -7,6 +7,7 @@ import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.folio.inventory.Messages
 import org.folio.inventory.parsing.ModsParser
+import org.folio.inventory.parsing.UTF8LiteralCharacterEncoding
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.RedirectResponse
@@ -53,7 +54,8 @@ class ModsIngestion {
         if (result.succeeded()) {
           def uploadedFileContents = result.result().toString()
 
-          def records = new ModsParser().parseRecords(uploadedFileContents)
+          def records = new ModsParser(new UTF8LiteralCharacterEncoding())
+            .parseRecords(uploadedFileContents)
 
           def convertedRecords = records.collect {
             ["title": "${it.title}", "barcode":"${it.barcode}" ]

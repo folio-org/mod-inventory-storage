@@ -67,10 +67,8 @@ class IngestMessageProcessor {
   }
 
   private void completeJob(jobId) {
-    println("Completing job: ${jobId}")
-    ingestJobCollection.update(new IngestJob(jobId, IngestJobState.COMPLETED),
-      {
-        println("Job completed: ${jobId}")
-      })
+    ingestJobCollection.update(
+      new IngestJob(jobId, IngestJobState.COMPLETED),
+      { })
   }
 }

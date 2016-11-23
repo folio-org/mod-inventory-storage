@@ -3,6 +3,7 @@ package api
 import io.vertx.groovy.core.Vertx
 import org.folio.inventory.InventoryVerticle
 import org.folio.metadata.common.testing.HttpClient
+import org.folio.metadata.common.testing.VertxHttpClient
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 import java.util.concurrent.CompletableFuture
@@ -11,7 +12,7 @@ class ModIngestExamples extends Specification {
 
   public static final testPortToUse = 9603
 
-  private Vertx vertx;
+  private static Vertx vertx
   private final HttpClient client = new HttpClient()
 
   def setupSpec() {
@@ -60,8 +61,6 @@ class ModIngestExamples extends Specification {
   }
 
   private ingestJobHasCompleted(String statusLocation) {
-    def client = new HttpClient()
-
     def (resp, body) = client.get(statusLocation)
 
     assert resp.status == 200
@@ -69,15 +68,13 @@ class ModIngestExamples extends Specification {
   }
 
   private expectedItemsCreatedFromIngest() {
-    def client = new HttpClient()
-
     def (resp, items) = client.get(
       new URL("http://localhost:9603/inventory/items"))
 
     assert resp.status == 200
 
     assert items != null
-    assert items.size() == 5
+    assert items.size() == 8
     assert items.every({ it.id != null })
     assert items.every({ it.title != null })
     assert items.every({ it.barcode != null })
@@ -85,7 +82,7 @@ class ModIngestExamples extends Specification {
 
     assert items.any({
       itemMatches(it,
-        "California: its gold and its inhabitants, by the author of 'Seven years on the Slave coast of Africa'.",
+        "California: its gold and its inhabitants",
         "69228882")
     })
 
@@ -103,7 +100,7 @@ class ModIngestExamples extends Specification {
 
     assert items.any({
       itemMatches(it,
-        "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman [W. Dunlop].",
+        "Statistical sketches of Upper Canada",
         "69077747")
     })
 
@@ -133,13 +130,13 @@ class ModIngestExamples extends Specification {
     assert resp.status == 200
     assert instances != null
 
-    assert instances.size() == 5
+    assert instances.size() == 8
     assert instances.every({ it.id != null })
     assert instances.every({ it.title != null })
 
     assert instances.any({
       instanceMatches(it,
-        "California: its gold and its inhabitants, by the author of 'Seven years on the Slave coast of Africa'.")
+        "California: its gold and its inhabitants")
     })
 
     assert instances.any({
@@ -154,7 +151,7 @@ class ModIngestExamples extends Specification {
 
     assert instances.any({
       instanceMatches(it,
-        "Statistical sketches of Upper Canada, for the use of emigrants, by a backwoodsman [W. Dunlop].")
+        "Statistical sketches of Upper Canada")
     })
 
     assert instances.any({
@@ -200,14 +197,14 @@ class ModIngestExamples extends Specification {
 
   private boolean itemMatches(
     record,
-    String expectedTitle,
+    String expectedSimilarTitle,
     String expectedBarcode) {
 
-    record.title == expectedTitle &&
+    record.title.contains(expectedSimilarTitle) &&
       record.barcode == expectedBarcode
   }
 
-  private boolean instanceMatches(record, String expectedTitle) {
-    record.title == expectedTitle
+  private boolean instanceMatches(record, String expectedSimilarTitle) {
+    record.title.contains(expectedSimilarTitle)
   }
 }

@@ -67,6 +67,63 @@
   </mods_ns:mods>
   <mods_ns:mods xmlns:mods_ns="http://www.loc.gov/mods/v3" version="3.5">
     <mods_ns:recordInfo>
+      <mods_ns:recordIdentifier source="UkMaC">43620390</mods_ns:recordIdentifier>
+      <mods_ns:recordCreationDate encoding="iso8601">20140401</mods_ns:recordCreationDate>
+    </mods_ns:recordInfo>
+    <mods_ns:typeOfResource>text</mods_ns:typeOfResource>
+    <mods_ns:originInfo>
+      <mods_ns:issuance>multipart monograph</mods_ns:issuance>
+    </mods_ns:originInfo>
+    <mods_ns:originInfo>
+      <mods_ns:dateIssued encoding="marc">1833</mods_ns:dateIssued>
+    </mods_ns:originInfo>
+    <mods_ns:recordInfo>
+      <mods_ns:recordContentSource authority="marcorg">Uk</mods_ns:recordContentSource>
+    </mods_ns:recordInfo>
+    <mods_ns:name type="personal">
+      <mods_ns:namePart>MABIL, Pier Luigi.</mods_ns:namePart>
+    </mods_ns:name>
+    <mods_ns:titleInfo>
+      <mods_ns:title>[Dell\xE2\x80\x99Emulazione e dell\xE2\x80\x99Influenza della Poesia sui Costumi, discorsi due.]</mods_ns:title>
+    </mods_ns:titleInfo>
+    <mods_ns:originInfo>
+      <mods_ns:edition>[Another edition.]</mods_ns:edition>
+    </mods_ns:originInfo>
+    <mods_ns:note type="linking entry complexity">In : C., G. Scelte Orazioni Italiane, etc. 1833. 12\xC2\xBA.</mods_ns:note>
+    <mods_ns:relatedItem>
+      <mods_ns:titleInfo>
+        <mods_ns:title>Dell\xE2\x80\x99Emulazione e dell\xE2\x80\x99Influenza della Poesia sui Costumi, discorsi due.</mods_ns:title>
+      </mods_ns:titleInfo>
+      <mods_ns:originInfo>
+        <mods_ns:publisher>Brescia, 1804. 8\xC2\xBA.</mods_ns:publisher>
+      </mods_ns:originInfo>
+      <mods_ns:identifier type="local">(Uk)MP1.0002438942</mods_ns:identifier>
+    </mods_ns:relatedItem>
+    <mods_ns:location>
+      <mods_ns:holdingExternal>
+        <h:localHolds xmlns:h="http://copac.ac.uk/schemas/holdings/v1">
+          <h:org displayName="British Library (blc)" postcode="NW1 2DB" coords="51.528903,-0.127483" copacCode="blc">Uk</h:org>
+          <h:objId>43620390</h:objId>
+          <h:holds>
+            <h:item>
+              <h:loc heldByShortName="British Library" heldBy="British Library (blc)" postcode="NW1 2DB" location="British Library, St Pancras" subLocation="Humanities and Social Sciences, St Pancras Reading Rooms" coords="51.528903,-0.127483">HMNTS</h:loc>
+              <h:shelfmark>12301.e.19</h:shelfmark>
+            </h:item>
+          </h:holds>
+        </h:localHolds>
+      </mods_ns:holdingExternal>
+    </mods_ns:location>
+    <mods_ns:extension>
+      <cpc:flags xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1">
+        <cpc:flag>copbok</cpc:flag>
+        <cpc:flag>coppri</cpc:flag>
+        <cpc:flag>m21bk</cpc:flag>
+        <cpc:flag>rtypa</cpc:flag>
+      </cpc:flags>
+    </mods_ns:extension>
+  </mods_ns:mods>
+  <mods_ns:mods xmlns:mods_ns="http://www.loc.gov/mods/v3" version="3.5">
+    <mods_ns:recordInfo>
       <mods_ns:recordIdentifier source="UkMaC">53556908</mods_ns:recordIdentifier>
       <mods_ns:recordIdentifier source="StGlU">b13803414</mods_ns:recordIdentifier>
       <mods_ns:recordCreationDate encoding="iso8601">20160505</mods_ns:recordCreationDate>
@@ -228,6 +285,168 @@
       </mods_ns:holdingExternal>
     </mods_ns:location>
     <mods_ns:extension>
+      <cpc:flags xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1">
+        <cpc:flag>copbok</cpc:flag>
+        <cpc:flag>coppri</cpc:flag>
+        <cpc:flag>m21bk</cpc:flag>
+        <cpc:flag>rtypa</cpc:flag>
+      </cpc:flags>
+    </mods_ns:extension>
+  </mods_ns:mods>
+  <mods_ns:mods xmlns:mods_ns="http://www.loc.gov/mods/v3" version="3.5">
+    <mods_ns:recordInfo>
+      <mods_ns:recordIdentifier source="UkMaC">37696876</mods_ns:recordIdentifier>
+      <mods_ns:recordCreationDate encoding="iso8601">20140401</mods_ns:recordCreationDate>
+    </mods_ns:recordInfo>
+    <mods_ns:typeOfResource>text</mods_ns:typeOfResource>
+    <mods_ns:originInfo>
+      <mods_ns:issuance>multipart monograph</mods_ns:issuance>
+    </mods_ns:originInfo>
+    <mods_ns:recordInfo>
+      <mods_ns:descriptionStandard>aacr</mods_ns:descriptionStandard>
+    </mods_ns:recordInfo>
+    <mods_ns:originInfo>
+      <mods_ns:dateIssued encoding="marc">2006</mods_ns:dateIssued>
+      <mods_ns:place>
+        <mods_ns:placeTerm authority="marccountry" type="code">yu </mods_ns:placeTerm>
+      </mods_ns:place>
+    </mods_ns:originInfo>
+    <mods_ns:identifier type="isbn">8683385124</mods_ns:identifier>
+    <mods_ns:recordInfo>
+      <mods_ns:recordContentSource authority="marcorg">Uk</mods_ns:recordContentSource>
+      <mods_ns:languageOfCataloging>
+        <mods_ns:languageTerm authority="iso639-2b" type="code">eng</mods_ns:languageTerm>
+      </mods_ns:languageOfCataloging>
+    </mods_ns:recordInfo>
+    <mods_ns:name type="personal">
+      <mods_ns:namePart>Nikitovic\xCC\x81, Pavle</mods_ns:namePart>
+      <mods_ns:namePart type="date">1945-</mods_ns:namePart>
+    </mods_ns:name>
+    <mods_ns:titleInfo>
+      <mods_ns:title>Pavle Nik Nikitovic\xCC\x81</mods_ns:title>
+    </mods_ns:titleInfo>
+    <mods_ns:note type="statement of responsibility">[esej "Veliki igrac\xCC\x8C"] Ratko Boz\xCC\x8Covic\xCC\x81.</mods_ns:note>
+    <mods_ns:originInfo eventType="publisher">
+      <mods_ns:place>
+        <mods_ns:placeTerm type="text">Beograd</mods_ns:placeTerm>
+      </mods_ns:place>
+      <mods_ns:publisher>Radionica Dus\xCC\x8Ce</mods_ns:publisher>
+      <mods_ns:dateIssued>2006</mods_ns:dateIssued>
+    </mods_ns:originInfo>
+    <mods_ns:physicalDescription>
+      <mods_ns:extent>148 p. : col. ill. ; 30 cm.</mods_ns:extent>
+    </mods_ns:physicalDescription>
+    <mods_ns:note type="language">In Serbian (Roman) and English.</mods_ns:note>
+    <mods_ns:subject authority="lcsh">
+      <mods_ns:name type="personal">
+        <mods_ns:namePart>Nikitovic\xCC\x81, Pavle</mods_ns:namePart>
+        <mods_ns:namePart type="date">1945-</mods_ns:namePart>
+      </mods_ns:name>
+    </mods_ns:subject>
+    <mods_ns:subject authority="lcsh">
+      <mods_ns:topic>Art, Serbian</mods_ns:topic>
+      <mods_ns:temporal>20th century.</mods_ns:temporal>
+    </mods_ns:subject>
+    <mods_ns:name type="personal">
+      <mods_ns:namePart>Boz\xCC\x8Covic\xCC\x81, Ratko.</mods_ns:namePart>
+    </mods_ns:name>
+    <mods_ns:physicalDescription>
+      <mods_ns:form authority="marcform">print</mods_ns:form>
+    </mods_ns:physicalDescription>
+    <mods_ns:genre>Illustrated</mods_ns:genre>
+    <mods_ns:language>
+      <mods_ns:languageTerm authority="iso639-2b" type="code">eng</mods_ns:languageTerm>
+      <mods_ns:languageTerm type="text">English</mods_ns:languageTerm>
+    </mods_ns:language>
+    <mods_ns:language>
+      <mods_ns:languageTerm authority="iso639-2b" type="code">scc</mods_ns:languageTerm>
+      <mods_ns:languageTerm type="text">Serbian</mods_ns:languageTerm>
+    </mods_ns:language>
+    <mods_ns:location>
+      <mods_ns:holdingExternal>
+        <h:localHolds xmlns:h="http://copac.ac.uk/schemas/holdings/v1">
+          <h:org displayName="British Library" postcode="NW1 2DB" coords="51.528903,-0.127483" copacCode="bli">Uk</h:org>
+          <h:objId>37696876</h:objId>
+          <h:holds>
+            <h:item>
+              <h:loc heldByShortName="British Library" heldBy="British Library" postcode="NW1 2DB" location="British Library, St Pancras" subLocation="Humanities and Social Sciences, St Pancras Reading Rooms" coords="51.528903,-0.127483">HMNTS</h:loc>
+              <h:shelfmark>LF.31.b.3126</h:shelfmark>
+            </h:item>
+          </h:holds>
+        </h:localHolds>
+      </mods_ns:holdingExternal>
+    </mods_ns:location>
+    <mods_ns:extension>
+      <cpc:flags xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1">
+        <cpc:flag>copbok</cpc:flag>
+        <cpc:flag>coppri</cpc:flag>
+        <cpc:flag>m21bk</cpc:flag>
+        <cpc:flag>rtypa</cpc:flag>
+      </cpc:flags>
+    </mods_ns:extension>
+  </mods_ns:mods>
+  <mods_ns:mods xmlns:mods_ns="http://www.loc.gov/mods/v3" version="3.5">
+    <mods_ns:recordInfo>
+      <mods_ns:recordIdentifier source="UkMaC">69250051</mods_ns:recordIdentifier>
+      <mods_ns:recordCreationDate encoding="iso8601">20140401</mods_ns:recordCreationDate>
+    </mods_ns:recordInfo>
+    <mods_ns:typeOfResource>text</mods_ns:typeOfResource>
+    <mods_ns:originInfo>
+      <mods_ns:issuance>multipart monograph</mods_ns:issuance>
+    </mods_ns:originInfo>
+    <mods_ns:originInfo>
+      <mods_ns:dateIssued encoding="marc">1901</mods_ns:dateIssued>
+      <mods_ns:place>
+        <mods_ns:placeTerm authority="marccountry" type="code">fr </mods_ns:placeTerm>
+      </mods_ns:place>
+    </mods_ns:originInfo>
+    <mods_ns:name type="personal">
+      <mods_ns:namePart>Riemann, Othon.</mods_ns:namePart>
+    </mods_ns:name>
+    <mods_ns:titleInfo>
+      <mods_ns:title>Grammaire compar\xC3\xA9e du grec et du latin. Phon\xC3\xA9tique et \xC3\xA9tude des formes grecques et latines, par O. Riemann &amp; H. Goelzer.</mods_ns:title>
+    </mods_ns:titleInfo>
+    <mods_ns:originInfo eventType="publisher">
+      <mods_ns:place>
+        <mods_ns:placeTerm type="text">Par.</mods_ns:placeTerm>
+      </mods_ns:place>
+      <mods_ns:dateIssued>1901</mods_ns:dateIssued>
+    </mods_ns:originInfo>
+    <mods_ns:physicalDescription>
+      <mods_ns:extent>cm.25.</mods_ns:extent>
+    </mods_ns:physicalDescription>
+    <mods_ns:name type="personal">
+      <mods_ns:namePart>Goelzer, Henri Jules E.</mods_ns:namePart>
+    </mods_ns:name>
+    <mods_ns:subject>
+      <mods_ns:hierarchicalGeographic>
+        <mods_ns:country>France</mods_ns:country>
+        <mods_ns:city>Paris</mods_ns:city>
+      </mods_ns:hierarchicalGeographic>
+    </mods_ns:subject>
+    <mods_ns:physicalDescription>
+      <mods_ns:form authority="marcform">print</mods_ns:form>
+    </mods_ns:physicalDescription>
+    <mods_ns:location>
+      <mods_ns:holdingExternal>
+        <h:localHolds xmlns:h="http://copac.ac.uk/schemas/holdings/v1">
+          <h:org displayName="University of Oxford Libraries" postcode="OX1 3BG" coords="51.754054,-1.254373" copacCode="oxf">UkOxU</h:org>
+          <h:objId>69250051</h:objId>
+          <h:holds>
+            <h:item>
+              <h:loc heldByShortName="Oxford University" heldBy="University of Oxford Libraries" postcode="OX1 3BG" location="Bodleian Library" subLocation="Bodleian Library" coords="51.754054,-1.254373">Bodleian Library</h:loc>
+              <h:shelfmark>3047 d.38</h:shelfmark>
+            </h:item>
+          </h:holds>
+        </h:localHolds>
+      </mods_ns:holdingExternal>
+    </mods_ns:location>
+    <mods_ns:extension>
+      <cpc:local xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1">
+        <mods_ns:subject authority="lcsh">
+          <mods_ns:topic>Greek language</mods_ns:topic>
+        </mods_ns:subject>
+      </cpc:local>
       <cpc:flags xmlns:cpc="http://copac.ac.uk/schemas/mods-copac/v1">
         <cpc:flag>copbok</cpc:flag>
         <cpc:flag>coppri</cpc:flag>
