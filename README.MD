@@ -16,7 +16,7 @@ This readme is intended to get these modules up and running. For further informa
 
 - Java 8 JDK
 - Gradle 3.0
-- Groovy 2.4.7
+- Apache Groovy 2.4.7
 - MongoDB 3.2.9 (running and listening on localhost:27017)
 - Docker 1.12
 - Node 6.4.0 (for the demo UI)
