@@ -6,7 +6,6 @@ import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -101,8 +100,6 @@ public interface InstanceStorageResource {
      * 
      * @param instanceId
      *     
-     * @param xTenant
-     *      e.g. tennantID1234
      * @param vertxContext
      *      The Vertx Context Object <code>io.vertx.core.Context</code> 
      * @param asyncResultHandler
@@ -114,9 +111,7 @@ public interface InstanceStorageResource {
     void getInstanceStorageInstanceByInstanceId(
         @PathParam("instanceId")
         @NotNull
-        String instanceId,
-        @HeaderParam("X-Tenant")
-        String xTenant, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        String instanceId, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
         throws Exception
     ;
 
