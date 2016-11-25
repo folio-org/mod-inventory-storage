@@ -31,6 +31,32 @@ public class JobsClient {
      * Service endpoint ^/jobs/jobconfs
      * 
      */
+    public void getJobconfs(String query, String orderBy, org.folio.rest.jaxrs.resource.JobsResource.Order order, int offset, int limit, String lang, Handler<HttpClientResponse> responseHandler) {
+        StringBuilder queryParams = new StringBuilder("?");
+        io.vertx.core.http.HttpClientRequest request = httpClient.get("/jobs/jobconfs"+queryParams.toString());
+        request.handler(responseHandler);
+        if(query != null) {queryParams.append("query="+query);}
+        queryParams.append("&");
+        if(orderBy != null) {queryParams.append("orderBy="+orderBy);}
+        queryParams.append("&");
+        if(order != null) {queryParams.append("order="+order.toString());}
+        queryParams.append("&");
+        queryParams.append("offset="+offset);
+        queryParams.append("&");
+        queryParams.append("limit="+limit);
+        queryParams.append("&");
+        if(lang != null) {queryParams.append("lang="+lang);}
+        queryParams.append("&");
+        request.putHeader("Accept", "application/json,text/plain");
+        request.putHeader("Authorization", tenantId);
+        request.putHeader("x-okapi-tenant", tenantId);
+        request.end();
+    }
+
+    /**
+     * Service endpoint ^/jobs/jobconfs
+     * 
+     */
     public void postJobconfs(String lang, org.folio.rest.jaxrs.model.JobConf JobConf, Handler<HttpClientResponse> responseHandler) {
         StringBuilder queryParams = new StringBuilder("?");
         io.vertx.core.http.HttpClientRequest request = httpClient.post("/jobs/jobconfs"+queryParams.toString());
@@ -156,32 +182,6 @@ public class JobsClient {
         StringBuilder queryParams = new StringBuilder("?");
         io.vertx.core.http.HttpClientRequest request = httpClient.get("/jobs/jobconfs/"+jobconfsId+"/jobs/"+jobId+""+queryParams.toString());
         request.handler(responseHandler);
-        if(lang != null) {queryParams.append("lang="+lang);}
-        queryParams.append("&");
-        request.putHeader("Accept", "application/json,text/plain");
-        request.putHeader("Authorization", tenantId);
-        request.putHeader("x-okapi-tenant", tenantId);
-        request.end();
-    }
-
-    /**
-     * Service endpoint ^/jobs/jobconfs
-     * 
-     */
-    public void getJobconfs(String query, String orderBy, org.folio.rest.jaxrs.resource.JobsResource.Order order, int offset, int limit, String lang, Handler<HttpClientResponse> responseHandler) {
-        StringBuilder queryParams = new StringBuilder("?");
-        io.vertx.core.http.HttpClientRequest request = httpClient.get("/jobs/jobconfs"+queryParams.toString());
-        request.handler(responseHandler);
-        if(query != null) {queryParams.append("query="+query);}
-        queryParams.append("&");
-        if(orderBy != null) {queryParams.append("orderBy="+orderBy);}
-        queryParams.append("&");
-        if(order != null) {queryParams.append("order="+order.toString());}
-        queryParams.append("&");
-        queryParams.append("offset="+offset);
-        queryParams.append("&");
-        queryParams.append("limit="+limit);
-        queryParams.append("&");
         if(lang != null) {queryParams.append("lang="+lang);}
         queryParams.append("&");
         request.putHeader("Accept", "application/json,text/plain");

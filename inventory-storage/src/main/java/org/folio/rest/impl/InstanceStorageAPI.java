@@ -47,12 +47,26 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) throws Exception {
 
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStorageInstanceResponse.withPlainInternalServerError("Not implemented")));
+    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStorageInstanceResponse.withPlainInternalServerError("Not implemented")));
   }
 
   @Override
-  public void getInstanceStorageInstanceByInstanceId(@NotNull String instanceId, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStorageInstanceResponse.withPlainInternalServerError("Not implemented")));
+  public void postInstanceStorageInstanceByInstanceId(@NotNull String instanceId, @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceByInstanceIdResponse.withPlainInternalServerError("Not implemented")));
+  }
+
+  @Override
+  public void getInstanceStorageInstanceByInstanceId(@NotNull String instanceId, @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStorageInstanceByInstanceIdResponse.withPlainInternalServerError("Not implemented")));
+  }
+
+  @Override
+  public void deleteInstanceStorageInstanceByInstanceId(@NotNull String instanceId, @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStorageInstanceByInstanceIdResponse.withPlainInternalServerError("Not implemented")));
+  }
+
+  @Override
+  public void putInstanceStorageInstanceByInstanceId(@NotNull String instanceId, @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Instance entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceByInstanceIdResponse.withPlainInternalServerError("Not implemented")));
   }
 }

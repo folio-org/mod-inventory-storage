@@ -21,20 +21,20 @@ resourceTypes:
  - collection-item: !include https://raw.githubusercontent.com/folio-org/raml/master/rtypes/item-collection.raml
 
 /item_storage:
-    /item:
-      displayName: Items
+  /item:
+    displayName: Items
+    type:
+      collection:
+        exampleCollection: !include  examples/items_get.json
+        schemaCollection: items
+        schemaItem: item
+        exampleItem: !include  examples/item_get.json
+    get:
+    post:
+    /{itemId}:
       type:
-        collection:
-          exampleCollection: !include  examples/items_get.json
-          schemaCollection: items
-          schemaItem: item
-          exampleItem: !include  examples/item_get.json
+        collection-item:
+          exampleItem: !include examples/item_get.json
+          schema: item
       get:
       post:
-      /{itemId}:
-        type:
-          collection-item:
-            exampleItem: !include examples/item_get.json
-            schema: item
-        get:
-        post:

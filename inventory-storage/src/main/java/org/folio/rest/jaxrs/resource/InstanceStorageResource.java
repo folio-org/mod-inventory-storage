@@ -4,9 +4,11 @@ package org.folio.rest.jaxrs.resource;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -92,6 +94,32 @@ public interface InstanceStorageResource {
     ;
 
     /**
+     * 
+     * @param instanceId
+     *     
+     * @param vertxContext
+     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
+     * @param asyncResultHandler
+     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
+     * @param lang
+     *     Requested language. Optional. [lang=en]
+     *     
+     */
+    @POST
+    @Path("instance/{instanceId}")
+    @Validate
+    void postInstanceStorageInstanceByInstanceId(
+        @PathParam("instanceId")
+        @NotNull
+        String instanceId,
+        @QueryParam("lang")
+        @DefaultValue("en")
+        @Pattern(regexp = "[a-zA-Z]{2}")
+        String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    ;
+
+    /**
      * Get Instance by InstanceId
      * Instances are stored and accessed by a hash of key properties. The rules which govern
      * how instance hashes are computed are business rules and defined in the service layer.
@@ -104,16 +132,166 @@ public interface InstanceStorageResource {
      *      The Vertx Context Object <code>io.vertx.core.Context</code> 
      * @param asyncResultHandler
      *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
+     * @param lang
+     *     Requested language. Optional. [lang=en]
+     *     
      */
     @GET
     @Path("instance/{instanceId}")
+    @Produces({
+        "application/json",
+        "text/plain"
+    })
     @Validate
     void getInstanceStorageInstanceByInstanceId(
         @PathParam("instanceId")
         @NotNull
-        String instanceId, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        String instanceId,
+        @QueryParam("lang")
+        @DefaultValue("en")
+        @Pattern(regexp = "[a-zA-Z]{2}")
+        String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
         throws Exception
     ;
+
+    /**
+     * Delete instance item with given {instanceId}
+     * 
+     * 
+     * @param instanceId
+     *     
+     * @param vertxContext
+     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
+     * @param asyncResultHandler
+     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
+     * @param lang
+     *     Requested language. Optional. [lang=en]
+     *     
+     */
+    @DELETE
+    @Path("instance/{instanceId}")
+    @Produces({
+        "text/plain"
+    })
+    @Validate
+    void deleteInstanceStorageInstanceByInstanceId(
+        @PathParam("instanceId")
+        @NotNull
+        String instanceId,
+        @QueryParam("lang")
+        @DefaultValue("en")
+        @Pattern(regexp = "[a-zA-Z]{2}")
+        String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    ;
+
+    /**
+     * Update instance item with given {instanceId}
+     * 
+     * 
+     * @param instanceId
+     *     
+     * @param vertxContext
+     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
+     * @param asyncResultHandler
+     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
+     * @param lang
+     *     Requested language. Optional. [lang=en]
+     *     
+     * @param entity
+     *      e.g. {
+     *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+     *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+     *       "identifiers": [
+     *         {
+     *           "namespace": "isbn",
+     *           "value": "9781466636897"
+     *         },
+     *         {
+     *           "namespace": "ybp",
+     *           "value": "1"
+     *         }
+     *       ]
+     *     }
+     *     
+     */
+    @PUT
+    @Path("instance/{instanceId}")
+    @Consumes("application/json")
+    @Produces({
+        "text/plain"
+    })
+    @Validate
+    void putInstanceStorageInstanceByInstanceId(
+        @PathParam("instanceId")
+        @NotNull
+        String instanceId,
+        @QueryParam("lang")
+        @DefaultValue("en")
+        @Pattern(regexp = "[a-zA-Z]{2}")
+        String lang, Instance entity, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    ;
+
+    public class DeleteInstanceStorageInstanceByInstanceIdResponse
+        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
+    {
+
+
+        private DeleteInstanceStorageInstanceByInstanceIdResponse(Response delegate) {
+            super(delegate);
+        }
+
+        /**
+         * Item deleted successfully
+         * 
+         */
+        public static InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse withNoContent() {
+            Response.ResponseBuilder responseBuilder = Response.status(204);
+            return new InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+        /**
+         * Item with a given ID not found e.g. "instance not found"
+         * 
+         * 
+         * @param entity
+         *     "instance not found"
+         *     
+         */
+        public static InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse withPlainNotFound(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+        /**
+         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. "unable to delete instance -- constraint violation"
+         * 
+         * 
+         * @param entity
+         *     "unable to delete instance -- constraint violation"
+         *     
+         */
+        public static InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse withPlainBadRequest(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+        /**
+         * Internal server error, e.g. due to misconfiguration e.g. Internal server error, contact administrator
+         * 
+         * @param entity
+         *     Internal server error, contact administrator
+         */
+        public static InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse withPlainInternalServerError(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+    }
 
     public class GetInstanceStorageInstanceByInstanceIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
@@ -125,10 +303,68 @@ public interface InstanceStorageResource {
         }
 
         /**
+         * Returns item with a given ID e.g. {
+         *   "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *   "identifiers": [
+         *     {
+         *       "namespace": "isbn",
+         *       "value": "9781466636897"
+         *     },
+         *     {
+         *       "namespace": "ybp",
+         *       "value": "1"
+         *     }
+         *   ]
+         * }
          * 
+         * 
+         * @param entity
+         *     {
+         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *       "identifiers": [
+         *         {
+         *           "namespace": "isbn",
+         *           "value": "9781466636897"
+         *         },
+         *         {
+         *           "namespace": "ybp",
+         *           "value": "1"
+         *         }
+         *       ]
+         *     }
+         *     
          */
-        public static InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse withOK() {
-            Response.ResponseBuilder responseBuilder = Response.status(200);
+        public static InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse withJsonOK(Instance entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", "application/json");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+        /**
+         * Item with a given ID not found e.g. "instance not found"
+         * 
+         * 
+         * @param entity
+         *     "instance not found"
+         *     
+         */
+        public static InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse withPlainNotFound(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+        /**
+         * Internal server error, e.g. due to misconfiguration e.g. internal server error, contact administrator
+         * 
+         * @param entity
+         *     internal server error, contact administrator
+         */
+        public static InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse withPlainInternalServerError(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
             return new InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
         }
 
@@ -209,6 +445,17 @@ public interface InstanceStorageResource {
 
     }
 
+    public class PostInstanceStorageInstanceByInstanceIdResponse
+        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
+    {
+
+
+        private PostInstanceStorageInstanceByInstanceIdResponse(Response delegate) {
+            super(delegate);
+        }
+
+    }
+
     public class PostInstanceStorageInstanceResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
@@ -284,6 +531,66 @@ public interface InstanceStorageResource {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new InstanceStorageResource.PostInstanceStorageInstanceResponse(responseBuilder.build());
+        }
+
+    }
+
+    public class PutInstanceStorageInstanceByInstanceIdResponse
+        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
+    {
+
+
+        private PutInstanceStorageInstanceByInstanceIdResponse(Response delegate) {
+            super(delegate);
+        }
+
+        /**
+         * Item successfully updated
+         * 
+         */
+        public static InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse withNoContent() {
+            Response.ResponseBuilder responseBuilder = Response.status(204);
+            return new InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+        /**
+         * Item with a given ID not found e.g. "instance not found"
+         * 
+         * 
+         * @param entity
+         *     "instance not found"
+         *     
+         */
+        public static InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse withPlainNotFound(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+        /**
+         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. "unable to update instance -- malformed JSON at 13:4"
+         * 
+         * 
+         * @param entity
+         *     "unable to update instance -- malformed JSON at 13:4"
+         *     
+         */
+        public static InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse withPlainBadRequest(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+        }
+
+        /**
+         * Internal server error, e.g. due to misconfiguration e.g. internal server error, contact administrator
+         * 
+         * @param entity
+         *     internal server error, contact administrator
+         */
+        public static InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse withPlainInternalServerError(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
         }
 
     }

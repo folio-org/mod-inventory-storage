@@ -21,24 +21,29 @@ resourceTypes:
  - collection-item: !include https://raw.githubusercontent.com/folio-org/raml/master/rtypes/item-collection.raml
 
 /instance_storage:
-    /instance:
-      displayName: Instances
+  /instance:
+    displayName: Instances
+    type:
+      collection:
+        exampleCollection: !include  examples/instance_get.json
+        schemaCollection: instances
+        schemaItem: instance
+        exampleItem: !include  examples/instance_get.json
+    get:
+    post:
+    /{instanceId}:
       type:
-        collection:
-          exampleCollection: !include  examples/instance_get.json
-          schemaCollection: instances
-          schemaItem: instance
-          exampleItem: !include  examples/instance_get.json
+        collection-item:
+          exampleItem: !include examples/instance_get.json
+          schema: instance
       get:
+        responses:
+          200:
+            body:
+  #              type: instance
+        description: |
+          Get Instance by InstanceId
+          Instances are stored and accessed by a hash of key properties. The rules which govern
+          how instance hashes are computed are business rules and defined in the service layer.
+          the storage layer only knows how to insert or retrieve instance records by ID.
       post:
-      /{instanceId}:
-        get:
-          responses:
-            200:
-              body:
-#                type: instance
-          description: |
-            Get Instance by InstanceId
-            Instances are stored and accessed by a hash of key properties. The rules which govern
-            how instance hashes are computed are business rules and defined in the service layer.
-            the storage layer only knows how to insert or retrieve instance records by ID.

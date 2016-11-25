@@ -28,16 +28,68 @@ public class InstanceStorageClient {
     }
 
     /**
-     * Service endpoint ^/instance_storage/instance
+     * Service endpoint ^/instance_storage/instance/{instanceId}
      * 
      */
-    public void getInstance(String lang, Handler<HttpClientResponse> responseHandler) {
+    public void postInstanceId(String instanceId, String lang, Handler<HttpClientResponse> responseHandler) {
         StringBuilder queryParams = new StringBuilder("?");
-        io.vertx.core.http.HttpClientRequest request = httpClient.get("/instance_storage/instance"+queryParams.toString());
+        io.vertx.core.http.HttpClientRequest request = httpClient.post("/instance_storage/instance/"+instanceId+""+queryParams.toString());
+        request.handler(responseHandler);
+        if(lang != null) {queryParams.append("lang="+lang);}
+        queryParams.append("&");
+        request.putHeader("Authorization", tenantId);
+        request.putHeader("x-okapi-tenant", tenantId);
+        request.end();
+    }
+
+    /**
+     * Service endpoint ^/instance_storage/instance/{instanceId}
+     * 
+     */
+    public void getInstanceId(String instanceId, String lang, Handler<HttpClientResponse> responseHandler) {
+        StringBuilder queryParams = new StringBuilder("?");
+        io.vertx.core.http.HttpClientRequest request = httpClient.get("/instance_storage/instance/"+instanceId+""+queryParams.toString());
         request.handler(responseHandler);
         if(lang != null) {queryParams.append("lang="+lang);}
         queryParams.append("&");
         request.putHeader("Accept", "application/json,text/plain");
+        request.putHeader("Authorization", tenantId);
+        request.putHeader("x-okapi-tenant", tenantId);
+        request.end();
+    }
+
+    /**
+     * Service endpoint ^/instance_storage/instance/{instanceId}
+     * 
+     */
+    public void deleteInstanceId(String instanceId, String lang, Handler<HttpClientResponse> responseHandler) {
+        StringBuilder queryParams = new StringBuilder("?");
+        io.vertx.core.http.HttpClientRequest request = httpClient.delete("/instance_storage/instance/"+instanceId+""+queryParams.toString());
+        request.handler(responseHandler);
+        if(lang != null) {queryParams.append("lang="+lang);}
+        queryParams.append("&");
+        request.putHeader("Accept", "text/plain");
+        request.putHeader("Authorization", tenantId);
+        request.putHeader("x-okapi-tenant", tenantId);
+        request.end();
+    }
+
+    /**
+     * Service endpoint ^/instance_storage/instance/{instanceId}
+     * 
+     */
+    public void putInstanceId(String instanceId, String lang, org.folio.rest.jaxrs.model.Instance Instance, Handler<HttpClientResponse> responseHandler) {
+        StringBuilder queryParams = new StringBuilder("?");
+        io.vertx.core.http.HttpClientRequest request = httpClient.put("/instance_storage/instance/"+instanceId+""+queryParams.toString());
+        request.handler(responseHandler);
+        if(lang != null) {queryParams.append("lang="+lang);}
+        queryParams.append("&");
+        io.vertx.core.buffer.Buffer buffer = io.vertx.core.buffer.Buffer.buffer();
+        buffer.appendString(org.folio.rest.tools.utils.JsonUtils.entity2Json(Instance).encode());
+        request.write(buffer);
+        request.setChunked(true);
+        request.putHeader("Content-type", "application/json");
+        request.putHeader("Accept", "text/plain");
         request.putHeader("Authorization", tenantId);
         request.putHeader("x-okapi-tenant", tenantId);
         request.end();
@@ -65,13 +117,16 @@ public class InstanceStorageClient {
     }
 
     /**
-     * Service endpoint ^/instance_storage/instance/{instanceId}
+     * Service endpoint ^/instance_storage/instance
      * 
      */
-    public void getInstanceId(String instanceId, Handler<HttpClientResponse> responseHandler) {
+    public void getInstance(String lang, Handler<HttpClientResponse> responseHandler) {
         StringBuilder queryParams = new StringBuilder("?");
-        io.vertx.core.http.HttpClientRequest request = httpClient.get("/instance_storage/instance/"+instanceId+""+queryParams.toString());
+        io.vertx.core.http.HttpClientRequest request = httpClient.get("/instance_storage/instance"+queryParams.toString());
         request.handler(responseHandler);
+        if(lang != null) {queryParams.append("lang="+lang);}
+        queryParams.append("&");
+        request.putHeader("Accept", "application/json,text/plain");
         request.putHeader("Authorization", tenantId);
         request.putHeader("x-okapi-tenant", tenantId);
         request.end();
