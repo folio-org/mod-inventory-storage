@@ -99,6 +99,22 @@ public class InstanceStorageClient {
      * Service endpoint ^/instance_storage/instance
      * 
      */
+    public void getInstance(String lang, Handler<HttpClientResponse> responseHandler) {
+        StringBuilder queryParams = new StringBuilder("?");
+        io.vertx.core.http.HttpClientRequest request = httpClient.get("/instance_storage/instance"+queryParams.toString());
+        request.handler(responseHandler);
+        if(lang != null) {queryParams.append("lang="+lang);}
+        queryParams.append("&");
+        request.putHeader("Accept", "application/json,text/plain");
+        request.putHeader("Authorization", tenantId);
+        request.putHeader("x-okapi-tenant", tenantId);
+        request.end();
+    }
+
+    /**
+     * Service endpoint ^/instance_storage/instance
+     * 
+     */
     public void postInstance(String lang, org.folio.rest.jaxrs.model.Instance Instance, Handler<HttpClientResponse> responseHandler) {
         StringBuilder queryParams = new StringBuilder("?");
         io.vertx.core.http.HttpClientRequest request = httpClient.post("/instance_storage/instance"+queryParams.toString());
@@ -110,22 +126,6 @@ public class InstanceStorageClient {
         request.write(buffer);
         request.setChunked(true);
         request.putHeader("Content-type", "application/json");
-        request.putHeader("Accept", "application/json,text/plain");
-        request.putHeader("Authorization", tenantId);
-        request.putHeader("x-okapi-tenant", tenantId);
-        request.end();
-    }
-
-    /**
-     * Service endpoint ^/instance_storage/instance
-     * 
-     */
-    public void getInstance(String lang, Handler<HttpClientResponse> responseHandler) {
-        StringBuilder queryParams = new StringBuilder("?");
-        io.vertx.core.http.HttpClientRequest request = httpClient.get("/instance_storage/instance"+queryParams.toString());
-        request.handler(responseHandler);
-        if(lang != null) {queryParams.append("lang="+lang);}
-        queryParams.append("&");
         request.putHeader("Accept", "application/json,text/plain");
         request.putHeader("Authorization", tenantId);
         request.putHeader("x-okapi-tenant", tenantId);

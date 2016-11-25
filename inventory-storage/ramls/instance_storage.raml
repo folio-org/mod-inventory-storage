@@ -13,8 +13,8 @@ schemas:
  - instances: !include schema/instances.json
 
 traits:
- - secured: !include https://raw.githubusercontent.com/folio-org/raml/master/traits/auth.raml
- - language: !include https://raw.githubusercontent.com/folio-org/raml/master/traits/language.raml
+ - secured: !include ../raml-util/traits/auth.raml
+ - language: !include ../raml-util/traits/language.raml
 
 resourceTypes:
  - collection: !include https://raw.githubusercontent.com/folio-org/raml/master/rtypes/collection.raml
