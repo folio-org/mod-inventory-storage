@@ -26,16 +26,48 @@ import org.folio.rest.persist.Criteria.Criteria;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
-    public Map<String,Item> storage = new HashMap<String,Item>();
-    
   @Override
   public void getItemStorageItem(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    List<Item> items = new ArrayList<Item>();
-    Items itemList = new Items();
-    itemList.setItems(items);
-    itemList.setTotalRecords(items.size());
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      ItemStorageResource.GetItemStorageItemResponse.withJsonOK(itemList)));
+      Criteria a = new Criteria();
+      Criterion criterion = new Criterion(a);
+	try {
+	    System.out.println("getting... Items");
+	    PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner());
+
+	    vertxContext.runOnContext(v -> {
+
+		    try {
+			postgresClient.get("test.item", Item.class, criterion , false,
+					   reply -> {
+					       try {
+						   List<Item> items = (List<Item>)reply.result()[0];
+						   Items itemList = new Items();
+						   itemList.setItems(items);
+						   itemList.setTotalRecords(items.size());
+						   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+														      ItemStorageResource.GetItemStorageItemResponse.
+														      withJsonOK(itemList)));
+						   	  
+					       } catch (Exception e) {
+						   e.printStackTrace();
+						   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+														  ItemStorageResource.GetItemStorageItemResponse.
+														  withPlainInternalServerError("Error")));
+					       }
+					   });
+		    } catch (Exception e) {
+			e.printStackTrace();
+			asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+										       ItemStorageResource.GetItemStorageItemResponse.
+										       withPlainInternalServerError("Error")));
+		    }
+		});
+	} catch (Exception e) {
+	    e.printStackTrace();
+	    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+									   ItemStorageResource.GetItemStorageItemResponse.
+									   withPlainInternalServerError("Error")));
+	}
   }
 
   @Override
