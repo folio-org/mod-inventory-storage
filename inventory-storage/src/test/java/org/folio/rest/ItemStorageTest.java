@@ -308,7 +308,7 @@ public class ItemStorageTest {
 					  System.out.println(restResponse.toString());
 					  async.complete();
 				      }
-1				  });
+				  });
 			  });
 
 		      request.headers().add("Accept", "application/json");
