@@ -1,0 +1,21 @@
+{
+  "id": "inventory",
+  "name": "Inventory Module",
+  "provides": [
+    {
+      "id": "inventory",
+      "version": "0.1"
+    }
+  ],
+  "routingEntries": [
+    {
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "path": "/inventory",
+      "level": "30",
+      "type": "request-response"
+    }
+  ]
+}

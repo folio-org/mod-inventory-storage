@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-instance_id=${1:-localhost-9402}
-module_id=${2:-catalogue-core}
+instance_id=${1:-localhost-9403}
+module_id=${2:-inventory}
 tenant=${3:-test-tenant}
 
 ../okapi-registration/unmanaged-deployment/unregister.sh \
