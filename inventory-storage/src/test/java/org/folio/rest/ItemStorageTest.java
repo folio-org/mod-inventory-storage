@@ -30,8 +30,10 @@ import java.util.concurrent.TimeoutException;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpClientRequest;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+
 import io.vertx.ext.unit.Async;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.Handler;
@@ -166,10 +168,10 @@ public class ItemStorageTest {
 
     JsonObject post = new JsonObject();
     post.put("id",id.toString());
+    post.put("instance_id", "Fake");
     post.put("title", "Real Analysis");
     post.put("barcode", "271828");
-    post.put("instance_id", "Fake");
-    
+       
     HttpClientRequest request = client.postAbs(postItemUrl.toString(), response -> {
 
 	    final int statusCode = response.statusCode();                    
@@ -179,7 +181,8 @@ public class ItemStorageTest {
 
 			JsonObject restResponse = new JsonObject(body.getString(0,body.length()));
 
-			System.out.println("Response Received");
+			context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
+			System.out.println("RECORD CREATED");
 			System.out.println(restResponse.toString());
 
 			context.assertEquals(restResponse.getString("title") , "Real Analysis");
@@ -210,18 +213,20 @@ public class ItemStorageTest {
 
     JsonObject post = new JsonObject();
     post.put("id", uuid);
+    post.put("instance_id", "MadeUp");
     post.put("title", "Refactoring");
     post.put("barcode", "314159");
-    post.put("instance_id", "MadeUp");
-    
+        
     HttpClientRequest postRequest = client.postAbs(postItemUrl.toString(), response -> {
-             
+
+	     final int postStatusCode = response.statusCode(); 
 	    response.bodyHandler(new Handler<Buffer>() {
 		    @Override
 		    public void handle(Buffer body) {
 
 			JsonObject restResponse = new JsonObject(body.getString(0,body.length()));
 
+			context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
 			System.out.println("POST Response Received");
 			System.out.println(restResponse.toString());
 
@@ -239,13 +244,15 @@ public class ItemStorageTest {
 			     System.out.println(getItemUrl);
 
 			     HttpClientRequest getRequest = client.getAbs(getItemUrl.toString(), response -> {
-              
+
+				     final int getStatusCode = response.statusCode(); 
 				     response.bodyHandler(new Handler<Buffer>() {
 					     @Override
 					     public void handle(Buffer body) {
 
 						 JsonObject restResponse = new JsonObject(body.getString(0,body.length()));
 
+						 context.assertEquals(getStatusCode, HttpURLConnection.HTTP_OK);
 						 System.out.println("GET Response Received");
 						 System.out.println(restResponse.toString());
 
@@ -283,22 +290,31 @@ public class ItemStorageTest {
 
       JsonObject post1 = new JsonObject();
       post1.put("id", uuid1);
+      post1.put("instance_id", "MadeUp");
       post1.put("title", "Refactoring");
       post1.put("barcode", "314159");
-      post1.put("instance_id", "MadeUp");
-
+     
       JsonObject post2 = new JsonObject();
       post2.put("id", uuid2);
+      post2.put("instance_id", "Fake");
       post2.put("title", "Real Analysis");
       post2.put("barcode", "271828");
-      post2.put("instance_id", "Fake");
-
+      
       HttpClientRequest post1Request = client.postAbs(itemsUrl.toString(), post1Response -> {
 
+	      final int post1StatusCode = post1Response.statusCode(); 
+	      context.assertEquals(post1StatusCode, HttpURLConnection.HTTP_CREATED);
+	      System.out.println("POST 1 CREATED");
 	      HttpClientRequest post2Request = client.postAbs(itemsUrl.toString(), post2Response -> {
 
+		      final int post2StatusCode = post1Response.statusCode(); 
+		      context.assertEquals(post2StatusCode, HttpURLConnection.HTTP_CREATED);
+		      System.out.println("POST 2 CREATED");
 		      HttpClientRequest request = client.getAbs(itemsUrl.toString(), getResponse -> {
 
+			      final int getAllStatusCode  = getResponse.statusCode(); 
+			      context.assertEquals(getAllStatusCode, HttpURLConnection.HTTP_OK);
+			      System.out.println("GET ALL OK");
 			      getResponse.bodyHandler( new Handler<Buffer>() {
 				      @Override
 				      public void handle(Buffer body) {
@@ -306,6 +322,17 @@ public class ItemStorageTest {
 					  JsonObject restResponse = new JsonObject(body.getString(0, body.length()));
 
 					  System.out.println(restResponse.toString());
+					  context.assertEquals(restResponse.getInteger("total_records"), 2);
+
+					  JsonObject item1 = restResponse.getJsonArray("items").getJsonObject(0);
+					  System.out.println("POST 1: " + post1);
+					  System.out.println("ITEM 1: " + item1);
+					  context.assertEquals(item1.getString("title"), post1.getString("title"));
+
+					  JsonObject item2 = restResponse.getJsonArray("items").getJsonObject(1);
+					  System.out.println("POST 2: " + post2);
+					  System.out.println("ITEM 2: " + item2);
+					  context.assertEquals(item2.getString("title"), post2.getString("title"));
 					  async.complete();
 				      }
 				  });
