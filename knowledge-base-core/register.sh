@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
-knowledgebase_direct_address=${1:-http://localhost:9401}
-knowledge_base_instance_id=${2:-localhost-9401}
-okapi_proxy_address=${3:-http://localhost:9130}
-tenant=${4:-test-tenant}
+module_direct_address=${1:-http://localhost:9401}
+module_instance_id=${2:-localhost-9401}
+module_id=${3:-knowledge-base-core}
+okapi_proxy_address=${4:-http://localhost:9130}
+tenant=${5:-test-tenant}
 
 ../okapi-registration/unmanaged-deployment/register.sh \
-  ${knowledgebase_direct_address} \
-  ${knowledge_base_instance_id} \
+  ${module_direct_address} \
+  ${module_instance_id} \
+  ${module_id} \
   ${okapi_proxy_address} \
   ${tenant}
