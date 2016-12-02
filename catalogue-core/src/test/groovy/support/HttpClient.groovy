@@ -8,6 +8,7 @@ import groovyx.net.http.ResponseParseException
 import org.apache.commons.io.IOUtils
 
 class HttpClient {
+  static private final String tenant = "test-tenant"
 
   static get(url) {
     def requestBuilder = new HTTPBuilder(url)
@@ -16,7 +17,7 @@ class HttpClient {
       requestBuilder.request(Method.GET) { req ->
         println "\nTest Http Client GET from: ${url}\n"
 
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
 
         response.success = { resp, body ->
           body
@@ -55,7 +56,7 @@ class HttpClient {
       requestBuilder.request(Method.GET) { req ->
         println "\nTest Http Client GET from: ${url}\n"
 
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
 
         response.success = { resp, body ->
           body
@@ -92,7 +93,7 @@ class HttpClient {
         println "\nTest Http Client POST to: ${url}\n"
 
         body = bodyToSend
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
 
         response.success = { resp ->
           println "Status Code: ${resp.status}"
@@ -124,7 +125,7 @@ class HttpClient {
         println "\nTest Http Client POST to: ${url}\n"
 
         body = bodyToSend
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
 
         response.success = { resp ->
           println "Status Code: ${resp.status}"
@@ -159,7 +160,7 @@ class HttpClient {
     try {
       requestBuilder.request(Method.GET) { req ->
         println "\nTest Http Client POST to: ${requestBuilder.uri}\n"
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
         uri.query = query
 
         response.success = { resp, body ->

@@ -3,6 +3,7 @@
 catalogue_direct_address=${1:-http://localhost:9402/catalogue}
 catalogue_instance_id=${2:-localhost-9402}
 okapi_proxy_address=${3:-http://localhost:9130}
+tenant=${4:-test-tenant}
 
 discovery_json=$(cat ./registration/discovery.json)
 
@@ -25,5 +26,5 @@ curl -w '\n' -D - -s \
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
      -d @./registration/activate.json  \
-     "${okapi_proxy_address}/_/proxy/tenants/our/modules"
+     "${okapi_proxy_address}/_/proxy/tenants/${tenant}/modules"
 

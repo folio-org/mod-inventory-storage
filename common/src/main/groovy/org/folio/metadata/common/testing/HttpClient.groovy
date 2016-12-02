@@ -5,6 +5,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.http.entity.mime.MultipartEntityBuilder
 
 class HttpClient {
+  private final String tenant = "test-tenant"
 
   Tuple get(url) {
     def requestBuilder = new HTTPBuilder(url)
@@ -13,7 +14,7 @@ class HttpClient {
       requestBuilder.request(Method.GET) { req ->
         println "\nTest Http Client GET from: ${url}\n"
 
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
 
         response.success = { resp, body ->
           new Tuple(resp, body)
@@ -55,7 +56,7 @@ class HttpClient {
       http.request(Method.POST) { req ->
         println "\nTest Http Client POST to: ${url}\n"
 
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
         requestContentType = 'multipart/form-data'
 
         def multipartBuilder = new MultipartEntityBuilder()

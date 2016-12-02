@@ -2,10 +2,11 @@
 
 catalogue_root_address=${1:-http://localhost:9130/catalogue}
 knowledgebase_root_address=${2:-http://localhost:9130/knowledge-base}
+tenant=${3:-test-tenant}
 
 create_instance_output=$(curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
-     -H "X-Okapi-Tenant: our" \
+     -H "X-Okapi-Tenant: ${tenant}" \
      -d @./nod-instance.json \
      "${knowledgebase_root_address}/instance")
 
@@ -17,7 +18,7 @@ create_item_json="${create_item_json/InstanceLocationHere/$instance_location}"
 
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
-     -H "X-Okapi-Tenant: our" \
+     -H "X-Okapi-Tenant: ${tenant}" \
      -d "${create_item_json}" \
      "${catalogue_root_address}/item"
 
@@ -25,7 +26,7 @@ curl -w '\n' -X POST -D - \
 
 create_instance_output=$(curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
-     -H "X-Okapi-Tenant: our" \
+     -H "X-Okapi-Tenant: ${tenant}" \
      -d @./uprooted-instance.json \
      "${knowledgebase_root_address}/instance")
 
@@ -37,6 +38,6 @@ create_item_json="${create_item_json/InstanceLocationHere/$instance_location}"
 
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
-     -H "X-Okapi-Tenant: our" \
+     -H "X-Okapi-Tenant: ${tenant}" \
      -d "${create_item_json}" \
      "${catalogue_root_address}/item"

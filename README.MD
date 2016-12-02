@@ -86,13 +86,13 @@ The output should be something similar to:
 ```
 HTTP/1.1 201 Created
 Content-Type: application/json
-Location: /_/proxy/tenants/our
+Location: /_/proxy/tenants/test-tenant
 Content-Length: 81
 
 {
-  "id" : "our",
-  "name" : "our library",
-  "description" : "Our Own Library"
+  "id" : "test-tenant",
+  "name" : "A Test Library",
+  "description" : "A test library"
 }
 ```
 

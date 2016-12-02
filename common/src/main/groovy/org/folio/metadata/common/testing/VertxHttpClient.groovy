@@ -6,8 +6,6 @@ import groovyx.net.http.Method
 import groovyx.net.http.ResponseParseException
 import io.vertx.core.Handler
 import io.vertx.core.http.HttpMethod
-import io.vertx.core.json.Json
-import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import org.apache.http.entity.mime.MultipartEntityBuilder
@@ -17,10 +15,16 @@ import java.util.concurrent.CompletableFuture
 class VertxHttpClient {
 
   private final Vertx vertx
+  private final String tenant
 
   VertxHttpClient(Vertx vertx) {
     this.vertx = vertx
-    assert this.vertx != null
+    this.tenant = "test-tenant"
+  }
+
+  VertxHttpClient(Vertx vertx, String tenant) {
+    this.vertx = vertx
+    this.tenant = tenant
   }
 
   Tuple get(url) {
@@ -38,7 +42,7 @@ class VertxHttpClient {
 
     Handler<Throwable> onException = { println "Exception: ${it}" }
 
-    String tenant = "our"
+    String tenant = tenant
 
     client.requestAbs(HttpMethod.GET, url, onResponse)
       .exceptionHandler(onException)
@@ -58,7 +62,7 @@ class VertxHttpClient {
       http.request(Method.POST) { req ->
         println "\nTest Http Client POST to: ${url}\n"
 
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
         requestContentType = 'multipart/form-data'
 
         def multipartBuilder = new MultipartEntityBuilder()

@@ -13,6 +13,7 @@ import support.HttpClient
 import support.World
 
 class InstanceApiExamples extends Specification {
+  private final String tenant = "test-tenant"
 
   def setupSpec() {
     World.startVertx()
@@ -181,7 +182,7 @@ class InstanceApiExamples extends Specification {
     def documentLoader = new DocumentLoader()
     def httpClient = CachingHttpClientBuilder
       .create()
-      .setDefaultHeaders([new BasicHeader('X-Okapi-Tenant', "our")])
+      .setDefaultHeaders([new BasicHeader('X-Okapi-Tenant', tenant)])
       .build()
 
     documentLoader.setHttpClient(httpClient)

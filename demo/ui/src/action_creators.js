@@ -48,7 +48,7 @@ export function fetchInstances(filter) {
 
         var headers = new Headers();
 
-        headers.append('X-Okapi-Tenant', 'our');
+        headers.append('X-Okapi-Tenant', 'test-tenant');
 
         var init = { method: 'GET',
             headers: headers };
