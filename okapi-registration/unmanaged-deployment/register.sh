@@ -12,8 +12,6 @@ discovery_json="${discovery_json/moduleidhere/$module_id}"
 discovery_json="${discovery_json/directaddresshere/$module_direct_address}"
 discovery_json="${discovery_json/instanceidhere/$module_instance_id}"
 
-echo "${discovery_json}"
-
 curl -w '\n' -X POST -D -   \
      -H "Content-type: application/json"   \
      -d "${discovery_json}" \
@@ -25,8 +23,11 @@ curl -w '\n' -D - -s \
      -d @./registration/proxy.json  \
      "${okapi_proxy_address}/_/proxy/modules"
 
+activate_json=$(cat ./registration/activate.json)
+activate_json="${activate_json/moduleidhere/$module_id}"
+
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
-     -d @./registration/activate.json  \
+     -d "${activate_json}"  \
      "${okapi_proxy_address}/_/proxy/tenants/${tenant}/modules"
 
