@@ -8,7 +8,7 @@ import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 import java.util.concurrent.CompletableFuture
 
-class ModIngestExamples extends Specification {
+class ModsIngestExamples extends Specification {
 
   public static final testPortToUse = 9603
 
@@ -69,7 +69,7 @@ class ModIngestExamples extends Specification {
 
   private expectedItemsCreatedFromIngest() {
     def (resp, items) = client.get(
-      new URL("http://localhost:9603/inventory/items"))
+      new URL("${inventoryApiRoot()}/items"))
 
     assert resp.status == 200
 
@@ -115,7 +115,7 @@ class ModIngestExamples extends Specification {
 
   private itemHasCorrectInstanceRelationship(item) {
     def (resp, instance) = client.get(
-      new URL("http://localhost:9603/inventory/instances/${item.instanceId}"))
+      new URL("${inventoryApiRoot()}/instances/${item.instanceId}"))
 
     assert resp.status == 200
     assert instance != null
@@ -125,7 +125,7 @@ class ModIngestExamples extends Specification {
   private expectedInstancesCreatedFromIngest() {
     def client = new HttpClient()
 
-    def (resp, instances) = client.get(new URL("http://localhost:9603/inventory/instances"))
+    def (resp, instances) = client.get(new URL("${inventoryApiRoot()}/instances"))
 
     assert resp.status == 200
     assert instances != null
@@ -185,8 +185,22 @@ class ModIngestExamples extends Specification {
   }
 
   private beginIngest(List<File> files) {
-    client.uploadFile(new URL("http://localhost:9603/inventory/ingest/mods"),
+    client.uploadFile(getIngestUrl(),
       files, "record")
+  }
+
+  private URL getIngestUrl() {
+    new URL("${inventoryApiRoot()}/ingest/mods")
+  }
+
+  private String inventoryApiRoot() {
+    def directAddress = new URL("http://localhost:${testPortToUse}/inventory")
+
+    def useOkapi = (System.getProperty("okapi.use") ?: "").toBoolean()
+
+    useOkapi ?
+      System.getProperty("okapi.address") + '/inventory'
+      : directAddress
   }
 
   private File loadFileFromResource(String filename) {

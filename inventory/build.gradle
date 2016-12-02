@@ -36,6 +36,20 @@ test {
   exclude '**/External**CollectionExamples.class'
 }
 
+task testApiDirect(type: Test) {
+  include '**/api/**'
+}
+
+task testApiViaOkapi(type: Test) {
+  include '**/api/**'
+
+  systemProperty 'okapi.use', 'true'
+
+  def okapiAddress = System.getProperty('okapi.address') ?: 'http://localhost:9130'
+
+  systemProperty 'okapi.address', okapiAddress
+}
+
 task fatJar(type: Jar) {
   manifest {
     attributes 'Main-Class': mainClassName

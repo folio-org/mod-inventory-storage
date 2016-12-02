@@ -33,8 +33,6 @@ task testApiViaOkapi(type: Test) {
 
   def okapiAddress = System.getProperty('okapi.address') ?: 'http://localhost:9130'
 
-  println "Using ${okapiAddress} as Okapi Proxy to communicate with modules"
-
   systemProperty 'okapi.address', okapiAddress
 }
 
