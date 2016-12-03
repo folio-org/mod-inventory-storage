@@ -67,15 +67,20 @@ class ExternalStorageModuleItemCollection
     String location = storageAddress + "/items/${id}"
 
     def onResponse = { response ->
-      response.bodyHandler({ buffer ->
-        def responseBody = "${buffer.getString(0, buffer.length())}"
+      if(response.statusCode() == 200) {
+        response.bodyHandler({ buffer ->
+          def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        def itemFromServer = new JsonObject(responseBody)
+          def itemFromServer = new JsonObject(responseBody)
 
-        def foundItem = mapFromJson(itemFromServer)
+          def foundItem = mapFromJson(itemFromServer)
 
-        resultCallback(foundItem)
-      })
+          resultCallback(foundItem)
+        })
+      }
+      else {
+        resultCallback(null)
+      }
     }
 
     Handler<Throwable> onException = { println "Exception: ${it}" }

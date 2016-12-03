@@ -6,19 +6,26 @@ import org.folio.inventory.domain.ItemCollection
 import org.folio.inventory.resources.ingest.IngestJobCollection
 
 class InMemoryCollections implements CollectionProvider {
-  private final InMemoryItemCollection itemCollection
+  private final Map<String, ItemCollection> itemCollections = [:]
+
   private final InMemoryInstanceCollection instanceCollection
   private final InMemoryIngestJobCollection ingestJobCollection
 
   def InMemoryCollections() {
-    itemCollection = new InMemoryItemCollection()
     instanceCollection = new InMemoryInstanceCollection()
     ingestJobCollection = new InMemoryIngestJobCollection()
   }
 
   @Override
   ItemCollection getItemCollection(String tenantId) {
-    itemCollection
+    def itemCollectionForTenant = itemCollections.get(tenantId, null)
+
+    if(itemCollectionForTenant == null) {
+      itemCollectionForTenant = new InMemoryItemCollection()
+      itemCollections.put(tenantId, itemCollectionForTenant)
+    }
+
+    itemCollectionForTenant
   }
 
   @Override

@@ -12,7 +12,8 @@ import java.util.concurrent.CompletableFuture
 import static org.folio.metadata.common.FutureAssistance.*
 
 abstract class ItemCollectionExamples {
-  private static final String tenantId = "test-tenant-1"
+  private static final String firstTenantId = "test-tenant-1"
+  private static final String secondTenantId = "test-tenant-2"
 
   private final CollectionProvider collectionProvider
 
@@ -33,18 +34,13 @@ abstract class ItemCollectionExamples {
 
   @Before
   public void before() {
-    def collection = collectionProvider.getItemCollection(tenantId)
-
-    def emptied = new CompletableFuture()
-
-    collection.empty(complete(emptied))
-
-    waitForCompletion(emptied)
+    emptyCollection(collectionProvider.getItemCollection(firstTenantId))
+    emptyCollection(collectionProvider.getItemCollection(secondTenantId))
   }
 
   @Test
   void canBeEmptied() {
-    def collection = collectionProvider.getItemCollection(tenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId)
 
     addAllExamples(collection)
 
@@ -65,7 +61,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void itemsCanBeAdded() {
-    def collection = collectionProvider.getItemCollection(tenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId)
 
     addAllExamples(collection)
 
@@ -93,8 +89,63 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
+  void itemsCanBeFoundByIdWithinATenant() {
+    def firstTenantCollection = collectionProvider
+      .getItemCollection(firstTenantId)
+
+    def secondTenantCollection = collectionProvider
+      .getItemCollection(secondTenantId)
+
+    def addFuture = new CompletableFuture<Item>()
+
+    firstTenantCollection.add(smallAngryPlanet, complete(addFuture))
+
+    def addedItem = getOnCompletion(addFuture)
+
+    def findItemForCorrectTenant = new CompletableFuture<Item>()
+    def findItemForIncorrectTenant = new CompletableFuture<Item>()
+
+    firstTenantCollection.findById(addedItem.id,
+      complete(findItemForCorrectTenant))
+
+    secondTenantCollection.findById(addedItem.id,
+      complete(findItemForIncorrectTenant))
+
+    assert getOnCompletion(findItemForCorrectTenant) != null
+    assert getOnCompletion(findItemForIncorrectTenant) == null
+  }
+
+  @Test
+  void itemsCanBeFoundByByPartialName() {
+    def collection = collectionProvider.getItemCollection(firstTenantId)
+
+    def firstAddFuture = new CompletableFuture<Item>()
+    def secondAddFuture = new CompletableFuture<Item>()
+    def thirdAddFuture = new CompletableFuture<Item>()
+
+    collection.add(smallAngryPlanet, complete(firstAddFuture))
+    collection.add(nod, complete(secondAddFuture))
+    collection.add(uprooted, complete(thirdAddFuture))
+
+    def allAddsFuture = CompletableFuture.allOf(secondAddFuture, thirdAddFuture)
+
+    getOnCompletion(allAddsFuture)
+
+    def addedSmallAngryPlanet = getOnCompletion(firstAddFuture)
+
+    def findFuture = new CompletableFuture<List<Item>>()
+
+    collection.findByTitle("Small Angry", complete(findFuture))
+
+    def findByNameResults = getOnCompletion(findFuture)
+
+    assert findByNameResults.size() == 1
+    assert findByNameResults[0].id == addedSmallAngryPlanet.id
+  }
+
+  @Test
   void itemsCanBeFoundById() {
-    def collection = collectionProvider.getItemCollection(tenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId)
 
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
@@ -123,34 +174,6 @@ abstract class ItemCollectionExamples {
     assert otherFoundItem.instanceId == nod.instanceId
   }
 
-  @Test
-  void itemsCanBeFoundByByPartialName() {
-    def collection = collectionProvider.getItemCollection(tenantId)
-
-    def firstAddFuture = new CompletableFuture<Item>()
-    def secondAddFuture = new CompletableFuture<Item>()
-    def thirdAddFuture = new CompletableFuture<Item>()
-
-    collection.add(smallAngryPlanet, complete(firstAddFuture))
-    collection.add(nod, complete(secondAddFuture))
-    collection.add(uprooted, complete(thirdAddFuture))
-
-    def allAddsFuture = CompletableFuture.allOf(secondAddFuture, thirdAddFuture)
-
-    getOnCompletion(allAddsFuture)
-
-    def addedSmallAngryPlanet = getOnCompletion(firstAddFuture)
-
-    def findFuture = new CompletableFuture<List<Item>>()
-
-    collection.findByTitle("Small Angry", complete(findFuture))
-
-    def findByNameResults = getOnCompletion(findFuture)
-
-    assert findByNameResults.size() == 1
-    assert findByNameResults[0].id == addedSmallAngryPlanet.id
-  }
-
   private void addAllExamples(ItemCollection itemCollection) {
     def allAdded = new WaitForAllFutures()
 
@@ -159,5 +182,13 @@ abstract class ItemCollectionExamples {
     itemCollection.add(uprooted, allAdded.notifyComplete())
 
     allAdded.waitForCompletion()
+  }
+
+  private void emptyCollection(ItemCollection collection) {
+    def emptied = new CompletableFuture()
+
+    collection.empty(complete(emptied))
+
+    waitForCompletion(emptied)
   }
 }
