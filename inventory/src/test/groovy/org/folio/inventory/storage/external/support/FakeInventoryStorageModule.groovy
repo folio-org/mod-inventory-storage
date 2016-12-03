@@ -28,8 +28,8 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   @Override
   public void start(Future deployed) {
 
-    def expectedTenant = vertx.getOrCreateContext().config()
-      .get("expectedTenant", "")
+    def expectedTenants = vertx.getOrCreateContext().config()
+      .get("expectedTenants", [])
 
     server = vertx.createHttpServer()
 
@@ -49,7 +49,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     router.route('/inventory-storage/instances/*').handler(BodyHandler.create())
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
-    router.route().handler(this.&checkTenantHeader.rcurry(expectedTenant))
+    router.route().handler(this.&checkTenantHeader.rcurry(expectedTenants))
 
     router.route(HttpMethod.GET, '/inventory-storage/items/:id')
       .handler(this.&getItem);
@@ -166,12 +166,12 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   }
 
   private static void checkTenantHeader(RoutingContext routingContext,
-                                        String expectedTenant) {
+                                        Collection<String> expectedTenants) {
 
     def tenant = routingContext.request().getHeader("X-Okapi-Tenant");
 
     switch (tenant) {
-      case expectedTenant:
+      case expectedTenants:
         routingContext.next()
         break
 
@@ -182,7 +182,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
       default:
         ClientErrorResponse.forbidden(routingContext.response(),
-          "Incorrect Tenant, expected: ${expectedTenant}, received: ${tenant}")
+          "Incorrect Tenant, expected: ${expectedTenants}, received: ${tenant}")
         break
     }
   }

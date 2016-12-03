@@ -6,8 +6,8 @@ class ExternalItemCollectionExamples extends ItemCollectionExamples {
 
   ExternalItemCollectionExamples() {
     super(ExternalStorageSuite.useVertx {
-      new ExternalStorageModuleItemCollection(it,
-        ExternalStorageSuite.storageAddress,
-        ExternalStorageSuite.expectedTenant) })
+      new ExternalStorageCollections(it,
+        ExternalStorageSuite.storageAddress)
+    })
   }
 }

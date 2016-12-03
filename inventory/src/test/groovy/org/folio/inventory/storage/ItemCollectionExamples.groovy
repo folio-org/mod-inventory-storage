@@ -1,5 +1,6 @@
 package org.folio.inventory.storage
 
+import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
 import org.folio.metadata.common.WaitForAllFutures
@@ -11,7 +12,9 @@ import java.util.concurrent.CompletableFuture
 import static org.folio.metadata.common.FutureAssistance.*
 
 abstract class ItemCollectionExamples {
-  private final ItemCollection collection
+  private static final String tenantId = "test-tenant-1"
+
+  private final CollectionProvider collectionProvider
 
   private final Item smallAngryPlanet =
     new Item("Long Way to a Small Angry Planet", "036000291452",
@@ -23,12 +26,15 @@ abstract class ItemCollectionExamples {
   private final Item uprooted = new Item("Uprooted", "657670342075",
       UUID.randomUUID().toString())
 
-  public ItemCollectionExamples(ItemCollection collection) {
-    this.collection = collection
+  public ItemCollectionExamples(CollectionProvider collectionProvider) {
+
+    this.collectionProvider = collectionProvider
   }
 
   @Before
   public void before() {
+    def collection = collectionProvider.getItemCollection(tenantId)
+
     def emptied = new CompletableFuture()
 
     collection.empty(complete(emptied))
@@ -38,7 +44,9 @@ abstract class ItemCollectionExamples {
 
   @Test
   void canBeEmptied() {
-    addAllExamples()
+    def collection = collectionProvider.getItemCollection(tenantId)
+
+    addAllExamples(collection)
 
     def emptied = new CompletableFuture()
 
@@ -57,7 +65,9 @@ abstract class ItemCollectionExamples {
 
   @Test
   void itemsCanBeAdded() {
-    addAllExamples()
+    def collection = collectionProvider.getItemCollection(tenantId)
+
+    addAllExamples(collection)
 
     def findFuture = new CompletableFuture<List<Item>>()
 
@@ -84,6 +94,8 @@ abstract class ItemCollectionExamples {
 
   @Test
   void itemsCanBeFoundById() {
+    def collection = collectionProvider.getItemCollection(tenantId)
+
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
 
@@ -113,6 +125,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void itemsCanBeFoundByByPartialName() {
+    def collection = collectionProvider.getItemCollection(tenantId)
 
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
@@ -138,12 +151,12 @@ abstract class ItemCollectionExamples {
     assert findByNameResults[0].id == addedSmallAngryPlanet.id
   }
 
-  private void addAllExamples() {
+  private void addAllExamples(ItemCollection itemCollection) {
     def allAdded = new WaitForAllFutures()
 
-    collection.add(smallAngryPlanet, allAdded.notifyComplete())
-    collection.add(nod, allAdded.notifyComplete())
-    collection.add(uprooted, allAdded.notifyComplete())
+    itemCollection.add(smallAngryPlanet, allAdded.notifyComplete())
+    itemCollection.add(nod, allAdded.notifyComplete())
+    itemCollection.add(uprooted, allAdded.notifyComplete())
 
     allAdded.waitForCompletion()
   }

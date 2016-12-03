@@ -29,8 +29,8 @@ public class ExternalStorageSuite {
     FakeInventoryStorageModule.address
   }
 
-  static String getExpectedTenant() {
-    "not-blank"
+  static Collection<String> getExpectedTenants() {
+    ["test-tenant-1"]
   }
 
   @BeforeClass
@@ -41,7 +41,7 @@ public class ExternalStorageSuite {
 
     vertxAssistant.deployGroovyVerticle(
       FakeInventoryStorageModule.class.name,
-      ["expectedTenant" : expectedTenant],
+      ["expectedTenants" : expectedTenants],
       deployed)
 
     storageModuleDeploymentId = deployed.get(20000, TimeUnit.MILLISECONDS)
