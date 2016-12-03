@@ -2,26 +2,19 @@ package org.folio.inventory
 
 import io.vertx.groovy.core.eventbus.EventBus
 import io.vertx.groovy.core.eventbus.Message
+import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.Instance
-import org.folio.inventory.domain.InstanceCollection
 import org.folio.inventory.domain.Item
-import org.folio.inventory.domain.ItemCollection
 import org.folio.inventory.resources.ingest.IngestJob
-import org.folio.inventory.resources.ingest.IngestJobCollection
 import org.folio.inventory.resources.ingest.IngestJobState
 import org.folio.metadata.common.CollectAll
 
 class IngestMessageProcessor {
-  private final ItemCollection itemCollection
-  private final InstanceCollection instanceCollection
-  private final IngestJobCollection ingestJobCollection
+  private final CollectionProvider collectionProvider
 
-  IngestMessageProcessor(ItemCollection itemCollection,
-                         InstanceCollection instanceCollection,
-                         IngestJobCollection ingestJobCollection) {
-    this.itemCollection = itemCollection
-    this.instanceCollection = instanceCollection
-    this.ingestJobCollection = ingestJobCollection
+  IngestMessageProcessor(CollectionProvider collectionProvider) {
+
+    this.collectionProvider = collectionProvider
   }
 
   void register(EventBus eventBus) {
@@ -37,6 +30,11 @@ class IngestMessageProcessor {
     def allInstances = new CollectAll<Instance>()
 
     def records = message.body().records
+
+    def tenantId = message.headers().get("tenantId")
+
+    def instanceCollection = collectionProvider.getInstanceCollection(tenantId)
+    def itemCollection = collectionProvider.getItemCollection(tenantId)
 
     records.stream()
       .map({
@@ -57,17 +55,20 @@ class IngestMessageProcessor {
 
     allItems.collect({
       eventBus.send( Messages.INGEST_COMPLETED.Address, "",
-        ["headers" : ["jobId" : message.headers().get("jobId") ]])
+        ["headers" : ["jobId" : message.headers().get("jobId"),
+                    "tenantId": message.headers().get("tenantId")]])
     })
   }
 
   private void markIngestCompleted(Message message) {
     def jobId = message.headers().get("jobId")
-    completeJob(jobId)
+    def tenantId = message.headers().get("tenantId")
+
+    completeJob(jobId, tenantId)
   }
 
-  private void completeJob(jobId) {
-    ingestJobCollection.update(
+  private void completeJob(jobId, tenantId) {
+    collectionProvider.getIngestJobCollection(tenantId).update(
       new IngestJob(jobId, IngestJobState.COMPLETED),
       { })
   }

@@ -6,19 +6,20 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.folio.inventory.Messages
+import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.parsing.UTF8LiteralCharacterEncoding
+import org.folio.metadata.common.Context
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.RedirectResponse
 import org.folio.metadata.common.api.response.ServerErrorResponse
 
 class ModsIngestion {
-  private final IngestJobCollection ingestJobCollection
+  private final CollectionProvider collectionProvider
 
-  ModsIngestion(IngestJobCollection ingestJobCollection) {
-
-    this.ingestJobCollection = ingestJobCollection
+  ModsIngestion(CollectionProvider collectionProvider) {
+    this.collectionProvider = collectionProvider
   }
 
   public void register(Router router) {
@@ -38,7 +39,10 @@ class ModsIngestion {
   }
 
   private status(RoutingContext routingContext) {
-    ingestJobCollection.findById(routingContext.request().getParam("id"), {
+    def tenantId = new Context(routingContext).tenantId
+
+    collectionProvider.getIngestJobCollection(tenantId)
+      .findById(routingContext.request().getParam("id"), {
         JsonResponse.success(routingContext.response(),
           ["status" : it.state.toString()])
       })
@@ -61,11 +65,15 @@ class ModsIngestion {
             ["title": "${it.title}", "barcode":"${it.barcode}" ]
           }
 
-          ingestJobCollection.add(new IngestJob(IngestJobState.REQUESTED), {
+          def tenantId = new Context(routingContext).tenantId
+
+          collectionProvider.getIngestJobCollection(tenantId)
+            .add(new IngestJob(IngestJobState.REQUESTED), {
             routingContext.vertx().eventBus().send(
               Messages.START_INGEST.Address,
               new JsonObject(["records" : convertedRecords]),
-              ["headers" : ["jobId" : it.id]])
+              ["headers" : ["jobId" : it.id,
+                            "tenantId" : tenantId]])
 
             RedirectResponse.accepted(routingContext.response(),
               statusLocation(routingContext, it.id))

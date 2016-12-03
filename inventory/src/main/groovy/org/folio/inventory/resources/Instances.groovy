@@ -5,16 +5,16 @@ import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import org.apache.commons.lang.StringEscapeUtils
+import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.Instance
-import org.folio.inventory.domain.InstanceCollection
+import org.folio.metadata.common.Context
 import org.folio.metadata.common.api.response.JsonResponse
 
 class Instances {
+  private final CollectionProvider collectionProvider
 
-  private final InstanceCollection instanceCollection
-
-  Instances(InstanceCollection instanceCollection) {
-    this.instanceCollection = instanceCollection
+  Instances(CollectionProvider collectionProvider) {
+    this.collectionProvider = collectionProvider
   }
 
   public void register(Router router) {
@@ -23,7 +23,9 @@ class Instances {
   }
 
   void getAll(RoutingContext routingContext) {
-    instanceCollection.findAll {
+    def tenantId = new Context(routingContext).tenantId
+
+    collectionProvider.getInstanceCollection(tenantId).findAll {
       JsonResponse.success(routingContext.response(),
         convertToUTF8(it))
     }
@@ -31,7 +33,9 @@ class Instances {
 
 
   void getById(RoutingContext routingContext) {
-    instanceCollection.findById(
+    def tenantId = new Context(routingContext).tenantId
+
+    collectionProvider.getInstanceCollection(tenantId).findById(
       routingContext.request().getParam("id"),
       { JsonResponse.success(routingContext.response(), convertToUTF8(it)) })
   }

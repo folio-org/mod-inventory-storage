@@ -8,6 +8,7 @@ import io.vertx.lang.groovy.GroovyVerticle
 import org.folio.inventory.resources.Instances
 import org.folio.inventory.resources.Items
 import org.folio.inventory.resources.ingest.ModsIngestion
+import org.folio.inventory.storage.memory.InMemoryCollections
 import org.folio.inventory.storage.memory.InMemoryIngestJobCollection
 import org.folio.inventory.storage.memory.InMemoryInstanceCollection
 import org.folio.inventory.storage.memory.InMemoryItemCollection
@@ -48,19 +49,16 @@ public class InventoryVerticle extends GroovyVerticle {
 
     def eventBus = vertx.eventBus()
 
-    def itemCollection = new InMemoryItemCollection()
-    def instanceCollection = new InMemoryInstanceCollection()
-    def ingestJobCollection = new InMemoryIngestJobCollection()
+    def collectionProvider = new InMemoryCollections()
 
-    new IngestMessageProcessor(
-      itemCollection, instanceCollection, ingestJobCollection)
+    new IngestMessageProcessor(collectionProvider)
       .register(eventBus)
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-    new ModsIngestion(ingestJobCollection).register(router)
-    new Items(itemCollection).register(router)
-    new Instances(instanceCollection).register(router)
+    new ModsIngestion(collectionProvider).register(router)
+    new Items(collectionProvider).register(router)
+    new Instances(collectionProvider).register(router)
 
     def onHttpServerStart = { result ->
       if (result.succeeded()) {
