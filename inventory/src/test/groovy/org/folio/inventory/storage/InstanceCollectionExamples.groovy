@@ -13,7 +13,8 @@ import java.util.concurrent.CompletableFuture
 import static org.folio.metadata.common.FutureAssistance.*
 
 abstract class InstanceCollectionExamples {
-  private static final String tenantId = "test-tenant-1"
+  private static final String firstTenantId = "test-tenant-1"
+  private static final String secondTenantId = "test-tenant-2"
 
   private final CollectionProvider collectionProvider
 
@@ -30,14 +31,14 @@ abstract class InstanceCollectionExamples {
   public void before() {
     def emptied = new CompletableFuture()
 
-    collectionProvider.getInstanceCollection(tenantId).empty(complete(emptied))
+    collectionProvider.getInstanceCollection(firstTenantId).empty(complete(emptied))
 
     waitForCompletion(emptied)
   }
 
   @Test
   void canBeEmptied() {
-    def collection = collectionProvider.getInstanceCollection(tenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId)
     addAllExamples(collection)
 
     def emptied = new CompletableFuture()
@@ -57,7 +58,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void instancesCanBeAdded() {
-    def collection = collectionProvider.getInstanceCollection(tenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId)
     addAllExamples(collection)
 
     def findFuture = new CompletableFuture<List<Instance>>()
@@ -78,7 +79,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void instancesCanBeFoundById() {
-    def collection = collectionProvider.getInstanceCollection(tenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId)
 
     def firstAddFuture = new CompletableFuture<Instance>()
     def secondAddFuture = new CompletableFuture<Instance>()
@@ -105,7 +106,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void instancesCanBeFoundByByPartialName() {
-    def collection = collectionProvider.getInstanceCollection(tenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId)
 
     def firstAddFuture = new CompletableFuture<Instance>()
     def secondAddFuture = new CompletableFuture<Instance>()
@@ -129,6 +130,33 @@ abstract class InstanceCollectionExamples {
 
     assert findByNameResults.size() == 1
     assert findByNameResults[0].id == addedSmallAngryPlanet.id
+  }
+
+  @Test
+  void instancesCanBeFoundByIdWithinATenant() {
+    def firstTenantCollection = collectionProvider
+      .getInstanceCollection(firstTenantId)
+
+    def secondTenantCollection = collectionProvider
+      .getInstanceCollection(secondTenantId)
+
+    def addFuture = new CompletableFuture<Item>()
+
+    firstTenantCollection.add(smallAngryPlanet, complete(addFuture))
+
+    def addedInstance = getOnCompletion(addFuture)
+
+    def findInstanceForCorrectTenant = new CompletableFuture<Instance>()
+    def findInstanceForIncorrectTenant = new CompletableFuture<Instance>()
+
+    firstTenantCollection.findById(addedInstance.id,
+      complete(findInstanceForCorrectTenant))
+
+    secondTenantCollection.findById(addedInstance.id,
+      complete(findInstanceForIncorrectTenant))
+
+    assert getOnCompletion(findInstanceForCorrectTenant) != null
+    assert getOnCompletion(findInstanceForIncorrectTenant) == null
   }
 
   private void addAllExamples(InstanceCollection instanceCollection) {

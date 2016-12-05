@@ -8,8 +8,6 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import io.vertx.lang.groovy.GroovyVerticle
-import org.folio.inventory.domain.ItemCollection
-import org.folio.inventory.storage.memory.InMemoryItemCollection
 import org.folio.metadata.common.Context
 import org.folio.metadata.common.WebRequestDiagnostics
 import org.folio.metadata.common.api.response.ClientErrorResponse
@@ -19,14 +17,18 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   private static final int PORT_TO_USE = 9492
   private static final String address = "http://localhost:${PORT_TO_USE}/inventory-storage"
 
-  private final Map<String, Map<String, JsonObject>> storedItemsByTenant = [:];
-
-  private final Map<String, JsonObject> storedInstances = [:];
+  private final Map<String, Map<String, JsonObject>> storedItemsByTenant
+  private final Map<String, Map<String, JsonObject>> storedInstancesByTenant
 
   private HttpServer server;
 
   static def String getAddress() {
     address
+  }
+
+  FakeInventoryStorageModule() {
+    storedItemsByTenant = [:]
+    storedInstancesByTenant = [:]
   }
 
   @Override
@@ -145,6 +147,8 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def newItem = new JsonObject(body)
       .put("id", id)
 
+    def storedInstances = getInstancesForTenant(getTenantId(routingContext))
+
     storedInstances.put(id, newItem)
 
     JsonResponse.created(routingContext.response(),
@@ -152,6 +156,8 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   }
 
   private def deleteInstances(RoutingContext routingContext) {
+    def storedInstances = getInstancesForTenant(getTenantId(routingContext))
+
     storedInstances.clear()
 
     JsonResponse.success(routingContext.response(),
@@ -160,12 +166,19 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
   private def getInstances(RoutingContext routingContext) {
     JsonResponse.success(routingContext.response(),
-      storedInstances.values())
+      getInstancesForTenant(getTenantId(routingContext)).values())
   }
 
   private def getInstance(RoutingContext routingContext) {
-    JsonResponse.success(routingContext.response(),
-      storedInstances[routingContext.request().getParam("id")])
+    def foundInstance = getInstancesForTenant(getTenantId(routingContext)).get(
+      routingContext.request().getParam("id"), null)
+
+    if(foundInstance != null) {
+      JsonResponse.success(routingContext.response(), foundInstance)
+    }
+    else {
+      ClientErrorResponse.notFound(routingContext.response())
+    }
   }
 
   private static def getMapFromBody(RoutingContext routingContext) {
@@ -209,13 +222,24 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   }
 
   private Map<String, JsonObject> getItemsForTenant(String tenantId) {
-    def itemMapForTenant = storedItemsByTenant.get(tenantId, null)
+    getMapForTenant(tenantId, storedItemsByTenant)
+  }
 
-    if(itemMapForTenant == null) {
-      itemMapForTenant = [:]
-      storedItemsByTenant.put(tenantId, itemMapForTenant)
+  private Map<String, JsonObject> getInstancesForTenant(String tenantId) {
+    getMapForTenant(tenantId, storedInstancesByTenant)
+  }
+
+  private Map<String, JsonObject> getMapForTenant(
+    String tenantId,
+    Map<String, Map<String, JsonObject>> maps) {
+
+    def mapForTenant = maps.get(tenantId, null)
+
+    if (mapForTenant == null) {
+      mapForTenant = [:]
+      maps.put(tenantId, mapForTenant)
     }
 
-    itemMapForTenant
+    mapForTenant
   }
 }

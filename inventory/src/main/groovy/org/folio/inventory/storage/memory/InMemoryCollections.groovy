@@ -7,34 +7,44 @@ import org.folio.inventory.resources.ingest.IngestJobCollection
 
 class InMemoryCollections implements CollectionProvider {
   private final Map<String, ItemCollection> itemCollections = [:]
+  private final Map<String, InstanceCollection> instanceCollections = [:]
 
-  private final InMemoryInstanceCollection instanceCollection
   private final InMemoryIngestJobCollection ingestJobCollection
 
   def InMemoryCollections() {
-    instanceCollection = new InMemoryInstanceCollection()
     ingestJobCollection = new InMemoryIngestJobCollection()
   }
 
   @Override
   ItemCollection getItemCollection(String tenantId) {
-    def itemCollectionForTenant = itemCollections.get(tenantId, null)
-
-    if(itemCollectionForTenant == null) {
-      itemCollectionForTenant = new InMemoryItemCollection()
-      itemCollections.put(tenantId, itemCollectionForTenant)
-    }
-
-    itemCollectionForTenant
+    getCollectionFormTenant(tenantId, itemCollections,
+      { new InMemoryItemCollection() })
   }
+
 
   @Override
   InstanceCollection getInstanceCollection(String tenantId) {
-    instanceCollection
+    getCollectionFormTenant(tenantId, instanceCollections,
+      { new InMemoryInstanceCollection() })
   }
 
   @Override
   IngestJobCollection getIngestJobCollection(String tenantId) {
     ingestJobCollection
+  }
+
+  private <T> T getCollectionFormTenant(
+    String tenantId,
+    Map<String, T> collections,
+    Closure createNew) {
+
+    def collectionForTenant = collections.get(tenantId, null)
+
+    if (collectionForTenant == null) {
+      collectionForTenant = createNew()
+      collections.put(tenantId, collectionForTenant)
+    }
+
+    collectionForTenant
   }
 }
