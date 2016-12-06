@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-./start.sh
+inventory_root_address=${1:-http://localhost:9403/inventory}
 
 cd sample-data
 
-./example-ingest.sh
+./example-ingest.sh ${inventory_root_address}
 
 cd ..
 
-rm -f file-uploads/*
+# wait for completion then delete uploads
+# rm -f file-uploads/*
