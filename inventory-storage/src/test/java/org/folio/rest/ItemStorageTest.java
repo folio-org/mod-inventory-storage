@@ -48,8 +48,8 @@ public class ItemStorageTest {
   private static ArrayList<String> urls;
 
   private static void setupPostgres() throws Exception {
-    PostgresClient.setIsEmbedded(true);
-    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
+//    PostgresClient.setIsEmbedded(true);
+//    PostgresClient.getInstance(vertx).startEmbeddedPostgres();
   }
 
   @BeforeClass
