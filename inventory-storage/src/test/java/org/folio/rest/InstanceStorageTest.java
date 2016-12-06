@@ -11,10 +11,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
@@ -30,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@Ignore
 @RunWith(VertxUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class InstanceStorageTest {
@@ -101,6 +99,7 @@ public class InstanceStorageTest {
     }
   }
 
+  @Ignore
   @Test
   public void shouldListAllInstancesTest(TestContext context) throws MalformedURLException {
 
@@ -111,7 +110,7 @@ public class InstanceStorageTest {
     HttpMethod method = HttpMethod.GET;
     HttpClient client = vertx.createHttpClient();
 
-    URL getInstancesUrl = new URL("http", "localhost", port, "/instance_storage/instance");
+    URL getInstancesUrl = new URL("http", "localhost", port, "/instance-storage/instance");
 
     System.out.println("Getting Instances");
     System.out.println(getInstancesUrl);

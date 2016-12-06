@@ -20,7 +20,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instances;
 
-@Path("instance_storage")
+@Path("instance-storage")
 public interface InstanceStorageResource {
 
 

@@ -20,7 +20,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 
-@Path("item_storage")
+@Path("item-storage")
 public interface ItemStorageResource {
 
 

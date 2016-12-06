@@ -38,7 +38,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.Handler;
 import java.util.UUID;
-    
+
 @RunWith(VertxUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ItemStorageTest {
@@ -64,7 +64,7 @@ public class ItemStorageTest {
     } catch (Exception e) {
       context.fail(e);
     }
-    
+
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
     vertx.deployVerticle(RestVerticle.class.getName(), options);
 
@@ -161,7 +161,7 @@ public class ItemStorageTest {
     UUID id = UUID.randomUUID();
     HttpClient client = vertx.createHttpClient();
 
-    URL postItemUrl = new URL("http", "localhost", port, "/item_storage/item");
+    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
 
     System.out.println("Posting Item");
     System.out.println(postItemUrl);
@@ -171,10 +171,10 @@ public class ItemStorageTest {
     post.put("instance_id", "Fake");
     post.put("title", "Real Analysis");
     post.put("barcode", "271828");
-       
+
     HttpClientRequest request = client.postAbs(postItemUrl.toString(), response -> {
 
-	    final int statusCode = response.statusCode();                    
+	    final int statusCode = response.statusCode();
 	    response.bodyHandler(new Handler<Buffer>() {
 		    @Override
 		    public void handle(Buffer body) {
@@ -187,7 +187,7 @@ public class ItemStorageTest {
 
 			context.assertEquals(restResponse.getString("title") , "Real Analysis");
 			async.complete();
-			
+
 			}
 		});
 	});
@@ -195,10 +195,10 @@ public class ItemStorageTest {
     request.headers().add("Accept","application/json");
     request.headers().add("Content-type","application/json");
     request.end(post.encodePrettily());
- 
+
   }
- 
-    
+
+
   @Test
   public void postGetDataTest(TestContext context) throws MalformedURLException {
 
@@ -206,7 +206,7 @@ public class ItemStorageTest {
     String uuid = UUID.randomUUID().toString();
     HttpClient client = vertx.createHttpClient();
 
-    URL postItemUrl = new URL("http", "localhost", port, "/item_storage/item");
+    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
 
     System.out.println("Posting Item");
     System.out.println(postItemUrl);
@@ -216,10 +216,10 @@ public class ItemStorageTest {
     post.put("instance_id", "MadeUp");
     post.put("title", "Refactoring");
     post.put("barcode", "314159");
-        
+
     HttpClientRequest postRequest = client.postAbs(postItemUrl.toString(), response -> {
 
-	     final int postStatusCode = response.statusCode(); 
+	     final int postStatusCode = response.statusCode();
 	    response.bodyHandler(new Handler<Buffer>() {
 		    @Override
 		    public void handle(Buffer body) {
@@ -231,12 +231,12 @@ public class ItemStorageTest {
 			System.out.println(restResponse.toString());
 
 			context.assertEquals(restResponse.getString("title") , "Refactoring");
-			
+
 			String id = restResponse.getString("id");
-			String url = String.format("/item_storage/item/%s",id);
-			
+			String url = String.format("/item-storage/item/%s",id);
+
 			System.out.println("Id received " + restResponse.getString("id"));
-		 
+
 			 try{
 			     URL getItemUrl = new URL("http", "localhost", port, url);
 
@@ -245,7 +245,7 @@ public class ItemStorageTest {
 
 			     HttpClientRequest getRequest = client.getAbs(getItemUrl.toString(), response -> {
 
-				     final int getStatusCode = response.statusCode(); 
+				     final int getStatusCode = response.statusCode();
 				     response.bodyHandler(new Handler<Buffer>() {
 					     @Override
 					     public void handle(Buffer body) {
@@ -258,21 +258,21 @@ public class ItemStorageTest {
 
 						 context.assertEquals(restResponse.getString("id") , id);
 						 async.complete();
-			
+
 					     }
 					 });
 				 });
 
 			     getRequest.headers().add("Accept","application/json");
 			     getRequest.end();
-			     
+
 			 }catch(MalformedURLException ex){
 			     System.out.println("EXCEPTION HAPPENED");
 			 }
 		    }
 		});
 	});
-  
+
     postRequest.headers().add("Accept","application/json");
     postRequest.headers().add("Content-type","application/json");
     postRequest.end(post.encodePrettily());
@@ -286,33 +286,33 @@ public class ItemStorageTest {
       HttpClient client = vertx.createHttpClient();
       String uuid1 = UUID.randomUUID().toString();
       String uuid2 = UUID.randomUUID().toString();
-      URL itemsUrl = new URL("http", "localhost", port, "/item_storage/item");
+      URL itemsUrl = new URL("http", "localhost", port, "/item-storage/item");
 
       JsonObject post1 = new JsonObject();
       post1.put("id", uuid1);
       post1.put("instance_id", "MadeUp");
       post1.put("title", "Refactoring");
       post1.put("barcode", "314159");
-     
+
       JsonObject post2 = new JsonObject();
       post2.put("id", uuid2);
       post2.put("instance_id", "Fake");
       post2.put("title", "Real Analysis");
       post2.put("barcode", "271828");
-      
+
       HttpClientRequest post1Request = client.postAbs(itemsUrl.toString(), post1Response -> {
 
-	      final int post1StatusCode = post1Response.statusCode(); 
+	      final int post1StatusCode = post1Response.statusCode();
 	      context.assertEquals(post1StatusCode, HttpURLConnection.HTTP_CREATED);
 	      System.out.println("POST 1 CREATED");
 	      HttpClientRequest post2Request = client.postAbs(itemsUrl.toString(), post2Response -> {
 
-		      final int post2StatusCode = post1Response.statusCode(); 
+		      final int post2StatusCode = post1Response.statusCode();
 		      context.assertEquals(post2StatusCode, HttpURLConnection.HTTP_CREATED);
 		      System.out.println("POST 2 CREATED");
 		      HttpClientRequest request = client.getAbs(itemsUrl.toString(), getResponse -> {
 
-			      final int getAllStatusCode  = getResponse.statusCode(); 
+			      final int getAllStatusCode  = getResponse.statusCode();
 			      context.assertEquals(getAllStatusCode, HttpURLConnection.HTTP_OK);
 			      System.out.println("GET ALL OK");
 			      getResponse.bodyHandler( new Handler<Buffer>() {
@@ -340,14 +340,14 @@ public class ItemStorageTest {
 
 		      request.headers().add("Accept", "application/json");
 		      request.end();
-		      
+
 		  });
-	      
+
 	      post2Request.headers().add("Accept","application/json");
 	      post2Request.headers().add("Content-type","application/json");
 	      post2Request.end(post2.encodePrettily());
 
-	  });	  
+	  });
 
       post1Request.headers().add("Accept","application/json");
       post1Request.headers().add("Content-type","application/json");
