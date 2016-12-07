@@ -43,6 +43,9 @@ public class ItemStorageTest {
   private static Vertx vertx;
   private static int port;
 
+  private static final String TENANT_ID = "test";
+  private static final String TENANT_HEADER = "X-Okapi-Tenant";
+
   @BeforeClass
   public static void before(TestContext context) throws InterruptedException, ExecutionException, TimeoutException {
     vertx = Vertx.vertx();
@@ -153,8 +156,8 @@ public class ItemStorageTest {
 
     request.headers().add("Accept","application/json");
     request.headers().add("Content-type","application/json");
+    request.headers().add(TENANT_HEADER, TENANT_ID);
     request.end(post.encodePrettily());
-
   }
 
   @Test
@@ -219,6 +222,7 @@ public class ItemStorageTest {
             });
 
             getRequest.headers().add("Accept","application/json");
+            getRequest.headers().add(TENANT_HEADER, TENANT_ID);
             getRequest.end();
           }
           catch(MalformedURLException ex){
@@ -229,12 +233,14 @@ public class ItemStorageTest {
 
     postRequest.headers().add("Accept","application/json");
     postRequest.headers().add("Content-type","application/json");
+    postRequest.headers().add(TENANT_HEADER, TENANT_ID);
     postRequest.end(post.encodePrettily());
 
   }
 
   @Test
   public void GetAllTest(TestContext context) throws MalformedURLException {
+
     Async async = context.async();
     HttpClient client = vertx.createHttpClient();
     String uuid1 = UUID.randomUUID().toString();
@@ -298,16 +304,19 @@ public class ItemStorageTest {
 			  });
 
         request.headers().add("Accept", "application/json");
+        request.headers().add(TENANT_HEADER, TENANT_ID);
         request.end();
 		  });
 
       post2Request.headers().add("Accept","application/json");
       post2Request.headers().add("Content-type","application/json");
+      post2Request.headers().add(TENANT_HEADER, TENANT_ID);
       post2Request.end(post2.encodePrettily());
 	  });
 
     post1Request.headers().add("Accept","application/json");
     post1Request.headers().add("Content-type","application/json");
+    post1Request.headers().add(TENANT_HEADER, TENANT_ID);
     post1Request.end(post1.encodePrettily());
   }
 }
