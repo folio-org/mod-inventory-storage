@@ -37,7 +37,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 	    vertxContext.runOnContext(v -> {
 
 		    try {
-			postgresClient.get("test.item", Item.class, criterion , false,
+			postgresClient.get("item", Item.class, criterion , false,
 					   reply -> {
 					       try {
 						   List<Item> items = (List<Item>)reply.result()[0];
@@ -47,7 +47,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 						   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
 														      ItemStorageResource.GetItemStorageItemResponse.
 														      withJsonOK(itemList)));
-						   	  
+
 					       } catch (Exception e) {
 						   e.printStackTrace();
 						   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -79,7 +79,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 	  vertxContext.runOnContext(v -> {
 
 		  try {
-		      postgresClient.save("test.item", entity,
+		      postgresClient.save("item", entity,
 					  reply -> {
 					      try {
 						  Item p = entity;
@@ -134,7 +134,7 @@ public class ItemStorageAPI implements ItemStorageResource {
         @Pattern(regexp = "[a-zA-Z]{2}")
         String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
         throws Exception
-    {	
+    {
 	Criteria a = new Criteria();
 	a.addField("'id'");
 	a.setOperation("=");
@@ -147,7 +147,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 	    vertxContext.runOnContext(v -> {
 
 		    try {
-			postgresClient.get("test.item", Item.class, criterion , false,
+			postgresClient.get("item", Item.class, criterion , false,
 					   reply -> {
 					       try {
 						   List<Item> itemList = (List<Item>)reply.result()[0];
@@ -161,7 +161,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 						   else {
 						       throw new Exception(itemList.size() + " results returned");
 						   }
-		  
+
 					       } catch (Exception e) {
 						   e.printStackTrace();
 						   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -211,5 +211,5 @@ public class ItemStorageAPI implements ItemStorageResource {
     {
 
     }
-    
+
 }
