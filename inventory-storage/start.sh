@@ -14,7 +14,7 @@ java -jar target/inventory-storage-fat.jar db_connection=${config_path} -Dhttp.p
 
 echo 'Waiting for inventory storage module to start'
 
-until $(curl --output /dev/null --silent --get --fail http://localhost:${port}/item-storage/item); do
+until $(curl --output /dev/null --silent --get --fail -H "X-Okapi-Tenant: demo_tenant"  http://localhost:${port}/item-storage/item); do
     printf '.'
     sleep 1
 done

@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.tools.utils.TenantTool;
 import org.junit.*;
 import org.junit.runner.RunWith;
 
@@ -36,7 +37,7 @@ public class ItemStorageTest {
   private static Vertx vertx;
   private static int port;
 
-  private static final String TENANT_ID = "test";
+  private static final String TENANT_ID = "test_tenant";
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
 
   @BeforeClass
@@ -92,7 +93,7 @@ public class ItemStorageTest {
   public void beforeEach() throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture recordTableTruncated = new CompletableFuture();
 
-    PostgresClient.getInstance(vertx).mutate(
+    PostgresClient.getInstance(vertx, TenantTool.calculateTenantId(TENANT_ID)).mutate(
       "TRUNCATE TABLE item;",
       res -> {
         if(res.succeeded()){

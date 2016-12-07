@@ -1,10 +1,10 @@
-DROP DATABASE IF EXISTS folio_shared;
+DROP DATABASE IF EXISTS test_tenant;
 DROP ROLE IF EXISTS testuser;
 
 CREATE ROLE testuser PASSWORD 'test' NOSUPERUSER NOCREATEDB INHERIT LOGIN;
-CREATE DATABASE folio_shared OWNER testuser;
+CREATE DATABASE test_tenant OWNER testuser;
 
-\c folio_shared
+\c test_tenant
 
 CREATE TABLE item (_id SERIAL PRIMARY KEY,jsonb JSONB NOT NULL);
 

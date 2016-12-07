@@ -20,6 +20,7 @@ import java.util.Map;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.tools.utils.TenantTool;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -44,7 +45,8 @@ public class ItemStorageAPI implements ItemStorageResource {
 
 	  try {
 	    System.out.println("getting... Items");
-	    PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner());
+	    PostgresClient postgresClient = PostgresClient.getInstance(
+	      vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
 	    vertxContext.runOnContext(v -> {
 
@@ -95,7 +97,9 @@ public class ItemStorageAPI implements ItemStorageResource {
 
     try {
       System.out.println("sending... Item");
-	    PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner());
+	    PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
 	    vertxContext.runOnContext(v -> {
         try {
@@ -180,7 +184,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     try {
       System.out.println("getting... Item");
       PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner());
+        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
       vertxContext.runOnContext(v -> {
         try {
