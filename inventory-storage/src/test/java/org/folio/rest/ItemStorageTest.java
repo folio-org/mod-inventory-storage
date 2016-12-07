@@ -52,6 +52,7 @@ public class ItemStorageTest {
     DeploymentOptions options = new DeploymentOptions();
 
     options.setConfig(new JsonObject().put("http.port", port));
+    options.setWorker(true);
 
     startVerticle(options);
   }
