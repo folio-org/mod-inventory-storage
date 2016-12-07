@@ -2,21 +2,15 @@ package org.folio.rest;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.resource.ItemStorageResource;
-import org.folio.rest.tools.utils.OutStream;
 import org.junit.*;
 import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.util.ArrayList;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.persist.PostgresClient;
 
@@ -26,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpClientRequest;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -319,5 +312,107 @@ public class ItemStorageTest {
     post1Request.headers().add(TENANT_HEADER, TENANT_ID);
     post1Request.end(post1.encodePrettily());
   }
-}
 
+  @Test
+  public void tenantIsRequiredForCreatingNewItem(TestContext context)
+    throws MalformedURLException {
+
+    Async async = context.async();
+
+    Item item = new Item();
+    item.setId(UUID.randomUUID().toString());
+    item.setTitle("Refactoring");
+    item.setInstanceId(UUID.randomUUID().toString());
+    item.setBarcode("4554345453");
+
+    Post(vertx, new URL("http", "localhost",  port, "/item-storage/item"),
+      item, response -> {
+        context.assertEquals(response.statusCode(), 400);
+
+        response.bodyHandler( buffer -> {
+          String responseBody = buffer.getString(0, buffer.length());
+
+          context.assertEquals(responseBody, "Tenant Must Be Provided");
+
+          async.complete();
+        });
+      });
+  }
+
+  @Test
+  public void tenantIsRequiredForGettingAnItem(TestContext context)
+    throws MalformedURLException {
+
+    Async async = context.async();
+
+    String path = String.format("/item-storage/item/%s",
+      UUID.randomUUID().toString());
+
+    URL getItemUrl = new URL("http", "localhost", port, path);
+
+    Get(vertx, getItemUrl,
+      response -> {
+        context.assertEquals(response.statusCode(), 400);
+
+        response.bodyHandler( buffer -> {
+          String responseBody = buffer.getString(0, buffer.length());
+
+          context.assertEquals(responseBody, "Tenant Must Be Provided");
+
+          async.complete();
+        });
+      });
+  }
+
+  @Test
+  public void tenantIsRequiredForGettingAllItems(TestContext context)
+    throws MalformedURLException {
+
+    Async async = context.async();
+
+    String path = String.format("/item-storage/item");
+
+    URL getItemsUrl = new URL("http", "localhost", port, path);
+
+    Get(vertx, getItemsUrl,
+      response -> {
+        System.out.println("Response received");
+
+        context.assertEquals(response.statusCode(), 400);
+
+        response.bodyHandler( buffer -> {
+          String responseBody = buffer.getString(0, buffer.length());
+
+          context.assertEquals(responseBody, "Tenant Must Be Provided");
+
+          async.complete();
+        });
+      });
+  }
+
+  public void Post(Vertx vertx,
+                   URL url,
+                   Object body,
+                   Handler<HttpClientResponse> responseHandler) {
+
+    HttpClient client = vertx.createHttpClient();
+
+    HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
+
+    request.headers().add("Accept","application/json");
+    request.headers().add("Content-type","application/json");
+    request.end(Json.encodePrettily(body));
+  }
+
+  public void Get(Vertx vertx,
+                   URL url,
+                   Handler<HttpClientResponse> responseHandler) {
+
+    HttpClient client = vertx.createHttpClient();
+
+    HttpClientRequest request = client.getAbs(url.toString(), responseHandler);
+
+    request.headers().add("Accept","application/json");
+    request.end();
+  }
+}
