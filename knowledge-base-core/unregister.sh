@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 instance_id=${1:-localhost-9401}
-module_id=${2:-"knowledge-base-core"}
-tenant=${3:-test-tenant}
+tenant_id=${2:-demo_tenant}
+module_id=${3:-knowledge-base-core}
 
 ../okapi-registration/unmanaged-deployment/unregister.sh \
   ${instance_id} \
   ${module_id} \
-  ${tenant}
+  ${tenant_id}

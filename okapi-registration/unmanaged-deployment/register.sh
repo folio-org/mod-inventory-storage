@@ -4,7 +4,7 @@ module_direct_address=${1}
 module_instance_id=${2}
 module_id=${3}
 okapi_proxy_address=${4:-http://localhost:9130}
-tenant=${5:-test-tenant}
+tenant_id=${5:-demo_tenant}
 
 discovery_json=$(cat ./registration/discovery.json)
 
@@ -29,5 +29,5 @@ activate_json="${activate_json/moduleidhere/$module_id}"
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
      -d "${activate_json}"  \
-     "${okapi_proxy_address}/_/proxy/tenants/${tenant}/modules"
+     "${okapi_proxy_address}/_/proxy/tenants/${tenant_id}/modules"
 

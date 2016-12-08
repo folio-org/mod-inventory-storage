@@ -9,8 +9,9 @@ inventory_direct_address=${3:-http://localhost:9603}
 knowledgebase_instance_id=${4:-localhost-9601}
 catalogue_instance_id=${5:-localhost-9602}
 inventory_instance_id=${6:-localhost-9603}
+tenant_id=${7:-test_tenant}
 
-./create-tenant.sh
+./create-tenant.sh ${tenant_id}
 
 ./register.sh \
   ${knowledgebase_direct_address} \
@@ -19,12 +20,14 @@ inventory_instance_id=${6:-localhost-9603}
   ${knowledgebase_instance_id} \
   ${catalogue_instance_id} \
   ${inventory_instance_id} \
+  ${tenant_id}
 
 gradle -Dokapi.address="${okapi_address}" clean test testApiViaOkapi
 
 ./unregister.sh \
   ${knowledgebase_instance_id} \
   ${catalogue_instance_id} \
-  ${inventory_instance_id}
+  ${inventory_instance_id} \
+  ${tenant_id}
 
-./delete-tenant.sh
+./delete-tenant.sh ${tenant_id}

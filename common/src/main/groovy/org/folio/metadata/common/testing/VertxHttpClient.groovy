@@ -19,7 +19,7 @@ class VertxHttpClient {
 
   VertxHttpClient(Vertx vertx) {
     this.vertx = vertx
-    this.tenant = "test-tenant"
+    this.tenant = "test_tenant"
   }
 
   VertxHttpClient(Vertx vertx, String tenant) {

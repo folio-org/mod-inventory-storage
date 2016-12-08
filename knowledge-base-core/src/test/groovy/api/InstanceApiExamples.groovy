@@ -13,7 +13,7 @@ import support.HttpClient
 import support.World
 
 class InstanceApiExamples extends Specification {
-  private final String tenant = "test-tenant"
+  private final String tenant = "test_tenant"
 
   def setupSpec() {
     World.startVertx()

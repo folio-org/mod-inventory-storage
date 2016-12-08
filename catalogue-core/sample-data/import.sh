@@ -2,7 +2,7 @@
 
 catalogue_root_address=${1:-http://localhost:9130/catalogue}
 knowledgebase_root_address=${2:-http://localhost:9130/knowledge-base}
-tenant=${3:-test-tenant}
+tenant=${3:-demo_tenant}
 
 create_instance_output=$(curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \

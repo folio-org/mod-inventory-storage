@@ -30,7 +30,7 @@ public class ExternalStorageSuite {
   }
 
   static Collection<String> getExpectedTenants() {
-    ["test-tenant-1", "test-tenant-2"]
+    ["test_tenant_1", "test_tenant_2"]
   }
 
   @BeforeClass

@@ -12,8 +12,8 @@ import java.util.concurrent.CompletableFuture
 import static org.folio.metadata.common.FutureAssistance.*
 
 abstract class ItemCollectionExamples {
-  private static final String firstTenantId = "test-tenant-1"
-  private static final String secondTenantId = "test-tenant-2"
+  private static final String firstTenantId = "test_tenant_1"
+  private static final String secondTenantId = "test_tenant_2"
 
   private final CollectionProvider collectionProvider
 

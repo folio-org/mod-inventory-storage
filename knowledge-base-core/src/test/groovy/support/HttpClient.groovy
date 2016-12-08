@@ -8,7 +8,7 @@ import groovyx.net.http.ResponseParseException
 import org.apache.commons.io.IOUtils
 
 class HttpClient {
-  static private final String tenant = "test-tenant"
+  static private final String tenant = "test_tenant"
 
   static get(url) {
     def http = new HTTPBuilder(url)

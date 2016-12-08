@@ -5,7 +5,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.http.entity.mime.MultipartEntityBuilder
 
 class HttpClient {
-  private final String tenant = "test-tenant"
+  private final String tenant = "test_tenant"
 
   Tuple get(url) {
     def requestBuilder = new HTTPBuilder(url)

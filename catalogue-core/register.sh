@@ -2,14 +2,14 @@
 
 module_direct_address=${1:-http://localhost:9402}
 module_instance_id=${2:-localhost-9402}
-module_id=${3:-catalogue-core}
+tenant_id=${3:-demo_tenant}
 okapi_proxy_address=${4:-http://localhost:9130}
-tenant=${5:-test-tenant}
+module_id=${5:-catalogue-core}
 
 ../okapi-registration/unmanaged-deployment/register.sh \
   ${module_direct_address} \
   ${module_instance_id} \
   ${module_id} \
   ${okapi_proxy_address} \
-  ${tenant}
+  ${tenant_id}
 
