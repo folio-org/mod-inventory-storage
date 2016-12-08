@@ -2,6 +2,7 @@ package org.folio.rest;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -41,7 +42,9 @@ public class ItemStorageTest {
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
 
   @BeforeClass
-  public static void before(TestContext context) throws InterruptedException, ExecutionException, TimeoutException {
+  public static void before(TestContext context)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
     vertx = Vertx.vertx();
 
     port = NetworkUtils.nextFreePort();
@@ -90,17 +93,19 @@ public class ItemStorageTest {
   }
 
   @Before
-  public void beforeEach() throws InterruptedException, ExecutionException, TimeoutException {
+  public void beforeEach()
+    throws InterruptedException, ExecutionException, TimeoutException {
+
     CompletableFuture recordTableTruncated = new CompletableFuture();
 
-    PostgresClient.getInstance(vertx, TenantTool.calculateTenantId(TENANT_ID)).mutate(
-      "TRUNCATE TABLE item;",
-      res -> {
-        if(res.succeeded()){
+    PostgresClient.getInstance(vertx, TenantTool.calculateTenantId(TENANT_ID))
+      .mutate("TRUNCATE TABLE item;",
+      result -> {
+        if(result.succeeded()){
           recordTableTruncated.complete(null);
         }
         else{
-          recordTableTruncated.completeExceptionally(res.cause());
+          recordTableTruncated.completeExceptionally(result.cause());
         }
       });
 
@@ -113,25 +118,28 @@ public class ItemStorageTest {
 
     Async async = context.async();
     UUID id = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
 
     URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
 
     JsonObject itemToCreate = new JsonObject();
+
     itemToCreate.put("id",id.toString());
-    itemToCreate.put("instance_id", "Fake");
+    itemToCreate.put("instance_id", instanceId.toString());
     itemToCreate.put("title", "Real Analysis");
     itemToCreate.put("barcode", "271828");
 
     Post(vertx, postItemUrl, itemToCreate, TENANT_ID, response -> {
-      final int statusCode = response.statusCode();
+      int statusCode = response.statusCode();
+      context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
 
       response.bodyHandler(buffer -> {
-        JsonObject restResponse = new JsonObject(
-          buffer.getString(0,buffer.length()));
+        JsonObject item = jsonObjectFromBuffer(buffer);
 
-        context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
-
-        context.assertEquals(restResponse.getString("title"), "Real Analysis");
+        context.assertEquals(item.getString("title"), "Real Analysis");
+        context.assertEquals(item.getString("barcode"), "271828");
+        context.assertEquals(item.getString("instance_id"), instanceId.toString());
+        context.assertEquals(item.getString("id"), id.toString());
 
         async.complete();
       });
@@ -143,43 +151,35 @@ public class ItemStorageTest {
     throws MalformedURLException {
 
     Async async = context.async();
-    String uuid = UUID.randomUUID().toString();
+    String id = UUID.randomUUID().toString();
 
     URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
 
     JsonObject itemToCreate = new JsonObject();
-    itemToCreate.put("id", uuid);
+    itemToCreate.put("id", id);
     itemToCreate.put("instance_id", "MadeUp");
     itemToCreate.put("title", "Refactoring");
     itemToCreate.put("barcode", "314159");
 
     Post(vertx, postItemUrl, itemToCreate, TENANT_ID, postResponse -> {
-        final int postStatusCode = postResponse.statusCode();
-	      postResponse.bodyHandler(postBuffer -> {
+      final int postStatusCode = postResponse.statusCode();
+        context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
 
-          JsonObject restResponse = new JsonObject(
-            postBuffer.getString(0, postBuffer.length()));
+        String urlForGet =
+          String.format("http://localhost:%s/item-storage/item/%s",
+            port, id);
 
-          context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
+        Get(vertx, urlForGet, TENANT_ID, getResponse -> {
+          final int getStatusCode = getResponse.statusCode();
 
-          String id = restResponse.getString("id");
+          getResponse.bodyHandler(getBuffer -> {
+            JsonObject restResponse1 =
+              jsonObjectFromBuffer(getBuffer);
 
-          String urlForGet =
-            String.format("http://localhost:%s/item-storage/item/%s",
-              port, id);
+            context.assertEquals(getStatusCode, HttpURLConnection.HTTP_OK);
+            context.assertEquals(restResponse1.getString("id") , id);
 
-          Get(vertx, urlForGet, TENANT_ID, getResponse -> {
-            final int getStatusCode = getResponse.statusCode();
-
-            getResponse.bodyHandler(getBuffer -> {
-              JsonObject restResponse1 =
-                new JsonObject(getBuffer.getString(0, getBuffer.length()));
-
-              context.assertEquals(getStatusCode, HttpURLConnection.HTTP_OK);
-              context.assertEquals(restResponse1.getString("id") , id);
-
-              async.complete();
-            });
+            async.complete();
           });
         });
       });
@@ -192,16 +192,20 @@ public class ItemStorageTest {
     ExecutionException,
     TimeoutException {
 
+    UUID firstItemId = UUID.randomUUID();
+
     JsonObject firstItemToCreate = new JsonObject();
-    firstItemToCreate.put("id", UUID.randomUUID().toString());
+    firstItemToCreate.put("id", firstItemId.toString());
     firstItemToCreate.put("instance_id", "MadeUp");
     firstItemToCreate.put("title", "Refactoring");
     firstItemToCreate.put("barcode", "314159");
 
     createItem(firstItemToCreate);
 
+    UUID secondItemId = UUID.randomUUID();
+
     JsonObject secondItemToCreate = new JsonObject();
-    secondItemToCreate.put("id", UUID.randomUUID().toString());
+    secondItemToCreate.put("id", secondItemId.toString());
     secondItemToCreate.put("instance_id", "MadeUp");
     secondItemToCreate.put("title", "Real Analysis");
     secondItemToCreate.put("barcode", "271828");
@@ -218,37 +222,25 @@ public class ItemStorageTest {
           HttpURLConnection.HTTP_OK);
 
         getResponse.bodyHandler(body -> {
-          JsonObject restResponse
-            = new JsonObject(body.getString(0, body.length()));
+          JsonObject getAllResponse = jsonObjectFromBuffer(body);
 
-          JsonArray allItems = restResponse.getJsonArray("items");
+          JsonArray allItems = getAllResponse.getJsonArray("items");
 
           context.assertEquals(allItems.size(), 2);
-          context.assertEquals(restResponse.getInteger("total_records"), 2);
+          context.assertEquals(getAllResponse.getInteger("total_records"), 2);
 
           JsonObject firstItem = allItems.getJsonObject(0);
           JsonObject secondItem = allItems.getJsonObject(1);
 
           context.assertEquals(firstItem.getString("title"), "Refactoring");
+          context.assertEquals(firstItem.getString("id"), firstItemId.toString());
+
           context.assertEquals(secondItem.getString("title"), "Real Analysis");
+          context.assertEquals(secondItem.getString("id"), secondItemId.toString());
+
           async.complete();
         });
       });
-  }
-
-  private void createItem(JsonObject itemToCreate)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
-
-    CompletableFuture firstCreateComplete = new CompletableFuture();
-
-    Post(vertx, postItemUrl, itemToCreate, TENANT_ID, response -> {
-      firstCreateComplete.complete(null);
-    });
-
-    firstCreateComplete.get(1, TimeUnit.SECONDS);
   }
 
   @Test
@@ -268,7 +260,7 @@ public class ItemStorageTest {
         context.assertEquals(response.statusCode(), 400);
 
         response.bodyHandler( buffer -> {
-          String responseBody = buffer.getString(0, buffer.length());
+          String responseBody = stringFromBuffer(buffer);
 
           context.assertEquals(responseBody, "Tenant Must Be Provided");
 
@@ -293,7 +285,7 @@ public class ItemStorageTest {
         context.assertEquals(response.statusCode(), 400);
 
         response.bodyHandler( buffer -> {
-          String responseBody = buffer.getString(0, buffer.length());
+          String responseBody = stringFromBuffer(buffer);
 
           context.assertEquals(responseBody, "Tenant Must Be Provided");
 
@@ -319,13 +311,28 @@ public class ItemStorageTest {
         context.assertEquals(response.statusCode(), 400);
 
         response.bodyHandler( buffer -> {
-          String responseBody = buffer.getString(0, buffer.length());
+          String responseBody = stringFromBuffer(buffer);
 
           context.assertEquals(responseBody, "Tenant Must Be Provided");
 
           async.complete();
         });
       });
+  }
+
+  private void createItem(JsonObject itemToCreate)
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
+
+    CompletableFuture firstCreateComplete = new CompletableFuture();
+
+    Post(vertx, postItemUrl, itemToCreate, TENANT_ID, response -> {
+      firstCreateComplete.complete(null);
+    });
+
+    firstCreateComplete.get(1, TimeUnit.SECONDS);
   }
 
   private void Post(Vertx vertx,
@@ -344,7 +351,11 @@ public class ItemStorageTest {
 
     HttpClient client = vertx.createHttpClient();
 
-    HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
+    HttpClientRequest request = client.postAbs(url.toString(), response -> {
+      System.out.println("Response Received from Post");
+
+      responseHandler.handle(response);
+    });
 
     request.headers().add("Accept","application/json");
     request.headers().add("Content-type","application/json");
@@ -389,5 +400,13 @@ public class ItemStorageTest {
     }
 
     request.end();
+  }
+
+  private JsonObject jsonObjectFromBuffer(Buffer buffer) {
+    return new JsonObject(stringFromBuffer(buffer));
+  }
+
+  private String stringFromBuffer(Buffer buffer) {
+    return buffer.getString(0, buffer.length());
   }
 }
