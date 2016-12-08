@@ -36,13 +36,13 @@ public interface InstanceStorageResource {
      *     
      */
     @GET
-    @Path("instance")
+    @Path("instances")
     @Produces({
         "application/json",
         "text/plain"
     })
     @Validate
-    void getInstanceStorageInstance(
+    void getInstanceStorageInstances(
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
@@ -78,14 +78,14 @@ public interface InstanceStorageResource {
      *     
      */
     @POST
-    @Path("instance")
+    @Path("instances")
     @Consumes("application/json")
     @Produces({
         "application/json",
         "text/plain"
     })
     @Validate
-    void postInstanceStorageInstance(
+    void postInstanceStorageInstances(
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
@@ -106,9 +106,9 @@ public interface InstanceStorageResource {
      *     
      */
     @POST
-    @Path("instance/{instanceId}")
+    @Path("instances/{instanceId}")
     @Validate
-    void postInstanceStorageInstanceByInstanceId(
+    void postInstanceStorageInstancesByInstanceId(
         @PathParam("instanceId")
         @NotNull
         String instanceId,
@@ -137,13 +137,13 @@ public interface InstanceStorageResource {
      *     
      */
     @GET
-    @Path("instance/{instanceId}")
+    @Path("instances/{instanceId}")
     @Produces({
         "application/json",
         "text/plain"
     })
     @Validate
-    void getInstanceStorageInstanceByInstanceId(
+    void getInstanceStorageInstancesByInstanceId(
         @PathParam("instanceId")
         @NotNull
         String instanceId,
@@ -169,12 +169,12 @@ public interface InstanceStorageResource {
      *     
      */
     @DELETE
-    @Path("instance/{instanceId}")
+    @Path("instances/{instanceId}")
     @Produces({
         "text/plain"
     })
     @Validate
-    void deleteInstanceStorageInstanceByInstanceId(
+    void deleteInstanceStorageInstancesByInstanceId(
         @PathParam("instanceId")
         @NotNull
         String instanceId,
@@ -216,13 +216,13 @@ public interface InstanceStorageResource {
      *     
      */
     @PUT
-    @Path("instance/{instanceId}")
+    @Path("instances/{instanceId}")
     @Consumes("application/json")
     @Produces({
         "text/plain"
     })
     @Validate
-    void putInstanceStorageInstanceByInstanceId(
+    void putInstanceStorageInstancesByInstanceId(
         @PathParam("instanceId")
         @NotNull
         String instanceId,
@@ -233,12 +233,12 @@ public interface InstanceStorageResource {
         throws Exception
     ;
 
-    public class DeleteInstanceStorageInstanceByInstanceIdResponse
+    public class DeleteInstanceStorageInstancesByInstanceIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private DeleteInstanceStorageInstanceByInstanceIdResponse(Response delegate) {
+        private DeleteInstanceStorageInstancesByInstanceIdResponse(Response delegate) {
             super(delegate);
         }
 
@@ -246,9 +246,9 @@ public interface InstanceStorageResource {
          * Item deleted successfully
          * 
          */
-        public static InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse withNoContent() {
+        public static InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse withNoContent() {
             Response.ResponseBuilder responseBuilder = Response.status(204);
-            return new InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
         /**
@@ -259,10 +259,10 @@ public interface InstanceStorageResource {
          *     "instance not found"
          *     
          */
-        public static InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse withPlainNotFound(String entity) {
+        public static InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse withPlainNotFound(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
         /**
@@ -273,10 +273,10 @@ public interface InstanceStorageResource {
          *     "unable to delete instance -- constraint violation"
          *     
          */
-        public static InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse withPlainBadRequest(String entity) {
+        public static InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
         /**
@@ -285,20 +285,20 @@ public interface InstanceStorageResource {
          * @param entity
          *     Internal server error, contact administrator
          */
-        public static InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse withPlainInternalServerError(String entity) {
+        public static InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.DeleteInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
     }
 
-    public class GetInstanceStorageInstanceByInstanceIdResponse
+    public class GetInstanceStorageInstancesByInstanceIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private GetInstanceStorageInstanceByInstanceIdResponse(Response delegate) {
+        private GetInstanceStorageInstancesByInstanceIdResponse(Response delegate) {
             super(delegate);
         }
 
@@ -336,10 +336,10 @@ public interface InstanceStorageResource {
          *     }
          *     
          */
-        public static InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse withJsonOK(Instance entity) {
+        public static InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse withJsonOK(Instance entity) {
             Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", "application/json");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
         /**
@@ -350,10 +350,10 @@ public interface InstanceStorageResource {
          *     "instance not found"
          *     
          */
-        public static InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse withPlainNotFound(String entity) {
+        public static InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse withPlainNotFound(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
         /**
@@ -362,20 +362,20 @@ public interface InstanceStorageResource {
          * @param entity
          *     internal server error, contact administrator
          */
-        public static InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse withPlainInternalServerError(String entity) {
+        public static InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.GetInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
     }
 
-    public class GetInstanceStorageInstanceResponse
+    public class GetInstanceStorageInstancesResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private GetInstanceStorageInstanceResponse(Response delegate) {
+        private GetInstanceStorageInstancesResponse(Response delegate) {
             super(delegate);
         }
 
@@ -413,22 +413,22 @@ public interface InstanceStorageResource {
          *     }
          *     
          */
-        public static InstanceStorageResource.GetInstanceStorageInstanceResponse withJsonOK(Instances entity) {
+        public static InstanceStorageResource.GetInstanceStorageInstancesResponse withJsonOK(Instances entity) {
             Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", "application/json");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.GetInstanceStorageInstanceResponse(responseBuilder.build());
+            return new InstanceStorageResource.GetInstanceStorageInstancesResponse(responseBuilder.build());
         }
 
         /**
-         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. unable to list instance -- malformed parameter 'query', syntax error at column 6
+         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. unable to list instances -- malformed parameter 'query', syntax error at column 6
          * 
          * @param entity
-         *     unable to list instance -- malformed parameter 'query', syntax error at column 6
+         *     unable to list instances -- malformed parameter 'query', syntax error at column 6
          */
-        public static InstanceStorageResource.GetInstanceStorageInstanceResponse withPlainBadRequest(String entity) {
+        public static InstanceStorageResource.GetInstanceStorageInstancesResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.GetInstanceStorageInstanceResponse(responseBuilder.build());
+            return new InstanceStorageResource.GetInstanceStorageInstancesResponse(responseBuilder.build());
         }
 
         /**
@@ -437,31 +437,31 @@ public interface InstanceStorageResource {
          * @param entity
          *     internal server error, contact administrator
          */
-        public static InstanceStorageResource.GetInstanceStorageInstanceResponse withPlainInternalServerError(String entity) {
+        public static InstanceStorageResource.GetInstanceStorageInstancesResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.GetInstanceStorageInstanceResponse(responseBuilder.build());
+            return new InstanceStorageResource.GetInstanceStorageInstancesResponse(responseBuilder.build());
         }
 
     }
 
-    public class PostInstanceStorageInstanceByInstanceIdResponse
+    public class PostInstanceStorageInstancesByInstanceIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private PostInstanceStorageInstanceByInstanceIdResponse(Response delegate) {
+        private PostInstanceStorageInstancesByInstanceIdResponse(Response delegate) {
             super(delegate);
         }
 
     }
 
-    public class PostInstanceStorageInstanceResponse
+    public class PostInstanceStorageInstancesResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private PostInstanceStorageInstanceResponse(Response delegate) {
+        private PostInstanceStorageInstancesResponse(Response delegate) {
             super(delegate);
         }
 
@@ -501,10 +501,10 @@ public interface InstanceStorageResource {
          *     }
          *     
          */
-        public static InstanceStorageResource.PostInstanceStorageInstanceResponse withJsonCreated(String location, StreamingOutput entity) {
+        public static InstanceStorageResource.PostInstanceStorageInstancesResponse withJsonCreated(String location, StreamingOutput entity) {
             Response.ResponseBuilder responseBuilder = Response.status(201).header("Content-Type", "application/json").header("Location", location);
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.PostInstanceStorageInstanceResponse(responseBuilder.build());
+            return new InstanceStorageResource.PostInstanceStorageInstancesResponse(responseBuilder.build());
         }
 
         /**
@@ -515,10 +515,10 @@ public interface InstanceStorageResource {
          *     "unable to add instance -- malformed JSON at 13:3"
          *     
          */
-        public static InstanceStorageResource.PostInstanceStorageInstanceResponse withPlainBadRequest(String entity) {
+        public static InstanceStorageResource.PostInstanceStorageInstancesResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.PostInstanceStorageInstanceResponse(responseBuilder.build());
+            return new InstanceStorageResource.PostInstanceStorageInstancesResponse(responseBuilder.build());
         }
 
         /**
@@ -527,20 +527,20 @@ public interface InstanceStorageResource {
          * @param entity
          *     Internal server error, contact administrator
          */
-        public static InstanceStorageResource.PostInstanceStorageInstanceResponse withPlainInternalServerError(String entity) {
+        public static InstanceStorageResource.PostInstanceStorageInstancesResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.PostInstanceStorageInstanceResponse(responseBuilder.build());
+            return new InstanceStorageResource.PostInstanceStorageInstancesResponse(responseBuilder.build());
         }
 
     }
 
-    public class PutInstanceStorageInstanceByInstanceIdResponse
+    public class PutInstanceStorageInstancesByInstanceIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private PutInstanceStorageInstanceByInstanceIdResponse(Response delegate) {
+        private PutInstanceStorageInstancesByInstanceIdResponse(Response delegate) {
             super(delegate);
         }
 
@@ -548,9 +548,9 @@ public interface InstanceStorageResource {
          * Item successfully updated
          * 
          */
-        public static InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse withNoContent() {
+        public static InstanceStorageResource.PutInstanceStorageInstancesByInstanceIdResponse withNoContent() {
             Response.ResponseBuilder responseBuilder = Response.status(204);
-            return new InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.PutInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
         /**
@@ -561,10 +561,10 @@ public interface InstanceStorageResource {
          *     "instance not found"
          *     
          */
-        public static InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse withPlainNotFound(String entity) {
+        public static InstanceStorageResource.PutInstanceStorageInstancesByInstanceIdResponse withPlainNotFound(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.PutInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
         /**
@@ -575,10 +575,10 @@ public interface InstanceStorageResource {
          *     "unable to update instance -- malformed JSON at 13:4"
          *     
          */
-        public static InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse withPlainBadRequest(String entity) {
+        public static InstanceStorageResource.PutInstanceStorageInstancesByInstanceIdResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.PutInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
         /**
@@ -587,10 +587,10 @@ public interface InstanceStorageResource {
          * @param entity
          *     internal server error, contact administrator
          */
-        public static InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse withPlainInternalServerError(String entity) {
+        public static InstanceStorageResource.PutInstanceStorageInstancesByInstanceIdResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new InstanceStorageResource.PutInstanceStorageInstanceByInstanceIdResponse(responseBuilder.build());
+            return new InstanceStorageResource.PutInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
         }
 
     }

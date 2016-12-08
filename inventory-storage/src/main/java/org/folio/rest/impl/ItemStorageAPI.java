@@ -34,7 +34,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   private static final Map<String, String> replacedToOriginalIdMap = new HashMap<>();
 
   @Override
-  public void getItemStorageItem(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getItemStorageItems(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -67,33 +67,33 @@ public class ItemStorageAPI implements ItemStorageResource {
                 itemList.setItems(items);
                 itemList.setTotalRecords(items.size());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  ItemStorageResource.GetItemStorageItemResponse.
+                  ItemStorageResource.GetItemStorageItemsResponse.
                     withJsonOK(itemList)));
 
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  ItemStorageResource.GetItemStorageItemResponse.
+                  ItemStorageResource.GetItemStorageItemsResponse.
                     withPlainInternalServerError("Error")));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            ItemStorageResource.GetItemStorageItemResponse.
+            ItemStorageResource.GetItemStorageItemsResponse.
               withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        ItemStorageResource.GetItemStorageItemResponse.
+        ItemStorageResource.GetItemStorageItemsResponse.
           withPlainInternalServerError("Error")));
     }
   }
 
   @Override
-  public void postItemStorageItem(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Item entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void postItemStorageItems(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Item entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -121,34 +121,34 @@ public class ItemStorageAPI implements ItemStorageResource {
 
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
-                    ItemStorageResource.PostItemStorageItemResponse
+                    ItemStorageResource.PostItemStorageItemsResponse
                       .withJsonCreated(reply.result(), stream)));
 
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
-                    ItemStorageResource.PostItemStorageItemResponse
+                    ItemStorageResource.PostItemStorageItemsResponse
                       .withPlainInternalServerError("Error")));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            ItemStorageResource.PostItemStorageItemResponse
+            ItemStorageResource.PostItemStorageItemsResponse
               .withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        ItemStorageResource.PostItemStorageItemResponse
+        ItemStorageResource.PostItemStorageItemsResponse
           .withPlainInternalServerError("Error")));
     }
   }
 
   @Override
-  public void postItemStorageItemByItemId(
+  public void postItemStorageItemsByItemId(
     @PathParam("itemId")
     @NotNull
       String itemId,
@@ -161,7 +161,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   }
 
   @Override
-  public void getItemStorageItemByItemId(
+  public void getItemStorageItemsByItemId(
     @PathParam("itemId")
     @NotNull
       String itemId,
@@ -204,7 +204,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      ItemStorageResource.GetItemStorageItemByItemIdResponse.
+                      ItemStorageResource.GetItemStorageItemsByItemIdResponse.
                         withJsonOK(item)));
                 } else {
                   throw new Exception(itemList.size() + " results returned");
@@ -213,27 +213,27 @@ public class ItemStorageAPI implements ItemStorageResource {
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  ItemStorageResource.GetItemStorageItemByItemIdResponse.
+                  ItemStorageResource.GetItemStorageItemsByItemIdResponse.
                     withPlainInternalServerError("Error")));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            ItemStorageResource.GetItemStorageItemByItemIdResponse.
+            ItemStorageResource.GetItemStorageItemsByItemIdResponse.
               withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        ItemStorageResource.GetItemStorageItemByItemIdResponse.
+        ItemStorageResource.GetItemStorageItemsByItemIdResponse.
           withPlainInternalServerError("Error")));
     }
   }
 
   @Override
-  public void deleteItemStorageItem(
+  public void deleteItemStorageItems(
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
@@ -254,13 +254,13 @@ public class ItemStorageAPI implements ItemStorageResource {
       postgresClient.mutate("TRUNCATE TABLE item",
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              ItemStorageResource.DeleteItemStorageItemResponse.ok().build()));
+              ItemStorageResource.DeleteItemStorageItemsResponse.ok().build()));
           });
       });
   }
 
   @Override
-  public void putItemStorageItemByItemId(
+  public void putItemStorageItemsByItemId(
     @PathParam("itemId")
     @NotNull
       String itemId,
@@ -273,7 +273,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   }
 
   @Override
-  public void deleteItemStorageItemByItemId(
+  public void deleteItemStorageItemsByItemId(
     @PathParam("itemId")
     @NotNull
       String itemId,
@@ -294,7 +294,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   private void badRequestResult(
     Handler<AsyncResult<Response>> asyncResultHandler, String message) {
     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      GetItemStorageItemResponse.withPlainBadRequest(message)));
+      GetItemStorageItemsResponse.withPlainBadRequest(message)));
   }
 
   private boolean blankTenantId(String tenantId) {

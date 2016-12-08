@@ -35,9 +35,9 @@ public interface ItemStorageResource {
      *     
      */
     @DELETE
-    @Path("item")
+    @Path("items")
     @Validate
-    void deleteItemStorageItem(
+    void deleteItemStorageItems(
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
@@ -57,13 +57,13 @@ public interface ItemStorageResource {
      *     
      */
     @GET
-    @Path("item")
+    @Path("items")
     @Produces({
         "application/json",
         "text/plain"
     })
     @Validate
-    void getItemStorageItem(
+    void getItemStorageItems(
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
@@ -91,14 +91,14 @@ public interface ItemStorageResource {
      *     
      */
     @POST
-    @Path("item")
+    @Path("items")
     @Consumes("application/json")
     @Produces({
         "application/json",
         "text/plain"
     })
     @Validate
-    void postItemStorageItem(
+    void postItemStorageItems(
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")
@@ -119,9 +119,9 @@ public interface ItemStorageResource {
      *     
      */
     @POST
-    @Path("item/{itemId}")
+    @Path("items/{itemId}")
     @Validate
-    void postItemStorageItemByItemId(
+    void postItemStorageItemsByItemId(
         @PathParam("itemId")
         @NotNull
         String itemId,
@@ -147,13 +147,13 @@ public interface ItemStorageResource {
      *     
      */
     @GET
-    @Path("item/{itemId}")
+    @Path("items/{itemId}")
     @Produces({
         "application/json",
         "text/plain"
     })
     @Validate
-    void getItemStorageItemByItemId(
+    void getItemStorageItemsByItemId(
         @PathParam("itemId")
         @NotNull
         String itemId,
@@ -179,12 +179,12 @@ public interface ItemStorageResource {
      *     
      */
     @DELETE
-    @Path("item/{itemId}")
+    @Path("items/{itemId}")
     @Produces({
         "text/plain"
     })
     @Validate
-    void deleteItemStorageItemByItemId(
+    void deleteItemStorageItemsByItemId(
         @PathParam("itemId")
         @NotNull
         String itemId,
@@ -218,13 +218,13 @@ public interface ItemStorageResource {
      *     
      */
     @PUT
-    @Path("item/{itemId}")
+    @Path("items/{itemId}")
     @Consumes("application/json")
     @Produces({
         "text/plain"
     })
     @Validate
-    void putItemStorageItemByItemId(
+    void putItemStorageItemsByItemId(
         @PathParam("itemId")
         @NotNull
         String itemId,
@@ -235,12 +235,12 @@ public interface ItemStorageResource {
         throws Exception
     ;
 
-    public class DeleteItemStorageItemByItemIdResponse
+    public class DeleteItemStorageItemsByItemIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private DeleteItemStorageItemByItemIdResponse(Response delegate) {
+        private DeleteItemStorageItemsByItemIdResponse(Response delegate) {
             super(delegate);
         }
 
@@ -248,9 +248,9 @@ public interface ItemStorageResource {
          * Item deleted successfully
          * 
          */
-        public static ItemStorageResource.DeleteItemStorageItemByItemIdResponse withNoContent() {
+        public static ItemStorageResource.DeleteItemStorageItemsByItemIdResponse withNoContent() {
             Response.ResponseBuilder responseBuilder = Response.status(204);
-            return new ItemStorageResource.DeleteItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.DeleteItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
         /**
@@ -261,10 +261,10 @@ public interface ItemStorageResource {
          *     "item not found"
          *     
          */
-        public static ItemStorageResource.DeleteItemStorageItemByItemIdResponse withPlainNotFound(String entity) {
+        public static ItemStorageResource.DeleteItemStorageItemsByItemIdResponse withPlainNotFound(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.DeleteItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.DeleteItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
         /**
@@ -275,10 +275,10 @@ public interface ItemStorageResource {
          *     "unable to delete item -- constraint violation"
          *     
          */
-        public static ItemStorageResource.DeleteItemStorageItemByItemIdResponse withPlainBadRequest(String entity) {
+        public static ItemStorageResource.DeleteItemStorageItemsByItemIdResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.DeleteItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.DeleteItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
         /**
@@ -287,31 +287,31 @@ public interface ItemStorageResource {
          * @param entity
          *     Internal server error, contact administrator
          */
-        public static ItemStorageResource.DeleteItemStorageItemByItemIdResponse withPlainInternalServerError(String entity) {
+        public static ItemStorageResource.DeleteItemStorageItemsByItemIdResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.DeleteItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.DeleteItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
     }
 
-    public class DeleteItemStorageItemResponse
+    public class DeleteItemStorageItemsResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private DeleteItemStorageItemResponse(Response delegate) {
+        private DeleteItemStorageItemsResponse(Response delegate) {
             super(delegate);
         }
 
     }
 
-    public class GetItemStorageItemByItemIdResponse
+    public class GetItemStorageItemsByItemIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private GetItemStorageItemByItemIdResponse(Response delegate) {
+        private GetItemStorageItemsByItemIdResponse(Response delegate) {
             super(delegate);
         }
 
@@ -333,10 +333,10 @@ public interface ItemStorageResource {
          *     }
          *     
          */
-        public static ItemStorageResource.GetItemStorageItemByItemIdResponse withJsonOK(Item entity) {
+        public static ItemStorageResource.GetItemStorageItemsByItemIdResponse withJsonOK(Item entity) {
             Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", "application/json");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.GetItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.GetItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
         /**
@@ -347,10 +347,10 @@ public interface ItemStorageResource {
          *     "item not found"
          *     
          */
-        public static ItemStorageResource.GetItemStorageItemByItemIdResponse withPlainNotFound(String entity) {
+        public static ItemStorageResource.GetItemStorageItemsByItemIdResponse withPlainNotFound(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.GetItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.GetItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
         /**
@@ -359,20 +359,20 @@ public interface ItemStorageResource {
          * @param entity
          *     internal server error, contact administrator
          */
-        public static ItemStorageResource.GetItemStorageItemByItemIdResponse withPlainInternalServerError(String entity) {
+        public static ItemStorageResource.GetItemStorageItemsByItemIdResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.GetItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.GetItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
     }
 
-    public class GetItemStorageItemResponse
+    public class GetItemStorageItemsResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private GetItemStorageItemResponse(Response delegate) {
+        private GetItemStorageItemsResponse(Response delegate) {
             super(delegate);
         }
 
@@ -410,22 +410,22 @@ public interface ItemStorageResource {
          *     ]
          *     
          */
-        public static ItemStorageResource.GetItemStorageItemResponse withJsonOK(Items entity) {
+        public static ItemStorageResource.GetItemStorageItemsResponse withJsonOK(Items entity) {
             Response.ResponseBuilder responseBuilder = Response.status(200).header("Content-Type", "application/json");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.GetItemStorageItemResponse(responseBuilder.build());
+            return new ItemStorageResource.GetItemStorageItemsResponse(responseBuilder.build());
         }
 
         /**
-         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. unable to list item -- malformed parameter 'query', syntax error at column 6
+         * Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response. e.g. unable to list items -- malformed parameter 'query', syntax error at column 6
          * 
          * @param entity
-         *     unable to list item -- malformed parameter 'query', syntax error at column 6
+         *     unable to list items -- malformed parameter 'query', syntax error at column 6
          */
-        public static ItemStorageResource.GetItemStorageItemResponse withPlainBadRequest(String entity) {
+        public static ItemStorageResource.GetItemStorageItemsResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.GetItemStorageItemResponse(responseBuilder.build());
+            return new ItemStorageResource.GetItemStorageItemsResponse(responseBuilder.build());
         }
 
         /**
@@ -434,31 +434,31 @@ public interface ItemStorageResource {
          * @param entity
          *     internal server error, contact administrator
          */
-        public static ItemStorageResource.GetItemStorageItemResponse withPlainInternalServerError(String entity) {
+        public static ItemStorageResource.GetItemStorageItemsResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.GetItemStorageItemResponse(responseBuilder.build());
+            return new ItemStorageResource.GetItemStorageItemsResponse(responseBuilder.build());
         }
 
     }
 
-    public class PostItemStorageItemByItemIdResponse
+    public class PostItemStorageItemsByItemIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private PostItemStorageItemByItemIdResponse(Response delegate) {
+        private PostItemStorageItemsByItemIdResponse(Response delegate) {
             super(delegate);
         }
 
     }
 
-    public class PostItemStorageItemResponse
+    public class PostItemStorageItemsResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private PostItemStorageItemResponse(Response delegate) {
+        private PostItemStorageItemsResponse(Response delegate) {
             super(delegate);
         }
 
@@ -482,10 +482,10 @@ public interface ItemStorageResource {
          *     }
          *     
          */
-        public static ItemStorageResource.PostItemStorageItemResponse withJsonCreated(String location, StreamingOutput entity) {
+        public static ItemStorageResource.PostItemStorageItemsResponse withJsonCreated(String location, StreamingOutput entity) {
             Response.ResponseBuilder responseBuilder = Response.status(201).header("Content-Type", "application/json").header("Location", location);
             responseBuilder.entity(entity);
-            return new ItemStorageResource.PostItemStorageItemResponse(responseBuilder.build());
+            return new ItemStorageResource.PostItemStorageItemsResponse(responseBuilder.build());
         }
 
         /**
@@ -496,10 +496,10 @@ public interface ItemStorageResource {
          *     "unable to add item -- malformed JSON at 13:3"
          *     
          */
-        public static ItemStorageResource.PostItemStorageItemResponse withPlainBadRequest(String entity) {
+        public static ItemStorageResource.PostItemStorageItemsResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.PostItemStorageItemResponse(responseBuilder.build());
+            return new ItemStorageResource.PostItemStorageItemsResponse(responseBuilder.build());
         }
 
         /**
@@ -508,20 +508,20 @@ public interface ItemStorageResource {
          * @param entity
          *     Internal server error, contact administrator
          */
-        public static ItemStorageResource.PostItemStorageItemResponse withPlainInternalServerError(String entity) {
+        public static ItemStorageResource.PostItemStorageItemsResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.PostItemStorageItemResponse(responseBuilder.build());
+            return new ItemStorageResource.PostItemStorageItemsResponse(responseBuilder.build());
         }
 
     }
 
-    public class PutItemStorageItemByItemIdResponse
+    public class PutItemStorageItemsByItemIdResponse
         extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
     {
 
 
-        private PutItemStorageItemByItemIdResponse(Response delegate) {
+        private PutItemStorageItemsByItemIdResponse(Response delegate) {
             super(delegate);
         }
 
@@ -529,9 +529,9 @@ public interface ItemStorageResource {
          * Item successfully updated
          * 
          */
-        public static ItemStorageResource.PutItemStorageItemByItemIdResponse withNoContent() {
+        public static ItemStorageResource.PutItemStorageItemsByItemIdResponse withNoContent() {
             Response.ResponseBuilder responseBuilder = Response.status(204);
-            return new ItemStorageResource.PutItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.PutItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
         /**
@@ -542,10 +542,10 @@ public interface ItemStorageResource {
          *     "item not found"
          *     
          */
-        public static ItemStorageResource.PutItemStorageItemByItemIdResponse withPlainNotFound(String entity) {
+        public static ItemStorageResource.PutItemStorageItemsByItemIdResponse withPlainNotFound(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(404).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.PutItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.PutItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
         /**
@@ -556,10 +556,10 @@ public interface ItemStorageResource {
          *     "unable to update item -- malformed JSON at 13:4"
          *     
          */
-        public static ItemStorageResource.PutItemStorageItemByItemIdResponse withPlainBadRequest(String entity) {
+        public static ItemStorageResource.PutItemStorageItemsByItemIdResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.PutItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.PutItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
         /**
@@ -568,10 +568,10 @@ public interface ItemStorageResource {
          * @param entity
          *     internal server error, contact administrator
          */
-        public static ItemStorageResource.PutItemStorageItemByItemIdResponse withPlainInternalServerError(String entity) {
+        public static ItemStorageResource.PutItemStorageItemsByItemIdResponse withPlainInternalServerError(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
-            return new ItemStorageResource.PutItemStorageItemByItemIdResponse(responseBuilder.build());
+            return new ItemStorageResource.PutItemStorageItemsByItemIdResponse(responseBuilder.build());
         }
 
     }

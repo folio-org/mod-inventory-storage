@@ -99,7 +99,7 @@ public class ItemStorageTest {
 
     CompletableFuture deleteAllFinished = new CompletableFuture();
 
-    URL deleteItemsUrl = new URL("http", "localhost", port, "/item-storage/item");
+    URL deleteItemsUrl = new URL("http", "localhost", port, "/item-storage/items");
 
     Delete(vertx, deleteItemsUrl.toString(), TENANT_ID, response -> {
       if(response.statusCode() == 200) {
@@ -118,7 +118,7 @@ public class ItemStorageTest {
     UUID id = UUID.randomUUID();
     UUID instanceId = UUID.randomUUID();
 
-    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
+    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/items");
 
     JsonObject itemToCreate = new JsonObject();
 
@@ -151,7 +151,7 @@ public class ItemStorageTest {
     Async async = context.async();
     String id = UUID.randomUUID().toString();
 
-    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
+    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/items");
 
     JsonObject itemToCreate = new JsonObject();
     itemToCreate.put("id", id);
@@ -164,7 +164,7 @@ public class ItemStorageTest {
         context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
 
         String urlForGet =
-          String.format("http://localhost:%s/item-storage/item/%s",
+          String.format("http://localhost:%s/item-storage/items/%s",
             port, id);
 
         Get(vertx, urlForGet, TENANT_ID, getResponse -> {
@@ -210,7 +210,7 @@ public class ItemStorageTest {
 
     createItem(secondItemToCreate);
 
-    URL itemsUrl = new URL("http", "localhost", port, "/item-storage/item");
+    URL itemsUrl = new URL("http", "localhost", port, "/item-storage/items");
 
     Async async = context.async();
 
@@ -266,7 +266,7 @@ public class ItemStorageTest {
 
     CompletableFuture deleteAllFinished = new CompletableFuture();
 
-    URL itemsUrl = new URL("http", "localhost", port, "/item-storage/item");
+    URL itemsUrl = new URL("http", "localhost", port, "/item-storage/items");
 
     Delete(vertx, itemsUrl.toString(), TENANT_ID, response -> {
       context.assertEquals(response.statusCode(), HttpURLConnection.HTTP_OK);
@@ -304,7 +304,7 @@ public class ItemStorageTest {
     item.setInstanceId(UUID.randomUUID().toString());
     item.setBarcode("4554345453");
 
-    Post(vertx, new URL("http", "localhost",  port, "/item-storage/item"),
+    Post(vertx, new URL("http", "localhost",  port, "/item-storage/items"),
       item, response -> {
         context.assertEquals(response.statusCode(), 400);
 
@@ -324,7 +324,7 @@ public class ItemStorageTest {
 
     Async async = context.async();
 
-    String path = String.format("/item-storage/item/%s",
+    String path = String.format("/item-storage/items/%s",
       UUID.randomUUID().toString());
 
     URL getItemUrl = new URL("http", "localhost", port, path);
@@ -349,7 +349,7 @@ public class ItemStorageTest {
 
     Async async = context.async();
 
-    String path = String.format("/item-storage/item");
+    String path = String.format("/item-storage/items");
 
     URL getItemsUrl = new URL("http", "localhost", port, path);
 
@@ -373,7 +373,7 @@ public class ItemStorageTest {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
+    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/items");
 
     CompletableFuture createComplete = new CompletableFuture();
 
