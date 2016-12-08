@@ -170,6 +170,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     @Pattern(regexp = "[a-zA-Z]{2}")
       String lang, java.util.Map<String, String> okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler, Context vertxContext)
     throws Exception {
+
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
     if (blankTenantId(tenantId)) {
@@ -229,6 +230,33 @@ public class ItemStorageAPI implements ItemStorageResource {
         ItemStorageResource.GetItemStorageItemByItemIdResponse.
           withPlainInternalServerError("Error")));
     }
+  }
+
+  @Override
+  public void deleteItemStorageItem(
+    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+    throws Exception {
+
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    if (blankTenantId(tenantId)) {
+      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
+
+      return;
+    }
+
+    vertxContext.runOnContext(v -> {
+        PostgresClient postgresClient = PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      postgresClient.mutate("TRUNCATE TABLE item",
+          reply -> {
+            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+              ItemStorageResource.DeleteItemStorageItemResponse.ok().build()));
+          });
+      });
   }
 
   @Override

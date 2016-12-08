@@ -1,36 +1,34 @@
 package org.folio.rest;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.tools.utils.TenantTool;
-import org.junit.*;
+import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.folio.rest.persist.PostgresClient;
-
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import io.vertx.ext.unit.Async;
-import io.vertx.core.Handler;
-import java.util.UUID;
 
 @RunWith(VertxUnitRunner.class)
 public class ItemStorageTest {
@@ -94,22 +92,22 @@ public class ItemStorageTest {
 
   @Before
   public void beforeEach()
-    throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
 
-    CompletableFuture recordTableTruncated = new CompletableFuture();
+    CompletableFuture deleteAllFinished = new CompletableFuture();
 
-    PostgresClient.getInstance(vertx, TenantTool.calculateTenantId(TENANT_ID))
-      .mutate("TRUNCATE TABLE item;",
-      result -> {
-        if(result.succeeded()){
-          recordTableTruncated.complete(null);
-        }
-        else{
-          recordTableTruncated.completeExceptionally(result.cause());
-        }
-      });
+    URL deleteItemsUrl = new URL("http", "localhost", port, "/item-storage/item");
 
-    recordTableTruncated.get(5, TimeUnit.SECONDS);
+    Delete(vertx, deleteItemsUrl.toString(), TENANT_ID, response -> {
+      if(response.statusCode() == 200) {
+        deleteAllFinished.complete(null);
+      }
+    });
+
+    deleteAllFinished.get(5, TimeUnit.SECONDS);
   }
 
   @Test
@@ -244,6 +242,57 @@ public class ItemStorageTest {
   }
 
   @Test
+  public void canDeleteAllItems(TestContext context)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    JsonObject firstItemToCreate = new JsonObject();
+    firstItemToCreate.put("id", UUID.randomUUID().toString());
+    firstItemToCreate.put("instance_id", "MadeUp");
+    firstItemToCreate.put("title", "Refactoring");
+    firstItemToCreate.put("barcode", "314159");
+
+    createItem(firstItemToCreate);
+
+    JsonObject secondItemToCreate = new JsonObject();
+    secondItemToCreate.put("id", UUID.randomUUID().toString());
+    secondItemToCreate.put("instance_id", "MadeUp");
+    secondItemToCreate.put("title", "Real Analysis");
+    secondItemToCreate.put("barcode", "271828");
+
+    createItem(secondItemToCreate);
+
+    CompletableFuture deleteAllFinished = new CompletableFuture();
+
+    URL itemsUrl = new URL("http", "localhost", port, "/item-storage/item");
+
+    Delete(vertx, itemsUrl.toString(), TENANT_ID, response -> {
+      context.assertEquals(response.statusCode(), HttpURLConnection.HTTP_OK);
+
+      deleteAllFinished.complete(null);
+    });
+
+    deleteAllFinished.get(5, TimeUnit.SECONDS);
+
+    Async async = context.async();
+
+    Get(vertx, itemsUrl.toString(), TENANT_ID, response -> {
+      response.bodyHandler(body -> {
+
+        JsonObject getAllResponse = jsonObjectFromBuffer(body);
+
+        JsonArray allItems = getAllResponse.getJsonArray("items");
+
+        context.assertEquals(allItems.size(), 0);
+        context.assertEquals(getAllResponse.getInteger("total_records"), 0);
+        async.complete();
+      });
+    });
+  }
+
+  @Test
   public void tenantIsRequiredForCreatingNewItem(TestContext context)
     throws MalformedURLException {
 
@@ -326,13 +375,13 @@ public class ItemStorageTest {
 
     URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
 
-    CompletableFuture firstCreateComplete = new CompletableFuture();
+    CompletableFuture createComplete = new CompletableFuture();
 
     Post(vertx, postItemUrl, itemToCreate, TENANT_ID, response -> {
-      firstCreateComplete.complete(null);
+      createComplete.complete(null);
     });
 
-    firstCreateComplete.get(1, TimeUnit.SECONDS);
+    createComplete.get(2, TimeUnit.SECONDS);
   }
 
   private void Post(Vertx vertx,
@@ -351,11 +400,7 @@ public class ItemStorageTest {
 
     HttpClient client = vertx.createHttpClient();
 
-    HttpClientRequest request = client.postAbs(url.toString(), response -> {
-      System.out.println("Response Received from Post");
-
-      responseHandler.handle(response);
-    });
+    HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
 
     request.headers().add("Accept","application/json");
     request.headers().add("Content-type","application/json");
@@ -391,7 +436,23 @@ public class ItemStorageTest {
 
     HttpClientRequest request = client.getAbs(url, responseHandler);
 
-    System.out.println(String.format("Getting %s", url));
+    request.headers().add("Accept","application/json");
+
+    if(tenantId != null) {
+      request.headers().add(TENANT_HEADER, tenantId);
+    }
+
+    request.end();
+  }
+
+  private void Delete(Vertx vertx,
+                   String url,
+                   String tenantId,
+                   Handler<HttpClientResponse> responseHandler) {
+
+    HttpClient client = vertx.createHttpClient();
+
+    HttpClientRequest request = client.deleteAbs(url, responseHandler);
 
     request.headers().add("Accept","application/json");
 
