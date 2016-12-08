@@ -4,6 +4,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -27,7 +28,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import io.vertx.ext.unit.Async;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.Handler;
 import java.util.UUID;
 
@@ -68,7 +68,7 @@ public class ItemStorageTest {
       }
     });
 
-    deploymentComplete.get(20000, TimeUnit.MILLISECONDS);
+    deploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
   @AfterClass
@@ -86,7 +86,7 @@ public class ItemStorageTest {
       }
     });
 
-    undeploymentComplete.get(20000, TimeUnit.MILLISECONDS);
+    undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
   @Before
@@ -108,210 +108,147 @@ public class ItemStorageTest {
   }
 
   @Test
-  public void postDataTest(TestContext context) throws MalformedURLException {
+  public void createViaPostRespondsWithCorrectResource(TestContext context)
+    throws MalformedURLException {
 
     Async async = context.async();
     UUID id = UUID.randomUUID();
-    HttpClient client = vertx.createHttpClient();
 
     URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
 
-    System.out.println("Posting Item");
-    System.out.println(postItemUrl);
+    JsonObject itemToCreate = new JsonObject();
+    itemToCreate.put("id",id.toString());
+    itemToCreate.put("instance_id", "Fake");
+    itemToCreate.put("title", "Real Analysis");
+    itemToCreate.put("barcode", "271828");
 
-    JsonObject post = new JsonObject();
-    post.put("id",id.toString());
-    post.put("instance_id", "Fake");
-    post.put("title", "Real Analysis");
-    post.put("barcode", "271828");
+    Post(vertx, postItemUrl, itemToCreate, TENANT_ID, response -> {
+      final int statusCode = response.statusCode();
 
-    HttpClientRequest request = client.postAbs(postItemUrl.toString(), response -> {
+      response.bodyHandler(buffer -> {
+        JsonObject restResponse = new JsonObject(
+          buffer.getString(0,buffer.length()));
 
-	    final int statusCode = response.statusCode();
+        context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
 
-      response.bodyHandler(new Handler<Buffer>() {
-		    @Override
-		    public void handle(Buffer body) {
+        context.assertEquals(restResponse.getString("title"), "Real Analysis");
 
-          JsonObject restResponse = new JsonObject(
-            body.getString(0,body.length()));
-
-          context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
-          System.out.println("RECORD CREATED");
-          System.out.println(restResponse.toString());
-
-          context.assertEquals(restResponse.getString("title") ,
-            "Real Analysis");
-
-          async.complete();
-			  }
-		  });
-	  });
-
-    request.headers().add("Accept","application/json");
-    request.headers().add("Content-type","application/json");
-    request.headers().add(TENANT_HEADER, TENANT_ID);
-    request.end(post.encodePrettily());
+        async.complete();
+      });
+    });
   }
 
   @Test
-  public void postGetDataTest(TestContext context) throws MalformedURLException {
+  public void canGetItemById(TestContext context)
+    throws MalformedURLException {
 
     Async async = context.async();
     String uuid = UUID.randomUUID().toString();
-    HttpClient client = vertx.createHttpClient();
 
     URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
 
-    System.out.println("Posting Item");
-    System.out.println(postItemUrl);
+    JsonObject itemToCreate = new JsonObject();
+    itemToCreate.put("id", uuid);
+    itemToCreate.put("instance_id", "MadeUp");
+    itemToCreate.put("title", "Refactoring");
+    itemToCreate.put("barcode", "314159");
 
-    JsonObject post = new JsonObject();
-    post.put("id", uuid);
-    post.put("instance_id", "MadeUp");
-    post.put("title", "Refactoring");
-    post.put("barcode", "314159");
-
-    HttpClientRequest postRequest = client.postAbs(postItemUrl.toString(),
-      response -> {
-        final int postStatusCode = response.statusCode();
-	      response.bodyHandler(body -> {
+    Post(vertx, postItemUrl, itemToCreate, TENANT_ID, postResponse -> {
+        final int postStatusCode = postResponse.statusCode();
+	      postResponse.bodyHandler(postBuffer -> {
 
           JsonObject restResponse = new JsonObject(
-            body.getString(0,body.length()));
+            postBuffer.getString(0, postBuffer.length()));
 
           context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
-          System.out.println("POST Response Received");
-          System.out.println(restResponse.toString());
-
-          context.assertEquals(restResponse.getString("title") , "Refactoring");
 
           String id = restResponse.getString("id");
-          String url = String.format("/item-storage/item/%s",id);
 
-          System.out.println("Id received " + restResponse.getString("id"));
+          String urlForGet =
+            String.format("http://localhost:%s/item-storage/item/%s",
+              port, id);
 
-          try {
-             URL getItemUrl = new URL("http", "localhost", port, url);
+          Get(vertx, urlForGet, TENANT_ID, getResponse -> {
+            final int getStatusCode = getResponse.statusCode();
 
-             System.out.println("Getting Item");
-             System.out.println(getItemUrl);
+            getResponse.bodyHandler(getBuffer -> {
+              JsonObject restResponse1 =
+                new JsonObject(getBuffer.getString(0, getBuffer.length()));
 
-             HttpClientRequest getRequest = client.getAbs(
-              getItemUrl.toString(), getResponse -> {
+              context.assertEquals(getStatusCode, HttpURLConnection.HTTP_OK);
+              context.assertEquals(restResponse1.getString("id") , id);
 
-              final int getStatusCode = getResponse.statusCode();
-
-              getResponse.bodyHandler(body1 -> {
-                JsonObject restResponse1 =
-                new JsonObject(body1.getString(0, body1.length()));
-
-                context.assertEquals(getStatusCode, HttpURLConnection.HTTP_OK);
-                System.out.println("GET Response Received");
-                System.out.println(restResponse1.toString());
-
-                context.assertEquals(restResponse1.getString("id") , id);
-                async.complete();
-               });
+              async.complete();
             });
-
-            getRequest.headers().add("Accept","application/json");
-            getRequest.headers().add(TENANT_HEADER, TENANT_ID);
-            getRequest.end();
-          }
-          catch(MalformedURLException ex){
-            System.out.println("EXCEPTION HAPPENED");
-          }
+          });
         });
       });
-
-    postRequest.headers().add("Accept","application/json");
-    postRequest.headers().add("Content-type","application/json");
-    postRequest.headers().add(TENANT_HEADER, TENANT_ID);
-    postRequest.end(post.encodePrettily());
-
   }
 
   @Test
-  public void GetAllTest(TestContext context) throws MalformedURLException {
+  public void canGetAllItems(TestContext context)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
-    Async async = context.async();
-    HttpClient client = vertx.createHttpClient();
-    String uuid1 = UUID.randomUUID().toString();
-    String uuid2 = UUID.randomUUID().toString();
+    JsonObject firstItemToCreate = new JsonObject();
+    firstItemToCreate.put("id", UUID.randomUUID().toString());
+    firstItemToCreate.put("instance_id", "MadeUp");
+    firstItemToCreate.put("title", "Refactoring");
+    firstItemToCreate.put("barcode", "314159");
+
+    createItem(firstItemToCreate);
+
+    JsonObject secondItemToCreate = new JsonObject();
+    secondItemToCreate.put("id", UUID.randomUUID().toString());
+    secondItemToCreate.put("instance_id", "MadeUp");
+    secondItemToCreate.put("title", "Real Analysis");
+    secondItemToCreate.put("barcode", "271828");
+
+    createItem(secondItemToCreate);
+
     URL itemsUrl = new URL("http", "localhost", port, "/item-storage/item");
 
-    JsonObject post1 = new JsonObject();
-    post1.put("id", uuid1);
-    post1.put("instance_id", "MadeUp");
-    post1.put("title", "Refactoring");
-    post1.put("barcode", "314159");
+    Async async = context.async();
 
-    JsonObject post2 = new JsonObject();
-    post2.put("id", uuid2);
-    post2.put("instance_id", "Fake");
-    post2.put("title", "Real Analysis");
-    post2.put("barcode", "271828");
+    Get(vertx, itemsUrl.toString(), TENANT_ID,
+      getResponse -> {
+        context.assertEquals(getResponse.statusCode(),
+          HttpURLConnection.HTTP_OK);
 
-    HttpClientRequest post1Request = client.postAbs(itemsUrl.toString(),
-      post1Response -> {
-        final int post1StatusCode = post1Response.statusCode();
-        context.assertEquals(post1StatusCode, HttpURLConnection.HTTP_CREATED);
-        System.out.println("POST 1 CREATED");
+        getResponse.bodyHandler(body -> {
+          JsonObject restResponse
+            = new JsonObject(body.getString(0, body.length()));
 
-	      HttpClientRequest post2Request = client.postAbs(itemsUrl.toString(),
-          post2Response -> {
+          JsonArray allItems = restResponse.getJsonArray("items");
 
-		      final int post2StatusCode = post1Response.statusCode();
-		      context.assertEquals(post2StatusCode, HttpURLConnection.HTTP_CREATED);
-		      System.out.println("POST 2 CREATED");
+          context.assertEquals(allItems.size(), 2);
+          context.assertEquals(restResponse.getInteger("total_records"), 2);
 
-          HttpClientRequest request = client.getAbs(itemsUrl.toString(),
-            getResponse -> {
+          JsonObject firstItem = allItems.getJsonObject(0);
+          JsonObject secondItem = allItems.getJsonObject(1);
 
-			      final int getAllStatusCode  = getResponse.statusCode();
-			      context.assertEquals(getAllStatusCode, HttpURLConnection.HTTP_OK);
-			      System.out.println("GET ALL OK");
+          context.assertEquals(firstItem.getString("title"), "Refactoring");
+          context.assertEquals(secondItem.getString("title"), "Real Analysis");
+          async.complete();
+        });
+      });
+  }
 
-			      getResponse.bodyHandler(body -> {
-              JsonObject restResponse
-                = new JsonObject(body.getString(0, body.length()));
+  private void createItem(JsonObject itemToCreate)
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
-            System.out.println(restResponse.toString());
-            context.assertEquals(restResponse.getInteger("total_records"), 2);
+    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/item");
 
-            JsonObject item1 = restResponse.getJsonArray("items")
-              .getJsonObject(0);
+    CompletableFuture firstCreateComplete = new CompletableFuture();
 
-            System.out.println("POST 1: " + post1);
-            System.out.println("ITEM 1: " + item1);
+    Post(vertx, postItemUrl, itemToCreate, TENANT_ID, response -> {
+      firstCreateComplete.complete(null);
+    });
 
-            context.assertEquals(item1.getString("title"),
-              post1.getString("title"));
-
-            JsonObject item2 = restResponse.getJsonArray("items").getJsonObject(1);
-            System.out.println("POST 2: " + post2);
-            System.out.println("ITEM 2: " + item2);
-            context.assertEquals(item2.getString("title"), post2.getString("title"));
-            async.complete();
-          });
-			  });
-
-        request.headers().add("Accept", "application/json");
-        request.headers().add(TENANT_HEADER, TENANT_ID);
-        request.end();
-		  });
-
-      post2Request.headers().add("Accept","application/json");
-      post2Request.headers().add("Content-type","application/json");
-      post2Request.headers().add(TENANT_HEADER, TENANT_ID);
-      post2Request.end(post2.encodePrettily());
-	  });
-
-    post1Request.headers().add("Accept","application/json");
-    post1Request.headers().add("Content-type","application/json");
-    post1Request.headers().add(TENANT_HEADER, TENANT_ID);
-    post1Request.end(post1.encodePrettily());
+    firstCreateComplete.get(1, TimeUnit.SECONDS);
   }
 
   @Test
@@ -391,10 +328,19 @@ public class ItemStorageTest {
       });
   }
 
-  public void Post(Vertx vertx,
+  private void Post(Vertx vertx,
                    URL url,
                    Object body,
                    Handler<HttpClientResponse> responseHandler) {
+
+      Post(vertx, url, body, null, responseHandler);
+  }
+
+  private void Post(Vertx vertx,
+                    URL url,
+                    Object body,
+                    String tenantId,
+                    Handler<HttpClientResponse> responseHandler) {
 
     HttpClient client = vertx.createHttpClient();
 
@@ -402,18 +348,46 @@ public class ItemStorageTest {
 
     request.headers().add("Accept","application/json");
     request.headers().add("Content-type","application/json");
+
+    if(tenantId != null) {
+      request.headers().add(TENANT_HEADER, tenantId);
+    }
+
     request.end(Json.encodePrettily(body));
   }
 
-  public void Get(Vertx vertx,
+  private void Get(Vertx vertx,
                    URL url,
+                   Handler<HttpClientResponse> responseHandler) {
+
+    Get(vertx, url, null, responseHandler);
+  }
+
+  private void Get(Vertx vertx,
+                   URL url,
+                   String tenantId,
+                   Handler<HttpClientResponse> responseHandler) {
+
+    Get(vertx, url.toString(), tenantId, responseHandler);
+  }
+
+  private void Get(Vertx vertx,
+                   String url,
+                   String tenantId,
                    Handler<HttpClientResponse> responseHandler) {
 
     HttpClient client = vertx.createHttpClient();
 
-    HttpClientRequest request = client.getAbs(url.toString(), responseHandler);
+    HttpClientRequest request = client.getAbs(url, responseHandler);
+
+    System.out.println(String.format("Getting %s", url));
 
     request.headers().add("Accept","application/json");
+
+    if(tenantId != null) {
+      request.headers().add(TENANT_HEADER, tenantId);
+    }
+
     request.end();
   }
 }
