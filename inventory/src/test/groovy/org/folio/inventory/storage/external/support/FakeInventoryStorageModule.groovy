@@ -100,10 +100,9 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   private def createItem(RoutingContext routingContext) {
     def body = getMapFromBody(routingContext)
 
-    def id = UUID.randomUUID().toString()
-
     def newItem = new JsonObject(body)
-      .put("id", id)
+
+    def id = newItem.getString("id")
 
     def itemsForTenant = getItemsForTenant(getTenantId(routingContext))
 
@@ -148,10 +147,9 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   private def createInstance(RoutingContext routingContext) {
     def body = getMapFromBody(routingContext)
 
-    def id = UUID.randomUUID().toString()
-
     def newItem = new JsonObject(body)
-      .put("id", id)
+
+    def id = newItem.getString("id")
 
     def storedInstances = getInstancesForTenant(getTenantId(routingContext))
 

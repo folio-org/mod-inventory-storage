@@ -52,6 +52,7 @@ class ExternalStorageModuleInstanceCollection
 
     def instanceToSend = [:]
 
+    instanceToSend.put("id", UUID.randomUUID().toString())
     instanceToSend.put("title", instance.title)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
