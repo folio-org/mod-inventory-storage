@@ -52,13 +52,16 @@ class ExternalStorageModuleItemCollection
 
     def itemToSend = [:]
 
+    itemToSend.put("id", UUID.randomUUID().toString())
     itemToSend.put("title", item.title)
     itemToSend.put("barcode", item.barcode)
-    itemToSend.put("instanceId", item.instanceId)
+    itemToSend.put("instance_id", item.instanceId)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Content-Type", "application/json")
+      .putHeader("Accept", "application/json")
       .end(Json.encodePrettily(itemToSend))
   }
 
@@ -88,6 +91,7 @@ class ExternalStorageModuleItemCollection
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant",  tenant)
+      .putHeader("Accept", "application/json")
       .end()
   }
 
@@ -100,7 +104,7 @@ class ExternalStorageModuleItemCollection
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        JsonArray itemsFromServer = new JsonArray(responseBody)
+        def itemsFromServer = new JsonObject(responseBody).getJsonArray("items")
 
         def foundItems = new ArrayList<Item>()
 
@@ -117,6 +121,7 @@ class ExternalStorageModuleItemCollection
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
       .end()
   }
 
@@ -135,6 +140,7 @@ class ExternalStorageModuleItemCollection
     vertx.createHttpClient().requestAbs(HttpMethod.DELETE, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
       .end()
   }
 
@@ -158,6 +164,6 @@ class ExternalStorageModuleItemCollection
       itemFromServer.getString("id"),
       itemFromServer.getString("title"),
       itemFromServer.getString("barcode"),
-      itemFromServer.getString("instanceId"))
+      itemFromServer.getString("instance_id"))
   }
 }

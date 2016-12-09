@@ -2,6 +2,7 @@ package org.folio.inventory.storage.external.support
 
 import io.vertx.core.Future
 import io.vertx.core.http.HttpMethod
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
@@ -122,8 +123,11 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   private def getItems(RoutingContext routingContext) {
     def itemsForTenant = getItemsForTenant(getTenantId(routingContext))
 
-    JsonResponse.success(routingContext.response(),
-      itemsForTenant.values())
+    def result = new JsonObject()
+    result.put("items", new JsonArray(itemsForTenant.values().toList()))
+    result.put("total_records", itemsForTenant.size())
+
+    JsonResponse.success(routingContext.response(), result)
   }
 
   private def getItem(RoutingContext routingContext) {
