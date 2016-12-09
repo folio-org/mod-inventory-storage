@@ -10,3 +10,9 @@ CREATE TABLE item (_id SERIAL PRIMARY KEY,jsonb JSONB NOT NULL);
 
 GRANT ALL ON item TO testuser;
 GRANT ALL ON item__id_seq TO testuser;
+
+CREATE TABLE instance (_id SERIAL PRIMARY KEY,jsonb JSONB NOT NULL);
+
+GRANT ALL ON instance TO testuser;
+GRANT ALL ON instance__id_seq TO testuser;
+

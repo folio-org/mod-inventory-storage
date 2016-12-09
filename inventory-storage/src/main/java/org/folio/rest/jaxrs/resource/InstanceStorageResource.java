@@ -25,6 +25,27 @@ public interface InstanceStorageResource {
 
 
     /**
+     * 
+     * @param vertxContext
+     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
+     * @param asyncResultHandler
+     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
+     * @param lang
+     *     Requested language. Optional. [lang=en]
+     *     
+     */
+    @DELETE
+    @Path("instances")
+    @Validate
+    void deleteInstanceStorageInstances(
+        @QueryParam("lang")
+        @DefaultValue("en")
+        @Pattern(regexp = "[a-zA-Z]{2}")
+        String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
+        throws Exception
+    ;
+
+    /**
      * Retrieve a list of instance items.
      * 
      * @param vertxContext
@@ -289,6 +310,17 @@ public interface InstanceStorageResource {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse(responseBuilder.build());
+        }
+
+    }
+
+    public class DeleteInstanceStorageInstancesResponse
+        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
+    {
+
+
+        private DeleteInstanceStorageInstancesResponse(Response delegate) {
+            super(delegate);
         }
 
     }

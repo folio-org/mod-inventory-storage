@@ -31,10 +31,16 @@ public class ItemStorageAPI implements ItemStorageResource {
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
 
   // Replace the replaced IDs
-  private static final Map<String, String> replacedToOriginalIdMap = new HashMap<>();
+  private static final Map<String, String> replacedToOriginalIdMap
+    = new HashMap<>();
 
   @Override
-  public void getItemStorageItems(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getItemStorageItems(
+    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext)
+    throws Exception {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -93,7 +99,13 @@ public class ItemStorageAPI implements ItemStorageResource {
   }
 
   @Override
-  public void postItemStorageItems(@DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang, Item entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void postItemStorageItems(
+    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    Item entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext)
+    throws Exception {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -149,26 +161,22 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   @Override
   public void postItemStorageItemsByItemId(
-    @PathParam("itemId")
-    @NotNull
-      String itemId,
-    @QueryParam("lang")
-    @DefaultValue("en")
-    @Pattern(regexp = "[a-zA-Z]{2}")
-      String lang, java.util.Map<String, String> okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+    @PathParam("itemId") @NotNull String itemId,
+    @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    java.util.Map<String, String> okapiHeaders,
+    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext)
     throws Exception {
 
   }
 
   @Override
   public void getItemStorageItemsByItemId(
-    @PathParam("itemId")
-    @NotNull
-      String itemId,
-    @QueryParam("lang")
-    @DefaultValue("en")
-    @Pattern(regexp = "[a-zA-Z]{2}")
-      String lang, java.util.Map<String, String> okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+    @PathParam("itemId") @NotNull String itemId,
+    @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    java.util.Map<String, String> okapiHeaders,
+    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext)
     throws Exception {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
@@ -261,26 +269,23 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   @Override
   public void putItemStorageItemsByItemId(
-    @PathParam("itemId")
-    @NotNull
-      String itemId,
-    @QueryParam("lang")
-    @DefaultValue("en")
-    @Pattern(regexp = "[a-zA-Z]{2}")
-      String lang, Item entity, java.util.Map<String, String> okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+    @PathParam("itemId") @NotNull String itemId,
+    @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    Item entity,
+    java.util.Map<String, String> okapiHeaders,
+    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext)
     throws Exception {
 
   }
 
   @Override
   public void deleteItemStorageItemsByItemId(
-    @PathParam("itemId")
-    @NotNull
-      String itemId,
-    @QueryParam("lang")
-    @DefaultValue("en")
-    @Pattern(regexp = "[a-zA-Z]{2}")
-      String lang, java.util.Map<String, String> okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+    @PathParam("itemId") @NotNull String itemId,
+    @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    java.util.Map<String, String> okapiHeaders,
+    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext)
     throws Exception {
 
   }

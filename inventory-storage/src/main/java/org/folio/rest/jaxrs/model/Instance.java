@@ -39,7 +39,7 @@ public class Instance {
     @NotNull
     private String title;
     @JsonProperty("identifiers")
-    @Size(min = 1)
+    @Size(min = 0)
     @Valid
     private List<Identifier> identifiers = new ArrayList<Identifier>();
     @JsonIgnore

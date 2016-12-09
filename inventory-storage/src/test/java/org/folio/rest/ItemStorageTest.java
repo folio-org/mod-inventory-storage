@@ -33,62 +33,11 @@ import java.util.concurrent.TimeoutException;
 @RunWith(VertxUnitRunner.class)
 public class ItemStorageTest {
 
-  private static Vertx vertx;
-  private static int port;
+  private static Vertx vertx = StorageTestSuite.getVertx();
+  private static int port = StorageTestSuite.getPort();
 
   private static final String TENANT_ID = "test_tenant";
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
-
-  @BeforeClass
-  public static void before(TestContext context)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    vertx = Vertx.vertx();
-
-    port = NetworkUtils.nextFreePort();
-
-    DeploymentOptions options = new DeploymentOptions();
-
-    options.setConfig(new JsonObject().put("http.port", port));
-    options.setWorker(true);
-
-    startVerticle(options);
-  }
-
-  private static void startVerticle(DeploymentOptions options)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture deploymentComplete = new CompletableFuture<String>();
-
-    vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-      if(res.succeeded()) {
-        deploymentComplete.complete(res.result());
-      }
-      else {
-        deploymentComplete.completeExceptionally(res.cause());
-      }
-    });
-
-    deploymentComplete.get(20, TimeUnit.SECONDS);
-  }
-
-  @AfterClass
-  public static void after()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture undeploymentComplete = new CompletableFuture<String>();
-
-    vertx.close(res -> {
-      if(res.succeeded()) {
-        undeploymentComplete.complete(null);
-      }
-      else {
-        undeploymentComplete.completeExceptionally(res.cause());
-      }
-    });
-
-    undeploymentComplete.get(20, TimeUnit.SECONDS);
-  }
 
   @Before
   public void beforeEach()
