@@ -57,6 +57,7 @@ class ExternalStorageModuleInstanceCollection
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
       .end(Json.encodePrettily(instanceToSend))
   }
 
@@ -86,6 +87,7 @@ class ExternalStorageModuleInstanceCollection
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
       .end()
   }
 
@@ -115,6 +117,7 @@ class ExternalStorageModuleInstanceCollection
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
       .end()
   }
 
@@ -133,6 +136,7 @@ class ExternalStorageModuleInstanceCollection
     vertx.createHttpClient().requestAbs(HttpMethod.DELETE, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
       .end()
   }
 

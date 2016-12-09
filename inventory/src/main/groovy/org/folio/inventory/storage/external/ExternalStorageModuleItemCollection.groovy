@@ -95,7 +95,6 @@ class ExternalStorageModuleItemCollection
       .end()
   }
 
-
   @Override
   void findAll(Closure resultCallback) {
     String location = storageAddress + "/items"

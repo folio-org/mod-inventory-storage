@@ -56,6 +56,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
     router.route().handler(this.&checkTenantHeader.rcurry(expectedTenants))
+    router.route().handler(this.&checkAcceptHeader)
 
     router.route(HttpMethod.GET, '/inventory-storage/items/:id')
       .handler(this.&getItem);
@@ -252,5 +253,23 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     }
 
     mapForTenant
+  }
+
+  private static void checkAcceptHeader(RoutingContext routingContext) {
+
+    def accepts = new Context(routingContext).getHeader("Accept")
+
+    switch (accepts) {
+      case null:
+      case "":
+        ClientErrorResponse.badRequest(routingContext.response(),
+          "Missing Accept Header")
+        break
+
+      case "application/json":
+      default:
+        routingContext.next()
+        break
+    }
   }
 }
