@@ -58,6 +58,7 @@ class ExternalStorageModuleInstanceCollection
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json")
+      .putHeader("Content-Type", "application/json")
       .end(Json.encodePrettily(instanceToSend))
   }
 
