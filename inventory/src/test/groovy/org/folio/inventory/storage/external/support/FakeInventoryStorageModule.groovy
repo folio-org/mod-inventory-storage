@@ -169,8 +169,15 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   }
 
   private def getInstances(RoutingContext routingContext) {
-    JsonResponse.success(routingContext.response(),
-      getInstancesForTenant(getTenantId(routingContext)).values())
+
+    def instancesForTenant = getInstancesForTenant(
+      getTenantId(routingContext))
+
+    def result = new JsonObject()
+    result.put("instances", new JsonArray(instancesForTenant.values().toList()))
+    result.put("total_records", instancesForTenant.size())
+
+    JsonResponse.success(routingContext.response(), result)
   }
 
   private def getInstance(RoutingContext routingContext) {

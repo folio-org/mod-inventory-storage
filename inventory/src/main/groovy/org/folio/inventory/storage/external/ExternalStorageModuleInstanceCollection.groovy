@@ -98,7 +98,7 @@ class ExternalStorageModuleInstanceCollection
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        JsonArray instances = new JsonArray(responseBody)
+        def instances = new JsonObject(responseBody).getJsonArray("instances")
 
         def foundInstances = new ArrayList<Instance>()
 
