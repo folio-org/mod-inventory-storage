@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
 
 port=${1:-9407}
-config_path=${2:-"$(pwd)/postgres-conf.json"}
+config_path=${2:-"$(pwd)/demo-postgres-conf.json"}
 tenant_id=${3:-demo_tenant}
 
 rm output.log
 
 echo "Building"
 
-./setup-test-db.sh
-
-mvn clean install
-
-./setup-demo-db.sh
+mvn clean install -DskipTests
 
 java -jar target/inventory-storage-fat.jar db_connection=${config_path} -Dhttp.port=${port} 1>output.log 2>output.log &
 

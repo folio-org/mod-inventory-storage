@@ -25,8 +25,36 @@ public class ExternalStorageSuite {
     vertxAssistant.useVertx(action)
   }
 
-  static String getStorageAddress() {
-    FakeInventoryStorageModule.address
+  static String getItemStorageAddress() {
+    if(!useFakeStorageModule()) {
+      def externalStorageAddress = System.getProperty(
+        "inventory.storage.address")
+
+      def address = "${externalStorageAddress}/item-storage"
+      println "Using External Storage Module: ${address}"
+
+      address
+    }
+    else {
+      println "Using Fake Storage Module"
+      FakeInventoryStorageModule.address
+    }
+  }
+
+  static String getInstanceStorageAddress() {
+    if(!useFakeStorageModule()) {
+      def externalStorageAddress = System.getProperty(
+        "inventory.storage.address")
+
+      def address = "${externalStorageAddress}/instance-storage"
+      println "Using External Storage Module: ${address}"
+
+      address
+    }
+    else {
+      println "Using Fake Storage Module"
+      FakeInventoryStorageModule.address
+    }
   }
 
   static Collection<String> getExpectedTenants() {
@@ -37,23 +65,35 @@ public class ExternalStorageSuite {
   static void beforeAll() {
     vertxAssistant.start()
 
-    def deployed = new CompletableFuture()
+    if(useFakeStorageModule()) {
+      println("Starting Fake Storage Module")
 
-    vertxAssistant.deployGroovyVerticle(
-      FakeInventoryStorageModule.class.name,
-      ["expectedTenants" : expectedTenants],
-      deployed)
+      def deployed = new CompletableFuture()
 
-    storageModuleDeploymentId = deployed.get(20000, TimeUnit.MILLISECONDS)
+      vertxAssistant.deployGroovyVerticle(
+        FakeInventoryStorageModule.class.name,
+        ["expectedTenants": expectedTenants],
+        deployed)
+
+      storageModuleDeploymentId = deployed.get(20000, TimeUnit.MILLISECONDS)
+    }
+  }
+
+  private static boolean useFakeStorageModule() {
+    Boolean.parseBoolean(
+      System.getProperty('inventory.storage.use.fake', "true"))
   }
 
   @AfterClass()
   static void afterAll() {
-    def undeployed = new CompletableFuture()
 
-    vertxAssistant.undeployVerticle(storageModuleDeploymentId, undeployed)
+    if(useFakeStorageModule()) {
+      def undeployed = new CompletableFuture()
 
-    undeployed.get(20000, TimeUnit.MILLISECONDS)
+      vertxAssistant.undeployVerticle(storageModuleDeploymentId, undeployed)
+
+      undeployed.get(20000, TimeUnit.MILLISECONDS)
+    }
 
     vertxAssistant.stop()
   }

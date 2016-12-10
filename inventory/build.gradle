@@ -50,6 +50,17 @@ task testApiViaOkapi(type: Test) {
   systemProperty 'okapi.address', okapiAddress
 }
 
+task testExternalStorage(type: Test) {
+  exclude '**/External**CollectionExamples.class'
+  include '**/storage/external/**'
+
+  systemProperty 'inventory.storage.use.fake', 'false'
+
+  println "Inventory Storage Config: ${System.getProperty('inventory.storage.address')}"
+
+  systemProperty 'inventory.storage.address', System.getProperty('inventory.storage.address')
+}
+
 task fatJar(type: Jar) {
   manifest {
     attributes 'Main-Class': mainClassName
