@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 
-psql -f setup-test-db.sql
-
+./setup-db.sh test_tenant testuser test

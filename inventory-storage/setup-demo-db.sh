@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 
-psql -f setup-demo-db.sql
-
+./setup-db.sh demo_tenant demouser demo
