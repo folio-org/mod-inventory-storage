@@ -27,32 +27,18 @@ public class ExternalStorageSuite {
 
   static String getItemStorageAddress() {
     if(!useFakeStorageModule()) {
-      def externalStorageAddress = System.getProperty(
-        "inventory.storage.address")
-
-      def address = "${externalStorageAddress}/item-storage"
-      println "Using External Storage Module: ${address}"
-
-      address
+      System.getProperty("inventory.storage.address")
     }
     else {
-      println "Using Fake Storage Module"
       FakeInventoryStorageModule.address
     }
   }
 
   static String getInstanceStorageAddress() {
     if(!useFakeStorageModule()) {
-      def externalStorageAddress = System.getProperty(
-        "inventory.storage.address")
-
-      def address = "${externalStorageAddress}/instance-storage"
-      println "Using External Storage Module: ${address}"
-
-      address
+      System.getProperty("inventory.storage.address")
     }
     else {
-      println "Using Fake Storage Module"
       FakeInventoryStorageModule.address
     }
   }

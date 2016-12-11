@@ -30,7 +30,7 @@ class ExternalStorageModuleInstanceCollection
   @Override
   void add(Instance instance, Closure resultCallback) {
 
-    String location = storageModuleAddress + "/instances"
+    String location = storageModuleAddress + "/instance-storage/instances"
 
     def onResponse = { HttpClientResponse response ->
       response.bodyHandler({ buffer ->
@@ -65,7 +65,7 @@ class ExternalStorageModuleInstanceCollection
 
   @Override
   void findById(String id, Closure resultCallback) {
-    String location = storageModuleAddress + "/instances/${id}"
+    String location = storageModuleAddress + "/instance-storage/instances/${id}"
 
     def onResponse = { response ->
       if(response.statusCode() == 200) {
@@ -96,7 +96,7 @@ class ExternalStorageModuleInstanceCollection
 
   @Override
   void findAll(Closure resultCallback) {
-    String location = storageModuleAddress + "/instances"
+    String location = storageModuleAddress + "/instance-storage/instances"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -125,7 +125,7 @@ class ExternalStorageModuleInstanceCollection
 
   @Override
   void empty(Closure completionCallback) {
-    String location = storageModuleAddress + "/instances"
+    String location = storageModuleAddress + "/instance-storage/instances"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->

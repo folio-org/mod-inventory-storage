@@ -9,23 +9,23 @@ import org.folio.inventory.storage.memory.InMemoryIngestJobCollection
 
 class ExternalStorageCollections implements CollectionProvider {
   private final Vertx vertx
-  private final String storageAddress
+  private final String baseAddress
   private final InMemoryIngestJobCollection ingestJobCollection
 
-  def ExternalStorageCollections(Vertx vertx, String storageAddress) {
+  def ExternalStorageCollections(Vertx vertx, String baseAddress) {
     this.vertx = vertx
-    this.storageAddress = storageAddress
+    this.baseAddress = baseAddress
     this.ingestJobCollection = new InMemoryIngestJobCollection()
   }
 
   @Override
   ItemCollection getItemCollection(String tenantId) {
-    new ExternalStorageModuleItemCollection(vertx, storageAddress, tenantId)
+    new ExternalStorageModuleItemCollection(vertx, baseAddress, tenantId)
   }
 
   @Override
   InstanceCollection getInstanceCollection(String tenantId) {
-    new ExternalStorageModuleInstanceCollection(vertx, storageAddress, tenantId)
+    new ExternalStorageModuleInstanceCollection(vertx, baseAddress, tenantId)
   }
 
   @Override

@@ -16,7 +16,7 @@ import org.folio.metadata.common.api.response.JsonResponse
 
 class FakeInventoryStorageModule extends GroovyVerticle {
   private static final int PORT_TO_USE = 9492
-  private static final String address = "http://localhost:${PORT_TO_USE}/inventory-storage"
+  private static final String address = "http://localhost:${PORT_TO_USE}"
 
   private final Map<String, Map<String, JsonObject>> storedItemsByTenant
   private final Map<String, Map<String, JsonObject>> storedInstancesByTenant
@@ -51,36 +51,37 @@ class FakeInventoryStorageModule extends GroovyVerticle {
         }
       })
 
-    router.route('/inventory-storage/items/*').handler(BodyHandler.create())
-    router.route('/inventory-storage/instances/*').handler(BodyHandler.create())
+    router.route('/item-storage/items/*').handler(BodyHandler.create())
+    router.route('/instance-storage/instances/*').handler(BodyHandler.create())
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
     router.route().handler(this.&checkTenantHeader.rcurry(expectedTenants))
     router.route().handler(this.&checkAcceptHeader)
-    router.route(HttpMethod.POST, '/inventory-storage/*').handler(this.&checkContentTypeHeader)
+    router.route(HttpMethod.POST, '/instance-storage/*').handler(this.&checkContentTypeHeader)
+    router.route(HttpMethod.POST, '/item-storage/*').handler(this.&checkContentTypeHeader)
 
-    router.route(HttpMethod.GET, '/inventory-storage/items/:id')
+    router.route(HttpMethod.GET, '/item-storage/items/:id')
       .handler(this.&getItem);
 
-    router.route(HttpMethod.GET, '/inventory-storage/items')
+    router.route(HttpMethod.GET, '/item-storage/items')
       .handler(this.&getItems);
 
-    router.route(HttpMethod.DELETE, '/inventory-storage/items')
+    router.route(HttpMethod.DELETE, '/item-storage/items')
       .handler(this.&deleteItems)
 
-    router.route(HttpMethod.POST, '/inventory-storage/items')
+    router.route(HttpMethod.POST, '/item-storage/items')
       .handler(this.&createItem)
 
-    router.route(HttpMethod.GET, '/inventory-storage/instances/:id')
+    router.route(HttpMethod.GET, '/instance-storage/instances/:id')
       .handler(this.&getInstance);
 
-    router.route(HttpMethod.GET, '/inventory-storage/instances')
+    router.route(HttpMethod.GET, '/instance-storage/instances')
       .handler(this.&getInstances);
 
-    router.route(HttpMethod.DELETE, '/inventory-storage/instances')
+    router.route(HttpMethod.DELETE, '/instance-storage/instances')
       .handler(this.&deleteInstances)
 
-    router.route(HttpMethod.POST, '/inventory-storage/instances')
+    router.route(HttpMethod.POST, '/instance-storage/instances')
       .handler(this.&createInstance)
   }
 
