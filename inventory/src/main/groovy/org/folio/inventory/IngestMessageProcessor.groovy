@@ -33,8 +33,6 @@ class IngestMessageProcessor {
 
     def context = new MessagingContext(message.headers())
 
-    def tenantId = context.tenantId
-
     def instanceCollection = storage.getInstanceCollection(context)
     def itemCollection = storage.getItemCollection(context)
 

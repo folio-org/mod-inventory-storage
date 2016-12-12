@@ -9,7 +9,6 @@ import org.folio.inventory.resources.Instances
 import org.folio.inventory.resources.Items
 import org.folio.inventory.resources.ingest.ModsIngestion
 import org.folio.inventory.storage.Storage
-import org.folio.inventory.storage.memory.InMemoryCollections
 import org.folio.metadata.common.WebRequestDiagnostics
 
 import java.util.concurrent.CompletableFuture
@@ -47,7 +46,12 @@ public class InventoryVerticle extends GroovyVerticle {
 
     def eventBus = vertx.eventBus()
 
-    def storage = new Storage(new InMemoryCollections())
+    def config = vertx.getOrCreateContext().config()
+
+    println("Received Config")
+    config.each { println("${it.key}:${it.value}") }
+
+    def storage = Storage.basedUpon(vertx, config)
 
     new IngestMessageProcessor(storage).register(eventBus)
 
@@ -65,8 +69,6 @@ public class InventoryVerticle extends GroovyVerticle {
         started.fail(result.cause());
       }
     }
-
-    def config = vertx.getOrCreateContext().config()
 
     server.requestHandler(router.&accept)
       .listen(config.port ?: 9403, onHttpServerStart)
