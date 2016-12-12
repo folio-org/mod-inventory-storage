@@ -8,14 +8,16 @@ import org.apache.commons.lang.StringEscapeUtils
 import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
+import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.Context
 import org.folio.metadata.common.api.response.JsonResponse
 
 class Items {
-  private final CollectionProvider collectionProvider
 
-  Items(CollectionProvider collectionProvider) {
-    this.collectionProvider = collectionProvider
+  private final Storage storage
+
+  Items(final Storage storage) {
+    this.storage = storage
   }
 
   public void register(Router router) {
@@ -23,9 +25,9 @@ class Items {
   }
 
   void getAll(RoutingContext routingContext) {
-    def tenantId = new Context(routingContext).tenantId
+    def context = new Context(routingContext)
 
-    collectionProvider.getItemCollection(tenantId).findAll {
+    storage.getItemCollection(context).findAll {
       JsonResponse.success(routingContext.response(), convertToUTF8(it))
     }
   }

@@ -59,7 +59,7 @@ public class InventoryVerticle extends GroovyVerticle {
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
     new ModsIngestion(storage).register(router)
-    new Items(collectionProvider).register(router)
+    new Items(storage).register(router)
     new Instances(collectionProvider).register(router)
 
     def onHttpServerStart = { result ->
