@@ -7,7 +7,7 @@ import io.vertx.groovy.ext.web.RoutingContext
 import org.apache.commons.lang.StringEscapeUtils
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.storage.Storage
-import org.folio.metadata.common.Context
+import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.response.JsonResponse
 
 class Instances {
@@ -23,7 +23,7 @@ class Instances {
   }
 
   void getAll(RoutingContext routingContext) {
-    def context = new Context(routingContext)
+    def context = new WebContext(routingContext)
 
     storage.getInstanceCollection(context).findAll {
       JsonResponse.success(routingContext.response(),
@@ -33,7 +33,7 @@ class Instances {
 
 
   void getById(RoutingContext routingContext) {
-    def context = new Context(routingContext)
+    def context = new WebContext(routingContext)
 
     storage.getInstanceCollection(context).findById(
       routingContext.request().getParam("id"),

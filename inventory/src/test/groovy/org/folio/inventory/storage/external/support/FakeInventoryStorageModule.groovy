@@ -9,7 +9,7 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import io.vertx.lang.groovy.GroovyVerticle
-import org.folio.metadata.common.Context
+import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.WebRequestDiagnostics
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
@@ -210,7 +210,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   private static void checkTenantHeader(RoutingContext routingContext,
                                         Collection<String> expectedTenants) {
 
-    def tenantId = new Context(routingContext).tenantId
+    def tenantId = new WebContext(routingContext).tenantId
 
     switch (tenantId) {
       case expectedTenants:
@@ -230,7 +230,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   }
 
   private String getTenantId(RoutingContext routingContext) {
-    new Context(routingContext).tenantId
+    new WebContext(routingContext).tenantId
   }
 
   private Map<String, JsonObject> getItemsForTenant(String tenantId) {
@@ -257,7 +257,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
   private static void checkAcceptHeader(RoutingContext routingContext) {
 
-    def accepts = new Context(routingContext).getHeader("Accept")
+    def accepts = new WebContext(routingContext).getHeader("Accept")
 
     switch (accepts) {
       case null:
@@ -275,7 +275,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
   private static void checkContentTypeHeader(RoutingContext routingContext) {
 
-    def accepts = new Context(routingContext).getHeader("Content-Type")
+    def accepts = new WebContext(routingContext).getHeader("Content-Type")
 
     switch (accepts) {
       case "application/json":

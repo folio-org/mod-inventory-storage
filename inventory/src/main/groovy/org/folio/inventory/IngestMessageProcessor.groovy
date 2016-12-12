@@ -2,19 +2,19 @@ package org.folio.inventory
 
 import io.vertx.groovy.core.eventbus.EventBus
 import io.vertx.groovy.core.eventbus.Message
-import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.Item
 import org.folio.inventory.resources.ingest.IngestJob
 import org.folio.inventory.resources.ingest.IngestJobState
+import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.CollectAll
+import org.folio.metadata.common.MessagingContext
 
 class IngestMessageProcessor {
-  private final CollectionProvider collectionProvider
+  private final Storage storage
 
-  IngestMessageProcessor(CollectionProvider collectionProvider) {
-
-    this.collectionProvider = collectionProvider
+  IngestMessageProcessor(final Storage storage) {
+    this.storage = storage
   }
 
   void register(EventBus eventBus) {
@@ -31,10 +31,12 @@ class IngestMessageProcessor {
 
     def records = message.body().records
 
-    def tenantId = message.headers().get("tenantId")
+    def context = new MessagingContext(message.headers())
 
-    def instanceCollection = collectionProvider.getInstanceCollection(tenantId)
-    def itemCollection = collectionProvider.getItemCollection(tenantId)
+    def tenantId = context.tenantId
+
+    def instanceCollection = storage.getInstanceCollection(context)
+    def itemCollection = storage.getItemCollection(context)
 
     records.stream()
       .map({
@@ -55,21 +57,16 @@ class IngestMessageProcessor {
 
     allItems.collect({
       eventBus.send( Messages.INGEST_COMPLETED.Address, "",
-        ["headers" : ["jobId" : message.headers().get("jobId"),
-                    "tenantId": message.headers().get("tenantId")]])
+        ["headers" : ["jobId" : context.getHeader("jobId"),
+                    "tenantId": context.tenantId]])
     })
   }
 
   private void markIngestCompleted(Message message) {
-    def jobId = message.headers().get("jobId")
-    def tenantId = message.headers().get("tenantId")
+    def context = new MessagingContext(message.headers())
 
-    completeJob(jobId, tenantId)
-  }
-
-  private void completeJob(jobId, tenantId) {
-    collectionProvider.getIngestJobCollection(tenantId).update(
-      new IngestJob(jobId, IngestJobState.COMPLETED),
+    storage.getIngestJobCollection(context).update(
+      new IngestJob(context.getHeader("jobId"), IngestJobState.COMPLETED),
       { })
   }
 }

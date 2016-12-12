@@ -10,9 +10,6 @@ import org.folio.inventory.resources.Items
 import org.folio.inventory.resources.ingest.ModsIngestion
 import org.folio.inventory.storage.Storage
 import org.folio.inventory.storage.memory.InMemoryCollections
-import org.folio.inventory.storage.memory.InMemoryIngestJobCollection
-import org.folio.inventory.storage.memory.InMemoryInstanceCollection
-import org.folio.inventory.storage.memory.InMemoryItemCollection
 import org.folio.metadata.common.WebRequestDiagnostics
 
 import java.util.concurrent.CompletableFuture
@@ -50,11 +47,9 @@ public class InventoryVerticle extends GroovyVerticle {
 
     def eventBus = vertx.eventBus()
 
-    def collectionProvider = new InMemoryCollections()
+    def storage = new Storage(new InMemoryCollections())
 
-    def storage = new Storage(collectionProvider)
-
-    new IngestMessageProcessor(collectionProvider).register(eventBus)
+    new IngestMessageProcessor(storage).register(eventBus)
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 

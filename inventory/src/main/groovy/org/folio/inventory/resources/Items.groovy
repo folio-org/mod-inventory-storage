@@ -5,11 +5,9 @@ import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import org.apache.commons.lang.StringEscapeUtils
-import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.Item
-import org.folio.inventory.domain.ItemCollection
 import org.folio.inventory.storage.Storage
-import org.folio.metadata.common.Context
+import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.response.JsonResponse
 
 class Items {
@@ -25,7 +23,7 @@ class Items {
   }
 
   void getAll(RoutingContext routingContext) {
-    def context = new Context(routingContext)
+    def context = new WebContext(routingContext)
 
     storage.getItemCollection(context).findAll {
       JsonResponse.success(routingContext.response(), convertToUTF8(it))

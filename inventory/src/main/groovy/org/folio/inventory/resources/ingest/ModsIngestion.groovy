@@ -9,7 +9,7 @@ import org.folio.inventory.Messages
 import org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.parsing.UTF8LiteralCharacterEncoding
 import org.folio.inventory.storage.Storage
-import org.folio.metadata.common.Context
+import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.RedirectResponse
@@ -40,7 +40,7 @@ class ModsIngestion {
 
   private status(RoutingContext routingContext) {
 
-    def context = new Context(routingContext)
+    def context = new WebContext(routingContext)
 
     storage.getIngestJobCollection(context)
       .findById(routingContext.request().getParam("id"), {
@@ -66,7 +66,7 @@ class ModsIngestion {
             ["title": "${it.title}", "barcode":"${it.barcode}" ]
           }
 
-          def context = new Context(routingContext)
+          def context = new WebContext(routingContext)
 
           storage.getIngestJobCollection(context)
             .add(new IngestJob(IngestJobState.REQUESTED), {
