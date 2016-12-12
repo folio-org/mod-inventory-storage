@@ -22,6 +22,8 @@ This readme is intended to get these modules up and running. For further informa
 - Node 6.4.0 (for the demo UI)
 - NPM 3.10.3 (for the demo UI and documentation generation)
 - SDKMan (http://sdkman.io/, recommended for installing Gradle and Groovy)
+- RAML Module Builder (see https://github.com/folio-org/raml-module-builder)
+- Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
 
 # Preparation
 

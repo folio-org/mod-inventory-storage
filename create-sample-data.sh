@@ -15,3 +15,8 @@ cd catalogue-core/sample-data
 
 cd ../..
 
+cd inventory/sample-data
+
+./example-ingest.sh ${inventory_root_address}
+
+cd ../..

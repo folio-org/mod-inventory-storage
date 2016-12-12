@@ -30,6 +30,9 @@ class Storage {
         return new Storage(new ExternalStorageCollections(vertx, location))
         break;
 
+      case "okapi":
+
+
       case "memory":
       default:
         return new Storage(new InMemoryCollections())
