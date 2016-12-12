@@ -6,9 +6,9 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.folio.inventory.Messages
-import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.parsing.UTF8LiteralCharacterEncoding
+import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.Context
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
@@ -16,10 +16,10 @@ import org.folio.metadata.common.api.response.RedirectResponse
 import org.folio.metadata.common.api.response.ServerErrorResponse
 
 class ModsIngestion {
-  private final CollectionProvider collectionProvider
+  private final Storage storage
 
-  ModsIngestion(CollectionProvider collectionProvider) {
-    this.collectionProvider = collectionProvider
+  ModsIngestion(final Storage storage) {
+    this.storage = storage
   }
 
   public void register(Router router) {
@@ -39,9 +39,10 @@ class ModsIngestion {
   }
 
   private status(RoutingContext routingContext) {
-    def tenantId = new Context(routingContext).tenantId
 
-    collectionProvider.getIngestJobCollection(tenantId)
+    def context = new Context(routingContext)
+
+    storage.getIngestJobCollection(context)
       .findById(routingContext.request().getParam("id"), {
         JsonResponse.success(routingContext.response(),
           ["status" : it.state.toString()])
@@ -65,15 +66,15 @@ class ModsIngestion {
             ["title": "${it.title}", "barcode":"${it.barcode}" ]
           }
 
-          def tenantId = new Context(routingContext).tenantId
+          def context = new Context(routingContext)
 
-          collectionProvider.getIngestJobCollection(tenantId)
+          storage.getIngestJobCollection(context)
             .add(new IngestJob(IngestJobState.REQUESTED), {
             routingContext.vertx().eventBus().send(
               Messages.START_INGEST.Address,
               new JsonObject(["records" : convertedRecords]),
               ["headers" : ["jobId" : it.id,
-                            "tenantId" : tenantId]])
+                            "tenantId" : context.tenantId]])
 
             RedirectResponse.accepted(routingContext.response(),
               statusLocation(routingContext, it.id))

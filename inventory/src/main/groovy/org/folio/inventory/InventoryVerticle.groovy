@@ -8,6 +8,7 @@ import io.vertx.lang.groovy.GroovyVerticle
 import org.folio.inventory.resources.Instances
 import org.folio.inventory.resources.Items
 import org.folio.inventory.resources.ingest.ModsIngestion
+import org.folio.inventory.storage.Storage
 import org.folio.inventory.storage.memory.InMemoryCollections
 import org.folio.inventory.storage.memory.InMemoryIngestJobCollection
 import org.folio.inventory.storage.memory.InMemoryInstanceCollection
@@ -51,12 +52,13 @@ public class InventoryVerticle extends GroovyVerticle {
 
     def collectionProvider = new InMemoryCollections()
 
-    new IngestMessageProcessor(collectionProvider)
-      .register(eventBus)
+    def storage = new Storage(collectionProvider)
+
+    new IngestMessageProcessor(collectionProvider).register(eventBus)
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-    new ModsIngestion(collectionProvider).register(router)
+    new ModsIngestion(storage).register(router)
     new Items(collectionProvider).register(router)
     new Instances(collectionProvider).register(router)
 
