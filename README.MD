@@ -10,21 +10,29 @@ FOLIO compatible module suite to provide Knowledge Base and Metadata capabilitie
 
 # Included Modules
 
-## Inventory (in the `inventory` directory)
+## Inventory
 
 Provides basic physical item inventory management, currently limited to basic representations of local instances and items, which can only be created via a MODS import. Written in Groovy and uses Gradle as it's build system.
 
-## Inventory Storage (in the `inventory-storage` directory)
+In the inventory directory.
+
+## Inventory Storage
 
 Provides Postgres based storage to complement the inventory module. Written in Java, uses the raml-module-builder and uses Maven as it's build system.
 
-## Knowledge Base (in the `knowledge-base-core` directory)
+In the inventory-storage directory.
 
-Soon to be deprecated. Provides a basic representation of an instance. Written in Groovy and uses Gradle as it's build system.
+## Knowledge Base
 
-## Knowledge Base (in the `knowledge-base-core` directory)
+**Soon to be deprecated**. Provides a basic representation of an instance. Written in Groovy and uses Gradle as it's build system.
 
-Soon to be deprecated. Provides a basic representation of a physical item (with limited Dublin Core annotation). Written in Groovy and uses Gradle as it's build system.
+In the knowledge-base-core directory.
+
+## Catalogue
+
+**Soon to be deprecated** Provides a basic representation of a physical item (with limited Dublin Core annotation). Written in Groovy and uses Gradle as it's build system.
+
+In the cataologue-core directory.
 
 # Further Documentation
 
@@ -54,11 +62,13 @@ Run the `setup-test-db.sh` script in the inventory-storage directory to setup Po
 
 ## Inventory, Catalogue and Knowledge Base
 
-run `gradle build` from the root directory
+run `gradle build` from the root directory.
 
 ## Inventory Storage
 
-run `mvn install` from the inventory-storage directory. Must have the RAML Module Builder installed (see https://github.com/folio-org/raml-module-builder for instructions) beforehand.
+run `mvn install` from the inventory-storage directory.
+
+Must have the RAML Module Builder installed (see https://github.com/folio-org/raml-module-builder for instructions) beforehand.
 
 # Running the Modules
 
@@ -66,7 +76,7 @@ run `mvn install` from the inventory-storage directory. Must have the RAML Modul
 
 ## Running Okapi
 
-Make sure that [Okapi](https://github.com/folio-org/okapi) is running on it's default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for details).
+Make sure that [Okapi](https://github.com/folio-org/okapi) is running on it's default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for instructions).
 
 ### When Using the Modules as Docker Containers
 
@@ -88,9 +98,11 @@ On Mac OS X (using Docker Native), `ifconfig en0 | grep 'inet '` should give out
 
 ## Demo
 
-The best way to run all of the modules in this suite together. Okapi needs to be running (see above) prior to running these scripts. The demo UI requires Node and NPM to be installed, in addition to the prerequisites for running the modules themselves.
+The best way to run all of the modules in this suite together.
 
-To start the modules run the `start-demo.sh` script from the root directory, which performs the following steps:
+Okapi needs to be running (see above) prior to running these scripts. The demo UI requires Node and NPM to be installed, in addition to the prerequisites for running the modules themselves.
+
+To start the modules run the `./start-demo.sh` script from the root directory, which performs the following steps:
 
 * Creates a demo tenant (with ID demo_tenant, see Appendix 1 for more info)
 * Registers the modules with Okapi (see Appendix 1 for more info)
@@ -98,7 +110,7 @@ To start the modules run the `start-demo.sh` script from the root directory, whi
 * Creates some sample data
 * Starts the demo UI
 
-To stop the modules run the `start-demo.sh` script from the root directory, which performs the following steps:
+To stop the modules run `./stop-demo.sh` from the root directory, which performs the following steps:
 
 ### Demo User Interface (for the catalogue and knowledge base modules)
 
@@ -108,11 +120,15 @@ It can be accessed via `http://localhost-9501` in a browser.
 
 ## Natively
 
-Run `./start.sh` from the root directory. To stop them, run `./stop.sh` from the root directory.
+Run `./start.sh` from the root directory.
+
+To stop them, run `./stop.sh` from the root directory.
 
 ## With Docker (only for Knowledge Base and Catalogue modules)
 
-Run `./start-docker.sh` from the root directory. To stop them, run `./stop-docker.sh` from the root directory.
+Run `./start-docker.sh` from the root directory.
+
+To stop them, run `./stop-docker.sh` from the root directory.
 
 # Using the Modules
 
@@ -155,9 +171,9 @@ Okapi needs to be already running, without changing the address it uses (unlike 
 The modules should *not* be started before running the tests, as this can cause confusing results. The tests start an instance themselves during setup.
 
 The script performs the following steps:
-1. Creates a test tenant
+1. Creates a test tenant (with ID test_tenant)
 2. Registers the modules with Okapi (they run on a different port than usual during the tests)
-3. Builds and runs the tests (API tests run both directly and via Okapi Proxy - Except for Inventory Storage)
+3. Builds and runs the tests (API tests run both directly and via Okapi Proxy - except for Inventory Storage)
 4. Deregister the modules from Okapi
 5. Deletes the test tenant
 
@@ -196,13 +212,13 @@ The output should be something similar to:
 ```
 HTTP/1.1 201 Created
 Content-Type: application/json
-Location: /_/proxy/tenants/test-tenant
+Location: /_/proxy/tenants/demo_tenant
 Content-Length: 81
 
 {
-  "id" : "test-tenant",
-  "name" : "A Test Library",
-  "description" : "A test library"
+  "id" : "demo_tenant",
+  "name" : "A Library",
+  "description" : "A library"
 }
 ```
 
