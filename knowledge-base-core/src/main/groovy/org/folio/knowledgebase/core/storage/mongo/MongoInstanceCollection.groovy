@@ -32,6 +32,11 @@ class MongoInstanceCollection implements InstanceCollection {
   }
 
   @Override
+  void empty(Closure completionCallback) {
+    collection.empty(completionCallback)
+  }
+
+  @Override
   void add(Instance instance, Closure resultCallback) {
     collection.add(instance, resultCallback)
   }

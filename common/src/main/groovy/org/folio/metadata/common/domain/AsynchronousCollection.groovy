@@ -1,17 +1,8 @@
 package org.folio.metadata.common.domain
 
-interface Collection<T> {
-  void empty()
-
-  T add(T item)
-
-  List<T> findAll()
-
-  T findById(String id)
-
+interface AsynchronousCollection<T> {
+  void empty(Closure completionCallback)
   void add(T item, Closure resultCallback)
-
   void findById(String id, Closure resultCallback)
-
   void findAll(Closure resultCallback)
 }

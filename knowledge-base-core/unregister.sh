@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 instance_id=${1:-localhost-9401}
+tenant_id=${2:-demo_tenant}
+module_id=${3:-knowledge-base-core}
 
-curl -X DELETE -D - -w '\n' "http://localhost:9130/_/proxy/tenants/our/modules/knowledge-base-core"
-curl -X DELETE -D - -w '\n' "http://localhost:9130/_/discovery/modules/knowledge-base-core/${instance_id}"
-curl -X DELETE -D - -w '\n' "http://localhost:9130/_/proxy/modules/knowledge-base-core"
+../okapi-registration/unmanaged-deployment/unregister.sh \
+  ${instance_id} \
+  ${module_id} \
+  ${tenant_id}

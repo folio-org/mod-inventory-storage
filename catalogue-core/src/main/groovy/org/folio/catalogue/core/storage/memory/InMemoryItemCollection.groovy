@@ -41,6 +41,11 @@ class InMemoryItemCollection
   }
 
   @Override
+  void empty(Closure completionCallback) {
+    collection.empty(completionCallback)
+  }
+
+  @Override
   void add(Item item, Closure resultCallback) {
     collection.add(item.copyWithNewId(UUID.randomUUID().toString()), resultCallback)
   }

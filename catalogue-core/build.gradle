@@ -16,6 +16,7 @@ dependencies {
   compile 'com.google.guava:guava:19.0'
   compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
 
+  testCompile 'junit:junit:4.12'
   testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
   testCompile 'org.apache.commons:commons-io:1.3.2'
 
@@ -31,8 +32,6 @@ task testApiViaOkapi(type: Test) {
   systemProperty 'okapi.use', 'true'
 
   def okapiAddress = System.getProperty('okapi.address') ?: 'http://localhost:9130'
-
-  println "Using ${okapiAddress} as Okapi Proxy to communicate with modules"
 
   systemProperty 'okapi.address', okapiAddress
 }

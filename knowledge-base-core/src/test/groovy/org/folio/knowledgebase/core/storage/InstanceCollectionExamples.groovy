@@ -12,8 +12,7 @@ import org.junit.runners.Parameterized
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeoutException
 
-import static support.World.getOnCompletion
-import static support.World.complete
+import static org.folio.metadata.common.FutureAssistance.*
 
 @RunWith(value = Parameterized.class)
 class InstanceCollectionExamples {

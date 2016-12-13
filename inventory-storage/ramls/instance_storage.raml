@@ -1,0 +1,50 @@
+#%RAML 0.8
+title: Instance Storage
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Instance Storage API
+    content: <b>Storage for instances in the inventory</b>
+
+schemas:
+ - instance: !include schema/instance.json
+ - instances: !include schema/instances.json
+
+traits:
+ - secured: !include ../raml-util/traits/auth.raml
+ - language: !include ../raml-util/traits/language.raml
+
+resourceTypes:
+ - collection: !include ../raml-util/rtypes/collection.raml
+ - collection-item: !include ../raml-util/rtypes/item-collection.raml
+
+/instance-storage:
+  /instances:
+    displayName: Instances
+    type:
+      collection:
+        exampleCollection: !include  examples/instance_get.json
+        schemaCollection: instances
+        schemaItem: instance
+        exampleItem: !include  examples/instance_get.json
+    get:
+    post:
+    delete:
+    /{instanceId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/instance_get.json
+          schema: instance
+      get:
+        responses:
+          200:
+            body:
+  #              type: instance
+        description: |
+          Get Instance by InstanceId
+          Instances are stored and accessed by a hash of key properties. The rules which govern
+          how instance hashes are computed are business rules and defined in the service layer.
+          the storage layer only knows how to insert or retrieve instance records by ID.
+      post:

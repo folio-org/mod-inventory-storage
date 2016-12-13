@@ -9,14 +9,10 @@ import org.junit.runners.Parameterized
 
 import org.folio.catalogue.core.domain.ItemCollection
 import org.folio.catalogue.core.storage.memory.InMemoryItemCollection
-import support.World
 
 import java.util.concurrent.CompletableFuture
 
-import static support.World.complete
-import static support.World.complete
-import static support.World.getOnCompletion
-import static support.World.getOnCompletion
+import static org.folio.metadata.common.FutureAssistance.*
 
 @RunWith(value = Parameterized.class)
 class ItemCollectionExamples {
@@ -114,19 +110,19 @@ class ItemCollectionExamples {
     def secondAddFuture = new CompletableFuture<Item>()
     def thirdAddFuture = new CompletableFuture<Item>()
 
-    collection.add(smallAngryPlanet, World.complete(firstAddFuture))
-    collection.add(nod, World.complete(secondAddFuture))
-    collection.add(uprooted, World.complete(thirdAddFuture))
+    collection.add(smallAngryPlanet, complete(firstAddFuture))
+    collection.add(nod, complete(secondAddFuture))
+    collection.add(uprooted, complete(thirdAddFuture))
 
     def allAddsFuture = CompletableFuture.allOf(firstAddFuture, secondAddFuture, thirdAddFuture)
 
-    World.getOnCompletion(allAddsFuture)
+    getOnCompletion(allAddsFuture)
 
     def findFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(World.complete(findFuture))
+    collection.findAll(complete(findFuture))
 
-    def allItems = World.getOnCompletion(findFuture)
+    def allItems = getOnCompletion(findFuture)
 
     assert allItems.size() == 3
 
@@ -145,17 +141,17 @@ class ItemCollectionExamples {
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
 
-    collection.add(smallAngryPlanet, World.complete(firstAddFuture))
-    collection.add(nod, World.complete(secondAddFuture))
+    collection.add(smallAngryPlanet, complete(firstAddFuture))
+    collection.add(nod, complete(secondAddFuture))
 
-    def addedItem = World.getOnCompletion(firstAddFuture)
-    def otherAddedItem = World.getOnCompletion(secondAddFuture)
+    def addedItem = getOnCompletion(firstAddFuture)
+    def otherAddedItem = getOnCompletion(secondAddFuture)
 
     def findAllFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(World.complete(findAllFuture))
+    collection.findAll(complete(findAllFuture))
 
-    def allItems = World.getOnCompletion(findAllFuture)
+    def allItems = getOnCompletion(findAllFuture)
 
     assert allItems.every { it.id != null }
     assert allItems.every { it.title != null }
@@ -165,11 +161,11 @@ class ItemCollectionExamples {
     def findFuture = new CompletableFuture<Item>()
     def otherFindFuture = new CompletableFuture<Item>()
 
-    collection.findById(addedItem.id, World.complete(findFuture))
-    collection.findById(otherAddedItem.id, World.complete(otherFindFuture))
+    collection.findById(addedItem.id, complete(findFuture))
+    collection.findById(otherAddedItem.id, complete(otherFindFuture))
 
-    def foundItem = World.getOnCompletion(findFuture)
-    def otherFoundItem = World.getOnCompletion(otherFindFuture)
+    def foundItem = getOnCompletion(findFuture)
+    def otherFoundItem = getOnCompletion(otherFindFuture)
 
     assert foundItem.title == "Long Way to a Small Angry Planet"
     assert foundItem.instanceLocation == "http://books.com/small-angry"

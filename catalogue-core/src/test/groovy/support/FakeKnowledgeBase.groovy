@@ -109,7 +109,7 @@ class FakeKnowledgeBase extends GroovyVerticle {
   }
 
   private static void checkTenantHeader(RoutingContext routingContext) {
-    def tenant = routingContext.request().getHeader("X-Okapi-Tenant");
+    def tenant = routingContext.request().getHeader("X-Okapi-Tenant")
 
     if(tenant != null) {
       routingContext.next()

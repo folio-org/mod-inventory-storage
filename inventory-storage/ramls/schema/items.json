@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "items": {
+      "id": "items",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref" : "item"
+      }
+    },
+    "total_records": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "items",
+    "total_records"
+  ]
+}

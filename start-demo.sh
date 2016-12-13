@@ -1,8 +1,38 @@
 #!/usr/bin/env bash
 
-okapi_proxy_address=${1:-http://localhost:9130}
+./create-tenant.sh
 
-./start-with-sample-data.sh ${okapi_proxy_address}
+cd knowledge-base-core
+
+./build-docker-image.sh
+
+./start-docker.sh
+
+cd ..
+
+cd catalogue-core
+
+./build-docker-image.sh
+
+./start-docker.sh
+
+cd ..
+
+cd inventory-storage
+
+./start-demo.sh
+
+cd ..
+
+cd inventory
+
+./start-demo.sh
+
+cd ..
+
+./register.sh
+
+./create-sample-data.sh
 
 cd demo/ui
 

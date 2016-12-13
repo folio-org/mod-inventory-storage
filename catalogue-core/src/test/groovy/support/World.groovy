@@ -54,11 +54,5 @@ class World {
     useOkapi ? new URL(System.getProperty("okapi.address") + '/catalogue') : directAddress
   }
 
-  static <T> T getOnCompletion(CompletableFuture<T> future) {
-    future.get(2000, TimeUnit.MILLISECONDS)
-  }
 
-  static Closure complete(CompletableFuture future) {
-    return { future.complete(it) }
-  }
 }

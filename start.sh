@@ -14,3 +14,15 @@ cd catalogue-core
 ./start.sh ${catalogueport}
 
 cd ..
+
+cd inventory-storage
+
+./start.sh
+
+cd ..
+
+cd inventory
+
+./start.sh
+
+cd ..

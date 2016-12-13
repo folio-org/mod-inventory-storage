@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "instance_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "barcode": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "instance_id",
+    "barcode"
+  ]
+}

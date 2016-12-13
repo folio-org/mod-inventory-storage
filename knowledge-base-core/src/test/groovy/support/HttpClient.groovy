@@ -8,13 +8,14 @@ import groovyx.net.http.ResponseParseException
 import org.apache.commons.io.IOUtils
 
 class HttpClient {
+  static private final String tenant = "test_tenant"
 
   static get(url) {
     def http = new HTTPBuilder(url)
 
     try {
       http.request(Method.GET) { req ->
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
 
         response.success = { resp, body ->
           body
@@ -35,10 +36,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to connect to ${url} error: ${ex}"
+      println "Failed to connect to ${url} internalError: ${ex}"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex}"
+      println "Failed to access ${url} internalError: ${ex}"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -50,7 +51,7 @@ class HttpClient {
 
     try {
       http.request(Method.GET) { req ->
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
 
         response.success = { resp, body ->
           body
@@ -62,10 +63,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to connect to ${url} error: ${ex}"
+      println "Failed to connect to ${url} internalError: ${ex}"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex}"
+      println "Failed to access ${url} internalError: ${ex}"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -93,10 +94,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to access ${url} error: ${ex})"
+      println "Failed to access ${url} internalError: ${ex})"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex})"
+      println "Failed to access ${url} internalError: ${ex})"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -112,7 +113,7 @@ class HttpClient {
     try {
       http.request(Method.POST, ContentType.JSON) { req ->
         body = bodyToSend
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
 
         response.success = { resp ->
           println "Status Code: ${resp.status}"
@@ -121,10 +122,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to access ${url} error: ${ex})"
+      println "Failed to access ${url} internalError: ${ex})"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex})"
+      println "Failed to access ${url} internalError: ${ex})"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -136,7 +137,7 @@ class HttpClient {
 
     try {
       http.request(Method.GET) { req ->
-        headers.'X-Okapi-Tenant' = "our"
+        headers.'X-Okapi-Tenant' = tenant
         uri.query = query
 
         response.success = { resp, body ->
@@ -156,10 +157,10 @@ class HttpClient {
       }
     }
     catch (ConnectException ex) {
-      println "Failed to connect to ${url} error: ${ex}"
+      println "Failed to connect to ${url} internalError: ${ex}"
     }
     catch (ResponseParseException ex) {
-      println "Failed to access ${url} error: ${ex}"
+      println "Failed to access ${url} internalError: ${ex}"
     }
     catch (HttpResponseException ex) {
       parseResponseException(url, ex)
@@ -167,7 +168,7 @@ class HttpClient {
   }
 
   private static void parseResponseException(URL url, HttpResponseException ex) {
-    println "Failed to access ${url} error: ${ex}"
+    println "Failed to access ${url} internalError: ${ex}"
     printf "Headers: %s \n", ex.getResponse().getAllHeaders()
     printf "Content Type: %s \n", ex.getResponse().getContentType()
     printf "Status Code: %s \n", ex.getResponse().getStatus()
