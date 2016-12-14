@@ -13,11 +13,11 @@ schemas:
  - instances: !include schema/instances.json
 
 traits:
- - secured: !include traits/auth.raml
- - language: !include traits/language.raml
+ - secured: !include shared/traits/auth.raml
+ - language: !include shared/traits/language.raml
 
 resourceTypes:
- - collection: !include types/collection.raml
+ - collection: !include shared/rtypes/collection.raml
 
 /knowledge-base:
     /instance:
