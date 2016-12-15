@@ -1,0 +1,55 @@
+#%RAML 0.8
+title: Item Storage
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: "Inventory API"
+    content: <b>API for interacting with an inventory of physical resources</b>
+
+schemas:
+ - item: !include schema/inventory/item.json
+ - items: !include schema/inventory/items.json
+ - instance: !include schema/inventory/instance.json
+ - instances: !include schema/inventory/instances.json
+
+traits:
+ - secured: !include shared/traits/auth.raml
+ - language: !include shared/traits/language.raml
+
+resourceTypes:
+ - collection: !include shared/rtypes/collection.raml
+ - collection-item: !include shared/rtypes/item-collection.raml
+
+/inventory:
+  /items:
+    displayName: Items
+    type:
+      collection:
+        exampleCollection: !include  examples/inventory/items_get.json
+        schemaCollection: items
+        schemaItem: item
+        exampleItem: !include  examples/inventory/item_get.json
+    get:
+    /{itemId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/inventory/item_get.json
+          schema: item
+      get:
+  /instances:
+    displayName: Instances
+    type:
+      collection:
+        exampleCollection: !include  examples/inventory/instance_get.json
+        schemaCollection: instances
+        schemaItem: instance
+        exampleItem: !include  examples/inventory/instance_get.json
+    get:
+    /{instanceId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/inventory/instance_get.json
+          schema: instance
+      get:

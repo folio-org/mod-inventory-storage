@@ -9,8 +9,8 @@ documentation:
     content: <b>Defines the baseline resources provided by a knowledge base module implementation</b>
 
 schemas:
- - instance: !include schema/instance.json
- - instances: !include schema/instances.json
+ - instance: !include schema/knowledge-base/instance.json
+ - instances: !include schema/knowledge-base/instances.json
 
 traits:
  - secured: !include shared/traits/auth.raml
@@ -24,10 +24,10 @@ resourceTypes:
       displayName: Instances
       type:
         collection:
-          exampleCollection: !include  examples/instances_get.json
+          exampleCollection: !include  examples/knowledge-base/instances_get.json
           schemaCollection: instances
           schemaItem: instance
-          exampleItem: !include  examples/instance_get.json
+          exampleItem: !include  examples/knowledge-base/instance_get.json
 
       get:
         queryParameters:
@@ -46,8 +46,8 @@ resourceTypes:
       post:
         body:
           application/json:
-            schema: !include schema/instance_create.json
-            example: !include  examples/instance_post.json
+            schema: !include schema/knowledge-base/instance_create.json
+            example: !include  examples/knowledge-base/instance_post.json
         responses:
           201:
       /metadata:
@@ -57,4 +57,4 @@ resourceTypes:
             200:
               body:
                 application/json:
-                  example: !include examples/instance_metadata_get.json
+                  example: !include examples/knowledge-base/instance_metadata_get.json
