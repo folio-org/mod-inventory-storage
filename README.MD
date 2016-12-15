@@ -78,11 +78,15 @@ Must have the RAML Module Builder installed (see https://github.com/folio-org/ra
 
 Make sure that [Okapi](https://github.com/folio-org/okapi) is running on it's default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for instructions).
 
+A script for building and running Okapi is provided. Run `../mod-metadata/start-okapi.sh` from the root of the Okapi source.
+
+As this runs Okapi using Postgres storage, some database preparation is required. This can be achieved by running `./create-okapi-database.sh` from the root of this repository.
+
 ### When Using the Modules as Docker Containers
 
 For the modules to communicate via Okapi Proxy, when running in Docker containers, the address for Okapi Proxy needs to be routable from inside the container.
 
-This can be achieved by running `../mod-metadata/start-okapi.sh http://192.168.X.X:9130`, from the root of the Okapi source.
+This can be achieved by passing a parameter to the script used to start Okapi, as follows `../mod-metadata/start-okapi.sh http://192.168.X.X:9130`.
 
 Where 192.168.X.X is a routable IP address for the host from container instances and both repository clones are at the same directory level on your machine.
 

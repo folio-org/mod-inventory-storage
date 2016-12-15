@@ -17,7 +17,9 @@ mvn package --quiet -Dmaven.test.skip=true
 echo "Running Okapi Core"
 
 java  \
-      -Dokapiurl="${okapi_proxy_address}" \
-      -Dloglevel=DEBUG \
-      -jar ./okapi-core/target/okapi-core-fat.jar dev
+     -Dokapiurl="${okapi_proxy_address}" \
+     -Dloglevel=DEBUG \
+     -Dstorage=postgres \
+     -Dpostgres_db_init=1 \
+     -jar ./okapi-core/target/okapi-core-fat.jar dev
 
