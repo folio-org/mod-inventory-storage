@@ -1,6 +1,6 @@
 # Introduction
 
-This guide is intended to provide an introduction to the capabilities of the various FOLIO compatible Knowledge Base and Cataloguing modules provided here.
+This guide is intended to provide an introduction to the capabilities of the various FOLIO compatible Inventory, Knowledge Base and Cataloguing modules provided here.
 
 # General
 
