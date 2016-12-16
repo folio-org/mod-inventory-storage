@@ -5,6 +5,13 @@
   <groupId>org.folio</groupId>
   <version>0.0.1-SNAPSHOT</version>
 
+  <licenses>
+    <license>
+      <name>Apache License 2.0</name>
+      <url>http://spdx.org/licenses/Apache-2.0</url>
+    </license>
+  </licenses>
+
   <dependencies>
     <dependency>
       <groupId>org.folio</groupId>
