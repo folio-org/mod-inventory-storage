@@ -32,11 +32,11 @@ In the knowledge-base-core directory.
 
 **Soon to be deprecated** Provides a basic representation of a physical item (with limited Dublin Core annotation). Written in Groovy and uses Gradle as it's build system.
 
-In the cataologue-core directory.
+In the catalogue-core directory.
 
 # Further Documentation
 
-This readme is intended to get these modules up and running. For further information on what they do, see the [guide](doc/guide.md)
+This readme is intended to get these modules up and running. For further information on what they do, see the [guide](doc/guide.md).
 
 # Prerequisites
 
@@ -140,7 +140,7 @@ These modules provide HTTP based APIs rather than any UI themselves.
 
 As FOLIO is a multi-tenant system, many of the requests made to these modules are tenant aware (via the X-Okapi-Tenant header), which means most requests need to be made via a system which understands these headers (e.g. another module or UI built using [Stripes](https://github.com/folio-org/stripes-core)).
 
-Therefore, it is suggested that requests to the API are made via tools such as curl or [postman](https://www.getpostman.com/), or via a browser plugin for adding headers, such as [Requestly](https://chrome.google.com/webstore/detail/requestly/mdnleldcmiljblolnjhpnblkcekpdkpa)
+Therefore, it is suggested that requests to the API are made via tools such as curl or [postman](https://www.getpostman.com/), or via a browser plugin for adding headers, such as [Requestly](https://chrome.google.com/webstore/detail/requestly/mdnleldcmiljblolnjhpnblkcekpdkpa).
 
 ## Okapi Root Addresses
 
@@ -148,7 +148,7 @@ It is recommended that the modules are located via Okapi. Access via Okapi requi
 
 |Module|Root Address|
 |------|------------|
-|Inventory| http://localhost:9130 /inventory |
+|Inventory| http://localhost:9130/inventory |
 |Inventory Storage| http://localhost:9130/item-storage/ and http://localhost:9130/instance-storage/ |
 |Knowledge Base| http://localhost:9130/knowledge-base |
 |Catalogue| http://localhost:9130/catalogue |
