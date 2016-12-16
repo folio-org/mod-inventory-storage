@@ -12,25 +12,25 @@ FOLIO compatible module suite to provide Knowledge Base and Metadata capabilitie
 
 ## Inventory
 
-Provides basic physical item inventory management, currently limited to basic representations of local instances and items, which can only be created via a MODS import. Written in Groovy and uses Gradle as it's build system.
+Provides basic physical item inventory management, currently limited to basic representations of local instances and items, which can only be created via a MODS import. Written in Groovy and uses Gradle as its build system.
 
 In the inventory directory.
 
 ## Inventory Storage
 
-Provides Postgres based storage to complement the inventory module. Written in Java, uses the raml-module-builder and uses Maven as it's build system.
+Provides Postgres based storage to complement the inventory module. Written in Java, uses the raml-module-builder and uses Maven as its build system.
 
 In the inventory-storage directory.
 
 ## Knowledge Base
 
-**Soon to be deprecated**. Provides a basic representation of an instance. Written in Groovy and uses Gradle as it's build system.
+**Soon to be deprecated**. Provides a basic representation of an instance. Written in Groovy and uses Gradle as its build system.
 
 In the knowledge-base-core directory.
 
 ## Catalogue
 
-**Soon to be deprecated** Provides a basic representation of a physical item (with limited Dublin Core annotation). Written in Groovy and uses Gradle as it's build system.
+**Soon to be deprecated** Provides a basic representation of a physical item (with limited Dublin Core annotation). Written in Groovy and uses Gradle as its build system.
 
 In the catalogue-core directory.
 
@@ -76,7 +76,7 @@ Must have the RAML Module Builder installed (see https://github.com/folio-org/ra
 
 ## Running Okapi
 
-Make sure that [Okapi](https://github.com/folio-org/okapi) is running on it's default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for instructions).
+Make sure that [Okapi](https://github.com/folio-org/okapi) is running on its default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for instructions).
 
 A script for building and running Okapi is provided. Run `../mod-metadata/start-okapi.sh` from the root of the Okapi source.
 
