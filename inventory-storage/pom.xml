@@ -5,6 +5,13 @@
   <groupId>org.folio</groupId>
   <version>0.0.1-SNAPSHOT</version>
 
+  <licenses>
+    <license>
+      <name>Apache License 2.0</name>
+      <url>http://spdx.org/licenses/Apache-2.0</url>
+    </license>
+  </licenses>
+
   <dependencies>
     <dependency>
       <groupId>org.folio</groupId>
@@ -30,6 +37,7 @@
 
   <properties>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
+    <ramlfiles_util_path>${basedir}/raml-util</ramlfiles_util_path>
   </properties>
 
   <build>
@@ -138,6 +146,22 @@
               <resources>
                 <resource>
                   <directory>${ramlfiles_path}</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-resources-2</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/apidocs/raml-util</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${ramlfiles_util_path}</directory>
                   <filtering>true</filtering>
                 </resource>
               </resources>
