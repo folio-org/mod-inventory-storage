@@ -12,8 +12,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.apache.http.HttpStatus;
+import org.apache.http.protocol.HTTP;
 import org.folio.rest.jaxrs.model.Instance;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -152,6 +155,13 @@ public class InstanceStorageTest {
 
     Get(vertx, instancesUrl.toString(), TENANT_ID,
       getResponse -> {
+        if(getResponse.statusCode() == HttpURLConnection.HTTP_INTERNAL_ERROR)
+        {
+          getResponse.bodyHandler(body -> {
+            System.out.println("Response Message: " + stringFromBuffer(body));
+          });
+        }
+
         context.assertEquals(getResponse.statusCode(),
           HttpURLConnection.HTTP_OK);
 

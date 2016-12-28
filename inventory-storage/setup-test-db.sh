@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-./setup-db.sh test_tenant testuser test
+./setup-db.sh test test_tenant test_tenant test_tenant

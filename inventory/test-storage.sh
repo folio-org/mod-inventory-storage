@@ -5,15 +5,21 @@ inventory_storage_address=${1:-http://localhost:9408}
 #set up the inventory storage databases
 cd ./../inventory-storage
 
-./drop-db.sh test_tenant_1
-./drop-db.sh test_tenant_2
+./drop-schema.sh test_tenant_1
+./drop-schema.sh test_tenant_2
+./drop-db.sh test
 
-./drop-role.sh externaltestuser
+./drop-role.sh test_tenant_1
+./drop-role.sh test_tenant_2
 
-./create-role.sh externaltestuser test
+./create-role.sh test_tenant_1 test_tenant_1
+./create-role.sh test_tenant_2 test_tenant_2
 
-./create-db.sh test_tenant_1 externaltestuser
-./create-db.sh test_tenant_2 externaltestuser
+./create-db.sh test test_tenant_1
+./create-db.sh test test_tenant_2
+
+./create-schema.sh test test_tenant_1 test_tenant_1
+./create-schema.sh test test_tenant_2 test_tenant_2
 
 #start the inventory storage module with correct database config
 ./start.sh 9408 "$(pwd)/external-test-postgres-conf.json" test_tenant_1

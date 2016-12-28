@@ -59,20 +59,27 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           postgresClient.get("instance", Instance.class, criterion, false,
             reply -> {
               try {
-                List<Instance> instances = (List<Instance>) reply.result()[0];
+                if(reply.succeeded()) {
 
-                instances.forEach( item -> {
-                  putBackReplacedId(item);
-                });
+                  List<Instance> instances = (List<Instance>) reply.result()[0];
 
-                Instances instanceList = new Instances();
-                instanceList.setInstances(instances);
-                instanceList.setTotalRecords(instances.size());
+                  instances.forEach(item -> {
+                    putBackReplacedId(item);
+                  });
 
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  InstanceStorageResource.GetInstanceStorageInstancesResponse.
-                    withJsonOK(instanceList)));
+                  Instances instanceList = new Instances();
+                  instanceList.setInstances(instances);
+                  instanceList.setTotalRecords(instances.size());
 
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    InstanceStorageResource.GetInstanceStorageInstancesResponse.
+                      withJsonOK(instanceList)));
+                }
+                else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    InstanceStorageResource.GetInstanceStorageInstancesResponse.
+                      withPlainInternalServerError(reply.cause().getMessage())));
+                }
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(

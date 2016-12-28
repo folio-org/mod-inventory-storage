@@ -1,6 +1,5 @@
 {
   "host" : "localhost",
   "port" : 5432,
-  "username": "testuser",
-  "password": "test"
+  "database" : "test"
 }
