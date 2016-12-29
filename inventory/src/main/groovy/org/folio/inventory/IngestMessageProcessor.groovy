@@ -1,5 +1,6 @@
 package org.folio.inventory
 
+import io.vertx.groovy.core.Vertx
 import io.vertx.groovy.core.eventbus.EventBus
 import io.vertx.groovy.core.eventbus.Message
 import org.folio.inventory.domain.Instance
@@ -55,9 +56,14 @@ class IngestMessageProcessor {
 
     allItems.collect({
       eventBus.send( Messages.INGEST_COMPLETED.Address, "",
-        ["headers" : ["jobId" : context.getHeader("jobId"),
-                    "tenantId": context.tenantId]])
+        ["headers" : fromContext(context)])
     })
+  }
+
+  private LinkedHashMap<String, String> fromContext(MessagingContext context) {
+    ["jobId"        : context.getHeader("jobId"),
+     "tenantId"     : context.tenantId,
+     "okapiLocation": context.okapiLocation]
   }
 
   private void markIngestCompleted(Message message) {

@@ -18,8 +18,6 @@ class Storage {
     this.providerFactory = providerFactory
   }
 
-  //HACK: Need access to vertx in order to create a HttpClient, maybe move this
-  // to the context??
   static Storage basedUpon(Vertx vertx, Map<String, Object> config) {
     def storageType = config.get("storage.type", "memory")
 
@@ -37,7 +35,9 @@ class Storage {
         break;
 
       case "okapi":
-
+        return new Storage(
+        { context ->
+          new ExternalStorageCollections(vertx, context.okapiLocation) })
 
       case "memory":
         def inMemoryCollections = new InMemoryCollections()

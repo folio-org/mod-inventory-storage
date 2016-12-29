@@ -74,7 +74,8 @@ class ModsIngestion {
               Messages.START_INGEST.Address,
               new JsonObject(["records" : convertedRecords]),
               ["headers" : ["jobId" : it.id,
-                            "tenantId" : context.tenantId]])
+                            "tenantId" : context.tenantId,
+                            "okapiLocation" : context.okapiLocation]])
 
             RedirectResponse.accepted(routingContext.response(),
               statusLocation(routingContext, it.id))

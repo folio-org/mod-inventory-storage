@@ -44,8 +44,6 @@ public class InventoryVerticle extends GroovyVerticle {
 
     server = vertx.createHttpServer()
 
-    def eventBus = vertx.eventBus()
-
     def config = vertx.getOrCreateContext().config()
 
     println("Received Config")
@@ -53,7 +51,7 @@ public class InventoryVerticle extends GroovyVerticle {
 
     def storage = Storage.basedUpon(vertx, config)
 
-    new IngestMessageProcessor(storage).register(eventBus)
+    new IngestMessageProcessor(storage).register(vertx.eventBus())
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 

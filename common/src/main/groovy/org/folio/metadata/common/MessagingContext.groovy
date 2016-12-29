@@ -12,7 +12,12 @@ class MessagingContext implements Context {
 
   @Override
   String getTenantId() {
-    this.headers.get("tenantId")
+    getHeader("tenantId")
+  }
+
+  @Override
+  String getOkapiLocation() {
+    getHeader("okapiLocation")
   }
 
   def getHeader(String header) {

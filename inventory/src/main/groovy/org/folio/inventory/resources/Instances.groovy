@@ -31,7 +31,6 @@ class Instances {
     }
   }
 
-
   void getById(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 

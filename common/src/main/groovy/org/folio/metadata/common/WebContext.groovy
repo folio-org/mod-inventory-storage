@@ -11,10 +11,23 @@ class WebContext implements Context {
 
   @Override
   String getTenantId() {
-    routingContext.request().getHeader("X-Okapi-Tenant")
+    getHeader("X-Okapi-Tenant", "")
+  }
+
+  @Override
+  String getOkapiLocation() {
+    getHeader("X-Okapi-Url", "")
   }
 
   def getHeader(String header) {
     routingContext.request().getHeader(header)
+  }
+
+  def getHeader(String header, defaultValue) {
+    hasHeader(header) ? getHeader(header) : defaultValue
+  }
+
+  private boolean hasHeader(String header) {
+    routingContext.request().headers().contains(header)
   }
 }
