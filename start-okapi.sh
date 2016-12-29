@@ -2,8 +2,8 @@
 
 #Run this from the root directory of the Okapi source
 
-storage=${1:-"memory"}
-okapi_proxy_address=${2:-"http://localhost:9130"}
+okapi_proxy_address=${1:-"http://localhost:9130"}
+storage=${2:-"memory"}
 
 if [ $# == 0 ] ; then
   echo "Using default parameters"
