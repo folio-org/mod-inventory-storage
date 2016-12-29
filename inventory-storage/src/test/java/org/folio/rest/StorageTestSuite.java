@@ -1,12 +1,7 @@
 package org.folio.rest;
 
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
@@ -29,7 +24,6 @@ import java.util.concurrent.TimeoutException;
 })
 public class StorageTestSuite {
 
-  private static final String TENANT_HEADER = "X-Okapi-Tenant";
   static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
@@ -62,7 +56,9 @@ public class StorageTestSuite {
 
     CompletableFuture tenantPrepared = new CompletableFuture();
 
-    post(vertx, tenantUrl, null, tenantId, postResponse -> {
+    HttpClient client = new HttpClient(vertx);
+
+    client.post(tenantUrl, null, tenantId, postResponse -> {
       tenantPrepared.complete(null);
     });
 
@@ -77,51 +73,13 @@ public class StorageTestSuite {
 
     CompletableFuture tenantPrepared = new CompletableFuture();
 
-    delete(vertx, tenantUrl, null, tenantId, postResponse -> {
+    HttpClient client = new HttpClient(vertx);
+
+    client.delete(tenantUrl, tenantId, postResponse -> {
       tenantPrepared.complete(null);
     });
 
     tenantPrepared.get(5, TimeUnit.SECONDS);
-  }
-
-  private static void post(Vertx vertx,
-                    URL url,
-                    Object body,
-                    String tenantId,
-                    Handler<HttpClientResponse> responseHandler) {
-
-    HttpClient client = vertx.createHttpClient();
-
-    HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
-
-    request.headers().add("Accept","application/json");
-    request.headers().add("Content-type","application/json");
-
-    if(tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
-
-    request.end(Json.encodePrettily(body));
-  }
-
-  private static void delete(Vertx vertx,
-                           URL url,
-                           Object body,
-                           String tenantId,
-                           Handler<HttpClientResponse> responseHandler) {
-
-    HttpClient client = vertx.createHttpClient();
-
-    HttpClientRequest request = client.deleteAbs(url.toString(), responseHandler);
-
-    request.headers().add("Accept","application/json");
-    request.headers().add("Content-type","application/json");
-
-    if(tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
-
-    request.end(Json.encodePrettily(body));
   }
 
   private static void startVerticle(DeploymentOptions options)

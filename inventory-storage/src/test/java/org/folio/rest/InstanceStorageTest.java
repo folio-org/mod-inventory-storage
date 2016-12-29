@@ -1,12 +1,6 @@
 package org.folio.rest;
 
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -32,7 +26,7 @@ public class InstanceStorageTest {
   private static Vertx vertx = StorageTestSuite.getVertx();
   private static int port = StorageTestSuite.getPort();
 
-  private static final String TENANT_HEADER = "X-Okapi-Tenant";
+  private static HttpClient client = new HttpClient(vertx);
 
   @Before
   public void beforeEach()
@@ -46,7 +40,7 @@ public class InstanceStorageTest {
     URL deleteInstancesUrl = new URL("http", "localhost", port,
       "/instance-storage/instances");
 
-    Delete(vertx, deleteInstancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
+    client.delete(deleteInstancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       if(response.statusCode() == 200) {
         deleteAllFinished.complete(null);
       }
@@ -61,7 +55,6 @@ public class InstanceStorageTest {
 
     Async async = context.async();
     UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
 
     URL postInstanceUrl = new URL("http", "localhost", port, "/instance-storage/instances");
 
@@ -70,12 +63,12 @@ public class InstanceStorageTest {
     instanceToCreate.put("id",id.toString());
     instanceToCreate.put("title", "Real Analysis");
 
-    Post(vertx, postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, response -> {
+    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, response -> {
       int statusCode = response.statusCode();
       context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
 
       response.bodyHandler(buffer -> {
-        JsonObject instance = jsonObjectFromBuffer(buffer);
+        JsonObject instance = BufferHelper.jsonObjectFromBuffer(buffer);
 
         context.assertEquals(instance.getString("title"), "Real Analysis");
         context.assertEquals(instance.getString("id"), id.toString());
@@ -98,7 +91,7 @@ public class InstanceStorageTest {
     instanceToCreate.put("id", id);
     instanceToCreate.put("title", "Refactoring");
 
-    Post(vertx, postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, postResponse -> {
+    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, postResponse -> {
       final int postStatusCode = postResponse.statusCode();
       context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
 
@@ -106,12 +99,12 @@ public class InstanceStorageTest {
         String.format("http://localhost:%s/instance-storage/instances/%s",
           port, id);
 
-      Get(vertx, urlForGet, StorageTestSuite.TENANT_ID, getResponse -> {
+      client.get(urlForGet, StorageTestSuite.TENANT_ID, getResponse -> {
         final int getStatusCode = getResponse.statusCode();
 
         getResponse.bodyHandler(getBuffer -> {
           JsonObject restResponse1 =
-            jsonObjectFromBuffer(getBuffer);
+            BufferHelper.jsonObjectFromBuffer(getBuffer);
 
           context.assertEquals(getStatusCode, HttpURLConnection.HTTP_OK);
           context.assertEquals(restResponse1.getString("id") , id);
@@ -149,12 +142,12 @@ public class InstanceStorageTest {
 
     Async async = context.async();
 
-    Get(vertx, instancesUrl.toString(), StorageTestSuite.TENANT_ID,
+    client.get(instancesUrl.toString(), StorageTestSuite.TENANT_ID,
       getResponse -> {
         if(getResponse.statusCode() == HttpURLConnection.HTTP_INTERNAL_ERROR)
         {
           getResponse.bodyHandler(body -> {
-            System.out.println("Response Message: " + stringFromBuffer(body));
+            System.out.println("Response Message: " + BufferHelper.stringFromBuffer(body));
           });
         }
 
@@ -162,7 +155,7 @@ public class InstanceStorageTest {
           HttpURLConnection.HTTP_OK);
 
         getResponse.bodyHandler(body -> {
-          JsonObject getAllResponse = jsonObjectFromBuffer(body);
+          JsonObject getAllResponse = BufferHelper.jsonObjectFromBuffer(body);
 
           JsonArray allInstances = getAllResponse.getJsonArray("instances");
 
@@ -206,7 +199,7 @@ public class InstanceStorageTest {
 
     URL instancesUrl = new URL("http", "localhost", port, "/instance-storage/instances");
 
-    Delete(vertx, instancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
+    client.delete(instancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       context.assertEquals(response.statusCode(), HttpURLConnection.HTTP_OK);
 
       deleteAllFinished.complete(null);
@@ -216,10 +209,10 @@ public class InstanceStorageTest {
 
     Async async = context.async();
 
-    Get(vertx, instancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
+    client.get(instancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       response.bodyHandler(body -> {
 
-        JsonObject getAllResponse = jsonObjectFromBuffer(body);
+        JsonObject getAllResponse = BufferHelper.jsonObjectFromBuffer(body);
 
         JsonArray allInstances = getAllResponse.getJsonArray("instances");
 
@@ -240,12 +233,12 @@ public class InstanceStorageTest {
     instance.setId(UUID.randomUUID().toString());
     instance.setTitle("Refactoring");
 
-    Post(vertx, new URL("http", "localhost",  port, "/instance-storage/instances"),
+    client.post(new URL("http", "localhost",  port, "/instance-storage/instances"),
       instance, response -> {
         context.assertEquals(response.statusCode(), 400);
 
         response.bodyHandler( buffer -> {
-          String responseBody = stringFromBuffer(buffer);
+          String responseBody = BufferHelper.stringFromBuffer(buffer);
 
           context.assertEquals(responseBody, "Tenant Must Be Provided");
 
@@ -265,12 +258,12 @@ public class InstanceStorageTest {
 
     URL getInstanceUrl = new URL("http", "localhost", port, path);
 
-    Get(vertx, getInstanceUrl,
+    client.get(getInstanceUrl,
       response -> {
         context.assertEquals(response.statusCode(), 400);
 
         response.bodyHandler( buffer -> {
-          String responseBody = stringFromBuffer(buffer);
+          String responseBody = BufferHelper.stringFromBuffer(buffer);
 
           context.assertEquals(responseBody, "Tenant Must Be Provided");
 
@@ -289,14 +282,14 @@ public class InstanceStorageTest {
 
     URL getInstancesUrl = new URL("http", "localhost", port, path);
 
-    Get(vertx, getInstancesUrl,
+    client.get(getInstancesUrl,
       response -> {
         System.out.println("Response received");
 
         context.assertEquals(response.statusCode(), 400);
 
         response.bodyHandler( buffer -> {
-          String responseBody = stringFromBuffer(buffer);
+          String responseBody = BufferHelper.stringFromBuffer(buffer);
 
           context.assertEquals(responseBody, "Tenant Must Be Provided");
 
@@ -313,97 +306,11 @@ public class InstanceStorageTest {
 
     CompletableFuture createComplete = new CompletableFuture();
 
-    Post(vertx, postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, response -> {
+    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, response -> {
       createComplete.complete(null);
     });
 
     createComplete.get(2, TimeUnit.SECONDS);
   }
 
-  private void Post(Vertx vertx,
-                    URL url,
-                    Object body,
-                    Handler<HttpClientResponse> responseHandler) {
-
-    Post(vertx, url, body, null, responseHandler);
-  }
-
-  private void Post(Vertx vertx,
-                    URL url,
-                    Object body,
-                    String tenantId,
-                    Handler<HttpClientResponse> responseHandler) {
-
-    HttpClient client = vertx.createHttpClient();
-
-    HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
-
-    request.headers().add("Accept","application/json");
-    request.headers().add("Content-type","application/json");
-
-    if(tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
-
-    request.end(Json.encodePrettily(body));
-  }
-
-  private void Get(Vertx vertx,
-                   URL url,
-                   Handler<HttpClientResponse> responseHandler) {
-
-    Get(vertx, url, null, responseHandler);
-  }
-
-  private void Get(Vertx vertx,
-                   URL url,
-                   String tenantId,
-                   Handler<HttpClientResponse> responseHandler) {
-
-    Get(vertx, url.toString(), tenantId, responseHandler);
-  }
-
-  private void Get(Vertx vertx,
-                   String url,
-                   String tenantId,
-                   Handler<HttpClientResponse> responseHandler) {
-
-    HttpClient client = vertx.createHttpClient();
-
-    HttpClientRequest request = client.getAbs(url, responseHandler);
-
-    request.headers().add("Accept","application/json");
-
-    if(tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
-
-    request.end();
-  }
-
-  private void Delete(Vertx vertx,
-                      String url,
-                      String tenantId,
-                      Handler<HttpClientResponse> responseHandler) {
-
-    HttpClient client = vertx.createHttpClient();
-
-    HttpClientRequest request = client.deleteAbs(url, responseHandler);
-
-    request.headers().add("Accept","application/json");
-
-    if(tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
-
-    request.end();
-  }
-
-  private JsonObject jsonObjectFromBuffer(Buffer buffer) {
-    return new JsonObject(stringFromBuffer(buffer));
-  }
-
-  private String stringFromBuffer(Buffer buffer) {
-    return buffer.getString(0, buffer.length());
-  }
 }
