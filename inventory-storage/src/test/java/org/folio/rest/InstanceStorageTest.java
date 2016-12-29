@@ -12,11 +12,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.apache.http.HttpStatus;
-import org.apache.http.protocol.HTTP;
 import org.folio.rest.jaxrs.model.Instance;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -35,7 +32,6 @@ public class InstanceStorageTest {
   private static Vertx vertx = StorageTestSuite.getVertx();
   private static int port = StorageTestSuite.getPort();
 
-  private static final String TENANT_ID = "test_tenant";
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
 
   @Before
@@ -50,7 +46,7 @@ public class InstanceStorageTest {
     URL deleteInstancesUrl = new URL("http", "localhost", port,
       "/instance-storage/instances");
 
-    Delete(vertx, deleteInstancesUrl.toString(), TENANT_ID, response -> {
+    Delete(vertx, deleteInstancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       if(response.statusCode() == 200) {
         deleteAllFinished.complete(null);
       }
@@ -74,7 +70,7 @@ public class InstanceStorageTest {
     instanceToCreate.put("id",id.toString());
     instanceToCreate.put("title", "Real Analysis");
 
-    Post(vertx, postInstanceUrl, instanceToCreate, TENANT_ID, response -> {
+    Post(vertx, postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, response -> {
       int statusCode = response.statusCode();
       context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
 
@@ -102,7 +98,7 @@ public class InstanceStorageTest {
     instanceToCreate.put("id", id);
     instanceToCreate.put("title", "Refactoring");
 
-    Post(vertx, postInstanceUrl, instanceToCreate, TENANT_ID, postResponse -> {
+    Post(vertx, postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, postResponse -> {
       final int postStatusCode = postResponse.statusCode();
       context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
 
@@ -110,7 +106,7 @@ public class InstanceStorageTest {
         String.format("http://localhost:%s/instance-storage/instances/%s",
           port, id);
 
-      Get(vertx, urlForGet, TENANT_ID, getResponse -> {
+      Get(vertx, urlForGet, StorageTestSuite.TENANT_ID, getResponse -> {
         final int getStatusCode = getResponse.statusCode();
 
         getResponse.bodyHandler(getBuffer -> {
@@ -153,7 +149,7 @@ public class InstanceStorageTest {
 
     Async async = context.async();
 
-    Get(vertx, instancesUrl.toString(), TENANT_ID,
+    Get(vertx, instancesUrl.toString(), StorageTestSuite.TENANT_ID,
       getResponse -> {
         if(getResponse.statusCode() == HttpURLConnection.HTTP_INTERNAL_ERROR)
         {
@@ -210,7 +206,7 @@ public class InstanceStorageTest {
 
     URL instancesUrl = new URL("http", "localhost", port, "/instance-storage/instances");
 
-    Delete(vertx, instancesUrl.toString(), TENANT_ID, response -> {
+    Delete(vertx, instancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       context.assertEquals(response.statusCode(), HttpURLConnection.HTTP_OK);
 
       deleteAllFinished.complete(null);
@@ -220,7 +216,7 @@ public class InstanceStorageTest {
 
     Async async = context.async();
 
-    Get(vertx, instancesUrl.toString(), TENANT_ID, response -> {
+    Get(vertx, instancesUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       response.bodyHandler(body -> {
 
         JsonObject getAllResponse = jsonObjectFromBuffer(body);
@@ -317,7 +313,7 @@ public class InstanceStorageTest {
 
     CompletableFuture createComplete = new CompletableFuture();
 
-    Post(vertx, postInstanceUrl, instanceToCreate, TENANT_ID, response -> {
+    Post(vertx, postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID, response -> {
       createComplete.complete(null);
     });
 

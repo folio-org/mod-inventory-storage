@@ -14,7 +14,6 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.rest.jaxrs.model.Item;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -33,7 +32,6 @@ public class ItemStorageTest {
   private static Vertx vertx = StorageTestSuite.getVertx();
   private static int port = StorageTestSuite.getPort();
 
-  private static final String TENANT_ID = "test_tenant";
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
 
   @Before
@@ -47,7 +45,7 @@ public class ItemStorageTest {
 
     URL deleteItemsUrl = new URL("http", "localhost", port, "/item-storage/items");
 
-    Delete(vertx, deleteItemsUrl.toString(), TENANT_ID, response -> {
+    Delete(vertx, deleteItemsUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       if(response.statusCode() == 200) {
         deleteAllFinished.complete(null);
       }
@@ -73,7 +71,7 @@ public class ItemStorageTest {
     itemToCreate.put("title", "Real Analysis");
     itemToCreate.put("barcode", "271828");
 
-    Post(vertx, postItemUrl, itemToCreate, TENANT_ID, response -> {
+    Post(vertx, postItemUrl, itemToCreate, StorageTestSuite.TENANT_ID, response -> {
       int statusCode = response.statusCode();
       context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
 
@@ -105,7 +103,7 @@ public class ItemStorageTest {
     itemToCreate.put("title", "Refactoring");
     itemToCreate.put("barcode", "314159");
 
-    Post(vertx, postItemUrl, itemToCreate, TENANT_ID, postResponse -> {
+    Post(vertx, postItemUrl, itemToCreate, StorageTestSuite.TENANT_ID, postResponse -> {
       final int postStatusCode = postResponse.statusCode();
         context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
 
@@ -113,7 +111,7 @@ public class ItemStorageTest {
           String.format("http://localhost:%s/item-storage/items/%s",
             port, id);
 
-        Get(vertx, urlForGet, TENANT_ID, getResponse -> {
+        Get(vertx, urlForGet, StorageTestSuite.TENANT_ID, getResponse -> {
           final int getStatusCode = getResponse.statusCode();
 
           getResponse.bodyHandler(getBuffer -> {
@@ -160,7 +158,7 @@ public class ItemStorageTest {
 
     Async async = context.async();
 
-    Get(vertx, itemsUrl.toString(), TENANT_ID,
+    Get(vertx, itemsUrl.toString(), StorageTestSuite.TENANT_ID,
       getResponse -> {
         context.assertEquals(getResponse.statusCode(),
           HttpURLConnection.HTTP_OK);
@@ -214,7 +212,7 @@ public class ItemStorageTest {
 
     URL itemsUrl = new URL("http", "localhost", port, "/item-storage/items");
 
-    Delete(vertx, itemsUrl.toString(), TENANT_ID, response -> {
+    Delete(vertx, itemsUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       context.assertEquals(response.statusCode(), HttpURLConnection.HTTP_OK);
 
       deleteAllFinished.complete(null);
@@ -224,7 +222,7 @@ public class ItemStorageTest {
 
     Async async = context.async();
 
-    Get(vertx, itemsUrl.toString(), TENANT_ID, response -> {
+    Get(vertx, itemsUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
       response.bodyHandler(body -> {
 
         JsonObject getAllResponse = jsonObjectFromBuffer(body);
@@ -323,7 +321,7 @@ public class ItemStorageTest {
 
     CompletableFuture createComplete = new CompletableFuture();
 
-    Post(vertx, postItemUrl, itemToCreate, TENANT_ID, response -> {
+    Post(vertx, postItemUrl, itemToCreate, StorageTestSuite.TENANT_ID, response -> {
       createComplete.complete(null);
     });
 

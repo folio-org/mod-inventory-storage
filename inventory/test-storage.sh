@@ -2,27 +2,28 @@
 
 inventory_storage_address=${1:-http://localhost:9408}
 
+database_name="test"
+admin_user_name="inventory_storage_admin"
+admin_password="admin"
+
 #set up the inventory storage databases
 cd ./../inventory-storage
 
-./drop-schema.sh test_tenant_1
-./drop-schema.sh test_tenant_2
-./drop-db.sh test
+./drop-db.sh ${database_name}
 
-./drop-role.sh test_tenant_1
-./drop-role.sh test_tenant_2
-
-./create-role.sh test_tenant_1 test_tenant_1
-./create-role.sh test_tenant_2 test_tenant_2
-
-./create-db.sh test test_tenant_1
-./create-db.sh test test_tenant_2
-
-./create-schema.sh test test_tenant_1 test_tenant_1
-./create-schema.sh test test_tenant_2 test_tenant_2
+./create-admin-role.sh ${admin_user_name} ${password}
+./create-db.sh ${database_name} ${admin_user_name}
 
 #start the inventory storage module with correct database config
 ./start.sh 9408 "$(pwd)/external-test-postgres-conf.json" test_tenant_1
+
+echo "Initialising Tenant: test_tenant_2"
+
+curl -w '\n' -X POST -D -   \
+     -H "Content-type: application/json"   \
+     -H "Accept: */*"   \
+     -H "X-Okapi-Tenant: test_tenant_2" \
+     http://localhost:9408/tenant
 
 cd ./../inventory
 

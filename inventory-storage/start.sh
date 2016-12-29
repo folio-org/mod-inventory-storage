@@ -12,16 +12,24 @@ mvn clean install -DskipTests
 
 java -jar target/inventory-storage-fat.jar db_connection=${config_path} -Dhttp.port=${port} 1>output.log 2>output.log &
 
-echo 'Waiting for inventory storage module to start'
+echo "Waiting for inventory storage module to start"
 
-until $(curl --output /dev/null --silent --get --fail -H "X-Okapi-Tenant: ${tenant_id}"  http://localhost:${port}/item-storage/items); do
+until $(curl --output /dev/null --silent --get --fail -H "X-Okapi-Tenant: ${tenant_id}"  http://localhost:${port}/tenant); do
     printf '.'
     sleep 1
 done
 
 echo
 
-echo 'Running'
+echo "Running"
+
+echo "Initialising Tenant: ${tenant_id}"
+
+curl -w '\n' -X POST -D -   \
+     -H "Content-type: application/json"   \
+     -H "Accept: */*"   \
+     -H "X-Okapi-Tenant: ${tenant_id}" \
+     http://localhost:${port}/tenant
 
 #tail -F output.log
 

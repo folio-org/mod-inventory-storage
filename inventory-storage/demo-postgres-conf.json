@@ -1,5 +1,7 @@
 {
   "host" : "localhost",
   "port" : 5432,
-  "database" : "demo"
+  "database" : "demo",
+  "username" : "inventory_storage_admin",
+  "password" : "admin"
 }
