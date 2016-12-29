@@ -8,32 +8,27 @@ import org.folio.inventory.resources.ingest.IngestJobCollection
 class InMemoryCollections implements CollectionProvider {
   private final Map<String, ItemCollection> itemCollections = [:]
   private final Map<String, InstanceCollection> instanceCollections = [:]
-
-  private final InMemoryIngestJobCollection ingestJobCollection
-
-  def InMemoryCollections() {
-    ingestJobCollection = new InMemoryIngestJobCollection()
-  }
+  private final Map<String, IngestJobCollection> ingestJobCollections = [:]
 
   @Override
   ItemCollection getItemCollection(String tenantId) {
-    getCollectionFormTenant(tenantId, itemCollections,
+    getCollectionForTenant(tenantId, itemCollections,
       { new InMemoryItemCollection() })
   }
 
-
   @Override
   InstanceCollection getInstanceCollection(String tenantId) {
-    getCollectionFormTenant(tenantId, instanceCollections,
+    getCollectionForTenant(tenantId, instanceCollections,
       { new InMemoryInstanceCollection() })
   }
 
   @Override
   IngestJobCollection getIngestJobCollection(String tenantId) {
-    ingestJobCollection
+    getCollectionForTenant(tenantId, ingestJobCollections,
+      { new InMemoryIngestJobCollection() })
   }
 
-  private <T> T getCollectionFormTenant(
+  private <T> T getCollectionForTenant(
     String tenantId,
     Map<String, T> collections,
     Closure createNew) {

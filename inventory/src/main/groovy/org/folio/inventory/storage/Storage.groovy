@@ -9,13 +9,18 @@ import org.folio.inventory.storage.external.ExternalStorageCollections
 import org.folio.inventory.storage.memory.InMemoryCollections
 import org.folio.metadata.common.Context
 
+import java.util.function.Function
+
 class Storage {
-  private final CollectionProvider collectionProvider
+  private final Function<Context, CollectionProvider> providerFactory;
+
+  Storage( final Function<Context, CollectionProvider> providerFactory) {
+    this.providerFactory = providerFactory
+  }
 
   //HACK: Need access to vertx in order to create a HttpClient, maybe move this
   // to the context??
   static Storage basedUpon(Vertx vertx, Map<String, Object> config) {
-
     def storageType = config.get("storage.type", "memory")
 
     switch(storageType) {
@@ -27,32 +32,35 @@ class Storage {
             "For external storage, location must be provided.")
         }
 
-        return new Storage(new ExternalStorageCollections(vertx, location))
+        return new Storage(
+          { context -> new ExternalStorageCollections(vertx, location) })
         break;
 
       case "okapi":
 
 
       case "memory":
-      default:
-        return new Storage(new InMemoryCollections())
+        def inMemoryCollections = new InMemoryCollections()
+
+        return new Storage({ context -> inMemoryCollections })
         break;
+
+      default:
+        throw new IllegalArgumentException(
+          "Storage type must be one of [external, okapi, memory]")
     }
   }
 
-  Storage(final CollectionProvider collectionProvider) {
-    this.collectionProvider = collectionProvider
-  }
 
   ItemCollection getItemCollection(Context context) {
-    collectionProvider.getItemCollection(context.tenantId)
+    providerFactory.apply(context).getItemCollection(context.tenantId)
   }
 
   InstanceCollection getInstanceCollection(Context context) {
-    collectionProvider.getInstanceCollection(context.tenantId)
+    providerFactory.apply(context).getInstanceCollection(context.tenantId)
   }
 
   IngestJobCollection getIngestJobCollection(Context context) {
-    collectionProvider.getIngestJobCollection(context.tenantId)
+    providerFactory.apply(context).getIngestJobCollection(context.tenantId)
   }
 }

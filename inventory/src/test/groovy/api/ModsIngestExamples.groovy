@@ -165,7 +165,9 @@ class ModsIngestExamples extends Specification {
   }
 
   private startInventoryVerticle() {
-    InventoryVerticle.deploy(vertx, ["port": testPortToUse]).join()
+    def config = ["port": testPortToUse, "storage.type" : "memory"]
+
+    InventoryVerticle.deploy(vertx, config).join()
   }
 
   private stopVertx() {
