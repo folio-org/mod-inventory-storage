@@ -19,7 +19,7 @@ class Storage {
   }
 
   static Storage basedUpon(Vertx vertx, Map<String, Object> config) {
-    def storageType = config.get("storage.type", "memory")
+    def storageType = config.get("storage.type", "okapi")
 
     switch(storageType) {
       case "external":
@@ -50,7 +50,6 @@ class Storage {
           "Storage type must be one of [external, okapi, memory]")
     }
   }
-
 
   ItemCollection getItemCollection(Context context) {
     providerFactory.apply(context).getItemCollection(context.tenantId)

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 tenant_id=${1:-demo_tenant}
-storage_type=${2:-external}
-storage_location=${3:-http://localhost:9407}
+storage_type=${2:-okapi}
+storage_location=${3:-}
 
-./start.sh demo_tenant ${storage_type} ${storage_location}
+./start.sh "${tenant_id}" "${storage_type}" "${storage_location}" \
+  "http://localhost:9130/inventory"
 
 

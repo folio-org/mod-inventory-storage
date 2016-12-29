@@ -2,6 +2,8 @@
 
 ./create-tenant.sh
 
+./register.sh
+
 cd knowledge-base-core
 
 ./build-docker-image.sh
@@ -29,8 +31,6 @@ cd inventory
 ./start-demo.sh
 
 cd ..
-
-./register.sh
 
 ./create-sample-data.sh
 

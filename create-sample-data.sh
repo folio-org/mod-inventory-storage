@@ -2,6 +2,7 @@
 
 knowledgebase_root_address=${1:-http://localhost:9130/knowledge-base}
 catalogue_root_address=${2:-http://localhost:9130/catalogue}
+inventory_root_address=${1:-http://localhost:9130/inventory}
 
 cd knowledge-base-core/sample-data
 
