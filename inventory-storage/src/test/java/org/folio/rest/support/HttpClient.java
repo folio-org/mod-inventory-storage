@@ -1,4 +1,4 @@
-package org.folio.rest;
+package org.folio.rest.support;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -18,14 +18,14 @@ public class HttpClient {
     client = vertx.createHttpClient();
   }
 
-  void post(URL url,
+  public void post(URL url,
             Object body,
             Handler<HttpClientResponse> responseHandler) {
 
     post(url, body, null, responseHandler);
   }
 
-  void post(URL url,
+  public void post(URL url,
             Object body,
             String tenantId,
             Handler<HttpClientResponse> responseHandler) {
@@ -42,7 +42,7 @@ public class HttpClient {
     request.end(Json.encodePrettily(body));
   }
 
-  void get(URL url,
+  public void get(URL url,
            Handler<HttpClientResponse> responseHandler) {
 
     get(url, null, responseHandler);
@@ -55,7 +55,7 @@ public class HttpClient {
     get(url.toString(), tenantId, responseHandler);
   }
 
-  void get(String url,
+  public void get(String url,
            String tenantId,
            Handler<HttpClientResponse> responseHandler) {
 
@@ -70,7 +70,7 @@ public class HttpClient {
     request.end();
   }
 
-  void delete(URL url,
+  public void delete(URL url,
               String tenantId,
               Handler<HttpClientResponse> responseHandler) {
 
@@ -78,7 +78,7 @@ public class HttpClient {
   }
 
 
-  void delete(String url,
+  public void delete(String url,
               String tenantId,
               Handler<HttpClientResponse> responseHandler) {
 
