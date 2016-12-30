@@ -3,6 +3,7 @@ package org.folio.rest;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
@@ -34,6 +35,8 @@ public class StorageTestSuite {
   public static void before()
     throws InterruptedException, ExecutionException,
     TimeoutException, MalformedURLException {
+
+    PostgresClient.setConfigFilePath("/postgres-conf-local.json");
 
     vertx = Vertx.vertx();
 
