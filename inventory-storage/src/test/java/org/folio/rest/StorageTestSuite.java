@@ -36,7 +36,11 @@ public class StorageTestSuite {
     throws InterruptedException, ExecutionException,
     TimeoutException, MalformedURLException {
 
-    PostgresClient.setConfigFilePath("/postgres-conf-local.json");
+    String postgresConfigPath = System.getProperty(
+      "org.folio.inventory.storage.test.config",
+      "/postgres-conf-local.json");
+
+    PostgresClient.setConfigFilePath(postgresConfigPath);
 
     vertx = Vertx.vertx();
 
