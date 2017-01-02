@@ -1,28 +1,13 @@
 package api
 
-import io.vertx.groovy.core.Vertx
-import org.folio.inventory.InventoryVerticle
 import org.folio.metadata.common.testing.HttpClient
-import org.folio.metadata.common.testing.VertxHttpClient
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
-import java.util.concurrent.CompletableFuture
 
 class ModsIngestExamples extends Specification {
 
-  public static final testPortToUse = 9603
 
-  private static Vertx vertx
   private final HttpClient client = new HttpClient()
-
-  def setupSpec() {
-    startVertx()
-    startInventoryVerticle()
-  }
-
-  def cleanupSpec() {
-    stopVertx()
-  }
 
   void "Ingest some MODS records"() {
     given:
@@ -160,32 +145,6 @@ class ModsIngestExamples extends Specification {
     })
   }
 
-  private startVertx() {
-    vertx = Vertx.vertx()
-  }
-
-  private startInventoryVerticle() {
-    def config = ["port": testPortToUse, "storage.type" : "memory"]
-
-    InventoryVerticle.deploy(vertx, config).join()
-  }
-
-  private stopVertx() {
-    if (vertx != null) {
-      def stopped = new CompletableFuture()
-
-      vertx.close({ res ->
-        if (res.succeeded()) {
-          stopped.complete(null);
-        } else {
-          stopped.completeExceptionally(res.cause());
-        }
-      })
-
-      stopped.join()
-    }
-  }
-
   private beginIngest(List<File> files) {
     client.uploadFile(getIngestUrl(),
       files, "record")
@@ -196,7 +155,7 @@ class ModsIngestExamples extends Specification {
   }
 
   private String inventoryApiRoot() {
-    def directAddress = new URL("http://localhost:${testPortToUse}/inventory")
+    def directAddress = new URL("http://localhost:${ApiTestSuite.INVENTORY_VERTICLE_TEST_PORT}/inventory")
 
     def useOkapi = (System.getProperty("okapi.use") ?: "").toBoolean()
 
