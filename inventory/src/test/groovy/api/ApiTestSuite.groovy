@@ -7,6 +7,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Suite
 
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 @RunWith(Suite.class)
 
@@ -18,6 +19,7 @@ public class ApiTestSuite {
 
   private static VertxAssistant vertxAssistant = new VertxAssistant();
   public static final INVENTORY_VERTICLE_TEST_PORT = 9603
+  static String inventoryModuleDeploymentId
 
   @BeforeClass
   public static void before() {
@@ -27,8 +29,10 @@ public class ApiTestSuite {
 
   @AfterClass
   public static void after() {
+    stopInventoryVerticle()
     stopVertx()
   }
+
 
   private static stopVertx() {
     vertxAssistant.stop()
@@ -47,6 +51,14 @@ public class ApiTestSuite {
     vertxAssistant.deployGroovyVerticle(
       "org.folio.inventory.InventoryVerticle", config,  deployed)
 
-    deployed.join()
+    inventoryModuleDeploymentId = deployed.get(20000, TimeUnit.MILLISECONDS)
+  }
+
+  private static stopInventoryVerticle() {
+    def undeployed = new CompletableFuture()
+
+    vertxAssistant.undeployVerticle(inventoryModuleDeploymentId, undeployed)
+
+    undeployed.get(20000, TimeUnit.MILLISECONDS)
   }
 }
