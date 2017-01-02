@@ -2,7 +2,11 @@
 
 host=${1:-localhost}
 port=${2:-5432}
-executing_user=${3:-$user}
+executing_user=${3:-$USER}
 executing_password=${4:-}
 
+cd database-setup
+
 ./setup-db.sh test test_tenant test_tenant ${host} ${port} ${executing_user} ${executing_password}
+
+cd ..

@@ -4,7 +4,7 @@ database_name=${1:-}
 schema_name=${2:-}
 host=${3:-localhost}
 port=${4:-5432}
-executing_user=${5:-}
+executing_user=${5:-$USER}
 executing_password=${6:-}
 
 drop_schema_sql=$(cat ./drop-schema.sql)

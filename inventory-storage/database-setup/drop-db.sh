@@ -3,7 +3,7 @@
 database_name=${1:-}
 host=${2:-localhost}
 port=${3:-5432}
-executing_user=${4:-}
+executing_user=${4:-$USER}
 executing_password=${5:-}
 
 drop_database_sql=$(cat ./drop-db.sql)
