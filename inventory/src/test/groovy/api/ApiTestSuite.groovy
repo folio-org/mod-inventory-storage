@@ -1,7 +1,6 @@
 package api
 
-import io.vertx.groovy.core.Vertx
-import org.folio.inventory.InventoryVerticle
+import org.folio.metadata.common.VertxAssistant
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.runner.RunWith
@@ -17,7 +16,7 @@ import java.util.concurrent.CompletableFuture
 
 public class ApiTestSuite {
 
-  private static Vertx vertx;
+  private static VertxAssistant vertxAssistant = new VertxAssistant();
   public static final INVENTORY_VERTICLE_TEST_PORT = 9603
 
   @BeforeClass
@@ -31,30 +30,23 @@ public class ApiTestSuite {
     stopVertx()
   }
 
+  private static stopVertx() {
+    vertxAssistant.stop()
+  }
+
   private static startVertx() {
-    vertx = Vertx.vertx()
+    vertxAssistant.start()
   }
 
   private static startInventoryVerticle() {
+    def deployed = new CompletableFuture()
+
     def config = ["port": INVENTORY_VERTICLE_TEST_PORT,
                   "storage.type" : "memory"]
 
-    InventoryVerticle.deploy(vertx, config).join()
-  }
+    vertxAssistant.deployGroovyVerticle(
+      "org.folio.inventory.InventoryVerticle", config,  deployed)
 
-  private static stopVertx() {
-    if (vertx != null) {
-      def stopped = new CompletableFuture()
-
-      vertx.close({ res ->
-        if (res.succeeded()) {
-          stopped.complete(null);
-        } else {
-          stopped.completeExceptionally(res.cause());
-        }
-      })
-
-      stopped.join()
-    }
+    deployed.join()
   }
 }
