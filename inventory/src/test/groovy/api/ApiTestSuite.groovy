@@ -1,5 +1,6 @@
 package api
 
+import org.folio.inventory.InventoryVerticle
 import org.folio.metadata.common.VertxAssistant
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -16,7 +17,6 @@ import java.util.concurrent.TimeUnit
 ])
 
 public class ApiTestSuite {
-
   private static VertxAssistant vertxAssistant = new VertxAssistant();
   public static final INVENTORY_VERTICLE_TEST_PORT = 9603
   static String inventoryModuleDeploymentId
@@ -49,7 +49,7 @@ public class ApiTestSuite {
                   "storage.type" : "memory"]
 
     vertxAssistant.deployGroovyVerticle(
-      "org.folio.inventory.InventoryVerticle", config,  deployed)
+      InventoryVerticle.class.name, config,  deployed)
 
     inventoryModuleDeploymentId = deployed.get(20000, TimeUnit.MILLISECONDS)
   }
