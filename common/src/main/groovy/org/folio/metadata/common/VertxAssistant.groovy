@@ -1,7 +1,6 @@
 package org.folio.metadata.common
 
 import io.vertx.groovy.core.Vertx
-
 import java.util.concurrent.CompletableFuture
 
 class VertxAssistant {
@@ -19,9 +18,16 @@ class VertxAssistant {
   }
 
   void stop() {
-    if (vertx != null) {
-      def stopped = new CompletableFuture()
+    def stopped = new CompletableFuture()
 
+    stop(stopped)
+
+    stopped.join()
+  }
+
+  void stop(CompletableFuture stopped) {
+
+    if (vertx != null) {
       vertx.close({ res ->
         if (res.succeeded()) {
           stopped.complete(null);
@@ -30,8 +36,7 @@ class VertxAssistant {
         }
       })
 
-      stopped.join()
-      vertx == null
+      stopped.thenAccept({ vertx == null })
     }
   }
 
@@ -59,12 +64,13 @@ class VertxAssistant {
       });
   }
 
-  void undeployVerticle(String deploymentId, CompletableFuture deployed) {
+  void undeployVerticle(String deploymentId, CompletableFuture undeployed) {
+
     vertx.undeploy(deploymentId, { res ->
       if (res.succeeded()) {
-        deployed.complete();
+        undeployed.complete();
       } else {
-        deployed.completeExceptionally(res.cause());
+        undeployed.completeExceptionally(res.cause());
       }
     });
   }

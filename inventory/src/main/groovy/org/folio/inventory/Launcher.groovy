@@ -1,10 +1,13 @@
 package org.folio.inventory
 
-import io.vertx.groovy.core.Vertx
+import org.folio.metadata.common.VertxAssistant
+
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 public class Launcher {
-  private static Vertx vertx
+  private static VertxAssistant vertxAssistant = new VertxAssistant()
+  private static String inventoryModuleDeploymentId
 
   public static void main(String[] args) {
     Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -32,32 +35,34 @@ public class Launcher {
   }
 
   public static start(LinkedHashMap config) {
-    vertx = Vertx.vertx()
+    vertxAssistant.start()
 
     println "Server Starting"
 
-    def deploy = InventoryVerticle.deploy(vertx, config)
+    def deployed = new CompletableFuture()
 
-    deploy.thenAccept({ println "Server Started" })
+    vertxAssistant.deployGroovyVerticle(InventoryVerticle.class.name,
+      config, deployed)
+
+    deployed.thenAccept({ println "Server Started" })
+
+    inventoryModuleDeploymentId = deployed.get(20, TimeUnit.SECONDS)
   }
 
   public static stop() {
-    println "Server Stopping"
+    def undeployed = new CompletableFuture()
+    def stopped = new CompletableFuture()
+    def all = CompletableFuture.allOf(undeployed, stopped)
 
-    if (vertx != null) {
-      def stopped = new CompletableFuture()
+    println("Server Stopping")
 
-      vertx.close({ res ->
-        if (res.succeeded()) {
-          stopped.complete(null);
-        } else {
-          stopped.completeExceptionally(res.cause());
-        }
-      })
+    vertxAssistant.undeployVerticle(inventoryModuleDeploymentId, undeployed)
 
-      stopped.join()
+    undeployed.thenAccept({
+      vertxAssistant.stop(stopped)
+    })
 
-      println "Server Stopped"
-    }
+    all.join()
+    println("Server Stopped")
   }
 }

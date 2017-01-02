@@ -17,9 +17,10 @@ import java.util.concurrent.TimeUnit
 ])
 
 public class ApiTestSuite {
-  private static VertxAssistant vertxAssistant = new VertxAssistant();
   public static final INVENTORY_VERTICLE_TEST_PORT = 9603
-  static String inventoryModuleDeploymentId
+
+  private static VertxAssistant vertxAssistant = new VertxAssistant();
+  private static String inventoryModuleDeploymentId
 
   @BeforeClass
   public static void before() {
