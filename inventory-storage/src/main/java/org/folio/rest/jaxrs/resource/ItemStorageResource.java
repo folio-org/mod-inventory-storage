@@ -377,37 +377,43 @@ public interface ItemStorageResource {
         }
 
         /**
-         * Returns a list of item items e.g. [
-         *   {
-         *     "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *     "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *     "title": "Nod",
-         *     "barcode": "456743454532"
-         *   },
-         *   {
-         *     "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *     "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *     "title": "Uprooted",
-         *     "barcode": "645398607547"
-         *   }
-         * ]
+         * Returns a list of item items e.g. {
+         *   "items": [
+         *     {
+         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "title": "Nod",
+         *       "barcode": "456743454532"
+         *     },
+         *     {
+         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "title": "Uprooted",
+         *       "barcode": "645398607547"
+         *     }
+         *   ],
+         *   "total_records": 2
+         * }
          * 
          * 
          * @param entity
-         *     [
-         *       {
-         *         "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *         "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *         "title": "Nod",
-         *         "barcode": "456743454532"
-         *       },
-         *       {
-         *         "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *         "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *         "title": "Uprooted",
-         *         "barcode": "645398607547"
-         *       }
-         *     ]
+         *     {
+         *       "items": [
+         *         {
+         *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "title": "Nod",
+         *           "barcode": "456743454532"
+         *         },
+         *         {
+         *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "title": "Uprooted",
+         *           "barcode": "645398607547"
+         *         }
+         *       ],
+         *       "total_records": 2
+         *     }
          *     
          */
         public static ItemStorageResource.GetItemStorageItemsResponse withJsonOK(Items entity) {
