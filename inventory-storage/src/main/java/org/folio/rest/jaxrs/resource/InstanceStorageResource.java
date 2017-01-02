@@ -413,22 +413,7 @@ public interface InstanceStorageResource {
 
         /**
          * Returns a list of instance items e.g. {
-         *   "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-         *   "identifiers": [
-         *     {
-         *       "namespace": "isbn",
-         *       "value": "9781466636897"
-         *     },
-         *     {
-         *       "namespace": "ybp",
-         *       "value": "1"
-         *     }
-         *   ]
-         * }
-         * 
-         * 
-         * @param entity
+         *   "instances": [
          *     {
          *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
@@ -442,6 +427,59 @@ public interface InstanceStorageResource {
          *           "value": "1"
          *         }
          *       ]
+         *     },
+         *     {
+         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
+         *       "identifiers": [
+         *         {
+         *           "namespace": "isbn",
+         *           "value": "9781466639195"
+         *         },
+         *         {
+         *           "namespace": "ybp",
+         *           "value": "2"
+         *         }
+         *       ]
+         *     }
+         *   ],
+         *   "total_records": 2
+         * }
+         * 
+         * 
+         * @param entity
+         *     {
+         *       "instances": [
+         *         {
+         *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *           "identifiers": [
+         *             {
+         *               "namespace": "isbn",
+         *               "value": "9781466636897"
+         *             },
+         *             {
+         *               "namespace": "ybp",
+         *               "value": "1"
+         *             }
+         *           ]
+         *         },
+         *         {
+         *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
+         *           "identifiers": [
+         *             {
+         *               "namespace": "isbn",
+         *               "value": "9781466639195"
+         *             },
+         *             {
+         *               "namespace": "ybp",
+         *               "value": "2"
+         *             }
+         *           ]
+         *         }
+         *       ],
+         *       "total_records": 2
          *     }
          *     
          */
