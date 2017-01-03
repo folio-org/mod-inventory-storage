@@ -22,6 +22,7 @@ dependencies {
   testCompile 'org.apache.commons:commons-io:1.3.2'
   testCompile 'org.apache.httpcomponents:httpclient-osgi:4.5.2'
   testCompile 'org.apache.commons:commons-lang3:3.5'
+  testCompile 'com.github.jsonld-java:jsonld-java:0.9.0'
 }
 
 jar {

@@ -1,18 +1,25 @@
 package api
 
+import com.github.jsonldjava.core.DocumentLoader
+import com.github.jsonldjava.core.JsonLdOptions
+import com.github.jsonldjava.core.JsonLdProcessor
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
+import org.apache.http.impl.client.cache.CachingHttpClientBuilder
+import org.apache.http.message.BasicHeader
 import org.folio.metadata.common.testing.HttpClient
 import spock.lang.Specification
 
 class InstancesApiExamples extends Specification {
-  private final HttpClient client = new HttpClient("test_tenant")
+  private final String TENANT_ID = "test_tenant"
+
+  private final HttpClient client = new HttpClient(TENANT_ID)
 
   def setup() {
     deleteInstances()
   }
 
-  void "Can create instances"() {
+  void "Can create an instance"() {
     given:
       def newInstanceRequest = new JsonObject()
         .put("title", "Long Way to a Small Angry Planet")
@@ -32,8 +39,8 @@ class InstancesApiExamples extends Specification {
 
       assert getResponse.status == 200
 
-      assert new JsonObject(createdInstance)
-        .getString("title") == "Long Way to a Small Angry Planet"
+      assert createdInstance.title == "Long Way to a Small Angry Planet"
+      instanceExpressesDublinCoreMetadata(createdInstance)
   }
 
   void "Instance title is mandatory"() {
@@ -78,6 +85,19 @@ class InstancesApiExamples extends Specification {
     then:
       assert response.status == 200
       assert instances.size() == 3
+
+      instances.each { instanceExpressesDublinCoreMetadata(it) }
+  }
+
+  void "Instance expresses title in Dublin Core metadata"() {
+    given:
+      createInstance("Long Way to a Small Angry Planet")
+
+    when:
+      def (response, instances) = client.get(instancesRoot())
+
+    then:
+      instanceExpressesDublinCoreMetadata(instances[0])
   }
 
   private URL instancesRoot() {
@@ -111,5 +131,28 @@ class InstancesApiExamples extends Specification {
       new URL("${instancesRoot()}"))
 
     assert response.status == 200
+  }
+
+  private void instanceExpressesDublinCoreMetadata(instance) {
+    def options = new JsonLdOptions()
+    def documentLoader = new DocumentLoader()
+    def httpClient = CachingHttpClientBuilder
+      .create()
+      .setDefaultHeaders([new BasicHeader('X-Okapi-Tenant', TENANT_ID)])
+      .build()
+
+    documentLoader.setHttpClient(httpClient)
+
+    options.setDocumentLoader(documentLoader)
+
+    def expandedLinkedData = JsonLdProcessor.expand(instance, options)
+
+    assert expandedLinkedData.empty == false: "No Linked Data present"
+    assert LinkedDataValue(expandedLinkedData,
+      "http://purl.org/dc/terms/title") == instance.title
+  }
+
+  private static String LinkedDataValue(List<Object> expanded, String field) {
+    expanded[0][field][0]?."@value"
   }
 }
