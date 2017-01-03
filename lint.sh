@@ -2,11 +2,14 @@
 
 replace_references_in_schema() {
   schema_file=${1:-}
+  reference_to_replace=${2:-}
 
   rm ${schema_file}.original
 
   # Hack to fix references in the schema
-  sed -i .original 's/\(.*ref.*\)\(instance\)\(.*\)/\1\2.json\3/g' ${schema_file}
+  sed -i .original \
+    "s/\(.*ref.*\)\(${reference_to_replace}\)\(.*\)/\1\2.json\3/g" \
+    ${schema_file}
 }
 
 replace_changed_schema_file() {
@@ -16,12 +19,18 @@ replace_changed_schema_file() {
   mv ${schema_file}.original ${schema_file}
 }
 
+instances_schema_file="inventory-storage/ramls/schema/instances.json"
+items_schema_file="inventory-storage/ramls/schema/items.json"
+
 npm install
 
-replace_references_in_schema "inventory-storage/ramls/schema/instances.json"
+replace_references_in_schema ${instances_schema_file} instance
+replace_references_in_schema ${items_schema_file} item
 
 ./node_modules/.bin/eslint inventory-storage/ramls/instance_storage.raml
+./node_modules/.bin/eslint inventory-storage/ramls/item_storage.raml
 
-replace_changed_schema_file "inventory-storage/ramls/schema/instances.json"
+replace_changed_schema_file ${instances_schema_file}
+replace_changed_schema_file ${items_schema_file}
 
 
