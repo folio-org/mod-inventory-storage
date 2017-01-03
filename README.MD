@@ -86,7 +86,7 @@ As this runs Okapi using Postgres storage, some database preparation is required
 
 For the modules to communicate via Okapi Proxy, when running in Docker containers, the address for Okapi Proxy needs to be routable from inside the container.
 
-This can be achieved by passing a parameter to the script used to start Okapi, as follows `../mod-metadata/start-okapi.sh http://192.168.X.X:9130`.
+This can be achieved by passing a parameter to the script used to start Okapi, as follows `../mod-metadata/start-okapi.sh http://192.168.X.X:9130`
 
 Where 192.168.X.X is a routable IP address for the host from container instances and both repository clones are at the same directory level on your machine.
 
@@ -98,7 +98,7 @@ If these methods don't work for you, please do get in touch, so this section can
 
 On Linux, `ifconfig docker0 | grep 'inet addr:'` should give output similar to `inet addr:192.168.X.X  Bcast:0.0.0.0  Mask:255.255.0.0`, , the first IP address is usually routable from within containers.
 
-On Mac OS X (using Docker Native), `ifconfig en0 | grep 'inet '` should give output similar to `net 192.168.X.X netmask 0xffffff00 broadcast 192.168.X.X`, the first IP address is usually routable from within containers.
+On Mac OS X (using Docker Native), `ifconfig en0 | grep 'inet '` should give output similar to `inet 192.168.X.X netmask 0xffffff00 broadcast 192.168.X.X`, the first IP address is usually routable from within containers.
 
 ## Demo
 
@@ -120,7 +120,7 @@ To stop the modules run `./stop-demo.sh` from the root directory, which performs
 
 There is a basic demo user interface provided, which allows for searching instances by partial title.
 
-It can be accessed via `http://localhost-9501` in a browser.
+It can be accessed via `http://localhost:9501` in a browser.
 
 ## Natively
 
