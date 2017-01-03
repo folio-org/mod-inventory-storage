@@ -89,7 +89,7 @@ class Instances {
 
     result
   }
-  
+
   private JsonObject convertToUTF8(Instance instance) {
     def object = new JsonObject()
     object.put("id", instance.id)

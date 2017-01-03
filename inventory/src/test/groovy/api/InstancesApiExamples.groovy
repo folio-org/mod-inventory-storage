@@ -19,7 +19,7 @@ class InstancesApiExamples extends Specification {
 
     when:
       def (postResponse, _) = client.post(
-        new URL("${inventoryApiRoot()}/instances"),
+        new URL("${instancesRoot()}"),
         Json.encodePrettily(newInstanceRequest))
 
     then:
@@ -38,17 +38,61 @@ class InstancesApiExamples extends Specification {
 
   void "Instance title is mandatory"() {
     given:
-    def newInstanceRequest = new JsonObject()
+      def newInstanceRequest = new JsonObject()
 
     when:
       def (postResponse, body) = client.post(
-        new URL("${inventoryApiRoot()}/instances"),
+        new URL("${instancesRoot()}"),
         Json.encodePrettily(newInstanceRequest))
 
     then:
       assert postResponse.status == 400
       assert postResponse.headers.location == null
       assert body == "Title must be provided for an instance"
+  }
+
+  void "Can delete all instances"() {
+    given:
+      createInstance("Long Way to a Small Angry Planet")
+      createInstance("Nod")
+      createInstance("Leviathan Wakes")
+
+    when:
+      deleteInstances()
+      def (response, instances) = client.get(instancesRoot())
+
+    then:
+      assert response.status == 200
+      assert instances.size() == 0
+  }
+
+  void "Can get all instances"() {
+    given:
+      createInstance("Long Way to a Small Angry Planet")
+      createInstance("Nod")
+      createInstance("Leviathan Wakes")
+
+    when:
+      def (response, instances) = client.get(instancesRoot())
+
+    then:
+      assert response.status == 200
+      assert instances.size() == 3
+  }
+
+  private URL instancesRoot() {
+    new URL("${inventoryApiRoot()}/instances")
+  }
+
+  def createInstance(String title) {
+    def newInstanceRequest = new JsonObject()
+      .put("title", title)
+
+    def (postResponse, body) = client.post(
+      new URL("${inventoryApiRoot()}/instances"),
+      Json.encodePrettily(newInstanceRequest))
+
+    assert postResponse.status == 201
   }
 
   private String inventoryApiRoot() {
@@ -64,7 +108,7 @@ class InstancesApiExamples extends Specification {
 
   private void deleteInstances() {
     def (response, _) = client.delete(
-      new URL("${inventoryApiRoot()}/instances"))
+      new URL("${instancesRoot()}"))
 
     assert response.status == 200
   }
