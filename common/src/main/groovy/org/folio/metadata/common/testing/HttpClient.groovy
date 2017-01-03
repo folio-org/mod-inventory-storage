@@ -5,16 +5,21 @@ import org.apache.commons.io.IOUtils
 import org.apache.http.entity.mime.MultipartEntityBuilder
 
 class HttpClient {
-  private final String tenant = "test_tenant"
+  private final String TENANT_HEADER = 'X-Okapi-Tenant'
+
+  private final String tenantId
+
+  def HttpClient(String tenantId) {
+    this.tenantId = tenantId
+  }
 
   Tuple get(url) {
     def requestBuilder = new HTTPBuilder(url)
 
     try {
       requestBuilder.request(Method.GET) { req ->
-        println "\nTest Http Client GET from: ${url}\n"
 
-        headers.'X-Okapi-Tenant' = tenant
+        headers.put(TENANT_HEADER, tenantId)
 
         response.success = { resp, body ->
           new Tuple(resp, body)
@@ -54,9 +59,8 @@ class HttpClient {
 
     try {
       http.request(Method.POST) { req ->
-        println "\nTest Http Client POST to: ${url}\n"
 
-        headers.'X-Okapi-Tenant' = tenant
+        headers.put(TENANT_HEADER, tenantId)
         requestContentType = 'multipart/form-data'
 
         def multipartBuilder = new MultipartEntityBuilder()
@@ -99,5 +103,37 @@ class HttpClient {
     println "${ex.response.allHeaders}"
     println "Content Type: ${ex.response.contentType}"
     println "Status Code: ${ex.response.status}"
+  }
+
+  Tuple delete(URL url) {
+    def requestBuilder = new HTTPBuilder(url)
+
+    requestBuilder.request(Method.DELETE) { req ->
+
+      headers.put(TENANT_HEADER, tenantId)
+
+      response.success = { resp, body ->
+        println "Status Code: ${resp.status}"
+        println "Location: ${resp.headers.location}\n"
+
+        new Tuple2(resp, body)
+      }
+
+      response.failure = { resp, body ->
+        println "Failed to access ${url}"
+        println "Status Code: ${resp.status}"
+
+        resp.headers.each { println "${it.name} : ${it.value}" }
+        println ""
+
+        def bodyString = body instanceof InputStream ?
+          IOUtils.toString(body) :
+          body
+
+          println "Body: ${body}\n"
+
+        new Tuple2(resp, body)
+      }
+    }
   }
 }

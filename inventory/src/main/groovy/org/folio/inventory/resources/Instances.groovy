@@ -19,6 +19,7 @@ class Instances {
 
   public void register(Router router) {
     router.get(relativeItemsPath()).handler(this.&getAll)
+    router.delete(relativeItemsPath()).handler(this.&deleteAll)
     router.get(relativeItemsPath() + "/:id").handler(this.&getById)
   }
 
@@ -26,6 +27,15 @@ class Instances {
     def context = new WebContext(routingContext)
 
     storage.getInstanceCollection(context).findAll {
+      JsonResponse.success(routingContext.response(),
+        convertToUTF8(it))
+    }
+  }
+
+  void deleteAll(RoutingContext routingContext) {
+    def context = new WebContext(routingContext)
+
+    storage.getInstanceCollection(context).empty {
       JsonResponse.success(routingContext.response(),
         convertToUTF8(it))
     }

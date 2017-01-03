@@ -6,8 +6,14 @@ import spock.util.concurrent.PollingConditions
 
 class ModsIngestExamples extends Specification {
 
+  private final HttpClient client = new HttpClient("test_tenant")
 
-  private final HttpClient client = new HttpClient()
+  def setup() {
+    def (response, _) = client.delete(
+      new URL("${inventoryApiRoot()}/instances"))
+
+    assert response.status == 200
+  }
 
   void "Ingest some MODS records"() {
     given:
@@ -108,7 +114,7 @@ class ModsIngestExamples extends Specification {
   }
 
   private expectedInstancesCreatedFromIngest() {
-    def client = new HttpClient()
+    def client = new HttpClient("test_tenant")
 
     def (resp, instances) = client.get(new URL("${inventoryApiRoot()}/instances"))
 

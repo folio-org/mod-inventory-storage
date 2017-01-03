@@ -11,7 +11,8 @@
     {
       "methods": [
         "GET",
-        "POST"
+        "POST",
+        "DELETE"
       ],
       "path": "/inventory",
       "level": "30",
