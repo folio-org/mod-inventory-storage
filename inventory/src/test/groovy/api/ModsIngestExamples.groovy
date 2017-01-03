@@ -9,11 +9,10 @@ class ModsIngestExamples extends Specification {
   private final HttpClient client = new HttpClient("test_tenant")
 
   def setup() {
-    def (response, _) = client.delete(
-      new URL("${inventoryApiRoot()}/instances"))
-
-    assert response.status == 200
+    deleteInstances()
+    deleteItems()
   }
+
 
   void "Ingest some MODS records"() {
     given:
@@ -187,5 +186,19 @@ class ModsIngestExamples extends Specification {
 
   private boolean instanceMatches(record, String expectedSimilarTitle) {
     record.title.contains(expectedSimilarTitle)
+  }
+
+  private void deleteItems() {
+    def (response, _) = client.delete(
+      new URL("${inventoryApiRoot()}/items"))
+
+    assert response.status == 200
+  }
+
+  private void deleteInstances() {
+    def (response, _) = client.delete(
+      new URL("${inventoryApiRoot()}/instances"))
+
+    assert response.status == 200
   }
 }

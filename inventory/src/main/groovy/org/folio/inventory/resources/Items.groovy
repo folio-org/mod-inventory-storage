@@ -20,12 +20,21 @@ class Items {
 
   public void register(Router router) {
     router.get(relativeItemsPath()).handler(this.&getAll)
+    router.delete(relativeItemsPath()).handler(this.&deleteAll)
   }
 
   void getAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
     storage.getItemCollection(context).findAll {
+      JsonResponse.success(routingContext.response(), convertToUTF8(it))
+    }
+  }
+
+  void deleteAll(RoutingContext routingContext) {
+    def context = new WebContext(routingContext)
+
+    storage.getItemCollection(context).empty {
       JsonResponse.success(routingContext.response(), convertToUTF8(it))
     }
   }
