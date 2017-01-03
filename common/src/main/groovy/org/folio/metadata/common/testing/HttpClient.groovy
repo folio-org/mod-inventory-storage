@@ -13,7 +13,11 @@ class HttpClient {
     this.tenantId = tenantId
   }
 
-  Tuple get(url) {
+  Tuple get(String url) {
+    get(new URL(url))
+  }
+
+  Tuple get(URL url) {
     def requestBuilder = new HTTPBuilder(url)
 
     try {
@@ -25,19 +29,7 @@ class HttpClient {
           new Tuple(resp, body)
         }
 
-        response.failure = { resp, body ->
-          println "Failed to access ${url}"
-          println "Status Code: ${resp.statusLine}"
-          resp.headers.each { println "${it.name} : ${it.value}" }
-          println ""
-
-          if (body instanceof InputStream) {
-            println "Body: ${IOUtils.toString(body)}\n"
-          } else {
-            println "Body: ${body}\n"
-          }
-          null
-        }
+        response.failure = handleFailure(url)
       }
     }
     catch (ConnectException ex) {
@@ -78,12 +70,7 @@ class HttpClient {
           new Tuple2(resp, body)
         }
 
-        response.failure = { resp, body ->
-          println "Status Code: ${resp.status}"
-          println "Location: ${resp.headers.location}\n"
-
-          new Tuple2(resp, body.getText())
-        }
+        response.failure = handleFailure(url)
       }
     }
     catch (ConnectException ex) {
@@ -97,13 +84,6 @@ class HttpClient {
     }
   }
 
-  private void parseResponseException(URL url, HttpResponseException ex) {
-    println "Failed to access ${url} internalError: ${ex} (More information below)\n"
-    println "Headers:"
-    println "${ex.response.allHeaders}"
-    println "Content Type: ${ex.response.contentType}"
-    println "Status Code: ${ex.response.status}"
-  }
 
   Tuple delete(URL url) {
     def requestBuilder = new HTTPBuilder(url)
@@ -119,21 +99,74 @@ class HttpClient {
         new Tuple2(resp, body)
       }
 
-      response.failure = { resp, body ->
-        println "Failed to access ${url}"
-        println "Status Code: ${resp.status}"
+      response.failure = handleFailure(url)
+    }
+  }
 
-        resp.headers.each { println "${it.name} : ${it.value}" }
-        println ""
+  Tuple post(URL url, String bodyToSend) {
+    if (url == null)
+      throw new IllegalArgumentException("url is null")
 
-        def bodyString = body instanceof InputStream ?
-          IOUtils.toString(body) :
-          body
+    def http = new HTTPBuilder(url)
 
-          println "Body: ${body}\n"
+    try {
+      http.request(Method.POST) { req ->
 
-        new Tuple2(resp, body)
+        headers.put(TENANT_HEADER, tenantId)
+        requestContentType = 'application/json'
+        body = bodyToSend
+
+        response.success = { resp, responseBody ->
+          println "Status Code: ${resp.status}"
+          println "Location: ${resp.headers.location}\n"
+
+          new Tuple2(resp, responseBody)
+        }
+
+        response.failure = handleFailure(url)
       }
     }
+    catch (ConnectException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
+    }
+    catch (ResponseParseException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
+    }
+    catch (HttpResponseException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
+    }
+  }
+
+  private Closure<Tuple2> handleFailure(url) {
+    { resp, body ->
+      println "Failed to access ${url}"
+      println "Status Code: ${resp.status}"
+
+      resp.headers.each { println "${it.name} : ${it.value}" }
+      println ""
+
+      def bodyString = getBody(body)
+
+      println "Body: ${bodyString}\n"
+
+      new Tuple2(resp, bodyString)
+    }
+  }
+
+  private String getBody(body) {
+    if(body instanceof InputStreamReader) {
+      IOUtils.toString(body)
+    }
+    else {
+      body
+    }
+  }
+
+  private void parseResponseException(URL url, HttpResponseException ex) {
+    println "Failed to access ${url} internalError: ${ex} (More information below)\n"
+    println "Headers:"
+    println "${ex.response.allHeaders}"
+    println "Content Type: ${ex.response.contentType}"
+    println "Status Code: ${ex.response.status}"
   }
 }

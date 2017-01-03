@@ -4,11 +4,14 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
+import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.apache.commons.lang.StringEscapeUtils
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
+import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.JsonResponse
+import org.folio.metadata.common.api.response.RedirectResponse
 
 class Instances {
   private final Storage storage
@@ -18,9 +21,12 @@ class Instances {
   }
 
   public void register(Router router) {
-    router.get(relativeItemsPath()).handler(this.&getAll)
-    router.delete(relativeItemsPath()).handler(this.&deleteAll)
-    router.get(relativeItemsPath() + "/:id").handler(this.&getById)
+    router.post(relativeInstancesPath() + "*").handler(BodyHandler.create())
+
+    router.get(relativeInstancesPath()).handler(this.&getAll)
+    router.post(relativeInstancesPath()).handler(this.&create)
+    router.delete(relativeInstancesPath()).handler(this.&deleteAll)
+    router.get(relativeInstancesPath() + "/:id").handler(this.&getById)
   }
 
   void getAll(RoutingContext routingContext) {
@@ -30,6 +36,19 @@ class Instances {
       JsonResponse.success(routingContext.response(),
         convertToUTF8(it))
     }
+  }
+
+  void create(RoutingContext routingContext) {
+    def context = new WebContext(routingContext)
+
+    Map instanceRequest = new VertxBodyParser().toMap(routingContext)
+
+    def newInstance = new Instance(instanceRequest.title)
+
+    storage.getInstanceCollection(context).add(newInstance, {
+      RedirectResponse.created(routingContext.response(),
+        context.absoluteUrl("${relativeInstancesPath()}/${it.id}").toString())
+    })
   }
 
   void deleteAll(RoutingContext routingContext) {
@@ -49,7 +68,7 @@ class Instances {
       { JsonResponse.success(routingContext.response(), convertToUTF8(it)) })
   }
 
-  private static String relativeItemsPath() {
+  private static String relativeInstancesPath() {
     "/inventory/instances"
   }
 

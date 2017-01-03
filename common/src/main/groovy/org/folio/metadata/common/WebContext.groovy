@@ -27,6 +27,13 @@ class WebContext implements Context {
     hasHeader(header) ? getHeader(header) : defaultValue
   }
 
+  def URL absoluteUrl(String path) {
+    def currentRequestUrl = new URL(routingContext.request().absoluteURI())
+
+    new URL(currentRequestUrl.protocol, currentRequestUrl.host,
+      currentRequestUrl.port, path)
+  }
+
   private boolean hasHeader(String header) {
     routingContext.request().headers().contains(header)
   }
