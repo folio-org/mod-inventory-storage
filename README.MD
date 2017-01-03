@@ -175,6 +175,7 @@ Okapi needs to be already running, without changing the address it uses (unlike 
 The modules should *not* be started before running the tests, as this can cause confusing results. The tests start an instance themselves during setup.
 
 The script performs the following steps:
+
 1. Creates a test tenant (with ID test_tenant)
 2. Registers the modules with Okapi (they run on a different port than usual during the tests)
 3. Builds and runs the tests (API tests run both directly and via Okapi Proxy - except for Inventory Storage)
