@@ -36,8 +36,24 @@ class InstancesApiExamples extends Specification {
         .getString("title") == "Long Way to a Small Angry Planet"
   }
 
+  void "Instance title is mandatory"() {
+    given:
+    def newInstanceRequest = new JsonObject()
+
+    when:
+      def (postResponse, body) = client.post(
+        new URL("${inventoryApiRoot()}/instances"),
+        Json.encodePrettily(newInstanceRequest))
+
+    then:
+      assert postResponse.status == 400
+      assert postResponse.headers.location == null
+      assert body == "Title must be provided for an instance"
+  }
+
   private String inventoryApiRoot() {
-    def directAddress = new URL("http://localhost:${ApiTestSuite.INVENTORY_VERTICLE_TEST_PORT}/inventory")
+    def directAddress = new URL(
+      "http://localhost:${ApiTestSuite.INVENTORY_VERTICLE_TEST_PORT}/inventory")
 
     def useOkapi = (System.getProperty("okapi.use") ?: "").toBoolean()
 

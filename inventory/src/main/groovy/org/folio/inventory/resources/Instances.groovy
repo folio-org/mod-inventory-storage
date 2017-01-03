@@ -10,6 +10,7 @@ import org.folio.inventory.domain.Instance
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.request.VertxBodyParser
+import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.RedirectResponse
 
@@ -43,6 +44,12 @@ class Instances {
 
     Map instanceRequest = new VertxBodyParser().toMap(routingContext)
 
+    if(isEmpty(instanceRequest.title)) {
+      ClientErrorResponse.badRequest(routingContext.response(),
+        "Title must be provided for an instance")
+      return
+    }
+
     def newInstance = new Instance(instanceRequest.title)
 
     storage.getInstanceCollection(context).add(newInstance, {
@@ -50,6 +57,7 @@ class Instances {
         context.absoluteUrl("${relativeInstancesPath()}/${it.id}").toString())
     })
   }
+
 
   void deleteAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
@@ -81,11 +89,15 @@ class Instances {
 
     result
   }
-
+  
   private JsonObject convertToUTF8(Instance instance) {
     def object = new JsonObject()
     object.put("id", instance.id)
     object.put("title", StringEscapeUtils.escapeJava(instance.title))
     object
+  }
+
+  private boolean isEmpty(String string) {
+    string == null || string.trim().length() == 0
   }
 }
