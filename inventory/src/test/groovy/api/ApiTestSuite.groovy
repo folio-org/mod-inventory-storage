@@ -35,13 +35,21 @@ public class ApiTestSuite {
     stopVertx()
   }
 
-
   private static stopVertx() {
     vertxAssistant.stop()
   }
 
   private static startVertx() {
     vertxAssistant.start()
+  }
+
+  private static String apiRoot() {
+    def okapiRoot = System.getProperty("okapi.address", "")
+    def directRoot = "http://localhost:${ApiTestSuite.INVENTORY_VERTICLE_TEST_PORT}"
+
+    def useOkapi = (System.getProperty("okapi.use") ?: "").toBoolean()
+
+    useOkapi ? okapiRoot : directRoot
   }
 
   private static startInventoryVerticle() {

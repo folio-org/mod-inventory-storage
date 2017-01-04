@@ -160,14 +160,7 @@ class ModsIngestExamples extends Specification {
   }
 
   private String inventoryApiRoot() {
-    def directAddress = new URL(
-      "http://localhost:${ApiTestSuite.INVENTORY_VERTICLE_TEST_PORT}/inventory")
-
-    def useOkapi = (System.getProperty("okapi.use") ?: "").toBoolean()
-
-    useOkapi ?
-      System.getProperty("okapi.address") + '/inventory'
-      : directAddress
+    "${ApiTestSuite.apiRoot()}/inventory"
   }
 
   private File loadFileFromResource(String filename) {
