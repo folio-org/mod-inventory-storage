@@ -30,6 +30,9 @@ class WebContext implements Context {
   def URL absoluteUrl(String path) {
     def currentRequestUrl = new URL(routingContext.request().absoluteURI())
 
+    //It would seem Okapi preserves headers from the original request,
+    // so there is no need to use X-Okapi-Url for this?
+
     new URL(currentRequestUrl.protocol, currentRequestUrl.host,
       currentRequestUrl.port, path)
   }

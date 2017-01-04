@@ -40,7 +40,8 @@ class InstancesApiExamples extends Specification {
       assert getResponse.status == 200
 
       assert createdInstance.title == "Long Way to a Small Angry Planet"
-      instanceExpressesDublinCoreMetadata(createdInstance)
+      expressesDublinCoreMetadata(createdInstance)
+      dublinCoreContextLinkRespectsWayResourceWasReached(createdInstance)
   }
 
   void "Instance title is mandatory"() {
@@ -86,18 +87,13 @@ class InstancesApiExamples extends Specification {
       assert response.status == 200
       assert instances.size() == 3
 
-      instances.each { instanceExpressesDublinCoreMetadata(it) }
-  }
+      instances.each {
+        expressesDublinCoreMetadata(it)
+      }
 
-  void "Instance expresses title in Dublin Core metadata"() {
-    given:
-      createInstance("Long Way to a Small Angry Planet")
-
-    when:
-      def (response, instances) = client.get(instancesRoot())
-
-    then:
-      instanceExpressesDublinCoreMetadata(instances[0])
+      instances.each {
+        dublinCoreContextLinkRespectsWayResourceWasReached(it)
+      }
   }
 
   private URL instancesRoot() {
@@ -126,7 +122,7 @@ class InstancesApiExamples extends Specification {
     assert response.status == 200
   }
 
-  private void instanceExpressesDublinCoreMetadata(instance) {
+  private void expressesDublinCoreMetadata(instance) {
     def options = new JsonLdOptions()
     def documentLoader = new DocumentLoader()
     def httpClient = CachingHttpClientBuilder
@@ -147,5 +143,9 @@ class InstancesApiExamples extends Specification {
 
   private static String LinkedDataValue(List<Object> expanded, String field) {
     expanded[0][field][0]?."@value"
+  }
+
+  private void dublinCoreContextLinkRespectsWayResourceWasReached(instance) {
+    assert instance."@context".contains(ApiTestSuite.apiRoot())
   }
 }
