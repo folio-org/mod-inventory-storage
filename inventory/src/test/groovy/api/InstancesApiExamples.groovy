@@ -40,8 +40,13 @@ class InstancesApiExamples extends Specification {
       assert getResponse.status == 200
 
       assert createdInstance.title == "Long Way to a Small Angry Planet"
+
       expressesDublinCoreMetadata(createdInstance)
       dublinCoreContextLinkRespectsWayResourceWasReached(createdInstance)
+      selfLinkRespectsWayResourceWasReached(createdInstance)
+      selfLinkShouldBeReachable(createdInstance)
+
+
   }
 
   void "Instance title is mandatory"() {
@@ -94,6 +99,14 @@ class InstancesApiExamples extends Specification {
       instances.each {
         dublinCoreContextLinkRespectsWayResourceWasReached(it)
       }
+
+      instances.each {
+        selfLinkRespectsWayResourceWasReached(it)
+      }
+
+      instances.each {
+        selfLinkShouldBeReachable(it)
+      }
   }
 
   private URL instancesRoot() {
@@ -145,7 +158,21 @@ class InstancesApiExamples extends Specification {
     expanded[0][field][0]?."@value"
   }
 
+  private void selfLinkShouldBeReachable(instance) {
+    def (response, _) = client.get(instance.links.self)
+
+    assert response.status == 200
+  }
+
   private void dublinCoreContextLinkRespectsWayResourceWasReached(instance) {
-    assert instance."@context".contains(ApiTestSuite.apiRoot())
+    assert containsApiRoot(instance."@context")
+  }
+
+  private void selfLinkRespectsWayResourceWasReached(instance) {
+    assert containsApiRoot(instance.links.self)
+  }
+
+  private boolean containsApiRoot(String link) {
+    link.contains(ApiTestSuite.apiRoot())
   }
 }

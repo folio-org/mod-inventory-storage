@@ -110,10 +110,16 @@ class Instances {
 
   private JsonObject convertToUTF8(Instance instance, WebContext context) {
     def representation = new JsonObject()
-    representation.put("id", instance.id)
-    representation.put("title", StringEscapeUtils.escapeJava(instance.title))
+
     representation.put("@context", context.absoluteUrl(
       relativeInstancesPath() + "/context").toString())
+
+    representation.put("id", instance.id)
+    representation.put("title", StringEscapeUtils.escapeJava(instance.title))
+
+    representation.put('links',
+      ['self': context.absoluteUrl(
+        relativeInstancesPath() + "/${instance.id}").toString()])
 
     representation
   }
