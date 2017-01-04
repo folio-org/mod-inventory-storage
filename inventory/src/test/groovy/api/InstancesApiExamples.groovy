@@ -45,8 +45,6 @@ class InstancesApiExamples extends Specification {
       dublinCoreContextLinkRespectsWayResourceWasReached(createdInstance)
       selfLinkRespectsWayResourceWasReached(createdInstance)
       selfLinkShouldBeReachable(createdInstance)
-
-
   }
 
   void "Instance title is mandatory"() {
@@ -107,6 +105,14 @@ class InstancesApiExamples extends Specification {
       instances.each {
         selfLinkShouldBeReachable(it)
       }
+  }
+
+  void "Cannot find an unknown resource"() {
+    when:
+      def (response, _) = client.get("${instancesRoot()}/${UUID.randomUUID()}")
+
+    then:
+      assert response.status == 404
   }
 
   private URL instancesRoot() {

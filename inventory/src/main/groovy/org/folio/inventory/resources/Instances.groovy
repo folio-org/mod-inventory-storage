@@ -90,8 +90,15 @@ class Instances {
 
     storage.getInstanceCollection(context).findById(
       routingContext.request().getParam("id"),
-      { JsonResponse.success(routingContext.response(),
-        convertToUTF8(it, context)) })
+      {
+        if(it != null) {
+          JsonResponse.success(routingContext.response(),
+            convertToUTF8(it, context))
+        }
+        else {
+          ClientErrorResponse.notFound(routingContext.response())
+        }
+      })
   }
 
   private static String relativeInstancesPath() {
