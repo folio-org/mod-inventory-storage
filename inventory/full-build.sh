@@ -8,22 +8,6 @@ tenant_id=${3:-test_tenant}
 
 gradle clean test
 
-cd ..
-
-./create-tenant.sh ${tenant_id}
-
-cd inventory
-
-./register.sh ${inventory_direct_address} ${inventory_instance_id} ${tenant_id}
-
-gradle -Dokapi.address="${okapi_address}" testApiViaOkapi
-
-./unregister.sh ${inventory_instance_id} ${tenant_id}
-
-cd ..
-
-./delete-tenant.sh ${tenant_id}
-
-cd inventory
+./test-via-okapi.sh
 
 gradle fatJar
