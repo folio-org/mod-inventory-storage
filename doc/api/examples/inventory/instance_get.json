@@ -1,4 +1,14 @@
 {
+  "@context": "http://localhost:9130/inventory/instance/context",
   "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
-  "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN"
+  "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+  "links": {
+    "self": "http://localhost:9130/inventory/instance/cd28da0f-a3e4-465c-82f1-acade4e8e170"
+  },
+  "identifiers": [
+    {
+      "namespace": "isbn",
+      "value": "9781466636897"
+    }
+  ]
 }

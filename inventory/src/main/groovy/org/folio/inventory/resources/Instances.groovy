@@ -67,7 +67,8 @@ class Instances {
       return
     }
 
-    def newInstance = new Instance(instanceRequest.title)
+    def newInstance = new Instance(instanceRequest.title,
+      instanceRequest.identifiers)
 
     storage.getInstanceCollection(context).add(newInstance, {
       RedirectResponse.created(routingContext.response(),
@@ -123,6 +124,19 @@ class Instances {
 
     representation.put("id", instance.id)
     representation.put("title", StringEscapeUtils.escapeJava(instance.title))
+
+    def identifiers = []
+
+    instance.identifiers.each { identifier ->
+      def identifierRepresentation = [:]
+
+      identifierRepresentation.namespace = identifier.namespace
+      identifierRepresentation.value = identifier.value
+
+      identifiers.add(identifierRepresentation)
+    }
+
+    representation.put('identifiers', identifiers)
 
     representation.put('links',
       ['self': context.absoluteUrl(

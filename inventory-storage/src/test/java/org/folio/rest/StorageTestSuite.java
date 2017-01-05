@@ -1,4 +1,4 @@
-package org.folio.rest;
+  package org.folio.rest;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;

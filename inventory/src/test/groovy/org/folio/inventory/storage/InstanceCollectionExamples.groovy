@@ -18,9 +18,9 @@ abstract class InstanceCollectionExamples {
 
   private final CollectionProvider collectionProvider
 
-  private final Instance smallAngryPlanet = new Instance("Long Way to a Small Angry Planet")
-  private final Instance nod = new Instance("Nod")
-  private final Instance uprooted = new Instance("Uprooted")
+  private final Instance smallAngryPlanet = smallAngryPlanet()
+  private final Instance nod = nod()
+  private final Instance uprooted = uprooted()
 
   public InstanceCollectionExamples(CollectionProvider collectionProvider) {
 
@@ -75,6 +75,30 @@ abstract class InstanceCollectionExamples {
     assert allInstances.any { it.title == "Long Way to a Small Angry Planet" }
     assert allInstances.any { it.title == "Nod" }
     assert allInstances.any { it.title == "Uprooted" }
+
+    def createdAngryPlanet = allInstances.find {
+      it.title == "Long Way to a Small Angry Planet"
+    }
+
+    def createdNod = allInstances.find {
+      it.title == "Nod"
+    }
+
+    def createdUprooted = allInstances.find {
+      it.title == "Uprooted"
+    }
+
+    assert createdAngryPlanet.identifiers.any {
+      it.namespace == 'isbn' && it.value == '9781473619777' }
+
+    assert createdNod.identifiers.any {
+      it.namespace == 'asin' && it.value == 'B01D1PLMDO' }
+
+    assert createdUprooted.identifiers.any {
+      it.namespace == 'isbn' && it.value == '1447294149' }
+
+    assert createdUprooted.identifiers.any {
+      it.namespace == 'isbn' && it.value == '9781447294146' }
   }
 
   @Test
@@ -96,12 +120,18 @@ abstract class InstanceCollectionExamples {
     collection.findById(addedInstance.id, complete(findFuture))
     collection.findById(otherAddedInstance.id, complete(otherFindFuture))
 
-    def foundInstance = getOnCompletion(findFuture)
-    def otherFoundInstance = getOnCompletion(otherFindFuture)
+    def foundSmallAngry = getOnCompletion(findFuture)
+    def foundNod = getOnCompletion(otherFindFuture)
 
-    assert foundInstance.title == "Long Way to a Small Angry Planet"
+    assert foundSmallAngry.title == "Long Way to a Small Angry Planet"
 
-    assert otherFoundInstance.title == "Nod"
+    assert foundNod.title == "Nod"
+
+    assert foundSmallAngry.identifiers.any {
+      it.namespace == 'isbn' && it.value == '9781473619777' }
+
+    assert foundNod.identifiers.any {
+      it.namespace == 'asin' && it.value == 'B01D1PLMDO' }
   }
 
   @Test
@@ -167,5 +197,22 @@ abstract class InstanceCollectionExamples {
     instanceCollection.add(uprooted, allAdded.notifyComplete())
 
     allAdded.waitForCompletion()
+  }
+
+  private Instance nod() {
+    new Instance("Nod")
+      .addIdentifier('asin', 'B01D1PLMDO')
+  }
+
+  private Instance uprooted() {
+    new Instance("Uprooted")
+      .addIdentifier('isbn', '1447294149')
+      .addIdentifier('isbn', '9781447294146')
+  }
+
+  private Instance smallAngryPlanet() {
+    new Instance("Long Way to a Small Angry Planet")
+      .addIdentifier('isbn', '9781473619777')
+
   }
 }

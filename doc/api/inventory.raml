@@ -13,6 +13,7 @@ schemas:
  - items: !include schema/inventory/items.json
  - instance: !include schema/inventory/instance.json
  - instances: !include schema/inventory/instances.json
+ - context: !include schema/inventory/instance_context.json
 
 traits:
  - secured: !include shared/traits/auth.raml
@@ -27,10 +28,10 @@ resourceTypes:
     displayName: Items
     type:
       collection:
-        exampleCollection: !include  examples/inventory/items_get.json
+        exampleCollection: !include examples/inventory/items_get.json
         schemaCollection: items
         schemaItem: item
-        exampleItem: !include  examples/inventory/item_get.json
+        exampleItem: !include examples/inventory/item_get.json
     get:
     delete:
     /{itemId}:
@@ -46,8 +47,9 @@ resourceTypes:
         exampleCollection: !include  examples/inventory/instance_get.json
         schemaCollection: instances
         schemaItem: instance
-        exampleItem: !include  examples/inventory/instance_get.json
+        exampleItem: !include examples/inventory/instance_get.json
     get:
+    post:
     delete:
     /{instanceId}:
       type:
@@ -55,3 +57,13 @@ resourceTypes:
           exampleItem: !include examples/inventory/instance_get.json
           schema: instance
       get:
+    /context:
+      get:
+        description: "Provides Dublin Core context for instances"
+        responses:
+          200:
+            description: "Dublin Core context for instances"
+            body:
+              application/json:
+                example: !include examples/inventory/instance_context_get.json
+                schema: context

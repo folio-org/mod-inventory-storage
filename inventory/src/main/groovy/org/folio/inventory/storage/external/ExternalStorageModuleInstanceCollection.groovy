@@ -54,6 +54,7 @@ class ExternalStorageModuleInstanceCollection
 
     instanceToSend.put("id", UUID.randomUUID().toString())
     instanceToSend.put("title", instance.title)
+    instanceToSend.put("identifiers", instance.identifiers)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
@@ -158,8 +159,19 @@ class ExternalStorageModuleInstanceCollection
   }
 
   private Instance mapFromJson(JsonObject instanceFromServer) {
+
+    def identifiers = toList(
+      instanceFromServer.getJsonArray("identifiers", new JsonArray()))
+
     new Instance(
       instanceFromServer.getString("id"),
-      instanceFromServer.getString("title"))
+      instanceFromServer.getString("title"),
+      identifiers.collect( {
+        [ 'namespace' : it.getString("namespace"),
+          'value' : it.getString("value") ] }))
+  }
+
+  private toList(JsonArray array) {
+    array.stream().collect()
   }
 }

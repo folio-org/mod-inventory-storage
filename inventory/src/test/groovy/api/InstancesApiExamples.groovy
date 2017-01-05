@@ -23,6 +23,7 @@ class InstancesApiExamples extends Specification {
     given:
       def newInstanceRequest = new JsonObject()
         .put("title", "Long Way to a Small Angry Planet")
+        .put("identifiers", [[namespace: "isbn", value: "9781473619777"]]);
 
     when:
       def (postResponse, _) = client.post(
@@ -40,6 +41,8 @@ class InstancesApiExamples extends Specification {
       assert getResponse.status == 200
 
       assert createdInstance.title == "Long Way to a Small Angry Planet"
+      assert createdInstance.identifiers[0].namespace == "isbn"
+      assert createdInstance.identifiers[0].value == "9781473619777"
 
       expressesDublinCoreMetadata(createdInstance)
       dublinCoreContextLinkRespectsWayResourceWasReached(createdInstance)

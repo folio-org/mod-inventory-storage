@@ -13,7 +13,8 @@ class InMemoryInstanceCollection
 
   @Override
   void add(Instance item, Closure resultCallback) {
-    collection.add(item.copyWithNewId(UUID.randomUUID().toString()), resultCallback)
+    collection.add(item.copyWithNewId(UUID.randomUUID().toString()),
+      resultCallback)
   }
 
   @Override

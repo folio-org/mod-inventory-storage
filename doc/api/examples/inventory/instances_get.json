@@ -1,10 +1,34 @@
 [
   {
+    "@context": "http://localhost:9130/inventory/instance/context",
     "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
-    "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN"
+    "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+    "links": {
+      "self": "http://localhost:9130/inventory/instance/cf23adf0-61ba-4887-bf82-956c4aae2260"
+    },
+    "identifiers": [
+      {
+        "namespace": "isbn",
+        "value": "9781466636897"
+      }
+    ]
   },
   {
+    "@context": "http://localhost:9130/inventory/instance/context",
     "id": "ab312025-0642-45a6-8545-aa02aff1ae7c",
-    "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES."
+    "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
+    "links": {
+      "self": "http://localhost:9130/inventory/instance/ab312025-0642-45a6-8545-aa02aff1ae7c"
+    },
+    "identifiers": [
+      {
+        "namespace": "isbn",
+        "value": "9781466639195"
+      },
+      {
+        "namespace": "ybp",
+        "value": "2"
+      }
+    ]
   }
 ]
