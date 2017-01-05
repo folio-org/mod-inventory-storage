@@ -5,9 +5,6 @@
     "id": {
       "type": "string"
     },
-    "lastModified":{
-      "type": "integer"
-    },
     "title": {
       "type": "string"
     },

@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "id",
-    "lastModified",
     "title",
     "identifiers"
 })
@@ -28,8 +27,6 @@ public class Instance {
 
     @JsonProperty("id")
     private String id;
-    @JsonProperty("lastModified")
-    private Integer lastModified;
     /**
      * 
      * (Required)
@@ -67,31 +64,6 @@ public class Instance {
 
     public Instance withId(String id) {
         this.id = id;
-        return this;
-    }
-
-    /**
-     * 
-     * @return
-     *     The lastModified
-     */
-    @JsonProperty("lastModified")
-    public Integer getLastModified() {
-        return lastModified;
-    }
-
-    /**
-     * 
-     * @param lastModified
-     *     The lastModified
-     */
-    @JsonProperty("lastModified")
-    public void setLastModified(Integer lastModified) {
-        this.lastModified = lastModified;
-    }
-
-    public Instance withLastModified(Integer lastModified) {
-        this.lastModified = lastModified;
         return this;
     }
 
