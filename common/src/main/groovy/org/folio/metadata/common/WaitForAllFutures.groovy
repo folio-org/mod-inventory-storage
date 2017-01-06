@@ -1,6 +1,7 @@
 package org.folio.metadata.common
 
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 import static org.folio.metadata.common.FutureAssistance.*
 
@@ -18,6 +19,6 @@ class WaitForAllFutures<T> {
   }
 
   void waitForCompletion() {
-    CompletableFuture.allOf(*allFutures).join()
+    CompletableFuture.allOf(*allFutures).get(5000, TimeUnit.MILLISECONDS)
   }
 }
