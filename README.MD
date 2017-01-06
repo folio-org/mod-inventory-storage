@@ -168,7 +168,7 @@ Whilst some requests may currently not require tenant information (it is likely 
 
 # Running the Tests
 
-The best way to run the tests is to run ./full-test.sh.
+The best way to run the tests is to run `./full-test.sh`
 
 Okapi needs to be already running, without changing the address it uses (unlike when running Okapi for running the modules in Docker containers).
 
@@ -227,7 +227,7 @@ Content-Length: 81
 }
 ```
 
-The tenant can be deleted by running `./delete-tenant.sh`.
+The tenant can be deleted by running `./delete-tenant.sh`
 
 ### Registering the Modules With Okapi
 
