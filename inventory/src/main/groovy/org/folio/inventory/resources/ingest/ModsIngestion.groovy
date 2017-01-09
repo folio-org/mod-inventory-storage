@@ -1,12 +1,10 @@
 package org.folio.inventory.resources.ingest
 
-import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.file.FileSystem
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
-import org.folio.inventory.Messages
+import org.folio.inventory.domain.ingest.IngestMessages
 import org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.parsing.UTF8LiteralCharacterEncoding
 import org.folio.inventory.storage.Storage
@@ -68,16 +66,13 @@ class ModsIngestion {
           def context = new WebContext(routingContext)
 
           storage.getIngestJobCollection(context)
-            .add(new IngestJob(IngestJobState.REQUESTED), {
-            routingContext.vertx().eventBus().send(
-              Messages.START_INGEST.Address,
-              new JsonObject(["records" : convertedRecords]),
-              ["headers" : ["jobId" : it.id,
-                            "tenantId" : context.tenantId,
-                            "okapiLocation" : context.okapiLocation]])
+            .add(new IngestJob(IngestJobState.REQUESTED), { job ->
+
+            IngestMessages.start(convertedRecords, job.id, context)
+              .send(routingContext.vertx())
 
             RedirectResponse.accepted(routingContext.response(),
-              statusLocation(routingContext, it.id))
+              statusLocation(routingContext, job.id))
           })
 
         } else {

@@ -5,6 +5,7 @@ import io.vertx.groovy.core.Vertx
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.groovy.ext.web.Router
 import io.vertx.lang.groovy.GroovyVerticle
+import org.folio.inventory.domain.ingest.IngestMessageProcessor
 import org.folio.inventory.resources.Instances
 import org.folio.inventory.resources.Items
 import org.folio.inventory.resources.ingest.ModsIngestion

@@ -1,5 +1,4 @@
-package org.folio.inventory
-
+package org.folio.inventory.domain
 
 enum Messages {
   START_INGEST("org.folio.inventory.ingest.start"),

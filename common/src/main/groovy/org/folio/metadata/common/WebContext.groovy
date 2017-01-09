@@ -19,10 +19,12 @@ class WebContext implements Context {
     getHeader("X-Okapi-Url", "")
   }
 
+  @Override
   def getHeader(String header) {
     routingContext.request().getHeader(header)
   }
 
+  @Override
   def getHeader(String header, defaultValue) {
     hasHeader(header) ? getHeader(header) : defaultValue
   }
@@ -37,7 +39,8 @@ class WebContext implements Context {
       currentRequestUrl.port, path)
   }
 
-  private boolean hasHeader(String header) {
+  @Override
+  boolean hasHeader(String header) {
     routingContext.request().headers().contains(header)
   }
 }

@@ -20,7 +20,18 @@ class MessagingContext implements Context {
     getHeader("okapiLocation")
   }
 
+  @Override
   def getHeader(String header) {
     headers.get(header)
+  }
+
+  @Override
+  def getHeader(String header, Object defaultValue) {
+    hasHeader(header) ? getHeader(header) : defaultValue
+  }
+
+  @Override
+  boolean hasHeader(String header) {
+    headers.contains(header)
   }
 }
