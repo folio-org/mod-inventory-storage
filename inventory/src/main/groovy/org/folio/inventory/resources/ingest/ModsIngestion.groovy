@@ -1,5 +1,6 @@
 package org.folio.inventory.resources.ingest
 
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.file.FileSystem
 import io.vertx.groovy.ext.web.Router
@@ -63,7 +64,15 @@ class ModsIngestion {
             .parseRecords(uploadedFileContents)
 
           def convertedRecords = records.collect {
-            ["title": "${it.title}", "barcode":"${it.barcode}" ]
+
+            def convertedIdentifiers = it.identifiers.collect {
+              ["namespace" : "${it.namespace}", "value" : "${it.value}"]
+            }
+
+            new JsonObject()
+              .put("title", it.title)
+              .put("barcode", it.barcode)
+              .put("identifiers", new JsonArray(convertedIdentifiers))
           }
 
           def context = new WebContext(routingContext)

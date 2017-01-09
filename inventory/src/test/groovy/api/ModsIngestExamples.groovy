@@ -13,7 +13,6 @@ class ModsIngestExamples extends Specification {
     deleteItems()
   }
 
-
   void "Ingest some MODS records"() {
     given:
       def modsFile = loadFileFromResource(
@@ -71,39 +70,41 @@ class ModsIngestExamples extends Specification {
     assert items.every({ it.instanceId != null })
 
     assert items.any({
-      itemMatches(it,
-        "California: its gold and its inhabitants",
-        "69228882")
+      itemSimilarTo(it, "California: its gold and its inhabitants", "69228882")
     })
 
     assert items.any({
-      itemMatches(it,
-        "Studien zur Geschichte der Notenschrift.",
-        "69247446")
+      itemSimilarTo(it, "Studien zur Geschichte der Notenschrift.", "69247446")
     })
 
     assert items.any({
-      itemMatches(it,
-        "Essays on C.S. Lewis and George MacDonald",
-        "53556908")
+      itemSimilarTo(it, "Essays on C.S. Lewis and George MacDonald", "53556908")
     })
 
     assert items.any({
-      itemMatches(it,
-        "Statistical sketches of Upper Canada",
-        "69077747")
+      itemSimilarTo(it, "Statistical sketches of Upper Canada", "69077747")
     })
 
     assert items.any({
-      itemMatches(it,
-        "Edward McGuire, RHA",
-        "22169083")
+      itemSimilarTo(it, "Edward McGuire, RHA", "22169083")
     })
 
-    items.stream().forEach({ itemHasCorrectInstanceRelationship(it) })
+    assert items.any({
+      itemSimilarTo(it, "Influenza della Poesia sui Costumi", "43620390")
+    })
+
+    assert items.any({
+      itemSimilarTo(it, "Pavle Nik", "37696876")
+    })
+
+    assert items.any({
+      itemSimilarTo(it, "Grammaire", "69250051")
+    })
+
+    items.every({ hasCorrectInstanceRelationship(it) })
   }
 
-  private itemHasCorrectInstanceRelationship(item) {
+  private hasCorrectInstanceRelationship(item) {
     def (resp, instance) = client.get(
       new URL("${inventoryApiRoot()}/instances/${item.instanceId}"))
 
@@ -123,31 +124,39 @@ class ModsIngestExamples extends Specification {
     assert instances.size() == 8
     assert instances.every({ it.id != null })
     assert instances.every({ it.title != null })
+    assert instances.every({ it.identifiers != null })
+    assert instances.every({ it.identifiers.size() >= 1 })
+    assert instances.every({ it.identifiers.every({ it.namespace != null }) })
+    assert instances.every({ it.identifiers.every({ it.value != null }) })
 
     assert instances.any({
-      instanceMatches(it,
-        "California: its gold and its inhabitants")
+      InstanceSimilarTo(it, "California: its gold and its inhabitants")
     })
 
     assert instances.any({
-      instanceMatches(it,
-        "Studien zur Geschichte der Notenschrift.")
+      InstanceSimilarTo(it, "Studien zur Geschichte der Notenschrift.")
     })
 
     assert instances.any({
-      instanceMatches(it,
-        "Essays on C.S. Lewis and George MacDonald")
+      InstanceSimilarTo(it, "Essays on C.S. Lewis and George MacDonald")
     })
 
     assert instances.any({
-      instanceMatches(it,
-        "Statistical sketches of Upper Canada")
+      InstanceSimilarTo(it, "Statistical sketches of Upper Canada")
     })
 
     assert instances.any({
-      instanceMatches(it,
-        "Edward McGuire, RHA")
+      InstanceSimilarTo(it, "Edward McGuire, RHA")
     })
+
+    assert instances.any({
+      InstanceSimilarTo(it, "Influenza della Poesia sui Costumi") })
+
+    assert instances.any({
+      InstanceSimilarTo(it, "Pavle Nik") })
+
+    assert instances.any({
+      InstanceSimilarTo(it, "Grammaire") })
   }
 
   private beginIngest(List<File> files) {
@@ -169,7 +178,7 @@ class ModsIngestExamples extends Specification {
     new File(classLoader.getResource(filename).getFile())
   }
 
-  private boolean itemMatches(
+  private boolean itemSimilarTo(
     record,
     String expectedSimilarTitle,
     String expectedBarcode) {
@@ -178,7 +187,7 @@ class ModsIngestExamples extends Specification {
       record.barcode == expectedBarcode
   }
 
-  private boolean instanceMatches(record, String expectedSimilarTitle) {
+  private boolean InstanceSimilarTo(record, String expectedSimilarTitle) {
     record.title.contains(expectedSimilarTitle)
   }
 

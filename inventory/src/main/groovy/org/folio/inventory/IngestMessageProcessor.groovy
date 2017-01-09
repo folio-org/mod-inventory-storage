@@ -39,7 +39,7 @@ class IngestMessageProcessor {
 
     records.stream()
       .map({
-      new Instance(it.title)
+      new Instance(it.title, it.identifiers)
     })
     .forEach({ instanceCollection.add(it, allInstances.receive()) })
 
