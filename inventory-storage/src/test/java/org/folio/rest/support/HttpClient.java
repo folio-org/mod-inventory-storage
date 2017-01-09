@@ -48,7 +48,7 @@ public class HttpClient {
     get(url, null, responseHandler);
   }
 
-  private void get(URL url,
+  public void get(URL url,
                    String tenantId,
                    Handler<HttpClientResponse> responseHandler) {
 
