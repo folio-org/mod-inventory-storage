@@ -63,17 +63,7 @@ class ModsIngestion {
           def records = new ModsParser(new UTF8LiteralCharacterEncoding())
             .parseRecords(uploadedFileContents)
 
-          def convertedRecords = records.collect {
-
-            def convertedIdentifiers = it.identifiers.collect {
-              ["namespace" : "${it.namespace}", "value" : "${it.value}"]
-            }
-
-            new JsonObject()
-              .put("title", it.title)
-              .put("barcode", it.barcode)
-              .put("identifiers", new JsonArray(convertedIdentifiers))
-          }
+          def convertedRecords = new IngestRecordConverter().toJson(records)
 
           def context = new WebContext(routingContext)
 
