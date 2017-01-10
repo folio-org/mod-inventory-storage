@@ -58,12 +58,12 @@ public class InstanceStorageTest {
     instanceToCreate.put("id",id.toString());
     instanceToCreate.put("title", "Real Analysis");
 
-    CompletableFuture<JsonResponse> postCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
     client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(postCompleted));
+      ResponseHandler.json(createCompleted));
 
-    JsonResponse response = postCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     JsonObject instance = response.getBody();
 
@@ -89,8 +89,8 @@ public class InstanceStorageTest {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 
-      client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
-        ResponseHandler.json(getCompleted));
+    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
 
     JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -248,12 +248,12 @@ public class InstanceStorageTest {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<Response> createComplete = new CompletableFuture();
+    CompletableFuture<Response> createCompleted = new CompletableFuture();
 
     client.post(instanceStorageUrl(), instanceToCreate,
-      StorageTestSuite.TENANT_ID, ResponseHandler.empty(createComplete));
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(createCompleted));
 
-    Response response = createComplete.get(2, TimeUnit.SECONDS);
+    Response response = createCompleted.get(2, TimeUnit.SECONDS);
 
     if(response.getStatusCode() != 201) {
       throw new UnknownError("Create instance preparation failed");

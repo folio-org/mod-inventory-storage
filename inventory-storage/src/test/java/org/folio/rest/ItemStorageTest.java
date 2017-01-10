@@ -1,17 +1,11 @@
 package org.folio.rest;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.support.BufferHelper;
-import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.*;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -22,13 +16,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@RunWith(VertxUnitRunner.class)
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 public class ItemStorageTest {
 
-  private static Vertx vertx = StorageTestSuite.getVertx();
-  private static int port = StorageTestSuite.getPort();
-
-  private static HttpClient client = new HttpClient(vertx);
+  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
   @Before
   public void beforeEach()
@@ -37,28 +30,27 @@ public class ItemStorageTest {
     TimeoutException,
     MalformedURLException {
 
-    CompletableFuture deleteAllFinished = new CompletableFuture();
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
 
-    URL deleteItemsUrl = new URL("http", "localhost", port, "/item-storage/items");
+    URL deleteItemsUrl = itemStorageUrl();
 
-    client.delete(deleteItemsUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
-      if(response.statusCode() == 200) {
-        deleteAllFinished.complete(null);
-      }
-    });
+    client.delete(deleteItemsUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(deleteAllFinished));
 
-    deleteAllFinished.get(5, TimeUnit.SECONDS);
+    Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
+
+    if(response.getStatusCode() != 200) {
+      throw new UnknownError("Delete all items preparation failed");
+    }
   }
 
   @Test
-  public void createViaPostRespondsWithCorrectResource(TestContext context)
-    throws MalformedURLException {
+  public void canCreateItems()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
-    Async async = context.async();
     UUID id = UUID.randomUUID();
     UUID instanceId = UUID.randomUUID();
-
-    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/items");
 
     JsonObject itemToCreate = new JsonObject();
 
@@ -67,122 +59,123 @@ public class ItemStorageTest {
     itemToCreate.put("title", "Real Analysis");
     itemToCreate.put("barcode", "271828");
 
-    client.post(postItemUrl, itemToCreate, StorageTestSuite.TENANT_ID, response -> {
-      int statusCode = response.statusCode();
-      context.assertEquals(statusCode, HttpURLConnection.HTTP_CREATED);
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
-      response.bodyHandler(buffer -> {
-        JsonObject item = BufferHelper.jsonObjectFromBuffer(buffer);
+    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
 
-        context.assertEquals(item.getString("title"), "Real Analysis");
-        context.assertEquals(item.getString("barcode"), "271828");
-        context.assertEquals(item.getString("instance_id"), instanceId.toString());
-        context.assertEquals(item.getString("id"), id.toString());
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-        async.complete();
-      });
-    });
+    JsonObject item = response.getBody();
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getString("instance_id"), is(instanceId.toString()));
+    assertThat(item.getString("title"), is("Real Analysis"));
+    assertThat(item.getString("barcode"), is("271828"));
   }
 
   @Test
-  public void canGetItemById(TestContext context)
-    throws MalformedURLException {
+  public void canGetItemById()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
-    Async async = context.async();
-    String id = UUID.randomUUID().toString();
-
-    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/items");
+    UUID id = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
 
     JsonObject itemToCreate = new JsonObject();
-    itemToCreate.put("id", id);
-    itemToCreate.put("instance_id", "MadeUp");
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("instance_id", instanceId.toString());
     itemToCreate.put("title", "Refactoring");
     itemToCreate.put("barcode", "314159");
 
-    client.post(postItemUrl, itemToCreate, StorageTestSuite.TENANT_ID, postResponse -> {
-      final int postStatusCode = postResponse.statusCode();
-        context.assertEquals(postStatusCode, HttpURLConnection.HTTP_CREATED);
+    createItem(itemToCreate);
 
-        String urlForGet =
-          String.format("http://localhost:%s/item-storage/items/%s",
-            port, id);
+    URL getItemUrl = itemStorageUrl(String.format("/%s", id));
 
-      client.get(urlForGet, StorageTestSuite.TENANT_ID, getResponse -> {
-          final int getStatusCode = getResponse.statusCode();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 
-          getResponse.bodyHandler(getBuffer -> {
-            JsonObject restResponse1 =
-              BufferHelper.jsonObjectFromBuffer(getBuffer);
+    client.get(getItemUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
 
-            context.assertEquals(getStatusCode, HttpURLConnection.HTTP_OK);
-            context.assertEquals(restResponse1.getString("id") , id);
+    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
-            async.complete();
-          });
-        });
-      });
+    JsonObject item = response.getBody();
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getString("instance_id"), is(instanceId.toString()));
+    assertThat(item.getString("title"), is("Refactoring"));
+    assertThat(item.getString("barcode"), is("314159"));
   }
 
   @Test
-  public void canGetAllItems(TestContext context)
+  public void canGetAllItems()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
 
     UUID firstItemId = UUID.randomUUID();
+    UUID firstItemInstanceId = UUID.randomUUID();
 
     JsonObject firstItemToCreate = new JsonObject();
     firstItemToCreate.put("id", firstItemId.toString());
-    firstItemToCreate.put("instance_id", "MadeUp");
+    firstItemToCreate.put("instance_id", firstItemInstanceId.toString());
     firstItemToCreate.put("title", "Refactoring");
     firstItemToCreate.put("barcode", "314159");
 
     createItem(firstItemToCreate);
 
     UUID secondItemId = UUID.randomUUID();
+    UUID secondItemInstanceId = UUID.randomUUID();
 
     JsonObject secondItemToCreate = new JsonObject();
     secondItemToCreate.put("id", secondItemId.toString());
-    secondItemToCreate.put("instance_id", "MadeUp");
+    secondItemToCreate.put("instance_id", secondItemInstanceId.toString());
     secondItemToCreate.put("title", "Real Analysis");
     secondItemToCreate.put("barcode", "271828");
 
     createItem(secondItemToCreate);
 
-    URL itemsUrl = new URL("http", "localhost", port, "/item-storage/items");
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 
-    Async async = context.async();
+    client.get(itemStorageUrl(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
 
-    client.get(itemsUrl.toString(), StorageTestSuite.TENANT_ID,
-      getResponse -> {
-        context.assertEquals(getResponse.statusCode(),
-          HttpURLConnection.HTTP_OK);
+    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
-        getResponse.bodyHandler(body -> {
-          JsonObject getAllResponse = BufferHelper.jsonObjectFromBuffer(body);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-          JsonArray allItems = getAllResponse.getJsonArray("items");
+    JsonObject body = response.getBody();
 
-          context.assertEquals(allItems.size(), 2);
-          context.assertEquals(getAllResponse.getInteger("total_records"), 2);
+    JsonArray allItems = body.getJsonArray("items");
 
-          JsonObject firstItem = allItems.getJsonObject(0);
-          JsonObject secondItem = allItems.getJsonObject(1);
+    assertThat(allItems.size(), is(2));
+    assertThat(body.getInteger("total_records"), is(2));
 
-          context.assertEquals(firstItem.getString("title"), "Refactoring");
-          context.assertEquals(firstItem.getString("id"), firstItemId.toString());
+    JsonObject firstItem = allItems.getJsonObject(0);
+    JsonObject secondItem = allItems.getJsonObject(1);
 
-          context.assertEquals(secondItem.getString("title"), "Real Analysis");
-          context.assertEquals(secondItem.getString("id"), secondItemId.toString());
+    assertThat(firstItem.getString("id"), is(firstItemId.toString()));
+    assertThat(firstItem.getString("instance_id"),
+      is(firstItemInstanceId.toString()));
 
-          async.complete();
-        });
-      });
+    assertThat(firstItem.getString("title"), is("Refactoring"));
+    assertThat(firstItem.getString("barcode"), is("314159"));
+
+    assertThat(secondItem.getString("id"), is(secondItemId.toString()));
+    assertThat(secondItem.getString("instance_id"),
+      is(secondItemInstanceId.toString()));
+
+    assertThat(secondItem.getString("title"), is("Real Analysis"));
+    assertThat(secondItem.getString("barcode"), is("271828"));
   }
 
   @Test
-  public void canDeleteAllItems(TestContext context)
+  public void canDeleteAllItems()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -190,7 +183,7 @@ public class ItemStorageTest {
 
     JsonObject firstItemToCreate = new JsonObject();
     firstItemToCreate.put("id", UUID.randomUUID().toString());
-    firstItemToCreate.put("instance_id", "MadeUp");
+    firstItemToCreate.put("instance_id", UUID.randomUUID().toString());
     firstItemToCreate.put("title", "Refactoring");
     firstItemToCreate.put("barcode", "314159");
 
@@ -198,45 +191,40 @@ public class ItemStorageTest {
 
     JsonObject secondItemToCreate = new JsonObject();
     secondItemToCreate.put("id", UUID.randomUUID().toString());
-    secondItemToCreate.put("instance_id", "MadeUp");
+    secondItemToCreate.put("instance_id", UUID.randomUUID().toString());
     secondItemToCreate.put("title", "Real Analysis");
     secondItemToCreate.put("barcode", "271828");
 
     createItem(secondItemToCreate);
 
-    CompletableFuture deleteAllFinished = new CompletableFuture();
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
 
-    URL itemsUrl = new URL("http", "localhost", port, "/item-storage/items");
+    client.delete(itemStorageUrl(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(deleteAllFinished));
 
-    client.delete(itemsUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
-      context.assertEquals(response.statusCode(), HttpURLConnection.HTTP_OK);
+    Response deleteResponse = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
-      deleteAllFinished.complete(null);
-    });
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    deleteAllFinished.get(5, TimeUnit.SECONDS);
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 
-    Async async = context.async();
+    client.get(itemStorageUrl(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
 
-    client.get(itemsUrl.toString(), StorageTestSuite.TENANT_ID, response -> {
-      response.bodyHandler(body -> {
+    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
-        JsonObject getAllResponse = BufferHelper.jsonObjectFromBuffer(body);
+    JsonObject responseBody = response.getBody();
 
-        JsonArray allItems = getAllResponse.getJsonArray("items");
+    JsonArray allItems = responseBody.getJsonArray("items");
 
-        context.assertEquals(allItems.size(), 0);
-        context.assertEquals(getAllResponse.getInteger("total_records"), 0);
-        async.complete();
-      });
-    });
+    assertThat(allItems.size(), is(0));
+    assertThat(responseBody.getInteger("total_records"), is(0));
   }
 
   @Test
-  public void tenantIsRequiredForCreatingNewItem(TestContext context)
-    throws MalformedURLException {
-
-    Async async = context.async();
+  public void tenantIsRequiredForCreatingNewItem()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
     Item item = new Item();
     item.setId(UUID.randomUUID().toString());
@@ -244,83 +232,73 @@ public class ItemStorageTest {
     item.setInstanceId(UUID.randomUUID().toString());
     item.setBarcode("4554345453");
 
-    client.post(new URL("http", "localhost",  port, "/item-storage/items"),
-      item, response -> {
-        context.assertEquals(response.statusCode(), 400);
+    CompletableFuture<TextResponse> postCompleted = new CompletableFuture();
 
-        response.bodyHandler( buffer -> {
-          String responseBody = BufferHelper.stringFromBuffer(buffer);
+    client.post(itemStorageUrl(), item,
+      ResponseHandler.text(postCompleted));
 
-          context.assertEquals(responseBody, "Tenant Must Be Provided");
+    TextResponse response = postCompleted.get(5, TimeUnit.SECONDS);
 
-          async.complete();
-        });
-      });
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), is("Tenant Must Be Provided"));
   }
 
   @Test
-  public void tenantIsRequiredForGettingAnItem(TestContext context)
-    throws MalformedURLException {
+  public void tenantIsRequiredForGettingAnItem()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
-    Async async = context.async();
+    URL getInstanceUrl = itemStorageUrl(String.format("/%s",
+      UUID.randomUUID().toString()));
 
-    String path = String.format("/item-storage/items/%s",
-      UUID.randomUUID().toString());
+    CompletableFuture<TextResponse> getCompleted = new CompletableFuture();
 
-    URL getItemUrl = new URL("http", "localhost", port, path);
+    client.get(getInstanceUrl, ResponseHandler.text(getCompleted));
 
-    client.get(getItemUrl,
-      response -> {
-        context.assertEquals(response.statusCode(), 400);
+    TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
-        response.bodyHandler( buffer -> {
-          String responseBody = BufferHelper.stringFromBuffer(buffer);
-
-          context.assertEquals(responseBody, "Tenant Must Be Provided");
-
-          async.complete();
-        });
-      });
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), is("Tenant Must Be Provided"));
   }
 
   @Test
-  public void tenantIsRequiredForGettingAllItems(TestContext context)
-    throws MalformedURLException {
+  public void tenantIsRequiredForGettingAllItems()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
-    Async async = context.async();
+    CompletableFuture<TextResponse> getCompleted = new CompletableFuture();
 
-    String path = String.format("/item-storage/items");
+    client.get(itemStorageUrl(), ResponseHandler.text(getCompleted));
 
-    URL getItemsUrl = new URL("http", "localhost", port, path);
+    TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
-    client.get(getItemsUrl,
-      response -> {
-        System.out.println("Response received");
-
-        context.assertEquals(response.statusCode(), 400);
-
-        response.bodyHandler( buffer -> {
-          String responseBody = BufferHelper.stringFromBuffer(buffer);
-
-          context.assertEquals(responseBody, "Tenant Must Be Provided");
-
-          async.complete();
-        });
-      });
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), is("Tenant Must Be Provided"));
   }
 
   private void createItem(JsonObject itemToCreate)
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    URL postItemUrl = new URL("http", "localhost", port, "/item-storage/items");
+    CompletableFuture<Response> createCompleted = new CompletableFuture();
 
-    CompletableFuture createComplete = new CompletableFuture();
+    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(createCompleted));
 
-    client.post(postItemUrl, itemToCreate, StorageTestSuite.TENANT_ID, response -> {
-      createComplete.complete(null);
-    });
+    Response response = createCompleted.get(2, TimeUnit.SECONDS);
 
-    createComplete.get(2, TimeUnit.SECONDS);
+    if(response.getStatusCode() != 201) {
+      throw new UnknownError("Create item preparation failed");
+    }
+  }
+
+  private static URL itemStorageUrl() throws MalformedURLException {
+    return itemStorageUrl("");
+  }
+
+  private static URL itemStorageUrl(String subPath)
+    throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl("/item-storage/items" + subPath);
   }
 }
