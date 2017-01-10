@@ -34,17 +34,18 @@ public class InstanceStorageTest {
     TimeoutException,
     MalformedURLException {
 
-    CompletableFuture deleteAllFinished = new CompletableFuture();
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
 
-    URL deleteInstancesUrl = storageUrl();
+    URL deleteInstancesUrl = instanceStorageUrl();
 
-    client.delete(deleteInstancesUrl, StorageTestSuite.TENANT_ID, response -> {
-      if(response.statusCode() == 200) {
-        deleteAllFinished.complete(null);
-      }
-    });
+    client.delete(deleteInstancesUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(deleteAllFinished));
 
-    deleteAllFinished.get(5, TimeUnit.SECONDS);
+    Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
+
+    if(response.getStatusCode() != 200) {
+      throw new UnknownError("Delete all instances preparation failed");
+    }
   }
 
   @Test
@@ -54,7 +55,7 @@ public class InstanceStorageTest {
 
     UUID id = UUID.randomUUID();
 
-    URL postInstanceUrl = storageUrl();
+    URL postInstanceUrl = instanceStorageUrl();
 
     JsonObject instanceToCreate = new JsonObject();
 
@@ -64,15 +65,7 @@ public class InstanceStorageTest {
     CompletableFuture<JsonResponse> postCompleted = new CompletableFuture();
 
     client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID,
-      response -> {
-        int statusCode = response.statusCode();
-
-        response.bodyHandler(buffer -> {
-          JsonObject body = BufferHelper.jsonObjectFromBuffer(buffer);
-
-          postCompleted.complete(new JsonResponse(statusCode, body));
-      });
-    });
+      ResponseHandler.json(postCompleted));
 
     JsonResponse response = postCompleted.get(5, TimeUnit.SECONDS);
 
@@ -96,19 +89,12 @@ public class InstanceStorageTest {
 
     createInstance(instanceToCreate);
 
-    URL getInstanceUrl = storageUrl(String.format("/%s", id));
+    URL getInstanceUrl = instanceStorageUrl(String.format("/%s", id));
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 
-      client.get(getInstanceUrl, StorageTestSuite.TENANT_ID, response -> {
-        int statusCode = response.statusCode();
-
-        response.bodyHandler(buffer -> {
-          JsonObject body = BufferHelper.jsonObjectFromBuffer(buffer);
-
-          getCompleted.complete(new JsonResponse(statusCode, body));
-        });
-      });
+      client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(getCompleted));
 
     JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -144,15 +130,8 @@ public class InstanceStorageTest {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 
-    client.get(storageUrl(), StorageTestSuite.TENANT_ID, response -> {
-      int statusCode = response.statusCode();
-
-      response.bodyHandler(buffer -> {
-        JsonObject body = BufferHelper.jsonObjectFromBuffer(buffer);
-
-        getCompleted.complete(new JsonResponse(statusCode, body));
-      });
-    });
+    client.get(instanceStorageUrl(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
 
     JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -194,9 +173,8 @@ public class InstanceStorageTest {
 
     CompletableFuture<Response> allDeleted = new CompletableFuture();
 
-    client.delete(storageUrl(), StorageTestSuite.TENANT_ID, response -> {
-      allDeleted.complete(new Response(response.statusCode()));
-    });
+    client.delete(instanceStorageUrl(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(allDeleted));
 
     Response deleteResponse = allDeleted.get(5, TimeUnit.SECONDS);
 
@@ -204,15 +182,8 @@ public class InstanceStorageTest {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 
-    client.get(storageUrl(), StorageTestSuite.TENANT_ID, response -> {
-      int statusCode = response.statusCode();
-
-      response.bodyHandler(buffer -> {
-        JsonObject body = BufferHelper.jsonObjectFromBuffer(buffer);
-
-        getCompleted.complete(new JsonResponse(statusCode, body));
-      });
-    });
+    client.get(instanceStorageUrl(), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
 
     JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -233,19 +204,12 @@ public class InstanceStorageTest {
     instance.setId(UUID.randomUUID().toString());
     instance.setTitle("Refactoring");
 
-    CompletableFuture<StringResponse> postCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> postCompleted = new CompletableFuture();
 
-    client.post(storageUrl(), instance, response -> {
-      response.bodyHandler( buffer -> {
-        int statusCode = response.statusCode();
+    client.post(instanceStorageUrl(), instance,
+      ResponseHandler.text(postCompleted));
 
-        String body = BufferHelper.stringFromBuffer(buffer);
-
-        postCompleted.complete(new StringResponse(statusCode, body));
-      });
-    });
-
-    StringResponse response = postCompleted.get(5, TimeUnit.SECONDS);
+    TextResponse response = postCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Tenant Must Be Provided"));
@@ -256,22 +220,14 @@ public class InstanceStorageTest {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    URL getInstanceUrl = storageUrl(String.format("/%s",
+    URL getInstanceUrl = instanceStorageUrl(String.format("/%s",
       UUID.randomUUID().toString()));
 
-    CompletableFuture<StringResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> getCompleted = new CompletableFuture();
 
-    client.get(getInstanceUrl, response -> {
-      response.bodyHandler( buffer -> {
-        int statusCode = response.statusCode();
+    client.get(getInstanceUrl, ResponseHandler.text(getCompleted));
 
-        String body = BufferHelper.stringFromBuffer(buffer);
-
-        getCompleted.complete(new StringResponse(statusCode, body));
-      });
-    });
-
-    StringResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+    TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Tenant Must Be Provided"));
@@ -282,19 +238,11 @@ public class InstanceStorageTest {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<StringResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> getCompleted = new CompletableFuture();
 
-    client.get(storageUrl(), response -> {
-      response.bodyHandler( buffer -> {
-        int statusCode = response.statusCode();
+    client.get(instanceStorageUrl(), ResponseHandler.text(getCompleted));
 
-        String body = BufferHelper.stringFromBuffer(buffer);
-
-        getCompleted.complete(new StringResponse(statusCode, body));
-      });
-    });
-
-    StringResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+    TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Tenant Must Be Provided"));
@@ -304,22 +252,24 @@ public class InstanceStorageTest {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture createComplete = new CompletableFuture();
+    CompletableFuture<Response> createComplete = new CompletableFuture();
 
-    client.post(storageUrl(), instanceToCreate, StorageTestSuite.TENANT_ID,
-      response -> {
-        createComplete.complete(null);
-    });
+    client.post(instanceStorageUrl(), instanceToCreate,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(createComplete));
 
-    createComplete.get(2, TimeUnit.SECONDS);
+    Response response = createComplete.get(2, TimeUnit.SECONDS);
+
+    if(response.getStatusCode() != 201) {
+      throw new UnknownError("Create instance preparation failed");
+    }
   }
 
-  private URL storageUrl() throws MalformedURLException {
+  private URL instanceStorageUrl() throws MalformedURLException {
     return new URL("http", "localhost", port,
       "/instance-storage/instances");
   }
 
-  private URL storageUrl(String subPath) throws MalformedURLException {
+  private URL instanceStorageUrl(String subPath) throws MalformedURLException {
     return new URL("http", "localhost", port,
       "/instance-storage/instances" + subPath);
   }
