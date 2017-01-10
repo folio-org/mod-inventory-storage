@@ -1,6 +1,5 @@
 package org.folio.rest;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.jaxrs.model.Instance;
@@ -22,10 +21,7 @@ import static org.junit.Assert.assertThat;
 
 public class InstanceStorageTest {
 
-  private static Vertx vertx = StorageTestSuite.getVertx();
-  private static int port = StorageTestSuite.getPort();
-
-  private static HttpClient client = new HttpClient(vertx);
+  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
   @Before
   public void beforeEach()
@@ -264,13 +260,13 @@ public class InstanceStorageTest {
     }
   }
 
-  private URL instanceStorageUrl() throws MalformedURLException {
-    return new URL("http", "localhost", port,
-      "/instance-storage/instances");
+  private static URL instanceStorageUrl() throws MalformedURLException {
+    return instanceStorageUrl("");
   }
 
-  private URL instanceStorageUrl(String subPath) throws MalformedURLException {
-    return new URL("http", "localhost", port,
-      "/instance-storage/instances" + subPath);
+  private static URL instanceStorageUrl(String subPath)
+    throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl("/instance-storage/instances" + subPath);
   }
 }

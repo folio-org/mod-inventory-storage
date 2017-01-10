@@ -136,4 +136,7 @@ public class StorageTestSuite {
     return port;
   }
 
+  static URL storageUrl(String path) throws MalformedURLException {
+    return new URL("http", "localhost", port, path);
+  }
 }
