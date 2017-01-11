@@ -226,11 +226,11 @@ public class ItemStorageTest {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    Item item = new Item();
-    item.setId(UUID.randomUUID().toString());
-    item.setTitle("Refactoring");
-    item.setInstanceId(UUID.randomUUID().toString());
-    item.setBarcode("4554345453");
+    JsonObject item = new JsonObject();
+    item.put("id", UUID.randomUUID().toString());
+    item.put("title", "Refactoring");
+    item.put("instance_id", UUID.randomUUID().toString());
+    item.put("barcode", "4554345453");
 
     CompletableFuture<TextResponse> postCompleted = new CompletableFuture();
 

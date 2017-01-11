@@ -115,7 +115,7 @@ public class StorageTestSuite {
     client.post(storageUrl("/tenant"), null, tenantId,
       ResponseHandler.empty(tenantPrepared));
 
-    Response response = tenantPrepared.get(5, TimeUnit.SECONDS);
+    Response response = tenantPrepared.get(10, TimeUnit.SECONDS);
 
     if(response.getStatusCode() != 200) {
       throw new UnknownError("Tenant preparation failed");
@@ -133,7 +133,7 @@ public class StorageTestSuite {
     client.delete(storageUrl("/tenant"), tenantId,
       ResponseHandler.empty(tenantDeleted));
 
-    Response response = tenantDeleted.get(5, TimeUnit.SECONDS);
+    Response response = tenantDeleted.get(10, TimeUnit.SECONDS);
 
     if(response.getStatusCode() != 200) {
       throw new UnknownError("Tenant cleanup failed");
