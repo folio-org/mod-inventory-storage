@@ -1,5 +1,7 @@
 package api
 
+import api.support.ApiRoot
+import api.support.Preparation
 import com.github.jsonldjava.core.DocumentLoader
 import com.github.jsonldjava.core.JsonLdOptions
 import com.github.jsonldjava.core.JsonLdProcessor
@@ -16,7 +18,7 @@ class InstancesApiExamples extends Specification {
   private final HttpClient client = new HttpClient(TENANT_ID)
 
   def setup() {
-    deleteInstances()
+    new Preparation(client).deleteInstances()
   }
 
   void "Can create an instance"() {
@@ -26,8 +28,7 @@ class InstancesApiExamples extends Specification {
         .put("identifiers", [[namespace: "isbn", value: "9781473619777"]]);
 
     when:
-      def (postResponse, _) = client.post(
-        new URL("${instancesRoot()}"),
+      def (postResponse, _) = client.post(ApiRoot.instances(),
         Json.encodePrettily(newInstanceRequest))
 
     then:
@@ -40,6 +41,7 @@ class InstancesApiExamples extends Specification {
 
       assert getResponse.status == 200
 
+      assert createdInstance.id != null
       assert createdInstance.title == "Long Way to a Small Angry Planet"
       assert createdInstance.identifiers[0].namespace == "isbn"
       assert createdInstance.identifiers[0].value == "9781473619777"
@@ -56,7 +58,7 @@ class InstancesApiExamples extends Specification {
 
     when:
       def (postResponse, body) = client.post(
-        new URL("${instancesRoot()}"),
+        new URL("${ApiRoot.instances()}"),
         Json.encodePrettily(newInstanceRequest))
 
     then:
@@ -72,8 +74,9 @@ class InstancesApiExamples extends Specification {
       createInstance("Leviathan Wakes")
 
     when:
-      deleteInstances()
-      def (response, instances) = client.get(instancesRoot())
+      def (_, __) = client.delete(ApiRoot.instances())
+
+      def (response, instances) = client.get(ApiRoot.instances())
 
     then:
       assert response.status == 200
@@ -87,7 +90,7 @@ class InstancesApiExamples extends Specification {
       createInstance("Leviathan Wakes")
 
     when:
-      def (response, instances) = client.get(instancesRoot())
+      def (response, instances) = client.get(ApiRoot.instances())
 
     then:
       assert response.status == 200
@@ -112,36 +115,21 @@ class InstancesApiExamples extends Specification {
 
   void "Cannot find an unknown resource"() {
     when:
-      def (response, _) = client.get("${instancesRoot()}/${UUID.randomUUID()}")
+      def (response, _) = client.get("${ApiRoot.instances()}/${UUID.randomUUID()}")
 
     then:
       assert response.status == 404
   }
 
-  private URL instancesRoot() {
-    new URL("${inventoryApiRoot()}/instances")
-  }
-
-  def createInstance(String title) {
+  private def createInstance(String title) {
     def newInstanceRequest = new JsonObject()
       .put("title", title)
 
     def (postResponse, body) = client.post(
-      new URL("${inventoryApiRoot()}/instances"),
+      new URL("${ApiRoot.inventory()}/instances"),
       Json.encodePrettily(newInstanceRequest))
 
     assert postResponse.status == 201
-  }
-
-  private String inventoryApiRoot() {
-    "${ApiTestSuite.apiRoot()}/inventory"
-  }
-
-  private void deleteInstances() {
-    def (response, _) = client.delete(
-      new URL("${instancesRoot()}"))
-
-    assert response.status == 200
   }
 
   private void expressesDublinCoreMetadata(instance) {
