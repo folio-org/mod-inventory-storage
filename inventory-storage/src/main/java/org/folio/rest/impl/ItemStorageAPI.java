@@ -30,10 +30,6 @@ public class ItemStorageAPI implements ItemStorageResource {
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
 
-  // Replace the replaced IDs
-  private static final Map<String, String> replacedToOriginalIdMap
-    = new HashMap<>();
-
   @Override
   public void getItemStorageItems(
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
@@ -60,14 +56,10 @@ public class ItemStorageAPI implements ItemStorageResource {
       vertxContext.runOnContext(v -> {
 
         try {
-          postgresClient.get("item", Item.class, criterion, false,
+          postgresClient.get("item", Item.class, criterion, false, false,
             reply -> {
               try {
                 List<Item> items = (List<Item>) reply.result()[0];
-
-                items.forEach( item -> {
-                  putBackReplacedId(item);
-                });
 
                 Items itemList = new Items();
                 itemList.setItems(items);
@@ -126,8 +118,6 @@ public class ItemStorageAPI implements ItemStorageResource {
           postgresClient.save("item", entity,
             reply -> {
               try {
-                replacedToOriginalIdMap.put(reply.result(), entity.getId());
-
                 OutStream stream = new OutStream();
                 stream.setData(entity);
 
@@ -201,14 +191,12 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("item", Item.class, criterion, false,
+          postgresClient.get("item", Item.class, criterion, false, false,
             reply -> {
               try {
                 List<Item> itemList = (List<Item>) reply.result()[0];
                 if (itemList.size() == 1) {
                   Item item = itemList.get(0);
-
-                  putBackReplacedId(item);
 
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
@@ -288,12 +276,6 @@ public class ItemStorageAPI implements ItemStorageResource {
     Context vertxContext)
     throws Exception {
 
-  }
-
-  private void putBackReplacedId(Item item) {
-    if(replacedToOriginalIdMap.containsKey(item.getId())) {
-      item.setId(replacedToOriginalIdMap.get(item.getId()));
-    }
   }
 
   private void badRequestResult(

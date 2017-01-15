@@ -27,10 +27,6 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
 
-  // Replace the replaced IDs
-  private static final Map<String, String> replacedToOriginalIdMap
-    = new HashMap<>();
-
   @Override
   public void getInstanceStorageInstances(
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
@@ -56,16 +52,12 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       vertxContext.runOnContext(v -> {
 
         try {
-          postgresClient.get("instance", Instance.class, criterion, false,
+          postgresClient.get("instance", Instance.class, criterion, false, false,
             reply -> {
               try {
                 if(reply.succeeded()) {
 
                   List<Instance> instances = (List<Instance>) reply.result()[0];
-
-                  instances.forEach(item -> {
-                    putBackReplacedId(item);
-                  });
 
                   Instances instanceList = new Instances();
                   instanceList.setInstances(instances);
@@ -129,8 +121,6 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           postgresClient.save("instance", entity,
             reply -> {
               try {
-                replacedToOriginalIdMap.put(reply.result(), entity.getId());
-
                 OutStream stream = new OutStream();
                 stream.setData(entity);
 
@@ -234,14 +224,12 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("instance", Instance.class, criterion, false,
+          postgresClient.get("instance", Instance.class, criterion, false, false,
             reply -> {
               try {
                 List<Instance> instanceList = (List<Instance>) reply.result()[0];
                 if (instanceList.size() == 1) {
                   Instance instance = instanceList.get(0);
-
-                  putBackReplacedId(instance);
 
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
@@ -298,12 +286,6 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
       PutInstanceStorageInstancesByInstanceIdResponse
         .withPlainInternalServerError("Not implemented")));
-  }
-
-  private void putBackReplacedId(Instance instance) {
-    if(replacedToOriginalIdMap.containsKey(instance.getId())) {
-      instance.setId(replacedToOriginalIdMap.get(instance.getId()));
-    }
   }
 
   private void badRequestResult(
