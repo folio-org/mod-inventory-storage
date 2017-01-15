@@ -52,7 +52,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       vertxContext.runOnContext(v -> {
 
         try {
-          postgresClient.get("instance", Instance.class, criterion, false, false,
+          postgresClient.get("instance", Instance.class, criterion, true, false,
             reply -> {
               try {
                 if(reply.succeeded()) {
@@ -224,7 +224,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("instance", Instance.class, criterion, false, false,
+          postgresClient.get("instance", Instance.class, criterion, true, false,
             reply -> {
               try {
                 List<Instance> instanceList = (List<Instance>) reply.result()[0];

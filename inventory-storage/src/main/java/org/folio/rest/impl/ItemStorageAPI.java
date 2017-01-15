@@ -56,7 +56,7 @@ public class ItemStorageAPI implements ItemStorageResource {
       vertxContext.runOnContext(v -> {
 
         try {
-          postgresClient.get("item", Item.class, criterion, false, false,
+          postgresClient.get("item", Item.class, criterion, true, false,
             reply -> {
               try {
                 List<Item> items = (List<Item>) reply.result()[0];
@@ -191,7 +191,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("item", Item.class, criterion, false, false,
+          postgresClient.get("item", Item.class, criterion, true, false,
             reply -> {
               try {
                 List<Item> itemList = (List<Item>) reply.result()[0];
