@@ -19,16 +19,7 @@ class ItemApiExamples extends Specification {
 
   void "Can create an item"() {
     given:
-      def newInstanceRequest = new JsonObject()
-        .put("title", "Long Way to a Small Angry Planet")
-        .put("identifiers", [[namespace: "isbn", value: "9781473619777"]]);
-
-      def (createInstanceResponse, _) = client.post(ApiRoot.instances(),
-        Json.encodePrettily(newInstanceRequest))
-
-      def instanceLocation = createInstanceResponse.headers.location.toString()
-
-      def (getInstanceResponse, createdInstance) = client.get(instanceLocation)
+      def createdInstance = createInstance("Long Way to a Small Angry Planet")
 
       def newItemRequest = new JsonObject()
         .put("title", "Long Way to a Small Angry Planet")
@@ -59,6 +50,31 @@ class ItemApiExamples extends Specification {
       selfLinkShouldBeReachable(createdItem)
   }
 
+  void "Can delete all items"() {
+    given:
+      def createdInstance = createInstance("Long Way to a Small Angry Planet")
+
+      createItem("Long Way to a Small Angry Planet", createdInstance.id,
+        "645398607547")
+
+      createItem("Long Way to a Small Angry Planet", createdInstance.id,
+        "175848607547")
+
+      createItem("Long Way to a Small Angry Planet", createdInstance.id,
+        "645334645247")
+
+    when:
+      def (deleteResponse, deleteBody) = client.delete(ApiRoot.items())
+
+      def (_, items) = client.get(ApiRoot.items())
+
+    then:
+      assert deleteResponse.status == 204
+      assert deleteBody == null
+
+      assert items.size() == 0
+  }
+
   private void selfLinkRespectsWayResourceWasReached(item) {
     assert containsApiRoot(item.links.self)
   }
@@ -71,5 +87,39 @@ class ItemApiExamples extends Specification {
     def (response, _) = client.get(instance.links.self)
 
     assert response.status == 200
+  }
+
+  private def createInstance(String title) {
+    def newInstanceRequest = new JsonObject()
+      .put("title", title)
+
+    def (createInstanceResponse, _) = client.post(ApiRoot.instances(),
+      Json.encodePrettily(newInstanceRequest))
+
+    def instanceLocation = createInstanceResponse.headers.location.toString()
+
+    def (response, createdInstance) = client.get(instanceLocation)
+
+    assert response.status == 200
+
+    createdInstance
+  }
+
+  private def createItem(String title, String instanceId, String barcode) {
+    def newItemRequest = new JsonObject()
+      .put("title", title)
+      .put("instanceId", instanceId)
+      .put("barcode", barcode)
+
+    def (createInstanceResponse, _) = client.post(ApiRoot.instances(),
+      Json.encodePrettily(newItemRequest))
+
+    def instanceLocation = createInstanceResponse.headers.location.toString()
+
+    def (response, createdItem) = client.get(instanceLocation)
+
+    assert response.status == 200
+
+    createdItem
   }
 }

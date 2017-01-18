@@ -250,7 +250,7 @@ public class ItemStorageAPI implements ItemStorageResource {
       postgresClient.mutate("TRUNCATE TABLE item",
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              ItemStorageResource.DeleteItemStorageItemsResponse.ok().build()));
+              ItemStorageResource.DeleteItemStorageItemsResponse.noContent().build()));
           });
       });
   }

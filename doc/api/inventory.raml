@@ -35,6 +35,9 @@ resourceTypes:
     get:
     post:
     delete:
+      responses:
+        204:
+          description: "All items deleted"
     /{itemId}:
       type:
         collection-item:
@@ -52,6 +55,9 @@ resourceTypes:
     get:
     post:
     delete:
+      responses:
+        204:
+          description: "All instances deleted"
     /{instanceId}:
       type:
         collection-item:

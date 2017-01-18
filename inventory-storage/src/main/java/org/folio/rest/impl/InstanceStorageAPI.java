@@ -176,7 +176,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       postgresClient.mutate("TRUNCATE TABLE instance",
         reply -> {
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.DeleteInstanceStorageInstancesResponse.ok().build()));
+            InstanceStorageResource.DeleteInstanceStorageInstancesResponse.noContent().build()));
         });
     });
   }

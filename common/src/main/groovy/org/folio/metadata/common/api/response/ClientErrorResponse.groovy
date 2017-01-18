@@ -5,7 +5,6 @@ import org.apache.http.entity.ContentType
 
 class ClientErrorResponse {
   static notFound(HttpServerResponse response) {
-    println("Not Found Response")
     response.setStatusCode(404)
     response.end()
   }

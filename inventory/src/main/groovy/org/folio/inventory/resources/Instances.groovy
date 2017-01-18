@@ -14,6 +14,7 @@ import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.RedirectResponse
+import org.folio.metadata.common.api.response.SuccessResponse
 
 class Instances {
   private final Storage storage
@@ -81,8 +82,7 @@ class Instances {
     def context = new WebContext(routingContext)
 
     storage.getInstanceCollection(context).empty {
-      JsonResponse.success(routingContext.response(),
-        convertToUTF8(it, context))
+      SuccessResponse.noContent(routingContext.response())
     }
   }
 

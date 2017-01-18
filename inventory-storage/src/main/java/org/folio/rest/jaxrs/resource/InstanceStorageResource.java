@@ -323,6 +323,15 @@ public interface InstanceStorageResource {
             super(delegate);
         }
 
+        /**
+         * All instances deleted
+         * 
+         */
+        public static InstanceStorageResource.DeleteInstanceStorageInstancesResponse withNoContent() {
+            Response.ResponseBuilder responseBuilder = Response.status(204);
+            return new InstanceStorageResource.DeleteInstanceStorageInstancesResponse(responseBuilder.build());
+        }
+
     }
 
     public class GetInstanceStorageInstancesByInstanceIdResponse

@@ -304,6 +304,15 @@ public interface ItemStorageResource {
             super(delegate);
         }
 
+        /**
+         * All items deleted
+         * 
+         */
+        public static ItemStorageResource.DeleteItemStorageItemsResponse withNoContent() {
+            Response.ResponseBuilder responseBuilder = Response.status(204);
+            return new ItemStorageResource.DeleteItemStorageItemsResponse(responseBuilder.build());
+        }
+
     }
 
     public class GetItemStorageItemsByItemIdResponse

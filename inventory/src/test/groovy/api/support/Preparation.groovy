@@ -12,12 +12,12 @@ class Preparation {
   void deleteInstances() {
     def (response, _) = client.delete(ApiRoot.instances())
 
-    assert response.status == 200
+    assert response.status == 204
   }
 
   void deleteItems() {
     def (response, _) = client.delete(ApiRoot.items())
 
-    assert response.status == 200
+    assert response.status == 204
   }
 }

@@ -40,7 +40,7 @@ public class InstanceStorageTest {
 
     Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
-    if(response.getStatusCode() != 200) {
+    if(response.getStatusCode() != 204) {
       throw new UnknownError("Delete all instances preparation failed");
     }
   }
@@ -175,7 +175,7 @@ public class InstanceStorageTest {
 
     Response deleteResponse = allDeleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 

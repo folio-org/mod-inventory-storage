@@ -74,12 +74,14 @@ class InstancesApiExamples extends Specification {
       createInstance("Leviathan Wakes")
 
     when:
-      def (_, __) = client.delete(ApiRoot.instances())
+      def (deleteResponse, deleteBody) = client.delete(ApiRoot.instances())
 
-      def (response, instances) = client.get(ApiRoot.instances())
+      def (_, instances) = client.get(ApiRoot.instances())
 
     then:
-      assert response.status == 200
+      assert deleteResponse.status == 204
+      assert deleteBody == null
+
       assert instances.size() == 0
   }
 
