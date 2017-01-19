@@ -125,8 +125,18 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   private def getItems(RoutingContext routingContext) {
     def itemsForTenant = getItemsForTenant(getTenantId(routingContext))
 
+    def context = new WebContext(routingContext)
+
+    def limit = context.getIntegerParameter("limit", 10)
+    def offset = context.getIntegerParameter("offset", 0)
+
+    def filteredItems = itemsForTenant.values().stream()
+      .skip(offset)
+      .limit(limit)
+      .collect()
+
     def result = new JsonObject()
-    result.put("items", new JsonArray(itemsForTenant.values().toList()))
+    result.put("items", new JsonArray(filteredItems))
     result.put("total_records", itemsForTenant.size())
 
     JsonResponse.success(routingContext.response(), result)
@@ -179,9 +189,6 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def limit = context.getIntegerParameter("limit", 10)
     def offset = context.getIntegerParameter("offset", 0)
 
-    println("Limit: ${limit}")
-    println("Offset: ${offset}")
-
     def filteredInstances = instancesForTenant.values().stream()
       .skip(offset)
       .limit(limit)
@@ -189,7 +196,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     def result = new JsonObject()
     result.put("instances", new JsonArray(filteredInstances))
-    result.put("total_records", filteredInstances.size())
+    result.put("total_records", instancesForTenant.size())
 
     JsonResponse.success(routingContext.response(), result)
   }

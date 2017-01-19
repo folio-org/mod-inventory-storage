@@ -128,12 +128,33 @@ class ExternalStorageModuleItemCollection
 
   @Override
   void findAll(PagingParameters pagingParameters, Closure resultCallback) {
-    findAll({ Collection it ->
-      resultCallback(it.stream()
-        .skip(pagingParameters.offset)
-        .limit(pagingParameters.limit)
-        .collect())
-    })
+    String location = String.format(storageAddress
+      + "/item-storage/items?limit=%s&offset=%s",
+      pagingParameters.limit, pagingParameters.offset)
+
+    def onResponse = { response ->
+      response.bodyHandler({ buffer ->
+        def responseBody = "${buffer.getString(0, buffer.length())}"
+
+        def itemsFromServer = new JsonObject(responseBody).getJsonArray("items")
+
+        def foundItems = new ArrayList<Item>()
+
+        itemsFromServer.each {
+          foundItems.add(mapFromJson(it))
+        }
+
+        resultCallback(foundItems)
+      })
+    }
+
+    Handler<Throwable> onException = { println "Exception: ${it}" }
+
+    vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
+      .exceptionHandler(onException)
+      .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
+      .end()
   }
 
   @Override

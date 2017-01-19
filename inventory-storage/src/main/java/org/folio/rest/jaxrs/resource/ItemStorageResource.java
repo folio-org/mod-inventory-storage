@@ -1,6 +1,8 @@
 
 package org.folio.rest.jaxrs.resource;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.Consumes;
@@ -48,6 +50,10 @@ public interface ItemStorageResource {
     /**
      * Retrieve a list of item items.
      * 
+     * @param offset
+     *     Skip over a number of elements by specifying an offset value for the query e.g. 0
+     * @param limit
+     *     Limit the number of elements returned in the response e.g. 10
      * @param vertxContext
      *      The Vertx Context Object <code>io.vertx.core.Context</code> 
      * @param asyncResultHandler
@@ -64,6 +70,16 @@ public interface ItemStorageResource {
     })
     @Validate
     void getItemStorageItems(
+        @QueryParam("offset")
+        @DefaultValue("0")
+        @Min(0L)
+        @Max(1000L)
+        int offset,
+        @QueryParam("limit")
+        @DefaultValue("10")
+        @Min(1L)
+        @Max(100L)
+        int limit,
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")

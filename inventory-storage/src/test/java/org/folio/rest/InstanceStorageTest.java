@@ -337,7 +337,6 @@ public class InstanceStorageTest {
     instanceToCreate.put("identifiers", identifiers);
 
     return instanceToCreate;
-
   }
 
   private JsonObject nod(UUID id) {

@@ -6,8 +6,13 @@ import io.vertx.core.Handler;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
@@ -22,6 +27,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -32,6 +38,8 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   @Override
   public void getItemStorageItems(
+    @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
+    @DefaultValue("10") @Min(1L) @Max(100L) int limit,
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -46,24 +54,27 @@ public class ItemStorageAPI implements ItemStorageResource {
       return;
     }
 
-    Criteria a = new Criteria();
-    Criterion criterion = new Criterion(a);
-
     try {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
       vertxContext.runOnContext(v -> {
-
         try {
-          postgresClient.get("item", Item.class, criterion, true, false,
+          PostgresClient postgresClient = PostgresClient.getInstance(
+            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+          String[] fieldList = {"*"};
+
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON("instance.jsonb");
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+            .setLimit(new Limit(limit))
+            .setOffset(new Offset(offset));
+
+          postgresClient.get("item", Item.class, fieldList, cql, true, false,
             reply -> {
               try {
                 List<Item> items = (List<Item>) reply.result()[0];
 
                 Items itemList = new Items();
                 itemList.setItems(items);
-                itemList.setTotalRecords(items.size());
+                itemList.setTotalRecords((Integer) reply.result()[1]);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   ItemStorageResource.GetItemStorageItemsResponse.
                     withJsonOK(itemList)));

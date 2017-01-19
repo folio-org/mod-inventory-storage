@@ -1,5 +1,6 @@
 package org.folio.rest;
 
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.jaxrs.model.Item;
@@ -52,12 +53,7 @@ public class ItemStorageTest {
     UUID id = UUID.randomUUID();
     UUID instanceId = UUID.randomUUID();
 
-    JsonObject itemToCreate = new JsonObject();
-
-    itemToCreate.put("id",id.toString());
-    itemToCreate.put("instance_id", instanceId.toString());
-    itemToCreate.put("title", "Real Analysis");
-    itemToCreate.put("barcode", "271828");
+    JsonObject itemToCreate = nod(id, instanceId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -72,8 +68,8 @@ public class ItemStorageTest {
 
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("instance_id"), is(instanceId.toString()));
-    assertThat(item.getString("title"), is("Real Analysis"));
-    assertThat(item.getString("barcode"), is("271828"));
+    assertThat(item.getString("title"), is("Nod"));
+    assertThat(item.getString("barcode"), is("565578437802"));
   }
 
   @Test
@@ -84,13 +80,7 @@ public class ItemStorageTest {
     UUID id = UUID.randomUUID();
     UUID instanceId = UUID.randomUUID();
 
-    JsonObject itemToCreate = new JsonObject();
-    itemToCreate.put("id", id.toString());
-    itemToCreate.put("instance_id", instanceId.toString());
-    itemToCreate.put("title", "Refactoring");
-    itemToCreate.put("barcode", "314159");
-
-    createItem(itemToCreate);
+    createItem(smallAngryPlanet(id, instanceId));
 
     URL getItemUrl = itemStorageUrl(String.format("/%s", id));
 
@@ -107,8 +97,8 @@ public class ItemStorageTest {
 
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("instance_id"), is(instanceId.toString()));
-    assertThat(item.getString("title"), is("Refactoring"));
-    assertThat(item.getString("barcode"), is("314159"));
+    assertThat(item.getString("title"), is("Long Way to a Small Angry Planet"));
+    assertThat(item.getString("barcode"), is("036000291452"));
   }
 
   @Test
@@ -121,24 +111,11 @@ public class ItemStorageTest {
     UUID firstItemId = UUID.randomUUID();
     UUID firstItemInstanceId = UUID.randomUUID();
 
-    JsonObject firstItemToCreate = new JsonObject();
-    firstItemToCreate.put("id", firstItemId.toString());
-    firstItemToCreate.put("instance_id", firstItemInstanceId.toString());
-    firstItemToCreate.put("title", "Refactoring");
-    firstItemToCreate.put("barcode", "314159");
-
-    createItem(firstItemToCreate);
-
     UUID secondItemId = UUID.randomUUID();
     UUID secondItemInstanceId = UUID.randomUUID();
 
-    JsonObject secondItemToCreate = new JsonObject();
-    secondItemToCreate.put("id", secondItemId.toString());
-    secondItemToCreate.put("instance_id", secondItemInstanceId.toString());
-    secondItemToCreate.put("title", "Real Analysis");
-    secondItemToCreate.put("barcode", "271828");
-
-    createItem(secondItemToCreate);
+    createItem(smallAngryPlanet(firstItemId, firstItemInstanceId));
+    createItem(nod(secondItemId, secondItemInstanceId));
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
 
@@ -163,15 +140,56 @@ public class ItemStorageTest {
     assertThat(firstItem.getString("instance_id"),
       is(firstItemInstanceId.toString()));
 
-    assertThat(firstItem.getString("title"), is("Refactoring"));
-    assertThat(firstItem.getString("barcode"), is("314159"));
+    assertThat(firstItem.getString("title"), is("Long Way to a Small Angry Planet"));
+    assertThat(firstItem.getString("barcode"), is("036000291452"));
 
     assertThat(secondItem.getString("id"), is(secondItemId.toString()));
     assertThat(secondItem.getString("instance_id"),
       is(secondItemInstanceId.toString()));
 
-    assertThat(secondItem.getString("title"), is("Real Analysis"));
-    assertThat(secondItem.getString("barcode"), is("271828"));
+    assertThat(secondItem.getString("title"), is("Nod"));
+    assertThat(secondItem.getString("barcode"), is("565578437802"));
+  }
+
+  @Test
+  public void canPageAllItems()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    createItem(smallAngryPlanet());
+    createItem(nod());
+    createItem(uprooted());
+    createItem(temeraire());
+    createItem(interestingTimes());
+
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+
+    client.get(itemStorageUrl() + "?limit=3", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(firstPageCompleted));
+
+    client.get(itemStorageUrl() + "?limit=3&offset=3", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(secondPageCompleted));
+
+    JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(firstPageResponse.getStatusCode(), is(200));
+    assertThat(secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getBody();
+    JsonObject secondPage = secondPageResponse.getBody();
+
+    JsonArray firstPageItems = firstPage.getJsonArray("items");
+    JsonArray secondPageItems = secondPage.getJsonArray("items");
+
+    assertThat(firstPageItems.size(), is(3));
+    assertThat(firstPage.getInteger("total_records"), is(5));
+
+    assertThat(secondPageItems.size(), is(2));
+    assertThat(secondPage.getInteger("total_records"), is(5));
   }
 
   @Test
@@ -181,21 +199,11 @@ public class ItemStorageTest {
     ExecutionException,
     TimeoutException {
 
-    JsonObject firstItemToCreate = new JsonObject();
-    firstItemToCreate.put("id", UUID.randomUUID().toString());
-    firstItemToCreate.put("instance_id", UUID.randomUUID().toString());
-    firstItemToCreate.put("title", "Refactoring");
-    firstItemToCreate.put("barcode", "314159");
-
-    createItem(firstItemToCreate);
-
-    JsonObject secondItemToCreate = new JsonObject();
-    secondItemToCreate.put("id", UUID.randomUUID().toString());
-    secondItemToCreate.put("instance_id", UUID.randomUUID().toString());
-    secondItemToCreate.put("title", "Real Analysis");
-    secondItemToCreate.put("barcode", "271828");
-
-    createItem(secondItemToCreate);
+    createItem(smallAngryPlanet());
+    createItem(nod());
+    createItem(uprooted());
+    createItem(temeraire());
+    createItem(interestingTimes());
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
 
@@ -226,15 +234,9 @@ public class ItemStorageTest {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    JsonObject item = new JsonObject();
-    item.put("id", UUID.randomUUID().toString());
-    item.put("title", "Refactoring");
-    item.put("instance_id", UUID.randomUUID().toString());
-    item.put("barcode", "4554345453");
-
     CompletableFuture<TextResponse> postCompleted = new CompletableFuture();
 
-    client.post(itemStorageUrl(), item,
+    client.post(itemStorageUrl(), smallAngryPlanet(),
       ResponseHandler.text(postCompleted));
 
     TextResponse response = postCompleted.get(5, TimeUnit.SECONDS);
@@ -300,5 +302,54 @@ public class ItemStorageTest {
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/item-storage/items" + subPath);
+  }
+
+  private JsonObject createItemRequest(
+    UUID id,
+    UUID instanceId,
+    String title,
+    String barcode) {
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("instance_id", instanceId.toString());
+    itemToCreate.put("title", title);
+    itemToCreate.put("barcode", barcode);
+
+    return itemToCreate;
+  }
+
+  private JsonObject smallAngryPlanet(UUID itemId, UUID instanceId) {
+    return createItemRequest(itemId, instanceId,
+      "Long Way to a Small Angry Planet", "036000291452");
+  }
+
+  private JsonObject smallAngryPlanet() {
+    return smallAngryPlanet(UUID.randomUUID(), UUID.randomUUID());
+  }
+
+  private JsonObject nod(UUID itemId, UUID instanceId) {
+    return createItemRequest(itemId, instanceId,
+      "Nod", "565578437802");
+  }
+
+  private JsonObject nod() {
+    return nod(UUID.randomUUID(), UUID.randomUUID());
+  }
+
+  private JsonObject uprooted() {
+    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
+      "Uprooted", "657670342075");
+  }
+
+  private JsonObject temeraire() {
+    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
+      "Temeraire", "232142443432");
+  }
+
+  private JsonObject interestingTimes() {
+    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
+      "Interesting Times", "56454543534");
   }
 }
