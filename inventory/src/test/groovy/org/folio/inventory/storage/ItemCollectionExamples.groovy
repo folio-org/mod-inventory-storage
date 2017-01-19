@@ -4,6 +4,7 @@ import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
 import org.folio.metadata.common.WaitForAllFutures
+import org.folio.metadata.common.api.request.PagingParameters
 import org.junit.Before
 import org.junit.Test
 
@@ -17,15 +18,11 @@ abstract class ItemCollectionExamples {
 
   private final CollectionProvider collectionProvider
 
-  private final Item smallAngryPlanet =
-    new Item("Long Way to a Small Angry Planet", "036000291452",
-      UUID.randomUUID().toString())
-
-  private final Item nod = new Item("Nod", "565578437802",
-      UUID.randomUUID().toString())
-
-  private final Item uprooted = new Item("Uprooted", "657670342075",
-      UUID.randomUUID().toString())
+  private final Item smallAngryPlanet = smallAngryPlanet()
+  private final Item nod = nod()
+  private final Item uprooted = uprooted()
+  private final Item temeraire = temeraire()
+  private final Item interestingTimes = interestingTimes()
 
   public ItemCollectionExamples(CollectionProvider collectionProvider) {
 
@@ -42,7 +39,7 @@ abstract class ItemCollectionExamples {
   void canBeEmptied() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 
-    addAllExamples(collection)
+    addSomeExamples(collection)
 
     def emptied = new CompletableFuture()
 
@@ -63,7 +60,7 @@ abstract class ItemCollectionExamples {
   void itemsCanBeAdded() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 
-    addAllExamples(collection)
+    addSomeExamples(collection)
 
     def findFuture = new CompletableFuture<List<Item>>()
 
@@ -116,6 +113,33 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
+  void allItemsCanBePaged() {
+    def collection = collectionProvider.getItemCollection(firstTenantId)
+
+    def allAdded = new WaitForAllFutures()
+
+    collection.add(smallAngryPlanet, allAdded.notifyComplete())
+    collection.add(nod, allAdded.notifyComplete())
+    collection.add(uprooted, allAdded.notifyComplete())
+    collection.add(temeraire, allAdded.notifyComplete())
+    collection.add(interestingTimes, allAdded.notifyComplete())
+
+    allAdded.waitForCompletion()
+
+    def firstPageFuture = new CompletableFuture<Collection>()
+    def secondPageFuture = new CompletableFuture<Collection>()
+
+    collection.findAll(new PagingParameters(3, 0), complete(firstPageFuture))
+    collection.findAll(new PagingParameters(3, 3), complete(secondPageFuture))
+
+    def firstPage = getOnCompletion(firstPageFuture)
+    def secondPage = getOnCompletion(secondPageFuture)
+
+    assert firstPage.size() == 3
+    assert secondPage.size() == 2
+  }
+
+  @Test
   void itemsCanBeFoundByByPartialName() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 
@@ -151,6 +175,7 @@ abstract class ItemCollectionExamples {
     def secondAddFuture = new CompletableFuture<Item>()
 
     collection.add(smallAngryPlanet, complete(firstAddFuture))
+
     collection.add(nod, complete(secondAddFuture))
 
     def addedItem = getOnCompletion(firstAddFuture)
@@ -165,16 +190,16 @@ abstract class ItemCollectionExamples {
     def foundItem = getOnCompletion(findFuture)
     def otherFoundItem = getOnCompletion(otherFindFuture)
 
-    assert foundItem.title == smallAngryPlanet.title
-    assert foundItem.barcode == smallAngryPlanet.barcode
+    assert foundItem.title == "Long Way to a Small Angry Planet"
+    assert foundItem.barcode == "036000291452"
     assert foundItem.instanceId == smallAngryPlanet.instanceId
 
-    assert otherFoundItem.title == nod.title
-    assert otherFoundItem.barcode == nod.barcode
+    assert otherFoundItem.title == "Nod"
+    assert otherFoundItem.barcode == "565578437802"
     assert otherFoundItem.instanceId == nod.instanceId
   }
 
-  private void addAllExamples(ItemCollection itemCollection) {
+  private void addSomeExamples(ItemCollection itemCollection) {
     def allAdded = new WaitForAllFutures()
 
     itemCollection.add(smallAngryPlanet, allAdded.notifyComplete())
@@ -190,5 +215,30 @@ abstract class ItemCollectionExamples {
     collection.empty(complete(emptied))
 
     waitForCompletion(emptied)
+  }
+
+  private Item smallAngryPlanet() {
+    new Item("Long Way to a Small Angry Planet", "036000291452",
+      UUID.randomUUID().toString())
+  }
+
+  private Item nod() {
+    new Item("Nod", "565578437802",
+      UUID.randomUUID().toString())
+  }
+
+  private Item uprooted() {
+    new Item("Uprooted", "657670342075",
+      UUID.randomUUID().toString())
+  }
+
+  private Item temeraire() {
+    new Item("Temeraire", "232142443432",
+      UUID.randomUUID().toString())
+  }
+
+  private Item interestingTimes() {
+    new Item("Interesting Times", "56454543534",
+      UUID.randomUUID().toString())
   }
 }

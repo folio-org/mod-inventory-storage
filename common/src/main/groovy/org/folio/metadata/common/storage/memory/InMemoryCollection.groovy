@@ -1,5 +1,7 @@
 package org.folio.metadata.common.storage.memory
 
+import org.folio.metadata.common.api.request.PagingParameters
+
 //TODO: truly asynchronous implementation
 class InMemoryCollection<T> {
 
@@ -15,6 +17,13 @@ class InMemoryCollection<T> {
 
   void all(Closure resultCallback) {
     resultCallback(all())
+  }
+
+  void some(PagingParameters pagingParameters, Closure resultCallback) {
+    resultCallback(all().stream()
+      .skip(pagingParameters.offset)
+      .limit(pagingParameters.limit)
+      .collect())
   }
 
   T findOne(Closure matcher) {

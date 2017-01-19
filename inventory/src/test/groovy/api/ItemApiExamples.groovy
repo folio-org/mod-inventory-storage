@@ -75,6 +75,58 @@ class ItemApiExamples extends Specification {
       assert items.size() == 0
   }
 
+  void "Can page all items"() {
+    given:
+      def smallAngryInstance = createInstance("Long Way to a Small Angry Planet")
+
+      createItem("Long Way to a Small Angry Planet", smallAngryInstance.id,
+        "645398607547")
+
+      createItem("Long Way to a Small Angry Planet", smallAngryInstance.id,
+        "175848607547")
+
+      createItem("Long Way to a Small Angry Planet", smallAngryInstance.id,
+        "645334645247")
+
+      def nodInstance = createInstance("Nod")
+
+      createItem("Nod", nodInstance.id,
+        "564566456546")
+
+      createItem("Nod", nodInstance.id,
+        "943209584495")
+
+    when:
+      def (firstPageResponse, firstPage) = client.get(
+        ApiRoot.items("limit=3"))
+
+      def (secondPageResponse, secondPage) = client.get(
+        ApiRoot.items("limit=3&offset=3"))
+
+    then:
+      assert firstPageResponse.status == 200
+      assert firstPage.size() == 3
+
+      assert secondPageResponse.status == 200
+      assert secondPage.size() == 2
+
+      firstPage.each {
+        selfLinkRespectsWayResourceWasReached(it)
+      }
+
+      secondPage.each {
+        selfLinkRespectsWayResourceWasReached(it)
+      }
+
+      firstPage.each {
+        selfLinkShouldBeReachable(it)
+      }
+
+      secondPage.each {
+        selfLinkShouldBeReachable(it)
+      }
+  }
+
   private void selfLinkRespectsWayResourceWasReached(item) {
     assert containsApiRoot(item.links.self)
   }
@@ -111,10 +163,10 @@ class ItemApiExamples extends Specification {
       .put("instanceId", instanceId)
       .put("barcode", barcode)
 
-    def (createInstanceResponse, _) = client.post(ApiRoot.instances(),
+    def (createItemResponse, _) = client.post(ApiRoot.items(),
       Json.encodePrettily(newItemRequest))
 
-    def instanceLocation = createInstanceResponse.headers.location.toString()
+    def instanceLocation = createItemResponse.headers.location.toString()
 
     def (response, createdItem) = client.get(instanceLocation)
 

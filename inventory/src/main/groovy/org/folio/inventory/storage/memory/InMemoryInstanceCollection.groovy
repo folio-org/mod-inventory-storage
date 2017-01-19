@@ -30,12 +30,7 @@ class InMemoryInstanceCollection
 
   @Override
   void findAll(PagingParameters pagingParameters, Closure resultCallback) {
-    collection.all( { Collection results ->
-      resultCallback(results.stream()
-        .skip(pagingParameters.offset)
-        .limit(pagingParameters.limit)
-        .collect())
-    } )
+    collection.some(pagingParameters, resultCallback)
   }
 
   @Override

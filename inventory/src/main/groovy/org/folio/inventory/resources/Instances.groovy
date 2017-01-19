@@ -51,8 +51,6 @@ class Instances {
   void getAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
-    println("Get all parameters: ${routingContext.request().params().names()}")
-
     def limit = context.getIntegerParameter("limit", 10)
     def offset = context.getIntegerParameter("offset", 0)
 

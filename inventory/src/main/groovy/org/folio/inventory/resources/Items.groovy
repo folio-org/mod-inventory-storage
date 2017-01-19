@@ -10,6 +10,7 @@ import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.Item
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
+import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
@@ -37,10 +38,14 @@ class Items {
   void getAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
-    storage.getItemCollection(context).findAll {
+    def limit = context.getIntegerParameter("limit", 10)
+    def offset = context.getIntegerParameter("offset", 0)
+
+    storage.getItemCollection(context).findAll(
+      new PagingParameters(limit, offset), {
       JsonResponse.success(routingContext.response(),
         convertToUTF8(it, context))
-    }
+    })
   }
 
   void deleteAll(RoutingContext routingContext) {

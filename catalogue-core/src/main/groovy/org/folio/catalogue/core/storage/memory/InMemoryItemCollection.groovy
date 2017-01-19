@@ -1,7 +1,9 @@
 package org.folio.catalogue.core.storage.memory
 
+import org.apache.commons.lang.NotImplementedException
 import org.folio.catalogue.core.domain.Item
 import org.folio.catalogue.core.domain.ItemCollection
+import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.storage.memory.InMemoryCollection
 
 import java.util.regex.Pattern
@@ -58,6 +60,11 @@ class InMemoryItemCollection
   @Override
   void findAll(Closure resultCallback) {
     collection.all(resultCallback)
+  }
+
+  @Override
+  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+    throw new NotImplementedException("Paging operations not implemented")
   }
 
   @Override

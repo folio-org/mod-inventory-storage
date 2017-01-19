@@ -1,9 +1,11 @@
 package org.folio.knowledgebase.core.storage.mongo
 
 import com.mongodb.client.model.Filters
+import org.apache.commons.lang.NotImplementedException
 import org.folio.knowledgebase.core.domain.InstanceCollection
 import org.bson.Document
 import org.folio.knowledgebase.core.domain.Instance
+import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.storage.mongo.MongoCollection
 
 import java.util.regex.Pattern
@@ -87,6 +89,11 @@ class MongoInstanceCollection implements InstanceCollection {
   @Override
   void findAll(Closure resultCallback) {
     collection.findAll(resultCallback)
+  }
+
+  @Override
+  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+    throw new NotImplementedException("Paging operations not implemented")
   }
 
   private static Instance fromDoc(Document document) {

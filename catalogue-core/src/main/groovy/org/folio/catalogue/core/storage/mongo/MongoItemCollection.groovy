@@ -1,9 +1,11 @@
 package org.folio.catalogue.core.storage.mongo
 
 import com.mongodb.client.model.Filters
+import org.apache.commons.lang.NotImplementedException
 import org.bson.Document
 import org.folio.catalogue.core.domain.Item
 import org.folio.catalogue.core.domain.ItemCollection
+import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.storage.mongo.MongoCollection
 
 import java.util.regex.Pattern
@@ -55,6 +57,11 @@ class MongoItemCollection implements ItemCollection {
   @Override
   void findAll(Closure resultCallback) {
     collection.findAll(resultCallback)
+  }
+
+  @Override
+  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+    throw new NotImplementedException("Paging operations not implemented")
   }
 
   @Override

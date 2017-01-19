@@ -2,6 +2,7 @@ package org.folio.inventory.storage.memory
 
 import org.folio.inventory.resources.ingest.IngestJob
 import org.folio.inventory.resources.ingest.IngestJobCollection
+import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.storage.memory.InMemoryCollection
 
 class InMemoryIngestJobCollection implements IngestJobCollection {
@@ -27,6 +28,16 @@ class InMemoryIngestJobCollection implements IngestJobCollection {
   @Override
   void findAll(Closure resultCallback) {
     collection.all(resultCallback)
+  }
+
+  @Override
+  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+    collection.all { Collection it ->
+      it.stream()
+        .skip(pagingParameters.offset)
+        .limit(pagingParameters.limit)
+        .collect()
+    }
   }
 
   @Override

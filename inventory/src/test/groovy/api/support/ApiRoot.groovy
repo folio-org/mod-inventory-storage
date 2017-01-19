@@ -3,19 +3,23 @@ package api.support
 import api.ApiTestSuite
 
 class ApiRoot {
-  private static String inventory() {
+  static String inventory() {
     "${ApiTestSuite.apiRoot()}/inventory"
   }
 
-  private static URL instances() {
+  static URL instances() {
     new URL("${inventory()}/instances")
   }
 
-  private static URL instances(String query) {
+  static URL instances(String query) {
     new URL("${inventory()}/instances?${query}")
   }
 
   static URL items() {
     new URL("${inventory()}/items")
+  }
+
+  static URL items(String query) {
+    new URL("${inventory()}/items?${query}")
   }
 }
