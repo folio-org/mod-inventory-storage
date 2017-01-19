@@ -7,8 +7,10 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import io.vertx.groovy.core.http.HttpClientResponse
+import org.apache.commons.lang.NotImplementedException
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.InstanceCollection
+import org.folio.metadata.common.api.request.PagingParameters
 
 import java.util.regex.Pattern
 
@@ -122,6 +124,16 @@ class ExternalStorageModuleInstanceCollection
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json")
       .end()
+  }
+
+  @Override
+  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+    findAll( { Collection results ->
+      resultCallback(results.stream()
+        .skip(pagingParameters.offset)
+        .limit(pagingParameters.limit)
+        .collect())
+    })
   }
 
   @Override

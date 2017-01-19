@@ -5,6 +5,7 @@ import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.InstanceCollection
 import org.folio.inventory.domain.Item
 import org.folio.metadata.common.WaitForAllFutures
+import org.folio.metadata.common.api.request.PagingParameters
 import org.junit.Before
 import org.junit.Test
 
@@ -17,10 +18,6 @@ abstract class InstanceCollectionExamples {
   private static final String secondTenantId = "test_tenant_2"
 
   private final CollectionProvider collectionProvider
-
-  private final Instance smallAngryPlanet = smallAngryPlanet()
-  private final Instance nod = nod()
-  private final Instance uprooted = uprooted()
 
   public InstanceCollectionExamples(CollectionProvider collectionProvider) {
 
@@ -39,7 +36,7 @@ abstract class InstanceCollectionExamples {
   @Test
   void canBeEmptied() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
-    addAllExamples(collection)
+    addSomeExamples(collection)
 
     def emptied = new CompletableFuture()
 
@@ -59,7 +56,8 @@ abstract class InstanceCollectionExamples {
   @Test
   void instancesCanBeAdded() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
-    addAllExamples(collection)
+
+    addSomeExamples(collection)
 
     def findFuture = new CompletableFuture<List<Instance>>()
 
@@ -108,8 +106,8 @@ abstract class InstanceCollectionExamples {
     def firstAddFuture = new CompletableFuture<Instance>()
     def secondAddFuture = new CompletableFuture<Instance>()
 
-    collection.add(smallAngryPlanet, complete(firstAddFuture))
-    collection.add(nod, complete(secondAddFuture))
+    collection.add(smallAngryPlanet(), complete(firstAddFuture))
+    collection.add(nod(), complete(secondAddFuture))
 
     def addedInstance = getOnCompletion(firstAddFuture)
     def otherAddedInstance = getOnCompletion(secondAddFuture)
@@ -135,6 +133,33 @@ abstract class InstanceCollectionExamples {
   }
 
   @Test
+  void allInstancesCanBePaged() {
+    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+
+    def allAdded = new WaitForAllFutures()
+
+    collection.add(smallAngryPlanet(), allAdded.notifyComplete())
+    collection.add(nod(), allAdded.notifyComplete())
+    collection.add(uprooted(), allAdded.notifyComplete())
+    collection.add(temeraire(), allAdded.notifyComplete())
+    collection.add(interestingTimes(), allAdded.notifyComplete())
+
+    allAdded.waitForCompletion()
+
+    def firstPageFuture = new CompletableFuture<Collection>()
+    def secondPageFuture = new CompletableFuture<Collection>()
+
+    collection.findAll(new PagingParameters(3, 0), complete(firstPageFuture))
+    collection.findAll(new PagingParameters(3, 3), complete(secondPageFuture))
+
+    def firstPage = getOnCompletion(firstPageFuture)
+    def secondPage = getOnCompletion(secondPageFuture)
+
+    assert firstPage.size() == 3
+    assert secondPage.size() == 2
+  }
+
+  @Test
   void instancesCanBeFoundByByPartialName() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
 
@@ -142,9 +167,9 @@ abstract class InstanceCollectionExamples {
     def secondAddFuture = new CompletableFuture<Instance>()
     def thirdAddFuture = new CompletableFuture<Instance>()
 
-    collection.add(smallAngryPlanet, complete(firstAddFuture))
-    collection.add(nod, complete(secondAddFuture))
-    collection.add(uprooted, complete(thirdAddFuture))
+    collection.add(smallAngryPlanet(), complete(firstAddFuture))
+    collection.add(nod(), complete(secondAddFuture))
+    collection.add(uprooted(), complete(thirdAddFuture))
 
     def allAddsFuture = CompletableFuture.allOf(secondAddFuture, thirdAddFuture)
 
@@ -172,7 +197,7 @@ abstract class InstanceCollectionExamples {
 
     def addFuture = new CompletableFuture<Item>()
 
-    firstTenantCollection.add(smallAngryPlanet, complete(addFuture))
+    firstTenantCollection.add(smallAngryPlanet(), complete(addFuture))
 
     def addedInstance = getOnCompletion(addFuture)
 
@@ -189,12 +214,12 @@ abstract class InstanceCollectionExamples {
     assert getOnCompletion(findInstanceForIncorrectTenant) == null
   }
 
-  private void addAllExamples(InstanceCollection instanceCollection) {
+  private void addSomeExamples(InstanceCollection instanceCollection) {
     def allAdded = new WaitForAllFutures()
 
-    instanceCollection.add(smallAngryPlanet, allAdded.notifyComplete())
-    instanceCollection.add(nod, allAdded.notifyComplete())
-    instanceCollection.add(uprooted, allAdded.notifyComplete())
+    instanceCollection.add(smallAngryPlanet(), allAdded.notifyComplete())
+    instanceCollection.add(nod(), allAdded.notifyComplete())
+    instanceCollection.add(uprooted(), allAdded.notifyComplete())
 
     allAdded.waitForCompletion()
   }
@@ -213,6 +238,17 @@ abstract class InstanceCollectionExamples {
   private Instance smallAngryPlanet() {
     new Instance("Long Way to a Small Angry Planet")
       .addIdentifier('isbn', '9781473619777')
+  }
 
+  private Instance temeraire() {
+    new Instance("Temeraire")
+      .addIdentifier('isbn', '0007258712')
+      .addIdentifier('isbn', '9780007258710')
+  }
+
+  private Instance interestingTimes() {
+    new Instance("Interesting Times")
+      .addIdentifier('isbn', '0552167541')
+      .addIdentifier('isbn', '9780552167543')
   }
 }

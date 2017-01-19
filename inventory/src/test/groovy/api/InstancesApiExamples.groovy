@@ -115,6 +115,61 @@ class InstancesApiExamples extends Specification {
       }
   }
 
+  void "Can page all instances"() {
+    given:
+      createInstance("Long Way to a Small Angry Planet")
+      createInstance("Nod")
+      createInstance("Leviathan Wakes")
+      createInstance("Temeraire")
+      createInstance("The Tao of Pooh")
+
+    when:
+      def (firstPageResponse, firstPage) = client.get(
+        ApiRoot.instances("limit=3"))
+
+      def (secondPageResponse, secondPage) = client.get(
+        ApiRoot.instances("limit=3&offset=3"))
+
+    then:
+      assert firstPageResponse.status == 200
+      assert firstPage.size() == 3
+
+      assert secondPageResponse.status == 200
+      assert secondPage.size() == 2
+
+    firstPage.each {
+      expressesDublinCoreMetadata(it)
+    }
+
+    secondPage.each {
+      expressesDublinCoreMetadata(it)
+    }
+
+    firstPage.each {
+      dublinCoreContextLinkRespectsWayResourceWasReached(it)
+    }
+
+    secondPage.each {
+      dublinCoreContextLinkRespectsWayResourceWasReached(it)
+    }
+
+    firstPage.each {
+      selfLinkRespectsWayResourceWasReached(it)
+    }
+
+    secondPage.each {
+      selfLinkRespectsWayResourceWasReached(it)
+    }
+
+    firstPage.each {
+      selfLinkShouldBeReachable(it)
+    }
+
+    secondPage.each {
+      selfLinkShouldBeReachable(it)
+    }
+  }
+
   void "Cannot find an unknown resource"() {
     when:
       def (response, _) = client.get("${ApiRoot.instances()}/${UUID.randomUUID()}")

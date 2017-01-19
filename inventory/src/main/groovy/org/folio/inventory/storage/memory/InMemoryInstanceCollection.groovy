@@ -2,6 +2,7 @@ package org.folio.inventory.storage.memory
 
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.InstanceCollection
+import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.storage.memory.InMemoryCollection
 
 import java.util.regex.Pattern
@@ -25,6 +26,16 @@ class InMemoryInstanceCollection
   @Override
   void findAll(Closure resultCallback) {
     collection.all(resultCallback)
+  }
+
+  @Override
+  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+    collection.all( { Collection results ->
+      resultCallback(results.stream()
+        .skip(pagingParameters.offset)
+        .limit(pagingParameters.limit)
+        .collect())
+    } )
   }
 
   @Override

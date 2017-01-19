@@ -1,6 +1,5 @@
 package org.folio.inventory.resources
 
-import io.vertx.core.Handler
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
@@ -10,6 +9,7 @@ import org.apache.commons.lang.StringEscapeUtils
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
+import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
@@ -51,10 +51,16 @@ class Instances {
   void getAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
-    storage.getInstanceCollection(context).findAll {
+    println("Get all parameters: ${routingContext.request().params().names()}")
+
+    def limit = context.getIntegerParameter("limit", 10)
+    def offset = context.getIntegerParameter("offset", 0)
+
+    storage.getInstanceCollection(context).findAll(
+      new PagingParameters(limit, offset), {
       JsonResponse.success(routingContext.response(),
         convertToUTF8(it, context))
-    }
+    })
   }
 
   void create(RoutingContext routingContext) {

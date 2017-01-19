@@ -18,6 +18,7 @@ schemas:
 traits:
  - secured: !include shared/traits/auth.raml
  - language: !include shared/traits/language.raml
+ - pageable: !include shared/traits/pageable.raml
 
 resourceTypes:
  - collection: !include shared/rtypes/collection.raml
@@ -53,6 +54,7 @@ resourceTypes:
         schemaItem: instance
         exampleItem: !include examples/inventory/instance_get.json
     get:
+      is: [pageable]
     post:
     delete:
       responses:

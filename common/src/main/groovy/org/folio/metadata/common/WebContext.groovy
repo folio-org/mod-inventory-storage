@@ -29,6 +29,11 @@ class WebContext implements Context {
     hasHeader(header) ? getHeader(header) : defaultValue
   }
 
+  @Override
+  boolean hasHeader(String header) {
+    routingContext.request().headers().contains(header)
+  }
+
   def URL absoluteUrl(String path) {
     def currentRequestUrl = new URL(routingContext.request().absoluteURI())
 
@@ -39,8 +44,9 @@ class WebContext implements Context {
       currentRequestUrl.port, path)
   }
 
-  @Override
-  boolean hasHeader(String header) {
-    routingContext.request().headers().contains(header)
+  int getIntegerParameter(String name, Integer defaultValue) {
+    def value = routingContext.request().getParam(name)
+
+    value != null ? Integer.parseInt(value) : defaultValue
   }
 }
