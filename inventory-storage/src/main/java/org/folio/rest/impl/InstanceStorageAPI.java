@@ -8,10 +8,16 @@ import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.resource.InstanceStorageResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
@@ -29,6 +35,8 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
   @Override
   public void getInstanceStorageInstances(
+    @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
+    @DefaultValue("10") @Min(1L) @Max(100L) int limit,
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -42,17 +50,20 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       return;
     }
 
-    Criteria a = new Criteria();
-    Criterion criterion = new Criterion(a);
-
     try {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
       vertxContext.runOnContext(v -> {
-
         try {
-          postgresClient.get("instance", Instance.class, criterion, true, false,
+          PostgresClient postgresClient = PostgresClient.getInstance(
+            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+          String[] fieldList = {"*"};
+
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON("instance.jsonb");
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+            .setLimit(new Limit(limit))
+            .setOffset(new Offset(offset));
+
+          postgresClient.get("instance", Instance.class, fieldList, cql, true, false,
             reply -> {
               try {
                 if(reply.succeeded()) {
@@ -61,7 +72,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
                   Instances instanceList = new Instances();
                   instanceList.setInstances(instances);
-                  instanceList.setTotalRecords(instances.size());
+                  instanceList.setTotalRecords((Integer)reply.result()[1]);
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     InstanceStorageResource.GetInstanceStorageInstancesResponse.

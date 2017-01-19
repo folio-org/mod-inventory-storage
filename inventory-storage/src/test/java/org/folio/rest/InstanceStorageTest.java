@@ -158,6 +158,47 @@ public class InstanceStorageTest {
   }
 
   @Test
+  public void canPageAllInstances()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(nod(UUID.randomUUID()));
+    createInstance(uprooted(UUID.randomUUID()));
+    createInstance(temeraire(UUID.randomUUID()));
+    createInstance(interestingTimes(UUID.randomUUID()));
+
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+
+    client.get(instanceStorageUrl() + "?limit=3", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(firstPageCompleted));
+
+    client.get(instanceStorageUrl() + "?limit=3&offset=3", StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(secondPageCompleted));
+
+    JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
+    JsonResponse secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(firstPageResponse.getStatusCode(), is(200));
+    assertThat(secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getBody();
+    JsonObject secondPage = secondPageResponse.getBody();
+
+    JsonArray firstPageInstances = firstPage.getJsonArray("instances");
+    JsonArray secondPageInstances = secondPage.getJsonArray("instances");
+
+    assertThat(firstPageInstances.size(), is(3));
+    assertThat(firstPage.getInteger("total_records"), is(5));
+
+    assertThat(secondPageInstances.size(), is(2));
+    assertThat(secondPage.getInteger("total_records"), is(5));
+  }
+
+  @Test
   public void canDeleteAllInstances()
     throws MalformedURLException,
     InterruptedException,
@@ -316,6 +357,28 @@ public class InstanceStorageTest {
     identifiers.add(identifier("isbn", "9781447294146"));
 
     return createInstanceRequest(id, "Uprooted",
+      identifiers);
+  }
+
+  private JsonObject temeraire(UUID id) {
+
+    JsonArray identifiers = new JsonArray();
+
+    identifiers.add(identifier("isbn", "0007258712"));
+    identifiers.add(identifier("isbn", "9780007258710"));
+
+    return createInstanceRequest(id, "Temeraire",
+      identifiers);
+  }
+
+  private JsonObject interestingTimes(UUID id) {
+
+    JsonArray identifiers = new JsonArray();
+
+    identifiers.add(identifier("isbn", "0552167541"));
+    identifiers.add(identifier("isbn", "9780552167541"));
+
+    return createInstanceRequest(id, "Interesting Times",
       identifiers);
   }
 }

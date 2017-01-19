@@ -174,9 +174,22 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def instancesForTenant = getInstancesForTenant(
       getTenantId(routingContext))
 
+    def context = new WebContext(routingContext)
+
+    def limit = context.getIntegerParameter("limit", 10)
+    def offset = context.getIntegerParameter("offset", 0)
+
+    println("Limit: ${limit}")
+    println("Offset: ${offset}")
+
+    def filteredInstances = instancesForTenant.values().stream()
+      .skip(offset)
+      .limit(limit)
+      .collect()
+
     def result = new JsonObject()
-    result.put("instances", new JsonArray(instancesForTenant.values().toList()))
-    result.put("total_records", instancesForTenant.size())
+    result.put("instances", new JsonArray(filteredInstances))
+    result.put("total_records", filteredInstances.size())
 
     JsonResponse.success(routingContext.response(), result)
   }
