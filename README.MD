@@ -42,7 +42,7 @@ This readme is intended to get these modules up and running. For further informa
 
 - Java 8 JDK
 - Apache Groovy 2.4.7
-- Gradle 3.0
+- Gradle 3.3
 - Maven 3.3.9
 - [RAML Module Builder](https://github.com/folio-org/raml-module-builder)
 - Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
