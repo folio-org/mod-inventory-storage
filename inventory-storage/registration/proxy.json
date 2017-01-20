@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "inventory-storage",
-      "version": "0.1"
+      "version": "1.0"
     }
   ],
   "routingEntries": [

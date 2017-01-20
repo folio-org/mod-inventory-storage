@@ -14,7 +14,7 @@ java -jar target/inventory-storage-fat.jar db_connection=${config_path} -Dhttp.p
 
 echo "Waiting for inventory storage module to start"
 
-until $(curl --output /dev/null --silent --get --fail -H "X-Okapi-Tenant: ${tenant_id}"  http://localhost:${port}/tenant); do
+until $(curl --output /dev/null --silent --get --fail -H "X-Okapi-Tenant: ${tenant_id}"  http://localhost:${port}/_/tenant); do
     printf '.'
     sleep 1
 done
@@ -29,7 +29,7 @@ curl -w '\n' -X POST -D -   \
      -H "Content-type: application/json"   \
      -H "Accept: */*"   \
      -H "X-Okapi-Tenant: ${tenant_id}" \
-     http://localhost:${port}/tenant
+     http://localhost:${port}/_/tenant
 
 #tail -F output.log
 

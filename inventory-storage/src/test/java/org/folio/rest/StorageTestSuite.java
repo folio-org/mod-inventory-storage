@@ -112,7 +112,7 @@ public class StorageTestSuite {
 
     HttpClient client = new HttpClient(vertx);
 
-    client.post(storageUrl("/tenant"), null, tenantId,
+    client.post(storageUrl("/_/tenant"), null, tenantId,
       ResponseHandler.empty(tenantPrepared));
 
     Response response = tenantPrepared.get(10, TimeUnit.SECONDS);
@@ -130,7 +130,7 @@ public class StorageTestSuite {
 
     HttpClient client = new HttpClient(vertx);
 
-    client.delete(storageUrl("/tenant"), tenantId,
+    client.delete(storageUrl("/_/tenant"), tenantId,
       ResponseHandler.empty(tenantDeleted));
 
     Response response = tenantDeleted.get(10, TimeUnit.SECONDS);

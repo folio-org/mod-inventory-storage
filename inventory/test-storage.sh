@@ -27,7 +27,7 @@ curl -w '\n' -X POST -D -   \
      -H "Content-type: application/json"   \
      -H "Accept: */*"   \
      -H "X-Okapi-Tenant: test_tenant_2" \
-     http://localhost:9408/tenant
+     http://localhost:9408/_/tenant
 
 cd ../inventory
 
