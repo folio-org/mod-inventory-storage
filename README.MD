@@ -41,10 +41,10 @@ This readme is intended to get these modules up and running. For further informa
 # Prerequisites
 
 - Java 8 JDK
-- Apache Groovy 2.4.7
+- Apache Groovy 2.4.8
 - Gradle 3.3
 - Maven 3.3.9
-- [RAML Module Builder](https://github.com/folio-org/raml-module-builder)
+- [RAML Module Builder](https://github.com/folio-org/raml-module-builder) 2.3.3
 - Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
 - MongoDB 3.2.9 (running and listening on localhost:27017)
 - Docker 1.12

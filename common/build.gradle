@@ -7,7 +7,7 @@ repositories {
 dependencies {
   compile 'io.vertx:vertx-core:3.3.2'
   compile "io.vertx:vertx-lang-groovy:3.3.2"
-  compile 'org.codehaus.groovy:groovy-all:2.4.7'
+  compile 'org.codehaus.groovy:groovy-all:2.4.8'
   compile 'io.vertx:vertx-web:3.3.2'
   compile 'org.mongodb:mongodb-driver-async:3.3.0'
   compile 'org.apache.httpcomponents:httpclient-osgi:4.5.2'
