@@ -199,6 +199,39 @@ public class InstanceStorageTest {
   }
 
   @Test
+  public void canSearchInstancesByTitle()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(nod(UUID.randomUUID()));
+    createInstance(uprooted(UUID.randomUUID()));
+    createInstance(temeraire(UUID.randomUUID()));
+    createInstance(interestingTimes(UUID.randomUUID()));
+
+    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture();
+
+    client.get(instanceStorageUrl() + "?query=title=\"*Up*\"",
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+
+    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(200));
+
+    JsonObject searchBody = searchResponse.getBody();
+
+    JsonArray foundInstances = searchBody.getJsonArray("instances");
+
+    assertThat(foundInstances.size(), is(1));
+    assertThat(searchBody.getInteger("total_records"), is(1));
+
+    assertThat(foundInstances.getJsonObject(0).getString("title"),
+      is("Uprooted"));
+  }
+
+  @Test
   public void canDeleteAllInstances()
     throws MalformedURLException,
     InterruptedException,

@@ -37,6 +37,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   public void getInstanceStorageInstances(
     @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
     @DefaultValue("10") @Min(1L) @Max(100L) int limit,
+    String query,
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -59,12 +60,12 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           String[] fieldList = {"*"};
 
           CQL2PgJSON cql2pgJson = new CQL2PgJSON("instance.jsonb");
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
 
-          postgresClient.get("instance", Instance.class, fieldList, cql, true, false,
-            reply -> {
+          postgresClient.get("instance", Instance.class, fieldList, cql,
+            true, false, reply -> {
               try {
                 if(reply.succeeded()) {
 
