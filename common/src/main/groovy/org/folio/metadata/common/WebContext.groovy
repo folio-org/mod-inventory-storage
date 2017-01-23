@@ -44,9 +44,15 @@ class WebContext implements Context {
       currentRequestUrl.port, path)
   }
 
-  int getIntegerParameter(String name, Integer defaultValue) {
+  Integer getIntegerParameter(String name, Integer defaultValue) {
     def value = routingContext.request().getParam(name)
 
     value != null ? Integer.parseInt(value) : defaultValue
+  }
+
+  String getStringParameter(String name, String defaultValue) {
+    def value = routingContext.request().getParam(name)
+
+    value != null ? value : defaultValue
   }
 }

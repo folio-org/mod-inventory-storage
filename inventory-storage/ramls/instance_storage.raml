@@ -33,9 +33,9 @@ resourceTypes:
         exampleItem: !include  examples/instance_get.json
     get:
       is: [pageable,
-          searchable: {description: "by title",
-                        example: "title=\"uproot*\""},
-]
+          searchable: {description: "by title (using CQL)",
+                        example: "title=\"*uproot*\""},
+          ]
     post:
     delete:
       responses:

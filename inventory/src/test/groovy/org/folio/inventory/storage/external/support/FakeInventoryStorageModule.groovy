@@ -14,6 +14,8 @@ import org.folio.metadata.common.WebRequestDiagnostics
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 
+import java.util.regex.Pattern
+
 class FakeInventoryStorageModule extends GroovyVerticle {
   private static final int PORT_TO_USE = 9492
   private static final String address = "http://localhost:${PORT_TO_USE}"
@@ -129,6 +131,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     def limit = context.getIntegerParameter("limit", 10)
     def offset = context.getIntegerParameter("offset", 0)
+    def query = context.getStringParameter("query", null)
 
     def filteredItems = itemsForTenant.values().stream()
       .skip(offset)
@@ -189,16 +192,36 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def limit = context.getIntegerParameter("limit", 10)
     def offset = context.getIntegerParameter("offset", 0)
 
+    def query = context.getStringParameter("query", null)
+
+
+    def searchTerm = query == null ? null :
+      query.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")
+
     def filteredInstances = instancesForTenant.values().stream()
+      .filter(filterByTitle(searchTerm))
+      .collect()
+
+    def pagedInstances = filteredInstances.stream()
       .skip(offset)
       .limit(limit)
       .collect()
 
     def result = new JsonObject()
-    result.put("instances", new JsonArray(filteredInstances))
-    result.put("total_records", instancesForTenant.size())
+    result.put("instances", new JsonArray(pagedInstances))
+    result.put("total_records", filteredInstances.size())
 
     JsonResponse.success(routingContext.response(), result)
+  }
+
+  private Closure filterByTitle(searchTerm) {
+    return {
+      if (searchTerm == null) {
+        true
+      } else {
+        it.getString("title").contains(searchTerm)
+      }
+    }
   }
 
   private def getInstance(RoutingContext routingContext) {

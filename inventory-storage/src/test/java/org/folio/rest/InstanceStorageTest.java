@@ -213,7 +213,11 @@ public class InstanceStorageTest {
 
     CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture();
 
-    client.get(instanceStorageUrl() + "?query=title=\"*Up*\"",
+    String url = instanceStorageUrl() + "?query=title=\"*Up*\"";
+
+    System.out.printf("Search location: %s\n", url);
+
+    client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
 
     JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);

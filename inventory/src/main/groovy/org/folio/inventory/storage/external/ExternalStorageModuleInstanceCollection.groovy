@@ -7,12 +7,9 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import io.vertx.groovy.core.http.HttpClientResponse
-import org.apache.commons.lang.NotImplementedException
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.InstanceCollection
 import org.folio.metadata.common.api.request.PagingParameters
-
-import java.util.regex.Pattern
 
 class ExternalStorageModuleInstanceCollection
   implements InstanceCollection {
@@ -179,16 +176,33 @@ class ExternalStorageModuleInstanceCollection
   @Override
   def findByTitle(String partialTitle, Closure resultCallback) {
 
-    //HACK: Replace by server side implementation
-    findAll {
-      def results = it.findAll {
-        Pattern.compile(
-        Pattern.quote(partialTitle),
-        Pattern.CASE_INSENSITIVE).matcher(it.title).find()
-      }
+    def encodedQuery = URLEncoder.encode("title=\"*${partialTitle}*\"", "UTF-8")
 
-      resultCallback(results)
+    def location = "${storageModuleAddress}/instance-storage/instances?query=${encodedQuery}"
+
+    def onResponse = { response ->
+      response.bodyHandler({ buffer ->
+        def responseBody = "${buffer.getString(0, buffer.length())}"
+
+        def instances = new JsonObject(responseBody).getJsonArray("instances")
+
+        def foundInstances = new ArrayList<Instance>()
+
+        instances.each {
+          foundInstances.add(mapFromJson(it))
+        }
+
+        resultCallback(foundInstances)
+      })
     }
+
+    Handler<Throwable> onException = { println "Exception: ${it}" }
+
+    vertx.createHttpClient().getAbs(location, onResponse)
+      .exceptionHandler(onException)
+      .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
+      .end()
   }
 
   private Instance mapFromJson(JsonObject instanceFromServer) {
