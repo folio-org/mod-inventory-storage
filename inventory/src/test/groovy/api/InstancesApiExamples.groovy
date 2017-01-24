@@ -98,23 +98,9 @@ class InstancesApiExamples extends Specification {
       assert response.status == 200
       assert instances.size() == 3
 
-      instances.each {
-        expressesDublinCoreMetadata(it)
-      }
-
-      instances.each {
-        dublinCoreContextLinkRespectsWayResourceWasReached(it)
-      }
-
-      instances.each {
-        selfLinkRespectsWayResourceWasReached(it)
-      }
-
-      instances.each {
-        selfLinkShouldBeReachable(it)
-      }
+      hasCollectionProperties(instances)
   }
-
+  
   void "Can page all instances"() {
     given:
       createInstance("Long Way to a Small Angry Planet")
@@ -137,37 +123,8 @@ class InstancesApiExamples extends Specification {
       assert secondPageResponse.status == 200
       assert secondPage.size() == 2
 
-    firstPage.each {
-      expressesDublinCoreMetadata(it)
-    }
-
-    secondPage.each {
-      expressesDublinCoreMetadata(it)
-    }
-
-    firstPage.each {
-      dublinCoreContextLinkRespectsWayResourceWasReached(it)
-    }
-
-    secondPage.each {
-      dublinCoreContextLinkRespectsWayResourceWasReached(it)
-    }
-
-    firstPage.each {
-      selfLinkRespectsWayResourceWasReached(it)
-    }
-
-    secondPage.each {
-      selfLinkRespectsWayResourceWasReached(it)
-    }
-
-    firstPage.each {
-      selfLinkShouldBeReachable(it)
-    }
-
-    secondPage.each {
-      selfLinkShouldBeReachable(it)
-    }
+      hasCollectionProperties(firstPage)
+      hasCollectionProperties(secondPage)
   }
 
   void "Cannot find an unknown resource"() {
@@ -187,6 +144,25 @@ class InstancesApiExamples extends Specification {
       Json.encodePrettily(newInstanceRequest))
 
     assert postResponse.status == 201
+  }
+
+  private void hasCollectionProperties(instances) {
+
+    instances.each {
+      expressesDublinCoreMetadata(it)
+    }
+
+    instances.each {
+      dublinCoreContextLinkRespectsWayResourceWasReached(it)
+    }
+
+    instances.each {
+      selfLinkRespectsWayResourceWasReached(it)
+    }
+
+    instances.each {
+      selfLinkShouldBeReachable(it)
+    }
   }
 
   private void expressesDublinCoreMetadata(instance) {
