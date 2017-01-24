@@ -179,7 +179,8 @@ abstract class InstanceCollectionExamples {
 
     def findFuture = new CompletableFuture<List<Instance>>()
 
-    collection.findByTitle("Small Angry", complete(findFuture))
+    collection.findByCql("title=\"*Small Angry*\"",
+      new PagingParameters(10, 0), complete(findFuture))
 
     def findByNameResults = getOnCompletion(findFuture)
 

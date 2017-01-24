@@ -19,6 +19,7 @@ traits:
  - secured: !include shared/traits/auth.raml
  - language: !include shared/traits/language.raml
  - pageable: !include shared/traits/pageable.raml
+ - searchable: !include shared/traits/searchable.raml
 
 resourceTypes:
  - collection: !include shared/rtypes/collection.raml
@@ -34,7 +35,9 @@ resourceTypes:
         schemaItem: item
         exampleItem: !include examples/inventory/item_get.json
     get:
-      is: [pageable]
+      is: [pageable,
+          searchable: {description: "by title (using CQL)",
+                       example: "title=\"*uproot*\""}]
     post:
     delete:
       responses:

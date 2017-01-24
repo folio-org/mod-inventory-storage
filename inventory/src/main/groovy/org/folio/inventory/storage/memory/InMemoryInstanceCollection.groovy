@@ -5,8 +5,6 @@ import org.folio.inventory.domain.InstanceCollection
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.storage.memory.InMemoryCollection
 
-import java.util.regex.Pattern
-
 class InMemoryInstanceCollection
   implements InstanceCollection {
 
@@ -38,12 +36,33 @@ class InMemoryInstanceCollection
     collection.empty(completionCallback)
   }
 
+
   @Override
-  def findByTitle(String partialTitle, Closure completionCallback) {
-    return collection.find({
-      Pattern.compile(
-        Pattern.quote(partialTitle),
-        Pattern.CASE_INSENSITIVE).matcher(it.title).find()
-    }, completionCallback)
+  void findByCql(String cqlQuery, PagingParameters pagingParameters,
+                Closure completionCallback) {
+
+    def searchTerm = cqlQuery == null ? null :
+      cqlQuery.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")
+
+    def filteredInstances = collection.all().stream()
+      .filter(filterByTitle(searchTerm))
+      .collect()
+
+    def pagedInstances = filteredInstances.stream()
+      .skip(pagingParameters.offset)
+      .limit(pagingParameters.limit)
+      .collect()
+
+    completionCallback(pagedInstances)
+  }
+
+  private Closure filterByTitle(searchTerm) {
+    return {
+      if (searchTerm == null) {
+        true
+      } else {
+        it.title.contains(searchTerm)
+      }
+    }
   }
 }

@@ -174,11 +174,13 @@ class ExternalStorageModuleInstanceCollection
   }
 
   @Override
-  def findByTitle(String partialTitle, Closure resultCallback) {
+  void findByCql(String cqlQuery, PagingParameters pagingParameters,
+                 Closure completionCallback) {
 
-    def encodedQuery = URLEncoder.encode("title=\"*${partialTitle}*\"", "UTF-8")
+    def encodedQuery = URLEncoder.encode(cqlQuery, "UTF-8")
 
-    def location = "${storageModuleAddress}/instance-storage/instances?query=${encodedQuery}"
+    def location =
+      "${storageModuleAddress}/instance-storage/instances?query=${encodedQuery}"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
@@ -192,13 +194,13 @@ class ExternalStorageModuleInstanceCollection
           foundInstances.add(mapFromJson(it))
         }
 
-        resultCallback(foundInstances)
+        completionCallback(foundInstances)
       })
     }
 
     Handler<Throwable> onException = { println "Exception: ${it}" }
 
-    vertx.createHttpClient().getAbs(location, onResponse)
+    vertx.createHttpClient().getAbs(location.toString(), onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json")

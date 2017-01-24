@@ -100,7 +100,7 @@ class InstancesApiExamples extends Specification {
 
       hasCollectionProperties(instances)
   }
-  
+
   void "Can page all instances"() {
     given:
       createInstance("Long Way to a Small Angry Planet")
@@ -125,6 +125,25 @@ class InstancesApiExamples extends Specification {
 
       hasCollectionProperties(firstPage)
       hasCollectionProperties(secondPage)
+  }
+
+  void "Can search by title"() {
+    given:
+      createInstance("Long Way to a Small Angry Planet")
+      createInstance("Nod")
+      createInstance("Leviathan Wakes")
+
+    when:
+      def (response, instances) = client.get(
+        ApiRoot.instances("query=title=*Small%20Angry*"))
+
+    then:
+      assert response.status == 200
+      assert instances.size() == 1
+
+      assert instances[0].title == "Long Way to a Small Angry Planet"
+
+      hasCollectionProperties(instances)
   }
 
   void "Cannot find an unknown resource"() {
