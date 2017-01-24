@@ -127,6 +127,37 @@ class ItemApiExamples extends Specification {
       }
   }
 
+  void "Can search for items by title"() {
+    given:
+      def smallAngryInstance = createInstance("Long Way to a Small Angry Planet")
+
+      createItem("Long Way to a Small Angry Planet", smallAngryInstance.id,
+        "645398607547")
+
+      def nodInstance = createInstance("Nod")
+
+      createItem("Nod", nodInstance.id,
+        "564566456546")
+
+    when:
+      def (response, items) = client.get(
+        ApiRoot.items("query=title=*Small%20Angry*"))
+
+    then:
+      assert response.status == 200
+      assert items.size() == 1
+
+      assert items[0].title == "Long Way to a Small Angry Planet"
+
+      items.each {
+        selfLinkRespectsWayResourceWasReached(it)
+      }
+
+      items.each {
+        selfLinkShouldBeReachable(it)
+      }
+  }
+
   private void selfLinkRespectsWayResourceWasReached(item) {
     assert containsApiRoot(item.links.self)
   }

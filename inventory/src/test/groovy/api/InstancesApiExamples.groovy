@@ -127,7 +127,7 @@ class InstancesApiExamples extends Specification {
       hasCollectionProperties(secondPage)
   }
 
-  void "Can search by title"() {
+  void "Can search for instances by title"() {
     given:
       createInstance("Long Way to a Small Angry Planet")
       createInstance("Nod")

@@ -39,7 +39,7 @@ class InMemoryInstanceCollection
 
   @Override
   void findByCql(String cqlQuery, PagingParameters pagingParameters,
-                Closure completionCallback) {
+                Closure resultCallback) {
 
     def searchTerm = cqlQuery == null ? null :
       cqlQuery.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")
@@ -53,7 +53,7 @@ class InMemoryInstanceCollection
       .limit(pagingParameters.limit)
       .collect()
 
-    completionCallback(pagedInstances)
+    resultCallback(pagedInstances)
   }
 
   private Closure filterByTitle(searchTerm) {

@@ -133,13 +133,20 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def offset = context.getIntegerParameter("offset", 0)
     def query = context.getStringParameter("query", null)
 
+    def searchTerm = query == null ? null :
+      query.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")
+
     def filteredItems = itemsForTenant.values().stream()
+      .filter(filterByTitle(searchTerm))
+      .collect()
+
+    def pagedItems = filteredItems.stream()
       .skip(offset)
       .limit(limit)
       .collect()
 
     def result = new JsonObject()
-    result.put("items", new JsonArray(filteredItems))
+    result.put("items", new JsonArray(pagedItems))
     result.put("total_records", itemsForTenant.size())
 
     JsonResponse.success(routingContext.response(), result)
@@ -191,9 +198,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     def limit = context.getIntegerParameter("limit", 10)
     def offset = context.getIntegerParameter("offset", 0)
-
     def query = context.getStringParameter("query", null)
-
 
     def searchTerm = query == null ? null :
       query.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")

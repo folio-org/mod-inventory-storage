@@ -39,11 +39,31 @@ class InMemoryItemCollection
   }
 
   @Override
-  def findByTitle(String partialTitle, Closure completionCallback) {
-    return collection.find({
-      Pattern.compile(
-        Pattern.quote(partialTitle),
-        Pattern.CASE_INSENSITIVE).matcher(it.title).find()
-    }, completionCallback)
+  void findByCql(String cqlQuery, PagingParameters pagingParameters,
+                 Closure resultCallback) {
+
+    def searchTerm = cqlQuery == null ? null :
+      cqlQuery.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")
+
+    def filteredItems = collection.all().stream()
+      .filter(filterByTitle(searchTerm))
+      .collect()
+
+    def pagedItems = filteredItems.stream()
+      .skip(pagingParameters.offset)
+      .limit(pagingParameters.limit)
+      .collect()
+
+    resultCallback(pagedItems)
+  }
+
+  private Closure filterByTitle(searchTerm) {
+    return {
+      if (searchTerm == null) {
+        true
+      } else {
+        it.title.contains(searchTerm)
+      }
+    }
   }
 }

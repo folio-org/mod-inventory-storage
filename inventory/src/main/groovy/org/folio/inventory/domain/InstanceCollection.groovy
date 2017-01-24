@@ -5,5 +5,5 @@ import org.folio.metadata.common.domain.AsynchronousCollection
 
 interface InstanceCollection extends AsynchronousCollection<Instance> {
   void findByCql(String cqlQuery, PagingParameters pagingParameters,
-                Closure completionCallback)
+                Closure resultCallback)
 }

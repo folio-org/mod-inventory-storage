@@ -40,12 +40,22 @@ class Items {
 
     def limit = context.getIntegerParameter("limit", 10)
     def offset = context.getIntegerParameter("offset", 0)
+    def search = context.getStringParameter("query", null)
 
-    storage.getItemCollection(context).findAll(
-      new PagingParameters(limit, offset), {
-      JsonResponse.success(routingContext.response(),
-        convertToUTF8(it, context))
-    })
+    if(search == null) {
+      storage.getItemCollection(context).findAll(
+        new PagingParameters(limit, offset), {
+        JsonResponse.success(routingContext.response(),
+          convertToUTF8(it, context))
+      })
+    }
+    else {
+      storage.getItemCollection(context).findByCql(search,
+        new PagingParameters(limit, offset), {
+        JsonResponse.success(routingContext.response(),
+          convertToUTF8(it, context))
+      })
+    }
   }
 
   void deleteAll(RoutingContext routingContext) {

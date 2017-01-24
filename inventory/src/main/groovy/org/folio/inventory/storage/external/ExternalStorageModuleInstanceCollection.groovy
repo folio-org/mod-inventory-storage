@@ -175,7 +175,7 @@ class ExternalStorageModuleInstanceCollection
 
   @Override
   void findByCql(String cqlQuery, PagingParameters pagingParameters,
-                 Closure completionCallback) {
+                 Closure resultCallback) {
 
     def encodedQuery = URLEncoder.encode(cqlQuery, "UTF-8")
 
@@ -194,7 +194,7 @@ class ExternalStorageModuleInstanceCollection
           foundInstances.add(mapFromJson(it))
         }
 
-        completionCallback(foundInstances)
+        resultCallback(foundInstances)
       })
     }
 

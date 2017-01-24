@@ -177,18 +177,37 @@ class ExternalStorageModuleItemCollection
   }
 
   @Override
-  def findByTitle(String partialTitle, Closure resultCallback) {
+  void findByCql(String cqlQuery, PagingParameters pagingParameters,
+                 Closure resultCallback) {
 
-    //HACK: Replace by server side implementation
-    findAll {
-      def results = it.findAll {
-        Pattern.compile(
-        Pattern.quote(partialTitle),
-        Pattern.CASE_INSENSITIVE).matcher(it.title).find()
-      }
+    def encodedQuery = URLEncoder.encode(cqlQuery, "UTF-8")
 
-      resultCallback(results)
+    def location =
+      "${storageAddress}/item-storage/items?query=${encodedQuery}"
+
+    def onResponse = { response ->
+      response.bodyHandler({ buffer ->
+        def responseBody = "${buffer.getString(0, buffer.length())}"
+
+        def items = new JsonObject(responseBody).getJsonArray("items")
+
+        def foundItems = new ArrayList<Item>()
+
+        items.each {
+          foundItems.add(mapFromJson(it))
+        }
+
+        resultCallback(foundItems)
+      })
     }
+
+    Handler<Throwable> onException = { println "Exception: ${it}" }
+
+    vertx.createHttpClient().getAbs(location.toString(), onResponse)
+      .exceptionHandler(onException)
+      .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json")
+      .end()
   }
 
   private Item mapFromJson(JsonObject itemFromServer) {
