@@ -40,6 +40,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   public void getItemStorageItems(
     @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
     @DefaultValue("10") @Min(1L) @Max(100L) int limit,
+    String query,
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -62,8 +63,8 @@ public class ItemStorageAPI implements ItemStorageResource {
 
           String[] fieldList = {"*"};
 
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON("instance.jsonb");
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, null)
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON("item.jsonb");
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
 

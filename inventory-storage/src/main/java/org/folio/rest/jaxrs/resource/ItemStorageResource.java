@@ -52,6 +52,10 @@ public interface ItemStorageResource {
      * 
      * @param offset
      *     Skip over a number of elements by specifying an offset value for the query e.g. 0
+     * @param query
+     *     JSON array [{"field1","value1","operator1"},{"field2","value2","operator2"},...,{"fieldN","valueN","operatorN"}] by title (using CQL)
+     *      e.g. title="*uproot*"
+     *     
      * @param limit
      *     Limit the number of elements returned in the response e.g. 10
      * @param vertxContext
@@ -80,6 +84,8 @@ public interface ItemStorageResource {
         @Min(1L)
         @Max(100L)
         int limit,
+        @QueryParam("query")
+        String query,
         @QueryParam("lang")
         @DefaultValue("en")
         @Pattern(regexp = "[a-zA-Z]{2}")

@@ -193,6 +193,41 @@ public class ItemStorageTest {
   }
 
   @Test
+  public void canSearchForItemsByTitle()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    createItem(smallAngryPlanet());
+    createItem(nod());
+    createItem(uprooted());
+    createItem(temeraire());
+    createItem(interestingTimes());
+
+    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture();
+
+    String url = itemStorageUrl() + "?query=title=\"*Up*\"";
+
+    client.get(url,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+
+    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(200));
+
+    JsonObject searchBody = searchResponse.getBody();
+
+    JsonArray foundItems = searchBody.getJsonArray("items");
+
+    assertThat(foundItems.size(), is(1));
+    assertThat(searchBody.getInteger("total_records"), is(1));
+
+    assertThat(foundItems.getJsonObject(0).getString("title"),
+      is("Uprooted"));
+  }
+
+  @Test
   public void canDeleteAllItems()
     throws MalformedURLException,
     InterruptedException,
