@@ -118,7 +118,9 @@ class ModsIngestExamples extends Specification {
   private expectedInstancesCreatedFromIngest() {
     def client = new HttpClient("test_tenant")
 
-    def (resp, instances) = client.get(new URL("${inventoryApiRoot()}/instances"))
+    def (resp, body) = client.get(new URL("${inventoryApiRoot()}/instances"))
+
+    def instances = body.instances
 
     assert resp.status == 200
     assert instances != null

@@ -1,51 +1,60 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "@context": {
-        "type": "string"
-      },
-      "id": {
-        "type": "string"
-      },
-      "title": {
-        "type": "string"
-      },
-      "identifiers": {
-        "type": "array",
-        "minItems": 1,
-        "items": {
-          "type": "object",
-          "properties": {
-            "namespace": {
-              "type": "string"
-            },
-            "value": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "namespace",
-            "value"
-          ]
-        }
-      },
-      "links": {
+  "type": "object",
+  "properties": {
+    "instances": {
+      "id": "instances",
+      "type": "array",
+      "items": {
         "type": "object",
         "properties": {
-          "self": {
+          "@context": {
             "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "identifiers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "namespace",
+                "value"
+              ]
+            }
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "self"
+            ]
           }
         },
         "required": [
-          "self"
+          "title"
         ]
       }
-    },
-    "required": [
-      "title"
-    ]
-  }
+    }
+  },
+  "required": [
+    "instances"
+  ]
 }

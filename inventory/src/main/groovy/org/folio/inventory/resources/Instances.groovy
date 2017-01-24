@@ -120,14 +120,18 @@ class Instances {
     "/inventory/instances"
   }
 
-  private JsonArray convertToUTF8(List<Instance> instances, WebContext context) {
-    def result = new JsonArray()
+  private JsonObject convertToUTF8(List<Instance> instances, WebContext context) {
+    def representation = new JsonObject()
+
+    def results = new JsonArray()
 
     instances.each {
-      result.add(convertToUTF8(it, context))
+      results.add(convertToUTF8(it, context))
     }
 
-    result
+    representation.put("instances", results)
+
+    representation
   }
 
   private JsonObject convertToUTF8(Instance instance, WebContext context) {

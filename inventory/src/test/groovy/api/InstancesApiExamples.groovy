@@ -76,7 +76,8 @@ class InstancesApiExamples extends Specification {
     when:
       def (deleteResponse, deleteBody) = client.delete(ApiRoot.instances())
 
-      def (_, instances) = client.get(ApiRoot.instances())
+      def (_, body) = client.get(ApiRoot.instances())
+      def instances = body.instances
 
     then:
       assert deleteResponse.status == 204
@@ -92,7 +93,8 @@ class InstancesApiExamples extends Specification {
       createInstance("Leviathan Wakes")
 
     when:
-      def (response, instances) = client.get(ApiRoot.instances())
+      def (response, body) = client.get(ApiRoot.instances())
+      def instances = body.instances
 
     then:
       assert response.status == 200
@@ -118,13 +120,13 @@ class InstancesApiExamples extends Specification {
 
     then:
       assert firstPageResponse.status == 200
-      assert firstPage.size() == 3
+      assert firstPage.instances.size() == 3
 
       assert secondPageResponse.status == 200
-      assert secondPage.size() == 2
+      assert secondPage.instances.size() == 2
 
-      hasCollectionProperties(firstPage)
-      hasCollectionProperties(secondPage)
+      hasCollectionProperties(firstPage.instances)
+      hasCollectionProperties(secondPage.instances)
   }
 
   void "Can search for instances by title"() {
@@ -134,8 +136,10 @@ class InstancesApiExamples extends Specification {
       createInstance("Leviathan Wakes")
 
     when:
-      def (response, instances) = client.get(
+      def (response, body) = client.get(
         ApiRoot.instances("query=title=*Small%20Angry*"))
+
+      def instances = body.instances
 
     then:
       assert response.status == 200
