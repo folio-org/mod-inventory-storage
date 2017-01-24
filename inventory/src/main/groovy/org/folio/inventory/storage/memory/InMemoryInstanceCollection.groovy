@@ -36,33 +36,10 @@ class InMemoryInstanceCollection
     collection.empty(completionCallback)
   }
 
-
   @Override
   void findByCql(String cqlQuery, PagingParameters pagingParameters,
                 Closure resultCallback) {
 
-    def searchTerm = cqlQuery == null ? null :
-      cqlQuery.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")
-
-    def filteredInstances = collection.all().stream()
-      .filter(filterByTitle(searchTerm))
-      .collect()
-
-    def pagedInstances = filteredInstances.stream()
-      .skip(pagingParameters.offset)
-      .limit(pagingParameters.limit)
-      .collect()
-
-    resultCallback(pagedInstances)
-  }
-
-  private Closure filterByTitle(searchTerm) {
-    return {
-      if (searchTerm == null) {
-        true
-      } else {
-        it.title.contains(searchTerm)
-      }
-    }
+    collection.find(cqlQuery, pagingParameters, resultCallback)
   }
 }

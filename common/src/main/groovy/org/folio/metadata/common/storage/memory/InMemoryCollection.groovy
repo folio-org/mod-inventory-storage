@@ -1,6 +1,8 @@
 package org.folio.metadata.common.storage.memory
 
 import org.folio.metadata.common.api.request.PagingParameters
+import org.folio.metadata.common.cql.CqlFilter
+import org.folio.metadata.common.cql.CqlParser
 
 //TODO: truly asynchronous implementation
 class InMemoryCollection<T> {
@@ -36,6 +38,23 @@ class InMemoryCollection<T> {
 
   void find(Closure matcher, Closure resultCallback) {
     resultCallback(items.findAll(matcher))
+  }
+
+  void find(String cqlQuery, PagingParameters pagingParameters,
+                 Closure resultCallback) {
+
+    def (field, searchTerm) = new CqlParser().parseCql(cqlQuery)
+
+    def filtered = all().stream()
+      .filter(new CqlFilter().filterBy(field, searchTerm))
+      .collect()
+
+    def paged = filtered.stream()
+      .skip(pagingParameters.offset)
+      .limit(pagingParameters.limit)
+      .collect()
+
+    resultCallback(paged)
   }
 
   T add(T item) {
