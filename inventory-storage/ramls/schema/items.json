@@ -10,12 +10,12 @@
         "$ref" : "item"
       }
     },
-    "total_records": {
+    "totalRecords": {
       "type": "integer"
     }
   },
   "required": [
     "items",
-    "total_records"
+    "totalRecords"
   ]
 }

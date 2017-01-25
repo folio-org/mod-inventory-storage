@@ -474,7 +474,7 @@ public interface InstanceStorageResource {
          *       ]
          *     }
          *   ],
-         *   "total_records": 2
+         *   "totalRecords": 2
          * }
          * 
          * 
@@ -510,7 +510,7 @@ public interface InstanceStorageResource {
          *           ]
          *         }
          *       ],
-         *       "total_records": 2
+         *       "totalRecords": 2
          *     }
          *     
          */

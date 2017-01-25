@@ -131,7 +131,7 @@ public class ItemStorageTest {
     JsonArray allItems = body.getJsonArray("items");
 
     assertThat(allItems.size(), is(2));
-    assertThat(body.getInteger("total_records"), is(2));
+    assertThat(body.getInteger("totalRecords"), is(2));
 
     JsonObject firstItem = allItems.getJsonObject(0);
     JsonObject secondItem = allItems.getJsonObject(1);
@@ -186,10 +186,10 @@ public class ItemStorageTest {
     JsonArray secondPageItems = secondPage.getJsonArray("items");
 
     assertThat(firstPageItems.size(), is(3));
-    assertThat(firstPage.getInteger("total_records"), is(5));
+    assertThat(firstPage.getInteger("totalRecords"), is(5));
 
     assertThat(secondPageItems.size(), is(2));
-    assertThat(secondPage.getInteger("total_records"), is(5));
+    assertThat(secondPage.getInteger("totalRecords"), is(5));
   }
 
   @Test
@@ -221,7 +221,7 @@ public class ItemStorageTest {
     JsonArray foundItems = searchBody.getJsonArray("items");
 
     assertThat(foundItems.size(), is(1));
-    assertThat(searchBody.getInteger("total_records"), is(1));
+    assertThat(searchBody.getInteger("totalRecords"), is(1));
 
     assertThat(foundItems.getJsonObject(0).getString("title"),
       is("Uprooted"));
@@ -261,7 +261,7 @@ public class ItemStorageTest {
     JsonArray allItems = responseBody.getJsonArray("items");
 
     assertThat(allItems.size(), is(0));
-    assertThat(responseBody.getInteger("total_records"), is(0));
+    assertThat(responseBody.getInteger("totalRecords"), is(0));
   }
 
   @Test

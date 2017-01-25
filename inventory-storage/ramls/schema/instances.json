@@ -10,12 +10,12 @@
         "$ref" : "instance"
       }
     },
-    "total_records": {
+    "totalRecords": {
       "type": "integer"
     }
   },
   "required": [
     "instances",
-    "total_records"
+    "totalRecords"
   ]
 }

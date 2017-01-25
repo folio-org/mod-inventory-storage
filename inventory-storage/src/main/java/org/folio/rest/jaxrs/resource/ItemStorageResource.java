@@ -423,7 +423,7 @@ public interface ItemStorageResource {
          *       "barcode": "645398607547"
          *     }
          *   ],
-         *   "total_records": 2
+         *   "totalRecords": 2
          * }
          * 
          * 
@@ -443,7 +443,7 @@ public interface ItemStorageResource {
          *           "barcode": "645398607547"
          *         }
          *       ],
-         *       "total_records": 2
+         *       "totalRecords": 2
          *     }
          *     
          */

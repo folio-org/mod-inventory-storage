@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "items",
-    "total_records"
+    "totalRecords"
 })
 public class Items {
 
@@ -37,7 +37,7 @@ public class Items {
      * (Required)
      * 
      */
-    @JsonProperty("total_records")
+    @JsonProperty("totalRecords")
     @NotNull
     private Integer totalRecords;
     @JsonIgnore
@@ -79,7 +79,7 @@ public class Items {
      * @return
      *     The totalRecords
      */
-    @JsonProperty("total_records")
+    @JsonProperty("totalRecords")
     public Integer getTotalRecords() {
         return totalRecords;
     }
@@ -89,9 +89,9 @@ public class Items {
      * (Required)
      * 
      * @param totalRecords
-     *     The total_records
+     *     The totalRecords
      */
-    @JsonProperty("total_records")
+    @JsonProperty("totalRecords")
     public void setTotalRecords(Integer totalRecords) {
         this.totalRecords = totalRecords;
     }

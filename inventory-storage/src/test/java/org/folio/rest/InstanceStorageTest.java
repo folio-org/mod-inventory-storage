@@ -137,7 +137,7 @@ public class InstanceStorageTest {
     JsonArray allInstances = responseBody.getJsonArray("instances");
 
     assertThat(allInstances.size(), is(2));
-    assertThat(responseBody.getInteger("total_records"), is(2));
+    assertThat(responseBody.getInteger("totalRecords"), is(2));
 
     JsonObject firstInstance = allInstances.getJsonObject(0);
     JsonObject secondInstance = allInstances.getJsonObject(1);
@@ -192,10 +192,10 @@ public class InstanceStorageTest {
     JsonArray secondPageInstances = secondPage.getJsonArray("instances");
 
     assertThat(firstPageInstances.size(), is(3));
-    assertThat(firstPage.getInteger("total_records"), is(5));
+    assertThat(firstPage.getInteger("totalRecords"), is(5));
 
     assertThat(secondPageInstances.size(), is(2));
-    assertThat(secondPage.getInteger("total_records"), is(5));
+    assertThat(secondPage.getInteger("totalRecords"), is(5));
   }
 
   @Test
@@ -227,7 +227,7 @@ public class InstanceStorageTest {
     JsonArray foundInstances = searchBody.getJsonArray("instances");
 
     assertThat(foundInstances.size(), is(1));
-    assertThat(searchBody.getInteger("total_records"), is(1));
+    assertThat(searchBody.getInteger("totalRecords"), is(1));
 
     assertThat(foundInstances.getJsonObject(0).getString("title"),
       is("Uprooted"));
@@ -265,7 +265,7 @@ public class InstanceStorageTest {
     JsonArray allInstances = responseBody.getJsonArray("instances");
 
     assertThat(allInstances.size(), is(0));
-    assertThat(responseBody.getInteger("total_records"), is(0));
+    assertThat(responseBody.getInteger("totalRecords"), is(0));
   }
 
   @Test
