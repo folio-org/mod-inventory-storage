@@ -66,13 +66,13 @@ class ItemApiExamples extends Specification {
     when:
       def (deleteResponse, deleteBody) = client.delete(ApiRoot.items())
 
-      def (_, items) = client.get(ApiRoot.items())
+      def (_, body) = client.get(ApiRoot.items())
 
     then:
       assert deleteResponse.status == 204
       assert deleteBody == null
 
-      assert items.size() == 0
+      assert body.items.size() == 0
   }
 
   void "Can page all items"() {
@@ -105,24 +105,24 @@ class ItemApiExamples extends Specification {
 
     then:
       assert firstPageResponse.status == 200
-      assert firstPage.size() == 3
+      assert firstPage.items.size() == 3
 
       assert secondPageResponse.status == 200
-      assert secondPage.size() == 2
+      assert secondPage.items.size() == 2
 
-      firstPage.each {
+      firstPage.items.each {
         selfLinkRespectsWayResourceWasReached(it)
       }
 
-      secondPage.each {
-        selfLinkRespectsWayResourceWasReached(it)
-      }
-
-      firstPage.each {
+      firstPage.items.each {
         selfLinkShouldBeReachable(it)
       }
 
-      secondPage.each {
+      secondPage.items.each {
+        selfLinkRespectsWayResourceWasReached(it)
+      }
+
+      secondPage.items.each {
         selfLinkShouldBeReachable(it)
       }
   }
@@ -140,11 +140,14 @@ class ItemApiExamples extends Specification {
         "564566456546")
 
     when:
-      def (response, items) = client.get(
+      def (response, body) = client.get(
         ApiRoot.items("query=title=*Small%20Angry*"))
 
     then:
       assert response.status == 200
+
+      def items = body.items
+
       assert items.size() == 1
 
       assert items[0].title == "Long Way to a Small Angry Planet"

@@ -59,10 +59,12 @@ class ModsIngestExamples extends Specification {
   }
 
   private expectedItemsCreatedFromIngest() {
-    def (resp, items) = client.get(
+    def (resp, itemsBody) = client.get(
       new URL("${inventoryApiRoot()}/items"))
 
     assert resp.status == 200
+
+    def items = itemsBody.items
 
     assert items != null
     assert items.size() == 8
@@ -116,8 +118,6 @@ class ModsIngestExamples extends Specification {
   }
 
   private expectedInstancesCreatedFromIngest() {
-    def client = new HttpClient("test_tenant")
-
     def (resp, body) = client.get(new URL("${inventoryApiRoot()}/instances"))
 
     def instances = body.instances

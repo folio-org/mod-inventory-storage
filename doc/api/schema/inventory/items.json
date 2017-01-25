@@ -1,26 +1,31 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "string"
-      },
-      "instanceId": {
-        "type": "string"
-      },
-      "title": {
-        "type": "string"
-      },
-      "barcode": {
-        "type": "string"
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "instanceId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "barcode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "instanceId"
+        ]
       }
-    },
-    "required": [
-      "id",
-      "title",
-      "instanceId"
-    ]
+    }
   }
 }

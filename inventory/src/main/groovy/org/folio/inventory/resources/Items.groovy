@@ -100,14 +100,18 @@ class Items {
     "/inventory/items"
   }
 
-  private JsonArray convertToUTF8(List<Item> items, WebContext context) {
-    def result = new JsonArray()
+  private JsonObject convertToUTF8(List<Item> items, WebContext context) {
+    def representation = new JsonObject()
+
+    def results = new JsonArray()
 
     items.each {
-      result.add(convertToUTF8(it, context))
+      results.add(convertToUTF8(it, context))
     }
 
-    result
+    representation.put("items", results)
+
+    representation
   }
 
   private JsonObject convertToUTF8(Item item, WebContext context) {
