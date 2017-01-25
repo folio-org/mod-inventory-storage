@@ -5,7 +5,7 @@
     "id": {
       "type": "string"
     },
-    "instance_id": {
+    "instanceId": {
       "type": "string"
     },
     "title": {
@@ -16,7 +16,7 @@
     }
   },
   "required": [
-    "instance_id",
+    "instanceId",
     "barcode"
   ]
 }

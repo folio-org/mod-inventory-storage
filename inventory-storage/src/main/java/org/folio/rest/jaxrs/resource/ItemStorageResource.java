@@ -106,7 +106,7 @@ public interface ItemStorageResource {
      * @param entity
      *      e.g. {
      *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-     *       "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+     *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
      *       "title": "Uprooted",
      *       "barcode": "645398607547"
      *     }
@@ -233,7 +233,7 @@ public interface ItemStorageResource {
      * @param entity
      *      e.g. {
      *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-     *       "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+     *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
      *       "title": "Uprooted",
      *       "barcode": "645398607547"
      *     }
@@ -349,7 +349,7 @@ public interface ItemStorageResource {
         /**
          * Returns item with a given ID e.g. {
          *   "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *   "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *   "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *   "title": "Uprooted",
          *   "barcode": "645398607547"
          * }
@@ -358,7 +358,7 @@ public interface ItemStorageResource {
          * @param entity
          *     {
          *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *       "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *       "title": "Uprooted",
          *       "barcode": "645398607547"
          *     }
@@ -412,13 +412,13 @@ public interface ItemStorageResource {
          *   "items": [
          *     {
          *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *       "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *       "title": "Nod",
          *       "barcode": "456743454532"
          *     },
          *     {
          *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *       "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *       "title": "Uprooted",
          *       "barcode": "645398607547"
          *     }
@@ -432,13 +432,13 @@ public interface ItemStorageResource {
          *       "items": [
          *         {
          *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *           "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *           "title": "Nod",
          *           "barcode": "456743454532"
          *         },
          *         {
          *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *           "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *           "title": "Uprooted",
          *           "barcode": "645398607547"
          *         }
@@ -502,7 +502,7 @@ public interface ItemStorageResource {
         /**
          * Returns a newly created item, with server-controlled fields like 'id' populated e.g. {
          *   "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *   "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *   "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *   "title": "Uprooted",
          *   "barcode": "645398607547"
          * }
@@ -513,7 +513,7 @@ public interface ItemStorageResource {
          * @param entity
          *     {
          *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *       "instance_id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *       "title": "Uprooted",
          *       "barcode": "645398607547"
          *     }

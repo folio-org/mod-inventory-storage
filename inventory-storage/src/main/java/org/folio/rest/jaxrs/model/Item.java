@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "id",
-    "instance_id",
+    "instanceId",
     "title",
     "barcode"
 })
@@ -29,7 +29,7 @@ public class Item {
      * (Required)
      * 
      */
-    @JsonProperty("instance_id")
+    @JsonProperty("instanceId")
     @NotNull
     private String instanceId;
     @JsonProperty("title")
@@ -77,7 +77,7 @@ public class Item {
      * @return
      *     The instanceId
      */
-    @JsonProperty("instance_id")
+    @JsonProperty("instanceId")
     public String getInstanceId() {
         return instanceId;
     }
@@ -87,9 +87,9 @@ public class Item {
      * (Required)
      * 
      * @param instanceId
-     *     The instance_id
+     *     The instanceId
      */
-    @JsonProperty("instance_id")
+    @JsonProperty("instanceId")
     public void setInstanceId(String instanceId) {
         this.instanceId = instanceId;
     }

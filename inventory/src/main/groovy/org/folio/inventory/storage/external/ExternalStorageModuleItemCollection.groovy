@@ -1,19 +1,14 @@
 package org.folio.inventory.storage.external
 
 import io.vertx.core.Handler
-import io.vertx.core.http.HttpClientRequest
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.json.Json
-import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.groovy.core.Vertx
 import io.vertx.groovy.core.http.HttpClientResponse
-import org.apache.commons.lang.NotImplementedException
 import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
 import org.folio.metadata.common.api.request.PagingParameters
-
-import java.util.regex.Pattern
 
 class ExternalStorageModuleItemCollection
   implements ItemCollection {
@@ -57,7 +52,7 @@ class ExternalStorageModuleItemCollection
     itemToSend.put("id", UUID.randomUUID().toString())
     itemToSend.put("title", item.title)
     itemToSend.put("barcode", item.barcode)
-    itemToSend.put("instance_id", item.instanceId)
+    itemToSend.put("instanceId", item.instanceId)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
@@ -215,6 +210,6 @@ class ExternalStorageModuleItemCollection
       itemFromServer.getString("id"),
       itemFromServer.getString("title"),
       itemFromServer.getString("barcode"),
-      itemFromServer.getString("instance_id"))
+      itemFromServer.getString("instanceId"))
   }
 }

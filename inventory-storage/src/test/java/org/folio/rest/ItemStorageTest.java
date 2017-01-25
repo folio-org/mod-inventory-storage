@@ -67,7 +67,7 @@ public class ItemStorageTest {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("instance_id"), is(instanceId.toString()));
+    assertThat(item.getString("instanceId"), is(instanceId.toString()));
     assertThat(item.getString("title"), is("Nod"));
     assertThat(item.getString("barcode"), is("565578437802"));
   }
@@ -96,7 +96,7 @@ public class ItemStorageTest {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("instance_id"), is(instanceId.toString()));
+    assertThat(item.getString("instanceId"), is(instanceId.toString()));
     assertThat(item.getString("title"), is("Long Way to a Small Angry Planet"));
     assertThat(item.getString("barcode"), is("036000291452"));
   }
@@ -137,14 +137,14 @@ public class ItemStorageTest {
     JsonObject secondItem = allItems.getJsonObject(1);
 
     assertThat(firstItem.getString("id"), is(firstItemId.toString()));
-    assertThat(firstItem.getString("instance_id"),
+    assertThat(firstItem.getString("instanceId"),
       is(firstItemInstanceId.toString()));
 
     assertThat(firstItem.getString("title"), is("Long Way to a Small Angry Planet"));
     assertThat(firstItem.getString("barcode"), is("036000291452"));
 
     assertThat(secondItem.getString("id"), is(secondItemId.toString()));
-    assertThat(secondItem.getString("instance_id"),
+    assertThat(secondItem.getString("instanceId"),
       is(secondItemInstanceId.toString()));
 
     assertThat(secondItem.getString("title"), is("Nod"));
@@ -348,7 +348,7 @@ public class ItemStorageTest {
     JsonObject itemToCreate = new JsonObject();
 
     itemToCreate.put("id", id.toString());
-    itemToCreate.put("instance_id", instanceId.toString());
+    itemToCreate.put("instanceId", instanceId.toString());
     itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);
 
