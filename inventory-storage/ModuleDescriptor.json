@@ -9,6 +9,10 @@
     {
       "id": "instance-storage",
       "version": "1.0"
+    },
+    {
+      "id" : "_tenant",
+      "version" : "1.0"
     }
   ],
   "routingEntries": [

@@ -27,8 +27,8 @@ npm install
 replace_references_in_schema ${instances_schema_file} instance
 replace_references_in_schema ${items_schema_file} item
 
-./node_modules/.bin/eslint inventory-storage/ramls/instance_storage.raml
-./node_modules/.bin/eslint inventory-storage/ramls/item_storage.raml
+./node_modules/.bin/eslint inventory-storage/ramls/instance-storage.raml
+./node_modules/.bin/eslint inventory-storage/ramls/item-storage.raml
 ./node_modules/.bin/eslint doc/api/inventory.raml
 
 replace_changed_schema_file ${instances_schema_file}
