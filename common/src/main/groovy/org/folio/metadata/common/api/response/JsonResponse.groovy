@@ -1,6 +1,7 @@
 package org.folio.metadata.common.api.response
 
 import io.vertx.core.json.Json
+import io.vertx.groovy.core.buffer.Buffer
 import io.vertx.groovy.core.http.HttpServerResponse
 
 class JsonResponse {
@@ -12,30 +13,19 @@ class JsonResponse {
     jsonResponse(response, body, 201)
   }
 
-  static created(HttpServerResponse response, body, location) {
-    def json = Json.encodePrettily(body)
-
-    response.statusCode = 201
-    response.putHeader "content-type", "application/json;"
-    response.putHeader "content-length", Integer.toString(json.length())
-    response.putHeader "location", location
-
-    println("JSON Response: ${json}")
-
-    response.end(json)
-  }
-
   private static void jsonResponse(
     HttpServerResponse response, body, Integer status) {
 
     def json = Json.encodePrettily(body)
+    def buffer = Buffer.buffer(json, "UTF-8")
 
     response.statusCode = status
-    response.putHeader "content-type", "application/json;"
-    response.putHeader "content-length", Integer.toString(json.length())
+    response.putHeader "content-type", "application/json; charset=utf-8"
+    response.putHeader "content-length", Integer.toString(buffer.length())
 
     println("JSON Response: ${json}")
 
-    response.end(json)
+    response.write(buffer)
+    response.end()
   }
 }

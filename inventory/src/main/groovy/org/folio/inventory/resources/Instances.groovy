@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
-import org.apache.commons.lang.StringEscapeUtils
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
@@ -59,14 +58,14 @@ class Instances {
       storage.getInstanceCollection(context).findAll(
         new PagingParameters(limit, offset), {
         JsonResponse.success(routingContext.response(),
-          convertToUTF8(it, context))
+          toRepresentation(it, context))
       })
     }
     else {
       storage.getInstanceCollection(context).findByCql(search,
         new PagingParameters(limit, offset), {
         JsonResponse.success(routingContext.response(),
-          convertToUTF8(it, context))
+          toRepresentation(it, context))
       })
     }
   }
@@ -91,7 +90,6 @@ class Instances {
     })
   }
 
-
   void deleteAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
@@ -108,7 +106,7 @@ class Instances {
       {
         if(it != null) {
           JsonResponse.success(routingContext.response(),
-            convertToUTF8(it, context))
+            toRepresentation(it, context))
         }
         else {
           ClientErrorResponse.notFound(routingContext.response())
@@ -120,13 +118,13 @@ class Instances {
     "/inventory/instances"
   }
 
-  private JsonObject convertToUTF8(List<Instance> instances, WebContext context) {
+  private JsonObject toRepresentation(List<Instance> instances, WebContext context) {
     def representation = new JsonObject()
 
     def results = new JsonArray()
 
     instances.each {
-      results.add(convertToUTF8(it, context))
+      results.add(toRepresentation(it, context))
     }
 
     representation.put("instances", results)
@@ -134,14 +132,14 @@ class Instances {
     representation
   }
 
-  private JsonObject convertToUTF8(Instance instance, WebContext context) {
+  private JsonObject toRepresentation(Instance instance, WebContext context) {
     def representation = new JsonObject()
 
     representation.put("@context", context.absoluteUrl(
       relativeInstancesPath() + "/context").toString())
 
     representation.put("id", instance.id)
-    representation.put("title", StringEscapeUtils.escapeJava(instance.title))
+    representation.put("title", instance.title)
 
     def identifiers = []
 

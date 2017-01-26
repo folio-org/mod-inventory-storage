@@ -5,8 +5,6 @@ import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
-import org.apache.commons.lang.StringEscapeUtils
-import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.Item
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
@@ -46,14 +44,14 @@ class Items {
       storage.getItemCollection(context).findAll(
         new PagingParameters(limit, offset), {
         JsonResponse.success(routingContext.response(),
-          convertToUTF8(it, context))
+          toRepresentation(it, context))
       })
     }
     else {
       storage.getItemCollection(context).findByCql(search,
         new PagingParameters(limit, offset), {
         JsonResponse.success(routingContext.response(),
-          convertToUTF8(it, context))
+          toRepresentation(it, context))
       })
     }
   }
@@ -88,7 +86,7 @@ class Items {
       {
         if(it != null) {
           JsonResponse.success(routingContext.response(),
-            convertToUTF8(it, context))
+            toRepresentation(it, context))
         }
         else {
           ClientErrorResponse.notFound(routingContext.response())
@@ -100,13 +98,13 @@ class Items {
     "/inventory/items"
   }
 
-  private JsonObject convertToUTF8(List<Item> items, WebContext context) {
+  private JsonObject toRepresentation(List<Item> items, WebContext context) {
     def representation = new JsonObject()
 
     def results = new JsonArray()
 
     items.each {
-      results.add(convertToUTF8(it, context))
+      results.add(toRepresentation(it, context))
     }
 
     representation.put("items", results)
@@ -114,11 +112,11 @@ class Items {
     representation
   }
 
-  private JsonObject convertToUTF8(Item item, WebContext context) {
+  private JsonObject toRepresentation(Item item, WebContext context) {
     def representation = new JsonObject()
     representation.put("id", item.id)
     representation.put("instanceId", item.instanceId)
-    representation.put("title", StringEscapeUtils.escapeJava(item.title))
+    representation.put("title", item.title)
     representation.put("barcode", item.barcode)
 
     representation.put('links',
