@@ -19,17 +19,17 @@ public class Launcher {
 
     def config = [:]
 
+    def port = Integer.getInteger("port", 9403)
+
     def storageType = System.getProperty(
       "org.folio.metadata.inventory.storage.type", "memory")
 
     def storageLocation = System.getProperty(
       "org.folio.metadata.inventory.storage.location", null)
 
-    println("Storage type: ${storageType}")
-    println("Storage location: ${storageLocation}")
-
     config.put("storage.type", storageType)
     config.put("storage.location", storageLocation)
+    config.put("port", port)
 
     start(config)
   }

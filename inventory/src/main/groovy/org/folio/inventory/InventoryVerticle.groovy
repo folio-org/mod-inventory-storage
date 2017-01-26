@@ -70,7 +70,7 @@ public class InventoryVerticle extends GroovyVerticle {
     }
 
     server.requestHandler(router.&accept)
-      .listen(config.port ?: 9403, onHttpServerStart)
+      .listen(config.port, onHttpServerStart)
   }
 
   @Override
