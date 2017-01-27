@@ -38,5 +38,6 @@
       "level": "30",
       "type": "request-response"
     }
-  ]
+  ],
+  "tenantInterface" : "/_/tenant"
 }
