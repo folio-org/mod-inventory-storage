@@ -185,7 +185,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      postgresClient.mutate("TRUNCATE TABLE instance",
+      postgresClient.mutate(String.format("TRUNCATE TABLE %s.instance", tenantId),
         reply -> {
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.DeleteInstanceStorageInstancesResponse.noContent().build()));

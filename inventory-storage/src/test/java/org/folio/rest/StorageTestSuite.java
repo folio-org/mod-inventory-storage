@@ -43,16 +43,33 @@ public class StorageTestSuite {
 
   @BeforeClass
   public static void before()
-    throws InterruptedException, ExecutionException,
-    TimeoutException, MalformedURLException {
-
-    String postgresConfigPath = System.getProperty(
-      "org.folio.inventory.storage.test.config",
-      "/postgres-conf-local.json");
-
-    PostgresClient.setConfigFilePath(postgresConfigPath);
+    throws Exception {
 
     vertx = Vertx.vertx();
+
+    String useExternalDatabase = System.getProperty(
+      "org.folio.inventory.storage.test.database",
+      "embedded");
+
+    switch(useExternalDatabase) {
+      case "external":
+        String postgresConfigPath = System.getProperty(
+          "org.folio.inventory.storage.test.config",
+          "/postgres-conf-local.json");
+
+        PostgresClient.setConfigFilePath(postgresConfigPath);
+        break;
+      case "embedded":
+        PostgresClient.setIsEmbedded(true);
+        PostgresClient.getInstance(vertx).startEmbeddedPostgres();
+        break;
+      default:
+        String message = "No understood database choice made." +
+          "Please set org.folio.inventory.storage.test.config" +
+          "to 'external' or 'embedded'";
+
+        throw new Exception(message);
+    }
 
     port = NetworkUtils.nextFreePort();
 

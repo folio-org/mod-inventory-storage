@@ -105,7 +105,7 @@ public interface InstanceStorageResource {
      *     
      * @param entity
      *      e.g. {
-     *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+     *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
      *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
      *       "identifiers": [
      *         {
@@ -243,7 +243,7 @@ public interface InstanceStorageResource {
      *     
      * @param entity
      *      e.g. {
-     *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+     *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
      *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
      *       "identifiers": [
      *         {
@@ -367,7 +367,7 @@ public interface InstanceStorageResource {
 
         /**
          * Returns item with a given ID e.g. {
-         *   "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *   "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
          *   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
          *   "identifiers": [
          *     {
@@ -384,7 +384,7 @@ public interface InstanceStorageResource {
          * 
          * @param entity
          *     {
-         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
          *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
          *       "identifiers": [
          *         {
@@ -446,7 +446,7 @@ public interface InstanceStorageResource {
          * Returns a list of instance items e.g. {
          *   "instances": [
          *     {
-         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
          *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
          *       "identifiers": [
          *         {
@@ -460,7 +460,7 @@ public interface InstanceStorageResource {
          *       ]
          *     },
          *     {
-         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
          *       "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
          *       "identifiers": [
          *         {
@@ -482,7 +482,7 @@ public interface InstanceStorageResource {
          *     {
          *       "instances": [
          *         {
-         *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
          *           "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
          *           "identifiers": [
          *             {
@@ -496,7 +496,7 @@ public interface InstanceStorageResource {
          *           ]
          *         },
          *         {
-         *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
          *           "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
          *           "identifiers": [
          *             {
@@ -568,7 +568,7 @@ public interface InstanceStorageResource {
 
         /**
          * Returns a newly created item, with server-controlled fields like 'id' populated e.g. {
-         *   "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *   "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
          *   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
          *   "identifiers": [
          *     {
@@ -587,7 +587,7 @@ public interface InstanceStorageResource {
          *     URI to the created instance item
          * @param entity
          *     {
-         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
          *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
          *       "identifiers": [
          *         {

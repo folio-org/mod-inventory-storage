@@ -105,8 +105,8 @@ public interface ItemStorageResource {
      *     
      * @param entity
      *      e.g. {
-     *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-     *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+     *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+     *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
      *       "title": "Uprooted",
      *       "barcode": "645398607547"
      *     }
@@ -232,8 +232,8 @@ public interface ItemStorageResource {
      *     
      * @param entity
      *      e.g. {
-     *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-     *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+     *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+     *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
      *       "title": "Uprooted",
      *       "barcode": "645398607547"
      *     }
@@ -348,8 +348,8 @@ public interface ItemStorageResource {
 
         /**
          * Returns item with a given ID e.g. {
-         *   "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *   "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *   "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *   "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *   "title": "Uprooted",
          *   "barcode": "645398607547"
          * }
@@ -357,8 +357,8 @@ public interface ItemStorageResource {
          * 
          * @param entity
          *     {
-         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *       "title": "Uprooted",
          *       "barcode": "645398607547"
          *     }
@@ -411,13 +411,13 @@ public interface ItemStorageResource {
          * Returns a list of item items e.g. {
          *   "items": [
          *     {
-         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "id": "f2901bcc-6290-417a-843b-a6d97ee9a418",
+         *       "instanceId": "f2901bcc-6290-417a-843b-a6d97ee9a418",
          *       "title": "Nod",
          *       "barcode": "456743454532"
          *     },
          *     {
-         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
          *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *       "title": "Uprooted",
          *       "barcode": "645398607547"
@@ -431,13 +431,13 @@ public interface ItemStorageResource {
          *     {
          *       "items": [
          *         {
-         *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *           "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "id": "f2901bcc-6290-417a-843b-a6d97ee9a418",
+         *           "instanceId": "f2901bcc-6290-417a-843b-a6d97ee9a418",
          *           "title": "Nod",
          *           "barcode": "456743454532"
          *         },
          *         {
-         *           "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
          *           "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *           "title": "Uprooted",
          *           "barcode": "645398607547"
@@ -501,8 +501,8 @@ public interface ItemStorageResource {
 
         /**
          * Returns a newly created item, with server-controlled fields like 'id' populated e.g. {
-         *   "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *   "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *   "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *   "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *   "title": "Uprooted",
          *   "barcode": "645398607547"
          * }
@@ -512,8 +512,8 @@ public interface ItemStorageResource {
          *     URI to the created item item
          * @param entity
          *     {
-         *       "id": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *       "title": "Uprooted",
          *       "barcode": "645398607547"
          *     }

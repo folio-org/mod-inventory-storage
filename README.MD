@@ -56,7 +56,8 @@ This readme is intended to get these modules up and running. For further informa
 
 If sdkman is installed, run `source ./setup-environment.sh` to setup the shell with the appropriate versions of Gradle and Groovy.
 
-Run the `setup-test-db.sh` script in the inventory-storage directory to setup Postgres with a database to be used in tests (may be done automatically by the tests in a future version).
+Run the `setup-test-db.sh` script in the inventory-storage directory to setup Postgres with a database to be used in tests. 
+This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
 
 # Building the Modules
 
@@ -69,6 +70,8 @@ run `gradle build` from the root directory.
 run `mvn install` from the inventory-storage directory.
 
 Must have the RAML Module Builder installed (see https://github.com/folio-org/raml-module-builder for instructions) beforehand.
+
+To run the tests against both embedded and external databases, run `./build.sh` from the inventory-storage directory.
 
 # Running the Modules
 
