@@ -28,10 +28,14 @@ tenant_id=${9:-test_tenant}
 
 cd inventory-storage
 
-./setup-test-db.sh
-
 #Does not perform tests via Okapi yet
-mvn clean test
+./build.sh
+
+cd ..
+
+cd inventory
+
+./test-storage.sh
 
 cd ..
 
