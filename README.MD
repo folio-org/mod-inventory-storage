@@ -54,7 +54,21 @@ This readme is intended to get these modules up and running. For further informa
 
 # Preparation
 
+## Git Submodules
+
+There are some common RAML definitions that are shared between FOLIO projects via Git submodules.
+
+To initialise these please run `git submodule init && git submodule update` in the root directory.
+
+If these are not initialised, the inventory-storage module will fail to build correctly, and other operations may also fail.
+
+More information is available on the [developer site](http://dev.folio.org/doc/setup#configuration-for-repository-usage).
+
+## Groovy and Grails
+
 If sdkman is installed, run `source ./setup-environment.sh` to setup the shell with the appropriate versions of Gradle and Groovy.
+
+## Postgres
 
 Run the `setup-test-db.sh` script in the inventory-storage directory to setup Postgres with a database to be used in tests. 
 This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
