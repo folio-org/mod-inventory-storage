@@ -62,7 +62,7 @@ To initialise these please run `git submodule init && git submodule update` in t
 
 If these are not initialised, the inventory-storage module will fail to build correctly, and other operations may also fail.
 
-More information is available on the [developer site](http://dev.folio.org/doc/setup#configuration-for-repository-usage).
+More information is available on the [developer site](http://dev.folio.org/doc/setup#update-git-submodules).
 
 ## Groovy and Grails
 
