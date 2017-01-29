@@ -166,15 +166,33 @@ public class ItemStorageTest {
   }
 
   @Test
-  @Ignore
-  public void canDeleteAnItem() {
+  public void canDeleteAnItem() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
 
-  }
+    UUID id = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
 
-  @Test
-  @Ignore
-  public void canUpdateAnItem() {
+    JsonObject itemToCreate = smallAngryPlanet(id, instanceId);
 
+    createItem(itemToCreate);
+
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture();
+
+    client.delete(itemStorageUrl(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
+
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture();
+
+    client.get(itemStorageUrl(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(getCompleted));
+
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   @Test

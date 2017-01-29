@@ -7,28 +7,26 @@ import io.vertx.core.Handler;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import java.util.HashMap;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
-
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -82,21 +80,18 @@ public class ItemStorageAPI implements ItemStorageResource {
                     withJsonOK(itemList)));
 
               } catch (Exception e) {
-                e.printStackTrace();
                 asyncResultHandler.handle(Future.succeededFuture(
                   ItemStorageResource.GetItemStorageItemsResponse.
                     withPlainInternalServerError("Error")));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.GetItemStorageItemsResponse.
               withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
       asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.GetItemStorageItemsResponse.
           withPlainInternalServerError("Error")));
@@ -139,7 +134,6 @@ public class ItemStorageAPI implements ItemStorageResource {
                       .withJsonCreated(reply.result(), stream)));
 
               } catch (Exception e) {
-                e.printStackTrace();
                 asyncResultHandler.handle(
                   Future.succeededFuture(
                     ItemStorageResource.PostItemStorageItemsResponse
@@ -147,14 +141,12 @@ public class ItemStorageAPI implements ItemStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.PostItemStorageItemsResponse
               .withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
       asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.PostItemStorageItemsResponse
           .withPlainInternalServerError("Error")));
@@ -215,25 +207,25 @@ public class ItemStorageAPI implements ItemStorageResource {
                       ItemStorageResource.GetItemStorageItemsByItemIdResponse.
                         withJsonOK(item)));
                 } else {
-                  throw new Exception(itemList.size() + " results returned");
+                  asyncResultHandler.handle(
+                    Future.succeededFuture(
+                      ItemStorageResource.GetItemStorageItemsByItemIdResponse.
+                        withPlainNotFound("Not Found")));
                 }
 
               } catch (Exception e) {
-                e.printStackTrace();
                 asyncResultHandler.handle(Future.succeededFuture(
                   ItemStorageResource.GetItemStorageItemsByItemIdResponse.
                     withPlainInternalServerError("Error")));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.GetItemStorageItemsByItemIdResponse.
               withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
       asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.GetItemStorageItemsByItemIdResponse.
           withPlainInternalServerError("Error")));
@@ -320,7 +312,6 @@ public class ItemStorageAPI implements ItemStorageResource {
                             PutItemStorageItemsByItemIdResponse
                               .withNoContent()));
                       } catch (Exception e) {
-                        e.printStackTrace();
                         asyncResultHandler.handle(
                           Future.succeededFuture(
                             PostItemStorageItemsResponse
@@ -347,7 +338,6 @@ public class ItemStorageAPI implements ItemStorageResource {
                               .withNoContent()));
 
                       } catch (Exception e) {
-                        e.printStackTrace();
                         asyncResultHandler.handle(
                           Future.succeededFuture(
                             PostItemStorageItemsResponse
@@ -362,14 +352,12 @@ public class ItemStorageAPI implements ItemStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.PostItemStorageItemsResponse
               .withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
       asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.PostItemStorageItemsResponse
           .withPlainInternalServerError("Error")));
@@ -385,6 +373,54 @@ public class ItemStorageAPI implements ItemStorageResource {
     Context vertxContext)
     throws Exception {
 
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    if (blankTenantId(tenantId)) {
+      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
+
+      return;
+    }
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(itemId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.delete("item", criterion,
+            reply -> {
+              if(reply.succeeded()) {
+                asyncResultHandler.handle(
+                  Future.succeededFuture(
+                    DeleteItemStorageItemsByItemIdResponse
+                      .withNoContent()));
+              }
+              else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  ItemStorageResource.DeleteItemStorageItemsByItemIdResponse
+                    .withPlainInternalServerError("Error")));
+              }
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            ItemStorageResource.DeleteItemStorageItemsByItemIdResponse
+              .withPlainInternalServerError("Error")));
+        }
+      });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        ItemStorageResource.DeleteItemStorageItemsByItemIdResponse
+          .withPlainInternalServerError("Error")));
+    }
   }
 
   private void badRequestResult(
