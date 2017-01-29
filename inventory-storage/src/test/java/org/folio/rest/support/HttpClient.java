@@ -5,6 +5,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 
 import java.net.URL;
 
@@ -32,7 +33,7 @@ public class HttpClient {
 
     HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
 
-    request.headers().add("Accept","application/json");
+    request.headers().add("Accept","application/json, text/plain");
     request.headers().add("Content-type","application/json");
 
     if(tenantId != null) {
@@ -46,6 +47,23 @@ public class HttpClient {
            Handler<HttpClientResponse> responseHandler) {
 
     get(url, null, responseHandler);
+  }
+
+  public void put(URL url,
+                  Object body,
+                  String tenantId,
+                  Handler<HttpClientResponse> responseHandler) {
+
+    HttpClientRequest request = client.putAbs(url.toString(), responseHandler);
+
+    request.headers().add("Accept","application/json, text/plain");
+    request.headers().add("Content-type","application/json");
+
+    if(tenantId != null) {
+      request.headers().add(TENANT_HEADER, tenantId);
+    }
+
+    request.end(Json.encodePrettily(body));
   }
 
   public void get(URL url,
@@ -84,7 +102,7 @@ public class HttpClient {
 
     HttpClientRequest request = client.deleteAbs(url, responseHandler);
 
-    request.headers().add("Accept","application/json");
+    request.headers().add("Accept","application/json, text/plain");
 
     if(tenantId != null) {
       request.headers().add(TENANT_HEADER, tenantId);

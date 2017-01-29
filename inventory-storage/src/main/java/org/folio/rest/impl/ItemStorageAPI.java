@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
@@ -76,27 +77,27 @@ public class ItemStorageAPI implements ItemStorageResource {
                 Items itemList = new Items();
                 itemList.setItems(items);
                 itemList.setTotalRecords((Integer) reply.result()[1]);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                asyncResultHandler.handle(Future.succeededFuture(
                   ItemStorageResource.GetItemStorageItemsResponse.
                     withJsonOK(itemList)));
 
               } catch (Exception e) {
                 e.printStackTrace();
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                asyncResultHandler.handle(Future.succeededFuture(
                   ItemStorageResource.GetItemStorageItemsResponse.
                     withPlainInternalServerError("Error")));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.GetItemStorageItemsResponse.
               withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+      asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.GetItemStorageItemsResponse.
           withPlainInternalServerError("Error")));
     }
@@ -126,7 +127,6 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-
           postgresClient.save("item", entity,
             reply -> {
               try {
@@ -134,28 +134,28 @@ public class ItemStorageAPI implements ItemStorageResource {
                 stream.setData(entity);
 
                 asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(
+                  Future.succeededFuture(
                     ItemStorageResource.PostItemStorageItemsResponse
                       .withJsonCreated(reply.result(), stream)));
 
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(
+                  Future.succeededFuture(
                     ItemStorageResource.PostItemStorageItemsResponse
                       .withPlainInternalServerError("Error")));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.PostItemStorageItemsResponse
               .withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+      asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.PostItemStorageItemsResponse
           .withPlainInternalServerError("Error")));
     }
@@ -211,7 +211,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                   Item item = itemList.get(0);
 
                   asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
+                    Future.succeededFuture(
                       ItemStorageResource.GetItemStorageItemsByItemIdResponse.
                         withJsonOK(item)));
                 } else {
@@ -220,21 +220,21 @@ public class ItemStorageAPI implements ItemStorageResource {
 
               } catch (Exception e) {
                 e.printStackTrace();
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                asyncResultHandler.handle(Future.succeededFuture(
                   ItemStorageResource.GetItemStorageItemsByItemIdResponse.
                     withPlainInternalServerError("Error")));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.GetItemStorageItemsByItemIdResponse.
               withPlainInternalServerError("Error")));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+      asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.GetItemStorageItemsByItemIdResponse.
           withPlainInternalServerError("Error")));
     }
@@ -261,7 +261,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       postgresClient.mutate(String.format("TRUNCATE TABLE %s.item", tenantId),
           reply -> {
-            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            asyncResultHandler.handle(Future.succeededFuture(
               ItemStorageResource.DeleteItemStorageItemsResponse.noContent().build()));
           });
       });
@@ -277,6 +277,103 @@ public class ItemStorageAPI implements ItemStorageResource {
     Context vertxContext)
     throws Exception {
 
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    if (blankTenantId(tenantId)) {
+      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
+
+      return;
+    }
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(itemId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.get("item", Item.class, criterion, true, false,
+            reply -> {
+              List<Item> itemList = (List<Item>) reply.result()[0];
+              if (itemList.size() == 1) {
+                try {
+                  postgresClient.update("item", entity, criterion,
+                    true,
+                    update -> {
+                      try {
+                        System.out.println("Records Updated: "
+                            + update.result().getUpdated());
+
+                        OutStream stream = new OutStream();
+                        stream.setData(entity);
+
+                        asyncResultHandler.handle(
+                          Future.succeededFuture(
+                            PutItemStorageItemsByItemIdResponse
+                              .withNoContent()));
+                      } catch (Exception e) {
+                        e.printStackTrace();
+                        asyncResultHandler.handle(
+                          Future.succeededFuture(
+                            PostItemStorageItemsResponse
+                              .withPlainInternalServerError("Error")));
+                      }
+                    });
+                } catch (Exception e) {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    PutItemStorageItemsByItemIdResponse
+                      .withPlainInternalServerError("Error")));
+                }
+              }
+              else {
+                try {
+                  postgresClient.save("item", entity,
+                    save -> {
+                      try {
+                        OutStream stream = new OutStream();
+                        stream.setData(entity);
+
+                        asyncResultHandler.handle(
+                          Future.succeededFuture(
+                            PutItemStorageItemsByItemIdResponse
+                              .withNoContent()));
+
+                      } catch (Exception e) {
+                        e.printStackTrace();
+                        asyncResultHandler.handle(
+                          Future.succeededFuture(
+                            PostItemStorageItemsResponse
+                              .withPlainInternalServerError("Error")));
+                      }
+                    });
+                } catch (Exception e) {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    PutItemStorageItemsByItemIdResponse
+                      .withPlainInternalServerError("Error")));
+                }
+              }
+            });
+        } catch (Exception e) {
+          e.printStackTrace();
+          asyncResultHandler.handle(Future.succeededFuture(
+            ItemStorageResource.PostItemStorageItemsResponse
+              .withPlainInternalServerError("Error")));
+        }
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+      asyncResultHandler.handle(Future.succeededFuture(
+        ItemStorageResource.PostItemStorageItemsResponse
+          .withPlainInternalServerError("Error")));
+    }
   }
 
   @Override
@@ -292,7 +389,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   private void badRequestResult(
     Handler<AsyncResult<Response>> asyncResultHandler, String message) {
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+    asyncResultHandler.handle(Future.succeededFuture(
       GetItemStorageItemsResponse.withPlainBadRequest(message)));
   }
 
