@@ -137,32 +137,6 @@ public interface InstanceStorageResource {
     ;
 
     /**
-     * 
-     * @param instanceId
-     *     
-     * @param vertxContext
-     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
-     * @param asyncResultHandler
-     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
-     * @param lang
-     *     Requested language. Optional. [lang=en]
-     *     
-     */
-    @POST
-    @Path("instances/{instanceId}")
-    @Validate
-    void postInstanceStorageInstancesByInstanceId(
-        @PathParam("instanceId")
-        @NotNull
-        String instanceId,
-        @QueryParam("lang")
-        @DefaultValue("en")
-        @Pattern(regexp = "[a-zA-Z]{2}")
-        String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
-        throws Exception
-    ;
-
-    /**
      * Get Instance by InstanceId
      * Instances are stored and accessed by a hash of key properties. The rules which govern
      * how instance hashes are computed are business rules and defined in the service layer.
@@ -542,17 +516,6 @@ public interface InstanceStorageResource {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new InstanceStorageResource.GetInstanceStorageInstancesResponse(responseBuilder.build());
-        }
-
-    }
-
-    public class PostInstanceStorageInstancesByInstanceIdResponse
-        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
-    {
-
-
-        private PostInstanceStorageInstancesByInstanceIdResponse(Response delegate) {
-            super(delegate);
         }
 
     }

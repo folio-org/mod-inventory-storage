@@ -194,19 +194,6 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   }
 
   @Override
-  public void postInstanceStorageInstancesByInstanceId(
-    @NotNull String instanceId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
-
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      PutInstanceStorageInstancesByInstanceIdResponse.withPlainInternalServerError(
-        "Not implemented")));
-  }
-
-  @Override
   public void getInstanceStorageInstancesByInstanceId(
     @NotNull String instanceId,
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,

@@ -129,32 +129,6 @@ public interface ItemStorageResource {
     ;
 
     /**
-     * 
-     * @param itemId
-     *     
-     * @param vertxContext
-     *      The Vertx Context Object <code>io.vertx.core.Context</code> 
-     * @param asyncResultHandler
-     *     A <code>Handler<AsyncResult<Response>>></code> handler {@link io.vertx.core.Handler} which must be called as follows - Note the 'GetPatronsResponse' should be replaced with '[nameOfYourFunction]Response': (example only) <code>asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPatronsResponse.withJsonOK( new ObjectMapper().readValue(reply.result().body().toString(), Patron.class))));</code> in the final callback (most internal callback) of the function.
-     * @param lang
-     *     Requested language. Optional. [lang=en]
-     *     
-     */
-    @POST
-    @Path("items/{itemId}")
-    @Validate
-    void postItemStorageItemsByItemId(
-        @PathParam("itemId")
-        @NotNull
-        String itemId,
-        @QueryParam("lang")
-        @DefaultValue("en")
-        @Pattern(regexp = "[a-zA-Z]{2}")
-        String lang, java.util.Map<String, String>okapiHeaders, io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>>asyncResultHandler, Context vertxContext)
-        throws Exception
-    ;
-
-    /**
      * Retrieve item item with given {itemId}
      * 
      * 
@@ -475,17 +449,6 @@ public interface ItemStorageResource {
             Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new ItemStorageResource.GetItemStorageItemsResponse(responseBuilder.build());
-        }
-
-    }
-
-    public class PostItemStorageItemsByItemIdResponse
-        extends org.folio.rest.jaxrs.resource.support.ResponseWrapper
-    {
-
-
-        private PostItemStorageItemsByItemIdResponse(Response delegate) {
-            super(delegate);
         }
 
     }

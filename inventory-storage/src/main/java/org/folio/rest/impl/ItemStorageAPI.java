@@ -154,17 +154,6 @@ public class ItemStorageAPI implements ItemStorageResource {
   }
 
   @Override
-  public void postItemStorageItemsByItemId(
-    @PathParam("itemId") @NotNull String itemId,
-    @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-    java.util.Map<String, String> okapiHeaders,
-    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
-
-  }
-
-  @Override
   public void getItemStorageItemsByItemId(
     @PathParam("itemId") @NotNull String itemId,
     @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
