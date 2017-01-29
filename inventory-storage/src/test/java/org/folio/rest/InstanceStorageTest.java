@@ -4,6 +4,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.*;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
@@ -75,6 +76,76 @@ public class InstanceStorageTest {
     assertThat(identifiers, hasItem(identifierMatches("isbn", "9781473619777")));
   }
 
+  @Test
+  public void canCreateAnItemAtSpecificLocation()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject instanceToCreate = nod(id);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture();
+
+    client.put(instanceStorageUrl(String.format("/%s", id)), instanceToCreate,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(createCompleted));
+
+    Response putResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    //PUT currently cannot return a response
+//    JsonObject item = putResponse.getBody();
+//    assertThat(item.getString("id"), is(id.toString()));
+//    assertThat(item.getString("title"), is("Nod"));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getBody();
+
+    assertThat(itemFromGet.getString("id"), is(id.toString()));
+    assertThat(itemFromGet.getString("title"), is("Nod"));
+  }
+
+  @Test
+  public void canReplaceAnInstanceAtSpecificLocation()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    createInstance(instanceToCreate);
+
+    JsonObject replacement = instanceToCreate.copy();
+    replacement.put("title", "A Long Way to a Small Angry Planet");
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture();
+
+    client.put(instanceStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    //PUT currently cannot return a response
+//    JsonObject item = putResponse.getBody();
+//    assertThat(item.getString("id"), is(id.toString()));
+//    assertThat(item.getString("title"), is("A Long Way to a Small Angry Planet"));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getBody();
+
+    assertThat(itemFromGet.getString("id"), is(id.toString()));
+    assertThat(itemFromGet.getString("title"), is("A Long Way to a Small Angry Planet"));
+  }
 
   @Test
   public void canGetInstanceById()
@@ -358,6 +429,20 @@ public class InstanceStorageTest {
     return new JsonObject()
       .put("namespace", namespace)
       .put("value", value);
+  }
+
+  private JsonResponse getById(UUID id)
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    URL getInstanceUrl = instanceStorageUrl(String.format("/%s", id));
+
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+
+    client.get(getInstanceUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
   private JsonObject createInstanceRequest(

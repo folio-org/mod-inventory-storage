@@ -301,9 +301,6 @@ public class ItemStorageAPI implements ItemStorageResource {
                     true,
                     update -> {
                       try {
-                        System.out.println("Records Updated: "
-                            + update.result().getUpdated());
-
                         OutStream stream = new OutStream();
                         stream.setData(entity);
 
