@@ -1,6 +1,6 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
+  import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -23,7 +23,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -284,9 +283,54 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      DeleteInstanceStorageInstancesByInstanceIdResponse
-        .withPlainInternalServerError("Not implemented")));
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    if (blankTenantId(tenantId)) {
+      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
+
+      return;
+    }
+
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(instanceId);
+
+      Criterion criterion = new Criterion(a);
+
+      vertxContext.runOnContext(v -> {
+        try {
+          postgresClient.delete("instance", criterion,
+            reply -> {
+              if(reply.succeeded()) {
+                asyncResultHandler.handle(
+                  Future.succeededFuture(
+                    DeleteInstanceStorageInstancesByInstanceIdResponse
+                      .withNoContent()));
+              }
+              else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  DeleteInstanceStorageInstancesByInstanceIdResponse
+                    .withPlainInternalServerError("Error")));
+              }
+            });
+        } catch (Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            DeleteInstanceStorageInstancesByInstanceIdResponse
+              .withPlainInternalServerError("Error")));
+        }
+      });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        DeleteInstanceStorageInstancesByInstanceIdResponse
+          .withPlainInternalServerError("Error")));
+    }
   }
 
   @Override

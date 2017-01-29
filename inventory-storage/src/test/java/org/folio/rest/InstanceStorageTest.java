@@ -148,6 +148,35 @@ public class InstanceStorageTest {
   }
 
   @Test
+  public void canDeleteAnInstance() throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    createInstance(instanceToCreate);
+
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture();
+
+    client.delete(instanceStorageUrl(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
+
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture();
+
+    client.get(instanceStorageUrl(String.format("/%s", id)),
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(getCompleted));
+
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
   public void canGetInstanceById()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
