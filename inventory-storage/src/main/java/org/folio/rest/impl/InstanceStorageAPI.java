@@ -130,7 +130,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       vertxContext.runOnContext(v -> {
         try {
 
-          postgresClient.save("instance", entity,
+          postgresClient.save("instance", entity.getId(), entity,
             reply -> {
               try {
                 OutStream stream = new OutStream();
@@ -384,7 +384,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
               }
               else {
                 try {
-                  postgresClient.save("instance", entity,
+                  postgresClient.save("instance", entity.getId(), entity,
                     save -> {
                       try {
                         OutStream stream = new OutStream();

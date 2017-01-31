@@ -3,6 +3,7 @@ package org.folio.rest;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
@@ -103,6 +104,24 @@ public class StorageTestSuite {
     });
 
     undeploymentComplete.get(20, TimeUnit.SECONDS);
+  }
+
+  public static ResultSet getRecordsWithUnmatchedIds(String tenantId,
+                                                     String tableName)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    PostgresClient dbClient = PostgresClient.getInstance(
+      getVertx(), tenantId);
+
+    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture();
+
+    String sql = String.format("SELECT null FROM %s.%s" +
+        " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
+      tenantId, tableName);
+
+    dbClient.select(sql, result -> selectCompleted.complete(result.result()));
+
+    return selectCompleted.get(5, TimeUnit.SECONDS);
   }
 
   private static void startVerticle(DeploymentOptions options)

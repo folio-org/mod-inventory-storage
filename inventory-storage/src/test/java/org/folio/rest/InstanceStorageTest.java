@@ -2,7 +2,9 @@ package org.folio.rest;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.support.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -44,6 +46,17 @@ public class InstanceStorageTest {
     if(response.getStatusCode() != 204) {
       throw new UnknownError("Delete all instances preparation failed");
     }
+  }
+
+  @After
+  public void checkIdsAfterEach()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    String tenantId = StorageTestSuite.TENANT_ID;
+
+    ResultSet results = StorageTestSuite.getRecordsWithUnmatchedIds(
+      tenantId, "instance");
+
+    assertThat(results.getNumRows(), is(0));
   }
 
   @Test
