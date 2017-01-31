@@ -1,12 +1,12 @@
 package org.folio.rest;
 
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.jaxrs.model.Item;
+import io.vertx.ext.sql.ResultSet;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
@@ -44,6 +44,27 @@ public class ItemStorageTest {
     if(response.getStatusCode() != 204) {
       throw new UnknownError("Delete all items preparation failed");
     }
+  }
+
+  @After
+  public void checkIdsAfterEach()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    String tenantId = StorageTestSuite.TENANT_ID;
+
+    PostgresClient dbClient = PostgresClient.getInstance(
+      StorageTestSuite.getVertx(), tenantId);
+
+    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture();
+
+    String sql = String.format("SELECT null FROM %s.item" +
+        " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
+      tenantId);
+
+    dbClient.select(sql, result -> selectCompleted.complete(result.result()));
+
+    ResultSet results = selectCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(results.getNumRows(), is(0));
   }
 
   @Test

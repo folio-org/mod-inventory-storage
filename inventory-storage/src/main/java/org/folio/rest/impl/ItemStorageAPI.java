@@ -154,7 +154,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.save("item", entity,
+          postgresClient.save("item", entity.getId(), entity,
             reply -> {
               try {
                 OutStream stream = new OutStream();
@@ -319,8 +319,7 @@ public class ItemStorageAPI implements ItemStorageResource {
               List<Item> itemList = (List<Item>) reply.result()[0];
               if (itemList.size() == 1) {
                 try {
-                  postgresClient.update("item", entity, criterion,
-                    true,
+                  postgresClient.update("item", entity, criterion, true,
                     update -> {
                       try {
                         OutStream stream = new OutStream();
@@ -345,7 +344,7 @@ public class ItemStorageAPI implements ItemStorageResource {
               }
               else {
                 try {
-                  postgresClient.save("item", entity,
+                  postgresClient.save("item", entity.getId(), entity,
                     save -> {
                       try {
                         OutStream stream = new OutStream();
