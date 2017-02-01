@@ -1,3 +1,3 @@
-DROP SCHEMA IF EXISTS myuniversity CASCADE;
+DROP SCHEMA IF EXISTS myuniversity_mymodule CASCADE;
 
-DROP ROLE IF EXISTS myuniversity;
+DROP ROLE IF EXISTS myuniversity_mymodule;

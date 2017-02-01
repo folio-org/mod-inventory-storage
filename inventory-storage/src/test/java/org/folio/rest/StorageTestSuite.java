@@ -7,6 +7,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -125,17 +126,17 @@ public class StorageTestSuite {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<Response> tenantPrepared = new CompletableFuture();
+    CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture();
 
     HttpClient client = new HttpClient(vertx);
 
     client.post(storageUrl("/_/tenant"), null, tenantId,
-      ResponseHandler.empty(tenantPrepared));
+      ResponseHandler.text(tenantPrepared));
 
-    Response response = tenantPrepared.get(10, TimeUnit.SECONDS);
+    TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
 
     if(response.getStatusCode() != 200) {
-      throw new UnknownError("Tenant preparation failed");
+      throw new UnknownError("Tenant preparation failed: " + response.getBody());
     }
   }
 
@@ -143,17 +144,17 @@ public class StorageTestSuite {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<Response> tenantDeleted = new CompletableFuture();
+    CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture();
 
     HttpClient client = new HttpClient(vertx);
 
     client.delete(storageUrl("/_/tenant"), tenantId,
-      ResponseHandler.empty(tenantDeleted));
+      ResponseHandler.text(tenantDeleted));
 
-    Response response = tenantDeleted.get(10, TimeUnit.SECONDS);
+    TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
 
     if(response.getStatusCode() != 200) {
-      throw new UnknownError("Tenant cleanup failed");
+      throw new UnknownError("Tenant cleanup failed: " + response.getBody());
     }
   }
 }

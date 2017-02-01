@@ -7,6 +7,6 @@ executing_password=${4:-}
 
 cd database-setup
 
-./setup-db.sh test test_tenant test_tenant ${host} ${port} ${executing_user} ${executing_password}
+./setup-db.sh test test_tenant_inventory_storage test_tenant_inventory_storage ${host} ${port} ${executing_user} ${executing_password}
 
 cd ..
