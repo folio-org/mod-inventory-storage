@@ -70,31 +70,63 @@ public class ItemStorageAPI implements ItemStorageResource {
           postgresClient.get("item", Item.class, fieldList, cql, true, false,
             reply -> {
               try {
-                List<Item> items = (List<Item>) reply.result()[0];
 
-                Items itemList = new Items();
-                itemList.setItems(items);
-                itemList.setTotalRecords((Integer) reply.result()[1]);
-                asyncResultHandler.handle(Future.succeededFuture(
-                  ItemStorageResource.GetItemStorageItemsResponse.
-                    withJsonOK(itemList)));
+                if(reply.succeeded()) {
+                  List<Item> items = (List<Item>) reply.result()[0];
 
+                  Items itemList = new Items();
+                  itemList.setItems(items);
+                  itemList.setTotalRecords((Integer) reply.result()[1]);
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    ItemStorageResource.GetItemStorageItemsResponse.
+                      withJsonOK(itemList)));
+                }
+                else {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    ItemStorageResource.GetItemStorageItemsResponse.
+                      withPlainInternalServerError(reply.cause().getMessage())));
+                }
               } catch (Exception e) {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  ItemStorageResource.GetItemStorageItemsResponse.
-                    withPlainInternalServerError("Error")));
+                if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    GetItemStorageItemsResponse.withPlainBadRequest(
+                      "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
+                }
+                else {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    ItemStorageResource.GetItemStorageItemsResponse.
+                      withPlainInternalServerError("Error")));
+                }
               }
             });
-        } catch (Exception e) {
+        }
+        catch (IllegalStateException e) {
           asyncResultHandler.handle(Future.succeededFuture(
-            ItemStorageResource.GetItemStorageItemsResponse.
-              withPlainInternalServerError("Error")));
+            GetItemStorageItemsResponse.withPlainInternalServerError(
+              "CQL State Error for '" + query + "': " + e.getLocalizedMessage())));
+        }
+        catch (Exception e) {
+          if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              GetItemStorageItemsResponse.withPlainBadRequest(
+              "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+              ItemStorageResource.GetItemStorageItemsResponse.
+                withPlainInternalServerError("Error")));
+          }
         }
       });
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        ItemStorageResource.GetItemStorageItemsResponse.
-          withPlainInternalServerError("Error")));
+      if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
+        asyncResultHandler.handle(Future.succeededFuture(
+          GetItemStorageItemsResponse.withPlainBadRequest(
+            "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
+      } else {
+        asyncResultHandler.handle(Future.succeededFuture(
+          ItemStorageResource.GetItemStorageItemsResponse.
+            withPlainInternalServerError("Error")));
+      }
     }
   }
 

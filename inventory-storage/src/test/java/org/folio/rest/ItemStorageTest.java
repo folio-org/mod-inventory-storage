@@ -272,6 +272,36 @@ public class ItemStorageTest {
   }
 
   @Test
+  public void cannotSearchForItemsUsingADefaultField()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    createItem(smallAngryPlanet());
+    createItem(nod());
+    createItem(uprooted());
+    createItem(temeraire());
+    createItem(interestingTimes());
+
+    CompletableFuture<TextResponse> searchCompleted = new CompletableFuture();
+
+    String url = itemStorageUrl() + "?query=t";
+
+    client.get(url,
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
+
+    TextResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(500));
+
+    String error = searchResponse.getBody();
+
+    assertThat(error,
+      is("CQL State Error for 't': cql.serverChoice requested, but not serverChoiceIndexes defined."));
+  }
+
+  @Test
   public void canDeleteAllItems()
     throws MalformedURLException,
     InterruptedException,
