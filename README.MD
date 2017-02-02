@@ -77,7 +77,7 @@ This is only required to run tests against an external Postgres instance, the de
 
 ## Inventory, Catalogue and Knowledge Base
 
-run `gradle build` from the root directory.
+run `gradle build` from the root directory. In order to build an executable Jar (e.g. for Okapi to deploy), run `gradle fatJar`.
 
 ## Inventory Storage
 
