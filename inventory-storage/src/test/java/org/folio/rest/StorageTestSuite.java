@@ -115,9 +115,9 @@ public class StorageTestSuite {
 
     CompletableFuture<ResultSet> selectCompleted = new CompletableFuture();
 
-    String sql = String.format("SELECT null FROM %s.%s" +
+    String sql = String.format("SELECT null FROM %s_%s.%s" +
         " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
-      tenantId, tableName);
+      tenantId, "inventory_storage", tableName);
 
     dbClient.select(sql, result -> selectCompleted.complete(result.result()));
 
