@@ -6,12 +6,13 @@ import com.github.jsonldjava.core.DocumentLoader
 import com.github.jsonldjava.core.JsonLdOptions
 import com.github.jsonldjava.core.JsonLdProcessor
 import io.vertx.core.json.Json
-import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import org.apache.http.impl.client.cache.CachingHttpClientBuilder
 import org.apache.http.message.BasicHeader
 import org.folio.metadata.common.testing.HttpClient
 import spock.lang.Specification
+
+import static api.support.InstanceSamples.*
 
 class InstancesApiExamples extends Specification {
   private final String TENANT_ID = "test_tenant"
@@ -159,7 +160,6 @@ class InstancesApiExamples extends Specification {
       assert response.status == 404
   }
 
-
   private def createInstance(JsonObject newInstanceRequest) {
     def (postResponse, body) = client.post(
       new URL("${ApiRoot.inventory()}/instances"),
@@ -167,81 +167,7 @@ class InstancesApiExamples extends Specification {
 
     assert postResponse.status == 201
   }
-
-  private JsonObject createInstanceRequest(
-    UUID id,
-    String title,
-    JsonArray identifiers) {
-
-    new JsonObject()
-      .put("id",id.toString())
-      .put("title", title)
-      .put("identifiers", identifiers)
-  }
-
-  private JsonObject smallAngryPlanet(UUID id) {
-    def identifiers = new JsonArray()
-
-    identifiers.add(identifier("isbn", "9781473619777"))
-
-    return createInstanceRequest(id, "Long Way to a Small Angry Planet",
-      identifiers)
-  }
-
-  private JsonObject nod(UUID id) {
-    def identifiers = new JsonArray()
-
-    identifiers.add(identifier("asin", "B01D1PLMDO"))
-
-    createInstanceRequest(id, "Nod", identifiers)
-  }
-
-  private JsonObject uprooted(UUID id) {
-
-    def identifiers = new JsonArray();
-
-    identifiers.add(identifier("isbn", "1447294149"));
-    identifiers.add(identifier("isbn", "9781447294146"));
-
-    createInstanceRequest(id, "Uprooted",
-      identifiers);
-  }
-
-  private JsonObject temeraire(UUID id) {
-
-    def identifiers = new JsonArray();
-
-    identifiers.add(identifier("isbn", "0007258712"));
-    identifiers.add(identifier("isbn", "9780007258710"));
-
-    createInstanceRequest(id, "Temeraire",
-      identifiers);
-  }
-
-  private JsonObject leviathanWakes(UUID id) {
-    def identifiers = new JsonArray()
-
-    identifiers.add(identifier("isbn", "1841499897"))
-    identifiers.add(identifier("isbn", "9781841499895"))
-
-    createInstanceRequest(id, "Leviathan Wakes", identifiers)
-  }
-
-  private JsonObject taoOfPooh(UUID id) {
-    def identifiers = new JsonArray()
-
-    identifiers.add(identifier("isbn", "1405204265"))
-    identifiers.add(identifier("isbn", "9781405204265"))
-
-    createInstanceRequest(id, "Tao of Pooh", identifiers)
-  }
-
-  private JsonObject identifier(String namespace, String value) {
-    return new JsonObject()
-      .put("namespace", namespace)
-      .put("value", value);
-  }
-
+  
   private void hasCollectionProperties(instances) {
 
     instances.each {
