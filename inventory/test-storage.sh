@@ -12,6 +12,8 @@ cd ../inventory-storage
 cd database-setup
 
 ./drop-db.sh ${database_name}
+./drop-role.sh "test_tenant_1_inventory_storage"
+./drop-role.sh "test_tenant_2_inventory_storage"
 
 ./create-admin-role.sh ${admin_user_name} ${password}
 ./create-db.sh ${database_name} ${admin_user_name}
