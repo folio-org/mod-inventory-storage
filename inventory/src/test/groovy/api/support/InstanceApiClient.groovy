@@ -6,10 +6,15 @@ import org.folio.metadata.common.testing.HttpClient
 
 class InstanceApiClient {
   static def createInstance(HttpClient client, JsonObject newInstanceRequest) {
-    def (postResponse, body) = client.post(
-      new URL("${ApiRoot.inventory()}/instances"),
+    def (createInstanceResponse, _) = client.post(ApiRoot.instances(),
       Json.encodePrettily(newInstanceRequest))
 
-    assert postResponse.status == 201
+    def instanceLocation = createInstanceResponse.headers.location.toString()
+
+    def (response, createdInstance) = client.get(instanceLocation)
+
+    assert response.status == 200
+
+    createdInstance
   }
 }

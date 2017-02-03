@@ -1,11 +1,14 @@
 package api
 
 import api.support.ApiRoot
+import api.support.InstanceApiClient
+import api.support.Preparation
 import io.vertx.core.json.Json
 import io.vertx.core.json.JsonObject
-import spock.lang.Specification
-import api.support.Preparation
 import org.folio.metadata.common.testing.HttpClient
+import spock.lang.Specification
+
+import static api.support.InstanceSamples.*
 
 class ItemApiExamples extends Specification {
   private final String TENANT_ID = "test_tenant"
@@ -19,10 +22,11 @@ class ItemApiExamples extends Specification {
 
   void "Can create an item"() {
     given:
-      def createdInstance = createInstance("Long Way to a Small Angry Planet")
+      def createdInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
 
       def newItemRequest = new JsonObject()
-        .put("title", "Long Way to a Small Angry Planet")
+        .put("title", createdInstance.title)
         .put("instanceId", createdInstance.id)
         .put("barcode", "645398607547")
 
@@ -52,15 +56,16 @@ class ItemApiExamples extends Specification {
 
   void "Can delete all items"() {
     given:
-      def createdInstance = createInstance("Long Way to a Small Angry Planet")
+      def createdInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
 
-      createItem("Long Way to a Small Angry Planet", createdInstance.id,
+      createItem(createdInstance.title, createdInstance.id,
         "645398607547")
 
-      createItem("Long Way to a Small Angry Planet", createdInstance.id,
+      createItem(createdInstance.title, createdInstance.id,
         "175848607547")
 
-      createItem("Long Way to a Small Angry Planet", createdInstance.id,
+      createItem(createdInstance.title, createdInstance.id,
         "645334645247")
 
     when:
@@ -77,24 +82,23 @@ class ItemApiExamples extends Specification {
 
   void "Can page all items"() {
     given:
-      def smallAngryInstance = createInstance("Long Way to a Small Angry Planet")
+      def smallAngryInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
 
-      createItem("Long Way to a Small Angry Planet", smallAngryInstance.id,
+      createItem(smallAngryInstance.title, smallAngryInstance.id,
         "645398607547")
 
-      createItem("Long Way to a Small Angry Planet", smallAngryInstance.id,
+      createItem(smallAngryInstance.title, smallAngryInstance.id,
         "175848607547")
 
-      createItem("Long Way to a Small Angry Planet", smallAngryInstance.id,
+      createItem(smallAngryInstance.title, smallAngryInstance.id,
         "645334645247")
 
-      def nodInstance = createInstance("Nod")
+      def nodInstance = createInstance(nod(UUID.randomUUID()))
 
-      createItem("Nod", nodInstance.id,
-        "564566456546")
+      createItem(nodInstance.title, nodInstance.id, "564566456546")
 
-      createItem("Nod", nodInstance.id,
-        "943209584495")
+      createItem(nodInstance.title, nodInstance.id, "943209584495")
 
     when:
       def (firstPageResponse, firstPage) = client.get(
@@ -129,15 +133,15 @@ class ItemApiExamples extends Specification {
 
   void "Can search for items by title"() {
     given:
-      def smallAngryInstance = createInstance("Long Way to a Small Angry Planet")
+    def smallAngryInstance = createInstance(
+      smallAngryPlanet(UUID.randomUUID()))
 
-      createItem("Long Way to a Small Angry Planet", smallAngryInstance.id,
+      createItem(smallAngryInstance.title, smallAngryInstance.id,
         "645398607547")
 
-      def nodInstance = createInstance("Nod")
+      def nodInstance = createInstance(nod(UUID.randomUUID()))
 
-      createItem("Nod", nodInstance.id,
-        "564566456546")
+      createItem(nodInstance.title, nodInstance.id, "564566456546")
 
     when:
       def (response, body) = client.get(
@@ -174,21 +178,9 @@ class ItemApiExamples extends Specification {
 
     assert response.status == 200
   }
-
-  private def createInstance(String title) {
-    def newInstanceRequest = new JsonObject()
-      .put("title", title)
-
-    def (createInstanceResponse, _) = client.post(ApiRoot.instances(),
-      Json.encodePrettily(newInstanceRequest))
-
-    def instanceLocation = createInstanceResponse.headers.location.toString()
-
-    def (response, createdInstance) = client.get(instanceLocation)
-
-    assert response.status == 200
-
-    createdInstance
+  
+  private def createInstance(JsonObject newInstanceRequest) {
+    InstanceApiClient.createInstance(client, newInstanceRequest)
   }
 
   private def createItem(String title, String instanceId, String barcode) {
