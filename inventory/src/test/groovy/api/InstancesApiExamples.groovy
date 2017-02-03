@@ -6,6 +6,7 @@ import com.github.jsonldjava.core.DocumentLoader
 import com.github.jsonldjava.core.JsonLdOptions
 import com.github.jsonldjava.core.JsonLdProcessor
 import io.vertx.core.json.Json
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import org.apache.http.impl.client.cache.CachingHttpClientBuilder
 import org.apache.http.message.BasicHeader
@@ -25,7 +26,7 @@ class InstancesApiExamples extends Specification {
     given:
       def newInstanceRequest = new JsonObject()
         .put("title", "Long Way to a Small Angry Planet")
-        .put("identifiers", [[namespace: "isbn", value: "9781473619777"]]);
+        .put("identifiers", [[namespace: "isbn", value: "9781473619777"]])
 
     when:
       def (postResponse, _) = client.post(ApiRoot.instances(),
@@ -69,9 +70,9 @@ class InstancesApiExamples extends Specification {
 
   void "Can delete all instances"() {
     given:
-      createInstance("Long Way to a Small Angry Planet")
-      createInstance("Nod")
-      createInstance("Leviathan Wakes")
+      createInstance(smallAngryPlanet(UUID.randomUUID()))
+      createInstance(nod(UUID.randomUUID()))
+      createInstance(leviathanWakes(UUID.randomUUID()))
 
     when:
       def (deleteResponse, deleteBody) = client.delete(ApiRoot.instances())
@@ -88,9 +89,9 @@ class InstancesApiExamples extends Specification {
 
   void "Can get all instances"() {
     given:
-      createInstance("Long Way to a Small Angry Planet")
-      createInstance("Nod")
-      createInstance("Leviathan Wakes")
+      createInstance(smallAngryPlanet(UUID.randomUUID()))
+      createInstance(nod(UUID.randomUUID()))
+      createInstance(temeraire(UUID.randomUUID()))
 
     when:
       def (response, body) = client.get(ApiRoot.instances())
@@ -105,11 +106,11 @@ class InstancesApiExamples extends Specification {
 
   void "Can page all instances"() {
     given:
-      createInstance("Long Way to a Small Angry Planet")
-      createInstance("Nod")
-      createInstance("Leviathan Wakes")
-      createInstance("Temeraire")
-      createInstance("The Tao of Pooh")
+    createInstance(smallAngryPlanet(UUID.randomUUID()))
+    createInstance(nod(UUID.randomUUID()))
+    createInstance(temeraire(UUID.randomUUID()))
+    createInstance(leviathanWakes(UUID.randomUUID()))
+    createInstance(taoOfPooh(UUID.randomUUID()))
 
     when:
       def (firstPageResponse, firstPage) = client.get(
@@ -131,9 +132,9 @@ class InstancesApiExamples extends Specification {
 
   void "Can search for instances by title"() {
     given:
-      createInstance("Long Way to a Small Angry Planet")
-      createInstance("Nod")
-      createInstance("Leviathan Wakes")
+      createInstance(smallAngryPlanet(UUID.randomUUID()))
+      createInstance(nod(UUID.randomUUID()))
+      createInstance(uprooted(UUID.randomUUID()))
 
     when:
       def (response, body) = client.get(
@@ -158,15 +159,87 @@ class InstancesApiExamples extends Specification {
       assert response.status == 404
   }
 
-  private def createInstance(String title) {
-    def newInstanceRequest = new JsonObject()
-      .put("title", title)
 
+  private def createInstance(JsonObject newInstanceRequest) {
     def (postResponse, body) = client.post(
       new URL("${ApiRoot.inventory()}/instances"),
       Json.encodePrettily(newInstanceRequest))
 
     assert postResponse.status == 201
+  }
+
+  private JsonObject createInstanceRequest(
+    UUID id,
+    String title,
+    JsonArray identifiers) {
+
+    new JsonObject()
+      .put("id",id.toString())
+      .put("title", title)
+      .put("identifiers", identifiers)
+  }
+
+  private JsonObject smallAngryPlanet(UUID id) {
+    def identifiers = new JsonArray()
+
+    identifiers.add(identifier("isbn", "9781473619777"))
+
+    return createInstanceRequest(id, "Long Way to a Small Angry Planet",
+      identifiers)
+  }
+
+  private JsonObject nod(UUID id) {
+    def identifiers = new JsonArray()
+
+    identifiers.add(identifier("asin", "B01D1PLMDO"))
+
+    createInstanceRequest(id, "Nod", identifiers)
+  }
+
+  private JsonObject uprooted(UUID id) {
+
+    def identifiers = new JsonArray();
+
+    identifiers.add(identifier("isbn", "1447294149"));
+    identifiers.add(identifier("isbn", "9781447294146"));
+
+    createInstanceRequest(id, "Uprooted",
+      identifiers);
+  }
+
+  private JsonObject temeraire(UUID id) {
+
+    def identifiers = new JsonArray();
+
+    identifiers.add(identifier("isbn", "0007258712"));
+    identifiers.add(identifier("isbn", "9780007258710"));
+
+    createInstanceRequest(id, "Temeraire",
+      identifiers);
+  }
+
+  private JsonObject leviathanWakes(UUID id) {
+    def identifiers = new JsonArray()
+
+    identifiers.add(identifier("isbn", "1841499897"))
+    identifiers.add(identifier("isbn", "9781841499895"))
+
+    createInstanceRequest(id, "Leviathan Wakes", identifiers)
+  }
+
+  private JsonObject taoOfPooh(UUID id) {
+    def identifiers = new JsonArray()
+
+    identifiers.add(identifier("isbn", "1405204265"))
+    identifiers.add(identifier("isbn", "9781405204265"))
+
+    createInstanceRequest(id, "Tao of Pooh", identifiers)
+  }
+
+  private JsonObject identifier(String namespace, String value) {
+    return new JsonObject()
+      .put("namespace", namespace)
+      .put("value", value);
   }
 
   private void hasCollectionProperties(instances) {
