@@ -55,8 +55,9 @@ task testApiViaOkapi(type: Test) {
 task testExternalStorage(type: Test) {
   exclude '**/External**CollectionExamples.class'
   include '**/storage/external/**'
+  include '**/api/ApiTestSuite.class'
 
-  systemProperty 'inventory.storage.use.fake', 'false'
+  systemProperty 'inventory.storage.use', 'external'
 
   println "Inventory Storage Config: ${System.getProperty('inventory.storage.address')}"
 

@@ -12,6 +12,7 @@ cd ../inventory-storage
 cd database-setup
 
 ./drop-db.sh ${database_name}
+./drop-role.sh "test_tenant_inventory_storage"
 ./drop-role.sh "test_tenant_1_inventory_storage"
 ./drop-role.sh "test_tenant_2_inventory_storage"
 
@@ -29,6 +30,14 @@ curl -w '\n' -X POST -D -   \
      -H "Content-type: application/json"   \
      -H "Accept: */*"   \
      -H "X-Okapi-Tenant: test_tenant_2" \
+     http://localhost:9408/_/tenant
+
+echo "Initialising Tenant: test_tenant"
+
+curl -w '\n' -X POST -D -   \
+     -H "Content-type: application/json"   \
+     -H "Accept: */*"   \
+     -H "X-Okapi-Tenant: test_tenant" \
      http://localhost:9408/_/tenant
 
 cd ../inventory

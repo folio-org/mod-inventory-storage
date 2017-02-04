@@ -66,8 +66,7 @@ public class ExternalStorageSuite {
   }
 
   private static boolean useFakeStorageModule() {
-    Boolean.parseBoolean(
-      System.getProperty('inventory.storage.use.fake', "true"))
+      System.getProperty('inventory.storage.use', "fake") == "fake"
   }
 
   @AfterClass()

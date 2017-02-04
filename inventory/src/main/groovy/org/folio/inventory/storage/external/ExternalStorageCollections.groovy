@@ -10,12 +10,12 @@ import org.folio.inventory.storage.memory.InMemoryIngestJobCollection
 class ExternalStorageCollections implements CollectionProvider {
   private final Vertx vertx
   private final String baseAddress
-  private final InMemoryIngestJobCollection ingestJobCollection
+  private static final InMemoryIngestJobCollection ingestJobCollection =  
+    new InMemoryIngestJobCollection()
 
   def ExternalStorageCollections(Vertx vertx, String baseAddress) {
     this.vertx = vertx
     this.baseAddress = baseAddress
-    this.ingestJobCollection = new InMemoryIngestJobCollection()
   }
 
   @Override

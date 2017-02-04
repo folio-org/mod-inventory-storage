@@ -56,8 +56,20 @@ public class ApiTestSuite {
   private static startInventoryVerticle() {
     def deployed = new CompletableFuture()
 
+    def storageType = "memory"
+    def storageLocation = ""
+
+    if(System.getProperty('inventory.storage.use', "") == "external") {
+      storageType = "external"
+      storageLocation = System.getProperty('inventory.storage.address', "")
+    }
+
+    println("Storage Type: ${storageType}")
+    println("Storage Location: ${storageLocation}")
+
     def config = ["port": INVENTORY_VERTICLE_TEST_PORT,
-                  "storage.type" : "memory"]
+                  "storage.type" : storageType,
+                  "storage.location" : storageLocation]
 
     vertxAssistant.deployGroovyVerticle(
       InventoryVerticle.class.name, config,  deployed)
