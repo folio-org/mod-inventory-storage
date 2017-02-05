@@ -32,18 +32,19 @@ class Storage {
 
         return new Storage(
           { context -> new ExternalStorageCollections(vertx, location) })
-        break;
+        break
 
       case "okapi":
         return new Storage(
         { context ->
           new ExternalStorageCollections(vertx, context.okapiLocation) })
+        break
 
       case "memory":
         def inMemoryCollections = new InMemoryCollections()
 
         return new Storage({ context -> inMemoryCollections })
-        break;
+        break
 
       default:
         throw new IllegalArgumentException(

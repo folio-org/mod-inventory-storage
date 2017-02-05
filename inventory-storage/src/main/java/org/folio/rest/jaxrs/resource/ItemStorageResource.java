@@ -111,6 +111,9 @@ public interface ItemStorageResource {
      *       "barcode": "645398607547",
      *       "status": {
      *         "name": "available"
+     *       },
+     *       "materialType": {
+     *         "name": "available"
      *       }
      *     }
      *     
@@ -214,6 +217,9 @@ public interface ItemStorageResource {
      *       "title": "Uprooted",
      *       "barcode": "645398607547",
      *       "status": {
+     *         "name": "available"
+     *       },
+     *       "materialType": {
      *         "name": "available"
      *       }
      *     }
@@ -334,6 +340,9 @@ public interface ItemStorageResource {
          *   "barcode": "645398607547",
          *   "status": {
          *     "name": "available"
+         *   },
+         *   "materialType": {
+         *     "name": "available"
          *   }
          * }
          * 
@@ -345,6 +354,9 @@ public interface ItemStorageResource {
          *       "title": "Uprooted",
          *       "barcode": "645398607547",
          *       "status": {
+         *         "name": "available"
+         *       },
+         *       "materialType": {
          *         "name": "available"
          *       }
          *     }
@@ -403,6 +415,9 @@ public interface ItemStorageResource {
          *       "barcode": "456743454532",
          *       "status": {
          *         "name": "available"
+         *       },
+         *       "materialType": {
+         *         "name": "available"
          *       }
          *     },
          *     {
@@ -411,6 +426,9 @@ public interface ItemStorageResource {
          *       "title": "Uprooted",
          *       "barcode": "645398607547",
          *       "status": {
+         *         "name": "available"
+         *       },
+         *       "materialType": {
          *         "name": "available"
          *       }
          *     }
@@ -429,6 +447,9 @@ public interface ItemStorageResource {
          *           "barcode": "456743454532",
          *           "status": {
          *             "name": "available"
+         *           },
+         *           "materialType": {
+         *             "name": "available"
          *           }
          *         },
          *         {
@@ -437,6 +458,9 @@ public interface ItemStorageResource {
          *           "title": "Uprooted",
          *           "barcode": "645398607547",
          *           "status": {
+         *             "name": "available"
+         *           },
+         *           "materialType": {
          *             "name": "available"
          *           }
          *         }
@@ -494,6 +518,9 @@ public interface ItemStorageResource {
          *   "barcode": "645398607547",
          *   "status": {
          *     "name": "available"
+         *   },
+         *   "materialType": {
+         *     "name": "available"
          *   }
          * }
          * 
@@ -507,6 +534,9 @@ public interface ItemStorageResource {
          *       "title": "Uprooted",
          *       "barcode": "645398607547",
          *       "status": {
+         *         "name": "available"
+         *       },
+         *       "materialType": {
          *         "name": "available"
          *       }
          *     }

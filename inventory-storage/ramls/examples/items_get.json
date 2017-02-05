@@ -7,6 +7,9 @@
       "barcode": "456743454532",
       "status": {
         "name": "available"
+      },
+      "materialType": {
+        "name": "book"
       }
     },
     {
@@ -16,6 +19,9 @@
       "barcode": "645398607547",
       "status": {
         "name": "available"
+      },
+      "materialType": {
+        "name": "book"
       }
     }
   ],

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mods_records>
+  <mods_ns:mods xmlns:mods_ns="http://www.loc.gov/mods/v3" version="3.5">
+    <mods_ns:recordInfo>
+      <mods_ns:recordIdentifier source="UkMaC">684566576</mods_ns:recordIdentifier>
+    </mods_ns:recordInfo>
+    <mods_ns:identifier type="isbn">1473619793</mods_ns:identifier>
+    <mods_ns:identifier type="isbn">9781473619791</mods_ns:identifier>
+    <mods_ns:originInfo>
+      <mods_ns:dateIssued>2015-08-13</mods_ns:dateIssued>
+    </mods_ns:originInfo>
+    <mods_ns:name type="personal">
+      <mods_ns:namePart>Chambers, Becky</mods_ns:namePart>
+      <mods_ns:role>
+        <mods_ns:roleTerm type="text">creator</mods_ns:roleTerm>
+      </mods_ns:role>
+    </mods_ns:name>
+    <mods_ns:titleInfo>
+      <mods_ns:title>The Long Way to a Small, Angry Planet</mods_ns:title>
+    </mods_ns:titleInfo>
+    <mods_ns:location>
+      <mods_ns:holdingExternal>
+        <h:localHolds xmlns:h="http://copac.ac.uk/schemas/holdings/v1">
+          <h:org displayName="Test Library"></h:org>
+          <h:objId>67437645</h:objId>
+        </h:localHolds>
+      </mods_ns:holdingExternal>
+    </mods_ns:location>
+  </mods_ns:mods>
+  <mods_ns:mods xmlns:mods_ns="http://www.loc.gov/mods/v3" version="3.5">
+    <mods_ns:recordInfo>
+      <mods_ns:recordIdentifier source="UkMaC">756756756</mods_ns:recordIdentifier>
+    </mods_ns:recordInfo>
+    <mods_ns:identifier type="isbn">1447294130</mods_ns:identifier>
+    <mods_ns:identifier type="isbn">9781447294130</mods_ns:identifier>
+    <mods_ns:originInfo>
+      <mods_ns:dateIssued>2015-05-21</mods_ns:dateIssued>
+    </mods_ns:originInfo>
+    <mods_ns:name type="personal">
+      <mods_ns:namePart>Novik, Naomi</mods_ns:namePart>
+      <mods_ns:role>
+        <mods_ns:roleTerm type="text">creator</mods_ns:roleTerm>
+      </mods_ns:role>
+    </mods_ns:name>
+    <mods_ns:titleInfo>
+      <mods_ns:title>Uprooted</mods_ns:title>
+    </mods_ns:titleInfo>
+    <mods_ns:location>
+      <mods_ns:holdingExternal>
+        <h:localHolds xmlns:h="http://copac.ac.uk/schemas/holdings/v1">
+          <h:org displayName="Test Library"></h:org>
+          <h:objId>6743763221</h:objId>
+        </h:localHolds>
+      </mods_ns:holdingExternal>
+    </mods_ns:location>
+  </mods_ns:mods>
+</mods_records>

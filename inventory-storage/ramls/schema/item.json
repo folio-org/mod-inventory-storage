@@ -21,6 +21,14 @@
           "type": "string"
         }
       }
+    },
+    "materialType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": [
