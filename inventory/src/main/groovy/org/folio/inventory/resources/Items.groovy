@@ -1,7 +1,5 @@
 package org.folio.inventory.resources
 
-import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
@@ -44,14 +42,14 @@ class Items {
       storage.getItemCollection(context).findAll(
         new PagingParameters(limit, offset), {
         JsonResponse.success(routingContext.response(),
-          toRepresentation(it, context))
+          new ItemRepresentation(relativeItemsPath()).toJson(it, context))
       })
     }
     else {
       storage.getItemCollection(context).findByCql(search,
         new PagingParameters(limit, offset), {
         JsonResponse.success(routingContext.response(),
-          toRepresentation(it, context))
+          new ItemRepresentation(relativeItemsPath()).toJson(it, context))
       })
     }
   }
@@ -69,8 +67,8 @@ class Items {
 
     Map itemRequest = new VertxBodyParser().toMap(routingContext)
 
-    def newItem = new Item(itemRequest.title,
-      itemRequest.barcode, itemRequest.instanceId)
+    def newItem = new Item(itemRequest.id, itemRequest.title,
+      itemRequest.barcode, itemRequest.instanceId, itemRequest?.status?.name)
 
     storage.getItemCollection(context).add(newItem, {
       RedirectResponse.created(routingContext.response(),
@@ -86,7 +84,7 @@ class Items {
       {
         if(it != null) {
           JsonResponse.success(routingContext.response(),
-            toRepresentation(it, context))
+            new ItemRepresentation(relativeItemsPath()).toJson(it, context))
         }
         else {
           ClientErrorResponse.notFound(routingContext.response())
@@ -96,33 +94,5 @@ class Items {
 
   private static String relativeItemsPath() {
     "/inventory/items"
-  }
-
-  private JsonObject toRepresentation(List<Item> items, WebContext context) {
-    def representation = new JsonObject()
-
-    def results = new JsonArray()
-
-    items.each {
-      results.add(toRepresentation(it, context))
-    }
-
-    representation.put("items", results)
-
-    representation
-  }
-
-  private JsonObject toRepresentation(Item item, WebContext context) {
-    def representation = new JsonObject()
-    representation.put("id", item.id)
-    representation.put("instanceId", item.instanceId)
-    representation.put("title", item.title)
-    representation.put("barcode", item.barcode)
-
-    representation.put('links',
-      ['self': context.absoluteUrl(
-        relativeItemsPath() + "/${item.id}").toString()])
-
-    representation
   }
 }

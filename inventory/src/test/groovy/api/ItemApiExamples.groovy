@@ -29,6 +29,7 @@ class ItemApiExamples extends Specification {
         .put("title", createdInstance.title)
         .put("instanceId", createdInstance.id)
         .put("barcode", "645398607547")
+        .put("status", new JsonObject().put("name", "available"))
 
     when:
       def (postResponse, __) = client.post(
@@ -47,8 +48,43 @@ class ItemApiExamples extends Specification {
 
       assert createdItem.id != null
       assert createdItem.title == "Long Way to a Small Angry Planet"
+      assert createdItem.barcode == "645398607547"
+      assert createdItem.status.name == "available"
+
+      selfLinkRespectsWayResourceWasReached(createdItem)
+      selfLinkShouldBeReachable(createdItem)
+  }
+
+  void "Can create an item based upon an instance"() {
+    given:
+      def createdInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
+
+      def newItemRequest = new JsonObject()
+        .put("title", createdInstance.title)
+        .put("instanceId", createdInstance.id)
+        .put("barcode", "645398607547")
+        .put("status", new JsonObject().put("name", "available"))
+
+    when:
+      def (postResponse, __) = client.post(
+        new URL("${ApiRoot.items()}"),
+        Json.encodePrettily(newItemRequest))
+
+    then:
+      def location = postResponse.headers.location.toString()
+
+      assert postResponse.status == 201
+      assert location != null
+
+      def (getResponse, createdItem) = client.get(location)
+
+      assert getResponse.status == 200
+
+      assert createdItem.id != null
       assert createdItem.instanceId == createdInstance.id
       assert createdItem.barcode == "645398607547"
+      assert createdItem.status.name == "available"
 
       selfLinkRespectsWayResourceWasReached(createdItem)
       selfLinkShouldBeReachable(createdItem)
@@ -154,7 +190,10 @@ class ItemApiExamples extends Specification {
 
       assert items.size() == 1
 
-      assert items[0].title == "Long Way to a Small Angry Planet"
+      def firstItem = items[0]
+
+      assert firstItem.title == "Long Way to a Small Angry Planet"
+      assert firstItem.status.name == "available"
 
       items.each {
         selfLinkRespectsWayResourceWasReached(it)
@@ -178,7 +217,7 @@ class ItemApiExamples extends Specification {
 
     assert response.status == 200
   }
-  
+
   private def createInstance(JsonObject newInstanceRequest) {
     InstanceApiClient.createInstance(client, newInstanceRequest)
   }
@@ -188,6 +227,7 @@ class ItemApiExamples extends Specification {
       .put("title", title)
       .put("instanceId", instanceId)
       .put("barcode", barcode)
+      .put("status", new JsonObject().put("name", "available"))
 
     def (createItemResponse, _) = client.post(ApiRoot.items(),
       Json.encodePrettily(newItemRequest))

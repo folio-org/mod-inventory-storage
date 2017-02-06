@@ -46,10 +46,11 @@ class IngestMessageProcessor {
     allInstances.collect ({ instances ->
       records.stream()
         .map({ record ->
-        new Item(
-          record.title,
-          record.barcode,
-          instances.find({ it.title == record.title })?.id)
+          new Item(
+            record.title,
+            record.barcode,
+            instances.find({ it.title == record.title })?.id,
+            "available")
       })
       .forEach({ itemCollection.add(it, allItems.receive()) })
     })

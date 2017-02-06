@@ -75,14 +75,23 @@ abstract class ItemCollectionExamples {
     assert allItems.every { it.barcode != null }
     assert allItems.every { it.instanceId != null }
 
-    assert allItems.any { it.title == "Long Way to a Small Angry Planet" &&
-      it.barcode == "036000291452" }
+    def smallAngry = allItems.find({ it.title == "Long Way to a Small Angry Planet" })
 
-    assert allItems.any { it.title == "Nod" &&
-      it.barcode == "565578437802" }
+    assert smallAngry != null
+    assert smallAngry.barcode == "036000291452"
+    assert smallAngry.status == "available"
 
-    assert allItems.any { it.title == "Uprooted" &&
-      it.barcode == "657670342075" }
+    def nod = allItems.find({ it.title == "Nod" })
+
+    assert nod != null
+    assert nod.barcode == "565578437802"
+    assert nod.status == "available"
+
+    def uprooted = allItems.find({ it.title == "Uprooted"})
+
+    assert uprooted != null
+    assert uprooted.barcode == "657670342075"
+    assert uprooted.status == "available"
   }
 
   @Test
@@ -191,13 +200,15 @@ abstract class ItemCollectionExamples {
     def foundItem = getOnCompletion(findFuture)
     def otherFoundItem = getOnCompletion(otherFindFuture)
 
+    assert foundItem.instanceId == smallAngryPlanet.instanceId
     assert foundItem.title == "Long Way to a Small Angry Planet"
     assert foundItem.barcode == "036000291452"
-    assert foundItem.instanceId == smallAngryPlanet.instanceId
+    assert foundItem.status == "available"
 
     assert otherFoundItem.title == "Nod"
-    assert otherFoundItem.barcode == "565578437802"
     assert otherFoundItem.instanceId == nod.instanceId
+    assert otherFoundItem.barcode == "565578437802"
+    assert otherFoundItem.status == "available"
   }
 
   private void addSomeExamples(ItemCollection itemCollection) {
@@ -220,26 +231,26 @@ abstract class ItemCollectionExamples {
 
   private Item smallAngryPlanet() {
     new Item("Long Way to a Small Angry Planet", "036000291452",
-      UUID.randomUUID().toString())
+      UUID.randomUUID().toString(), "available")
   }
 
   private Item nod() {
     new Item("Nod", "565578437802",
-      UUID.randomUUID().toString())
+      UUID.randomUUID().toString(), "available")
   }
 
   private Item uprooted() {
     new Item("Uprooted", "657670342075",
-      UUID.randomUUID().toString())
+      UUID.randomUUID().toString(), "available")
   }
 
   private Item temeraire() {
     new Item("Temeraire", "232142443432",
-      UUID.randomUUID().toString())
+      UUID.randomUUID().toString(), "available")
   }
 
   private Item interestingTimes() {
     new Item("Interesting Times", "56454543534",
-      UUID.randomUUID().toString())
+      UUID.randomUUID().toString(), "available")
   }
 }

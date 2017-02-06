@@ -53,6 +53,7 @@ class ExternalStorageModuleItemCollection
     itemToSend.put("title", item.title)
     itemToSend.put("barcode", item.barcode)
     itemToSend.put("instanceId", item.instanceId)
+    itemToSend.put("status", new JsonObject().put("name", item.status))
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
@@ -210,6 +211,7 @@ class ExternalStorageModuleItemCollection
       itemFromServer.getString("id"),
       itemFromServer.getString("title"),
       itemFromServer.getString("barcode"),
-      itemFromServer.getString("instanceId"))
+      itemFromServer.getString("instanceId"),
+      itemFromServer?.getJsonObject("status")?.getString("name"))
   }
 }
