@@ -10,6 +10,10 @@ class PagingParameters {
     this.limit = limit
   }
 
+  static defaults() {
+    new PagingParameters(10, 0)
+  }
+
   def getLimit() {
     this.limit;
   }

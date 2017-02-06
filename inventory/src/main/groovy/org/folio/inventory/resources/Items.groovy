@@ -4,16 +4,11 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.folio.inventory.domain.Item
-import org.folio.inventory.domain.ItemCollection
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
-import org.folio.metadata.common.api.response.ClientErrorResponse
-import org.folio.metadata.common.api.response.JsonResponse
-import org.folio.metadata.common.api.response.RedirectResponse
-import org.folio.metadata.common.api.response.ServerErrorResponse
-import org.folio.metadata.common.api.response.SuccessResponse
+import org.folio.metadata.common.api.response.*
 
 class Items {
 
@@ -73,10 +68,21 @@ class Items {
 
     def newItem = requestToItem(itemRequest)
 
+    def itemCollection = storage.getItemCollection(context)
 
-    storage.getItemCollection(context).add(newItem, {
-      RedirectResponse.created(routingContext.response(),
-        context.absoluteUrl("${relativeItemsPath()}/${it.id}").toString())
+    itemCollection.findByCql("barcode=${newItem.barcode}",
+      PagingParameters.defaults(), {
+
+      if(it.size() == 0) {
+        itemCollection.add(newItem, {
+          RedirectResponse.created(routingContext.response(),
+            context.absoluteUrl("${relativeItemsPath()}/${it.id}").toString())
+        })
+      }
+      else {
+        ClientErrorResponse.badRequest(routingContext.response(),
+          "Barcode ${newItem.barcode} is already assigned to another item")
+      }
     })
   }
 

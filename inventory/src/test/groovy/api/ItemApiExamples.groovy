@@ -328,6 +328,32 @@ class ItemApiExamples extends Specification {
       }
   }
 
+  void "Cannot create a second item with the same barcode"() {
+    given:
+      def smallAngryInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
+
+      createItem(smallAngryInstance.title, smallAngryInstance.id,
+        "645398607547")
+
+      def nodInstance = createInstance(nod(UUID.randomUUID()))
+
+    when:
+      def newItemRequest = new JsonObject()
+        .put("title", nodInstance.title)
+        .put("instanceId", nodInstance.id)
+        .put("barcode", "645398607547")
+        .put("status", new JsonObject().put("name", "available"))
+        .put("materialType", new JsonObject().put("name", "book"))
+        .put("location", new JsonObject().put("name", "main library"))
+
+      def (createItemResponse, _) = client.post(ApiRoot.items(),
+        Json.encodePrettily(newItemRequest))
+
+    then:
+      assert createItemResponse.status == 400
+  }
+
   private void selfLinkRespectsWayResourceWasReached(item) {
     assert containsApiRoot(item.links.self)
   }
