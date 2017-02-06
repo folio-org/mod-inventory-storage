@@ -8,5 +8,8 @@
   },
   "materialType": {
     "name": "book"
+  },
+  "location": {
+    "name": "main library"
   }
 }

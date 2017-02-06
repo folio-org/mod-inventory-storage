@@ -8,5 +8,8 @@
   },
   "status": {
     "name": "available"
+  },
+  "location": {
+    "name": "main library"
   }
 }

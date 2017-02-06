@@ -4,6 +4,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.support.*;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,6 +86,8 @@ public class ItemStorageTest {
       is("available"));
     assertThat(itemFromPost.getJsonObject("materialType").getString("name"),
       is("book"));
+    assertThat(itemFromPost.getJsonObject("location").getString("name"),
+      is("main library"));
 
     JsonResponse getResponse = getById(id);
 
@@ -100,6 +103,8 @@ public class ItemStorageTest {
       is("available"));
     assertThat(itemFromGet.getJsonObject("materialType").getString("name"),
       is("book"));
+    assertThat(itemFromGet.getJsonObject("location").getString("name"),
+      is("main library"));
   }
 
   @Test
@@ -136,6 +141,8 @@ public class ItemStorageTest {
       is("available"));
     assertThat(item.getJsonObject("materialType").getString("name"),
       is("book"));
+    assertThat(item.getJsonObject("location").getString("name"),
+      is("main library"));
   }
 
   @Test
@@ -151,7 +158,10 @@ public class ItemStorageTest {
     createItem(itemToCreate);
 
     JsonObject replacement = itemToCreate.copy();
-    replacement.put("barcode", "125845734657");
+      replacement.put("barcode", "125845734657");
+      replacement.put("location",
+        new JsonObject().put("name", "annex library"));
+
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
 
@@ -177,6 +187,8 @@ public class ItemStorageTest {
       is("available"));
     assertThat(item.getJsonObject("materialType").getString("name"),
       is("book"));
+    assertThat(item.getJsonObject("location").getString("name"),
+      is("annex library"));
   }
 
   @Test
@@ -455,6 +467,7 @@ public class ItemStorageTest {
     itemToCreate.put("barcode", barcode);
     itemToCreate.put("status", new JsonObject().put("name", "available"));
     itemToCreate.put("materialType", new JsonObject().put("name", "book"));
+    itemToCreate.put("location", new JsonObject().put("name", "main library"));
 
     return itemToCreate;
   }

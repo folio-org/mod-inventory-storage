@@ -21,7 +21,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "title",
     "barcode",
     "status",
-    "materialType"
+    "materialType",
+    "location"
 })
 public class Item {
 
@@ -45,18 +46,15 @@ public class Item {
     @JsonProperty("barcode")
     @NotNull
     private String barcode;
-    /**
-     * 
-     */
     @JsonProperty("status")
     @Valid
     private Status status;
-    /**
-     * 
-     */
     @JsonProperty("materialType")
     @Valid
     private MaterialType materialType;
+    @JsonProperty("location")
+    @Valid
+    private Location location;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -215,6 +213,31 @@ public class Item {
 
     public Item withMaterialType(MaterialType materialType) {
         this.materialType = materialType;
+        return this;
+    }
+
+    /**
+     * 
+     * @return
+     *     The location
+     */
+    @JsonProperty("location")
+    public Location getLocation() {
+        return location;
+    }
+
+    /**
+     * 
+     * @param location
+     *     The location
+     */
+    @JsonProperty("location")
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
+    public Item withLocation(Location location) {
+        this.location = location;
         return this;
     }
 

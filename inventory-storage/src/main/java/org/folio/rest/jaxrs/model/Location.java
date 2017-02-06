@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "name"
 })
-public class Status {
+public class Location {
 
     @JsonProperty("name")
     private String name;
@@ -43,7 +43,7 @@ public class Status {
         this.name = name;
     }
 
-    public Status withName(String name) {
+    public Location withName(String name) {
         this.name = name;
         return this;
     }
@@ -58,7 +58,7 @@ public class Status {
         this.additionalProperties.put(name, value);
     }
 
-    public Status withAdditionalProperty(String name, Object value) {
+    public Location withAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
         return this;
     }

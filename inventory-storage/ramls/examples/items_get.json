@@ -10,6 +10,9 @@
       },
       "materialType": {
         "name": "book"
+      },
+      "location": {
+        "name": "main library"
       }
     },
     {
@@ -22,6 +25,9 @@
       },
       "materialType": {
         "name": "book"
+      },
+      "location": {
+        "name": "main library"
       }
     }
   ],

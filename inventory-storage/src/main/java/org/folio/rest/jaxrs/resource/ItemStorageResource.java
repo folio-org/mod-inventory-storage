@@ -113,7 +113,10 @@ public interface ItemStorageResource {
      *         "name": "available"
      *       },
      *       "materialType": {
-     *         "name": "available"
+     *         "name": "book"
+     *       },
+     *       "location": {
+     *         "name": "main library"
      *       }
      *     }
      *     
@@ -220,7 +223,10 @@ public interface ItemStorageResource {
      *         "name": "available"
      *       },
      *       "materialType": {
-     *         "name": "available"
+     *         "name": "book"
+     *       },
+     *       "location": {
+     *         "name": "main library"
      *       }
      *     }
      *     
@@ -342,7 +348,10 @@ public interface ItemStorageResource {
          *     "name": "available"
          *   },
          *   "materialType": {
-         *     "name": "available"
+         *     "name": "book"
+         *   },
+         *   "location": {
+         *     "name": "main library"
          *   }
          * }
          * 
@@ -357,7 +366,10 @@ public interface ItemStorageResource {
          *         "name": "available"
          *       },
          *       "materialType": {
-         *         "name": "available"
+         *         "name": "book"
+         *       },
+         *       "location": {
+         *         "name": "main library"
          *       }
          *     }
          *     
@@ -417,7 +429,10 @@ public interface ItemStorageResource {
          *         "name": "available"
          *       },
          *       "materialType": {
-         *         "name": "available"
+         *         "name": "book"
+         *       },
+         *       "location": {
+         *         "name": "main library"
          *       }
          *     },
          *     {
@@ -429,7 +444,10 @@ public interface ItemStorageResource {
          *         "name": "available"
          *       },
          *       "materialType": {
-         *         "name": "available"
+         *         "name": "book"
+         *       },
+         *       "location": {
+         *         "name": "main library"
          *       }
          *     }
          *   ],
@@ -449,7 +467,10 @@ public interface ItemStorageResource {
          *             "name": "available"
          *           },
          *           "materialType": {
-         *             "name": "available"
+         *             "name": "book"
+         *           },
+         *           "location": {
+         *             "name": "main library"
          *           }
          *         },
          *         {
@@ -461,7 +482,10 @@ public interface ItemStorageResource {
          *             "name": "available"
          *           },
          *           "materialType": {
-         *             "name": "available"
+         *             "name": "book"
+         *           },
+         *           "location": {
+         *             "name": "main library"
          *           }
          *         }
          *       ],
@@ -520,7 +544,10 @@ public interface ItemStorageResource {
          *     "name": "available"
          *   },
          *   "materialType": {
-         *     "name": "available"
+         *     "name": "book"
+         *   },
+         *   "location": {
+         *     "name": "main library"
          *   }
          * }
          * 
@@ -537,7 +564,10 @@ public interface ItemStorageResource {
          *         "name": "available"
          *       },
          *       "materialType": {
-         *         "name": "available"
+         *         "name": "book"
+         *       },
+         *       "location": {
+         *         "name": "main library"
          *       }
          *     }
          *     

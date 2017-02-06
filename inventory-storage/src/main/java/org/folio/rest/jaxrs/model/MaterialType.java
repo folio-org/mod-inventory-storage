@@ -4,7 +4,6 @@ package org.folio.rest.jaxrs.model;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Generated;
-import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,20 +18,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 })
 public class MaterialType {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("name")
-    @NotNull
     private String name;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
-     * 
-     * (Required)
      * 
      * @return
      *     The name
@@ -43,8 +34,6 @@ public class MaterialType {
     }
 
     /**
-     * 
-     * (Required)
      * 
      * @param name
      *     The name
