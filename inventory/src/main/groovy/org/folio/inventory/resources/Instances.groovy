@@ -81,7 +81,7 @@ class Instances {
       return
     }
 
-    def newInstance = new Instance(instanceRequest.title,
+    def newInstance = new Instance(instanceRequest.id, instanceRequest.title,
       instanceRequest.identifiers)
 
     storage.getInstanceCollection(context).add(newInstance, {

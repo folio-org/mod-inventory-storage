@@ -61,6 +61,41 @@ class ItemApiExamples extends Specification {
       selfLinkShouldBeReachable(createdItem)
   }
 
+  void "Can create an item with an ID"() {
+    given:
+      def createdInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
+
+      def itemId = UUID.randomUUID().toString()
+
+      def newItemRequest = new JsonObject()
+        .put("id", itemId)
+        .put("title", createdInstance.title)
+        .put("instanceId", createdInstance.id)
+        .put("barcode", "645398607547")
+
+    when:
+      def (postResponse, __) = client.post(
+        new URL("${ApiRoot.items()}"),
+        Json.encodePrettily(newItemRequest))
+
+    then:
+      def location = postResponse.headers.location.toString()
+
+      assert postResponse.status == 201
+      assert location != null
+      assert location.contains(itemId)
+
+      def (getResponse, createdItem) = client.get(location)
+
+      assert getResponse.status == 200
+
+      assert createdItem.id == itemId
+
+      selfLinkRespectsWayResourceWasReached(createdItem)
+      selfLinkShouldBeReachable(createdItem)
+  }
+
   void "Can create an item based upon an instance"() {
     given:
       def createdInstance = createInstance(

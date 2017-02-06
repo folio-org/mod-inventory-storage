@@ -100,6 +100,23 @@ abstract class InstanceCollectionExamples {
   }
 
   @Test
+  void itemsCanBeAddedWithAnId() {
+    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+
+    def addFinished = new CompletableFuture<Item>()
+
+    def instanceId = UUID.randomUUID().toString()
+
+    def instanceWithId = smallAngryPlanet().copyWithNewId(instanceId)
+
+    collection.add(instanceWithId, complete(addFinished))
+
+    def added = getOnCompletion(addFinished)
+
+    assert added.id == instanceId
+  }
+
+  @Test
   void instancesCanBeFoundById() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
 

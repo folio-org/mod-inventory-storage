@@ -49,7 +49,7 @@ class ExternalStorageModuleItemCollection
 
     def itemToSend = [:]
 
-    itemToSend.put("id", UUID.randomUUID().toString())
+    itemToSend.put("id", item.id ?: UUID.randomUUID().toString())
     itemToSend.put("title", item.title)
     itemToSend.put("barcode", item.barcode)
     itemToSend.put("instanceId", item.instanceId)

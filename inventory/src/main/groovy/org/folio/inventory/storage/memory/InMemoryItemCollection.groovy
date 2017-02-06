@@ -12,7 +12,9 @@ class InMemoryItemCollection
 
   @Override
   void add(Item item, Closure resultCallback) {
-    collection.add(item.copyWithNewId(UUID.randomUUID().toString()), resultCallback)
+    def id = item.id ?: UUID.randomUUID().toString()
+
+    collection.add(item.copyWithNewId(id), resultCallback)
   }
 
   @Override

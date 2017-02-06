@@ -100,6 +100,23 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
+  void itemsCanBeAddedWithAnId() {
+    def collection = collectionProvider.getItemCollection(firstTenantId)
+
+    def addFinished = new CompletableFuture<Item>()
+
+    def itemId = UUID.randomUUID().toString()
+
+    def itemWithId = smallAngryPlanet.copyWithNewId(itemId)
+
+    collection.add(itemWithId, complete(addFinished))
+
+    def added = getOnCompletion(addFinished)
+
+    assert added.id == itemId
+  }
+
+  @Test
   void itemsCanBeFoundByIdWithinATenant() {
     def firstTenantCollection = collectionProvider
       .getItemCollection(firstTenantId)

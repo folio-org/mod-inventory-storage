@@ -55,6 +55,38 @@ class InstancesApiExamples extends Specification {
       selfLinkShouldBeReachable(createdInstance)
   }
 
+  void "Can create an instance with an ID"() {
+    given:
+      def instanceId = UUID.randomUUID().toString()
+
+      def newInstanceRequest = new JsonObject()
+        .put("id", instanceId)
+        .put("title", "Long Way to a Small Angry Planet")
+
+    when:
+      def (postResponse, _) = client.post(ApiRoot.instances(),
+        Json.encodePrettily(newInstanceRequest))
+
+    then:
+      def location = postResponse.headers.location.toString()
+
+      assert postResponse.status == 201
+      assert location != null
+      assert location.contains(instanceId)
+
+      def (getResponse, createdInstance) = client.get(location)
+
+      assert getResponse.status == 200
+
+      assert createdInstance.id == instanceId
+      assert createdInstance.title == "Long Way to a Small Angry Planet"
+
+      expressesDublinCoreMetadata(createdInstance)
+      dublinCoreContextLinkRespectsWayResourceWasReached(createdInstance)
+      selfLinkRespectsWayResourceWasReached(createdInstance)
+      selfLinkShouldBeReachable(createdInstance)
+  }
+
   void "Instance title is mandatory"() {
     given:
       def newInstanceRequest = new JsonObject()
