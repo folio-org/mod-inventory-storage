@@ -25,7 +25,6 @@ abstract class ItemCollectionExamples {
   private final Item interestingTimes = interestingTimes()
 
   public ItemCollectionExamples(CollectionProvider collectionProvider) {
-
     this.collectionProvider = collectionProvider
   }
 
@@ -80,18 +79,24 @@ abstract class ItemCollectionExamples {
     assert smallAngry != null
     assert smallAngry.barcode == "036000291452"
     assert smallAngry.status == "available"
+    assert smallAngry.materialType == "book"
+    assert smallAngry.location == "main library"
 
     def nod = allItems.find({ it.title == "Nod" })
 
     assert nod != null
     assert nod.barcode == "565578437802"
     assert nod.status == "available"
+    assert nod.materialType == "book"
+    assert nod.location == "main library"
 
     def uprooted = allItems.find({ it.title == "Uprooted"})
 
     assert uprooted != null
     assert uprooted.barcode == "657670342075"
     assert uprooted.status == "available"
+    assert uprooted.materialType == "book"
+    assert uprooted.location == "main library"
   }
 
   @Test
@@ -204,11 +209,15 @@ abstract class ItemCollectionExamples {
     assert foundItem.title == "Long Way to a Small Angry Planet"
     assert foundItem.barcode == "036000291452"
     assert foundItem.status == "available"
+    assert foundItem.materialType == "book"
+    assert foundItem.location == "main library"
 
     assert otherFoundItem.title == "Nod"
     assert otherFoundItem.instanceId == nod.instanceId
     assert otherFoundItem.barcode == "565578437802"
     assert otherFoundItem.status == "available"
+    assert otherFoundItem.materialType == "book"
+    assert otherFoundItem.location == "main library"
   }
 
   private void addSomeExamples(ItemCollection itemCollection) {
@@ -231,26 +240,26 @@ abstract class ItemCollectionExamples {
 
   private Item smallAngryPlanet() {
     new Item("Long Way to a Small Angry Planet", "036000291452",
-      UUID.randomUUID().toString(), "available")
+      UUID.randomUUID().toString(), "available", "book", "main library")
   }
 
   private Item nod() {
     new Item("Nod", "565578437802",
-      UUID.randomUUID().toString(), "available")
+      UUID.randomUUID().toString(), "available", "book", "main library")
   }
 
   private Item uprooted() {
     new Item("Uprooted", "657670342075",
-      UUID.randomUUID().toString(), "available")
+      UUID.randomUUID().toString(), "available", "book", "main library")
   }
 
   private Item temeraire() {
     new Item("Temeraire", "232142443432",
-      UUID.randomUUID().toString(), "available")
+      UUID.randomUUID().toString(), "available", "book", "main library")
   }
 
   private Item interestingTimes() {
     new Item("Interesting Times", "56454543534",
-      UUID.randomUUID().toString(), "available")
+      UUID.randomUUID().toString(), "available", "book", "main library")
   }
 }

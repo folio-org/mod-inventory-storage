@@ -6,6 +6,12 @@
     "barcode": "456743454532",
     "status": {
       "name" : "available"
+    },
+    "materialType": {
+      "name": "book"
+    },
+    "location": {
+      "name": "main library"
     }
   },
   {
@@ -15,6 +21,12 @@
     "barcode": "645398607547",
     "status": {
       "name" : "available"
+    },
+    "materialType": {
+      "name": "book"
+    },
+    "location": {
+      "name": "main library"
     }
   }
 ]}

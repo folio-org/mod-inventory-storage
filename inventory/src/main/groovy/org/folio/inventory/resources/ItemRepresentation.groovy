@@ -23,6 +23,16 @@ class ItemRepresentation {
       representation.put("status", new JsonObject().put("name", item.status))
     }
 
+    if(item.materialType != null) {
+      representation.put("materialType",
+        new JsonObject().put("name", item.materialType))
+    }
+
+    if(item.location != null) {
+      representation.put("location",
+        new JsonObject().put("name", item.location))
+    }
+
     representation.put('links',
       ['self': context.absoluteUrl(
         "${relativeItemsPath}/${item.id}").toString()])

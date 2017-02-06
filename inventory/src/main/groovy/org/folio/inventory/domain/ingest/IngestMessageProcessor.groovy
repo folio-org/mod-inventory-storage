@@ -50,7 +50,7 @@ class IngestMessageProcessor {
             record.title,
             record.barcode,
             instances.find({ it.title == record.title })?.id,
-            "available")
+            "available", "book", "main library")
       })
       .forEach({ itemCollection.add(it, allItems.receive()) })
     })

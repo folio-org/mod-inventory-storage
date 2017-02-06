@@ -73,6 +73,8 @@ class ModsIngestExamples extends Specification {
     assert items.every({ it.barcode != null })
     assert items.every({ it.instanceId != null })
     assert items.every({ it?.status?.name == "available" })
+    assert items.every({ it?.materialType?.name == "book" })
+    assert items.every({ it?.location?.name == "main library" })
 
     assert items.any({
       itemSimilarTo(it, "California: its gold and its inhabitants", "69228882")

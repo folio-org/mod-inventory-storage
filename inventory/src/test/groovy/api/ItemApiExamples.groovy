@@ -16,8 +16,10 @@ class ItemApiExamples extends Specification {
   private final HttpClient client = new HttpClient(TENANT_ID)
 
   def setup() {
-    new Preparation(client).deleteItems()
-    new Preparation(client).deleteInstances()
+    def preparation = new Preparation(client)
+
+    preparation.deleteItems()
+    preparation.deleteInstances()
   }
 
   void "Can create an item"() {
@@ -30,6 +32,8 @@ class ItemApiExamples extends Specification {
         .put("instanceId", createdInstance.id)
         .put("barcode", "645398607547")
         .put("status", new JsonObject().put("name", "available"))
+        .put("materialType", new JsonObject().put("name", "book"))
+        .put("location", new JsonObject().put("name", "annex library"))
 
     when:
       def (postResponse, __) = client.post(
@@ -49,7 +53,9 @@ class ItemApiExamples extends Specification {
       assert createdItem.id != null
       assert createdItem.title == "Long Way to a Small Angry Planet"
       assert createdItem.barcode == "645398607547"
-      assert createdItem.status.name == "available"
+      assert createdItem?.status?.name == "available"
+      assert createdItem?.materialType?.name == "book"
+      assert createdItem?.location?.name == "annex library"
 
       selfLinkRespectsWayResourceWasReached(createdItem)
       selfLinkShouldBeReachable(createdItem)
@@ -65,6 +71,8 @@ class ItemApiExamples extends Specification {
         .put("instanceId", createdInstance.id)
         .put("barcode", "645398607547")
         .put("status", new JsonObject().put("name", "available"))
+        .put("materialType", new JsonObject().put("name", "book"))
+        .put("location", new JsonObject().put("name", "annex library"))
 
     when:
       def (postResponse, __) = client.post(
@@ -84,7 +92,9 @@ class ItemApiExamples extends Specification {
       assert createdItem.id != null
       assert createdItem.instanceId == createdInstance.id
       assert createdItem.barcode == "645398607547"
-      assert createdItem.status.name == "available"
+      assert createdItem?.status?.name == "available"
+      assert createdItem?.materialType?.name == "book"
+      assert createdItem?.location?.name == "annex library"
 
       selfLinkRespectsWayResourceWasReached(createdItem)
       selfLinkShouldBeReachable(createdItem)
@@ -158,12 +168,36 @@ class ItemApiExamples extends Specification {
         selfLinkShouldBeReachable(it)
       }
 
+      firstPage.items.each {
+        hasMaterialType(it)
+      }
+
+      firstPage.items.each {
+        hasStatus(it)
+      }
+
+      firstPage.items.each {
+        hasLocation(it)
+      }
+
       secondPage.items.each {
         selfLinkRespectsWayResourceWasReached(it)
       }
 
       secondPage.items.each {
         selfLinkShouldBeReachable(it)
+      }
+
+      secondPage.items.each {
+        hasMaterialType(it)
+      }
+
+      secondPage.items.each {
+        hasStatus(it)
+      }
+
+      secondPage.items.each {
+        hasLocation(it)
       }
   }
 
@@ -212,10 +246,22 @@ class ItemApiExamples extends Specification {
     link.contains(ApiTestSuite.apiRoot())
   }
 
-  private void selfLinkShouldBeReachable(instance) {
-    def (response, _) = client.get(instance.links.self)
+  private void selfLinkShouldBeReachable(item) {
+    def (response, _) = client.get(item.links.self)
 
     assert response.status == 200
+  }
+
+  private void hasStatus(item) {
+    assert item?.status?.name != null
+  }
+
+  private void hasMaterialType(item) {
+    assert item?.materialType?.name != null
+  }
+
+  private void hasLocation(item) {
+    assert item?.location?.name != null
   }
 
   private def createInstance(JsonObject newInstanceRequest) {
@@ -228,6 +274,8 @@ class ItemApiExamples extends Specification {
       .put("instanceId", instanceId)
       .put("barcode", barcode)
       .put("status", new JsonObject().put("name", "available"))
+      .put("materialType", new JsonObject().put("name", "book"))
+      .put("location", new JsonObject().put("name", "main library"))
 
     def (createItemResponse, _) = client.post(ApiRoot.items(),
       Json.encodePrettily(newItemRequest))

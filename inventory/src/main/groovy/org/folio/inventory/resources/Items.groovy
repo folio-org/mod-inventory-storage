@@ -68,7 +68,8 @@ class Items {
     Map itemRequest = new VertxBodyParser().toMap(routingContext)
 
     def newItem = new Item(itemRequest.id, itemRequest.title,
-      itemRequest.barcode, itemRequest.instanceId, itemRequest?.status?.name)
+      itemRequest.barcode, itemRequest.instanceId, itemRequest?.status?.name,
+      itemRequest?.materialType?.name, itemRequest?.location?.name)
 
     storage.getItemCollection(context).add(newItem, {
       RedirectResponse.created(routingContext.response(),
