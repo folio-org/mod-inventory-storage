@@ -16,8 +16,17 @@ cd inventory
 
 cd ..
 
-./create-sample-data.sh
+cd inventory/sample-data
 
+./example-ingest.sh
+
+cd ../..
+
+cd inventory-storage/sample-data
+
+./import.sh
+
+cd ../..
 
 
 

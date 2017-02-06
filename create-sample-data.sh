@@ -15,9 +15,3 @@ cd catalogue-core/sample-data
 ./import.sh ${catalogue_root_address} ${knowledgebase_root_address}
 
 cd ../..
-
-cd inventory/sample-data
-
-./example-ingest.sh ${inventory_root_address}
-
-cd ../..

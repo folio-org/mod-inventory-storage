@@ -91,6 +91,18 @@ To run the tests against both embedded and external databases, run `./build.sh` 
 
 ## Preparation
 
+## Sample Data
+
+Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing. 
+
+### Inventory
+
+To load some sample data for the inventory storage module, run `./example-ingest.sh` from the inventory/sample-data directory.
+
+### Inventory Storage
+
+To load some sample data for the inventory storage module, run `./import.sh` from the inventory-storage/sample-data directory.
+
 ## Running Okapi
 
 Make sure that [Okapi](https://github.com/folio-org/okapi) is running on its default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for instructions).
