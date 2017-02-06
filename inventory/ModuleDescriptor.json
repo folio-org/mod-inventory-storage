@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "inventory",
-      "version": "1.0"
+      "version": "1.4"
     }
   ],
   "routingEntries": [
@@ -12,6 +12,7 @@
       "methods": [
         "GET",
         "POST",
+        "PUT",
         "DELETE"
       ],
       "path": "/inventory",

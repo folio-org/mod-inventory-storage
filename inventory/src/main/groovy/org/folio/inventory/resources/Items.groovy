@@ -4,6 +4,7 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
 import org.folio.inventory.domain.Item
+import org.folio.inventory.domain.ItemCollection
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.request.PagingParameters
@@ -11,6 +12,7 @@ import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
 import org.folio.metadata.common.api.response.RedirectResponse
+import org.folio.metadata.common.api.response.ServerErrorResponse
 import org.folio.metadata.common.api.response.SuccessResponse
 
 class Items {
@@ -23,12 +25,14 @@ class Items {
 
   public void register(Router router) {
     router.post(relativeItemsPath() + "*").handler(BodyHandler.create())
+    router.put(relativeItemsPath() + "*").handler(BodyHandler.create())
 
     router.get(relativeItemsPath()).handler(this.&getAll)
     router.post(relativeItemsPath()).handler(this.&create)
     router.delete(relativeItemsPath()).handler(this.&deleteAll)
 
     router.get(relativeItemsPath() + "/:id").handler(this.&getById)
+    router.put(relativeItemsPath() + "/:id").handler(this.&update)
   }
 
   void getAll(RoutingContext routingContext) {
@@ -67,13 +71,33 @@ class Items {
 
     Map itemRequest = new VertxBodyParser().toMap(routingContext)
 
-    def newItem = new Item(itemRequest.id, itemRequest.title,
-      itemRequest.barcode, itemRequest.instanceId, itemRequest?.status?.name,
-      itemRequest?.materialType?.name, itemRequest?.location?.name)
+    def newItem = requestToItem(itemRequest)
+
 
     storage.getItemCollection(context).add(newItem, {
       RedirectResponse.created(routingContext.response(),
         context.absoluteUrl("${relativeItemsPath()}/${it.id}").toString())
+    })
+  }
+
+  void update(RoutingContext routingContext) {
+    def context = new WebContext(routingContext)
+
+    Map itemRequest = new VertxBodyParser().toMap(routingContext)
+
+    def updatedItem = requestToItem(itemRequest)
+
+    def itemCollection = storage.getItemCollection(context)
+
+    itemCollection.findById(routingContext.request().getParam("id"), {
+      if(it != null) {
+        itemCollection.update(updatedItem,
+          { SuccessResponse.noContent(routingContext.response()) },
+          { ServerErrorResponse.internalError(routingContext.response(), it) })
+      }
+      else {
+        ClientErrorResponse.notFound(routingContext.response())
+      }
     })
   }
 
@@ -96,4 +120,12 @@ class Items {
   private static String relativeItemsPath() {
     "/inventory/items"
   }
+
+  private Item requestToItem(Map<String, Object> itemRequest) {
+    new Item(itemRequest.id, itemRequest.title,
+      itemRequest.barcode, itemRequest.instanceId, itemRequest?.status?.name,
+      itemRequest?.materialType?.name, itemRequest?.location?.name)
+  }
 }
+
+

@@ -135,6 +135,61 @@ class ItemApiExamples extends Specification {
       selfLinkShouldBeReachable(createdItem)
   }
 
+  void "Can update an existing item"() {
+    given:
+      def createdInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
+
+      def newItem = createItem(
+        createdInstance.title, createdInstance.id, "645398607547")
+
+      def updateItemRequest = newItem.copy()
+        .put("status", new JsonObject().put("name", "checked out"))
+
+      def itemLocation = new URL("${ApiRoot.items()}/${newItem.getString("id")}")
+
+    when:
+      def (putResponse, __) = client.put(itemLocation,
+        Json.encodePrettily(updateItemRequest))
+
+    then:
+      assert putResponse.status == 204
+
+      def (getResponse, updatedItem) = client.get(itemLocation)
+
+      assert getResponse.status == 200
+
+      assert updatedItem.id == newItem.getString("id")
+      assert updatedItem.instanceId == createdInstance.id
+      assert updatedItem.barcode == "645398607547"
+      assert updatedItem?.status?.name == "checked out"
+      assert updatedItem?.materialType?.name == "book"
+      assert updatedItem?.location?.name == "main library"
+
+      selfLinkRespectsWayResourceWasReached(updatedItem)
+      selfLinkShouldBeReachable(updatedItem)
+  }
+
+  void "Cannot update an item that does not exist"() {
+    given:
+      def updateItemRequest = new JsonObject()
+        .put("id", UUID.randomUUID().toString())
+        .put("title", "Nod")
+        .put("instanceId", UUID.randomUUID().toString())
+        .put("barcode", "546747342365")
+        .put("status", new JsonObject().put("name", "available"))
+        .put("materialType", new JsonObject().put("name", "book"))
+        .put("location", new JsonObject().put("name", "main library"))
+
+    when:
+      def (putResponse, __) = client.put(
+        new URL("${ApiRoot.items()}/${updateItemRequest.getString("id")}"),
+        Json.encodePrettily(updateItemRequest))
+
+    then:
+      assert putResponse.status == 404
+  }
+
   void "Can delete all items"() {
     given:
       def createdInstance = createInstance(
@@ -303,7 +358,7 @@ class ItemApiExamples extends Specification {
     InstanceApiClient.createInstance(client, newInstanceRequest)
   }
 
-  private def createItem(String title, String instanceId, String barcode) {
+  private JsonObject createItem(String title, String instanceId, String barcode) {
     def newItemRequest = new JsonObject()
       .put("title", title)
       .put("instanceId", instanceId)

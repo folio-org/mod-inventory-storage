@@ -137,6 +137,39 @@ class HttpClient {
     }
   }
 
+  def put(URL url, bodyToSend) {
+    if (url == null)
+      throw new IllegalArgumentException("url is null")
+
+    def http = new HTTPBuilder(url)
+
+    try {
+      http.request(Method.PUT) { req ->
+        headers.put(TENANT_HEADER, tenantId)
+        requestContentType = 'application/json'
+        body = bodyToSend
+
+        response.success = { resp, responseBody ->
+          println "Status Code: ${resp.status}"
+          println "Location: ${resp.headers.location}\n"
+
+          new Tuple2(resp, responseBody)
+        }
+
+        response.failure = handleFailure(url)
+      }
+    }
+    catch (ConnectException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
+    }
+    catch (ResponseParseException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
+    }
+    catch (HttpResponseException ex) {
+      println "Failed to access ${url} internalError: ${ex})\n"
+    }
+  }
+
   private Closure<Tuple2> handleFailure(url) {
     { resp, body ->
       println "Failed to access ${url}"
