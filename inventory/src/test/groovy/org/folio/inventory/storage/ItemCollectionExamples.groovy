@@ -216,7 +216,8 @@ abstract class ItemCollectionExamples {
     collection.add(nod, complete(secondAddFuture))
     collection.add(uprooted, complete(thirdAddFuture))
 
-    def allAddsFuture = CompletableFuture.allOf(secondAddFuture, thirdAddFuture)
+    def allAddsFuture = CompletableFuture.allOf(firstAddFuture,
+      secondAddFuture, thirdAddFuture)
 
     getOnCompletion(allAddsFuture)
 
@@ -231,6 +232,35 @@ abstract class ItemCollectionExamples {
 
     assert findByNameResults.size() == 1
     assert findByNameResults[0].id == addedSmallAngryPlanet.id
+  }
+
+  @Test
+  void itemsCanBeFoundByByBarcode() {
+    def collection = collectionProvider.getItemCollection(firstTenantId)
+
+    def firstAddFuture = new CompletableFuture<Item>()
+    def secondAddFuture = new CompletableFuture<Item>()
+    def thirdAddFuture = new CompletableFuture<Item>()
+
+    collection.add(smallAngryPlanet, complete(firstAddFuture))
+    collection.add(nod, complete(secondAddFuture))
+    collection.add(uprooted, complete(thirdAddFuture))
+
+    def allAddsFuture = CompletableFuture.allOf(secondAddFuture, thirdAddFuture)
+
+    getOnCompletion(allAddsFuture)
+
+    def addedSmallAngryPlanet = getOnCompletion(firstAddFuture)
+
+    def findFuture = new CompletableFuture<List<Item>>()
+
+    collection.findByCql("barcode=036000291452", new PagingParameters(10, 0),
+      complete(findFuture))
+
+    def findByBarcodeResults = getOnCompletion(findFuture)
+
+    assert findByBarcodeResults.size() == 1
+    assert findByBarcodeResults[0].id == addedSmallAngryPlanet.id
   }
 
   @Test

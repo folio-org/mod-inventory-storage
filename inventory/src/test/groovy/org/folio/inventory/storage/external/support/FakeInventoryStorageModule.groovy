@@ -155,11 +155,13 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def offset = context.getIntegerParameter("offset", 0)
     def query = context.getStringParameter("query", null)
 
+    def searchField = query == null ? null : query.split("=").first()
+
     def searchTerm = query == null ? null :
-      query.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")
+      query.replace("${searchField}=", "").replaceAll("\"", "").replaceAll("\\*", "")
 
     def filteredItems = itemsForTenant.values().stream()
-      .filter(filterByTitle(searchTerm))
+      .filter(filterByField(searchField, searchTerm))
       .collect()
 
     def pagedItems = filteredItems.stream()
@@ -222,11 +224,13 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def offset = context.getIntegerParameter("offset", 0)
     def query = context.getStringParameter("query", null)
 
+    def searchField = query == null ? null : query.split("=").first()
+
     def searchTerm = query == null ? null :
-      query.replace("title=", "").replaceAll("\"", "").replaceAll("\\*", "")
+      query.replace("${searchField}=", "").replaceAll("\"", "").replaceAll("\\*", "")
 
     def filteredInstances = instancesForTenant.values().stream()
-      .filter(filterByTitle(searchTerm))
+      .filter(filterByField(searchField, searchTerm))
       .collect()
 
     def pagedInstances = filteredInstances.stream()
@@ -241,12 +245,12 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     JsonResponse.success(routingContext.response(), result)
   }
 
-  private Closure filterByTitle(searchTerm) {
+  private Closure filterByField(field, term) {
     return {
-      if (searchTerm == null) {
+      if (term == null || field == null) {
         true
       } else {
-        it.getString("title").contains(searchTerm)
+        it.getString("${field}").contains(term)
       }
     }
   }
