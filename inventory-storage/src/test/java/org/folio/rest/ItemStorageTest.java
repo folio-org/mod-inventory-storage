@@ -81,6 +81,8 @@ public class ItemStorageTest {
     assertThat(itemFromPost.getString("instanceId"), is(instanceId.toString()));
     assertThat(itemFromPost.getString("title"), is("Nod"));
     assertThat(itemFromPost.getString("barcode"), is("565578437802"));
+    assertThat(itemFromPost.getJsonObject("status").getString("name"),
+      is("available"));
 
     JsonResponse getResponse = getById(id);
 
@@ -92,6 +94,8 @@ public class ItemStorageTest {
     assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(itemFromGet.getString("title"), is("Nod"));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"),
+      is("available"));
   }
 
   @Test
@@ -113,15 +117,9 @@ public class ItemStorageTest {
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    //PUT currently cannot return a response
-//    JsonObject item = putResponse.getBody();
-//    assertThat(item.getString("id"), is(id.toString()));
-//    assertThat(item.getString("instanceId"), is(instanceId.toString()));
-//    assertThat(item.getString("title"), is("Nod"));
-//    assertThat(item.getString("barcode"), is("565578437802"));
-
     JsonResponse getResponse = getById(id);
 
+    //PUT currently cannot return a response
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     JsonObject itemFromGet = getResponse.getBody();
@@ -130,6 +128,8 @@ public class ItemStorageTest {
     assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(itemFromGet.getString("title"), is("Nod"));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"),
+      is("available"));
   }
 
   @Test
@@ -156,23 +156,19 @@ public class ItemStorageTest {
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    //PUT currently cannot return a response
-//    JsonObject item = putResponse.getBody();
-//    assertThat(item.getString("id"), is(id.toString()));
-//    assertThat(item.getString("instanceId"), is(instanceId.toString()));
-//    assertThat(item.getString("title"), is("A Long Way to a Small Angry Planet"));
-//    assertThat(item.getString("barcode"), is("125845734657"));
-
     JsonResponse getResponse = getById(id);
 
+    //PUT currently cannot return a response
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonObject itemFromGet = getResponse.getBody();
+    JsonObject item = getResponse.getBody();
 
-    assertThat(itemFromGet.getString("id"), is(id.toString()));
-    assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
-    assertThat(itemFromGet.getString("title"), is("Long Way to a Small Angry Planet"));
-    assertThat(itemFromGet.getString("barcode"), is("125845734657"));
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getString("instanceId"), is(instanceId.toString()));
+    assertThat(item.getString("title"), is("Long Way to a Small Angry Planet"));
+    assertThat(item.getString("barcode"), is("125845734657"));
+    assertThat(item.getJsonObject("status").getString("name"),
+      is("available"));
   }
 
   @Test
@@ -449,6 +445,7 @@ public class ItemStorageTest {
     itemToCreate.put("instanceId", instanceId.toString());
     itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);
+    itemToCreate.put("status", new JsonObject().put("name", "available"));
 
     return itemToCreate;
   }

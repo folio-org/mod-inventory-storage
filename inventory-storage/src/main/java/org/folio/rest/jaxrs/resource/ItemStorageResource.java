@@ -108,7 +108,10 @@ public interface ItemStorageResource {
      *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
      *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
      *       "title": "Uprooted",
-     *       "barcode": "645398607547"
+     *       "barcode": "645398607547",
+     *       "status": {
+     *         "name": "available"
+     *       }
      *     }
      *     
      */
@@ -209,7 +212,10 @@ public interface ItemStorageResource {
      *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
      *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
      *       "title": "Uprooted",
-     *       "barcode": "645398607547"
+     *       "barcode": "645398607547",
+     *       "status": {
+     *         "name": "available"
+     *       }
      *     }
      *     
      */
@@ -325,7 +331,10 @@ public interface ItemStorageResource {
          *   "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
          *   "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *   "title": "Uprooted",
-         *   "barcode": "645398607547"
+         *   "barcode": "645398607547",
+         *   "status": {
+         *     "name": "available"
+         *   }
          * }
          * 
          * 
@@ -334,7 +343,10 @@ public interface ItemStorageResource {
          *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
          *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *       "title": "Uprooted",
-         *       "barcode": "645398607547"
+         *       "barcode": "645398607547",
+         *       "status": {
+         *         "name": "available"
+         *       }
          *     }
          *     
          */
@@ -388,13 +400,19 @@ public interface ItemStorageResource {
          *       "id": "f2901bcc-6290-417a-843b-a6d97ee9a418",
          *       "instanceId": "f2901bcc-6290-417a-843b-a6d97ee9a418",
          *       "title": "Nod",
-         *       "barcode": "456743454532"
+         *       "barcode": "456743454532",
+         *       "status": {
+         *         "name": "available"
+         *       }
          *     },
          *     {
          *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
          *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *       "title": "Uprooted",
-         *       "barcode": "645398607547"
+         *       "barcode": "645398607547",
+         *       "status": {
+         *         "name": "available"
+         *       }
          *     }
          *   ],
          *   "totalRecords": 2
@@ -408,13 +426,19 @@ public interface ItemStorageResource {
          *           "id": "f2901bcc-6290-417a-843b-a6d97ee9a418",
          *           "instanceId": "f2901bcc-6290-417a-843b-a6d97ee9a418",
          *           "title": "Nod",
-         *           "barcode": "456743454532"
+         *           "barcode": "456743454532",
+         *           "status": {
+         *             "name": "available"
+         *           }
          *         },
          *         {
          *           "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
          *           "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
          *           "title": "Uprooted",
-         *           "barcode": "645398607547"
+         *           "barcode": "645398607547",
+         *           "status": {
+         *             "name": "available"
+         *           }
          *         }
          *       ],
          *       "totalRecords": 2
@@ -467,7 +491,10 @@ public interface ItemStorageResource {
          *   "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
          *   "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *   "title": "Uprooted",
-         *   "barcode": "645398607547"
+         *   "barcode": "645398607547",
+         *   "status": {
+         *     "name": "available"
+         *   }
          * }
          * 
          * 
@@ -478,7 +505,10 @@ public interface ItemStorageResource {
          *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
          *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
          *       "title": "Uprooted",
-         *       "barcode": "645398607547"
+         *       "barcode": "645398607547",
+         *       "status": {
+         *         "name": "available"
+         *       }
          *     }
          *     
          */

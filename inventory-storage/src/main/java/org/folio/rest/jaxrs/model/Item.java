@@ -4,6 +4,7 @@ package org.folio.rest.jaxrs.model;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Generated;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -18,7 +19,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "id",
     "instanceId",
     "title",
-    "barcode"
+    "barcode",
+    "status"
 })
 public class Item {
 
@@ -42,6 +44,12 @@ public class Item {
     @JsonProperty("barcode")
     @NotNull
     private String barcode;
+    /**
+     * 
+     */
+    @JsonProperty("status")
+    @Valid
+    private Status status;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -150,6 +158,31 @@ public class Item {
 
     public Item withBarcode(String barcode) {
         this.barcode = barcode;
+        return this;
+    }
+
+    /**
+     * 
+     * @return
+     *     The status
+     */
+    @JsonProperty("status")
+    public Status getStatus() {
+        return status;
+    }
+
+    /**
+     * 
+     * @param status
+     *     The status
+     */
+    @JsonProperty("status")
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public Item withStatus(Status status) {
+        this.status = status;
         return this;
     }
 
