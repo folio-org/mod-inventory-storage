@@ -51,6 +51,7 @@ class ExternalStorageModuleInstanceCollection
 
     def instanceToSend = [:]
 
+    //TODO: Review if this shouldn't be defaulting here
     instanceToSend.put("id", instance.id ?: UUID.randomUUID().toString())
     instanceToSend.put("title", instance.title)
     instanceToSend.put("identifiers", instance.identifiers)

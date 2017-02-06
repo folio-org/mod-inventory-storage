@@ -117,6 +117,40 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
+  void itemsCanBeUpdated() {
+    def collection = collectionProvider.getItemCollection(firstTenantId)
+
+    def addFinished = new CompletableFuture<Item>()
+
+    collection.add(smallAngryPlanet, complete(addFinished))
+
+    def added = getOnCompletion(addFinished)
+
+    def updateFinished = new CompletableFuture<Item>()
+
+    def changed = added.changeStatus("checked out")
+
+    collection.update(changed, complete(updateFinished),
+      { println("Update item failed: ${it}") })
+
+    waitForCompletion(updateFinished)
+
+    def gotUpdated = new CompletableFuture<Item>()
+
+    collection.findById(added.id, complete(gotUpdated))
+
+    def updated = getOnCompletion(gotUpdated)
+
+    assert updated.id == added.id
+    assert updated.title == added.title
+    assert updated.barcode == added.barcode
+    assert updated.location == added.location
+    assert updated.materialType == added.materialType
+    assert updated.status == "checked out"
+
+  }
+
+  @Test
   void itemsCanBeFoundByIdWithinATenant() {
     def firstTenantCollection = collectionProvider
       .getItemCollection(firstTenantId)

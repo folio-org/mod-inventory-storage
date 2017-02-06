@@ -7,4 +7,9 @@ class SuccessResponse {
     response.setStatusCode(204);
     response.end()
   }
+
+  static ok(HttpServerResponse response) {
+    response.setStatusCode(200);
+    response.end()
+  }
 }

@@ -32,8 +32,14 @@ class Item {
       this.instanceId, this.status, this.materialType, this.location)
   }
 
+  def changeStatus(String newStatus) {
+    new Item(this.id, this.title, this.barcode,
+      this.instanceId, newStatus, this.materialType, this.location)
+  }
+
   @Override
   public String toString() {
     println ("Item ID: ${id}, Title: ${title}, Barcode: ${barcode}")
   }
+
 }

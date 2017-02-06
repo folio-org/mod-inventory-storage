@@ -43,4 +43,9 @@ class InMemoryItemCollection
 
     collection.find(cqlQuery, pagingParameters, resultCallback)
   }
+
+  @Override
+  void update(Item item, Closure completionCallback, Closure failureCallback) {
+    collection.replace(item, completionCallback)
+  }
 }

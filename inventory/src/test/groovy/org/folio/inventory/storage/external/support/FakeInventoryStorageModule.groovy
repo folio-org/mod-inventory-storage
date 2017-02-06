@@ -13,8 +13,7 @@ import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.WebRequestDiagnostics
 import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.JsonResponse
-
-import java.util.regex.Pattern
+import org.folio.metadata.common.api.response.SuccessResponse
 
 class FakeInventoryStorageModule extends GroovyVerticle {
   private static final int PORT_TO_USE = 9492
@@ -54,13 +53,19 @@ class FakeInventoryStorageModule extends GroovyVerticle {
       })
 
     router.route('/item-storage/items/*').handler(BodyHandler.create())
+    router.route(HttpMethod.POST, '/item-storage/items/*').handler(this.&acceptHeaderIsJson)
+    router.route(HttpMethod.GET, '/item-storage/items/*').handler(this.&acceptHeaderIsJson)
+    router.route(HttpMethod.PUT, '/item-storage/items/*').handler(this.&acceptHeaderIsText)
+
     router.route('/instance-storage/instances/*').handler(BodyHandler.create())
+    router.route('/instance-storage/instances/*').handler(this.&acceptHeaderIsJson)
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
     router.route().handler(this.&checkTenantHeader.rcurry(expectedTenants))
-    router.route().handler(this.&checkAcceptHeader)
+
     router.route(HttpMethod.POST, '/instance-storage/*').handler(this.&checkContentTypeHeader)
     router.route(HttpMethod.POST, '/item-storage/*').handler(this.&checkContentTypeHeader)
+    router.route(HttpMethod.PUT, '/item-storage/*').handler(this.&checkContentTypeHeader)
 
     router.route(HttpMethod.GET, '/item-storage/items/:id')
       .handler(this.&getItem);
@@ -73,6 +78,9 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     router.route(HttpMethod.POST, '/item-storage/items')
       .handler(this.&createItem)
+
+    router.route(HttpMethod.PUT, '/item-storage/items/:id')
+      .handler(this.&updateItem)
 
     router.route(HttpMethod.GET, '/instance-storage/instances/:id')
       .handler(this.&getInstance);
@@ -113,6 +121,20 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     JsonResponse.created(routingContext.response(),
       itemsForTenant[id])
+  }
+
+  private def updateItem(RoutingContext routingContext) {
+    def body = getMapFromBody(routingContext)
+
+    def updatedItem = new JsonObject(body)
+
+    def id = routingContext.request().getParam("id")
+
+    def itemsForTenant = getItemsForTenant(getTenantId(routingContext))
+
+    itemsForTenant.replace(id, updatedItem)
+
+    SuccessResponse.noContent(routingContext.response())
   }
 
   private def deleteItems(RoutingContext routingContext) {
@@ -303,20 +325,32 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     mapForTenant
   }
 
-  private static void checkAcceptHeader(RoutingContext routingContext) {
+  private static void acceptHeaderIsJson(RoutingContext routingContext) {
+    checkAcceptHeader(routingContext, "application/json")
+  }
+
+  private static void acceptHeaderIsText(RoutingContext routingContext) {
+    checkAcceptHeader(routingContext, "text/plain")
+  }
+
+  private static void checkAcceptHeader(RoutingContext routingContext,
+                                        String acceptableType) {
 
     def accepts = new WebContext(routingContext).getHeader("Accept")
 
     switch (accepts) {
+      case acceptableType:
+        routingContext.next()
+        break
+
       case null:
       case "":
         ClientErrorResponse.badRequest(routingContext.response(),
           "Missing Accept Header")
         break
-
-      case "application/json":
       default:
-        routingContext.next()
+        ClientErrorResponse.badRequest(routingContext.response(),
+          "Accept Header should be ${acceptableType}")
         break
     }
   }

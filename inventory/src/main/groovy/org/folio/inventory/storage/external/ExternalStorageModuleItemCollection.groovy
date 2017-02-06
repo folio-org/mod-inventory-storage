@@ -47,17 +47,7 @@ class ExternalStorageModuleItemCollection
 
     Handler<Throwable> onException = { println "Exception: ${it}" }
 
-    def itemToSend = [:]
-
-    itemToSend.put("id", item.id ?: UUID.randomUUID().toString())
-    itemToSend.put("title", item.title)
-    itemToSend.put("barcode", item.barcode)
-    itemToSend.put("instanceId", item.instanceId)
-    itemToSend.put("status", new JsonObject().put("name", item.status))
-    itemToSend.put("materialType",
-      new JsonObject().put("name", item.materialType))
-    itemToSend.put("location",
-      new JsonObject().put("name", item.location))
+    def itemToSend = mapToItemRequest(item)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
@@ -210,6 +200,36 @@ class ExternalStorageModuleItemCollection
       .end()
   }
 
+  @Override
+  void update(Item item, Closure completionCallback, Closure failureCallback) {
+    String location = storageAddress + "/item-storage/items/${item.id}"
+
+    def onResponse = { HttpClientResponse response ->
+      response.bodyHandler({ buffer ->
+        def responseBody = "${buffer.getString(0, buffer.length())}"
+
+        if(response.statusCode() == 204) {
+          completionCallback()
+        }
+        else {
+          println("Update item failed, reason: ${responseBody}")
+          failureCallback("${responseBody}")
+        }
+      })
+    }
+
+    Handler<Throwable> onException = { println "Exception: ${it}" }
+
+    def itemToSend = mapToItemRequest(item)
+
+    vertx.createHttpClient().requestAbs(HttpMethod.PUT, location, onResponse)
+      .exceptionHandler(onException)
+      .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Content-Type", "application/json")
+      .putHeader("Accept", "text/plain")
+      .end(Json.encodePrettily(itemToSend))
+  }
+
   private Item mapFromJson(JsonObject itemFromServer) {
     new Item(
       itemFromServer.getString("id"),
@@ -219,5 +239,21 @@ class ExternalStorageModuleItemCollection
       itemFromServer?.getJsonObject("status")?.getString("name"),
       itemFromServer?.getJsonObject("materialType")?.getString("name"),
       itemFromServer?.getJsonObject("location")?.getString("name"))
+  }
+
+  private Map mapToItemRequest(Item item) {
+    def itemToSend = [:]
+
+    //TODO: Review if this shouldn't be defaulting here
+    itemToSend.put("id", item.id ?: UUID.randomUUID().toString())
+    itemToSend.put("title", item.title)
+    itemToSend.put("barcode", item.barcode)
+    itemToSend.put("instanceId", item.instanceId)
+    itemToSend.put("status", new JsonObject().put("name", item.status))
+    itemToSend.put("materialType",
+      new JsonObject().put("name", item.materialType))
+    itemToSend.put("location",
+      new JsonObject().put("name", item.location))
+    itemToSend
   }
 }
