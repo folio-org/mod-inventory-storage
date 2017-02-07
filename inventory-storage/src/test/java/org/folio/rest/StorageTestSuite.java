@@ -15,12 +15,16 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import java.beans.ExceptionListener;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 @RunWith(Suite.class)
 
@@ -106,7 +110,45 @@ public class StorageTestSuite {
     undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  public static ResultSet getRecordsWithUnmatchedIds(String tenantId,
+  static void deleteAll(URL rootUrl) {
+    HttpClient client = new HttpClient(getVertx());
+
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
+
+    try {
+      client.delete(rootUrl, TENANT_ID,
+        ResponseHandler.empty(deleteAllFinished));
+
+      Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
+
+      if(response.getStatusCode() != 204) {
+        System.out.println("WARNING!!!!! Delete all items preparation failed");
+      }
+    }
+    catch(Exception e) {
+      System.out.println("WARNING!!!!! Unable to delete all items: " +
+        e.getMessage());
+    }
+  }
+
+  static void checkForMismatchedIDs(String table) {
+    String tenantId = TENANT_ID;
+
+    try {
+      ResultSet results = getRecordsWithUnmatchedIds(
+        tenantId, table);
+
+      Integer mismatchedRowCount = results.getNumRows();
+
+      assertThat(mismatchedRowCount, is(0));
+    }
+    catch(Exception e) {
+      System.out.println(String.format(
+        "WARNING!!!!! Unable to determine mismatched ID rows"));
+    }
+  }
+
+  private static ResultSet getRecordsWithUnmatchedIds(String tenantId,
                                                      String tableName)
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -119,7 +161,14 @@ public class StorageTestSuite {
         " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
       tenantId, "inventory_storage", tableName);
 
-    dbClient.select(sql, result -> selectCompleted.complete(result.result()));
+    dbClient.select(sql, result -> {
+      if(result.succeeded()) {
+        selectCompleted.complete(result.result());
+      }
+      else {
+        selectCompleted.completeExceptionally(result.cause());
+      }
+    });
 
     return selectCompleted.get(5, TimeUnit.SECONDS);
   }
@@ -147,15 +196,20 @@ public class StorageTestSuite {
 
     CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture();
 
-    HttpClient client = new HttpClient(vertx);
+    try {
+      HttpClient client = new HttpClient(vertx);
 
-    client.post(storageUrl("/_/tenant"), null, tenantId,
-      ResponseHandler.text(tenantPrepared));
+      client.post(storageUrl("/_/tenant"), null, tenantId,
+        ResponseHandler.text(tenantPrepared));
 
-    TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
+      TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
 
-    if(response.getStatusCode() != 200) {
-      throw new UnknownError("Tenant preparation failed: " + response.getBody());
+      if(response.getStatusCode() != 200) {
+        System.out.println("Tenant preparation failed: " + response.getBody());
+      }
+    } catch(Exception e) {
+      System.out.println("WARNING!!!!! Tenant preparation failed: "
+        + e.getMessage());
     }
   }
 
@@ -165,15 +219,20 @@ public class StorageTestSuite {
 
     CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture();
 
-    HttpClient client = new HttpClient(vertx);
+    try {
+      HttpClient client = new HttpClient(vertx);
 
-    client.delete(storageUrl("/_/tenant"), tenantId,
-      ResponseHandler.text(tenantDeleted));
+      client.delete(storageUrl("/_/tenant"), tenantId,
+        ResponseHandler.text(tenantDeleted));
 
-    TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
+      TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
 
-    if(response.getStatusCode() != 200) {
-      throw new UnknownError("Tenant cleanup failed: " + response.getBody());
+      if (response.getStatusCode() != 200) {
+        System.out.println("Tenant cleanup failed: " + response.getBody());
+      }
+    } catch(Exception e) {
+      System.out.println("WARNING!!!!! Tenant cleanup failed: "
+        + e.getMessage());
     }
   }
 }

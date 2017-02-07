@@ -222,17 +222,17 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       return;
     }
 
-    Criteria a = new Criteria();
-
-    a.addField("'id'");
-    a.setOperation("=");
-    a.setValue(instanceId);
-
-    Criterion criterion = new Criterion(a);
-
     try {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      Criteria a = new Criteria();
+
+      a.addField("'id'");
+      a.setOperation("=");
+      a.setValue(instanceId);
+
+      Criterion criterion = new Criterion(a);
 
       vertxContext.runOnContext(v -> {
         try {

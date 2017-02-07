@@ -2,15 +2,12 @@ package org.folio.rest.support;
 
 import io.vertx.core.json.JsonObject;
 
-public class JsonResponse extends Response {
-  private final JsonObject body;
-
-  public JsonResponse(int statusCode, JsonObject body) {
-    super(statusCode);
-    this.body = body;
+public class JsonResponse extends TextResponse {
+  public JsonResponse(int statusCode, String body) {
+    super(statusCode, body);
   }
 
-  public JsonObject getBody() {
-    return body;
+  public JsonObject getJson() {
+    return new JsonObject(getBody());
   }
 }

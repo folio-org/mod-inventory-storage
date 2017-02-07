@@ -2,7 +2,6 @@ package org.folio.rest;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.support.*;
 import org.junit.After;
 import org.junit.Before;
@@ -17,7 +16,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -32,29 +30,14 @@ public class ItemStorageTest {
     TimeoutException,
     MalformedURLException {
 
-    CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
-
-    URL deleteItemsUrl = itemStorageUrl();
-
-    client.delete(deleteItemsUrl, StorageTestSuite.TENANT_ID,
-      ResponseHandler.empty(deleteAllFinished));
-
-    Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
-
-    if(response.getStatusCode() != 204) {
-      throw new UnknownError("Delete all items preparation failed");
-    }
+    StorageTestSuite.deleteAll(itemStorageUrl());
   }
 
   @After
   public void checkIdsAfterEach()
     throws InterruptedException, ExecutionException, TimeoutException {
-    String tenantId = StorageTestSuite.TENANT_ID;
 
-    ResultSet results = StorageTestSuite.getRecordsWithUnmatchedIds(
-      tenantId, "item");
-
-    assertThat(results.getNumRows(), is(0));
+    StorageTestSuite.checkForMismatchedIDs("item");
   }
 
   @Test
@@ -76,7 +59,7 @@ public class ItemStorageTest {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    JsonObject itemFromPost = postResponse.getBody();
+    JsonObject itemFromPost = postResponse.getJson();
 
     assertThat(itemFromPost.getString("id"), is(id.toString()));
     assertThat(itemFromPost.getString("instanceId"), is(instanceId.toString()));
@@ -93,7 +76,7 @@ public class ItemStorageTest {
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonObject itemFromGet = getResponse.getBody();
+    JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
     assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
@@ -161,7 +144,7 @@ public class ItemStorageTest {
     //PUT currently cannot return a response
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonObject item = getResponse.getBody();
+    JsonObject item = getResponse.getJson();
 
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("instanceId"), is(instanceId.toString()));
@@ -207,7 +190,7 @@ public class ItemStorageTest {
     //PUT currently cannot return a response
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonObject item = getResponse.getBody();
+    JsonObject item = getResponse.getJson();
 
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("instanceId"), is(instanceId.toString()));
@@ -279,8 +262,8 @@ public class ItemStorageTest {
     assertThat(firstPageResponse.getStatusCode(), is(200));
     assertThat(secondPageResponse.getStatusCode(), is(200));
 
-    JsonObject firstPage = firstPageResponse.getBody();
-    JsonObject secondPage = secondPageResponse.getBody();
+    JsonObject firstPage = firstPageResponse.getJson();
+    JsonObject secondPage = secondPageResponse.getJson();
 
     JsonArray firstPageItems = firstPage.getJsonArray("items");
     JsonArray secondPageItems = secondPage.getJsonArray("items");
@@ -316,7 +299,7 @@ public class ItemStorageTest {
 
     assertThat(searchResponse.getStatusCode(), is(200));
 
-    JsonObject searchBody = searchResponse.getBody();
+    JsonObject searchBody = searchResponse.getJson();
 
     JsonArray foundItems = searchBody.getJsonArray("items");
 
@@ -351,7 +334,7 @@ public class ItemStorageTest {
 
     assertThat(searchResponse.getStatusCode(), is(200));
 
-    JsonObject searchBody = searchResponse.getBody();
+    JsonObject searchBody = searchResponse.getJson();
 
     JsonArray foundItems = searchBody.getJsonArray("items");
 
@@ -421,7 +404,7 @@ public class ItemStorageTest {
 
     JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
-    JsonObject responseBody = response.getBody();
+    JsonObject responseBody = response.getJson();
 
     JsonArray allItems = responseBody.getJsonArray("items");
 
@@ -496,15 +479,22 @@ public class ItemStorageTest {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
 
-    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.empty(createCompleted));
+    try {
+      client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+        ResponseHandler.text(createCompleted));
 
-    Response response = createCompleted.get(2, TimeUnit.SECONDS);
+      TextResponse response = createCompleted.get(2, TimeUnit.SECONDS);
 
-    if(response.getStatusCode() != 201) {
-      throw new UnknownError("Create item preparation failed");
+      if (response.getStatusCode() != 201) {
+        System.out.println("WARNING!!!!! Create item preparation failed: "
+          + response.getBody());
+      }
+    }
+    catch(Exception e) {
+      System.out.println("WARNING!!!!! Create item preparation failed: "
+        + e.getMessage());
     }
   }
 

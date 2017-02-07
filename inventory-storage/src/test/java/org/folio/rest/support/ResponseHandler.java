@@ -4,6 +4,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonObject;
 
+import java.beans.ExceptionListener;
 import java.util.concurrent.CompletableFuture;
 
 public class ResponseHandler {
@@ -11,9 +12,14 @@ public class ResponseHandler {
     CompletableFuture<Response> completed) {
 
     return response -> {
-      int statusCode = response.statusCode();
+      try {
+        int statusCode = response.statusCode();
 
-      completed.complete(new Response(statusCode));;
+        completed.complete(new Response(statusCode));
+      }
+      catch(Exception e) {
+        completed.completeExceptionally(e);
+      }
     };
   }
 
@@ -21,12 +27,16 @@ public class ResponseHandler {
     CompletableFuture<JsonResponse> completed) {
 
     return response -> {
-      int statusCode = response.statusCode();
-
       response.bodyHandler(buffer -> {
-        JsonObject body = BufferHelper.jsonObjectFromBuffer(buffer);
+        try {
+          int statusCode = response.statusCode();
+          String body = BufferHelper.stringFromBuffer(buffer);
 
-        completed.complete(new JsonResponse(statusCode, body));
+          completed.complete(new JsonResponse(statusCode, body));
+
+        } catch(Exception e) {
+          completed.completeExceptionally(e);
+        }
       });
     };
   }
@@ -35,13 +45,18 @@ public class ResponseHandler {
     CompletableFuture<TextResponse> completed) {
 
     return response -> {
-      int statusCode = response.statusCode();
+        int statusCode = response.statusCode();
 
-      response.bodyHandler(buffer -> {
-        String body = BufferHelper.stringFromBuffer(buffer);
+        response.bodyHandler(buffer -> {
+          try {
+            String body = BufferHelper.stringFromBuffer(buffer);
 
-        completed.complete(new TextResponse(statusCode, body));
-      });
+            completed.complete(new TextResponse(statusCode, body));
+
+          } catch (Exception e) {
+            completed.completeExceptionally(e);
+          }
+        });
     };
   }
 }
