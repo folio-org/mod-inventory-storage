@@ -7,7 +7,7 @@
     "name": "book"
   },
   "status": {
-    "name": "available"
+    "name": "checked out"
   },
   "location": {
     "name": "annex library"

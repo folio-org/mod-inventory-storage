@@ -1,0 +1,15 @@
+{
+  "id": "",
+  "instanceId": "",
+  "title": "",
+  "barcode": "",
+  "materialType": {
+    "name": ""
+  },
+  "status": {
+    "name": "available"
+  },
+  "location": {
+    "name": "main library"
+  }
+}
