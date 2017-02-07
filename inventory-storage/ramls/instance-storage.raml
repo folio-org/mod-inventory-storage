@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Instance Storage
-version: v0.1
+version: v1.0.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -41,6 +41,11 @@ resourceTypes:
       responses:
         204:
           description: "All instances deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
     /{instanceId}:
       type:
         collection-item:

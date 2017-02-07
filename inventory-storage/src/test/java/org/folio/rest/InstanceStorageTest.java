@@ -6,7 +6,6 @@ import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.support.*;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
@@ -21,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class InstanceStorageTest {
@@ -87,6 +87,37 @@ public class InstanceStorageTest {
     JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
     assertThat(identifiers, hasItem(identifierMatches("isbn", "9781473619777")));
+  }
+
+  @Test
+  public void cannotCreateAnInstanceWithIDThatIsNotUUID()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    String id = "6556456";
+
+    URL postInstanceUrl = instanceStorageUrl();
+
+    JsonArray identifiers = new JsonArray();
+
+    identifiers.add(identifier("isbn", "9781473619777"));
+
+    JsonObject instanceToCreate = new JsonObject();
+
+    instanceToCreate.put("id", id);
+    instanceToCreate.put("title", "Long Way to a Small Angry Planet");
+    instanceToCreate.put("identifiers", identifiers);
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+
+    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    assertThat(response.getBody(), is("ID must both be a UUID"));
   }
 
   @Test

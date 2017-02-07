@@ -38,6 +38,9 @@ public interface ItemStorageResource {
      */
     @DELETE
     @Path("items")
+    @Produces({
+        "text/plain"
+    })
     @Validate
     void deleteItemStorageItems(
         @QueryParam("lang")
@@ -324,6 +327,18 @@ public interface ItemStorageResource {
          */
         public static ItemStorageResource.DeleteItemStorageItemsResponse withNoContent() {
             Response.ResponseBuilder responseBuilder = Response.status(204);
+            return new ItemStorageResource.DeleteItemStorageItemsResponse(responseBuilder.build());
+        }
+
+        /**
+         * Internal server error, e.g. due to misconfiguration e.g. Internal server error, contact administrator
+         * 
+         * @param entity
+         *     Internal server error, contact administrator
+         */
+        public static ItemStorageResource.DeleteItemStorageItemsResponse withPlainInternalServerError(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
             return new ItemStorageResource.DeleteItemStorageItemsResponse(responseBuilder.build());
         }
 

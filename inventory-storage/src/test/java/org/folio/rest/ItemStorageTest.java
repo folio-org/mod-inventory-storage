@@ -133,8 +133,8 @@ public class ItemStorageTest {
     TextResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    assertThat(postResponse.getBody(), containsString("uuid"));
+    
+    assertThat(postResponse.getBody(), is("ID and instance ID must both be a UUID"));
   }
 
   @Test

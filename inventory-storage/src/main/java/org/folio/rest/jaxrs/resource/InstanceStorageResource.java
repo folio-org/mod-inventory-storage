@@ -38,6 +38,9 @@ public interface InstanceStorageResource {
      */
     @DELETE
     @Path("instances")
+    @Produces({
+        "text/plain"
+    })
     @Validate
     void deleteInstanceStorageInstances(
         @QueryParam("lang")
@@ -325,6 +328,18 @@ public interface InstanceStorageResource {
          */
         public static InstanceStorageResource.DeleteInstanceStorageInstancesResponse withNoContent() {
             Response.ResponseBuilder responseBuilder = Response.status(204);
+            return new InstanceStorageResource.DeleteInstanceStorageInstancesResponse(responseBuilder.build());
+        }
+
+        /**
+         * Internal server error, e.g. due to misconfiguration e.g. Internal server error, contact administrator
+         * 
+         * @param entity
+         *     Internal server error, contact administrator
+         */
+        public static InstanceStorageResource.DeleteInstanceStorageInstancesResponse withPlainInternalServerError(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(500).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
             return new InstanceStorageResource.DeleteInstanceStorageInstancesResponse(responseBuilder.build());
         }
 

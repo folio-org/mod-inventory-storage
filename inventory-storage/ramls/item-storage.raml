@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Item Storage
-version: v1.3
+version: v1.3.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -41,6 +41,11 @@ resourceTypes:
       responses:
         204:
           description: "All items deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
     /{itemId}:
       type:
         collection-item:

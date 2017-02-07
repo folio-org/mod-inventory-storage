@@ -68,7 +68,6 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-
                   List<Instance> instances = (List<Instance>) reply.result()[0];
 
                   Instances instanceList = new Instances();
@@ -88,21 +87,21 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                 e.printStackTrace();
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   InstanceStorageResource.GetInstanceStorageInstancesResponse.
-                    withPlainInternalServerError("Error")));
+                    withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.GetInstanceStorageInstancesResponse.
-              withPlainInternalServerError("Error")));
+              withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.GetInstanceStorageInstancesResponse.
-          withPlainInternalServerError("Error")));
+          withPlainInternalServerError(e.getMessage())));
     }
   }
 
@@ -133,37 +132,42 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           postgresClient.save("instance", entity.getId(), entity,
             reply -> {
               try {
-                OutStream stream = new OutStream();
-                stream.setData(entity);
+                if(reply.succeeded()) {
+                  OutStream stream = new OutStream();
+                  stream.setData(entity);
 
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.PostInstanceStorageInstancesResponse
-                      .withJsonCreated(reply.result(), stream)));
-
+                  asyncResultHandler.handle(
+                    io.vertx.core.Future.succeededFuture(
+                      InstanceStorageResource.PostInstanceStorageInstancesResponse
+                        .withJsonCreated(reply.result(), stream)));
+                }
+                else {
+                  asyncResultHandler.handle(
+                    io.vertx.core.Future.succeededFuture(
+                      InstanceStorageResource.PostInstanceStorageInstancesResponse
+                        .withPlainBadRequest("ID must both be a UUID")));
+                }
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     InstanceStorageResource.PostInstanceStorageInstancesResponse
-                      .withPlainInternalServerError("Error")));
+                      .withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.PostInstanceStorageInstancesResponse
-              .withPlainInternalServerError("Error")));
+              .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.PostInstanceStorageInstancesResponse
-          .withPlainInternalServerError("Error")));
+          .withPlainInternalServerError(e.getMessage())));
     }
-
-
   }
 
   @Override
@@ -182,15 +186,23 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     }
 
     vertxContext.runOnContext(v -> {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+      try {
+        PostgresClient postgresClient = PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.instance",
-        tenantId, "inventory_storage"),
-        reply -> {
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.DeleteInstanceStorageInstancesResponse.noContent().build()));
-        });
+        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.instance",
+          tenantId, "inventory_storage"),
+          reply -> {
+            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+              InstanceStorageResource.DeleteInstanceStorageInstancesResponse
+                .noContent().build()));
+          });
+      }
+      catch(Exception e) {
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          InstanceStorageResource.DeleteInstanceStorageInstancesResponse
+            .withPlainInternalServerError(e.getMessage())));
+      }
     });
   }
 
@@ -227,39 +239,48 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           postgresClient.get("instance", Instance.class, criterion, true, false,
             reply -> {
               try {
-                List<Instance> instanceList = (List<Instance>) reply.result()[0];
-                if (instanceList.size() == 1) {
-                  Instance instance = instanceList.get(0);
+                if (reply.succeeded()) {
+                  List<Instance> instanceList = (List<Instance>) reply.result()[0];
+                  if (instanceList.size() == 1) {
+                    Instance instance = instanceList.get(0);
 
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-                        withJsonOK(instance)));
-                } else {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(
+                        InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
+                          withJsonOK(instance)));
+                  }
+                  else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(
                       InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
                         withPlainNotFound("Not Found")));
+                  }
+                } else {
+                  asyncResultHandler.handle(
+                    Future.succeededFuture(
+                      InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
+                        withPlainInternalServerError(reply.cause().getMessage())));
+
                 }
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-                    withPlainInternalServerError("Error")));
+                    withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-              withPlainInternalServerError("Error")));
+              withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-          withPlainInternalServerError("Error")));
+          withPlainInternalServerError(e.getMessage())));
     }
   }
 
@@ -305,19 +326,19 @@ public class InstanceStorageAPI implements InstanceStorageResource {
               else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   DeleteInstanceStorageInstancesByInstanceIdResponse
-                    .withPlainInternalServerError("Error")));
+                    .withPlainInternalServerError(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             DeleteInstanceStorageInstancesByInstanceIdResponse
-              .withPlainInternalServerError("Error")));
+              .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         DeleteInstanceStorageInstancesByInstanceIdResponse
-          .withPlainInternalServerError("Error")));
+          .withPlainInternalServerError(e.getMessage())));
     }
   }
 
@@ -355,77 +376,102 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         try {
           postgresClient.get("instance", Instance.class, criterion, true, false,
             reply -> {
-              List<Instance> itemList = (List<Instance>) reply.result()[0];
-              if (itemList.size() == 1) {
-                try {
-                  postgresClient.update("instance", entity, criterion,
-                    true,
-                    update -> {
-                      try {
-                        OutStream stream = new OutStream();
-                        stream.setData(entity);
+              if(reply.succeeded()) {
+                List<Instance> itemList = (List<Instance>) reply.result()[0];
 
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PutInstanceStorageInstancesByInstanceIdResponse
-                              .withNoContent()));
-                      } catch (Exception e) {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PutInstanceStorageInstancesByInstanceIdResponse
-                              .withPlainInternalServerError("Error")));
-                      }
-                    });
-                } catch (Exception e) {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    PutInstanceStorageInstancesByInstanceIdResponse
-                      .withPlainInternalServerError("Error")));
-                }
+                if (itemList.size() == 1) {
+                  try {
+                    postgresClient.update("instance", entity, criterion,
+                      true,
+                      update -> {
+                        try {
+                          if(update.succeeded()) {
+                            OutStream stream = new OutStream();
+                            stream.setData(entity);
+
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutInstanceStorageInstancesByInstanceIdResponse
+                                  .withNoContent()));
+                          }
+                          else {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutInstanceStorageInstancesByInstanceIdResponse
+                                  .withPlainInternalServerError(
+                                    update.cause().getMessage())));
+                          }
+                        } catch (Exception e) {
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PutInstanceStorageInstancesByInstanceIdResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                        }
+                      });
+                  } catch (Exception e) {
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      PutInstanceStorageInstancesByInstanceIdResponse
+                        .withPlainInternalServerError(e.getMessage())));
+                  }
               }
               else {
                 try {
                   postgresClient.save("instance", entity.getId(), entity,
                     save -> {
                       try {
-                        OutStream stream = new OutStream();
-                        stream.setData(entity);
+                        if(save.succeeded()) {
+                          OutStream stream = new OutStream();
+                          stream.setData(entity);
 
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PutInstanceStorageInstancesByInstanceIdResponse
-                              .withNoContent()));
-
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PutInstanceStorageInstancesByInstanceIdResponse
+                                .withNoContent()));
+                        }
+                        else {
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PutInstanceStorageInstancesByInstanceIdResponse
+                                .withPlainInternalServerError(
+                                  save.cause().getMessage())));
+                        }
                       } catch (Exception e) {
                         asyncResultHandler.handle(
                           Future.succeededFuture(
                             PutInstanceStorageInstancesByInstanceIdResponse
-                              .withPlainInternalServerError("Error")));
+                              .withPlainInternalServerError(e.getMessage())));
                       }
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     PutInstanceStorageInstancesByInstanceIdResponse
-                      .withPlainInternalServerError("Error")));
+                      .withPlainInternalServerError(e.getMessage())));
                 }
               }
-            });
+            } else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  PutInstanceStorageInstancesByInstanceIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
+            }
+          });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             PutInstanceStorageInstancesByInstanceIdResponse
-              .withPlainInternalServerError("Error")));
+              .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PutInstanceStorageInstancesByInstanceIdResponse
-          .withPlainInternalServerError("Error")));
+          .withPlainInternalServerError(e.getMessage())));
     }
   }
 
   private void badRequestResult(
     Handler<AsyncResult<Response>> asyncResultHandler, String message) {
     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      InstanceStorageResource.GetInstanceStorageInstancesResponse.withPlainBadRequest(message)));
+      InstanceStorageResource.GetInstanceStorageInstancesResponse
+        .withPlainBadRequest(message)));
   }
 
   private boolean blankTenantId(String tenantId) {

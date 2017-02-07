@@ -167,28 +167,40 @@ public class ItemStorageAPI implements ItemStorageResource {
                         .withJsonCreated(reply.result(), stream)));
                 }
                 else {
-                  asyncResultHandler.handle(
-                    Future.succeededFuture(
-                      ItemStorageResource.PostItemStorageItemsResponse
-                        .withPlainBadRequest(reply.cause().getMessage())));
+                  String message = reply.cause().getMessage();
+
+                  if(message.contains("invalid input syntax for uuid")) {
+                    asyncResultHandler.handle(
+                      Future.succeededFuture(
+                        ItemStorageResource.PostItemStorageItemsResponse
+                          .withPlainBadRequest(
+                            "ID and instance ID must both be a UUID")));
+                  }
+                  else {
+                    asyncResultHandler.handle(
+                      Future.succeededFuture(
+                        ItemStorageResource.PostItemStorageItemsResponse
+                          .withPlainInternalServerError(
+                            reply.cause().getMessage())));
+                  }
                 }
               } catch (Exception e) {
                 asyncResultHandler.handle(
                   Future.succeededFuture(
                     ItemStorageResource.PostItemStorageItemsResponse
-                      .withPlainInternalServerError("Error")));
+                      .withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.PostItemStorageItemsResponse
-              .withPlainInternalServerError("Error")));
+              .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.PostItemStorageItemsResponse
-          .withPlainInternalServerError("Error")));
+          .withPlainInternalServerError(e.getMessage())));
     }
   }
 
@@ -226,37 +238,44 @@ public class ItemStorageAPI implements ItemStorageResource {
           postgresClient.get("item", Item.class, criterion, true, false,
             reply -> {
               try {
-                List<Item> itemList = (List<Item>) reply.result()[0];
-                if (itemList.size() == 1) {
-                  Item item = itemList.get(0);
+                if(reply.succeeded()) {
+                  List<Item> itemList = (List<Item>) reply.result()[0];
+                  if (itemList.size() == 1) {
+                    Item item = itemList.get(0);
 
-                  asyncResultHandler.handle(
-                    Future.succeededFuture(
-                      ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-                        withJsonOK(item)));
-                } else {
-                  asyncResultHandler.handle(
-                    Future.succeededFuture(
-                      ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-                        withPlainNotFound("Not Found")));
+                    asyncResultHandler.handle(
+                      Future.succeededFuture(
+                        ItemStorageResource.GetItemStorageItemsByItemIdResponse.
+                          withJsonOK(item)));
+                  } else {
+                    asyncResultHandler.handle(
+                      Future.succeededFuture(
+                        ItemStorageResource.GetItemStorageItemsByItemIdResponse.
+                          withPlainNotFound("Not Found")));
+                  }
                 }
-
+                else {
+                  Future.succeededFuture(
+                    ItemStorageResource.GetItemStorageItemsByItemIdResponse
+                      .withPlainInternalServerError(
+                        reply.cause().getMessage()));
+                }
               } catch (Exception e) {
                 asyncResultHandler.handle(Future.succeededFuture(
                   ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-                    withPlainInternalServerError("Error")));
+                    withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-              withPlainInternalServerError("Error")));
+              withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-          withPlainInternalServerError("Error")));
+          withPlainInternalServerError(e.getMessage())));
     }
   }
 
@@ -275,17 +294,31 @@ public class ItemStorageAPI implements ItemStorageResource {
       return;
     }
 
-    vertxContext.runOnContext(v -> {
+    try {
+      vertxContext.runOnContext(v -> {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.item",
-        tenantId, "inventory_storage"),
+        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.item",
+          tenantId, "inventory_storage"),
           reply -> {
-            asyncResultHandler.handle(Future.succeededFuture(
-              ItemStorageResource.DeleteItemStorageItemsResponse.noContent().build()));
+            if (reply.succeeded()) {
+              asyncResultHandler.handle(Future.succeededFuture(
+                ItemStorageResource.DeleteItemStorageItemsResponse.noContent()
+                  .build()));
+            } else {
+              asyncResultHandler.handle(Future.succeededFuture(
+                ItemStorageResource.DeleteItemStorageItemsResponse.
+                  withPlainInternalServerError(reply.cause().getMessage())));
+            }
           });
       });
+    }
+    catch(Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        ItemStorageResource.DeleteItemStorageItemsResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
   }
 
   @Override
@@ -323,69 +356,90 @@ public class ItemStorageAPI implements ItemStorageResource {
         try {
           postgresClient.get("item", Item.class, criterion, true, false,
             reply -> {
-              List<Item> itemList = (List<Item>) reply.result()[0];
-              if (itemList.size() == 1) {
-                try {
-                  postgresClient.update("item", entity, criterion, true,
-                    update -> {
-                      try {
-                        OutStream stream = new OutStream();
-                        stream.setData(entity);
+              if(reply.succeeded()) {
+                List<Item> itemList = (List<Item>) reply.result()[0];
+                if (itemList.size() == 1) {
+                  try {
+                    postgresClient.update("item", entity, criterion, true,
+                      update -> {
+                        try {
+                          if (update.succeeded()) {
+                            OutStream stream = new OutStream();
+                            stream.setData(entity);
 
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PutItemStorageItemsByItemIdResponse
-                              .withNoContent()));
-                      } catch (Exception e) {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PostItemStorageItemsResponse
-                              .withPlainInternalServerError("Error")));
-                      }
-                    });
-                } catch (Exception e) {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    PutItemStorageItemsByItemIdResponse
-                      .withPlainInternalServerError("Error")));
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutItemStorageItemsByItemIdResponse
+                                  .withNoContent()));
+                          } else {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutItemStorageItemsByItemIdResponse
+                                  .withPlainInternalServerError(
+                                    update.cause().getMessage())));
+                          }
+                        } catch (Exception e) {
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PostItemStorageItemsResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                        }
+                      });
+                  } catch (Exception e) {
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      PutItemStorageItemsByItemIdResponse
+                        .withPlainInternalServerError(e.getMessage())));
+                  }
+                } else {
+                  try {
+                    postgresClient.save("item", entity.getId(), entity,
+                      save -> {
+                        try {
+                          if (save.succeeded()) {
+                            OutStream stream = new OutStream();
+                            stream.setData(entity);
+
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutItemStorageItemsByItemIdResponse
+                                  .withNoContent()));
+                          } else {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutItemStorageItemsByItemIdResponse
+                                  .withPlainInternalServerError(
+                                    save.cause().getMessage())));
+                          }
+
+                        } catch (Exception e) {
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              PostItemStorageItemsResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                        }
+                      });
+                  } catch (Exception e) {
+                    asyncResultHandler.handle(Future.succeededFuture(
+                      PutItemStorageItemsByItemIdResponse
+                        .withPlainInternalServerError(e.getMessage())));
+                  }
                 }
-              }
-              else {
-                try {
-                  postgresClient.save("item", entity.getId(), entity,
-                    save -> {
-                      try {
-                        OutStream stream = new OutStream();
-                        stream.setData(entity);
-
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PutItemStorageItemsByItemIdResponse
-                              .withNoContent()));
-
-                      } catch (Exception e) {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PostItemStorageItemsResponse
-                              .withPlainInternalServerError("Error")));
-                      }
-                    });
-                } catch (Exception e) {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    PutItemStorageItemsByItemIdResponse
-                      .withPlainInternalServerError("Error")));
-                }
+              } else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  PutItemStorageItemsByItemIdResponse
+                    .withPlainInternalServerError(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.PostItemStorageItemsResponse
-              .withPlainInternalServerError("Error")));
+              .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         ItemStorageResource.PostItemStorageItemsResponse
-          .withPlainInternalServerError("Error")));
+          .withPlainInternalServerError(e.getMessage())));
     }
   }
 
