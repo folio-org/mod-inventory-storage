@@ -4,7 +4,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.support.*;
-import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -105,6 +105,36 @@ public class ItemStorageTest {
       is("book"));
     assertThat(itemFromGet.getJsonObject("location").getString("name"),
       is("main library"));
+  }
+
+  @Test
+  public void cannotCreateAnItemWithIDThatIsNotUUID()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    String id = "1234";
+    UUID instanceId = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("instanceId", instanceId.toString());
+    itemToCreate.put("title", "Nod");
+    itemToCreate.put("barcode", "565578437802");
+    itemToCreate.put("status", new JsonObject().put("name", "available"));
+    itemToCreate.put("materialType", new JsonObject().put("name", "book"));
+    itemToCreate.put("location", new JsonObject().put("name", "main library"));
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    TextResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    assertThat(postResponse.getBody(), containsString("uuid"));
   }
 
   @Test

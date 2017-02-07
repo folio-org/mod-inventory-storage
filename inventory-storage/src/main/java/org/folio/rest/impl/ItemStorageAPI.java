@@ -157,14 +157,21 @@ public class ItemStorageAPI implements ItemStorageResource {
           postgresClient.save("item", entity.getId(), entity,
             reply -> {
               try {
-                OutStream stream = new OutStream();
-                stream.setData(entity);
+                if(reply.succeeded()) {
+                  OutStream stream = new OutStream();
+                  stream.setData(entity);
 
-                asyncResultHandler.handle(
-                  Future.succeededFuture(
-                    ItemStorageResource.PostItemStorageItemsResponse
-                      .withJsonCreated(reply.result(), stream)));
-
+                  asyncResultHandler.handle(
+                    Future.succeededFuture(
+                      ItemStorageResource.PostItemStorageItemsResponse
+                        .withJsonCreated(reply.result(), stream)));
+                }
+                else {
+                  asyncResultHandler.handle(
+                    Future.succeededFuture(
+                      ItemStorageResource.PostItemStorageItemsResponse
+                        .withPlainBadRequest(reply.cause().getMessage())));
+                }
               } catch (Exception e) {
                 asyncResultHandler.handle(
                   Future.succeededFuture(
