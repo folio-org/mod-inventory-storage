@@ -56,7 +56,7 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
-  void itemsCanBeAdded() {
+  void anItemCanBeAdded() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 
     addSomeExamples(collection)
@@ -100,7 +100,7 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
-  void itemsCanBeAddedWithAnId() {
+  void anItemCanBeAddedWithAnId() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 
     def addFinished = new CompletableFuture<Item>()
@@ -117,7 +117,7 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
-  void itemsCanBeUpdated() {
+  void anItemCanBeUpdated() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 
     def addFinished = new CompletableFuture<Item>()
@@ -147,11 +147,10 @@ abstract class ItemCollectionExamples {
     assert updated.location == added.location
     assert updated.materialType == added.materialType
     assert updated.status == "checked out"
-
   }
 
   @Test
-  void itemsCanBeFoundByIdWithinATenant() {
+  void anItemCanBeFoundByIdWithinATenant() {
     def firstTenantCollection = collectionProvider
       .getItemCollection(firstTenantId)
 
@@ -268,7 +267,7 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
-  void itemsCanBeFoundByByBarcode() {
+  void itemsCanBeFoundByBarcode() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 
     def firstAddFuture = new CompletableFuture<Item>()
@@ -297,7 +296,7 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
-  void itemsCanBeFoundById() {
+  void anItemCanBeFoundById() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 
     def firstAddFuture = new CompletableFuture<Item>()

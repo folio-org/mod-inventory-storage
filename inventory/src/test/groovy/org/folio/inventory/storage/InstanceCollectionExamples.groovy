@@ -54,7 +54,7 @@ abstract class InstanceCollectionExamples {
   }
 
   @Test
-  void instancesCanBeAdded() {
+  void anInstanceCanBeAdded() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
 
     addSomeExamples(collection)
@@ -100,7 +100,7 @@ abstract class InstanceCollectionExamples {
   }
 
   @Test
-  void itemsCanBeAddedWithAnId() {
+  void anInstanceCanBeAddedWithAnId() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
 
     def addFinished = new CompletableFuture<Item>()
@@ -117,7 +117,7 @@ abstract class InstanceCollectionExamples {
   }
 
   @Test
-  void instancesCanBeFoundById() {
+  void anInstanceCanBeFoundById() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
 
     def firstAddFuture = new CompletableFuture<Instance>()
@@ -239,7 +239,7 @@ abstract class InstanceCollectionExamples {
   }
 
   @Test
-  void instancesCanBeFoundByIdWithinATenant() {
+  void anInstanceCanBeFoundByIdWithinATenant() {
     def firstTenantCollection = collectionProvider
       .getInstanceCollection(firstTenantId)
 
