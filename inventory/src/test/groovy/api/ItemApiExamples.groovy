@@ -347,11 +347,40 @@ class ItemApiExamples extends Specification {
         .put("materialType", new JsonObject().put("name", "book"))
         .put("location", new JsonObject().put("name", "main library"))
 
-      def (createItemResponse, _) = client.post(ApiRoot.items(),
+      def (createItemResponse, createItemBody) = client.post(ApiRoot.items(),
         Json.encodePrettily(newItemRequest))
 
     then:
       assert createItemResponse.status == 400
+      assert createItemBody == "Barcodes must be unique, 645398607547 is already assigned to another item"
+  }
+
+  void "Cannot update an item to have the same barcode as an existing item"() {
+    given:
+      def smallAngryInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
+
+      createItem(smallAngryInstance.title, smallAngryInstance.id,
+        "645398607547")
+
+      def nodInstance = createInstance(nod(UUID.randomUUID()))
+
+      def nodItem = createItem(nodInstance.title, nodInstance.id,
+        "654647774352")
+
+    when:
+      def changedNodItem = nodItem.copy()
+        .put("barcode", "645398607547")
+
+      def nodItemLocation = new URL(
+        "${ApiRoot.items()}/${changedNodItem.getString("id")}")
+
+    def (putItemResponse, putItemBody) = client.put(nodItemLocation,
+      Json.encodePrettily(changedNodItem));
+
+    then:
+      assert putItemResponse.status == 400
+      assert putItemBody == "Barcodes must be unique, 645398607547 is already assigned to another item"
   }
 
   private void selfLinkRespectsWayResourceWasReached(item) {

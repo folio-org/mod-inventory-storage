@@ -81,7 +81,7 @@ class Items {
       }
       else {
         ClientErrorResponse.badRequest(routingContext.response(),
-          "Barcode ${newItem.barcode} is already assigned to another item")
+          "Barcodes must be unique, ${newItem.barcode} is already assigned to another item")
       }
     })
   }
@@ -97,9 +97,26 @@ class Items {
 
     itemCollection.findById(routingContext.request().getParam("id"), {
       if(it != null) {
-        itemCollection.update(updatedItem,
-          { SuccessResponse.noContent(routingContext.response()) },
-          { ServerErrorResponse.internalError(routingContext.response(), it) })
+
+        if(it.barcode == updatedItem.barcode) {
+          itemCollection.update(updatedItem,
+            { SuccessResponse.noContent(routingContext.response()) },
+            { ServerErrorResponse.internalError(routingContext.response(), it) })
+        } else {
+          itemCollection.findByCql("barcode=${updatedItem.barcode}",
+            PagingParameters.defaults(), {
+
+            if(it.size() == 1 && it.first().id == updatedItem.id) {
+              itemCollection.update(updatedItem, {
+                SuccessResponse.noContent(routingContext.response())
+              })
+            }
+            else {
+              ClientErrorResponse.badRequest(routingContext.response(),
+                "Barcodes must be unique, ${updatedItem.barcode} is already assigned to another item")
+            }
+          })
+        }
       }
       else {
         ClientErrorResponse.notFound(routingContext.response())
