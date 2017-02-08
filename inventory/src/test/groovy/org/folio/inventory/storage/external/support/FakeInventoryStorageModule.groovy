@@ -343,7 +343,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     def accepts = new WebContext(routingContext).getHeader("Accept")
 
     switch (accepts) {
-      case acceptableType:
+      case {it.contains(acceptableType)}:
         routingContext.next()
         break
 

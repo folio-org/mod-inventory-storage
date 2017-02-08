@@ -160,6 +160,9 @@ class ExternalStorageModuleInstanceCollection
     String location = storageModuleAddress + "/instance-storage/instances"
 
     def onResponse = { response ->
+
+      println("DELETE ${location}: status code: ${response.statusCode()}")
+
       response.bodyHandler({ buffer ->
         completionCallback()
       })
@@ -170,7 +173,7 @@ class ExternalStorageModuleInstanceCollection
     vertx.createHttpClient().requestAbs(HttpMethod.DELETE, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant", tenant)
-      .putHeader("Accept", "application/json")
+      .putHeader("Accept", "application/json, text/plain")
       .end()
   }
 
