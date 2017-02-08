@@ -109,7 +109,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
   @Override
   public void stop(Future stopped) {
-    println "Stopping fake knowledge base"
+    println "Stopping fake storage module"
     server.close({ result ->
       if (result.succeeded()) {
         println "Stopped listening on ${server.actualPort()}"

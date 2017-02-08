@@ -10,6 +10,7 @@ import org.folio.inventory.resources.ingest.IngestJobState
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.CollectAll
 import org.folio.metadata.common.MessagingContext
+import org.folio.metadata.common.domain.Failure
 
 class IngestMessageProcessor {
   private final Storage storage
@@ -66,6 +67,8 @@ class IngestMessageProcessor {
 
     storage.getIngestJobCollection(context).update(
       new IngestJob(context.getHeader("jobId"), IngestJobState.COMPLETED),
-      { })
+      { },
+      { Failure failure ->
+        println("Updating ingest job failed: ${failure.reason}") })
   }
 }

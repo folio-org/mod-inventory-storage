@@ -23,7 +23,7 @@ class JsonResponse {
     response.putHeader "content-type", "application/json; charset=utf-8"
     response.putHeader "content-length", Integer.toString(buffer.length())
 
-    println("JSON Response: ${json}")
+    println("JSON Success: ${json}")
 
     response.write(buffer)
     response.end()

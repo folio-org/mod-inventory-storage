@@ -34,7 +34,7 @@ jar {
 test {
   //Gradle runs tests designed to be run in a suite twice
   //See: https://discuss.gradle.org/t/how-to-prevent-junit-test-suite-classes-from-being-ran-twice/7107/4
-  exclude '**/External**CollectionExamples.class'
+  exclude '**/External**Collection**Examples.class'
   exclude '**/api/**Examples.class'
 }
 
@@ -54,7 +54,7 @@ task testApiViaOkapi(type: Test) {
 
 task testExternalStorage(type: Test) {
   exclude '**/External**CollectionExamples.class'
-  include '**/storage/external/**'
+  include '**/storage/external/ExternalStorageSuite.class'
   include '**/api/ApiTestSuite.class'
 
   systemProperty 'inventory.storage.use', 'external'

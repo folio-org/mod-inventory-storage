@@ -10,6 +10,10 @@ import io.vertx.groovy.core.http.HttpClientResponse
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.InstanceCollection
 import org.folio.metadata.common.api.request.PagingParameters
+import org.folio.metadata.common.domain.Failure
+import org.folio.metadata.common.domain.Success
+
+import java.util.function.Consumer
 
 class ExternalStorageModuleInstanceCollection
   implements InstanceCollection {
@@ -78,36 +82,6 @@ class ExternalStorageModuleInstanceCollection
       else {
         resultCallback(null)
       }
-    }
-
-    Handler<Throwable> onException = { println "Exception: ${it}" }
-
-    vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
-      .exceptionHandler(onException)
-      .putHeader("X-Okapi-Tenant", tenant)
-      .putHeader("Accept", "application/json")
-      .end()
-  }
-
-
-  @Override
-  void findAll(Closure resultCallback) {
-    String location = storageModuleAddress + "/instance-storage/instances"
-
-    def onResponse = { response ->
-      response.bodyHandler({ buffer ->
-        def responseBody = "${buffer.getString(0, buffer.length())}"
-
-        def instances = new JsonObject(responseBody).getJsonArray("instances")
-
-        def foundInstances = new ArrayList<Instance>()
-
-        instances.each {
-          foundInstances.add(mapFromJson(it))
-        }
-
-        resultCallback(foundInstances)
-      })
     }
 
     Handler<Throwable> onException = { println "Exception: ${it}" }
@@ -229,7 +203,10 @@ class ExternalStorageModuleInstanceCollection
   }
 
   @Override
-  void update(Instance instance, Closure completionCallback, Closure failureCallback) {
+  void update(Instance instance,
+              Consumer<Success> completionCallback,
+              Consumer<Failure> failureCallback) {
+
     String location = "${storageModuleAddress}/instance-storage/instances/${instance.id}"
 
     def onResponse = { HttpClientResponse response ->
@@ -237,11 +214,10 @@ class ExternalStorageModuleInstanceCollection
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
         if(response.statusCode() == 204) {
-          completionCallback()
+          completionCallback.accept(new Success())
         }
         else {
-          println("Update instance failed, reason: ${responseBody}")
-          failureCallback("${responseBody}")
+          failureCallback.accept(new Failure("${responseBody}"))
         }
       })
     }
@@ -256,6 +232,7 @@ class ExternalStorageModuleInstanceCollection
       .putHeader("Content-Type", "application/json")
       .putHeader("Accept", "text/plain")
       .end(Json.encodePrettily(instanceToSend))
+
   }
 
   private Map mapToInstanceRequest(Instance instance) {

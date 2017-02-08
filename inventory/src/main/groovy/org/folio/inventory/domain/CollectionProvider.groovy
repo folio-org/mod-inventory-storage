@@ -1,6 +1,6 @@
 package org.folio.inventory.domain
 
-import org.folio.inventory.resources.ingest.IngestJobCollection
+import org.folio.inventory.domain.ingest.IngestJobCollection
 
 interface CollectionProvider {
   ItemCollection getItemCollection(String tenantId)

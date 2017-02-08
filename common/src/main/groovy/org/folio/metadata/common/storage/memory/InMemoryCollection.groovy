@@ -3,6 +3,9 @@ package org.folio.metadata.common.storage.memory
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.cql.CqlFilter
 import org.folio.metadata.common.cql.CqlParser
+import org.folio.metadata.common.domain.Success
+
+import java.util.function.Consumer
 
 //TODO: truly asynchronous implementation
 class InMemoryCollection<T> {
@@ -67,10 +70,10 @@ class InMemoryCollection<T> {
     resultCallback(item)
   }
 
-  void replace(T item, completionCallback) {
+  void replace(T item, Consumer<Success> completionCallback) {
     items.removeIf({ it.id == item.id })
     items.add(item)
-    completionCallback()
+    completionCallback.accept(new Success())
   }
 
   List<T> add(List<T> itemsToAdd) {

@@ -4,13 +4,13 @@ import io.vertx.groovy.core.Vertx
 import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.InstanceCollection
 import org.folio.inventory.domain.ItemCollection
-import org.folio.inventory.resources.ingest.IngestJobCollection
+import org.folio.inventory.domain.ingest.IngestJobCollection
 import org.folio.inventory.storage.memory.InMemoryIngestJobCollection
 
 class ExternalStorageCollections implements CollectionProvider {
   private final Vertx vertx
   private final String baseAddress
-  private static final InMemoryIngestJobCollection ingestJobCollection =  
+  private static final InMemoryIngestJobCollection ingestJobCollection =
     new InMemoryIngestJobCollection()
 
   def ExternalStorageCollections(Vertx vertx, String baseAddress) {

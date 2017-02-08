@@ -1,9 +1,13 @@
 package org.folio.inventory.storage.memory
 
 import org.folio.inventory.resources.ingest.IngestJob
-import org.folio.inventory.resources.ingest.IngestJobCollection
+import org.folio.inventory.domain.ingest.IngestJobCollection
 import org.folio.metadata.common.api.request.PagingParameters
+import org.folio.metadata.common.domain.Failure
+import org.folio.metadata.common.domain.Success
 import org.folio.metadata.common.storage.memory.InMemoryCollection
+
+import java.util.function.Consumer
 
 class InMemoryIngestJobCollection implements IngestJobCollection {
 
@@ -26,22 +30,19 @@ class InMemoryIngestJobCollection implements IngestJobCollection {
   }
 
   @Override
-  void findAll(Closure resultCallback) {
-    collection.all(resultCallback)
-  }
-
-  @Override
   void findAll(PagingParameters pagingParameters, Closure resultCallback) {
-    collection.all { Collection it ->
-      it.stream()
-        .skip(pagingParameters.offset)
-        .limit(pagingParameters.limit)
-        .collect()
-    }
+    collection.some(pagingParameters, resultCallback)
   }
 
   @Override
-  def update(IngestJob ingestJob, Closure completionCallback) {
+  void update(IngestJob ingestJob,
+             Consumer<Success> completionCallback,
+             Consumer<Failure> failureCallback) {
     collection.replace(ingestJob, completionCallback)
+  }
+
+  @Override
+  void delete(String id, Closure completionCallback) {
+    collection.remove(id, completionCallback)
   }
 }

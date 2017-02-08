@@ -1,10 +1,9 @@
 package org.folio.inventory.storage.memory
 
-import org.folio.inventory.domain.Item
 import org.folio.inventory.resources.ingest.IngestJob
-import org.folio.inventory.resources.ingest.IngestJobCollection
+import org.folio.inventory.domain.ingest.IngestJobCollection
 import org.folio.inventory.resources.ingest.IngestJobState
-import org.folio.inventory.storage.memory.InMemoryIngestJobCollection
+import org.folio.metadata.common.api.request.PagingParameters
 import org.junit.Before
 import org.junit.Test
 
@@ -38,7 +37,7 @@ class InMemoryIngestJobCollectionExamples {
 
     def findFuture = new CompletableFuture<List<IngestJob>>()
 
-    collection.findAll(complete(findFuture))
+    collection.findAll(PagingParameters.defaults(), complete(findFuture))
 
     def allJobs = getOnCompletion(findFuture)
 
@@ -80,7 +79,7 @@ class InMemoryIngestJobCollectionExamples {
 
     def updateFuture = new CompletableFuture<IngestJob>()
 
-    collection.update(completed, complete(updateFuture))
+    collection.update(completed, complete(updateFuture), { })
 
     waitForCompletion(updateFuture)
 
@@ -106,13 +105,13 @@ class InMemoryIngestJobCollectionExamples {
 
     def updateFuture = new CompletableFuture<IngestJob>()
 
-    collection.update(completed, complete(updateFuture))
+    collection.update(completed, complete(updateFuture), { })
 
     waitForCompletion(updateFuture)
 
     def findAllFuture = new CompletableFuture<List<IngestJob>>()
 
-    collection.findAll(complete(findAllFuture))
+    collection.findAll(PagingParameters.defaults(), complete(findAllFuture))
 
     def all = getOnCompletion(findAllFuture)
 

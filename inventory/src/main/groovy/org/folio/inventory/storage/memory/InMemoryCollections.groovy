@@ -3,7 +3,7 @@ package org.folio.inventory.storage.memory
 import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.InstanceCollection
 import org.folio.inventory.domain.ItemCollection
-import org.folio.inventory.resources.ingest.IngestJobCollection
+import org.folio.inventory.domain.ingest.IngestJobCollection
 
 class InMemoryCollections implements CollectionProvider {
   private final Map<String, ItemCollection> itemCollections = [:]

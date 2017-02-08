@@ -9,6 +9,7 @@ import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.*
+import org.folio.metadata.common.domain.Failure
 
 class Items {
 
@@ -101,7 +102,8 @@ class Items {
         if(it.barcode == updatedItem.barcode) {
           itemCollection.update(updatedItem,
             { SuccessResponse.noContent(routingContext.response()) },
-            { ServerErrorResponse.internalError(routingContext.response(), it) })
+            { Failure failure -> ServerErrorResponse.internalError(
+              routingContext.response(), failure.reason) })
         } else {
           itemCollection.findByCql("barcode=${updatedItem.barcode}",
             PagingParameters.defaults(), {
@@ -109,8 +111,8 @@ class Items {
             if(it.size() == 1 && it.first().id == updatedItem.id) {
               itemCollection.update(updatedItem, {
                 SuccessResponse.noContent(routingContext.response()) },
-                { ServerErrorResponse.internalError(
-                  routingContext.response(), it) })
+                { Failure failure -> ServerErrorResponse.internalError(
+                  routingContext.response(), failure.reason) })
             }
             else {
               ClientErrorResponse.badRequest(routingContext.response(),

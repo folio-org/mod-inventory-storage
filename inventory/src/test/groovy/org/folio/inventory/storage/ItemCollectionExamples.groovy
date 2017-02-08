@@ -48,7 +48,7 @@ abstract class ItemCollectionExamples {
 
     def findFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(complete(findFuture))
+    collection.findAll(PagingParameters.defaults(), complete(findFuture))
 
     def allItems = getOnCompletion(findFuture)
 
@@ -63,7 +63,7 @@ abstract class ItemCollectionExamples {
 
     def findFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(complete(findFuture))
+    collection.findAll(PagingParameters.defaults(), complete(findFuture))
 
     def allItems = getOnCompletion(findFuture)
 
@@ -202,7 +202,7 @@ abstract class ItemCollectionExamples {
 
     def findAllFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(complete(findAllFuture))
+    collection.findAll(PagingParameters.defaults(), complete(findAllFuture))
 
     def allItems = getOnCompletion(findAllFuture)
 

@@ -9,6 +9,10 @@ import io.vertx.groovy.core.http.HttpClientResponse
 import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
 import org.folio.metadata.common.api.request.PagingParameters
+import org.folio.metadata.common.domain.Failure
+import org.folio.metadata.common.domain.Success
+
+import java.util.function.Consumer
 
 class ExternalStorageModuleItemCollection
   implements ItemCollection {
@@ -83,35 +87,6 @@ class ExternalStorageModuleItemCollection
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
       .exceptionHandler(onException)
       .putHeader("X-Okapi-Tenant",  tenant)
-      .putHeader("Accept", "application/json")
-      .end()
-  }
-
-  @Override
-  void findAll(Closure resultCallback) {
-    String location = storageAddress + "/item-storage/items"
-
-    def onResponse = { response ->
-      response.bodyHandler({ buffer ->
-        def responseBody = "${buffer.getString(0, buffer.length())}"
-
-        def itemsFromServer = new JsonObject(responseBody).getJsonArray("items")
-
-        def foundItems = new ArrayList<Item>()
-
-        itemsFromServer.each {
-          foundItems.add(mapFromJson(it))
-        }
-
-        resultCallback(foundItems)
-      })
-    }
-
-    Handler<Throwable> onException = { println "Exception: ${it}" }
-
-    vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
-      .exceptionHandler(onException)
-      .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json")
       .end()
   }
@@ -204,7 +179,10 @@ class ExternalStorageModuleItemCollection
   }
 
   @Override
-  void update(Item item, Closure completionCallback, Closure failureCallback) {
+  void update(Item item,
+              Consumer<Success> completionCallback,
+              Consumer<Failure> failureCallback) {
+
     String location = storageAddress + "/item-storage/items/${item.id}"
 
     def onResponse = { HttpClientResponse response ->
@@ -212,11 +190,10 @@ class ExternalStorageModuleItemCollection
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
         if(response.statusCode() == 204) {
-          completionCallback()
+          completionCallback.accept(new Success())
         }
         else {
-          println("Update item failed, reason: ${responseBody}")
-          failureCallback("${responseBody}")
+          failureCallback.accept(new Failure("${responseBody}"))
         }
       })
     }

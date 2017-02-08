@@ -11,6 +11,7 @@ import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.*
+import org.folio.metadata.common.domain.Failure
 
 class Instances {
   private final Storage storage
@@ -103,8 +104,8 @@ class Instances {
         if(it != null) {
           instanceCollection.update(updatedInstance, {
             SuccessResponse.noContent(routingContext.response()) },
-            { ServerErrorResponse.internalError(
-              routingContext.response(), it) })
+            { Failure failure ->  ServerErrorResponse.internalError(
+              routingContext.response(), failure.reason) })
         }
         else {
           ClientErrorResponse.notFound(routingContext.response())

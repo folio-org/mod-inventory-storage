@@ -3,7 +3,11 @@ package org.folio.inventory.storage.memory
 import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
 import org.folio.metadata.common.api.request.PagingParameters
+import org.folio.metadata.common.domain.Failure
+import org.folio.metadata.common.domain.Success
 import org.folio.metadata.common.storage.memory.InMemoryCollection
+
+import java.util.function.Consumer
 
 class InMemoryItemCollection
   implements ItemCollection {
@@ -20,11 +24,6 @@ class InMemoryItemCollection
   @Override
   void findById(String id, Closure resultCallback) {
     collection.findOne({ it.id == id }, resultCallback)
-  }
-
-  @Override
-  void findAll(Closure resultCallback) {
-    collection.all(resultCallback)
   }
 
   @Override
@@ -45,7 +44,10 @@ class InMemoryItemCollection
   }
 
   @Override
-  void update(Item item, Closure completionCallback, Closure failureCallback) {
+  void update(Item item,
+              Consumer<Success> completionCallback,
+              Consumer<Failure> failureCallback) {
+
     collection.replace(item, completionCallback)
   }
 

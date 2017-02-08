@@ -4,7 +4,7 @@ import io.vertx.groovy.core.Vertx
 import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.InstanceCollection
 import org.folio.inventory.domain.ItemCollection
-import org.folio.inventory.resources.ingest.IngestJobCollection
+import org.folio.inventory.domain.ingest.IngestJobCollection
 import org.folio.inventory.storage.external.ExternalStorageCollections
 import org.folio.inventory.storage.memory.InMemoryCollections
 import org.folio.metadata.common.Context

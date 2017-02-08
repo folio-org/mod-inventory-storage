@@ -46,7 +46,7 @@ abstract class InstanceCollectionExamples {
 
     def findFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(complete(findFuture))
+    collection.findAll(PagingParameters.defaults(), complete(findFuture))
 
     def allInstances = getOnCompletion(findFuture)
 
@@ -61,7 +61,7 @@ abstract class InstanceCollectionExamples {
 
     def findFuture = new CompletableFuture<List<Instance>>()
 
-    collection.findAll(complete(findFuture))
+    collection.findAll(PagingParameters.defaults(), complete(findFuture))
 
     def allInstances = getOnCompletion(findFuture)
 
@@ -202,7 +202,7 @@ abstract class InstanceCollectionExamples {
 
     def findAllFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(complete(findAllFuture))
+    collection.findAll(PagingParameters.defaults(), complete(findAllFuture))
 
     def allInstances = getOnCompletion(findAllFuture)
 
