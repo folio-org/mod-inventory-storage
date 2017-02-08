@@ -8,4 +8,5 @@ interface ItemCollection extends AsynchronousCollection<Item> {
                  Closure resultCallback)
 
   void update(Item item, Closure completionCallback, Closure failureCallback)
+  void delete(String id, Closure completionCallback)
 }

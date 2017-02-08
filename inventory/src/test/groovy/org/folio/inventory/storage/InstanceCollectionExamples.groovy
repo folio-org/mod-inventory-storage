@@ -184,7 +184,7 @@ abstract class InstanceCollectionExamples {
 
     def instanceToBeDeletedFuture = new CompletableFuture<Instance>()
 
-    collection.add(smallAngryPlanet(), complete(instanceToBeDeletedFuture))
+    collection.add(temeraire(), complete(instanceToBeDeletedFuture))
 
     def instanceToBeDeleted = instanceToBeDeletedFuture.get()
 

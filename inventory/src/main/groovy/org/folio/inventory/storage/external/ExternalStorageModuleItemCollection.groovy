@@ -233,6 +233,28 @@ class ExternalStorageModuleItemCollection
       .end(Json.encodePrettily(itemToSend))
   }
 
+  @Override
+  void delete(String id, Closure completionCallback) {
+    String location = "${storageAddress}/item-storage/items/${id}"
+
+    def onResponse = { response ->
+
+      println("DELETE ${location}: status code: ${response.statusCode()}")
+
+      response.bodyHandler({ buffer ->
+        completionCallback()
+      })
+    }
+
+    Handler<Throwable> onException = { println "Exception: ${it}" }
+
+    vertx.createHttpClient().requestAbs(HttpMethod.DELETE, location, onResponse)
+      .exceptionHandler(onException)
+      .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Accept", "application/json, text/plain")
+      .end()
+  }
+
   private Item mapFromJson(JsonObject itemFromServer) {
     new Item(
       itemFromServer.getString("id"),

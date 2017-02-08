@@ -216,6 +216,39 @@ class ItemApiExamples extends Specification {
       assert body.items.size() == 0
   }
 
+  void "Can delete a single item"() {
+    given:
+      def createdInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
+
+      createItem(createdInstance.title, createdInstance.id,
+        "645398607547")
+
+      createItem(createdInstance.title, createdInstance.id,
+        "175848607547")
+
+      def itemToDelete = createItem(createdInstance.title, createdInstance.id,
+        "645334645247")
+
+      def itemToDeleteLocation =
+        new URL("${ApiRoot.items()}/${itemToDelete.getString("id")}")
+
+    when:
+      def (deleteResponse, deleteBody) = client.delete(itemToDeleteLocation)
+
+    then:
+      assert deleteResponse.status == 204
+      assert deleteBody == null
+
+      def (getResponse, _) = client.get(itemToDeleteLocation)
+
+      assert getResponse.status == 404
+
+      def (__, getAllBody) = client.get(ApiRoot.items())
+
+      assert getAllBody.items.size() == 2
+  }
+
   void "Can page all items"() {
     given:
       def smallAngryInstance = createInstance(

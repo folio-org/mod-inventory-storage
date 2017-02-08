@@ -48,4 +48,9 @@ class InMemoryItemCollection
   void update(Item item, Closure completionCallback, Closure failureCallback) {
     collection.replace(item, completionCallback)
   }
+
+  @Override
+  void delete(String id, Closure completionCallback) {
+    collection.remove(id, completionCallback)
+  }
 }

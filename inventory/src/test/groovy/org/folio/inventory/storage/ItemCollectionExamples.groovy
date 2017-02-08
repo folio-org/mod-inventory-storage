@@ -178,6 +178,39 @@ abstract class ItemCollectionExamples {
   }
 
   @Test
+  void anItemCanBeDeleted() {
+    def collection = collectionProvider.getItemCollection(firstTenantId)
+
+    addSomeExamples(collection)
+
+    def itemToBeDeletedFuture = new CompletableFuture<Item>()
+
+    collection.add(temeraire(), complete(itemToBeDeletedFuture))
+
+    def itemToBeDeleted = itemToBeDeletedFuture.get()
+
+    def deleted = new CompletableFuture()
+
+    collection.delete(itemToBeDeleted.id, complete(deleted))
+
+    waitForCompletion(deleted)
+
+    def findFuture = new CompletableFuture<Item>()
+
+    collection.findById(itemToBeDeleted.id, complete(findFuture))
+
+    assert findFuture.get() == null
+
+    def findAllFuture = new CompletableFuture<List<Item>>()
+
+    collection.findAll(complete(findAllFuture))
+
+    def allItems = getOnCompletion(findAllFuture)
+
+    assert allItems.size() == 3
+  }
+
+  @Test
   void allItemsCanBePaged() {
     def collection = collectionProvider.getItemCollection(firstTenantId)
 

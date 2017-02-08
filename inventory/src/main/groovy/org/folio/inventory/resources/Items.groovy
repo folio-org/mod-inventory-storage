@@ -28,6 +28,7 @@ class Items {
 
     router.get(relativeItemsPath() + "/:id").handler(this.&getById)
     router.put(relativeItemsPath() + "/:id").handler(this.&update)
+    router.delete(relativeItemsPath() + "/:id").handler(this.&deleteById)
   }
 
   void getAll(RoutingContext routingContext) {
@@ -121,6 +122,15 @@ class Items {
       else {
         ClientErrorResponse.notFound(routingContext.response())
       }
+    })
+  }
+
+  void deleteById(RoutingContext routingContext) {
+    def context = new WebContext(routingContext)
+
+    storage.getItemCollection(context).delete(
+      routingContext.request().getParam("id"), {
+      SuccessResponse.noContent(routingContext.response())
     })
   }
 

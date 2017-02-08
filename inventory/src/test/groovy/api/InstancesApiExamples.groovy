@@ -137,14 +137,13 @@ class InstancesApiExamples extends Specification {
       assert deleteResponse.status == 204
       assert deleteBody == null
 
-      def (getResponse, getBody) = client.get(instanceToDeleteLocation)
+      def (getResponse, _) = client.get(instanceToDeleteLocation)
 
       assert getResponse.status == 404
 
       def (__, getAllBody) = client.get(ApiRoot.instances())
-      def instances = getAllBody.instances
 
-      assert instances.size() == 2
+      assert getAllBody.instances.size() == 2
   }
 
   void "Can get all instances"() {
