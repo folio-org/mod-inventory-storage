@@ -121,6 +121,32 @@ class InstancesApiExamples extends Specification {
       assert instances.size() == 0
   }
 
+  void "Can delete a single instance"() {
+    given:
+      createInstance(smallAngryPlanet(UUID.randomUUID()))
+      createInstance(nod(UUID.randomUUID()))
+      def instanceToDelete = createInstance(leviathanWakes(UUID.randomUUID()))
+
+      def instanceToDeleteLocation =
+        new URL("${ApiRoot.instances()}/${instanceToDelete.id}")
+
+    when:
+      def (deleteResponse, deleteBody) = client.delete(instanceToDeleteLocation)
+
+    then:
+      assert deleteResponse.status == 204
+      assert deleteBody == null
+
+      def (getResponse, getBody) = client.get(instanceToDeleteLocation)
+
+      assert getResponse.status == 404
+
+      def (__, getAllBody) = client.get(ApiRoot.instances())
+      def instances = getAllBody.instances
+
+      assert instances.size() == 2
+  }
+
   void "Can get all instances"() {
     given:
       createInstance(smallAngryPlanet(UUID.randomUUID()))

@@ -177,6 +177,39 @@ abstract class InstanceCollectionExamples {
   }
 
   @Test
+  void anInstanceCanBeDeleted() {
+    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+
+    addSomeExamples(collection)
+
+    def instanceToBeDeletedFuture = new CompletableFuture<Instance>()
+
+    collection.add(smallAngryPlanet(), complete(instanceToBeDeletedFuture))
+
+    def instanceToBeDeleted = instanceToBeDeletedFuture.get()
+
+    def deleted = new CompletableFuture()
+
+    collection.delete(instanceToBeDeleted.id, complete(deleted))
+
+    waitForCompletion(deleted)
+
+    def findFuture = new CompletableFuture<Item>()
+
+    collection.findById(instanceToBeDeleted.id, complete(findFuture))
+
+    assert findFuture.get() == null
+
+    def findAllFuture = new CompletableFuture<List<Item>>()
+
+    collection.findAll(complete(findAllFuture))
+
+    def allInstances = getOnCompletion(findAllFuture)
+
+    assert allInstances.size() == 3
+  }
+
+  @Test
   void instancesCanBeFoundByByPartialName() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
 

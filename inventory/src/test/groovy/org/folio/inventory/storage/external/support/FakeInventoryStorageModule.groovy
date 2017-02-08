@@ -70,6 +70,9 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     router.route(HttpMethod.GET, '/item-storage/items/:id')
       .handler(this.&getItem);
 
+    router.route(HttpMethod.DELETE, '/item-storage/items/:id')
+      .handler(this.&deleteItem);
+
     router.route(HttpMethod.GET, '/item-storage/items')
       .handler(this.&getItems);
 
@@ -84,6 +87,9 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     router.route(HttpMethod.GET, '/instance-storage/instances/:id')
       .handler(this.&getInstance);
+
+    router.route(HttpMethod.DELETE, '/instance-storage/instances/:id')
+      .handler(this.&deleteInstance);
 
     router.route(HttpMethod.GET, '/instance-storage/instances')
       .handler(this.&getInstances);
@@ -179,10 +185,25 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   private def getItem(RoutingContext routingContext) {
     def itemsForTenant = getItemsForTenant(getTenantId(routingContext))
 
-    def item = itemsForTenant.get(routingContext.request().getParam("id"), null)
+    def id = routingContext.request().getParam("id")
 
-    if(item != null) {
-      JsonResponse.success(routingContext.response(), item)
+    if(itemsForTenant.containsKey(id)) {
+      JsonResponse.success(routingContext.response(),
+        itemsForTenant.get(id))
+    }
+    else {
+      ClientErrorResponse.notFound(routingContext.response())
+    }
+  }
+
+  private def deleteItem(RoutingContext routingContext) {
+    def itemsForTenant = getItemsForTenant(getTenantId(routingContext))
+
+    def id = routingContext.request().getParam("id")
+
+    if(itemsForTenant.containsKey(id)) {
+      itemsForTenant.remove(id)
+      SuccessResponse.noContent(routingContext.response())
     }
     else {
       ClientErrorResponse.notFound(routingContext.response())
@@ -213,6 +234,20 @@ class FakeInventoryStorageModule extends GroovyVerticle {
       storedInstances.values())
   }
 
+  private def deleteInstance(RoutingContext routingContext) {
+    def instancesForTenant = getInstancesForTenant(getTenantId(routingContext))
+
+    def id = routingContext.request().getParam("id")
+
+    if(instancesForTenant.containsKey(id)) {
+      instancesForTenant.remove(id)
+      SuccessResponse.noContent(routingContext.response())
+    }
+    else {
+      ClientErrorResponse.notFound(routingContext.response())
+    }
+  }
+
   private def getInstances(RoutingContext routingContext) {
 
     def instancesForTenant = getInstancesForTenant(
@@ -238,6 +273,10 @@ class FakeInventoryStorageModule extends GroovyVerticle {
       .limit(limit)
       .collect()
 
+    println("Total instances: ${instancesForTenant.size()}")
+    println("Filtered instances: ${filteredInstances.size()}")
+    println("Paged instances: ${pagedInstances.size()}")
+
     def result = new JsonObject()
     result.put("instances", new JsonArray(pagedInstances))
     result.put("total_records", filteredInstances.size())
@@ -256,11 +295,14 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   }
 
   private def getInstance(RoutingContext routingContext) {
-    def foundInstance = getInstancesForTenant(getTenantId(routingContext)).get(
-      routingContext.request().getParam("id"), null)
 
-    if(foundInstance != null) {
-      JsonResponse.success(routingContext.response(), foundInstance)
+    def instancesForTenant = getInstancesForTenant(getTenantId(routingContext))
+
+    def id = routingContext.request().getParam("id")
+
+    if(instancesForTenant.containsKey(id)) {
+      JsonResponse.success(routingContext.response(),
+        instancesForTenant.get(id))
     }
     else {
       ClientErrorResponse.notFound(routingContext.response())

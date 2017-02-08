@@ -43,4 +43,9 @@ class InMemoryInstanceCollection
 
     collection.find(cqlQuery, pagingParameters, resultCallback)
   }
+
+  @Override
+  void delete(String id, Closure completionCallback) {
+    collection.remove(id, completionCallback)
+  }
 }

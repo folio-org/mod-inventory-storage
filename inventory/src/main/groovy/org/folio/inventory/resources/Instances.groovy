@@ -33,6 +33,7 @@ class Instances {
     router.delete(relativeInstancesPath()).handler(this.&deleteAll)
 
     router.get(relativeInstancesPath() + "/:id").handler(this.&getById)
+    router.delete(relativeInstancesPath() + "/:id").handler(this.&deleteById)
   }
 
   void getMetadataContext(RoutingContext routingContext) {
@@ -96,6 +97,15 @@ class Instances {
     storage.getInstanceCollection(context).empty {
       SuccessResponse.noContent(routingContext.response())
     }
+  }
+
+  void deleteById(RoutingContext routingContext) {
+    def context = new WebContext(routingContext)
+
+    storage.getInstanceCollection(context).delete(
+      routingContext.request().getParam("id"), {
+      SuccessResponse.noContent(routingContext.response())
+    })
   }
 
   void getById(RoutingContext routingContext) {

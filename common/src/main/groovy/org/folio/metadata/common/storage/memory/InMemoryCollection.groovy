@@ -86,4 +86,9 @@ class InMemoryCollection<T> {
     items.clear()
     completionCallback()
   }
+
+  void remove(String id, Closure completionCallback) {
+    items.removeIf({ it.id == id })
+    completionCallback()
+  }
 }
