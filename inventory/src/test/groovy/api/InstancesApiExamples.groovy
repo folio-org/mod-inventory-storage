@@ -102,6 +102,51 @@ class InstancesApiExamples extends Specification {
       assert body == "Title must be provided for an instance"
   }
 
+  void "Can update an existing instance"() {
+
+    given:
+      def id = UUID.randomUUID()
+
+      def newInstance = createInstance(smallAngryPlanet(id))
+
+      def updateInstanceRequest = smallAngryPlanet(id)
+        .put("title", "The Long Way to a Small, Angry Planet")
+
+      def instanceLocation =
+        new URL("${ApiRoot.instances()}/${newInstance.id}")
+
+    when:
+      def (putResponse, __) = client.put(instanceLocation,
+        Json.encodePrettily(updateInstanceRequest))
+
+    then:
+      assert putResponse.status == 204
+
+      def (getResponse, updatedInstance) = client.get(instanceLocation)
+
+      assert getResponse.status == 200
+
+      assert updatedInstance.id == newInstance.id
+      assert updatedInstance.title == "The Long Way to a Small, Angry Planet"
+      assert updatedInstance.identifiers.size() == 1
+
+      selfLinkRespectsWayResourceWasReached(updatedInstance)
+      selfLinkShouldBeReachable(updatedInstance)
+  }
+
+  void "Cannot update an instance that does not exist"() {
+    given:
+      def updateInstanceRequest = smallAngryPlanet(UUID.randomUUID())
+
+    when:
+      def (putResponse, __) = client.put(
+        new URL("${ApiRoot.items()}/${updateInstanceRequest.getString("id")}"),
+        Json.encodePrettily(updateInstanceRequest))
+
+    then:
+      assert putResponse.status == 404
+  }
+
   void "Can delete all instances"() {
     given:
       createInstance(smallAngryPlanet(UUID.randomUUID()))

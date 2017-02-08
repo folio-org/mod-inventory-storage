@@ -10,10 +10,7 @@ import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
-import org.folio.metadata.common.api.response.ClientErrorResponse
-import org.folio.metadata.common.api.response.JsonResponse
-import org.folio.metadata.common.api.response.RedirectResponse
-import org.folio.metadata.common.api.response.SuccessResponse
+import org.folio.metadata.common.api.response.*
 
 class Instances {
   private final Storage storage
@@ -24,6 +21,7 @@ class Instances {
 
   public void register(Router router) {
     router.post(relativeInstancesPath() + "*").handler(BodyHandler.create())
+    router.put(relativeInstancesPath() + "*").handler(BodyHandler.create())
 
     router.get(relativeInstancesPath() + "/context")
       .handler(this.&getMetadataContext)
@@ -33,6 +31,7 @@ class Instances {
     router.delete(relativeInstancesPath()).handler(this.&deleteAll)
 
     router.get(relativeInstancesPath() + "/:id").handler(this.&getById)
+    router.put(relativeInstancesPath() + "/:id").handler(this.&update)
     router.delete(relativeInstancesPath() + "/:id").handler(this.&deleteById)
   }
 
@@ -82,13 +81,35 @@ class Instances {
       return
     }
 
-    def newInstance = new Instance(instanceRequest.id, instanceRequest.title,
-      instanceRequest.identifiers)
+    def newInstance = requestToInstance(instanceRequest)
 
     storage.getInstanceCollection(context).add(newInstance, {
       RedirectResponse.created(routingContext.response(),
         context.absoluteUrl("${relativeInstancesPath()}/${it.id}").toString())
     })
+  }
+
+  void update(RoutingContext routingContext) {
+    def context = new WebContext(routingContext)
+
+    Map instanceRequest = new VertxBodyParser().toMap(routingContext)
+
+    def updatedInstance = requestToInstance(instanceRequest)
+
+    def instanceCollection = storage.getInstanceCollection(context)
+
+    instanceCollection.findById(routingContext.request().getParam("id"),
+      {
+        if(it != null) {
+          instanceCollection.update(updatedInstance, {
+            SuccessResponse.noContent(routingContext.response()) },
+            { ServerErrorResponse.internalError(
+              routingContext.response(), it) })
+        }
+        else {
+          ClientErrorResponse.notFound(routingContext.response())
+        }
+      })
   }
 
   void deleteAll(RoutingContext routingContext) {
@@ -169,6 +190,11 @@ class Instances {
         relativeInstancesPath() + "/${instance.id}").toString()])
 
     representation
+  }
+
+  private Instance requestToInstance(Map<String, Object> instanceRequest) {
+    new Instance(instanceRequest.id, instanceRequest.title,
+      instanceRequest.identifiers)
   }
 
   private boolean isEmpty(String string) {

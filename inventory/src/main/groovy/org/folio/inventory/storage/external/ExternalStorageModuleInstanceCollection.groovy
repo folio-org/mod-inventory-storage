@@ -49,12 +49,7 @@ class ExternalStorageModuleInstanceCollection
 
     Handler<Throwable> onException = { println "Exception: ${it}" }
 
-    def instanceToSend = [:]
-
-    //TODO: Review if this shouldn't be defaulting here
-    instanceToSend.put("id", instance.id ?: UUID.randomUUID().toString())
-    instanceToSend.put("title", instance.title)
-    instanceToSend.put("identifiers", instance.identifiers)
+    def instanceToSend = mapToInstanceRequest(instance)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
       .exceptionHandler(onException)
@@ -231,6 +226,46 @@ class ExternalStorageModuleInstanceCollection
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json")
       .end()
+  }
+
+  @Override
+  void update(Instance instance, Closure completionCallback, Closure failureCallback) {
+    String location = "${storageModuleAddress}/instance-storage/instances/${instance.id}"
+
+    def onResponse = { HttpClientResponse response ->
+      response.bodyHandler({ buffer ->
+        def responseBody = "${buffer.getString(0, buffer.length())}"
+
+        if(response.statusCode() == 204) {
+          completionCallback()
+        }
+        else {
+          println("Update instance failed, reason: ${responseBody}")
+          failureCallback("${responseBody}")
+        }
+      })
+    }
+
+    Handler<Throwable> onException = { println "Exception: ${it}" }
+
+    def instanceToSend = mapToInstanceRequest(instance)
+
+    vertx.createHttpClient().requestAbs(HttpMethod.PUT, location, onResponse)
+      .exceptionHandler(onException)
+      .putHeader("X-Okapi-Tenant", tenant)
+      .putHeader("Content-Type", "application/json")
+      .putHeader("Accept", "text/plain")
+      .end(Json.encodePrettily(instanceToSend))
+  }
+
+  private Map mapToInstanceRequest(Instance instance) {
+    def instanceToSend = [:]
+
+    //TODO: Review if this shouldn't be defaulting here
+    instanceToSend.put("id", instance.id ?: UUID.randomUUID().toString())
+    instanceToSend.put("title", instance.title)
+    instanceToSend.put("identifiers", instance.identifiers)
+    instanceToSend
   }
 
   private Instance mapFromJson(JsonObject instanceFromServer) {

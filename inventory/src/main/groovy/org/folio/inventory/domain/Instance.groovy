@@ -37,4 +37,12 @@ class Instance {
   public String toString() {
     println ("Instance ID: ${id}, Title: ${title}")
   }
+
+  Instance removeIdentifier(String namespace, String value) {
+    def newIdentifiers = this.identifiers.stream()
+      .filter({ !(it.namespace == namespace && it.value == value) })
+      .collect()
+
+    new Instance(id, title, newIdentifiers)
+  }
 }

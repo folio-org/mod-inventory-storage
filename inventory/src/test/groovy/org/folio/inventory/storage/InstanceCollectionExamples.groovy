@@ -210,6 +210,36 @@ abstract class InstanceCollectionExamples {
   }
 
   @Test
+  void anInstanceCanBeUpdated() {
+    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+
+    def addFinished = new CompletableFuture<Instance>()
+
+    collection.add(smallAngryPlanet(), complete(addFinished))
+
+    def added = getOnCompletion(addFinished)
+
+    def updateFinished = new CompletableFuture<Instance>()
+
+    def changed = added.removeIdentifier('isbn', '9781473619777')
+
+    collection.update(changed, complete(updateFinished),
+      { println("Update instance failed: ${it}") })
+
+    waitForCompletion(updateFinished)
+
+    def gotUpdated = new CompletableFuture<Item>()
+
+    collection.findById(added.id, complete(gotUpdated))
+
+    def updated = getOnCompletion(gotUpdated)
+
+    assert updated.id == added.id
+    assert updated.title == added.title
+    assert updated.identifiers.size() == 0
+  }
+
+  @Test
   void instancesCanBeFoundByByPartialName() {
     def collection = collectionProvider.getInstanceCollection(firstTenantId)
 

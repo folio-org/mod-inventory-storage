@@ -7,5 +7,6 @@ interface InstanceCollection extends AsynchronousCollection<Instance> {
   void findByCql(String cqlQuery, PagingParameters pagingParameters,
                 Closure resultCallback)
 
+  void update(Instance instance, Closure completionCallback, Closure failureCallback)
   void delete(String id, Closure completionCallback)
 }

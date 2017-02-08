@@ -52,18 +52,21 @@ class FakeInventoryStorageModule extends GroovyVerticle {
         }
       })
 
+    router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
+    router.route().handler(this.&checkTenantHeader.rcurry(expectedTenants))
+
     router.route('/item-storage/items/*').handler(BodyHandler.create())
     router.route(HttpMethod.POST, '/item-storage/items/*').handler(this.&acceptHeaderIsJson)
     router.route(HttpMethod.GET, '/item-storage/items/*').handler(this.&acceptHeaderIsJson)
     router.route(HttpMethod.PUT, '/item-storage/items/*').handler(this.&acceptHeaderIsText)
 
     router.route('/instance-storage/instances/*').handler(BodyHandler.create())
-    router.route('/instance-storage/instances/*').handler(this.&acceptHeaderIsJson)
-
-    router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
-    router.route().handler(this.&checkTenantHeader.rcurry(expectedTenants))
+    router.route(HttpMethod.POST, '/instance-storage/instances/*').handler(this.&acceptHeaderIsJson)
+    router.route(HttpMethod.GET, '/instance-storage/instances/*').handler(this.&acceptHeaderIsJson)
+    router.route(HttpMethod.PUT, '/instance-storage/instances/*').handler(this.&acceptHeaderIsText)
 
     router.route(HttpMethod.POST, '/instance-storage/*').handler(this.&checkContentTypeHeader)
+    router.route(HttpMethod.PUT, '/instance-storage/*').handler(this.&checkContentTypeHeader)
     router.route(HttpMethod.POST, '/item-storage/*').handler(this.&checkContentTypeHeader)
     router.route(HttpMethod.PUT, '/item-storage/*').handler(this.&checkContentTypeHeader)
 
@@ -72,6 +75,9 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     router.route(HttpMethod.DELETE, '/item-storage/items/:id')
       .handler(this.&deleteItem);
+
+    router.route(HttpMethod.PUT, '/item-storage/items/:id')
+      .handler(this.&updateItem)
 
     router.route(HttpMethod.GET, '/item-storage/items')
       .handler(this.&getItems);
@@ -82,14 +88,14 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     router.route(HttpMethod.POST, '/item-storage/items')
       .handler(this.&createItem)
 
-    router.route(HttpMethod.PUT, '/item-storage/items/:id')
-      .handler(this.&updateItem)
-
     router.route(HttpMethod.GET, '/instance-storage/instances/:id')
       .handler(this.&getInstance);
 
     router.route(HttpMethod.DELETE, '/instance-storage/instances/:id')
       .handler(this.&deleteInstance);
+
+    router.route(HttpMethod.PUT, '/instance-storage/instances/:id')
+      .handler(this.&updateInstance);
 
     router.route(HttpMethod.GET, '/instance-storage/instances')
       .handler(this.&getInstances);
@@ -246,6 +252,20 @@ class FakeInventoryStorageModule extends GroovyVerticle {
     else {
       ClientErrorResponse.notFound(routingContext.response())
     }
+  }
+
+  private def updateInstance(RoutingContext routingContext) {
+    def body = getMapFromBody(routingContext)
+
+    def updatedInstance = new JsonObject(body)
+
+    def id = routingContext.request().getParam("id")
+
+    def instanceForTenant = getInstancesForTenant(getTenantId(routingContext))
+
+    instanceForTenant.replace(id, updatedInstance)
+
+    SuccessResponse.noContent(routingContext.response())
   }
 
   private def getInstances(RoutingContext routingContext) {

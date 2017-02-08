@@ -98,7 +98,6 @@ class Items {
 
     itemCollection.findById(routingContext.request().getParam("id"), {
       if(it != null) {
-
         if(it.barcode == updatedItem.barcode) {
           itemCollection.update(updatedItem,
             { SuccessResponse.noContent(routingContext.response()) },
@@ -109,8 +108,9 @@ class Items {
 
             if(it.size() == 1 && it.first().id == updatedItem.id) {
               itemCollection.update(updatedItem, {
-                SuccessResponse.noContent(routingContext.response())
-              })
+                SuccessResponse.noContent(routingContext.response()) },
+                { ServerErrorResponse.internalError(
+                  routingContext.response(), it) })
             }
             else {
               ClientErrorResponse.badRequest(routingContext.response(),

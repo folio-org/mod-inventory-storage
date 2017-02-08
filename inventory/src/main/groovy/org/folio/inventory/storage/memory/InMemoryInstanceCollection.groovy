@@ -45,6 +45,11 @@ class InMemoryInstanceCollection
   }
 
   @Override
+  void update(Instance instance, Closure completionCallback, Closure failureCallback) {
+    collection.replace(instance, completionCallback)
+  }
+
+  @Override
   void delete(String id, Closure completionCallback) {
     collection.remove(id, completionCallback)
   }
