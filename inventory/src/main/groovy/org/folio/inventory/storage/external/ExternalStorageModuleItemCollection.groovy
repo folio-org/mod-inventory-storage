@@ -62,30 +62,37 @@ class ExternalStorageModuleItemCollection
   }
 
   @Override
-  void findById(String id, Closure resultCallback) {
+  void findById(String id,
+                Consumer<Success<Item>> resultCallback,
+                Consumer<Failure> failureCallback) {
+
     String location = storageAddress + "/item-storage/items/${id}"
 
     def onResponse = { response ->
-      if(response.statusCode() == 200) {
-        response.bodyHandler({ buffer ->
-          def responseBody = "${buffer.getString(0, buffer.length())}"
+      response.bodyHandler({ buffer ->
+        def responseBody = "${buffer.getString(0, buffer.length())}"
 
-          def itemFromServer = new JsonObject(responseBody)
+        switch (response.statusCode()) {
+          case 200:
+            def itemFromServer = new JsonObject(responseBody)
 
-          def foundItem = mapFromJson(itemFromServer)
+            def foundItem = mapFromJson(itemFromServer)
 
-          resultCallback(foundItem)
-        })
-      }
-      else {
-        resultCallback(null)
-      }
+            resultCallback.accept(new Success(foundItem))
+            break
+
+          case 404:
+            resultCallback.accept(new Success(null))
+            break
+
+          default:
+            failureCallback.accept(new Failure(responseBody))
+        }
+      })
     }
 
-    Handler<Throwable> onException = { println "Exception: ${it}" }
-
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
-      .exceptionHandler(onException)
+      .exceptionHandler(exceptionHandler(failureCallback))
       .putHeader("X-Okapi-Tenant",  tenant)
       .putHeader("Accept", "application/json")
       .end()
@@ -93,7 +100,7 @@ class ExternalStorageModuleItemCollection
 
   @Override
   void findAll(PagingParameters pagingParameters,
-               Consumer<Success> resultCallback,
+               Consumer<Success<List<Item>>> resultCallback,
                Consumer<Failure> failureCallback) {
 
     String location = String.format(storageAddress
@@ -122,10 +129,8 @@ class ExternalStorageModuleItemCollection
       })
     }
 
-    Handler<Throwable> onException = { failureCallback.accept(new Failure(it)) }
-
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
-      .exceptionHandler(onException)
+      .exceptionHandler(exceptionHandler(failureCallback))
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json")
       .end()
@@ -202,17 +207,15 @@ class ExternalStorageModuleItemCollection
           completionCallback.accept(new Success(null))
         }
         else {
-          failureCallback.accept(new Failure("${responseBody}"))
+          failureCallback.accept(new Failure(responseBody))
         }
       })
     }
 
-    Handler<Throwable> onException = { failureCallback.accept(new Failure(it)) }
-
     def itemToSend = mapToItemRequest(item)
 
     vertx.createHttpClient().requestAbs(HttpMethod.PUT, location, onResponse)
-      .exceptionHandler(onException)
+      .exceptionHandler(exceptionHandler(failureCallback))
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Content-Type", "application/json")
       .putHeader("Accept", "text/plain")
@@ -266,5 +269,11 @@ class ExternalStorageModuleItemCollection
     itemToSend.put("location",
       new JsonObject().put("name", item.location))
     itemToSend
+  }
+
+  private Handler<Throwable> exceptionHandler(Consumer<Failure> failureCallback) {
+    return { Throwable it ->
+        failureCallback.accept(new Failure(it.getMessage()))
+    }
   }
 }

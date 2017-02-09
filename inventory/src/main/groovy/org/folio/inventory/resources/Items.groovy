@@ -47,8 +47,7 @@ class Items {
         JsonResponse.success(routingContext.response(),
           new ItemRepresentation(relativeItemsPath()).toJson(success.result,
             context)) },
-        { Failure failure -> ServerErrorResponse.internalError(
-          routingContext.response(), failure.reason) })
+        FailureResponseConsumer.serverError(routingContext.response()))
     }
     else {
       storage.getItemCollection(context).findByCql(search,
@@ -102,8 +101,9 @@ class Items {
     def itemCollection = storage.getItemCollection(context)
 
     itemCollection.findById(routingContext.request().getParam("id"), {
-      if(it != null) {
-        if(it.barcode == updatedItem.barcode) {
+      Success it ->
+      if(it.result != null) {
+        if(it.result.barcode == updatedItem.barcode) {
           itemCollection.update(updatedItem,
             { SuccessResponse.noContent(routingContext.response()) },
             { Failure failure -> ServerErrorResponse.internalError(
@@ -128,7 +128,7 @@ class Items {
       else {
         ClientErrorResponse.notFound(routingContext.response())
       }
-    })
+    }, FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   void deleteById(RoutingContext routingContext) {
@@ -145,15 +145,16 @@ class Items {
 
     storage.getItemCollection(context).findById(
       routingContext.request().getParam("id"),
-      {
-        if(it != null) {
+      { Success it ->
+        if(it.result != null) {
           JsonResponse.success(routingContext.response(),
-            new ItemRepresentation(relativeItemsPath()).toJson(it, context))
+            new ItemRepresentation(relativeItemsPath())
+              .toJson(it.result, context))
         }
         else {
           ClientErrorResponse.notFound(routingContext.response())
         }
-      })
+      }, FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   private static String relativeItemsPath() {

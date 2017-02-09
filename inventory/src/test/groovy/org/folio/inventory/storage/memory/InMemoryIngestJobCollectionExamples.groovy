@@ -4,7 +4,6 @@ import org.folio.inventory.domain.ingest.IngestJobCollection
 import org.folio.inventory.resources.ingest.IngestJob
 import org.folio.inventory.resources.ingest.IngestJobState
 import org.folio.metadata.common.api.request.PagingParameters
-import org.folio.metadata.common.domain.Success
 import org.junit.Before
 import org.junit.Test
 
@@ -34,12 +33,12 @@ class InMemoryIngestJobCollectionExamples {
 
     waitForCompletion(addFuture)
 
-    def findFuture = new CompletableFuture<Success<List<IngestJob>>>()
+    def findFuture = new CompletableFuture<List<IngestJob>>()
 
     collection.findAll(PagingParameters.defaults(), succeed(findFuture),
       fail(findFuture))
 
-    def allJobs = getOnCompletion(findFuture).result
+    def allJobs = getOnCompletion(findFuture)
 
     assert allJobs.size() == 1
 
@@ -58,7 +57,7 @@ class InMemoryIngestJobCollectionExamples {
 
     def findFuture = new CompletableFuture<IngestJob>()
 
-    collection.findById(added.id, complete(findFuture))
+    collection.findById(added.id, succeed(findFuture), fail(findFuture))
 
     def found = getOnCompletion(findFuture)
 
@@ -79,13 +78,14 @@ class InMemoryIngestJobCollectionExamples {
 
     def updateFuture = new CompletableFuture<IngestJob>()
 
-    collection.update(completed, complete(updateFuture), { })
+    collection.update(completed, succeed(updateFuture),
+      fail(updateFuture))
 
     waitForCompletion(updateFuture)
 
     def findFuture = new CompletableFuture<IngestJob>()
 
-    collection.findById(added.id, complete(findFuture))
+    collection.findById(added.id, succeed(findFuture), fail(findFuture))
 
     def found = getOnCompletion(findFuture)
 
@@ -105,16 +105,16 @@ class InMemoryIngestJobCollectionExamples {
 
     def updateFuture = new CompletableFuture<IngestJob>()
 
-    collection.update(completed, complete(updateFuture), { })
+    collection.update(completed, succeed(updateFuture), fail(updateFuture))
 
     waitForCompletion(updateFuture)
 
-    def findAllFuture = new CompletableFuture<Success<List<IngestJob>>>()
+    def findAllFuture = new CompletableFuture<List<IngestJob>>()
 
     collection.findAll(PagingParameters.defaults(), succeed(findAllFuture),
       fail(findAllFuture))
 
-    def all = getOnCompletion(findAllFuture).result
+    def all = getOnCompletion(findAllFuture)
 
     assert all.count({ it.id == added.id }) == 1
   }

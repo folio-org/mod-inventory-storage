@@ -9,10 +9,8 @@ import org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.parsing.UTF8LiteralCharacterEncoding
 import org.folio.inventory.storage.Storage
 import org.folio.metadata.common.WebContext
-import org.folio.metadata.common.api.response.ClientErrorResponse
-import org.folio.metadata.common.api.response.JsonResponse
-import org.folio.metadata.common.api.response.RedirectResponse
-import org.folio.metadata.common.api.response.ServerErrorResponse
+import org.folio.metadata.common.api.response.*
+import org.folio.metadata.common.domain.Success
 
 class ModsIngestion {
   private final Storage storage
@@ -42,10 +40,11 @@ class ModsIngestion {
     def context = new WebContext(routingContext)
 
     storage.getIngestJobCollection(context)
-      .findById(routingContext.request().getParam("id"), {
+      .findById(routingContext.request().getParam("id"),
+      { Success it ->
         JsonResponse.success(routingContext.response(),
-          ["status" : it.state.toString()])
-      })
+          ["status" : it.result.state.toString()])
+      }, FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   private FileSystem readUploadedFile(RoutingContext routingContext) {

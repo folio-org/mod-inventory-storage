@@ -63,12 +63,12 @@ abstract class ItemCollectionExamples {
 
     addSomeExamples(collection)
 
-    def findFuture = new CompletableFuture<Success<List<Item>>>()
+    def findFuture = new CompletableFuture<List<Item>>()
 
     collection.findAll(PagingParameters.defaults(), succeed(findFuture),
       fail(findFuture))
 
-    def allItems = getOnCompletion(findFuture).result
+    def allItems = getOnCompletion(findFuture)
 
     assert allItems.size() == 3
 
@@ -133,14 +133,15 @@ abstract class ItemCollectionExamples {
 
     def changed = added.changeStatus("Checked Out")
 
-    collection.update(changed, complete(updateFinished),
-      { println("Update item failed: ${it}") })
+    collection.update(changed, succeed(updateFinished),
+      fail(updateFinished))
 
     waitForCompletion(updateFinished)
 
     def gotUpdated = new CompletableFuture<Item>()
 
-    collection.findById(added.id, complete(gotUpdated))
+    collection.findById(added.id, succeed(gotUpdated),
+      fail(gotUpdated))
 
     def updated = getOnCompletion(gotUpdated)
 
@@ -170,10 +171,10 @@ abstract class ItemCollectionExamples {
     def findItemForIncorrectTenant = new CompletableFuture<Item>()
 
     firstTenantCollection.findById(addedItem.id,
-      complete(findItemForCorrectTenant))
+      succeed(findItemForCorrectTenant), fail(findItemForCorrectTenant))
 
     secondTenantCollection.findById(addedItem.id,
-      complete(findItemForIncorrectTenant))
+      succeed(findItemForIncorrectTenant), fail(findItemForIncorrectTenant))
 
     assert getOnCompletion(findItemForCorrectTenant) != null
     assert getOnCompletion(findItemForIncorrectTenant) == null
@@ -197,18 +198,19 @@ abstract class ItemCollectionExamples {
 
     waitForCompletion(deleted)
 
-    def findFuture = new CompletableFuture<Item>()
+    def findFuture = new CompletableFuture<Success<Item>>()
 
-    collection.findById(itemToBeDeleted.id, complete(findFuture))
+    collection.findById(itemToBeDeleted.id, succeed(findFuture),
+      fail(findFuture))
 
     assert findFuture.get() == null
 
-    def findAllFuture = new CompletableFuture<Success<List<Item>>>()
+    def findAllFuture = new CompletableFuture<List<Item>>()
 
     collection.findAll(PagingParameters.defaults(), succeed(findAllFuture),
       fail(findAllFuture))
 
-    def allItems = getOnCompletion(findAllFuture).result
+    def allItems = getOnCompletion(findAllFuture)
 
     assert allItems.size() == 3
   }
@@ -227,8 +229,8 @@ abstract class ItemCollectionExamples {
 
     allAdded.waitForCompletion()
 
-    def firstPageFuture = new CompletableFuture<Success<Collection>>()
-    def secondPageFuture = new CompletableFuture<Success<Collection>>()
+    def firstPageFuture = new CompletableFuture<Collection>()
+    def secondPageFuture = new CompletableFuture<Collection>()
 
     collection.findAll(new PagingParameters(3, 0), succeed(firstPageFuture),
       fail(secondPageFuture))
@@ -236,8 +238,8 @@ abstract class ItemCollectionExamples {
     collection.findAll(new PagingParameters(3, 3), succeed(secondPageFuture),
       fail(secondPageFuture))
 
-    def firstPage = getOnCompletion(firstPageFuture).result
-    def secondPage = getOnCompletion(secondPageFuture).result
+    def firstPage = getOnCompletion(firstPageFuture)
+    def secondPage = getOnCompletion(secondPageFuture)
 
     assert firstPage.size() == 3
     assert secondPage.size() == 2
@@ -319,8 +321,11 @@ abstract class ItemCollectionExamples {
     def findFuture = new CompletableFuture<Item>()
     def otherFindFuture = new CompletableFuture<Item>()
 
-    collection.findById(addedItem.id, complete(findFuture))
-    collection.findById(otherAddedItem.id, complete(otherFindFuture))
+    collection.findById(addedItem.id, succeed(findFuture),
+      fail(findFuture))
+
+    collection.findById(otherAddedItem.id, succeed(otherFindFuture),
+      fail(otherFindFuture))
 
     def foundItem = getOnCompletion(findFuture)
     def otherFoundItem = getOnCompletion(otherFindFuture)

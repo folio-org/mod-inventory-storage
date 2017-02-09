@@ -36,8 +36,8 @@ class InMemoryCollection<T> {
     items.find(matcher)
   }
 
-  void findOne(Closure matcher, Closure resultCallback) {
-    resultCallback(items.find(matcher))
+  void findOne(Closure matcher, Consumer<Success<T>> successCallback) {
+    successCallback.accept(new Success(items.find(matcher)))
   }
 
   void find(Closure matcher, Closure resultCallback) {

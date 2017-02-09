@@ -22,13 +22,15 @@ class InMemoryInstanceCollection
   }
 
   @Override
-  void findById(String id, Closure resultCallback) {
+  void findById(String id,
+                Consumer<Success<Instance>> resultCallback,
+                Consumer<Failure> failureCallback) {
     collection.findOne({ it.id == id }, resultCallback)
   }
 
   @Override
   void findAll(PagingParameters pagingParameters,
-               Consumer<Success> resultCallback,
+               Consumer<Success<List<Instance>>> resultCallback,
                Consumer<Failure> failureCallback) {
 
     collection.some(pagingParameters, resultCallback)

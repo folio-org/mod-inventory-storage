@@ -61,12 +61,12 @@ abstract class InstanceCollectionExamples {
 
     addSomeExamples(collection)
 
-    def findFuture = new CompletableFuture<Success<List<Instance>>>()
+    def findFuture = new CompletableFuture<List<Instance>>()
 
     collection.findAll(PagingParameters.defaults(), succeed(findFuture),
       fail(findFuture))
 
-    def allInstances = getOnCompletion(findFuture).result
+    def allInstances = getOnCompletion(findFuture)
 
     assert allInstances.size() == 3
 
@@ -135,8 +135,10 @@ abstract class InstanceCollectionExamples {
     def findFuture = new CompletableFuture<Instance>()
     def otherFindFuture = new CompletableFuture<Instance>()
 
-    collection.findById(addedInstance.id, complete(findFuture))
-    collection.findById(otherAddedInstance.id, complete(otherFindFuture))
+    collection.findById(addedInstance.id, succeed(findFuture),
+      fail(findFuture))
+    collection.findById(otherAddedInstance.id, succeed(otherFindFuture),
+      fail(otherFindFuture))
 
     def foundSmallAngry = getOnCompletion(findFuture)
     def foundNod = getOnCompletion(otherFindFuture)
@@ -201,16 +203,17 @@ abstract class InstanceCollectionExamples {
 
     def findFuture = new CompletableFuture<Item>()
 
-    collection.findById(instanceToBeDeleted.id, complete(findFuture))
+    collection.findById(instanceToBeDeleted.id, succeed(findFuture),
+      fail(findFuture))
 
     assert findFuture.get() == null
 
-    def findAllFuture = new CompletableFuture<Success<List<Item>>>()
+    def findAllFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(PagingParameters.defaults(), complete(findAllFuture),
+    collection.findAll(PagingParameters.defaults(), succeed(findAllFuture),
       fail(findAllFuture))
 
-    def allInstances = getOnCompletion(findAllFuture).result
+    def allInstances = getOnCompletion(findAllFuture)
 
     assert allInstances.size() == 3
   }
@@ -229,14 +232,13 @@ abstract class InstanceCollectionExamples {
 
     def changed = added.removeIdentifier('isbn', '9781473619777')
 
-    collection.update(changed, complete(updateFinished),
-      { println("Update instance failed: ${it}") })
+    collection.update(changed, succeed(updateFinished), fail(updateFinished))
 
     waitForCompletion(updateFinished)
 
-    def gotUpdated = new CompletableFuture<Item>()
+    def gotUpdated = new CompletableFuture<Instance>()
 
-    collection.findById(added.id, complete(gotUpdated))
+    collection.findById(added.id, succeed(gotUpdated), fail(gotUpdated))
 
     def updated = getOnCompletion(gotUpdated)
 
@@ -292,10 +294,10 @@ abstract class InstanceCollectionExamples {
     def findInstanceForIncorrectTenant = new CompletableFuture<Instance>()
 
     firstTenantCollection.findById(addedInstance.id,
-      complete(findInstanceForCorrectTenant))
+      succeed(findInstanceForCorrectTenant), fail(findInstanceForCorrectTenant))
 
     secondTenantCollection.findById(addedInstance.id,
-      complete(findInstanceForIncorrectTenant))
+      succeed(findInstanceForIncorrectTenant), fail(findInstanceForIncorrectTenant))
 
     assert getOnCompletion(findInstanceForCorrectTenant) != null
     assert getOnCompletion(findInstanceForIncorrectTenant) == null

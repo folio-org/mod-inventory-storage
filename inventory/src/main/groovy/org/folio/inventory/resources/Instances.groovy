@@ -11,7 +11,6 @@ import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.*
-import org.folio.metadata.common.domain.Failure
 import org.folio.metadata.common.domain.Success
 
 class Instances {
@@ -61,8 +60,7 @@ class Instances {
         new PagingParameters(limit, offset),
         { Success success -> JsonResponse.success(routingContext.response(),
           toRepresentation(success.result, context)) },
-        { Failure failure -> ServerErrorResponse.internalError(
-          routingContext.response(), failure.reason) })
+        FailureResponseConsumer.serverError(routingContext.response()))
     }
     else {
       storage.getInstanceCollection(context).findByCql(search,
@@ -102,17 +100,16 @@ class Instances {
     def instanceCollection = storage.getInstanceCollection(context)
 
     instanceCollection.findById(routingContext.request().getParam("id"),
-      {
-        if(it != null) {
+      { Success it ->
+        if(it.result != null) {
           instanceCollection.update(updatedInstance, {
             SuccessResponse.noContent(routingContext.response()) },
-            { Failure failure ->  ServerErrorResponse.internalError(
-              routingContext.response(), failure.reason) })
+            FailureResponseConsumer.serverError(routingContext.response()))
         }
         else {
           ClientErrorResponse.notFound(routingContext.response())
         }
-      })
+      }, FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   void deleteAll(RoutingContext routingContext) {
@@ -137,15 +134,15 @@ class Instances {
 
     storage.getInstanceCollection(context).findById(
       routingContext.request().getParam("id"),
-      {
-        if(it != null) {
+      { Success it ->
+        if(it.result != null) {
           JsonResponse.success(routingContext.response(),
-            toRepresentation(it, context))
+            toRepresentation(it.result, context))
         }
         else {
           ClientErrorResponse.notFound(routingContext.response())
         }
-      })
+      }, FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   private static String relativeInstancesPath() {
