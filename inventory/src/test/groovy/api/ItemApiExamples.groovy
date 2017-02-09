@@ -350,7 +350,7 @@ class ItemApiExamples extends Specification {
       def firstItem = items[0]
 
       assert firstItem.title == "Long Way to a Small Angry Planet"
-      assert firstItem.status.name == "available"
+      assert firstItem.status.name == "Available"
 
       items.each {
         selfLinkRespectsWayResourceWasReached(it)
