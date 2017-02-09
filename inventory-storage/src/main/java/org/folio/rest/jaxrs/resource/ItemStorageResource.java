@@ -113,13 +113,13 @@ public interface ItemStorageResource {
      *       "title": "Uprooted",
      *       "barcode": "645398607547",
      *       "status": {
-     *         "name": "available"
+     *         "name": "Available"
      *       },
      *       "materialType": {
-     *         "name": "book"
+     *         "name": "Book"
      *       },
      *       "location": {
-     *         "name": "main library"
+     *         "name": "Main Library"
      *       }
      *     }
      *     
@@ -223,13 +223,13 @@ public interface ItemStorageResource {
      *       "title": "Uprooted",
      *       "barcode": "645398607547",
      *       "status": {
-     *         "name": "available"
+     *         "name": "Available"
      *       },
      *       "materialType": {
-     *         "name": "book"
+     *         "name": "Book"
      *       },
      *       "location": {
-     *         "name": "main library"
+     *         "name": "Main Library"
      *       }
      *     }
      *     
@@ -360,13 +360,13 @@ public interface ItemStorageResource {
          *   "title": "Uprooted",
          *   "barcode": "645398607547",
          *   "status": {
-         *     "name": "available"
+         *     "name": "Available"
          *   },
          *   "materialType": {
-         *     "name": "book"
+         *     "name": "Book"
          *   },
          *   "location": {
-         *     "name": "main library"
+         *     "name": "Main Library"
          *   }
          * }
          * 
@@ -378,13 +378,13 @@ public interface ItemStorageResource {
          *       "title": "Uprooted",
          *       "barcode": "645398607547",
          *       "status": {
-         *         "name": "available"
+         *         "name": "Available"
          *       },
          *       "materialType": {
-         *         "name": "book"
+         *         "name": "Book"
          *       },
          *       "location": {
-         *         "name": "main library"
+         *         "name": "Main Library"
          *       }
          *     }
          *     
@@ -441,13 +441,13 @@ public interface ItemStorageResource {
          *       "title": "Nod",
          *       "barcode": "456743454532",
          *       "status": {
-         *         "name": "available"
+         *         "name": "Available"
          *       },
          *       "materialType": {
-         *         "name": "book"
+         *         "name": "Book"
          *       },
          *       "location": {
-         *         "name": "main library"
+         *         "name": "Main Library"
          *       }
          *     },
          *     {
@@ -456,13 +456,13 @@ public interface ItemStorageResource {
          *       "title": "Uprooted",
          *       "barcode": "645398607547",
          *       "status": {
-         *         "name": "available"
+         *         "name": "Available"
          *       },
          *       "materialType": {
-         *         "name": "book"
+         *         "name": "Book"
          *       },
          *       "location": {
-         *         "name": "main library"
+         *         "name": "Main Library"
          *       }
          *     }
          *   ],
@@ -479,13 +479,13 @@ public interface ItemStorageResource {
          *           "title": "Nod",
          *           "barcode": "456743454532",
          *           "status": {
-         *             "name": "available"
+         *             "name": "Available"
          *           },
          *           "materialType": {
-         *             "name": "book"
+         *             "name": "Book"
          *           },
          *           "location": {
-         *             "name": "main library"
+         *             "name": "Main Library"
          *           }
          *         },
          *         {
@@ -494,13 +494,13 @@ public interface ItemStorageResource {
          *           "title": "Uprooted",
          *           "barcode": "645398607547",
          *           "status": {
-         *             "name": "available"
+         *             "name": "Available"
          *           },
          *           "materialType": {
-         *             "name": "book"
+         *             "name": "Book"
          *           },
          *           "location": {
-         *             "name": "main library"
+         *             "name": "Main Library"
          *           }
          *         }
          *       ],
@@ -556,13 +556,13 @@ public interface ItemStorageResource {
          *   "title": "Uprooted",
          *   "barcode": "645398607547",
          *   "status": {
-         *     "name": "available"
+         *     "name": "Available"
          *   },
          *   "materialType": {
-         *     "name": "book"
+         *     "name": "Book"
          *   },
          *   "location": {
-         *     "name": "main library"
+         *     "name": "Main Library"
          *   }
          * }
          * 
@@ -576,13 +576,13 @@ public interface ItemStorageResource {
          *       "title": "Uprooted",
          *       "barcode": "645398607547",
          *       "status": {
-         *         "name": "available"
+         *         "name": "Available"
          *       },
          *       "materialType": {
-         *         "name": "book"
+         *         "name": "Book"
          *       },
          *       "location": {
-         *         "name": "main library"
+         *         "name": "Main Library"
          *       }
          *     }
          *     

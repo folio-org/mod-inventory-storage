@@ -4,12 +4,12 @@
   "title": "Uprooted",
   "barcode": "645398607547",
   "status": {
-    "name" : "available"
+    "name" : "Available"
   },
   "materialType": {
-    "name": "book"
+    "name": "Book"
   },
   "location": {
-    "name": "main library"
+    "name": "Main Library"
   }
 }

@@ -31,9 +31,9 @@ class ItemApiExamples extends Specification {
         .put("title", createdInstance.title)
         .put("instanceId", createdInstance.id)
         .put("barcode", "645398607547")
-        .put("status", new JsonObject().put("name", "available"))
-        .put("materialType", new JsonObject().put("name", "book"))
-        .put("location", new JsonObject().put("name", "annex library"))
+        .put("status", new JsonObject().put("name", "Available"))
+        .put("materialType", new JsonObject().put("name", "Book"))
+        .put("location", new JsonObject().put("name", "Annex Library"))
 
     when:
       def (postResponse, __) = client.post(
@@ -53,9 +53,9 @@ class ItemApiExamples extends Specification {
       assert createdItem.id != null
       assert createdItem.title == "Long Way to a Small Angry Planet"
       assert createdItem.barcode == "645398607547"
-      assert createdItem?.status?.name == "available"
-      assert createdItem?.materialType?.name == "book"
-      assert createdItem?.location?.name == "annex library"
+      assert createdItem?.status?.name == "Available"
+      assert createdItem?.materialType?.name == "Book"
+      assert createdItem?.location?.name == "Annex Library"
 
       selfLinkRespectsWayResourceWasReached(createdItem)
       selfLinkShouldBeReachable(createdItem)
@@ -105,9 +105,9 @@ class ItemApiExamples extends Specification {
         .put("title", createdInstance.title)
         .put("instanceId", createdInstance.id)
         .put("barcode", "645398607547")
-        .put("status", new JsonObject().put("name", "available"))
-        .put("materialType", new JsonObject().put("name", "book"))
-        .put("location", new JsonObject().put("name", "annex library"))
+        .put("status", new JsonObject().put("name", "Available"))
+        .put("materialType", new JsonObject().put("name", "Book"))
+        .put("location", new JsonObject().put("name", "Annex Library"))
 
     when:
       def (postResponse, __) = client.post(
@@ -127,9 +127,9 @@ class ItemApiExamples extends Specification {
       assert createdItem.id != null
       assert createdItem.instanceId == createdInstance.id
       assert createdItem.barcode == "645398607547"
-      assert createdItem?.status?.name == "available"
-      assert createdItem?.materialType?.name == "book"
-      assert createdItem?.location?.name == "annex library"
+      assert createdItem?.status?.name == "Available"
+      assert createdItem?.materialType?.name == "Book"
+      assert createdItem?.location?.name == "Annex Library"
 
       selfLinkRespectsWayResourceWasReached(createdItem)
       selfLinkShouldBeReachable(createdItem)
@@ -144,7 +144,7 @@ class ItemApiExamples extends Specification {
         createdInstance.title, createdInstance.id, "645398607547")
 
       def updateItemRequest = newItem.copy()
-        .put("status", new JsonObject().put("name", "checked out"))
+        .put("status", new JsonObject().put("name", "Checked Out"))
 
       def itemLocation = new URL("${ApiRoot.items()}/${newItem.getString("id")}")
 
@@ -162,9 +162,9 @@ class ItemApiExamples extends Specification {
       assert updatedItem.id == newItem.getString("id")
       assert updatedItem.instanceId == createdInstance.id
       assert updatedItem.barcode == "645398607547"
-      assert updatedItem?.status?.name == "checked out"
-      assert updatedItem?.materialType?.name == "book"
-      assert updatedItem?.location?.name == "main library"
+      assert updatedItem?.status?.name == "Checked Out"
+      assert updatedItem?.materialType?.name == "Book"
+      assert updatedItem?.location?.name == "Main Library"
 
       selfLinkRespectsWayResourceWasReached(updatedItem)
       selfLinkShouldBeReachable(updatedItem)
@@ -177,9 +177,9 @@ class ItemApiExamples extends Specification {
         .put("title", "Nod")
         .put("instanceId", UUID.randomUUID().toString())
         .put("barcode", "546747342365")
-        .put("status", new JsonObject().put("name", "available"))
-        .put("materialType", new JsonObject().put("name", "book"))
-        .put("location", new JsonObject().put("name", "main library"))
+        .put("status", new JsonObject().put("name", "Available"))
+        .put("materialType", new JsonObject().put("name", "Book"))
+        .put("location", new JsonObject().put("name", "Main Library"))
 
     when:
       def (putResponse, __) = client.put(
@@ -376,9 +376,9 @@ class ItemApiExamples extends Specification {
         .put("title", nodInstance.title)
         .put("instanceId", nodInstance.id)
         .put("barcode", "645398607547")
-        .put("status", new JsonObject().put("name", "available"))
-        .put("materialType", new JsonObject().put("name", "book"))
-        .put("location", new JsonObject().put("name", "main library"))
+        .put("status", new JsonObject().put("name", "Available"))
+        .put("materialType", new JsonObject().put("name", "Book"))
+        .put("location", new JsonObject().put("name", "Main Library"))
 
       def (createItemResponse, createItemBody) = client.post(ApiRoot.items(),
         Json.encodePrettily(newItemRequest))
@@ -451,9 +451,9 @@ class ItemApiExamples extends Specification {
       .put("title", title)
       .put("instanceId", instanceId)
       .put("barcode", barcode)
-      .put("status", new JsonObject().put("name", "available"))
-      .put("materialType", new JsonObject().put("name", "book"))
-      .put("location", new JsonObject().put("name", "main library"))
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("materialType", new JsonObject().put("name", "Book"))
+      .put("location", new JsonObject().put("name", "Main Library"))
 
     def (createItemResponse, _) = client.post(ApiRoot.items(),
       Json.encodePrettily(newItemRequest))

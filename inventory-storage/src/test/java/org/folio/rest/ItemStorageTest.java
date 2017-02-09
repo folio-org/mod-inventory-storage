@@ -66,11 +66,11 @@ public class ItemStorageTest {
     assertThat(itemFromPost.getString("title"), is("Nod"));
     assertThat(itemFromPost.getString("barcode"), is("565578437802"));
     assertThat(itemFromPost.getJsonObject("status").getString("name"),
-      is("available"));
+      is("Available"));
     assertThat(itemFromPost.getJsonObject("materialType").getString("name"),
-      is("book"));
+      is("Book"));
     assertThat(itemFromPost.getJsonObject("location").getString("name"),
-      is("main library"));
+      is("Main Library"));
 
     JsonResponse getResponse = getById(id);
 
@@ -83,11 +83,11 @@ public class ItemStorageTest {
     assertThat(itemFromGet.getString("title"), is("Nod"));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
-      is("available"));
+      is("Available"));
     assertThat(itemFromGet.getJsonObject("materialType").getString("name"),
-      is("book"));
+      is("Book"));
     assertThat(itemFromGet.getJsonObject("location").getString("name"),
-      is("main library"));
+      is("Main Library"));
   }
 
   @Test
@@ -104,9 +104,9 @@ public class ItemStorageTest {
     itemToCreate.put("instanceId", instanceId.toString());
     itemToCreate.put("title", "Nod");
     itemToCreate.put("barcode", "565578437802");
-    itemToCreate.put("status", new JsonObject().put("name", "available"));
-    itemToCreate.put("materialType", new JsonObject().put("name", "book"));
-    itemToCreate.put("location", new JsonObject().put("name", "main library"));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("materialType", new JsonObject().put("name", "Book"));
+    itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
 
     CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
 
@@ -116,7 +116,7 @@ public class ItemStorageTest {
     TextResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    
+
     assertThat(postResponse.getBody(), is("ID and instance ID must both be a UUID"));
   }
 
@@ -151,11 +151,11 @@ public class ItemStorageTest {
     assertThat(item.getString("title"), is("Nod"));
     assertThat(item.getString("barcode"), is("565578437802"));
     assertThat(item.getJsonObject("status").getString("name"),
-      is("available"));
+      is("Available"));
     assertThat(item.getJsonObject("materialType").getString("name"),
-      is("book"));
+      is("Book"));
     assertThat(item.getJsonObject("location").getString("name"),
-      is("main library"));
+      is("Main Library"));
   }
 
   @Test
@@ -173,7 +173,7 @@ public class ItemStorageTest {
     JsonObject replacement = itemToCreate.copy();
       replacement.put("barcode", "125845734657");
       replacement.put("location",
-        new JsonObject().put("name", "annex library"));
+        new JsonObject().put("name", "Annex Library"));
 
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
@@ -197,11 +197,11 @@ public class ItemStorageTest {
     assertThat(item.getString("title"), is("Long Way to a Small Angry Planet"));
     assertThat(item.getString("barcode"), is("125845734657"));
     assertThat(item.getJsonObject("status").getString("name"),
-      is("available"));
+      is("Available"));
     assertThat(item.getJsonObject("materialType").getString("name"),
-      is("book"));
+      is("Book"));
     assertThat(item.getJsonObject("location").getString("name"),
-      is("annex library"));
+      is("Annex Library"));
   }
 
   @Test
@@ -520,9 +520,9 @@ public class ItemStorageTest {
     itemToCreate.put("instanceId", instanceId.toString());
     itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);
-    itemToCreate.put("status", new JsonObject().put("name", "available"));
-    itemToCreate.put("materialType", new JsonObject().put("name", "book"));
-    itemToCreate.put("location", new JsonObject().put("name", "main library"));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("materialType", new JsonObject().put("name", "Book"));
+    itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
 
     return itemToCreate;
   }

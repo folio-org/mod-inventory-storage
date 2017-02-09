@@ -4,12 +4,12 @@
   "title": "The Girl on the Train",
   "barcode": "",
   "materialType": {
-    "name": "dvd"
+    "name": "DVD"
   },
   "status": {
-    "name": "available"
+    "name": "Available"
   },
   "location": {
-    "name": "annex library"
+    "name": "Annex Library"
   }
 }

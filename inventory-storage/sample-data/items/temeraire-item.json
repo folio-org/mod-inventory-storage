@@ -4,12 +4,12 @@
   "title": "Temeraire",
   "barcode": "645398607547",
   "materialType": {
-    "name": "book"
+    "name": "Book"
   },
   "status": {
-    "name": "available"
+    "name": "Available"
   },
   "location": {
-    "name": "main library"
+    "name": "Main Library"
   }
 }

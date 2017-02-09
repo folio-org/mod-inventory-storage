@@ -4,12 +4,12 @@
   "title": "Bridget Jones's Baby",
   "barcode": "453987605438",
   "materialType": {
-    "name": "dvd"
+    "name": "DVD"
   },
   "status": {
-    "name": "checked out"
+    "name": "Checked Out"
   },
   "location": {
-    "name": "main library"
+    "name": "Main Library"
   }
 }
