@@ -5,6 +5,7 @@ import org.folio.inventory.domain.Item
 import org.folio.inventory.domain.ItemCollection
 import org.folio.metadata.common.WaitForAllFutures
 import org.folio.metadata.common.api.request.PagingParameters
+import org.folio.metadata.common.domain.Success
 import org.junit.Before
 import org.junit.Test
 
@@ -46,11 +47,12 @@ abstract class ItemCollectionExamples {
 
     waitForCompletion(emptied)
 
-    def findFuture = new CompletableFuture<List<Item>>()
+    def findFuture = new CompletableFuture<Success<List<Item>>>()
 
-    collection.findAll(PagingParameters.defaults(), complete(findFuture))
+    collection.findAll(PagingParameters.defaults(),
+      succeed(findFuture), fail(findFuture))
 
-    def allItems = getOnCompletion(findFuture)
+    def allItems = getOnCompletion(findFuture).result
 
     assert allItems.size() == 0
   }
@@ -61,11 +63,12 @@ abstract class ItemCollectionExamples {
 
     addSomeExamples(collection)
 
-    def findFuture = new CompletableFuture<List<Item>>()
+    def findFuture = new CompletableFuture<Success<List<Item>>>()
 
-    collection.findAll(PagingParameters.defaults(), complete(findFuture))
+    collection.findAll(PagingParameters.defaults(), succeed(findFuture),
+      fail(findFuture))
 
-    def allItems = getOnCompletion(findFuture)
+    def allItems = getOnCompletion(findFuture).result
 
     assert allItems.size() == 3
 
@@ -200,11 +203,12 @@ abstract class ItemCollectionExamples {
 
     assert findFuture.get() == null
 
-    def findAllFuture = new CompletableFuture<List<Item>>()
+    def findAllFuture = new CompletableFuture<Success<List<Item>>>()
 
-    collection.findAll(PagingParameters.defaults(), complete(findAllFuture))
+    collection.findAll(PagingParameters.defaults(), succeed(findAllFuture),
+      fail(findAllFuture))
 
-    def allItems = getOnCompletion(findAllFuture)
+    def allItems = getOnCompletion(findAllFuture).result
 
     assert allItems.size() == 3
   }
@@ -223,14 +227,17 @@ abstract class ItemCollectionExamples {
 
     allAdded.waitForCompletion()
 
-    def firstPageFuture = new CompletableFuture<Collection>()
-    def secondPageFuture = new CompletableFuture<Collection>()
+    def firstPageFuture = new CompletableFuture<Success<Collection>>()
+    def secondPageFuture = new CompletableFuture<Success<Collection>>()
 
-    collection.findAll(new PagingParameters(3, 0), complete(firstPageFuture))
-    collection.findAll(new PagingParameters(3, 3), complete(secondPageFuture))
+    collection.findAll(new PagingParameters(3, 0), succeed(firstPageFuture),
+      fail(secondPageFuture))
 
-    def firstPage = getOnCompletion(firstPageFuture)
-    def secondPage = getOnCompletion(secondPageFuture)
+    collection.findAll(new PagingParameters(3, 3), succeed(secondPageFuture),
+      fail(secondPageFuture))
+
+    def firstPage = getOnCompletion(firstPageFuture).result
+    def secondPage = getOnCompletion(secondPageFuture).result
 
     assert firstPage.size() == 3
     assert secondPage.size() == 2

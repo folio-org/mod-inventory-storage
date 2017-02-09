@@ -10,7 +10,9 @@ interface AsynchronousCollection<T> {
   void empty(Closure completionCallback)
   void add(T item, Closure resultCallback)
   void findById(String id, Closure resultCallback)
-  void findAll(PagingParameters pagingParameters, Closure resultCallback)
+  void findAll(PagingParameters pagingParameters,
+               Consumer<Success> resultsCallback,
+               Consumer<Failure> failureCallback)
   void delete(String id, Closure completionCallback)
   void update(T item,
               Consumer<Success> completionCallback,

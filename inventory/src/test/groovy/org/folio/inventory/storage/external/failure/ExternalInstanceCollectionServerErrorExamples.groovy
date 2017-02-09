@@ -2,7 +2,9 @@ package org.folio.inventory.storage.external.failure
 
 import org.folio.inventory.domain.CollectionProvider
 import org.folio.inventory.domain.Instance
+import org.folio.inventory.domain.InstanceCollection
 import org.folio.inventory.storage.external.ExternalStorageCollections
+import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.domain.Failure
 import org.folio.metadata.common.domain.Success
 import org.junit.Test
@@ -22,8 +24,8 @@ class ExternalInstanceCollectionServerErrorExamples {
         ExternalStorageFailureSuite.instanceStorageAddress)})
 
   @Test
-  void serverErrorDuringAnUpdatingTriggersFailureCallback() {
-    def collection = collectionProvider.getInstanceCollection("test_tenant")
+  void serverErrorWhenUpdatingAnInstanceTriggersFailureCallback() {
+    def collection = createCollection()
 
     def failureCalled = new CompletableFuture<Failure>()
 
@@ -34,5 +36,24 @@ class ExternalInstanceCollectionServerErrorExamples {
     def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
 
     assertThat(failure.reason, is("Server Error"))
+  }
+
+  @Test
+  void serverErrorWhenGettingAllInstancesTriggersFailureCallback() {
+    def collection = createCollection()
+
+    def failureCalled = new CompletableFuture<Failure>()
+
+    collection.findAll(PagingParameters.defaults(),
+      { Success success -> fail("Results callback should not be called") },
+      { Failure failure -> failureCalled.complete(failure) })
+
+    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
+
+    assertThat(failure.reason, is("Server Error"))
+  }
+
+  private InstanceCollection createCollection() {
+    collectionProvider.getInstanceCollection("test_tenant")
   }
 }

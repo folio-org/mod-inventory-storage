@@ -27,7 +27,9 @@ class InMemoryItemCollection
   }
 
   @Override
-  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+  void findAll(PagingParameters pagingParameters,
+               Consumer<Success> resultCallback,
+               Consumer<Failure> failureCallback) {
     collection.some(pagingParameters, resultCallback)
   }
 

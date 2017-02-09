@@ -92,7 +92,10 @@ class ExternalStorageModuleItemCollection
   }
 
   @Override
-  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+  void findAll(PagingParameters pagingParameters,
+               Consumer<Success> resultCallback,
+               Consumer<Failure> failureCallback) {
+
     String location = String.format(storageAddress
       + "/item-storage/items?limit=%s&offset=%s",
       pagingParameters.limit, pagingParameters.offset)
@@ -101,19 +104,25 @@ class ExternalStorageModuleItemCollection
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        def itemsFromServer = new JsonObject(responseBody).getJsonArray("items")
+        if(response.statusCode() == 200) {
+          def itemsFromServer = new JsonObject(responseBody)
+            .getJsonArray("items")
 
-        def foundItems = new ArrayList<Item>()
+          def foundItems = new ArrayList<Item>()
 
-        itemsFromServer.each {
-          foundItems.add(mapFromJson(it))
+          itemsFromServer.each {
+            foundItems.add(mapFromJson(it))
+          }
+
+          resultCallback.accept(new Success(foundItems))
         }
-
-        resultCallback(foundItems)
+        else {
+          failureCallback.accept(new Failure(responseBody))
+        }
       })
     }
 
-    Handler<Throwable> onException = { println "Exception: ${it}" }
+    Handler<Throwable> onException = { failureCallback.accept(new Failure(it)) }
 
     vertx.createHttpClient().requestAbs(HttpMethod.GET, location, onResponse)
       .exceptionHandler(onException)
@@ -190,7 +199,7 @@ class ExternalStorageModuleItemCollection
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
         if(response.statusCode() == 204) {
-          completionCallback.accept(new Success())
+          completionCallback.accept(new Success(null))
         }
         else {
           failureCallback.accept(new Failure("${responseBody}"))
@@ -198,7 +207,7 @@ class ExternalStorageModuleItemCollection
       })
     }
 
-    Handler<Throwable> onException = { println "Exception: ${it}" }
+    Handler<Throwable> onException = { failureCallback.accept(new Failure(it)) }
 
     def itemToSend = mapToItemRequest(item)
 

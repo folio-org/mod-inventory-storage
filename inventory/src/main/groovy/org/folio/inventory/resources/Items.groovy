@@ -10,6 +10,7 @@ import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.*
 import org.folio.metadata.common.domain.Failure
+import org.folio.metadata.common.domain.Success
 
 class Items {
 
@@ -41,10 +42,13 @@ class Items {
 
     if(search == null) {
       storage.getItemCollection(context).findAll(
-        new PagingParameters(limit, offset), {
+        new PagingParameters(limit, offset),
+        { Success success ->
         JsonResponse.success(routingContext.response(),
-          new ItemRepresentation(relativeItemsPath()).toJson(it, context))
-      })
+          new ItemRepresentation(relativeItemsPath()).toJson(success.result,
+            context)) },
+        { Failure failure -> ServerErrorResponse.internalError(
+          routingContext.response(), failure.reason) })
     }
     else {
       storage.getItemCollection(context).findByCql(search,

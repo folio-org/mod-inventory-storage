@@ -1,7 +1,10 @@
 package org.folio.metadata.common
 
+import org.folio.metadata.common.domain.Failure
+
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
 
 class FutureAssistance {
   static <T> T getOnCompletion(CompletableFuture<T> future) {
@@ -14,5 +17,15 @@ class FutureAssistance {
 
   static Closure complete(CompletableFuture future) {
     return { future.complete(it) }
+  }
+
+  static Closure succeed(CompletableFuture future) {
+    return { future.complete(it) }
+  }
+
+  static Consumer<Failure> fail(CompletableFuture future) {
+    return { Failure failure -> future.completeExceptionally(
+      new Exception(failure.reason))
+    }
   }
 }

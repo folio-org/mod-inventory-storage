@@ -12,6 +12,7 @@ import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.*
 import org.folio.metadata.common.domain.Failure
+import org.folio.metadata.common.domain.Success
 
 class Instances {
   private final Storage storage
@@ -57,10 +58,11 @@ class Instances {
 
     if(search == null) {
       storage.getInstanceCollection(context).findAll(
-        new PagingParameters(limit, offset), {
-        JsonResponse.success(routingContext.response(),
-          toRepresentation(it, context))
-      })
+        new PagingParameters(limit, offset),
+        { Success success -> JsonResponse.success(routingContext.response(),
+          toRepresentation(success.result, context)) },
+        { Failure failure -> ServerErrorResponse.internalError(
+          routingContext.response(), failure.reason) })
     }
     else {
       storage.getInstanceCollection(context).findByCql(search,

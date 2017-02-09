@@ -94,7 +94,9 @@ class ExternalStorageModuleInstanceCollection
   }
 
   @Override
-  void findAll(PagingParameters pagingParameters, Closure resultCallback) {
+  void findAll(PagingParameters pagingParameters,
+               Consumer<Success> resultCallback,
+               Consumer<Failure> failureCallback) {
     String location = String.format(storageModuleAddress
       + "/instance-storage/instances?limit=%s&offset=%s",
       pagingParameters.limit, pagingParameters.offset)
@@ -103,15 +105,20 @@ class ExternalStorageModuleInstanceCollection
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        def instances = new JsonObject(responseBody).getJsonArray("instances")
+        if(response.statusCode() == 200) {
+          def instances = new JsonObject(responseBody).getJsonArray("instances")
 
-        def foundInstances = new ArrayList<Instance>()
+          def foundInstances = new ArrayList<Instance>()
 
-        instances.each {
-          foundInstances.add(mapFromJson(it))
+          instances.each {
+            foundInstances.add(mapFromJson(it))
+          }
+
+          resultCallback.accept(new Success(foundInstances))
         }
-
-        resultCallback(foundInstances)
+        else {
+          failureCallback.accept(new Failure(responseBody))
+        }
       })
     }
 
@@ -214,7 +221,7 @@ class ExternalStorageModuleInstanceCollection
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
         if(response.statusCode() == 204) {
-          completionCallback.accept(new Success())
+          completionCallback.accept(new Success(null))
         }
         else {
           failureCallback.accept(new Failure("${responseBody}"))

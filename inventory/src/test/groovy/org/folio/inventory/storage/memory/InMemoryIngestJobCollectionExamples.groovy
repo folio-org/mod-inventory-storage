@@ -1,17 +1,16 @@
 package org.folio.inventory.storage.memory
 
-import org.folio.inventory.resources.ingest.IngestJob
 import org.folio.inventory.domain.ingest.IngestJobCollection
+import org.folio.inventory.resources.ingest.IngestJob
 import org.folio.inventory.resources.ingest.IngestJobState
 import org.folio.metadata.common.api.request.PagingParameters
+import org.folio.metadata.common.domain.Success
 import org.junit.Before
 import org.junit.Test
 
 import java.util.concurrent.CompletableFuture
 
-import static org.folio.metadata.common.FutureAssistance.complete
-import static org.folio.metadata.common.FutureAssistance.getOnCompletion
-import static org.folio.metadata.common.FutureAssistance.waitForCompletion
+import static org.folio.metadata.common.FutureAssistance.*
 
 class InMemoryIngestJobCollectionExamples {
 
@@ -35,11 +34,12 @@ class InMemoryIngestJobCollectionExamples {
 
     waitForCompletion(addFuture)
 
-    def findFuture = new CompletableFuture<List<IngestJob>>()
+    def findFuture = new CompletableFuture<Success<List<IngestJob>>>()
 
-    collection.findAll(PagingParameters.defaults(), complete(findFuture))
+    collection.findAll(PagingParameters.defaults(), succeed(findFuture),
+      fail(findFuture))
 
-    def allJobs = getOnCompletion(findFuture)
+    def allJobs = getOnCompletion(findFuture).result
 
     assert allJobs.size() == 1
 
@@ -109,11 +109,12 @@ class InMemoryIngestJobCollectionExamples {
 
     waitForCompletion(updateFuture)
 
-    def findAllFuture = new CompletableFuture<List<IngestJob>>()
+    def findAllFuture = new CompletableFuture<Success<List<IngestJob>>>()
 
-    collection.findAll(PagingParameters.defaults(), complete(findAllFuture))
+    collection.findAll(PagingParameters.defaults(), succeed(findAllFuture),
+      fail(findAllFuture))
 
-    def all = getOnCompletion(findAllFuture)
+    def all = getOnCompletion(findAllFuture).result
 
     assert all.count({ it.id == added.id }) == 1
   }

@@ -6,7 +6,6 @@ import org.folio.metadata.common.cql.CqlParser
 import org.folio.metadata.common.domain.Success
 
 import java.util.function.Consumer
-
 //TODO: truly asynchronous implementation
 class InMemoryCollection<T> {
 
@@ -24,11 +23,13 @@ class InMemoryCollection<T> {
     resultCallback(all())
   }
 
-  void some(PagingParameters pagingParameters, Closure resultCallback) {
-    resultCallback(all().stream()
+  void some(PagingParameters pagingParameters,
+            Consumer<Success> resultCallback) {
+
+    resultCallback.accept(new Success(all().stream()
       .skip(pagingParameters.offset)
       .limit(pagingParameters.limit)
-      .collect())
+      .collect()))
   }
 
   T findOne(Closure matcher) {
@@ -73,7 +74,7 @@ class InMemoryCollection<T> {
   void replace(T item, Consumer<Success> completionCallback) {
     items.removeIf({ it.id == item.id })
     items.add(item)
-    completionCallback.accept(new Success())
+    completionCallback.accept(new Success(null))
   }
 
   List<T> add(List<T> itemsToAdd) {
