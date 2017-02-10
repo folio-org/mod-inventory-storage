@@ -79,10 +79,11 @@ class Items {
       PagingParameters.defaults(), {
 
       if(it.size() == 0) {
-        itemCollection.add(newItem, {
+        itemCollection.add(newItem, { Success success ->
           RedirectResponse.created(routingContext.response(),
-            context.absoluteUrl("${relativeItemsPath()}/${it.id}").toString())
-        })
+            context.absoluteUrl(
+              "${relativeItemsPath()}/${success.result.id}").toString())
+        }, FailureResponseConsumer.serverError(routingContext.response()))
       }
       else {
         ClientErrorResponse.badRequest(routingContext.response(),

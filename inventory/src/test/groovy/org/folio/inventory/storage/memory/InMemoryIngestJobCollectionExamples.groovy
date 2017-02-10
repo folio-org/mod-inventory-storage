@@ -29,7 +29,7 @@ class InMemoryIngestJobCollectionExamples {
     def addFuture = new CompletableFuture<IngestJob>()
 
     collection.add(new IngestJob(IngestJobState.REQUESTED),
-      complete(addFuture))
+      succeed(addFuture), fail(addFuture))
 
     waitForCompletion(addFuture)
 
@@ -51,7 +51,7 @@ class InMemoryIngestJobCollectionExamples {
     def addFuture = new CompletableFuture<IngestJob>()
 
     collection.add(new IngestJob(IngestJobState.REQUESTED),
-      complete(addFuture))
+      succeed(addFuture), fail(addFuture))
 
     def added = getOnCompletion(addFuture)
 
@@ -70,7 +70,7 @@ class InMemoryIngestJobCollectionExamples {
     def addFuture = new CompletableFuture<IngestJob>()
 
     collection.add(new IngestJob(IngestJobState.REQUESTED),
-      complete(addFuture))
+      succeed(addFuture), fail(addFuture))
 
     def added = getOnCompletion(addFuture)
 
@@ -97,7 +97,7 @@ class InMemoryIngestJobCollectionExamples {
     def addFuture = new CompletableFuture<IngestJob>()
 
     collection.add(new IngestJob(IngestJobState.REQUESTED),
-      complete(addFuture))
+      succeed(addFuture), fail(addFuture))
 
     def added = getOnCompletion(addFuture)
 

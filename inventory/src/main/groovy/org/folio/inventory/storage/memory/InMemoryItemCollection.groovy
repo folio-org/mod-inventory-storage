@@ -15,7 +15,9 @@ class InMemoryItemCollection
   private final collection = new InMemoryCollection<Item>()
 
   @Override
-  void add(Item item, Closure resultCallback) {
+  void add(Item item,
+           Consumer<Success<Item>> resultCallback,
+           Consumer<Failure> failureCallback) {
     def id = item.id ?: UUID.randomUUID().toString()
 
     collection.add(item.copyWithNewId(id), resultCallback)

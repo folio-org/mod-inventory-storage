@@ -1,20 +1,22 @@
 package org.folio.metadata.common
 
-import java.util.concurrent.CompletableFuture
+import org.folio.metadata.common.domain.Success
 
-import static org.folio.metadata.common.FutureAssistance.complete
+import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
+
+import static org.folio.metadata.common.FutureAssistance.succeed
 
 class CollectAll<T> {
 
   private allFutures = new ArrayList<CompletableFuture<T>>()
 
-  Closure receive() {
-
+  Consumer<Success> receive() {
     def newFuture = new CompletableFuture()
 
     allFutures.add(newFuture)
 
-    complete(newFuture)
+    succeed(newFuture)
   }
 
   void collect(Closure action) {

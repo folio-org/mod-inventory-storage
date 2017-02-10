@@ -112,7 +112,7 @@ abstract class ItemCollectionExamples {
 
     def itemWithId = smallAngryPlanet.copyWithNewId(itemId)
 
-    collection.add(itemWithId, complete(addFinished))
+    collection.add(itemWithId, succeed(addFinished), fail(addFinished))
 
     def added = getOnCompletion(addFinished)
 
@@ -125,7 +125,7 @@ abstract class ItemCollectionExamples {
 
     def addFinished = new CompletableFuture<Item>()
 
-    collection.add(smallAngryPlanet, complete(addFinished))
+    collection.add(smallAngryPlanet, succeed(addFinished), fail(addFinished))
 
     def added = getOnCompletion(addFinished)
 
@@ -163,7 +163,8 @@ abstract class ItemCollectionExamples {
 
     def addFuture = new CompletableFuture<Item>()
 
-    firstTenantCollection.add(smallAngryPlanet, complete(addFuture))
+    firstTenantCollection.add(smallAngryPlanet, succeed(addFuture),
+      fail(addFuture))
 
     def addedItem = getOnCompletion(addFuture)
 
@@ -188,7 +189,8 @@ abstract class ItemCollectionExamples {
 
     def itemToBeDeletedFuture = new CompletableFuture<Item>()
 
-    collection.add(temeraire(), complete(itemToBeDeletedFuture))
+    collection.add(temeraire(), succeed(itemToBeDeletedFuture),
+      fail(itemToBeDeletedFuture))
 
     def itemToBeDeleted = itemToBeDeletedFuture.get()
 
@@ -221,11 +223,11 @@ abstract class ItemCollectionExamples {
 
     def allAdded = new WaitForAllFutures()
 
-    collection.add(smallAngryPlanet, allAdded.notifyComplete())
-    collection.add(nod, allAdded.notifyComplete())
-    collection.add(uprooted, allAdded.notifyComplete())
-    collection.add(temeraire, allAdded.notifyComplete())
-    collection.add(interestingTimes, allAdded.notifyComplete())
+    collection.add(smallAngryPlanet, allAdded.notifySuccess(), {})
+    collection.add(nod, allAdded.notifySuccess(), {})
+    collection.add(uprooted, allAdded.notifySuccess(), {})
+    collection.add(temeraire, allAdded.notifySuccess(), {})
+    collection.add(interestingTimes, allAdded.notifySuccess(), {})
 
     allAdded.waitForCompletion()
 
@@ -253,9 +255,12 @@ abstract class ItemCollectionExamples {
     def secondAddFuture = new CompletableFuture<Item>()
     def thirdAddFuture = new CompletableFuture<Item>()
 
-    collection.add(smallAngryPlanet, complete(firstAddFuture))
-    collection.add(nod, complete(secondAddFuture))
-    collection.add(uprooted, complete(thirdAddFuture))
+    collection.add(smallAngryPlanet, succeed(firstAddFuture),
+      fail(firstAddFuture))
+    collection.add(nod, succeed(secondAddFuture),
+      fail(secondAddFuture))
+    collection.add(uprooted, succeed(thirdAddFuture),
+      fail(thirdAddFuture))
 
     def allAddsFuture = CompletableFuture.allOf(firstAddFuture,
       secondAddFuture, thirdAddFuture)
@@ -283,9 +288,12 @@ abstract class ItemCollectionExamples {
     def secondAddFuture = new CompletableFuture<Item>()
     def thirdAddFuture = new CompletableFuture<Item>()
 
-    collection.add(smallAngryPlanet, complete(firstAddFuture))
-    collection.add(nod, complete(secondAddFuture))
-    collection.add(uprooted, complete(thirdAddFuture))
+    collection.add(smallAngryPlanet, succeed(firstAddFuture),
+      fail(firstAddFuture))
+    collection.add(nod, succeed(secondAddFuture),
+      fail(secondAddFuture))
+    collection.add(uprooted, succeed(thirdAddFuture),
+      fail(thirdAddFuture))
 
     def allAddsFuture = CompletableFuture.allOf(secondAddFuture, thirdAddFuture)
 
@@ -311,9 +319,11 @@ abstract class ItemCollectionExamples {
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
 
-    collection.add(smallAngryPlanet, complete(firstAddFuture))
+    collection.add(smallAngryPlanet, succeed(firstAddFuture),
+      fail(firstAddFuture))
 
-    collection.add(nod, complete(secondAddFuture))
+    collection.add(nod, succeed(secondAddFuture),
+      fail(secondAddFuture))
 
     def addedItem = getOnCompletion(firstAddFuture)
     def otherAddedItem = getOnCompletion(secondAddFuture)
@@ -348,9 +358,9 @@ abstract class ItemCollectionExamples {
   private void addSomeExamples(ItemCollection itemCollection) {
     def allAdded = new WaitForAllFutures()
 
-    itemCollection.add(smallAngryPlanet, allAdded.notifyComplete())
-    itemCollection.add(nod, allAdded.notifyComplete())
-    itemCollection.add(uprooted, allAdded.notifyComplete())
+    itemCollection.add(smallAngryPlanet, allAdded.notifySuccess(), { })
+    itemCollection.add(nod, allAdded.notifySuccess(), { })
+    itemCollection.add(uprooted, allAdded.notifySuccess(), { })
 
     allAdded.waitForCompletion()
   }

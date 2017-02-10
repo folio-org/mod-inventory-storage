@@ -24,6 +24,21 @@ class ExternalInstanceCollectionServerErrorExamples {
         ExternalStorageFailureSuite.instanceStorageAddress)})
 
   @Test
+  void serverErrorWhenCreatingAnInstanceTriggersFailureCallback() {
+    def collection = createCollection()
+
+    def failureCalled = new CompletableFuture<Failure>()
+
+    collection.add(new Instance(UUID.randomUUID().toString(), "Nod", []),
+      { Success success -> fail("Completion callback should not be called") },
+      { Failure failure -> failureCalled.complete(failure) })
+
+    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
+
+    assertThat(failure.reason, is("Server Error"))
+  }
+
+  @Test
   void serverErrorWhenUpdatingAnInstanceTriggersFailureCallback() {
     def collection = createCollection()
 

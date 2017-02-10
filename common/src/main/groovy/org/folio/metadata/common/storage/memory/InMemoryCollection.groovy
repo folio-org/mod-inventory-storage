@@ -66,9 +66,14 @@ class InMemoryCollection<T> {
     item
   }
 
-  void add(T item, resultCallback) {
+  void add(T item, Closure resultCallback) {
     items.add(item)
     resultCallback(item)
+  }
+
+  void add(T item, Consumer<Success<T>> resultCallback) {
+    items.add(item)
+    resultCallback.accept(new Success<T>(item))
   }
 
   void replace(T item, Consumer<Success> completionCallback) {

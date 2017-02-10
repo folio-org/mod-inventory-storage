@@ -65,14 +65,18 @@ class ModsIngestion {
           def context = new WebContext(routingContext)
 
           storage.getIngestJobCollection(context)
-            .add(new IngestJob(IngestJobState.REQUESTED), { job ->
+            .add(new IngestJob(IngestJobState.REQUESTED),
+            { Success success ->
 
-            IngestMessages.start(convertedRecords, job.id, context)
-              .send(routingContext.vertx())
+              IngestMessages.start(convertedRecords, success.result.id, context)
+                .send(routingContext.vertx())
 
-            RedirectResponse.accepted(routingContext.response(),
-              statusLocation(routingContext, job.id))
-          })
+              RedirectResponse.accepted(routingContext.response(),
+                statusLocation(routingContext, success.result.id))
+            },
+            {
+              println("Creating Ingest Job failed")
+            })
 
         } else {
           ServerErrorResponse.internalError(

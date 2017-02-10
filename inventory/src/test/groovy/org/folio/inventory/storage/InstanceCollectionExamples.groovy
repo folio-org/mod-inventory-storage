@@ -112,7 +112,7 @@ abstract class InstanceCollectionExamples {
 
     def instanceWithId = smallAngryPlanet().copyWithNewId(instanceId)
 
-    collection.add(instanceWithId, complete(addFinished))
+    collection.add(instanceWithId, succeed(addFinished), fail(addFinished))
 
     def added = getOnCompletion(addFinished)
 
@@ -126,8 +126,10 @@ abstract class InstanceCollectionExamples {
     def firstAddFuture = new CompletableFuture<Instance>()
     def secondAddFuture = new CompletableFuture<Instance>()
 
-    collection.add(smallAngryPlanet(), complete(firstAddFuture))
-    collection.add(nod(), complete(secondAddFuture))
+    collection.add(smallAngryPlanet(), succeed(firstAddFuture),
+      fail(firstAddFuture))
+    collection.add(nod(), succeed(secondAddFuture),
+      fail(secondAddFuture))
 
     def addedInstance = getOnCompletion(firstAddFuture)
     def otherAddedInstance = getOnCompletion(secondAddFuture)
@@ -160,11 +162,11 @@ abstract class InstanceCollectionExamples {
 
     def allAdded = new WaitForAllFutures()
 
-    collection.add(smallAngryPlanet(), allAdded.notifyComplete())
-    collection.add(nod(), allAdded.notifyComplete())
-    collection.add(uprooted(), allAdded.notifyComplete())
-    collection.add(temeraire(), allAdded.notifyComplete())
-    collection.add(interestingTimes(), allAdded.notifyComplete())
+    collection.add(smallAngryPlanet(), allAdded.notifySuccess(), { })
+    collection.add(nod(), allAdded.notifySuccess(), { })
+    collection.add(uprooted(), allAdded.notifySuccess(), { })
+    collection.add(temeraire(), allAdded.notifySuccess(), { })
+    collection.add(interestingTimes(), allAdded.notifySuccess(), { })
 
     allAdded.waitForCompletion()
 
@@ -191,7 +193,8 @@ abstract class InstanceCollectionExamples {
 
     def instanceToBeDeletedFuture = new CompletableFuture<Instance>()
 
-    collection.add(temeraire(), complete(instanceToBeDeletedFuture))
+    collection.add(temeraire(), succeed(instanceToBeDeletedFuture),
+      fail(instanceToBeDeletedFuture))
 
     def instanceToBeDeleted = instanceToBeDeletedFuture.get()
 
@@ -224,7 +227,8 @@ abstract class InstanceCollectionExamples {
 
     def addFinished = new CompletableFuture<Instance>()
 
-    collection.add(smallAngryPlanet(), complete(addFinished))
+    collection.add(smallAngryPlanet(), succeed(addFinished),
+      fail(addFinished))
 
     def added = getOnCompletion(addFinished)
 
@@ -255,9 +259,12 @@ abstract class InstanceCollectionExamples {
     def secondAddFuture = new CompletableFuture<Instance>()
     def thirdAddFuture = new CompletableFuture<Instance>()
 
-    collection.add(smallAngryPlanet(), complete(firstAddFuture))
-    collection.add(nod(), complete(secondAddFuture))
-    collection.add(uprooted(), complete(thirdAddFuture))
+    collection.add(smallAngryPlanet(), succeed(firstAddFuture),
+      fail(firstAddFuture))
+    collection.add(nod(), succeed(secondAddFuture),
+      fail(secondAddFuture))
+    collection.add(uprooted(), succeed(thirdAddFuture),
+      fail(thirdAddFuture))
 
     def allAddsFuture = CompletableFuture.allOf(secondAddFuture, thirdAddFuture)
 
@@ -286,7 +293,8 @@ abstract class InstanceCollectionExamples {
 
     def addFuture = new CompletableFuture<Item>()
 
-    firstTenantCollection.add(smallAngryPlanet(), complete(addFuture))
+    firstTenantCollection.add(smallAngryPlanet(), succeed(addFuture),
+      fail(addFuture))
 
     def addedInstance = getOnCompletion(addFuture)
 
@@ -306,9 +314,9 @@ abstract class InstanceCollectionExamples {
   private void addSomeExamples(InstanceCollection instanceCollection) {
     def allAdded = new WaitForAllFutures()
 
-    instanceCollection.add(smallAngryPlanet(), allAdded.notifyComplete())
-    instanceCollection.add(nod(), allAdded.notifyComplete())
-    instanceCollection.add(uprooted(), allAdded.notifyComplete())
+    instanceCollection.add(smallAngryPlanet(), allAdded.notifySuccess(), { })
+    instanceCollection.add(nod(), allAdded.notifySuccess(), { })
+    instanceCollection.add(uprooted(), allAdded.notifySuccess(), { })
 
     allAdded.waitForCompletion()
   }

@@ -2,9 +2,9 @@ package org.folio.inventory.domain.ingest
 
 import io.vertx.groovy.core.eventbus.EventBus
 import io.vertx.groovy.core.eventbus.Message
-import org.folio.inventory.domain.Messages
 import org.folio.inventory.domain.Instance
 import org.folio.inventory.domain.Item
+import org.folio.inventory.domain.Messages
 import org.folio.inventory.resources.ingest.IngestJob
 import org.folio.inventory.resources.ingest.IngestJobState
 import org.folio.inventory.storage.Storage
@@ -42,7 +42,9 @@ class IngestMessageProcessor {
       .map({
       new Instance(it.title, it.identifiers)
     })
-    .forEach({ instanceCollection.add(it, allInstances.receive()) })
+    .forEach({ instanceCollection.add(it, allInstances.receive(),
+      { Failure failure -> println("Ingest Creation Failed: ${failure.reason}") })
+    })
 
     allInstances.collect ({ instances ->
       records.stream()
@@ -53,7 +55,9 @@ class IngestMessageProcessor {
             instances.find({ it.title == record.title })?.id,
             "Available", "Book", "Main Library")
       })
-      .forEach({ itemCollection.add(it, allItems.receive()) })
+      .forEach({ itemCollection.add(it, allItems.receive(),
+        { Failure failure -> println("Ingest Creation Failed: ${failure.reason}") })
+      })
     })
 
     allItems.collect({

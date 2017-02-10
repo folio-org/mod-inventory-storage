@@ -15,10 +15,13 @@ class InMemoryInstanceCollection
   private final collection = new InMemoryCollection<Instance>()
 
   @Override
-  void add(Instance item, Closure resultCallback) {
-    def id = item.id ?: UUID.randomUUID().toString()
+  void add(Instance instance,
+           Consumer<Success<Instance>> resultCallback,
+           Consumer<Failure> failureCallback) {
 
-    collection.add(item.copyWithNewId(id), resultCallback)
+    def id = instance.id ?: UUID.randomUUID().toString()
+
+    collection.add(instance.copyWithNewId(id), resultCallback)
   }
 
   @Override

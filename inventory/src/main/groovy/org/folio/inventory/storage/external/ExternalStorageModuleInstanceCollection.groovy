@@ -31,7 +31,9 @@ class ExternalStorageModuleInstanceCollection
   }
 
   @Override
-  void add(Instance instance, Closure resultCallback) {
+  void add(Instance instance,
+           Consumer<Success<Instance>> resultCallback,
+           Consumer<Failure> failureCallback) {
 
     String location = storageModuleAddress + "/instance-storage/instances"
 
@@ -42,21 +44,18 @@ class ExternalStorageModuleInstanceCollection
         if(response.statusCode() == 201) {
           def createdInstance = mapFromJson(new JsonObject(responseBody))
 
-          resultCallback(createdInstance)
+          resultCallback.accept(new Success<Instance>(createdInstance))
         }
         else {
-          println("Create item failed, reason: ${responseBody}")
-          resultCallback(null)
+          failureCallback.accept(new Failure(responseBody))
         }
       })
     }
 
-    Handler<Throwable> onException = { println "Exception: ${it}" }
-
     def instanceToSend = mapToInstanceRequest(instance)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
-      .exceptionHandler(onException)
+      .exceptionHandler(exceptionHandler(failureCallback))
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json")
       .putHeader("Content-Type", "application/json")

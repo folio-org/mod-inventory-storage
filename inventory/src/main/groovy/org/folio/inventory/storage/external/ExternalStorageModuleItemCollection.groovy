@@ -30,7 +30,10 @@ class ExternalStorageModuleItemCollection
   }
 
   @Override
-  void add(Item item, Closure resultCallback) {
+  void add(Item item,
+           Consumer<Success<Item>> resultCallback,
+           Consumer<Failure> failureCallback) {
+
     String location = storageAddress + "/item-storage/items"
 
     def onResponse = { HttpClientResponse response ->
@@ -40,21 +43,18 @@ class ExternalStorageModuleItemCollection
         if(response.statusCode() == 201) {
           def createdItem = mapFromJson(new JsonObject(responseBody))
 
-          resultCallback(createdItem)
+          resultCallback.accept(new Success<Item>(createdItem))
         }
         else {
-          println("Create item failed, reason: ${responseBody}")
-          resultCallback(null)
+          failureCallback.accept(new Failure(responseBody))
         }
       })
     }
 
-    Handler<Throwable> onException = { println "Exception: ${it}" }
-
     def itemToSend = mapToItemRequest(item)
 
     vertx.createHttpClient().requestAbs(HttpMethod.POST, location, onResponse)
-      .exceptionHandler(onException)
+      .exceptionHandler(exceptionHandler(failureCallback))
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Content-Type", "application/json")
       .putHeader("Accept", "application/json")

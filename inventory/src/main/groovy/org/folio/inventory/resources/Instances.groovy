@@ -84,10 +84,12 @@ class Instances {
 
     def newInstance = requestToInstance(instanceRequest)
 
-    storage.getInstanceCollection(context).add(newInstance, {
-      RedirectResponse.created(routingContext.response(),
-        context.absoluteUrl("${relativeInstancesPath()}/${it.id}").toString())
-    })
+    storage.getInstanceCollection(context).add(newInstance,
+      { Success success ->
+        RedirectResponse.created(routingContext.response(),
+        context.absoluteUrl(
+          "${relativeInstancesPath()}/${success.result.id}").toString())
+      }, FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   void update(RoutingContext routingContext) {

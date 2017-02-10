@@ -19,7 +19,9 @@ class InMemoryIngestJobCollection implements IngestJobCollection {
   }
 
   @Override
-  void add(IngestJob item, Closure resultCallback) {
+  void add(IngestJob item,
+           Consumer<Success<IngestJob>> resultCallback,
+           Consumer<Failure> failureCallback) {
     collection.add(item.copyWithNewId(UUID.randomUUID().toString()),
       resultCallback)
   }

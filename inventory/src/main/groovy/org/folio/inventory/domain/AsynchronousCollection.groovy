@@ -8,7 +8,9 @@ import java.util.function.Consumer
 
 interface AsynchronousCollection<T> {
   void empty(Closure completionCallback)
-  void add(T item, Closure resultCallback)
+  void add(T item,
+           Consumer<Success<T>> resultCallback,
+           Consumer<Failure> failureCallback)
   void findById(String id,
                 Consumer<Success<T>> resultCallback,
                 Consumer<Failure> failureCallback)
