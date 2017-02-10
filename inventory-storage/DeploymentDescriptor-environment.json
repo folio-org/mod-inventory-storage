@@ -1,0 +1,7 @@
+{
+  "srvcId" : "inventory-storage",
+  "nodeId" : "localhost",
+  "descriptor" : {
+    "exec" : "java -jar ../mod-metadata/inventory-storage/target/inventory-storage-fat.jar -Dhttp.port=%p"
+  }
+}

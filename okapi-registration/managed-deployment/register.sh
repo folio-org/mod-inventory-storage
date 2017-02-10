@@ -3,8 +3,9 @@
 module_id=${1}
 okapi_proxy_address=${2:-http://localhost:9130}
 tenant_id=${3:-demo_tenant}
+deployment_descriptor_filename=${4:-DeploymentDescriptor.json}
 
-discovery_json=$(cat ./DeploymentDescriptor.json)
+discovery_json=$(cat ./${deployment_descriptor_filename})
 
 curl -w '\n' -X POST -D -   \
      -H "Content-type: application/json"   \
@@ -24,5 +25,3 @@ curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
      -d "${activate_json}"  \
      "${okapi_proxy_address}/_/proxy/tenants/${tenant_id}/modules"
-
-

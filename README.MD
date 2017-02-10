@@ -32,10 +32,10 @@ This readme is intended to get these modules up and running. For further informa
 - Apache Groovy 2.4.8
 - Gradle 3.3
 - Maven 3.3.9
-- [RAML Module Builder](https://github.com/folio-org/raml-module-builder) 2.3.3
 - Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
-- Node 6.4.0
-- NPM 3.10.3
+- Node 6.4.0 (for API linting and documentation generation)
+- NPM 3.10.3 (for API linting and documentation generation)
+- Python 3.6.0 (for nice to have parts of deployment scripts, e.g. is used to remove environment variables from Okapi)
 - [SDKMan](http://sdkman.io/) (recommended for installing Gradle and Groovy)
 
 # Preparation
