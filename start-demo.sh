@@ -4,22 +4,6 @@
 
 ./register.sh
 
-cd knowledge-base-core
-
-./build-docker-image.sh
-
-./start-docker.sh
-
-cd ..
-
-cd catalogue-core
-
-./build-docker-image.sh
-
-./start-docker.sh
-
-cd ..
-
 cd inventory-storage
 
 ./start-demo.sh
@@ -32,13 +16,17 @@ cd inventory
 
 cd ..
 
-./create-sample-data.sh
+cd inventory/sample-data
 
-cd demo/ui
+./example-ingest.sh
 
-npm install
+cd ../..
 
-./node_modules/.bin/webpack-dev-server --host 0.0.0.0
+cd inventory-storage/sample-data
+
+./import.sh
+
+cd ../..
 
 
 
