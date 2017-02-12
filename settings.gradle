@@ -1,4 +1,2 @@
 include 'common'
-include 'knowledge-base-core'
-include 'catalogue-core'
 include 'inventory'
