@@ -14,7 +14,8 @@ class InMemoryIngestJobCollection implements IngestJobCollection {
   private final collection = new InMemoryCollection<IngestJob>()
 
   @Override
-  void empty(Closure completionCallback) {
+  void empty(Consumer<Success> completionCallback,
+             Consumer<Failure> failureCallback) {
     collection.empty(completionCallback)
   }
 
@@ -50,7 +51,9 @@ class InMemoryIngestJobCollection implements IngestJobCollection {
   }
 
   @Override
-  void delete(String id, Closure completionCallback) {
+  void delete(String id,
+              Consumer<Success> completionCallback,
+              Consumer<Failure> failureCallback) {
     collection.remove(id, completionCallback)
   }
 }

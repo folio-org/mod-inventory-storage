@@ -154,8 +154,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     itemsForTenant.clear()
 
-    JsonResponse.success(routingContext.response(),
-      itemsForTenant.values())
+    SuccessResponse.noContent(routingContext.response())
   }
 
   private def getItems(RoutingContext routingContext) {
@@ -236,8 +235,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     storedInstances.clear()
 
-    JsonResponse.success(routingContext.response(),
-      storedInstances.values())
+    SuccessResponse.noContent(routingContext.response())
   }
 
   private def deleteInstance(RoutingContext routingContext) {

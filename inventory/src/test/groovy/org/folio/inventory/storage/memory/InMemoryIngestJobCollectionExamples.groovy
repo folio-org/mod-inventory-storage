@@ -19,7 +19,7 @@ class InMemoryIngestJobCollectionExamples {
   public void before() {
     def emptied = new CompletableFuture()
 
-    collection.empty(complete(emptied))
+    collection.empty(succeed(emptied), fail(emptied))
 
     waitForCompletion(emptied)
   }

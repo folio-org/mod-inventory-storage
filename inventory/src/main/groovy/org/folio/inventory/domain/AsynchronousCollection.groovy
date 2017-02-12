@@ -7,7 +7,8 @@ import org.folio.metadata.common.domain.Success
 import java.util.function.Consumer
 
 interface AsynchronousCollection<T> {
-  void empty(Closure completionCallback)
+  void empty(Consumer<Success> completionCallback,
+             Consumer<Failure> failureCallback)
   void add(T item,
            Consumer<Success<T>> resultCallback,
            Consumer<Failure> failureCallback)
@@ -17,7 +18,9 @@ interface AsynchronousCollection<T> {
   void findAll(PagingParameters pagingParameters,
                Consumer<Success<List<T>>> resultsCallback,
                Consumer<Failure> failureCallback)
-  void delete(String id, Closure completionCallback)
+  void delete(String id,
+              Consumer<Success> completionCallback,
+              Consumer<Failure> failureCallback)
   void update(T item,
               Consumer<Success> completionCallback,
               Consumer<Failure> failureCallback)

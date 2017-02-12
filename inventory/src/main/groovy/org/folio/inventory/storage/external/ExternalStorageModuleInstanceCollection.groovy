@@ -135,41 +135,52 @@ class ExternalStorageModuleInstanceCollection
   }
 
   @Override
-  void delete(String id, Closure completionCallback) {
+  void delete(String id,
+              Consumer<Success> completionCallback,
+              Consumer<Failure> failureCallback) {
     String location = "${storageModuleAddress}/instance-storage/instances/${id}"
 
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
-        completionCallback()
+        def responseBody = "${buffer.getString(0, buffer.length())}"
+
+        if(response.statusCode() == 204) {
+          completionCallback.accept(new Success())
+        }
+        else {
+          failureCallback.accept(new Failure(responseBody))
+        }
       })
     }
 
-    Handler<Throwable> onException = { println "Exception: ${it}" }
-
     vertx.createHttpClient().requestAbs(HttpMethod.DELETE, location, onResponse)
-      .exceptionHandler(onException)
+      .exceptionHandler(exceptionHandler(failureCallback))
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json, text/plain")
       .end()
   }
 
   @Override
-  void empty(Closure completionCallback) {
+  void empty(Consumer<Success> completionCallback,
+             Consumer<Failure> failureCallback) {
+
     String location = storageModuleAddress + "/instance-storage/instances"
 
     def onResponse = { response ->
-
-      println("DELETE ${location}: status code: ${response.statusCode()}")
-
       response.bodyHandler({ buffer ->
-        completionCallback()
+        def responseBody = "${buffer.getString(0, buffer.length())}"
+
+        if(response.statusCode() == 204) {
+          completionCallback.accept(new Success())
+        }
+        else {
+          failureCallback.accept(new Failure(responseBody))
+        }
       })
     }
 
-    Handler<Throwable> onException = { println "Exception: ${it}" }
-
     vertx.createHttpClient().requestAbs(HttpMethod.DELETE, location, onResponse)
-      .exceptionHandler(onException)
+      .exceptionHandler(exceptionHandler(failureCallback))
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json, text/plain")
       .end()

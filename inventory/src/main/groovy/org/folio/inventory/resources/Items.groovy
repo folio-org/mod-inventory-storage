@@ -61,9 +61,9 @@ class Items {
   void deleteAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
-    storage.getItemCollection(context).empty {
-      SuccessResponse.noContent(routingContext.response())
-    }
+    storage.getItemCollection(context).empty(
+      { SuccessResponse.noContent(routingContext.response()) },
+      FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   void create(RoutingContext routingContext) {
@@ -136,9 +136,9 @@ class Items {
     def context = new WebContext(routingContext)
 
     storage.getItemCollection(context).delete(
-      routingContext.request().getParam("id"), {
-      SuccessResponse.noContent(routingContext.response())
-    })
+      routingContext.request().getParam("id"),
+      { SuccessResponse.noContent(routingContext.response()) },
+      FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   void getById(RoutingContext routingContext) {

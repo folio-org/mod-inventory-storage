@@ -117,18 +117,18 @@ class Instances {
   void deleteAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
-    storage.getInstanceCollection(context).empty {
-      SuccessResponse.noContent(routingContext.response())
-    }
+    storage.getInstanceCollection(context).empty (
+      { SuccessResponse.noContent(routingContext.response()) },
+      FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   void deleteById(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
     storage.getInstanceCollection(context).delete(
-      routingContext.request().getParam("id"), {
-      SuccessResponse.noContent(routingContext.response())
-    })
+      routingContext.request().getParam("id"),
+      { SuccessResponse.noContent(routingContext.response()) },
+      FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   void getById(RoutingContext routingContext) {

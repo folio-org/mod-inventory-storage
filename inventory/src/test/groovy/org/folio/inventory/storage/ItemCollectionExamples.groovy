@@ -43,16 +43,16 @@ abstract class ItemCollectionExamples {
 
     def emptied = new CompletableFuture()
 
-    collection.empty(complete(emptied))
+    collection.empty(succeed(emptied), fail(emptied))
 
     waitForCompletion(emptied)
 
-    def findFuture = new CompletableFuture<Success<List<Item>>>()
+    def findFuture = new CompletableFuture<List<Item>>()
 
     collection.findAll(PagingParameters.defaults(),
       succeed(findFuture), fail(findFuture))
 
-    def allItems = getOnCompletion(findFuture).result
+    def allItems = getOnCompletion(findFuture)
 
     assert allItems.size() == 0
   }
@@ -196,7 +196,7 @@ abstract class ItemCollectionExamples {
 
     def deleted = new CompletableFuture()
 
-    collection.delete(itemToBeDeleted.id, complete(deleted))
+    collection.delete(itemToBeDeleted.id, succeed(deleted), fail(deleted))
 
     waitForCompletion(deleted)
 
@@ -368,7 +368,7 @@ abstract class ItemCollectionExamples {
   private void emptyCollection(ItemCollection collection) {
     def emptied = new CompletableFuture()
 
-    collection.empty(complete(emptied))
+    collection.empty(succeed(emptied), fail(emptied))
 
     waitForCompletion(emptied)
   }

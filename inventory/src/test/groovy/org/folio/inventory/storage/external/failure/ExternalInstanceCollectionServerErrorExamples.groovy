@@ -69,13 +69,43 @@ class ExternalInstanceCollectionServerErrorExamples {
   }
 
   @Test
-  void serverErrorWhenGettingInstanceByIdTriggersFailureCallback() {
+  void serverErrorWhenGettingAnInstanceByIdTriggersFailureCallback() {
     def collection = createCollection()
 
     def failureCalled = new CompletableFuture<Failure>()
 
     collection.findById(UUID.randomUUID().toString(),
       { Success success -> fail("Results callback should not be called") },
+      { Failure failure -> failureCalled.complete(failure) })
+
+    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
+
+    assertThat(failure.reason, is("Server Error"))
+  }
+
+  @Test
+  void serverErrorWhenDeletingAnInstanceByIdTriggersFailureCallback() {
+    def collection = createCollection()
+
+    def failureCalled = new CompletableFuture<Failure>()
+
+    collection.delete(UUID.randomUUID().toString(),
+      { Success success -> fail("Completion callback should not be called") },
+      { Failure failure -> failureCalled.complete(failure) })
+
+    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
+
+    assertThat(failure.reason, is("Server Error"))
+  }
+
+  @Test
+  void serverErrorWhenDeletingAllInstancesTriggersFailureCallback() {
+    def collection = createCollection()
+
+    def failureCalled = new CompletableFuture<Failure>()
+
+    collection.empty(
+      { Success success -> fail("Completion callback should not be called") },
       { Failure failure -> failureCalled.complete(failure) })
 
     def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)

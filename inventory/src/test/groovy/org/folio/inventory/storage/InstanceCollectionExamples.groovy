@@ -29,7 +29,8 @@ abstract class InstanceCollectionExamples {
   public void before() {
     def emptied = new CompletableFuture()
 
-    collectionProvider.getInstanceCollection(firstTenantId).empty(complete(emptied))
+    collectionProvider.getInstanceCollection(firstTenantId).empty(
+      succeed(emptied), fail(emptied))
 
     waitForCompletion(emptied)
   }
@@ -41,16 +42,16 @@ abstract class InstanceCollectionExamples {
 
     def emptied = new CompletableFuture()
 
-    collection.empty(complete(emptied))
+    collection.empty(succeed(emptied), fail(emptied))
 
     waitForCompletion(emptied)
 
-    def findFuture = new CompletableFuture<Success<List<Item>>>()
+    def findFuture = new CompletableFuture<List<Item>>()
 
-    collection.findAll(PagingParameters.defaults(), complete(findFuture),
+    collection.findAll(PagingParameters.defaults(), succeed(findFuture),
       fail(findFuture))
 
-    def allInstances = getOnCompletion(findFuture).result
+    def allInstances = getOnCompletion(findFuture)
 
     assert allInstances.size() == 0
   }
@@ -200,7 +201,7 @@ abstract class InstanceCollectionExamples {
 
     def deleted = new CompletableFuture()
 
-    collection.delete(instanceToBeDeleted.id, complete(deleted))
+    collection.delete(instanceToBeDeleted.id, succeed(deleted), fail(deleted))
 
     waitForCompletion(deleted)
 

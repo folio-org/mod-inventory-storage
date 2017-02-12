@@ -96,8 +96,18 @@ class InMemoryCollection<T> {
     completionCallback()
   }
 
+  void empty(Consumer<Success> completionCallback) {
+    items.clear()
+    completionCallback.accept(new Success())
+  }
+
   void remove(String id, Closure completionCallback) {
     items.removeIf({ it.id == id })
     completionCallback()
+  }
+
+  void remove(String id, Consumer<Success> completionCallback) {
+    items.removeIf({ it.id == id })
+    completionCallback.accept(new Success())
   }
 }
