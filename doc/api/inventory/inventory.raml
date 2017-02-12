@@ -9,31 +9,31 @@ documentation:
     content: <b>API for interacting with an inventory of physical resources</b>
 
 schemas:
- - item: !include schema/inventory/item.json
- - items: !include schema/inventory/items.json
- - instance: !include schema/inventory/instance.json
- - instances: !include schema/inventory/instances.json
- - context: !include schema/inventory/instance_context.json
+ - item: !include schema/item.json
+ - items: !include schema/items.json
+ - instance: !include schema/instance.json
+ - instances: !include schema/instances.json
+ - context: !include schema/instance_context.json
 
 traits:
- - secured: !include shared/traits/auth.raml
- - language: !include shared/traits/language.raml
- - pageable: !include shared/traits/pageable.raml
- - searchable: !include shared/traits/searchable.raml
+ - secured: !include ../shared/traits/auth.raml
+ - language: !include ../shared/traits/language.raml
+ - pageable: !include ../shared/traits/pageable.raml
+ - searchable: !include ../shared/traits/searchable.raml
 
 resourceTypes:
- - collection: !include shared/rtypes/collection.raml
- - collection-item: !include shared/rtypes/item-collection.raml
+ - collection: !include ../shared/rtypes/collection.raml
+ - collection-item: !include ../shared/rtypes/item-collection.raml
 
 /inventory:
   /items:
     displayName: Items
     type:
       collection:
-        exampleCollection: !include examples/inventory/items_get.json
+        exampleCollection: !include examples/items_get.json
         schemaCollection: items
         schemaItem: item
-        exampleItem: !include examples/inventory/item_get.json
+        exampleItem: !include examples/item_get.json
     get:
       is: [pageable,
           searchable: {description: "by title (using CQL)",
@@ -46,17 +46,17 @@ resourceTypes:
     /{itemId}:
       type:
         collection-item:
-          exampleItem: !include examples/inventory/item_get.json
+          exampleItem: !include examples/item_get.json
           schema: item
       get:
   /instances:
     displayName: Instances
     type:
       collection:
-        exampleCollection: !include  examples/inventory/instances_get.json
+        exampleCollection: !include  examples/instances_get.json
         schemaCollection: instances
         schemaItem: instance
-        exampleItem: !include examples/inventory/instance_get.json
+        exampleItem: !include examples/instance_get.json
     get:
       is: [pageable]
     post:
@@ -67,7 +67,7 @@ resourceTypes:
     /{instanceId}:
       type:
         collection-item:
-          exampleItem: !include examples/inventory/instance_get.json
+          exampleItem: !include examples/instance_get.json
           schema: instance
       get:
     /context:
@@ -78,5 +78,5 @@ resourceTypes:
             description: "Dublin Core context for instances"
             body:
               application/json:
-                example: !include examples/inventory/instance_context_get.json
+                example: !include examples/instance_context_get.json
                 schema: context

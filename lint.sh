@@ -29,7 +29,7 @@ replace_references_in_schema ${items_schema_file} item
 
 ./node_modules/.bin/eslint inventory-storage/ramls/instance-storage.raml
 ./node_modules/.bin/eslint inventory-storage/ramls/item-storage.raml
-./node_modules/.bin/eslint doc/api/inventory.raml
+./node_modules/.bin/eslint doc/api/inventory/inventory.raml
 
 replace_changed_schema_file ${instances_schema_file}
 replace_changed_schema_file ${items_schema_file}
