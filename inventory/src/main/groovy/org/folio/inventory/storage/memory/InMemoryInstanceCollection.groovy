@@ -46,8 +46,10 @@ class InMemoryInstanceCollection
   }
 
   @Override
-  void findByCql(String cqlQuery, PagingParameters pagingParameters,
-                Closure resultCallback) {
+  void findByCql(String cqlQuery,
+                 PagingParameters pagingParameters,
+                 Consumer<Success<List<Instance>>> resultCallback,
+                 Consumer<Failure> failureCallback) {
 
     collection.find(cqlQuery, pagingParameters, resultCallback)
   }

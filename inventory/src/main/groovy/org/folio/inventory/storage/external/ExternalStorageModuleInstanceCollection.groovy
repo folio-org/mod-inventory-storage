@@ -187,8 +187,10 @@ class ExternalStorageModuleInstanceCollection
   }
 
   @Override
-  void findByCql(String cqlQuery, PagingParameters pagingParameters,
-                 Closure resultCallback) {
+  void findByCql(String cqlQuery,
+                 PagingParameters pagingParameters,
+                 Consumer<Success<List<Instance>>> resultCallback,
+                 Consumer<Failure> failureCallback) {
 
     def encodedQuery = URLEncoder.encode(cqlQuery, "UTF-8")
 
@@ -199,22 +201,25 @@ class ExternalStorageModuleInstanceCollection
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
 
-        def instances = new JsonObject(responseBody).getJsonArray("instances")
+        if(response.statusCode() == 200) {
+          def instances = new JsonObject(responseBody).getJsonArray("instances")
 
-        def foundInstances = new ArrayList<Instance>()
+          def foundInstances = new ArrayList<Instance>()
 
-        instances.each {
-          foundInstances.add(mapFromJson(it))
+          instances.each {
+            foundInstances.add(mapFromJson(it))
+          }
+
+          resultCallback.accept(new Success(foundInstances))
         }
-
-        resultCallback(foundInstances)
+        else {
+          failureCallback.accept(new Failure(responseBody))
+        }
       })
     }
 
-    Handler<Throwable> onException = { println "Exception: ${it}" }
-
     vertx.createHttpClient().getAbs(location.toString(), onResponse)
-      .exceptionHandler(onException)
+      .exceptionHandler(exceptionHandler(failureCallback))
       .putHeader("X-Okapi-Tenant", tenant)
       .putHeader("Accept", "application/json")
       .end()

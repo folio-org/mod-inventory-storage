@@ -66,8 +66,8 @@ class Instances {
       storage.getInstanceCollection(context).findByCql(search,
         new PagingParameters(limit, offset), {
         JsonResponse.success(routingContext.response(),
-          toRepresentation(it, context))
-      })
+          toRepresentation(it.result, context))
+      }, FailureResponseConsumer.serverError(routingContext.response()))
     }
   }
 

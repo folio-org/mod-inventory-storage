@@ -61,6 +61,23 @@ class InMemoryCollection<T> {
     resultCallback(paged)
   }
 
+  void find(String cqlQuery, PagingParameters pagingParameters,
+            Consumer<Success<List>> resultCallback) {
+
+    def (field, searchTerm) = new CqlParser().parseCql(cqlQuery)
+
+    def filtered = all().stream()
+      .filter(new CqlFilter().filterBy(field, searchTerm))
+      .collect()
+
+    def paged = filtered.stream()
+      .skip(pagingParameters.offset)
+      .limit(pagingParameters.limit)
+      .collect()
+
+    resultCallback.accept(new Success(paged))
+  }
+
   T add(T item) {
     items.add(item)
     item

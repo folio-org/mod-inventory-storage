@@ -53,8 +53,8 @@ class Items {
       storage.getItemCollection(context).findByCql(search,
         new PagingParameters(limit, offset), {
         JsonResponse.success(routingContext.response(),
-          new ItemRepresentation(relativeItemsPath()).toJson(it, context))
-      })
+          new ItemRepresentation(relativeItemsPath()).toJson(it.result, context))
+      }, FailureResponseConsumer.serverError(routingContext.response()))
     }
   }
 
@@ -78,7 +78,7 @@ class Items {
     itemCollection.findByCql("barcode=${newItem.barcode}",
       PagingParameters.defaults(), {
 
-      if(it.size() == 0) {
+      if(it.result.size() == 0) {
         itemCollection.add(newItem, { Success success ->
           RedirectResponse.created(routingContext.response(),
             context.absoluteUrl(
@@ -89,7 +89,7 @@ class Items {
         ClientErrorResponse.badRequest(routingContext.response(),
           "Barcodes must be unique, ${newItem.barcode} is already assigned to another item")
       }
-    })
+    }, FailureResponseConsumer.serverError(routingContext.response()))
   }
 
   void update(RoutingContext routingContext) {
@@ -113,7 +113,7 @@ class Items {
           itemCollection.findByCql("barcode=${updatedItem.barcode}",
             PagingParameters.defaults(), {
 
-            if(it.size() == 1 && it.first().id == updatedItem.id) {
+            if(it.result.size() == 1 && it.result.first().id == updatedItem.id) {
               itemCollection.update(updatedItem, {
                 SuccessResponse.noContent(routingContext.response()) },
                 { Failure failure -> ServerErrorResponse.internalError(
@@ -123,7 +123,7 @@ class Items {
               ClientErrorResponse.badRequest(routingContext.response(),
                 "Barcodes must be unique, ${updatedItem.barcode} is already assigned to another item")
             }
-          })
+          }, FailureResponseConsumer.serverError(routingContext.response()))
         }
       }
       else {
