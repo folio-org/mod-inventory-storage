@@ -22,18 +22,6 @@ Provides Postgres based storage to complement the inventory module. Written in J
 
 In the inventory-storage directory.
 
-## Knowledge Base
-
-**Soon to be deprecated**. Provides a basic representation of an instance. Written in Groovy and uses Gradle as its build system.
-
-In the knowledge-base-core directory.
-
-## Catalogue
-
-**Soon to be deprecated** Provides a basic representation of a physical item (with limited Dublin Core annotation). Written in Groovy and uses Gradle as its build system.
-
-In the catalogue-core directory.
-
 # Further Documentation
 
 This readme is intended to get these modules up and running. For further information on what they do, see the [guide](doc/guide.md).
@@ -47,9 +35,8 @@ This readme is intended to get these modules up and running. For further informa
 - [RAML Module Builder](https://github.com/folio-org/raml-module-builder) 2.3.3
 - Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
 - MongoDB 3.2.9 (running and listening on localhost:27017)
-- Docker 1.12
-- Node 6.4.0 (for the demo UI)
-- NPM 3.10.3 (for the demo UI and documentation generation)
+- Node 6.4.0
+- NPM 3.10.3
 - [SDKMan](http://sdkman.io/) (recommended for installing Gradle and Groovy)
 
 # Preparation
@@ -75,7 +62,7 @@ This is only required to run tests against an external Postgres instance, the de
 
 # Building the Modules
 
-## Inventory, Catalogue and Knowledge Base
+## Inventory
 
 run `gradle build` from the root directory. In order to build an executable Jar (e.g. for Okapi to deploy), run `gradle fatJar`.
 
@@ -111,57 +98,31 @@ A script for building and running Okapi is provided. Run `../mod-metadata/start-
 
 As this runs Okapi using Postgres storage, some database preparation is required. This can be achieved by running `./create-okapi-database.sh` from the root of this repository.
 
-### When Using the Modules as Docker Containers
-
-For the modules to communicate via Okapi Proxy, when running in Docker containers, the address for Okapi Proxy needs to be routable from inside the container.
-
-This can be achieved by passing a parameter to the script used to start Okapi, as follows `../mod-metadata/start-okapi.sh http://192.168.X.X:9130`
-
-Where 192.168.X.X is a routable IP address for the host from container instances and both repository clones are at the same directory level on your machine.
-
-#### Finding a Routable Address
-
-Finding the appropriate IP address can be OS and Docker implementation dependent, so this is a very early guide rather than thorough treatment of the topic.
-
-If these methods don't work for you, please do get in touch, so this section can be improved.
-
-On Linux, `ifconfig docker0 | grep 'inet addr:'` should give output similar to `inet addr:192.168.X.X  Bcast:0.0.0.0  Mask:255.255.0.0`, , the first IP address is usually routable from within containers.
-
-On Mac OS X (using Docker Native), `ifconfig en0 | grep 'inet '` should give output similar to `inet 192.168.X.X netmask 0xffffff00 broadcast 192.168.X.X`, the first IP address is usually routable from within containers.
-
 ## Demo
 
 The best way to run all of the modules in this suite together.
 
-Okapi needs to be running (see above) prior to running these scripts. The demo UI requires Node and NPM to be installed, in addition to the prerequisites for running the modules themselves.
+Okapi needs to be running (see above) prior to running these scripts.
 
 To start the modules run the `./start-demo.sh` script from the root directory, which performs the following steps:
 
 * Creates a demo tenant (with ID demo_tenant, see Appendix 1 for more info)
+* Sets up a demo database
 * Registers the modules with Okapi (see Appendix 1 for more info)
-* Starts each module (Inventory and Inventory Storage run natively, Catalogue and Knowledge Base run in Docker containers)
+* Starts each module
 * Creates some sample data
-* Starts the demo UI
 
 To stop the modules run `./stop-demo.sh` from the root directory, which performs the following steps:
 
-### Demo User Interface (for the catalogue and knowledge base modules)
-
-There is a basic demo user interface provided, which allows for searching instances by partial title.
-
-It can be accessed via `http://localhost:9501` in a browser.
+* Stops the modules modules
+* Unregisters the modules from Okapi
+* Removes the demo tenant
 
 ## Natively
 
 Run `./start.sh` from the root directory.
 
 To stop them, run `./stop.sh` from the root directory.
-
-## With Docker (only for Knowledge Base and Catalogue modules)
-
-Run `./start-docker.sh` from the root directory.
-
-To stop them, run `./stop-docker.sh` from the root directory.
 
 # Using the Modules
 
@@ -179,8 +140,6 @@ It is recommended that the modules are located via Okapi. Access via Okapi requi
 |------|------------|
 |Inventory| http://localhost:9130/inventory |
 |Inventory Storage| http://localhost:9130/item-storage/ and http://localhost:9130/instance-storage/ |
-|Knowledge Base| http://localhost:9130/knowledge-base |
-|Catalogue| http://localhost:9130/catalogue |
 
 ## Direct Root Addresses
 
@@ -192,8 +151,6 @@ Whilst some requests may currently not require tenant information (it is likely 
 |------|------------|
 |Inventory| http://localhost:9403/inventory |
 |Inventory Storage| http://localhost:9407/item-storage/ and http://localhost:9407/instance-storage/ |
-|Knowledge Base| http://localhost:9401/knowledge-base |
-|Catalogue| http://localhost:9402/catalogue |
 
 # Running the Tests
 
@@ -304,3 +261,23 @@ Content-Length: 34
   "id" : "knowledge-base-core"
 }
 ```
+
+#Appendix 2 - Docker Information
+
+## When Using the Modules as Docker Containers
+
+For the modules to communicate via Okapi Proxy, when running in Docker containers, the address for Okapi Proxy needs to be routable from inside the container.
+
+This can be achieved by passing a parameter to the script used to start Okapi, as follows `../mod-metadata/start-okapi.sh http://192.168.X.X:9130`
+
+Where 192.168.X.X is a routable IP address for the host from container instances and both repository clones are at the same directory level on your machine.
+
+### Finding a Routable Address
+
+Finding the appropriate IP address can be OS and Docker implementation dependent, so this is a very early guide rather than thorough treatment of the topic.
+
+If these methods don't work for you, please do get in touch, so this section can be improved.
+
+On Linux, `ifconfig docker0 | grep 'inet addr:'` should give output similar to `inet addr:192.168.X.X  Bcast:0.0.0.0  Mask:255.255.0.0`, , the first IP address is usually routable from within containers.
+
+On Mac OS X (using Docker Native), `ifconfig en0 | grep 'inet '` should give output similar to `inet 192.168.X.X netmask 0xffffff00 broadcast 192.168.X.X`, the first IP address is usually routable from within containers.
