@@ -39,14 +39,15 @@ class ExternalStorageModuleItemCollection
     def onResponse = { HttpClientResponse response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
+        def statusCode = response.statusCode()
 
-        if(response.statusCode() == 201) {
+        if(statusCode == 201) {
           def createdItem = mapFromJson(new JsonObject(responseBody))
 
           resultCallback.accept(new Success<Item>(createdItem))
         }
         else {
-          failureCallback.accept(new Failure(responseBody))
+          failureCallback.accept(new Failure(responseBody, statusCode))
         }
       })
     }
@@ -71,8 +72,9 @@ class ExternalStorageModuleItemCollection
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
+        def statusCode = response.statusCode()
 
-        switch (response.statusCode()) {
+        switch (statusCode) {
           case 200:
             def itemFromServer = new JsonObject(responseBody)
 
@@ -86,7 +88,7 @@ class ExternalStorageModuleItemCollection
             break
 
           default:
-            failureCallback.accept(new Failure(responseBody))
+            failureCallback.accept(new Failure(responseBody, statusCode))
         }
       })
     }
@@ -110,8 +112,9 @@ class ExternalStorageModuleItemCollection
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
+        def statusCode = response.statusCode()
 
-        if(response.statusCode() == 200) {
+        if(statusCode == 200) {
           def itemsFromServer = new JsonObject(responseBody)
             .getJsonArray("items")
 
@@ -124,7 +127,7 @@ class ExternalStorageModuleItemCollection
           resultCallback.accept(new Success(foundItems))
         }
         else {
-          failureCallback.accept(new Failure(responseBody))
+          failureCallback.accept(new Failure(responseBody, statusCode))
         }
       })
     }
@@ -144,12 +147,13 @@ class ExternalStorageModuleItemCollection
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
+        def statusCode = response.statusCode()
 
-        if(response.statusCode() == 204) {
+        if(statusCode == 204) {
           completionCallback.accept(new Success())
         }
         else {
-          failureCallback.accept(new Failure(responseBody))
+          failureCallback.accept(new Failure(responseBody, statusCode))
         }
       })
     }
@@ -175,8 +179,9 @@ class ExternalStorageModuleItemCollection
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
+        def statusCode = response.statusCode()
 
-        if(response.statusCode() == 200) {
+        if(statusCode == 200) {
           def items = new JsonObject(responseBody).getJsonArray("items")
 
           def foundItems = new ArrayList<Item>()
@@ -188,7 +193,7 @@ class ExternalStorageModuleItemCollection
           resultCallback.accept(new Success(foundItems))
         }
         else {
-          failureCallback.accept(new Failure(responseBody))
+          failureCallback.accept(new Failure(responseBody, statusCode))
         }
       })
     }
@@ -210,12 +215,13 @@ class ExternalStorageModuleItemCollection
     def onResponse = { HttpClientResponse response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
+        def statusCode = response.statusCode()
 
-        if(response.statusCode() == 204) {
+        if(statusCode == 204) {
           completionCallback.accept(new Success(null))
         }
         else {
-          failureCallback.accept(new Failure(responseBody))
+          failureCallback.accept(new Failure(responseBody, statusCode))
         }
       })
     }
@@ -239,12 +245,13 @@ class ExternalStorageModuleItemCollection
     def onResponse = { response ->
       response.bodyHandler({ buffer ->
         def responseBody = "${buffer.getString(0, buffer.length())}"
+        def statusCode = response.statusCode()
 
-        if(response.statusCode() == 204) {
+        if(statusCode == 204) {
           completionCallback.accept(new Success())
         }
         else {
-          failureCallback.accept(new Failure(responseBody))
+          failureCallback.accept(new Failure(responseBody, statusCode))
         }
       })
     }
@@ -285,7 +292,7 @@ class ExternalStorageModuleItemCollection
 
   private Handler<Throwable> exceptionHandler(Consumer<Failure> failureCallback) {
     return { Throwable it ->
-        failureCallback.accept(new Failure(it.getMessage()))
+        failureCallback.accept(new Failure(it.getMessage(), null))
     }
   }
 }

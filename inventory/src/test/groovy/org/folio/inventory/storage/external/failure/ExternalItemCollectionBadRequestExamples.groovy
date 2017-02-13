@@ -18,5 +18,6 @@ class ExternalItemCollectionBadRequestExamples
   @Override
   protected check(Failure failure) {
     assertThat(failure.reason, is("Bad Request"))
+    assertThat(failure.statusCode, is(400))
   }
 }

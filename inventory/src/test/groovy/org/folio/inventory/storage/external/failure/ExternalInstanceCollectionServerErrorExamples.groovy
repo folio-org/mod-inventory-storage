@@ -18,5 +18,6 @@ class ExternalInstanceCollectionServerErrorExamples
   @Override
   protected check(Failure failure) {
     assertThat(failure.reason, is("Server Error"))
+    assertThat(failure.statusCode, is(500))
   }
 }
