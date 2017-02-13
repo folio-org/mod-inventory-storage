@@ -1,135 +1,22 @@
 package org.folio.inventory.storage.external.failure
 
-import org.folio.inventory.domain.CollectionProvider
-import org.folio.inventory.domain.Item
-import org.folio.inventory.domain.ItemCollection
 import org.folio.inventory.storage.external.ExternalStorageCollections
-import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.domain.Failure
-import org.folio.metadata.common.domain.Success
-import org.junit.Test
 
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
-
-import static junit.framework.TestCase.fail
 import static org.hamcrest.CoreMatchers.is
 import static org.junit.Assert.assertThat
 
-class ExternalItemCollectionServerErrorExamples {
+class ExternalItemCollectionServerErrorExamples
+  extends ExternalItemCollectionFailureExamples {
 
-  private final CollectionProvider collectionProvider =
-    ExternalStorageFailureSuite.useVertx(
+  def ExternalItemCollectionServerErrorExamples() {
+    super(ExternalStorageFailureSuite.useVertx(
       { new ExternalStorageCollections(it,
-        ExternalStorageFailureSuite.itemStorageAddress)})
-
-  @Test
-  void serverErrorWhenCreatingAnItemTriggersFailureCallback() {
-    def collection = createCollection()
-
-    def failureCalled = new CompletableFuture<Failure>()
-
-    collection.add(new Item(UUID.randomUUID().toString(), "Nod", "", "", "", "", ""),
-      { Success success -> fail("Completion callback should not be called") },
-      { Failure failure -> failureCalled.complete(failure) })
-
-    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
-
-    assertThat(failure.reason, is("Server Error"))
+        ExternalStorageFailureSuite.serverErrorStorageAddress)}))
   }
 
-  @Test
-  void serverErrorWhenUpdatingAnItemTriggersFailureCallback() {
-    def collection = createCollection()
-
-    def failureCalled = new CompletableFuture<Failure>()
-
-    collection.update(new Item(UUID.randomUUID().toString(), "Nod", "", "", "", "", ""),
-      { Success success -> fail("Completion callback should not be called") },
-      { Failure failure -> failureCalled.complete(failure) })
-
-    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
-
+  @Override
+  protected check(Failure failure) {
     assertThat(failure.reason, is("Server Error"))
-  }
-
-  @Test
-  void serverErrorWhenGettingAllItemsTriggersFailureCallback() {
-    def collection = createCollection()
-
-    def failureCalled = new CompletableFuture<Failure>()
-
-    collection.findAll(PagingParameters.defaults(),
-      { Success success -> fail("Results callback should not be called") },
-      { Failure failure -> failureCalled.complete(failure) })
-
-    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
-
-    assertThat(failure.reason, is("Server Error"))
-  }
-
-  @Test
-  void serverErrorWhenGettingAnItemByIdTriggersFailureCallback() {
-    def collection = createCollection()
-
-    def failureCalled = new CompletableFuture<Failure>()
-
-    collection.findById(UUID.randomUUID().toString(),
-      { Success success -> fail("Results callback should not be called") },
-      { Failure failure -> failureCalled.complete(failure) })
-
-    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
-
-    assertThat(failure.reason, is("Server Error"))
-  }
-
-  @Test
-  void serverErrorWhenDeletingAnItemByIdTriggersFailureCallback() {
-    def collection = createCollection()
-
-    def failureCalled = new CompletableFuture<Failure>()
-
-    collection.delete(UUID.randomUUID().toString(),
-      { Success success -> fail("Completion callback should not be called") },
-      { Failure failure -> failureCalled.complete(failure) })
-
-    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
-
-    assertThat(failure.reason, is("Server Error"))
-  }
-
-  @Test
-  void serverErrorWhenDeletingAllItemsTriggersFailureCallback() {
-    def collection = createCollection()
-
-    def failureCalled = new CompletableFuture<Failure>()
-
-    collection.empty(
-      { Success success -> fail("Completion callback should not be called") },
-      { Failure failure -> failureCalled.complete(failure) })
-
-    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
-
-    assertThat(failure.reason, is("Server Error"))
-  }
-
-  @Test
-  void serverErrorWhenFindingItemsTriggersFailureCallback() {
-    def collection = createCollection()
-
-    def failureCalled = new CompletableFuture<Failure>()
-
-    collection.findByCql("title=\"*Small Angry*\"",
-      new PagingParameters(10, 0),
-      { Success success -> fail("Success callback should not be called") },
-      { Failure failure -> failureCalled.complete(failure) })
-
-    def failure = failureCalled.get(1000, TimeUnit.MILLISECONDS)
-
-    assertThat(failure.reason, is("Server Error"))
-  }
-
-  private ItemCollection createCollection() {
-    collectionProvider.getItemCollection("test_tenant")
   }
 }

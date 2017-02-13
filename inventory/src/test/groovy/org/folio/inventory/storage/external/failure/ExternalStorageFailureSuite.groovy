@@ -1,6 +1,6 @@
 package org.folio.inventory.storage.external.failure
 
-import org.folio.inventory.storage.external.support.ServerErrorInventoryStorageModule
+import org.folio.inventory.storage.external.support.FailureInventoryStorageModule
 import org.folio.metadata.common.VertxAssistant
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -14,7 +14,9 @@ import java.util.concurrent.TimeUnit
 
 @Suite.SuiteClasses([
   ExternalItemCollectionServerErrorExamples.class,
+  ExternalItemCollectionBadRequestExamples.class,
   ExternalInstanceCollectionServerErrorExamples.class,
+  ExternalInstanceCollectionBadRequestExamples.class,
 ])
 
 public class ExternalStorageFailureSuite {
@@ -25,12 +27,12 @@ public class ExternalStorageFailureSuite {
     vertxAssistant.useVertx(action)
   }
 
-  static String getItemStorageAddress() {
-      ServerErrorInventoryStorageModule.address
+  static String getServerErrorStorageAddress() {
+      FailureInventoryStorageModule.serverErrorAddress
   }
 
-  static String getInstanceStorageAddress() {
-      ServerErrorInventoryStorageModule.address
+  static String getBadRequestStorageAddress() {
+    FailureInventoryStorageModule.badRequestAddress
   }
 
   @BeforeClass
@@ -42,7 +44,7 @@ public class ExternalStorageFailureSuite {
     def deployed = new CompletableFuture()
 
     vertxAssistant.deployGroovyVerticle(
-      ServerErrorInventoryStorageModule.class.name,
+      FailureInventoryStorageModule.class.name,
       [:],
       deployed)
 

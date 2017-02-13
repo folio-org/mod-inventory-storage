@@ -6,16 +6,21 @@ import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.lang.groovy.GroovyVerticle
 import org.folio.metadata.common.WebRequestDiagnostics
+import org.folio.metadata.common.api.response.ClientErrorResponse
 import org.folio.metadata.common.api.response.ServerErrorResponse
 
-class ServerErrorInventoryStorageModule extends GroovyVerticle {
+class FailureInventoryStorageModule extends GroovyVerticle {
   private static final int PORT_TO_USE = 9493
   private static final String address = "http://localhost:${PORT_TO_USE}"
 
   private HttpServer server;
 
-  static def String getAddress() {
-    address
+  static def String getServerErrorAddress() {
+    address + "/server-error"
+  }
+
+  static def String getBadRequestAddress() {
+    address + "/bad-request"
   }
 
   @Override
@@ -36,8 +41,10 @@ class ServerErrorInventoryStorageModule extends GroovyVerticle {
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
 
-    router.route('/item-storage/items/*').handler(this.&serverError)
-    router.route('/instance-storage/instances/*').handler(this.&serverError)
+    router.route('/server-error/item-storage/items/*').handler(this.&serverError)
+    router.route('/server-error/instance-storage/instances/*').handler(this.&serverError)
+    router.route('/bad-request/item-storage/items/*').handler(this.&badRequest)
+    router.route('/bad-request/instance-storage/instances/*').handler(this.&badRequest)
   }
 
   @Override
@@ -55,5 +62,9 @@ class ServerErrorInventoryStorageModule extends GroovyVerticle {
 
   private void serverError(RoutingContext routingContext) {
     ServerErrorResponse.internalError(routingContext.response(), "Server Error")
+  }
+
+  private void badRequest(RoutingContext routingContext) {
+    ClientErrorResponse.badRequest(routingContext.response(), "Bad Request")
   }
 }

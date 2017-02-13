@@ -6,17 +6,17 @@ import org.folio.metadata.common.domain.Failure
 import static org.hamcrest.CoreMatchers.is
 import static org.junit.Assert.assertThat
 
-class ExternalInstanceCollectionServerErrorExamples
+class ExternalInstanceCollectionBadRequestExamples
   extends ExternalInstanceCollectionFailureExamples {
 
-  ExternalInstanceCollectionServerErrorExamples() {
+  ExternalInstanceCollectionBadRequestExamples() {
     super(ExternalStorageFailureSuite.useVertx(
       { new ExternalStorageCollections(it,
-        ExternalStorageFailureSuite.serverErrorStorageAddress)}))
+        ExternalStorageFailureSuite.badRequestStorageAddress)}))
   }
 
   @Override
   protected check(Failure failure) {
-    assertThat(failure.reason, is("Server Error"))
+    assertThat(failure.reason, is("Bad Request"))
   }
 }
