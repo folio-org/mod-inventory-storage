@@ -113,7 +113,7 @@ To start the modules run the `./start-demo.sh` script from the root directory, w
 
 To stop the modules run `./stop-demo.sh` from the root directory, which performs the following steps:
 
-* Stops the modules modules
+* Stops the modules
 * Unregisters the modules from Okapi
 * Removes the demo tenant
 
