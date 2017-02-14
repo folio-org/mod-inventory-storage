@@ -56,7 +56,7 @@ If sdkman is installed, run `source ./setup-environment.sh` to setup the shell w
 
 ## Postgres
 
-Run the `setup-test-db.sh` script in the inventory-storage directory to setup Postgres with a database to be used in tests. 
+Run the `setup-test-db.sh` script in the inventory-storage directory to setup Postgres with a database to be used in tests.
 This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
 
 # Building the Modules
@@ -79,7 +79,7 @@ To run the tests against both embedded and external databases, run `./build.sh` 
 
 ## Sample Data
 
-Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing. 
+Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing.
 
 ### Inventory
 
