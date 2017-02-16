@@ -15,7 +15,6 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import java.beans.ExceptionListener;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
@@ -58,6 +57,10 @@ public class StorageTestSuite {
       "embedded");
 
     switch(useExternalDatabase) {
+      case "environment":
+        System.out.println("Using environment settings");
+        break;
+
       case "external":
         String postgresConfigPath = System.getProperty(
           "org.folio.inventory.storage.test.config",
@@ -72,7 +75,7 @@ public class StorageTestSuite {
       default:
         String message = "No understood database choice made." +
           "Please set org.folio.inventory.storage.test.config" +
-          "to 'external' or 'embedded'";
+          "to 'external', 'environment' or 'embedded'";
 
         throw new Exception(message);
     }
