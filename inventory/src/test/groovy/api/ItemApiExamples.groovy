@@ -324,6 +324,15 @@ class ItemApiExamples extends Specification {
       }
   }
 
+  void "Page parameters must be numeric"() {
+    when:
+      def (response, message) = client.get(ApiRoot.items("limit=&offset="))
+
+    then:
+      assert response.status == 400
+      assert message == "limit and offset must be numeric when supplied"
+  }
+
   void "Can search for items by title"() {
     given:
     def smallAngryInstance = createInstance(

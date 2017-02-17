@@ -51,20 +51,27 @@ class Instances {
   void getAll(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
-    def limit = context.getIntegerParameter("limit", 10)
-    def offset = context.getIntegerParameter("offset", 0)
     def search = context.getStringParameter("query", null)
+
+    def pagingParameters = PagingParameters.from(context)
+
+    if(pagingParameters == null) {
+      ClientErrorResponse.badRequest(routingContext.response(),
+        "limit and offset must be numeric when supplied")
+
+      return
+    }
 
     if(search == null) {
       storage.getInstanceCollection(context).findAll(
-        new PagingParameters(limit, offset),
+        pagingParameters,
         { Success success -> JsonResponse.success(routingContext.response(),
           toRepresentation(success.result, context)) },
         FailureResponseConsumer.serverError(routingContext.response()))
     }
     else {
       storage.getInstanceCollection(context).findByCql(search,
-        new PagingParameters(limit, offset), {
+        pagingParameters, {
         JsonResponse.success(routingContext.response(),
           toRepresentation(it.result, context))
       }, FailureResponseConsumer.serverError(routingContext.response()))

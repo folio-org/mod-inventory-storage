@@ -234,6 +234,15 @@ class InstancesApiExamples extends Specification {
       hasCollectionProperties(secondPage.instances)
   }
 
+  void "Page parameters must be numeric"() {
+    when:
+      def (response, message) = client.get(ApiRoot.instances("limit=&offset="))
+
+    then:
+      assert response.status == 400
+      assert message == "limit and offset must be numeric when supplied"
+  }
+
   void "Can search for instances by title"() {
     given:
       createInstance(smallAngryPlanet(UUID.randomUUID()))
