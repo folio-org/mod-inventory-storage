@@ -207,12 +207,16 @@ public class StorageTestSuite {
 
       TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
 
-      if(response.getStatusCode() != 200) {
-        System.out.println("Tenant preparation failed: " + response.getBody());
-      }
+      String failureMessage = String.format("Tenant preparation failed: %s: %s",
+          response.getStatusCode(), response.getBody());
+
+      assertThat(failureMessage,
+        response.getStatusCode(), is(200));
+
     } catch(Exception e) {
       System.out.println("WARNING!!!!! Tenant preparation failed: "
         + e.getMessage());
+      assert false;
     }
   }
 
@@ -230,12 +234,16 @@ public class StorageTestSuite {
 
       TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
 
-      if (response.getStatusCode() != 200) {
-        System.out.println("Tenant cleanup failed: " + response.getBody());
-      }
+      String failureMessage = String.format("Tenant cleanup failed: %s: %s",
+        response.getStatusCode(), response.getBody());
+
+      assertThat(failureMessage,
+        response.getStatusCode(), is(200));
+
     } catch(Exception e) {
       System.out.println("WARNING!!!!! Tenant cleanup failed: "
         + e.getMessage());
+      assert false;
     }
   }
 }
