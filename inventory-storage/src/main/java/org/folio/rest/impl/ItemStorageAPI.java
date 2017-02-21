@@ -27,6 +27,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -151,6 +152,10 @@ public class ItemStorageAPI implements ItemStorageResource {
       PostgresClient postgresClient =
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+      if(entity.getId() == null) {
+        entity.setId(UUID.randomUUID().toString());
+      }
 
       vertxContext.runOnContext(v -> {
         try {

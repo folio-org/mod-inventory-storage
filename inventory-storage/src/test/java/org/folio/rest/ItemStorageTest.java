@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class ItemStorageTest {
@@ -79,6 +80,48 @@ public class ItemStorageTest {
     JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
+    assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
+    assertThat(itemFromGet.getString("title"), is("Nod"));
+    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"),
+      is("Available"));
+    assertThat(itemFromGet.getJsonObject("materialType").getString("name"),
+      is("Book"));
+    assertThat(itemFromGet.getJsonObject("location").getString("name"),
+      is("Main Library"));
+  }
+
+  @Test
+  public void canCreateAnItemWithoutProvidingID()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+
+    JsonObject itemToCreate = nod(null, instanceId);
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postResponse.getJson();
+
+    String newId = itemFromPost.getString("id");
+
+    assertThat(newId, is(notNullValue()));
+
+    JsonResponse getResponse = getById(UUID.fromString(newId));
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(newId));
     assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(itemFromGet.getString("title"), is("Nod"));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
@@ -516,7 +559,10 @@ public class ItemStorageTest {
 
     JsonObject itemToCreate = new JsonObject();
 
-    itemToCreate.put("id", id.toString());
+    if(id != null) {
+      itemToCreate.put("id", id.toString());
+    }
+
     itemToCreate.put("instanceId", instanceId.toString());
     itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);

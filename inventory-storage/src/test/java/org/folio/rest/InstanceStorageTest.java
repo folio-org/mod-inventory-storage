@@ -19,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class InstanceStorageTest {
@@ -43,7 +44,7 @@ public class InstanceStorageTest {
   }
 
   @Test
-  public void canCreateInstances()
+  public void canCreateAnInstance()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -60,14 +61,65 @@ public class InstanceStorageTest {
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    JsonObject instance = response.getJson();
-
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject instance = response.getJson();
 
     assertThat(instance.getString("id"), is(id.toString()));
     assertThat(instance.getString("title"), is("Long Way to a Small Angry Planet"));
 
     JsonArray identifiers = instance.getJsonArray("identifiers");
+    assertThat(identifiers.size(), is(1));
+    assertThat(identifiers, hasItem(identifierMatches("isbn", "9781473619777")));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject instanceFromGet = getResponse.getJson();
+
+    assertThat(instanceFromGet.getString("title"),
+      is("Long Way to a Small Angry Planet"));
+
+    JsonArray identifiersFromGet = instanceFromGet.getJsonArray("identifiers");
+    assertThat(identifiersFromGet.size(), is(1));
+    assertThat(identifiersFromGet, hasItem(identifierMatches("isbn", "9781473619777")));
+  }
+
+  @Test
+  public void canCreateAnInstanceWithoutProvidingID()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    URL postInstanceUrl = instanceStorageUrl();
+
+    JsonObject instanceToCreate = smallAngryPlanet(null);
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject instance = response.getJson();
+
+    String newId = instance.getString("id");
+
+    assertThat(newId, is(notNullValue()));
+
+    JsonResponse getResponse = getById(UUID.fromString(newId));
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject instanceFromGet = getResponse.getJson();
+
+    assertThat(instanceFromGet.getString("title"),
+      is("Long Way to a Small Angry Planet"));
+
+    JsonArray identifiers = instanceFromGet.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
     assertThat(identifiers, hasItem(identifierMatches("isbn", "9781473619777")));
   }
@@ -507,7 +559,10 @@ public class InstanceStorageTest {
 
     JsonObject instanceToCreate = new JsonObject();
 
-    instanceToCreate.put("id",id.toString());
+    if(id != null) {
+      instanceToCreate.put("id",id.toString());
+    }
+
     instanceToCreate.put("title", title);
     instanceToCreate.put("identifiers", identifiers);
 

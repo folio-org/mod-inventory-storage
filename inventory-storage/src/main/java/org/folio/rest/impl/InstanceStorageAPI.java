@@ -25,6 +25,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
+  import java.util.UUID;
 
 public class InstanceStorageAPI implements InstanceStorageResource {
 
@@ -128,6 +129,10 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
+
+          if(entity.getId() == null) {
+            entity.setId(UUID.randomUUID().toString());
+          }
 
           postgresClient.save("instance", entity.getId(), entity,
             reply -> {
