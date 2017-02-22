@@ -26,7 +26,7 @@ public class Launcher {
 
     def storageLocation = System.getProperty(
       "org.folio.metadata.inventory.storage.location", null)
-    
+
     putNonNullConfig("storage.type", storageType, config)
     putNonNullConfig("storage.location", storageLocation, config)
     putNonNullConfig("port", port, config)
@@ -66,7 +66,7 @@ public class Launcher {
     println("Server Stopped")
   }
 
-  private static void putNonNullConfig(String key, String value, Map config) {
+  private static void putNonNullConfig(String key, Object value, Map config) {
     if(value != null) {
       config.put(key, value)
     }
