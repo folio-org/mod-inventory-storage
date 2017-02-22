@@ -22,19 +22,19 @@ public class Launcher {
     def port = Integer.getInteger("port", 9403)
 
     def storageType = System.getProperty(
-      "org.folio.metadata.inventory.storage.type", "memory")
+      "org.folio.metadata.inventory.storage.type", null)
 
     def storageLocation = System.getProperty(
       "org.folio.metadata.inventory.storage.location", null)
-
-    config.put("storage.type", storageType)
-    config.put("storage.location", storageLocation)
-    config.put("port", port)
+    
+    putNonNullConfig("storage.type", storageType, config)
+    putNonNullConfig("storage.location", storageLocation, config)
+    putNonNullConfig("port", port, config)
 
     start(config)
   }
 
-  public static start(LinkedHashMap config) {
+  static start(Map config) {
     vertxAssistant.start()
 
     println "Server Starting"
@@ -49,7 +49,7 @@ public class Launcher {
     inventoryModuleDeploymentId = deployed.get(20, TimeUnit.SECONDS)
   }
 
-  public static stop() {
+  static stop() {
     def undeployed = new CompletableFuture()
     def stopped = new CompletableFuture()
     def all = CompletableFuture.allOf(undeployed, stopped)
@@ -64,5 +64,11 @@ public class Launcher {
 
     all.join()
     println("Server Stopped")
+  }
+
+  private static void putNonNullConfig(String key, String value, Map config) {
+    if(value != null) {
+      config.put(key, value)
+    }
   }
 }
