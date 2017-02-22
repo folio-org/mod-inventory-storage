@@ -2,6 +2,6 @@
   "srvcId" : "inventory",
   "nodeId" : "localhost",
   "descriptor" : {
-    "exec" : "java -Dorg.folio.metadata.inventory.storage.type=okapi -Dport=%p -jar ../mod-metadata/inventory/build/libs/inventory.jar"
+    "exec" : "java -Dport=%p -jar ../mod-metadata/inventory/build/libs/inventory.jar"
   }
 }
