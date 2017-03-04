@@ -415,7 +415,7 @@ public class ItemStorageTest {
     String error = searchResponse.getBody();
 
     assertThat(error,
-      is("CQL State Error for 't': cql.serverChoice requested, but not serverChoiceIndexes defined."));
+      is("CQL State Error for 't': cql.serverChoice requested, but no serverChoiceIndexes defined."));
   }
 
   @Test
