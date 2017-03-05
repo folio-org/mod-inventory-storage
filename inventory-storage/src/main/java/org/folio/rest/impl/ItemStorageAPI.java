@@ -78,6 +78,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                   Items itemList = new Items();
                   itemList.setItems(items);
                   itemList.setTotalRecords((Integer) reply.result()[1]);
+
                   asyncResultHandler.handle(Future.succeededFuture(
                     ItemStorageResource.GetItemStorageItemsResponse.
                       withJsonOK(itemList)));
@@ -365,6 +366,10 @@ public class ItemStorageAPI implements ItemStorageResource {
                 List<Item> itemList = (List<Item>) reply.result()[0];
                 if (itemList.size() == 1) {
                   try {
+
+                    //Temporary fix for single quotes
+                    entity.setTitle(entity.getTitle().replace("'", "''"));
+
                     postgresClient.update("item", entity, criterion, true,
                       update -> {
                         try {

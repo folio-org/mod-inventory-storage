@@ -218,7 +218,6 @@ public class ItemStorageTest {
       replacement.put("location",
         new JsonObject().put("name", "Annex Library"));
 
-
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
 
     client.put(itemStorageUrl(String.format("/%s", id)), replacement,
@@ -239,6 +238,52 @@ public class ItemStorageTest {
     assertThat(item.getString("instanceId"), is(instanceId.toString()));
     assertThat(item.getString("title"), is("Long Way to a Small Angry Planet"));
     assertThat(item.getString("barcode"), is("125845734657"));
+    assertThat(item.getJsonObject("status").getString("name"),
+      is("Available"));
+    assertThat(item.getJsonObject("materialType").getString("name"),
+      is("Book"));
+    assertThat(item.getJsonObject("location").getString("name"),
+      is("Annex Library"));
+  }
+
+  @Test
+  public void canReplaceAnItemWithASingleQuoteInTheTitle()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+
+    JsonObject itemToCreate = createItemRequest(id, instanceId,
+      "The Time Traveller's Wife", "036587275931");
+
+    createItem(itemToCreate);
+
+    JsonObject replacement = itemToCreate.copy();
+    replacement.put("barcode", "036587275931");
+    replacement.put("location",
+      new JsonObject().put("name", "Annex Library"));
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture();
+
+    client.put(itemStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonResponse getResponse = getById(id);
+
+    //PUT currently cannot return a response
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject item = getResponse.getJson();
+
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getString("instanceId"), is(instanceId.toString()));
+    assertThat(item.getString("title"), is("The Time Traveller's Wife"));
+    assertThat(item.getString("barcode"), is("036587275931"));
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(item.getJsonObject("materialType").getString("name"),
