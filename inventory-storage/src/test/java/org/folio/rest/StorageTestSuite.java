@@ -211,7 +211,7 @@ public class StorageTestSuite {
           response.getStatusCode(), response.getBody());
 
       assertThat(failureMessage,
-        response.getStatusCode(), is(200));
+        response.getStatusCode(), is(201));
 
     } catch(Exception e) {
       System.out.println("WARNING!!!!! Tenant preparation failed: "
@@ -238,7 +238,7 @@ public class StorageTestSuite {
         response.getStatusCode(), response.getBody());
 
       assertThat(failureMessage,
-        response.getStatusCode(), is(200));
+        response.getStatusCode(), is(204));
 
     } catch(Exception e) {
       System.out.println("WARNING!!!!! Tenant cleanup failed: "

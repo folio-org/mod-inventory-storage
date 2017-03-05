@@ -5,7 +5,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 
 import java.net.URL;
 
@@ -40,7 +39,17 @@ public class HttpClient {
       request.headers().add(TENANT_HEADER, tenantId);
     }
 
-    request.end(Json.encodePrettily(body));
+    if(body != null) {
+      String encodedBody = Json.encodePrettily(body);
+
+      System.out.println(String.format("POST %s, Request: %s",
+        url.toString(), encodedBody));
+
+      request.end(encodedBody);
+    }
+    else {
+      request.end();
+    }
   }
 
   public void get(URL url,
