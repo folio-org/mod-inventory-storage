@@ -2,7 +2,7 @@
 
 cd inventory/sample-data
 
-./example-ingest.sh
+./example-ingest.sh http://localhost:9130/inventory
 
 cd ../..
 
