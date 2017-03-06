@@ -7,6 +7,6 @@ executing_password=${4:-}
 
 cd database-setup
 
-./setup-db.sh demo demo_tenant_inventory_storage demo_tenant_inventory_storage ${host} ${port} ${executing_user} ${executing_password}
+./setup-db.sh demo demo_tenant_inventory_storage demo_inventory_storage_admin ${host} ${port} ${executing_user} ${executing_password}
 
 cd ..
