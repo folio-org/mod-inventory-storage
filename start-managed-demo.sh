@@ -71,5 +71,3 @@ cd inventory
 ./register-managed.sh
 
 cd ..
-
-./import-sample-data.sh
