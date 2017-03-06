@@ -41,9 +41,6 @@ if [ "${storage}" = "external" ]; then
   # setup Okapi environment variables
   create_environment_variable ./okapi-setup/environment/db-host.json
   create_environment_variable ./okapi-setup/environment/db-port.json
-  create_environment_variable ./okapi-setup/environment/db-database.json
-  create_environment_variable ./okapi-setup/environment/db-username.json
-  create_environment_variable ./okapi-setup/environment/db-password.json
 
   cd inventory-storage
 
