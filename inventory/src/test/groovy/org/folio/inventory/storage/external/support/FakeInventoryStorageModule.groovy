@@ -182,7 +182,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     def result = new JsonObject()
     result.put("items", new JsonArray(pagedItems))
-    result.put("total_records", itemsForTenant.size())
+    result.put("totalRecords", filteredItems.size())
 
     JsonResponse.success(routingContext.response(), result)
   }
@@ -297,7 +297,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     def result = new JsonObject()
     result.put("instances", new JsonArray(pagedInstances))
-    result.put("total_records", filteredInstances.size())
+    result.put("totalRecords", filteredInstances.size())
 
     JsonResponse.success(routingContext.response(), result)
   }
