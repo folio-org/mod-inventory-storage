@@ -1,11 +1,10 @@
 package org.folio.rest;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -16,9 +15,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ItemStorageTest {
 
@@ -460,7 +464,7 @@ public class ItemStorageTest {
     String error = searchResponse.getBody();
 
     assertThat(error,
-      is("CQL State Error for 't': cql.serverChoice requested, but no serverChoiceIndexes defined."));
+      is("CQL State Error for 't': org.z3950.zing.cql.cql2pgjson.QueryValidationException: cql.serverChoice requested, but no serverChoiceIndexes defined."));
   }
 
   @Test

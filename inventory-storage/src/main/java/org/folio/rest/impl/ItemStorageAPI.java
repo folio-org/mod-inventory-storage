@@ -4,18 +4,13 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.resource.ItemStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -25,17 +20,36 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Items;
+import org.folio.rest.jaxrs.model.MaterialType;
+import org.folio.rest.jaxrs.model.Mtype;
+import org.folio.rest.jaxrs.resource.ItemStorageResource;
+import org.folio.rest.jaxrs.resource.MaterialTypeResource.DeleteMaterialTypeByMaterialtypeIdResponse;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.messages.Messages;
+import org.folio.rest.tools.utils.OutStream;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
+  public static final String ITEM_TABLE = "item";
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
+  private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
+  private final Messages messages = Messages.getInstance();
 
+  @Validate
   @Override
   public void getItemStorageItems(
     @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
@@ -132,6 +146,42 @@ public class ItemStorageAPI implements ItemStorageResource {
     }
   }
 
+  /**
+   *
+   * @param vertx
+   * @param tenantId
+   * @param item
+   * @param handler
+   * @throws Exception
+   */
+  private void getMT(Vertx vertx, String tenantId, Item item, Handler<AsyncResult<Integer>> handler) throws Exception{
+    Mtype mtype = new Mtype();
+    MaterialType mt = item.getMaterialType();
+    if(mt == null){
+      //allow null material types so that they can be added after a record is created
+      handler.handle(io.vertx.core.Future.succeededFuture(1));
+    }else{
+      mtype.setName(item.getMaterialType().getName());
+      /** check if the material type name exists, if not, can not add it to the item **/
+      PostgresClient.getInstance(vertx, tenantId).get(
+        MaterialTypeAPI.MATERIAL_TYPE_TABLE, mtype, new String[]{"_id"}, true, false, 0, 1, check -> {
+          if(check.succeeded()){
+            List<Mtype> mtypeList0 = (List<Mtype>) check.result()[0];
+            if(mtypeList0.size() == 0){
+              handler.handle(io.vertx.core.Future.succeededFuture(0));
+            }
+            else{
+              handler.handle(io.vertx.core.Future.succeededFuture(1));
+            }
+          }
+          else{
+            log.error(check.cause().getLocalizedMessage(), check.cause());
+            handler.handle(io.vertx.core.Future.succeededFuture(-1));
+          }
+      });
+    }
+  }
+  @Validate
   @Override
   public void postItemStorageItems(
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
@@ -160,56 +210,79 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.save("item", entity.getId(), entity,
-            reply -> {
-              try {
-                if(reply.succeeded()) {
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
+          getMT(vertxContext.owner(), tenantId, entity, replyHandler -> {
+              int res = replyHandler.result();
+              if(res == 0){
+                String message = "Can not add " + entity.getMaterialType().getName() + ". Material type not found";
+                log.error(message);
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
+                  .withPlainNotFound(message)));
+              }
+              else if(res == -1){
+                asyncResultHandler.handle(Future.succeededFuture(
+                  ItemStorageResource.PostItemStorageItemsResponse
+                    .withPlainInternalServerError("")));
+              }
+              else{
+                try {
+                  postgresClient.save("item", entity.getId(), entity,
+                    reply -> {
+                      try {
+                        if(reply.succeeded()) {
+                          OutStream stream = new OutStream();
+                          stream.setData(entity);
 
-                  asyncResultHandler.handle(
-                    Future.succeededFuture(
-                      ItemStorageResource.PostItemStorageItemsResponse
-                        .withJsonCreated(reply.result(), stream)));
-                }
-                else {
-                  String message = reply.cause().getMessage();
+                          asyncResultHandler.handle(
+                            Future.succeededFuture(
+                              ItemStorageResource.PostItemStorageItemsResponse
+                                .withJsonCreated(reply.result(), stream)));
+                        }
+                        else {
+                          String message = reply.cause().getMessage();
 
-                  if(message.contains("invalid input syntax for uuid")) {
-                    asyncResultHandler.handle(
-                      Future.succeededFuture(
-                        ItemStorageResource.PostItemStorageItemsResponse
-                          .withPlainBadRequest(
-                            "ID and instance ID must both be a UUID")));
-                  }
-                  else {
-                    asyncResultHandler.handle(
-                      Future.succeededFuture(
-                        ItemStorageResource.PostItemStorageItemsResponse
-                          .withPlainInternalServerError(
-                            reply.cause().getMessage())));
-                  }
-                }
-              } catch (Exception e) {
-                asyncResultHandler.handle(
-                  Future.succeededFuture(
+                          if(message.contains("invalid input syntax for uuid")) {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                ItemStorageResource.PostItemStorageItemsResponse
+                                  .withPlainBadRequest(
+                                    "ID and instance ID must both be a UUID")));
+                          }
+                          else {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                ItemStorageResource.PostItemStorageItemsResponse
+                                  .withPlainInternalServerError(
+                                    reply.cause().getMessage())));
+                          }
+                        }
+                      } catch (Exception e) {
+                        asyncResultHandler.handle(
+                          Future.succeededFuture(
+                            ItemStorageResource.PostItemStorageItemsResponse
+                              .withPlainInternalServerError(e.getMessage())));
+                      }
+                    });
+                } catch (Exception e) {
+                  asyncResultHandler.handle(Future.succeededFuture(
                     ItemStorageResource.PostItemStorageItemsResponse
                       .withPlainInternalServerError(e.getMessage())));
+                }
               }
-            });
+          });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.PostItemStorageItemsResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        ItemStorageResource.PostItemStorageItemsResponse
-          .withPlainInternalServerError(e.getMessage())));
-    }
+      }
+      catch (Exception e) {
+        asyncResultHandler.handle(Future.succeededFuture(
+          ItemStorageResource.PostItemStorageItemsResponse
+            .withPlainInternalServerError(e.getMessage())));
+      }
   }
-
+  @Validate
   @Override
   public void getItemStorageItemsByItemId(
     @PathParam("itemId") @NotNull String itemId,
@@ -284,7 +357,7 @@ public class ItemStorageAPI implements ItemStorageResource {
           withPlainInternalServerError(e.getMessage())));
     }
   }
-
+  @Validate
   @Override
   public void deleteItemStorageItems(
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
@@ -327,6 +400,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     }
   }
 
+  @Validate
   @Override
   public void putItemStorageItemsByItemId(
     @PathParam("itemId") @NotNull String itemId,
@@ -360,86 +434,104 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("item", Item.class, criterion, true, false,
-            reply -> {
-              if(reply.succeeded()) {
-                List<Item> itemList = (List<Item>) reply.result()[0];
-                if (itemList.size() == 1) {
-                  try {
-
-                    //Temporary fix for single quotes
-                    entity.setTitle(entity.getTitle().replace("'", "''"));
-
-                    postgresClient.update("item", entity, criterion, true,
-                      update -> {
-                        try {
-                          if (update.succeeded()) {
-                            OutStream stream = new OutStream();
-                            stream.setData(entity);
-
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutItemStorageItemsByItemIdResponse
-                                  .withNoContent()));
-                          } else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutItemStorageItemsByItemIdResponse
-                                  .withPlainInternalServerError(
-                                    update.cause().getMessage())));
-                          }
-                        } catch (Exception e) {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PostItemStorageItemsResponse
-                                .withPlainInternalServerError(e.getMessage())));
-                        }
-                      });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      PutItemStorageItemsByItemIdResponse
-                        .withPlainInternalServerError(e.getMessage())));
-                  }
-                } else {
-                  try {
-                    postgresClient.save("item", entity.getId(), entity,
-                      save -> {
-                        try {
-                          if (save.succeeded()) {
-                            OutStream stream = new OutStream();
-                            stream.setData(entity);
-
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutItemStorageItemsByItemIdResponse
-                                  .withNoContent()));
-                          } else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutItemStorageItemsByItemIdResponse
-                                  .withPlainInternalServerError(
-                                    save.cause().getMessage())));
-                          }
-
-                        } catch (Exception e) {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PostItemStorageItemsResponse
-                                .withPlainInternalServerError(e.getMessage())));
-                        }
-                      });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      PutItemStorageItemsByItemIdResponse
-                        .withPlainInternalServerError(e.getMessage())));
-                  }
-                }
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  PutItemStorageItemsByItemIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+          getMT(vertxContext.owner(), tenantId, entity, replyHandler -> {
+              int res = replyHandler.result();
+              if(res == 0){
+                String message = "Can not add " + entity.getMaterialType().getName() + ". Material type not found";
+                log.error(message);
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
+                  .withPlainNotFound(message)));
               }
-            });
+              else if(res == -1){
+                asyncResultHandler.handle(Future.succeededFuture(
+                  ItemStorageResource.PostItemStorageItemsResponse
+                    .withPlainInternalServerError("")));
+              }
+              else{
+                try {
+                  postgresClient.get("item", Item.class, criterion, true, false,
+                    reply -> {
+                      if(reply.succeeded()) {
+                        List<Item> itemList = (List<Item>) reply.result()[0];
+                        if (itemList.size() == 1) {
+                          try {
+                            postgresClient.update("item", entity, criterion, true,
+                              update -> {
+                                try {
+                                  if (update.succeeded()) {
+                                    OutStream stream = new OutStream();
+                                    stream.setData(entity);
+
+                                    asyncResultHandler.handle(
+                                      Future.succeededFuture(
+                                        PutItemStorageItemsByItemIdResponse
+                                          .withNoContent()));
+                                  } else {
+                                    asyncResultHandler.handle(
+                                      Future.succeededFuture(
+                                        PutItemStorageItemsByItemIdResponse
+                                          .withPlainInternalServerError(
+                                            update.cause().getMessage())));
+                                  }
+                                } catch (Exception e) {
+                                  asyncResultHandler.handle(
+                                    Future.succeededFuture(
+                                      PostItemStorageItemsResponse
+                                        .withPlainInternalServerError(e.getMessage())));
+                                }
+                              });
+                          } catch (Exception e) {
+                            asyncResultHandler.handle(Future.succeededFuture(
+                              PutItemStorageItemsByItemIdResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                          }
+                        } else {
+                          try {
+                            postgresClient.save("item", entity.getId(), entity,
+                              save -> {
+                                try {
+                                  if (save.succeeded()) {
+                                    OutStream stream = new OutStream();
+                                    stream.setData(entity);
+
+                                    asyncResultHandler.handle(
+                                      Future.succeededFuture(
+                                        PutItemStorageItemsByItemIdResponse
+                                          .withNoContent()));
+                                  } else {
+                                    asyncResultHandler.handle(
+                                      Future.succeededFuture(
+                                        PutItemStorageItemsByItemIdResponse
+                                          .withPlainInternalServerError(
+                                            save.cause().getMessage())));
+                                  }
+
+                                } catch (Exception e) {
+                                  asyncResultHandler.handle(
+                                    Future.succeededFuture(
+                                      PostItemStorageItemsResponse
+                                        .withPlainInternalServerError(e.getMessage())));
+                                }
+                              });
+                          } catch (Exception e) {
+                            asyncResultHandler.handle(Future.succeededFuture(
+                              PutItemStorageItemsByItemIdResponse
+                                .withPlainInternalServerError(e.getMessage())));
+                          }
+                        }
+                      } else {
+                        asyncResultHandler.handle(Future.succeededFuture(
+                          PutItemStorageItemsByItemIdResponse
+                            .withPlainInternalServerError(reply.cause().getMessage())));
+                      }
+                    });
+                } catch (Exception e) {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    ItemStorageResource.PostItemStorageItemsResponse
+                      .withPlainInternalServerError(e.getMessage())));
+                }
+              }
+          });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             ItemStorageResource.PostItemStorageItemsResponse
@@ -452,7 +544,7 @@ public class ItemStorageAPI implements ItemStorageResource {
           .withPlainInternalServerError(e.getMessage())));
     }
   }
-
+  @Validate
   @Override
   public void deleteItemStorageItemsByItemId(
     @PathParam("itemId") @NotNull String itemId,
@@ -521,4 +613,5 @@ public class ItemStorageAPI implements ItemStorageResource {
   private boolean blankTenantId(String tenantId) {
     return tenantId == null || tenantId == "" || tenantId == "folio_shared";
   }
+
 }

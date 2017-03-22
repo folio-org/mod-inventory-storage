@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "mtypes": {
+      "id": "mtype",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref" : "mtype"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "mtypes",
+    "totalRecords"
+  ]
+}

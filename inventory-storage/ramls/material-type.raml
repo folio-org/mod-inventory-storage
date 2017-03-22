@@ -1,0 +1,48 @@
+#%RAML 0.8
+title: Material Types API
+version: v1.3.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Material Types API
+    content: This documents the API calls that can be made to query and manage material types of the system
+
+schemas:
+  - mtype: !include schema/materialtype.json
+  - mtypes: !include schema/materialtypes.json
+  - item: !include schema/item.json
+  - items: !include schema/items.json
+  
+traits:
+  - secured: !include ../raml-util/traits/auth.raml
+  - pageable: !include ../raml-util/traits/pageable.raml
+  - searchable: !include ../raml-util/traits/searchable.raml
+  - language: !include ../raml-util/traits/language.raml
+
+resourceTypes:
+  - collection: !include ../raml-util/rtypes/collection.raml
+  - collection-item: !include ../raml-util/rtypes/item-collection.raml
+  - get-delete-only: !include ../raml-util/rtypes/get-delete.raml
+
+/material-type:
+  type:
+    collection:
+      exampleCollection: !include examples/materialtypes.json
+      exampleItem: !include examples/materialtype.json
+      schemaCollection: mtypes
+      schemaItem: mtype
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of material types
+  post:
+    description: Create a new material type
+  /{materialtypeId}:
+    type:
+      collection-item:
+        exampleItem: !include examples/materialtype.json
+        schema: mtype
+
