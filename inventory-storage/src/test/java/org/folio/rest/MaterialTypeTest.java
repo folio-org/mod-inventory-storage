@@ -2,14 +2,6 @@ package org.folio.rest;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -25,6 +17,15 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 
 public class MaterialTypeTest {
 
@@ -78,7 +79,7 @@ public class MaterialTypeTest {
       send(createMTURL2, HttpMethod.POST, postRequest,
         SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, ResponseHandler.json(createMT2));
       JsonResponse createMTURLResponse2 = createMT2.get(5, TimeUnit.SECONDS);
-      assertThat(createMTURLResponse2.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+      assertThat(createMTURLResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
       System.out.println(createMTURLResponse2.getBody() +
         "\nStatus - " + createMTURLResponse2.getStatusCode() + " at " + System.currentTimeMillis() + " for " + createMTURL2);
 

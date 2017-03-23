@@ -1,12 +1,5 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,6 +13,7 @@ import org.folio.rest.jaxrs.model.MaterialType;
 import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.model.Mtypes;
 import org.folio.rest.jaxrs.resource.MaterialTypeResource;
+import org.folio.rest.jaxrs.resource.MaterialTypeResource.DeleteMaterialTypeByMaterialtypeIdResponse;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -32,6 +26,13 @@ import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  * @author shale
@@ -130,8 +131,14 @@ public class MaterialTypeAPI implements MaterialTypeResource {
               }
               else{
                 log.error(reply.cause().getMessage(), reply.cause());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostMaterialTypeResponse
-                  .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                if(isDuplicate(reply.cause().getMessage())){
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostMaterialTypeResponse
+                    .withPlainBadRequest("Material Type exists...")));
+                }
+                else{
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostMaterialTypeResponse
+                    .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                }
               }
             } catch (Exception e) {
               log.error(e.getMessage(), e);
@@ -330,10 +337,25 @@ public class MaterialTypeAPI implements MaterialTypeResource {
     });
   }
 
-
   private CQLWrapper getCQL(String table, String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(table+".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+  }
+
+  private boolean isDuplicate(String errorMessage){
+    if(errorMessage != null && errorMessage.contains("duplicate key value violates unique constraint")){
+      return true;
+    }
+    return false;
+  }
+
+  private boolean isInvalidUUID(String errorMessage){
+    if(errorMessage != null && errorMessage.contains("invalid input syntax for uuid")){
+      return true;
+    }
+    else{
+      return false;
+    }
   }
 
 }
