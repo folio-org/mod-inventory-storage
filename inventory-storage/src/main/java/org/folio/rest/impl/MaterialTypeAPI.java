@@ -170,15 +170,28 @@ public class MaterialTypeAPI implements MaterialTypeResource {
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(MATERIAL_TYPE_TABLE, Mtype.class, c, true,
             reply -> {
               try {
-                @SuppressWarnings("unchecked")
-                List<Mtype> userGroup = (List<Mtype>) reply.result()[0];
-                if(userGroup.isEmpty()){
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypeByMaterialtypeIdResponse
-                    .withPlainNotFound(materialtypeId)));
+                if(reply.succeeded()){
+                  @SuppressWarnings("unchecked")
+                  List<Mtype> userGroup = (List<Mtype>) reply.result()[0];
+                  if(userGroup.isEmpty()){
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypeByMaterialtypeIdResponse
+                      .withPlainNotFound(materialtypeId)));
+                  }
+                  else{
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypeByMaterialtypeIdResponse
+                      .withJsonOK(userGroup.get(0))));
+                  }
                 }
                 else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypeByMaterialtypeIdResponse
-                    .withJsonOK(userGroup.get(0))));
+                  log.error(reply.cause().getMessage(), reply.cause());
+                  if(isInvalidUUID(reply.cause().getMessage())){
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypeByMaterialtypeIdResponse
+                      .withPlainNotFound(materialtypeId)));
+                  }
+                  else{
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypeByMaterialtypeIdResponse
+                      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  }
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
