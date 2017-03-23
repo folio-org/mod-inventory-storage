@@ -1,5 +1,8 @@
 [
-{"name":"book"}
-,
-{"name":"dvd"}
+  {
+    "name": "book"
+  },
+  {
+    "name": "dvd"
+  }
 ]

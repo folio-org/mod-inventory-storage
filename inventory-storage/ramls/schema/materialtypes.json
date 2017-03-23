@@ -7,7 +7,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref" : "mtype"
+        "$ref": "mtype"
       }
     },
     "totalRecords": {
