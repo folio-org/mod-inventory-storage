@@ -522,6 +522,18 @@ public interface InstanceStorageResource {
         }
 
         /**
+         * Not authorized to perform requested action e.g. unable to list instances -- unauthorized
+         * 
+         * @param entity
+         *     unable to list instances -- unauthorized
+         */
+        public static InstanceStorageResource.GetInstanceStorageInstancesResponse withPlainUnauthorized(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.GetInstanceStorageInstancesResponse(responseBuilder.build());
+        }
+
+        /**
          * Internal server error, e.g. due to misconfiguration e.g. internal server error, contact administrator
          * 
          * @param entity
@@ -596,6 +608,18 @@ public interface InstanceStorageResource {
          */
         public static InstanceStorageResource.PostInstanceStorageInstancesResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.PostInstanceStorageInstancesResponse(responseBuilder.build());
+        }
+
+        /**
+         * Not authorized to perform requested action e.g. unable to create instances -- unauthorized
+         * 
+         * @param entity
+         *     unable to create instances -- unauthorized
+         */
+        public static InstanceStorageResource.PostInstanceStorageInstancesResponse withPlainUnauthorized(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new InstanceStorageResource.PostInstanceStorageInstancesResponse(responseBuilder.build());
         }

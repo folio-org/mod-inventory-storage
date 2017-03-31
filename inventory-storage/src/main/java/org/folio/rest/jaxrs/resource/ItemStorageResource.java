@@ -527,6 +527,18 @@ public interface ItemStorageResource {
         }
 
         /**
+         * Not authorized to perform requested action e.g. unable to list items -- unauthorized
+         * 
+         * @param entity
+         *     unable to list items -- unauthorized
+         */
+        public static ItemStorageResource.GetItemStorageItemsResponse withPlainUnauthorized(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new ItemStorageResource.GetItemStorageItemsResponse(responseBuilder.build());
+        }
+
+        /**
          * Internal server error, e.g. due to misconfiguration e.g. internal server error, contact administrator
          * 
          * @param entity
@@ -603,6 +615,18 @@ public interface ItemStorageResource {
          */
         public static ItemStorageResource.PostItemStorageItemsResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new ItemStorageResource.PostItemStorageItemsResponse(responseBuilder.build());
+        }
+
+        /**
+         * Not authorized to perform requested action e.g. unable to create items -- unauthorized
+         * 
+         * @param entity
+         *     unable to create items -- unauthorized
+         */
+        public static ItemStorageResource.PostItemStorageItemsResponse withPlainUnauthorized(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new ItemStorageResource.PostItemStorageItemsResponse(responseBuilder.build());
         }
