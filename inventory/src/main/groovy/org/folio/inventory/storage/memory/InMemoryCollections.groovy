@@ -11,19 +11,19 @@ class InMemoryCollections implements CollectionProvider {
   private final Map<String, IngestJobCollection> ingestJobCollections = [:]
 
   @Override
-  ItemCollection getItemCollection(String tenantId) {
+  ItemCollection getItemCollection(String tenantId, String token) {
     getCollectionForTenant(tenantId, itemCollections,
       { new InMemoryItemCollection() })
   }
 
   @Override
-  InstanceCollection getInstanceCollection(String tenantId) {
+  InstanceCollection getInstanceCollection(String tenantId, String token) {
     getCollectionForTenant(tenantId, instanceCollections,
       { new InMemoryInstanceCollection() })
   }
 
   @Override
-  IngestJobCollection getIngestJobCollection(String tenantId) {
+  IngestJobCollection getIngestJobCollection(String tenantId, String token) {
     getCollectionForTenant(tenantId, ingestJobCollections,
       { new InMemoryIngestJobCollection() })
   }

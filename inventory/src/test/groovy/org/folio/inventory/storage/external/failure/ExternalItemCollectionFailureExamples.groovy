@@ -134,6 +134,6 @@ abstract class ExternalItemCollectionFailureExamples {
   }
 
   private ItemCollection createCollection() {
-    collectionProvider.getItemCollection("test_tenant")
+    collectionProvider.getItemCollection("test_tenant", "")
   }
 }

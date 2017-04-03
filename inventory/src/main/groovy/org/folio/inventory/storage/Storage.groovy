@@ -53,14 +53,14 @@ class Storage {
   }
 
   ItemCollection getItemCollection(Context context) {
-    providerFactory.apply(context).getItemCollection(context.tenantId)
+    providerFactory.apply(context).getItemCollection(context.tenantId, context.token)
   }
 
   InstanceCollection getInstanceCollection(Context context) {
-    providerFactory.apply(context).getInstanceCollection(context.tenantId)
+    providerFactory.apply(context).getInstanceCollection(context.tenantId, context.token)
   }
 
   IngestJobCollection getIngestJobCollection(Context context) {
-    providerFactory.apply(context).getIngestJobCollection(context.tenantId)
+    providerFactory.apply(context).getIngestJobCollection(context.tenantId, context.token)
   }
 }

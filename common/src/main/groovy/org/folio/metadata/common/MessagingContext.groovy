@@ -16,6 +16,11 @@ class MessagingContext implements Context {
   }
 
   @Override
+  String getToken() {
+    getHeader("token")
+  }
+
+  @Override
   String getOkapiLocation() {
     getHeader("okapiLocation")
   }
