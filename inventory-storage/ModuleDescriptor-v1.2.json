@@ -1,0 +1,92 @@
+{
+  "id": "inventory-storage",
+  "name": "Inventory Storage Module",
+  "provides": [
+    {
+      "id": "item-storage",
+      "version": "1.3.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/item-storage/items"
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/item-storage/items/{id}"
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/item-storage/items"
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/item-storage/items/{id}"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/item-storage/items/{id}"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/item-storage/items"
+        }
+      ]
+    },
+    {
+      "id": "instance-storage",
+      "version": "1.0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instances"
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instances/{id}"
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances"
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-storage/instances/{id}"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instances/{id}"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instances"
+        }
+      ]
+    },
+    {
+      "id": "material-type",
+      "version": "1.0.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/material-type"
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/material-type/{id}"
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/material-type"
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/material-type/{id}"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/material-type/{id}"
+        }
+      ]
+    },
+    {
+      "id" : "_tenant",
+      "version" : "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/_/tenant"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/_/tenant"
+        }
+      ]
+    }
+  ]
+}
