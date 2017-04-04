@@ -1,0 +1,164 @@
+{
+  "id": "inventory",
+  "name": "Inventory Module",
+  "provides": [
+    {
+      "id": "inventory",
+      "version": "1.4",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory/items",
+          "permissionsRequired": ["inventory.items.collection.get"],
+          "modulePermissions": ["inventory-storage.items.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/inventory/items/{id}",
+          "permissionsRequired": ["inventory.items.item.get"],
+          "modulePermissions": ["inventory-storage.items.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/inventory/items",
+          "permissionsRequired": ["inventory.items.item.post"],
+          "modulePermissions": ["inventory-storage.items.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/inventory/items/{id}",
+          "permissionsRequired": ["inventory.items.item.put"],
+          "modulePermissions": ["inventory-storage.items.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/inventory/items/{id}",
+          "permissionsRequired": ["inventory.items.item.delete"],
+          "modulePermissions": ["inventory-storage.items.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/inventory/items",
+          "permissionsRequired": ["inventory.items.collection.delete"],
+          "modulePermissions": ["inventory-storage.items.collection.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory/instances",
+          "permissionsRequired": ["inventory.instances.collection.get"],
+          "modulePermissions": ["inventory-storage.instances.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/inventory/instances/{id}",
+          "permissionsRequired": ["inventory.instances.item.get"],
+          "modulePermissions": ["inventory-storage.instances.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/inventory/instances",
+          "permissionsRequired": ["inventory.instances.item.post"],
+          "modulePermissions": ["inventory-storage.instances.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/inventory/instances/{id}",
+          "permissionsRequired": ["inventory.instances.item.put"],
+          "modulePermissions": ["inventory-storage.instances.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/inventory/instances/{id}",
+          "permissionsRequired": ["inventory.instances.item.delete"],
+          "modulePermissions": ["inventory-storage.instances.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/inventory/instances",
+          "permissionsRequired": ["inventory.instances.collection.delete"],
+          "modulePermissions": ["inventory-storage.instances.collection.delete"]
+        }
+      ]
+    }
+  ],
+  "requires" : [ {
+    "id" : "item-storage",
+    "version" : "1.3"
+    },
+    {
+      "id": "instance-storage",
+      "version": "1.0"
+    }
+  ],
+  "permissionSets": [
+    {
+      "permissionName": "inventory.items.collection.get",
+      "displayName": "inventory - get item collection",
+      "description": "get item collection"
+    },
+    {
+      "permissionName": "inventory.items.collection.delete",
+      "displayName": "inventory - delete entire item collection",
+      "description": "delete entire item collection"
+    },
+    {
+      "permissionName": "inventory.items.item.get",
+      "displayName": "inventory - get individual item",
+      "description": "get individual item"
+    },
+    {
+      "permissionName": "inventory.items.item.post",
+      "displayName": "inventory - create individual item",
+      "description": "create individual item"
+    },
+    {
+      "permissionName": "inventory.items.item.put",
+      "displayName": "inventory - modify item",
+      "description": "modify item"
+    },
+    {
+      "permissionName": "inventory.items.item.delete",
+      "displayName": "inventory - delete individual item",
+      "description": "delete individual item"
+    },
+    {
+      "permissionName": "inventory.instances.collection.get",
+      "displayName": "inventory - get instance collection",
+      "description": "get instance collection"
+    },
+    {
+      "permissionName": "inventory.instances.collection.delete",
+      "displayName": "inventory - delete entire instance collection",
+      "description": "delete entire instance collection"
+    },
+    {
+      "permissionName": "inventory.instances.item.get",
+      "displayName": "inventory - get individual instance",
+      "description": "get individual instance"
+    },
+    {
+      "permissionName": "inventory.instances.item.post",
+      "displayName": "inventory - create individual instance",
+      "description": "create individual instance"
+    },
+    {
+      "permissionName": "inventory.instances.item.put",
+      "displayName": "inventory - modify instance",
+      "description": "modify instance"
+    },
+    {
+      "permissionName": "inventory.instances.item.delete",
+      "displayName": "inventory - delete individual instance",
+      "description": "delete individual instance"
+    },
+    {
+      "permissionName": "inventory.all",
+      "displayName": "inventory module - all permissions",
+      "description": "Entire set of permissions needed to use the inventory module",
+      "subPermissions": [
+        "inventory.items.collection.get",
+        "inventory.items.item.get",
+        "inventory.items.item.post",
+        "inventory.items.item.put",
+        "inventory.items.item.delete",
+        "inventory.items.collection.delete",
+        "inventory.instances.collection.get",
+        "inventory.instances.item.get",
+        "inventory.instances.item.post",
+        "inventory.instances.item.put",
+        "inventory.instances.item.delete",
+        "inventory.instances.collection.delete"
+      ]
+    }
+  ]
+}
