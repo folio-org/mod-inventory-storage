@@ -1,1 +1,220 @@
-ModuleDescriptor-v1.2.json
+{
+  "id": "inventory-storage",
+  "name": "Inventory Storage Module",
+  "provides": [
+    {
+      "id": "item-storage",
+      "version": "1.3.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/item-storage/items",
+          "permissionsRequired": ["inventory-storage.items.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/item-storage/items/{id}",
+          "permissionsRequired": ["inventory-storage.items.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/item-storage/items",
+          "permissionsRequired": ["inventory-storage.items.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/item-storage/items/{id}",
+          "permissionsRequired": ["inventory-storage.items.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/item-storage/items/{id}",
+          "permissionsRequired": ["inventory-storage.items.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/item-storage/items",
+          "permissionsRequired": ["inventory-storage.items.collection.delete"]
+        }
+      ]
+    },
+    {
+      "id": "instance-storage",
+      "version": "1.0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instances",
+          "permissionsRequired": ["inventory-storage.instances.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instances/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances",
+          "permissionsRequired": ["inventory-storage.instances.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-storage/instances/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instances/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instances",
+          "permissionsRequired": ["inventory-storage.instances.collection.delete"]
+        }
+      ]
+    },
+    {
+      "id": "material-type",
+      "version": "1.0.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/material-type",
+          "permissionsRequired": ["inventory-storage.material-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/material-type/{id}",
+          "permissionsRequired": ["inventory-storage.material-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/material-type",
+          "permissionsRequired": ["inventory-storage.material-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/material-type/{id}",
+          "permissionsRequired": ["inventory-storage.material-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/material-type/{id}",
+          "permissionsRequired": ["inventory-storage.material-types.item.delete"]
+        }
+      ]
+    },
+    {
+      "id" : "_tenant",
+      "version" : "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/_/tenant"
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/_/tenant"
+        }
+      ]
+    }
+  ],
+  "permissionSets": [
+    {
+      "permissionName": "inventory-storage.items.collection.get",
+      "displayName": "inventory storage - get item collection",
+      "description": "get item collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.items.collection.delete",
+      "displayName": "inventory storage - delete entire item collection",
+      "description": "delete entire item collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.items.item.get",
+      "displayName": "inventory storage - get individual item",
+      "description": "get individual item from storage"
+    },
+    {
+      "permissionName": "inventory-storage.items.item.post",
+      "displayName": "inventory storage - create individual item",
+      "description": "create individual item in storage"
+    },
+    {
+      "permissionName": "inventory-storage.items.item.put",
+      "displayName": "inventory storage - modify item",
+      "description": "modify item in storage"
+    },
+    {
+      "permissionName": "inventory-storage.items.item.delete",
+      "displayName": "inventory storage - delete individual item",
+      "description": "delete individual item from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.collection.get",
+      "displayName": "inventory storage - get instance collection",
+      "description": "get instance collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.collection.delete",
+      "displayName": "inventory storage - delete entire instance collection",
+      "description": "delete entire instance collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.item.get",
+      "displayName": "inventory storage - get individual instance",
+      "description": "get individual instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.item.post",
+      "displayName": "inventory storage - create individual instance",
+      "description": "create individual instance in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.item.put",
+      "displayName": "inventory storage - modify instance",
+      "description": "modify instance in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.item.delete",
+      "displayName": "inventory storage - delete individual instance",
+      "description": "delete individual instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.material-types.collection.get",
+      "displayName": "inventory storage - get material-type collection",
+      "description": "get material-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.material-types.item.get",
+      "displayName": "inventory storage - get individual material-type",
+      "description": "get individual material-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.material-types.item.post",
+      "displayName": "inventory storage - create individual material-type",
+      "description": "create individual material-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.material-types.item.put",
+      "displayName": "inventory storage - modify material-type",
+      "description": "modify material-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.material-types.item.delete",
+      "displayName": "inventory storage - delete individual material-type",
+      "description": "delete individual material-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.all",
+      "displayName": "inventory storage module - all permissions",
+      "description": "Entire set of permissions needed to use the inventory storage module",
+      "subPermissions": [
+        "inventory-storage.items.collection.get",
+        "inventory-storage.items.item.get",
+        "inventory-storage.items.item.post",
+        "inventory-storage.items.item.put",
+        "inventory-storage.items.item.delete",
+        "inventory-storage.items.collection.delete",
+        "inventory-storage.instances.collection.get",
+        "inventory-storage.instances.item.get",
+        "inventory-storage.instances.item.post",
+        "inventory-storage.instances.item.put",
+        "inventory-storage.instances.item.delete",
+        "inventory-storage.instances.collection.delete",
+        "inventory-storage.material-types.collection.get",
+        "inventory-storage.material-types.item.get",
+        "inventory-storage.material-types.item.post",
+        "inventory-storage.material-types.item.put",
+        "inventory-storage.material-types.item.delete"
+      ]
+    }
+  ]
+}
