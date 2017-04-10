@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "inventory",
-      "version": "1.4",
+      "version": "1.5",
       "handlers": [
         {
           "methods": ["GET"],
@@ -36,8 +36,7 @@
           "pathPattern": "/inventory/items",
           "permissionsRequired": ["inventory.items.collection.delete"],
           "modulePermissions": ["inventory-storage.items.collection.delete"]
-        },
-        {
+        }, {
           "methods": ["GET"],
           "pathPattern": "/inventory/instances",
           "permissionsRequired": ["inventory.instances.collection.get"],
@@ -67,6 +66,18 @@
           "pathPattern": "/inventory/instances",
           "permissionsRequired": ["inventory.instances.collection.delete"],
           "modulePermissions": ["inventory-storage.instances.collection.delete"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/inventory/ingest/mods",
+          "permissionsRequired": ["inventory.ingest.mods.post"],
+          "modulePermissions": [
+            "inventory-storage.items.item.post",
+            "inventory-storage.instances.item.post",
+            "inventory-storage.instances.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/inventory/ingest/mods/status/{id}",
+          "permissionsRequired": ["inventory.ingest.mods.status.get"]
         }
       ]
     }
@@ -142,6 +153,16 @@
       "description": "delete individual instance"
     },
     {
+      "permissionName": "inventory.ingest.mods.post",
+      "displayName": "inventory - ingest a MODS format file",
+      "description": "request ingestion of a MODS format file"
+    },
+    {
+      "permissionName": "inventory.ingest.mods.status.get",
+      "displayName": "inventory - MODS ingest status",
+      "description": "check the status of a MODS format file ingestion"
+    },
+    {
       "permissionName": "inventory.all",
       "displayName": "inventory module - all permissions",
       "description": "Entire set of permissions needed to use the inventory module",
@@ -157,7 +178,9 @@
         "inventory.instances.item.post",
         "inventory.instances.item.put",
         "inventory.instances.item.delete",
-        "inventory.instances.collection.delete"
+        "inventory.instances.collection.delete",
+        "inventory.ingest.mods.post",
+        "inventory.ingest.mods.status.get"
       ]
     }
   ]
