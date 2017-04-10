@@ -94,77 +94,77 @@
   "permissionSets": [
     {
       "permissionName": "inventory.items.collection.get",
-      "displayName": "inventory - get item collection",
-      "description": "get item collection"
+      "displayName": "Inventory - get item collection",
+      "description": "Get item collection"
     },
     {
       "permissionName": "inventory.items.collection.delete",
-      "displayName": "inventory - delete entire item collection",
-      "description": "delete entire item collection"
+      "displayName": "Inventory - delete entire item collection",
+      "description": "Delete entire item collection"
     },
     {
       "permissionName": "inventory.items.item.get",
-      "displayName": "inventory - get individual item",
-      "description": "get individual item"
+      "displayName": "Inventory - get individual item",
+      "description": "Get individual item"
     },
     {
       "permissionName": "inventory.items.item.post",
-      "displayName": "inventory - create individual item",
-      "description": "create individual item"
+      "displayName": "Inventory - create individual item",
+      "description": "Create individual item"
     },
     {
       "permissionName": "inventory.items.item.put",
-      "displayName": "inventory - modify item",
-      "description": "modify item"
+      "displayName": "Inventory - modify item",
+      "description": "Modify item"
     },
     {
       "permissionName": "inventory.items.item.delete",
-      "displayName": "inventory - delete individual item",
-      "description": "delete individual item"
+      "displayName": "Inventory - delete individual item",
+      "description": "Delete individual item"
     },
     {
       "permissionName": "inventory.instances.collection.get",
-      "displayName": "inventory - get instance collection",
-      "description": "get instance collection"
+      "displayName": "Inventory - get instance collection",
+      "description": "Get instance collection"
     },
     {
       "permissionName": "inventory.instances.collection.delete",
-      "displayName": "inventory - delete entire instance collection",
-      "description": "delete entire instance collection"
+      "displayName": "Inventory - delete entire instance collection",
+      "description": "Delete entire instance collection"
     },
     {
       "permissionName": "inventory.instances.item.get",
-      "displayName": "inventory - get individual instance",
-      "description": "get individual instance"
+      "displayName": "Inventory - get individual instance",
+      "description": "Get individual instance"
     },
     {
       "permissionName": "inventory.instances.item.post",
-      "displayName": "inventory - create individual instance",
-      "description": "create individual instance"
+      "displayName": "Inventory - create individual instance",
+      "description": "Create individual instance"
     },
     {
       "permissionName": "inventory.instances.item.put",
-      "displayName": "inventory - modify instance",
-      "description": "modify instance"
+      "displayName": "Inventory - modify instance",
+      "description": "Modify instance"
     },
     {
       "permissionName": "inventory.instances.item.delete",
-      "displayName": "inventory - delete individual instance",
-      "description": "delete individual instance"
+      "displayName": "Inventory - delete individual instance",
+      "description": "Delete individual instance"
     },
     {
       "permissionName": "inventory.ingest.mods.post",
-      "displayName": "inventory - ingest a MODS format file",
-      "description": "request ingestion of a MODS format file"
+      "displayName": "Inventory - ingest a MODS format file",
+      "description": "Request ingestion of a MODS format file"
     },
     {
       "permissionName": "inventory.ingest.mods.status.get",
-      "displayName": "inventory - MODS ingest status",
-      "description": "check the status of a MODS format file ingestion"
+      "displayName": "Inventory - MODS ingest status",
+      "description": "Check the status of a MODS format file ingestion"
     },
     {
       "permissionName": "inventory.all",
-      "displayName": "inventory module - all permissions",
+      "displayName": "Inventory - all permissions",
       "description": "Entire set of permissions needed to use the inventory module",
       "subPermissions": [
         "inventory.items.collection.get",
