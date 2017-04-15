@@ -73,27 +73,37 @@ public class MaterialTypeTest {
       System.out.println(createMTURLResponse.getBody() +
         "\nStatus - " + createMTURLResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + createMTURL);
 
-      /**add a duplicate material type*/
+      /**add a duplicate material type name*/
       CompletableFuture<JsonResponse> createMT2 = new CompletableFuture();
       String createMTURL2 = url+MATERIAL_TYPE_URL;
       send(createMTURL2, HttpMethod.POST, postRequest,
-        SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, ResponseHandler.json(createMT2));
+        SUPPORTED_CONTENT_TYPE_JSON_DEF, 422, ResponseHandler.json(createMT2));
       JsonResponse createMTURLResponse2 = createMT2.get(5, TimeUnit.SECONDS);
-      assertThat(createMTURLResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+      assertThat(createMTURLResponse2.getStatusCode(), is(422));
       System.out.println(createMTURLResponse2.getBody() +
         "\nStatus - " + createMTURLResponse2.getStatusCode() + " at " + System.currentTimeMillis() + " for " + createMTURL2);
 
-      /**update the material type*/
-      CompletableFuture<JsonResponse> updateMT = new CompletableFuture();
-      String updateMTURL = url+MATERIAL_TYPE_URL+materialTypeID;
-      send(updateMTURL, HttpMethod.PUT, putRequest,
-        SUPPORTED_CONTENT_TYPE_JSON_DEF, 204, ResponseHandler.json(updateMT));
-      JsonResponse updateMTURLResponse = updateMT.get(5, TimeUnit.SECONDS);
-      assertThat(updateMTURLResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-      System.out.println(updateMTURLResponse.getBody() +
-        "\nStatus - " + updateMTURLResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + updateMTURL);
+      /**add a duplicate material type id*/
+      CompletableFuture<JsonResponse> createMT3 = new CompletableFuture();
+      String createMTURL3 = url+MATERIAL_TYPE_URL;
+      send(createMTURL3, HttpMethod.POST, createMT("dvd", materialTypeID).encode(),
+        SUPPORTED_CONTENT_TYPE_JSON_DEF, 422, ResponseHandler.json(createMT3));
+      JsonResponse createMTURLResponse3 = createMT3.get(5, TimeUnit.SECONDS);
+      assertThat(createMTURLResponse3.getStatusCode(), is(422));
+      System.out.println(createMTURLResponse3.getBody() +
+        "\nStatus - " + createMTURLResponse3.getStatusCode() + " at " + System.currentTimeMillis() + " for " + createMTURL3);
 
-      /**get specific mt in mt table*/
+      /**update the material type*/
+      CompletableFuture<JsonResponse> updateMT2 = new CompletableFuture();
+      String updateMTURL2 = url+MATERIAL_TYPE_URL+materialTypeID;
+      send(updateMTURL2, HttpMethod.PUT, putRequest,
+        SUPPORTED_CONTENT_TYPE_JSON_DEF, 204, ResponseHandler.json(updateMT2));
+      JsonResponse updateMTURLResponse2 = updateMT2.get(5, TimeUnit.SECONDS);
+      assertThat(updateMTURLResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+      System.out.println(updateMTURLResponse2.getBody() +
+        "\nStatus - " + updateMTURLResponse2.getStatusCode() + " at " + System.currentTimeMillis() + " for " + updateMTURL2);
+
+      /**get mt in mt table will return 200*/
       CompletableFuture<JsonResponse> getSpecificMT = new CompletableFuture();
       String getSpecificMTUrl = url+MATERIAL_TYPE_URL + materialTypeID;
       send(getSpecificMTUrl, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF, 200, ResponseHandler.json(getSpecificMT));
@@ -102,10 +112,10 @@ public class MaterialTypeTest {
       System.out.println(getSpecificMTURLResponse.getBody() +
         "\nStatus - " + getSpecificMTURLResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + getSpecificMTUrl);
 
-      /**get bad id mt in mt table*/
+      /**get bad id mt in mt table - return 404 */
       CompletableFuture<JsonResponse> getSpecificBadMT = new CompletableFuture();
       String getSpecificBadMTUrl = url+MATERIAL_TYPE_URL + "12345";
-      send(getSpecificBadMTUrl, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF, 200, ResponseHandler.json(getSpecificBadMT));
+      send(getSpecificBadMTUrl, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF, 404, ResponseHandler.json(getSpecificBadMT));
       JsonResponse getSpecificBadMTURLResponse = getSpecificBadMT.get(5, TimeUnit.SECONDS);
       assertThat(getSpecificBadMTURLResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
       System.out.println(getSpecificBadMTURLResponse.getBody() +
@@ -114,13 +124,24 @@ public class MaterialTypeTest {
       /** add an item */
       CompletableFuture<JsonResponse> addItem = new CompletableFuture();
       String addItemURL = url+ITEM_URL;
-      send(addItemURL, HttpMethod.POST, createItem().encode(),
+      send(addItemURL, HttpMethod.POST, createItem(materialTypeID).encode(),
         SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, ResponseHandler.json(addItem));
       JsonResponse addItemURLResponse = addItem.get(5, TimeUnit.SECONDS);
       assertThat(addItemURLResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
       System.out.println(addItemURLResponse.getBody() +
         "\nStatus - " + addItemURLResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + addItemURL);
       String itemID = addItemURLResponse.getJson().getString("id");
+
+      /** add an item */
+      CompletableFuture<JsonResponse> addItemWithId = new CompletableFuture();
+      String addItemWithIdURL = url+ITEM_URL;
+      send(addItemWithIdURL, HttpMethod.POST, createItem(materialTypeID).encode(),
+        SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, ResponseHandler.json(addItemWithId));
+      JsonResponse addItemWithIdURLResponse = addItemWithId.get(5, TimeUnit.SECONDS);
+      assertThat(addItemWithIdURLResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      System.out.println(addItemWithIdURLResponse.getBody() +
+        "\nStatus - " + addItemWithIdURLResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + addItemWithIdURL);
+      String itemID2 = addItemWithIdURLResponse.getJson().getString("id");
 
      /**get all mt in mt table*/
       CompletableFuture<JsonResponse> getAllMT = new CompletableFuture();
@@ -151,6 +172,25 @@ public class MaterialTypeTest {
       System.out.println(delAllMTResponse.getBody() +
         "\nStatus - " + delAllMTResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + delAllMTURL);
 
+      /**delete an mt - should fail as there is still an item associated with the mt*/
+      CompletableFuture<JsonResponse> delMT2 = new CompletableFuture();
+      String delMTURL2 = url+MATERIAL_TYPE_URL+materialTypeID;
+      send(delMTURL2, HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF, 204, ResponseHandler.json(delMT2));
+      JsonResponse delMTResponse2 = delMT2.get(5, TimeUnit.SECONDS);
+      assertThat(delMTResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+      System.out.println(delMTResponse2.getBody() +
+        "\nStatus - " + delMTResponse2.getStatusCode() + " at " + System.currentTimeMillis() + " for " + delMTURL2);
+
+      /**delete item belonging to an mt*/
+      CompletableFuture<JsonResponse> delAllItemsMT2 = new CompletableFuture();
+      String delAllMTURL2 = url+ITEM_URL+"/"+itemID2;
+      send(delAllMTURL2, HttpMethod.DELETE, null,
+        SUPPORTED_CONTENT_TYPE_JSON_DEF, 204, ResponseHandler.json(delAllItemsMT2));
+      JsonResponse delAllMTResponse2 = delAllItemsMT2.get(5, TimeUnit.SECONDS);
+      assertThat(delAllMTResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+      System.out.println(delAllMTResponse2.getBody() +
+        "\nStatus - " + delAllMTResponse2.getStatusCode() + " at " + System.currentTimeMillis() + " for " + delAllMTURL2);
+
       /**delete an mt with no items attached*/
       CompletableFuture<JsonResponse> delDetachedMT = new CompletableFuture();
       String delDetachedMTURL = url+MATERIAL_TYPE_URL+materialTypeID;
@@ -161,15 +201,25 @@ public class MaterialTypeTest {
       System.out.println(delDetachedMTResponse.getBody() +
         "\nStatus - " + delDetachedMTResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + delDetachedMTURL);
 
-      /**add a material type for item-storage tests to pass*/
-      CompletableFuture<JsonResponse> createMT3 = new CompletableFuture();
-      String createMTURL3 = url+MATERIAL_TYPE_URL;
-      send(createMTURL3, HttpMethod.POST, putRequest,
-        SUPPORTED_CONTENT_TYPE_JSON_DEF, 201, ResponseHandler.json(createMT3));
-      JsonResponse createMTURLResponse3 = createMT3.get(5, TimeUnit.SECONDS);
-      assertThat(createMTURLResponse3.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-      System.out.println(createMTURLResponse3.getBody() +
-        "\nStatus - " + createMTURLResponse3.getStatusCode() + " at " + System.currentTimeMillis() + " for " + createMTURL3);
+      /**delete non existant mt*/
+      CompletableFuture<JsonResponse> delDetachedMT2 = new CompletableFuture();
+      String delDetachedMTURL2 = url+MATERIAL_TYPE_URL+materialTypeID;
+      send(delDetachedMTURL2, HttpMethod.DELETE, null,
+        SUPPORTED_CONTENT_TYPE_JSON_DEF, 404, ResponseHandler.json(delDetachedMT2));
+      JsonResponse delDetachedMTResponse2 = delDetachedMT2.get(5, TimeUnit.SECONDS);
+      assertThat(delDetachedMTResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+      System.out.println(delDetachedMTResponse2.getBody() +
+        "\nStatus - " + delDetachedMTResponse2.getStatusCode() + " at " + System.currentTimeMillis() + " for " + delDetachedMTURL2);
+
+      /**update non existant material type*/
+      CompletableFuture<JsonResponse> updateMT3 = new CompletableFuture();
+      String updateMTURL3 = url+MATERIAL_TYPE_URL+materialTypeID;
+      send(updateMTURL3, HttpMethod.PUT, putRequest,
+        SUPPORTED_CONTENT_TYPE_JSON_DEF, 404, ResponseHandler.json(updateMT3));
+      JsonResponse updateMTURLResponse3 = updateMT3.get(5, TimeUnit.SECONDS);
+      assertThat(updateMTURLResponse3.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+      System.out.println(updateMTURLResponse3.getBody() +
+        "\nStatus - " + updateMTURLResponse3.getStatusCode() + " at " + System.currentTimeMillis() + " for " + updateMTURL3);
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -215,15 +265,27 @@ public class MaterialTypeTest {
     request.end(buffer);
   }
 
-  private static JsonObject createItem() {
+  private static JsonObject createItem(String mtId) {
 
     JsonObject item = new JsonObject();
 
-    //item.put("id", ""+UUID.randomUUID());
     item.put("instanceId", ""+UUID.randomUUID());
     item.put("title", "abcd");
     item.put("barcode", "12345");
-    item.put("materialType", new JsonObject().put("name", "Book"));
+    item.put("materialTypeId", mtId);
+
+    return item;
+  }
+
+
+  private static JsonObject createMT(String name, String mtId) {
+
+    JsonObject item = new JsonObject();
+
+    item.put("name", name);
+    if(mtId != null){
+      item.put("id", mtId);
+    }
 
     return item;
   }

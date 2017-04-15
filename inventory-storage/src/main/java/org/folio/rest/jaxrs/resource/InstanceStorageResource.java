@@ -107,20 +107,20 @@ public interface InstanceStorageResource {
      *     Requested language. Optional. [lang=en]
      *     
      * @param entity
-     *      e.g. {
-     *       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-     *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-     *       "identifiers": [
-     *         {
-     *           "namespace": "isbn",
-     *           "value": "9781466636897"
-     *         },
-     *         {
-     *           "namespace": "ybp",
-     *           "value": "1"
-     *         }
-     *       ]
-     *     }
+     *      e.g. {
+     *       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+     *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+     *       "identifiers": [
+     *         {
+     *           "namespace": "isbn",
+     *           "value": "9781466636897"
+     *         },
+     *         {
+     *           "namespace": "ybp",
+     *           "value": "1"
+     *         }
+     *       ]
+     *     }
      *     
      */
     @POST
@@ -219,20 +219,20 @@ public interface InstanceStorageResource {
      *     Requested language. Optional. [lang=en]
      *     
      * @param entity
-     *      e.g. {
-     *       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-     *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-     *       "identifiers": [
-     *         {
-     *           "namespace": "isbn",
-     *           "value": "9781466636897"
-     *         },
-     *         {
-     *           "namespace": "ybp",
-     *           "value": "1"
-     *         }
-     *       ]
-     *     }
+     *      e.g. {
+     *       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+     *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+     *       "identifiers": [
+     *         {
+     *           "namespace": "isbn",
+     *           "value": "9781466636897"
+     *         },
+     *         {
+     *           "namespace": "ybp",
+     *           "value": "1"
+     *         }
+     *       ]
+     *     }
      *     
      */
     @PUT
@@ -355,37 +355,37 @@ public interface InstanceStorageResource {
         }
 
         /**
-         * Returns item with a given ID e.g. {
-         *   "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-         *   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-         *   "identifiers": [
-         *     {
-         *       "namespace": "isbn",
-         *       "value": "9781466636897"
-         *     },
-         *     {
-         *       "namespace": "ybp",
-         *       "value": "1"
-         *     }
-         *   ]
-         * }
+         * Returns item with a given ID e.g. {
+         *   "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+         *   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *   "identifiers": [
+         *     {
+         *       "namespace": "isbn",
+         *       "value": "9781466636897"
+         *     },
+         *     {
+         *       "namespace": "ybp",
+         *       "value": "1"
+         *     }
+         *   ]
+         * }
          * 
          * 
          * @param entity
-         *     {
-         *       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-         *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-         *       "identifiers": [
-         *         {
-         *           "namespace": "isbn",
-         *           "value": "9781466636897"
-         *         },
-         *         {
-         *           "namespace": "ybp",
-         *           "value": "1"
-         *         }
-         *       ]
-         *     }
+         *     {
+         *       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+         *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *       "identifiers": [
+         *         {
+         *           "namespace": "isbn",
+         *           "value": "9781466636897"
+         *         },
+         *         {
+         *           "namespace": "ybp",
+         *           "value": "1"
+         *         }
+         *       ]
+         *     }
          *     
          */
         public static InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse withJsonOK(Instance entity) {
@@ -432,75 +432,75 @@ public interface InstanceStorageResource {
         }
 
         /**
-         * Returns a list of instance items e.g. {
-         *   "instances": [
-         *     {
-         *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-         *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-         *       "identifiers": [
-         *         {
-         *           "namespace": "isbn",
-         *           "value": "9781466636897"
-         *         },
-         *         {
-         *           "namespace": "ybp",
-         *           "value": "1"
-         *         }
-         *       ]
-         *     },
-         *     {
-         *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-         *       "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
-         *       "identifiers": [
-         *         {
-         *           "namespace": "isbn",
-         *           "value": "9781466639195"
-         *         },
-         *         {
-         *           "namespace": "ybp",
-         *           "value": "2"
-         *         }
-         *       ]
-         *     }
-         *   ],
-         *   "totalRecords": 2
-         * }
+         * Returns a list of instance items e.g. {
+         *   "instances": [
+         *     {
+         *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+         *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *       "identifiers": [
+         *         {
+         *           "namespace": "isbn",
+         *           "value": "9781466636897"
+         *         },
+         *         {
+         *           "namespace": "ybp",
+         *           "value": "1"
+         *         }
+         *       ]
+         *     },
+         *     {
+         *       "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+         *       "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
+         *       "identifiers": [
+         *         {
+         *           "namespace": "isbn",
+         *           "value": "9781466639195"
+         *         },
+         *         {
+         *           "namespace": "ybp",
+         *           "value": "2"
+         *         }
+         *       ]
+         *     }
+         *   ],
+         *   "totalRecords": 2
+         * }
          * 
          * 
          * @param entity
-         *     {
-         *       "instances": [
-         *         {
-         *           "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-         *           "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-         *           "identifiers": [
-         *             {
-         *               "namespace": "isbn",
-         *               "value": "9781466636897"
-         *             },
-         *             {
-         *               "namespace": "ybp",
-         *               "value": "1"
-         *             }
-         *           ]
-         *         },
-         *         {
-         *           "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-         *           "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
-         *           "identifiers": [
-         *             {
-         *               "namespace": "isbn",
-         *               "value": "9781466639195"
-         *             },
-         *             {
-         *               "namespace": "ybp",
-         *               "value": "2"
-         *             }
-         *           ]
-         *         }
-         *       ],
-         *       "totalRecords": 2
-         *     }
+         *     {
+         *       "instances": [
+         *         {
+         *           "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+         *           "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *           "identifiers": [
+         *             {
+         *               "namespace": "isbn",
+         *               "value": "9781466636897"
+         *             },
+         *             {
+         *               "namespace": "ybp",
+         *               "value": "1"
+         *             }
+         *           ]
+         *         },
+         *         {
+         *           "id" : "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+         *           "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
+         *           "identifiers": [
+         *             {
+         *               "namespace": "isbn",
+         *               "value": "9781466639195"
+         *             },
+         *             {
+         *               "namespace": "ybp",
+         *               "value": "2"
+         *             }
+         *           ]
+         *         }
+         *       ],
+         *       "totalRecords": 2
+         *     }
          *     
          */
         public static InstanceStorageResource.GetInstanceStorageInstancesResponse withJsonOK(Instances entity) {
@@ -517,6 +517,18 @@ public interface InstanceStorageResource {
          */
         public static InstanceStorageResource.GetInstanceStorageInstancesResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.GetInstanceStorageInstancesResponse(responseBuilder.build());
+        }
+
+        /**
+         * Not authorized to perform requested action e.g. unable to list instances -- unauthorized
+         * 
+         * @param entity
+         *     unable to list instances -- unauthorized
+         */
+        public static InstanceStorageResource.GetInstanceStorageInstancesResponse withPlainUnauthorized(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new InstanceStorageResource.GetInstanceStorageInstancesResponse(responseBuilder.build());
         }
@@ -545,39 +557,39 @@ public interface InstanceStorageResource {
         }
 
         /**
-         * Returns a newly created item, with server-controlled fields like 'id' populated e.g. {
-         *   "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-         *   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-         *   "identifiers": [
-         *     {
-         *       "namespace": "isbn",
-         *       "value": "9781466636897"
-         *     },
-         *     {
-         *       "namespace": "ybp",
-         *       "value": "1"
-         *     }
-         *   ]
-         * }
+         * Returns a newly created item, with server-controlled fields like 'id' populated e.g. {
+         *   "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+         *   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *   "identifiers": [
+         *     {
+         *       "namespace": "isbn",
+         *       "value": "9781466636897"
+         *     },
+         *     {
+         *       "namespace": "ybp",
+         *       "value": "1"
+         *     }
+         *   ]
+         * }
          * 
          * 
          * @param location
          *     URI to the created instance item
          * @param entity
-         *     {
-         *       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-         *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-         *       "identifiers": [
-         *         {
-         *           "namespace": "isbn",
-         *           "value": "9781466636897"
-         *         },
-         *         {
-         *           "namespace": "ybp",
-         *           "value": "1"
-         *         }
-         *       ]
-         *     }
+         *     {
+         *       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+         *       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+         *       "identifiers": [
+         *         {
+         *           "namespace": "isbn",
+         *           "value": "9781466636897"
+         *         },
+         *         {
+         *           "namespace": "ybp",
+         *           "value": "1"
+         *         }
+         *       ]
+         *     }
          *     
          */
         public static InstanceStorageResource.PostInstanceStorageInstancesResponse withJsonCreated(String location, StreamingOutput entity) {
@@ -596,6 +608,18 @@ public interface InstanceStorageResource {
          */
         public static InstanceStorageResource.PostInstanceStorageInstancesResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new InstanceStorageResource.PostInstanceStorageInstancesResponse(responseBuilder.build());
+        }
+
+        /**
+         * Not authorized to perform requested action e.g. unable to create instances -- unauthorized
+         * 
+         * @param entity
+         *     unable to create instances -- unauthorized
+         */
+        public static InstanceStorageResource.PostInstanceStorageInstancesResponse withPlainUnauthorized(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new InstanceStorageResource.PostInstanceStorageInstancesResponse(responseBuilder.build());
         }

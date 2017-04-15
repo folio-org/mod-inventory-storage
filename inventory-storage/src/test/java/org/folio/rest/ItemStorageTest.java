@@ -3,8 +3,6 @@ package org.folio.rest;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -21,12 +19,31 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class ItemStorageTest {
 
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
+
+  private static String mtPostRequest = "{\"name\": \"journal\"}";
+
+  private static String materialTypeID;
+
+  @BeforeClass
+  public static void beforeAny() {
+    try {
+      createMT();
+    } catch (Exception e) {
+      e.printStackTrace();
+      Assert.fail(e.getMessage());
+    }
+  }
 
   @Before
   public void beforeEach()
@@ -36,6 +53,7 @@ public class ItemStorageTest {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemStorageUrl());
+
   }
 
   @After
@@ -72,8 +90,8 @@ public class ItemStorageTest {
     assertThat(itemFromPost.getString("barcode"), is("565578437802"));
     assertThat(itemFromPost.getJsonObject("status").getString("name"),
       is("Available"));
-    assertThat(itemFromPost.getJsonObject("materialType").getString("name"),
-      is("Book"));
+    assertThat(itemFromPost.getString("materialTypeId"),
+      is(materialTypeID));
     assertThat(itemFromPost.getJsonObject("location").getString("name"),
       is("Main Library"));
 
@@ -89,8 +107,8 @@ public class ItemStorageTest {
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
-    assertThat(itemFromGet.getJsonObject("materialType").getString("name"),
-      is("Book"));
+    assertThat(itemFromGet.getString("materialTypeId"),
+      is(materialTypeID));
     assertThat(itemFromGet.getJsonObject("location").getString("name"),
       is("Main Library"));
   }
@@ -131,8 +149,8 @@ public class ItemStorageTest {
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
-    assertThat(itemFromGet.getJsonObject("materialType").getString("name"),
-      is("Book"));
+    assertThat(itemFromGet.getString("materialTypeId"),
+      is(materialTypeID));
     assertThat(itemFromGet.getJsonObject("location").getString("name"),
       is("Main Library"));
   }
@@ -152,7 +170,7 @@ public class ItemStorageTest {
     itemToCreate.put("title", "Nod");
     itemToCreate.put("barcode", "565578437802");
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("materialType", new JsonObject().put("name", "Book"));
+    itemToCreate.put("materialTypeId", materialTypeID);
     itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
 
     CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
@@ -199,8 +217,8 @@ public class ItemStorageTest {
     assertThat(item.getString("barcode"), is("565578437802"));
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
-    assertThat(item.getJsonObject("materialType").getString("name"),
-      is("Book"));
+    assertThat(item.getString("materialTypeId"),
+      is(materialTypeID));
     assertThat(item.getJsonObject("location").getString("name"),
       is("Main Library"));
   }
@@ -244,8 +262,8 @@ public class ItemStorageTest {
     assertThat(item.getString("barcode"), is("125845734657"));
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
-    assertThat(item.getJsonObject("materialType").getString("name"),
-      is("Book"));
+    assertThat(item.getString("materialTypeId"),
+      is(materialTypeID));
     assertThat(item.getJsonObject("location").getString("name"),
       is("Annex Library"));
   }
@@ -290,8 +308,8 @@ public class ItemStorageTest {
     assertThat(item.getString("barcode"), is("036587275931"));
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
-    assertThat(item.getJsonObject("materialType").getString("name"),
-      is("Book"));
+    assertThat(item.getString("materialTypeId"),
+      is(materialTypeID));
     assertThat(item.getJsonObject("location").getString("name"),
       is("Annex Library"));
   }
@@ -590,6 +608,10 @@ public class ItemStorageTest {
     }
   }
 
+  private static URL getMTUrl() throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/material-type");
+  }
+
   private static URL itemStorageUrl() throws MalformedURLException {
     return itemStorageUrl("");
   }
@@ -616,7 +638,7 @@ public class ItemStorageTest {
     itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("materialType", new JsonObject().put("name", "Book"));
+    itemToCreate.put("materialTypeId", materialTypeID);
     itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
 
     return itemToCreate;
@@ -653,5 +675,13 @@ public class ItemStorageTest {
   private JsonObject interestingTimes() {
     return createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
       "Interesting Times", "56454543534");
+  }
+
+  private static void createMT() throws Exception {
+    CompletableFuture<JsonResponse> mtCreateCompleted = new CompletableFuture();
+    client.post(getMTUrl(), new JsonObject(mtPostRequest), StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(mtCreateCompleted));
+    JsonResponse mtPostResponse = mtCreateCompleted.get(5, TimeUnit.SECONDS);
+    materialTypeID = mtPostResponse.getJson().getString("id");
   }
 }

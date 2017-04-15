@@ -22,13 +22,8 @@
         }
       }
     },
-    "materialType": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        }
-      }
+    "materialTypeId": {
+      "type": "string"
     },
     "location": {
       "type": "object",

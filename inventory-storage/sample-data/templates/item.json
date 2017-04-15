@@ -3,9 +3,7 @@
   "instanceId": "",
   "title": "",
   "barcode": "",
-  "materialType": {
-    "name": ""
-  },
+  "materialTypeId": "",
   "status": {
     "name": "Available"
   },

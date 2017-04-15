@@ -107,21 +107,19 @@ public interface ItemStorageResource {
      *     Requested language. Optional. [lang=en]
      *     
      * @param entity
-     *      e.g. {
-     *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-     *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
-     *       "title": "Uprooted",
-     *       "barcode": "645398607547",
-     *       "status": {
-     *         "name": "Available"
-     *       },
-     *       "materialType": {
-     *         "name": "Book"
-     *       },
-     *       "location": {
-     *         "name": "Main Library"
-     *       }
-     *     }
+     *      e.g. {
+     *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+     *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
+     *       "title": "Uprooted",
+     *       "barcode": "645398607547",
+     *       "status": {
+     *         "name": "Available"
+     *       },
+     *       "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+     *       "location": {
+     *         "name": "Main Library"
+     *       }
+     *     }
      *     
      */
     @POST
@@ -217,21 +215,19 @@ public interface ItemStorageResource {
      *     Requested language. Optional. [lang=en]
      *     
      * @param entity
-     *      e.g. {
-     *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-     *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
-     *       "title": "Uprooted",
-     *       "barcode": "645398607547",
-     *       "status": {
-     *         "name": "Available"
-     *       },
-     *       "materialType": {
-     *         "name": "Book"
-     *       },
-     *       "location": {
-     *         "name": "Main Library"
-     *       }
-     *     }
+     *      e.g. {
+     *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+     *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
+     *       "title": "Uprooted",
+     *       "barcode": "645398607547",
+     *       "status": {
+     *         "name": "Available"
+     *       },
+     *       "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+     *       "location": {
+     *         "name": "Main Library"
+     *       }
+     *     }
      *     
      */
     @PUT
@@ -354,39 +350,35 @@ public interface ItemStorageResource {
         }
 
         /**
-         * Returns item with a given ID e.g. {
-         *   "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-         *   "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
-         *   "title": "Uprooted",
-         *   "barcode": "645398607547",
-         *   "status": {
-         *     "name": "Available"
-         *   },
-         *   "materialType": {
-         *     "name": "Book"
-         *   },
-         *   "location": {
-         *     "name": "Main Library"
-         *   }
-         * }
+         * Returns item with a given ID e.g. {
+         *   "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *   "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
+         *   "title": "Uprooted",
+         *   "barcode": "645398607547",
+         *   "status": {
+         *     "name": "Available"
+         *   },
+         *   "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+         *   "location": {
+         *     "name": "Main Library"
+         *   }
+         * }
          * 
          * 
          * @param entity
-         *     {
-         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-         *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
-         *       "title": "Uprooted",
-         *       "barcode": "645398607547",
-         *       "status": {
-         *         "name": "Available"
-         *       },
-         *       "materialType": {
-         *         "name": "Book"
-         *       },
-         *       "location": {
-         *         "name": "Main Library"
-         *       }
-         *     }
+         *     {
+         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
+         *       "title": "Uprooted",
+         *       "barcode": "645398607547",
+         *       "status": {
+         *         "name": "Available"
+         *       },
+         *       "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+         *       "location": {
+         *         "name": "Main Library"
+         *       }
+         *     }
          *     
          */
         public static ItemStorageResource.GetItemStorageItemsByItemIdResponse withJsonOK(Item entity) {
@@ -433,79 +425,75 @@ public interface ItemStorageResource {
         }
 
         /**
-         * Returns a list of item items e.g. {
-         *   "items": [
-         *     {
-         *       "id": "f2901bcc-6290-417a-843b-a6d97ee9a418",
-         *       "instanceId": "f2901bcc-6290-417a-843b-a6d97ee9a418",
-         *       "title": "Nod",
-         *       "barcode": "456743454532",
-         *       "status": {
-         *         "name": "Available"
-         *       },
-         *       "materialType": {
-         *         "name": "Book"
-         *       },
-         *       "location": {
-         *         "name": "Main Library"
-         *       }
-         *     },
-         *     {
-         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *       "title": "Uprooted",
-         *       "barcode": "645398607547",
-         *       "status": {
-         *         "name": "Available"
-         *       },
-         *       "materialType": {
-         *         "name": "Book"
-         *       },
-         *       "location": {
-         *         "name": "Main Library"
-         *       }
-         *     }
-         *   ],
-         *   "totalRecords": 2
-         * }
+         * Returns a list of item items e.g. {
+         *   "items": [
+         *     {
+         *       "id": "f2901bcc-6290-417a-843b-a6d97ee9a418",
+         *       "instanceId": "f2901bcc-6290-417a-843b-a6d97ee9a418",
+         *       "title": "Nod",
+         *       "barcode": "456743454532",
+         *       "status": {
+         *         "name": "Available"
+         *       },
+         *       "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+         *       "location": {
+         *         "name": "Main Library"
+         *       }
+         *     },
+         *     {
+         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *       "title": "Uprooted",
+         *       "barcode": "645398607547",
+         *       "status": {
+         *         "name": "Available"
+         *       },
+         *       "materialType": {
+         *         "name": "Book"
+         *       },
+         *       "location": {
+         *         "name": "Main Library"
+         *       }
+         *     }
+         *   ],
+         *   "totalRecords": 2
+         * }
          * 
          * 
          * @param entity
-         *     {
-         *       "items": [
-         *         {
-         *           "id": "f2901bcc-6290-417a-843b-a6d97ee9a418",
-         *           "instanceId": "f2901bcc-6290-417a-843b-a6d97ee9a418",
-         *           "title": "Nod",
-         *           "barcode": "456743454532",
-         *           "status": {
-         *             "name": "Available"
-         *           },
-         *           "materialType": {
-         *             "name": "Book"
-         *           },
-         *           "location": {
-         *             "name": "Main Library"
-         *           }
-         *         },
-         *         {
-         *           "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-         *           "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
-         *           "title": "Uprooted",
-         *           "barcode": "645398607547",
-         *           "status": {
-         *             "name": "Available"
-         *           },
-         *           "materialType": {
-         *             "name": "Book"
-         *           },
-         *           "location": {
-         *             "name": "Main Library"
-         *           }
-         *         }
-         *       ],
-         *       "totalRecords": 2
-         *     }
+         *     {
+         *       "items": [
+         *         {
+         *           "id": "f2901bcc-6290-417a-843b-a6d97ee9a418",
+         *           "instanceId": "f2901bcc-6290-417a-843b-a6d97ee9a418",
+         *           "title": "Nod",
+         *           "barcode": "456743454532",
+         *           "status": {
+         *             "name": "Available"
+         *           },
+         *           "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+         *           "location": {
+         *             "name": "Main Library"
+         *           }
+         *         },
+         *         {
+         *           "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *           "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+         *           "title": "Uprooted",
+         *           "barcode": "645398607547",
+         *           "status": {
+         *             "name": "Available"
+         *           },
+         *           "materialType": {
+         *             "name": "Book"
+         *           },
+         *           "location": {
+         *             "name": "Main Library"
+         *           }
+         *         }
+         *       ],
+         *       "totalRecords": 2
+         *     }
          *     
          */
         public static ItemStorageResource.GetItemStorageItemsResponse withJsonOK(Items entity) {
@@ -522,6 +510,18 @@ public interface ItemStorageResource {
          */
         public static ItemStorageResource.GetItemStorageItemsResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new ItemStorageResource.GetItemStorageItemsResponse(responseBuilder.build());
+        }
+
+        /**
+         * Not authorized to perform requested action e.g. unable to list items -- unauthorized
+         * 
+         * @param entity
+         *     unable to list items -- unauthorized
+         */
+        public static ItemStorageResource.GetItemStorageItemsResponse withPlainUnauthorized(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new ItemStorageResource.GetItemStorageItemsResponse(responseBuilder.build());
         }
@@ -550,41 +550,37 @@ public interface ItemStorageResource {
         }
 
         /**
-         * Returns a newly created item, with server-controlled fields like 'id' populated e.g. {
-         *   "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-         *   "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
-         *   "title": "Uprooted",
-         *   "barcode": "645398607547",
-         *   "status": {
-         *     "name": "Available"
-         *   },
-         *   "materialType": {
-         *     "name": "Book"
-         *   },
-         *   "location": {
-         *     "name": "Main Library"
-         *   }
-         * }
+         * Returns a newly created item, with server-controlled fields like 'id' populated e.g. {
+         *   "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *   "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
+         *   "title": "Uprooted",
+         *   "barcode": "645398607547",
+         *   "status": {
+         *     "name": "Available"
+         *   },
+         *   "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+         *   "location": {
+         *     "name": "Main Library"
+         *   }
+         * }
          * 
          * 
          * @param location
          *     URI to the created item item
          * @param entity
-         *     {
-         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-         *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
-         *       "title": "Uprooted",
-         *       "barcode": "645398607547",
-         *       "status": {
-         *         "name": "Available"
-         *       },
-         *       "materialType": {
-         *         "name": "Book"
-         *       },
-         *       "location": {
-         *         "name": "Main Library"
-         *       }
-         *     }
+         *     {
+         *       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+         *       "instanceId": "cf23adf0-61ba-4887-bf82-956c4aae2260",
+         *       "title": "Uprooted",
+         *       "barcode": "645398607547",
+         *       "status": {
+         *         "name": "Available"
+         *       },
+         *       "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+         *       "location": {
+         *         "name": "Main Library"
+         *       }
+         *     }
          *     
          */
         public static ItemStorageResource.PostItemStorageItemsResponse withJsonCreated(String location, StreamingOutput entity) {
@@ -603,6 +599,18 @@ public interface ItemStorageResource {
          */
         public static ItemStorageResource.PostItemStorageItemsResponse withPlainBadRequest(String entity) {
             Response.ResponseBuilder responseBuilder = Response.status(400).header("Content-Type", "text/plain");
+            responseBuilder.entity(entity);
+            return new ItemStorageResource.PostItemStorageItemsResponse(responseBuilder.build());
+        }
+
+        /**
+         * Not authorized to perform requested action e.g. unable to create items -- unauthorized
+         * 
+         * @param entity
+         *     unable to create items -- unauthorized
+         */
+        public static ItemStorageResource.PostItemStorageItemsResponse withPlainUnauthorized(String entity) {
+            Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", "text/plain");
             responseBuilder.entity(entity);
             return new ItemStorageResource.PostItemStorageItemsResponse(responseBuilder.build());
         }

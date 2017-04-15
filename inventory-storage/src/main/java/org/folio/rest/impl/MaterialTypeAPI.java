@@ -9,11 +9,9 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.MaterialType;
 import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.model.Mtypes;
 import org.folio.rest.jaxrs.resource.MaterialTypeResource;
-import org.folio.rest.jaxrs.resource.MaterialTypeResource.DeleteMaterialTypeByMaterialtypeIdResponse;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -63,7 +61,7 @@ public class MaterialTypeAPI implements MaterialTypeResource {
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     /**
-    * http://host:port/materialtype
+    * http://host:port/material-type
     */
     vertxContext.runOnContext(v -> {
       try {
@@ -114,7 +112,12 @@ public class MaterialTypeAPI implements MaterialTypeResource {
     vertxContext.runOnContext(v -> {
       try {
         String id = UUID.randomUUID().toString();
-        entity.setId(id);
+        if(entity.getId() == null){
+          entity.setId(id);
+        }
+        else{
+          id = entity.getId();
+        }
 
         String tenantId = TenantTool.calculateTenantId( okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT) );
         PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
@@ -133,7 +136,9 @@ public class MaterialTypeAPI implements MaterialTypeResource {
                 log.error(reply.cause().getMessage(), reply.cause());
                 if(isDuplicate(reply.cause().getMessage())){
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostMaterialTypeResponse
-                    .withPlainBadRequest("Material Type exists...")));
+                    .withJsonUnprocessableEntity(
+                      org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
+                        "name", entity.getName(), "Material Type exists"))));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostMaterialTypeResponse
@@ -216,87 +221,68 @@ public class MaterialTypeAPI implements MaterialTypeResource {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId( okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT) );
       try {
-        Mtype mtype = new Mtype();
-        mtype.setId(materialtypeId);
-        /** check if the material type id exists, if so, get its name / code **/
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(MATERIAL_TYPE_TABLE, mtype, true, false, replyHandler0 -> {
-          if(replyHandler0.succeeded()){
-            List<Mtype> mtypeList0 = (List<Mtype>) replyHandler0.result()[0];
-            if(mtypeList0.size() == 0){
-              String message = "Delete of material type with id " + materialtypeId + " failed. id not found";
-              log.error(message);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                .withPlainNotFound(message)));
-            }
-            else{
-              String code = mtypeList0.get(0).getName();
-              Item item = new Item();
-              MaterialType mt = new MaterialType();
-              mt.setName(code);
-              item.setMaterialType(mt);
-              /** check if any item is using this material type **/
+        Item item = new Item();
+        item.setMaterialTypeId(materialtypeId);
+        /** check if any item is using this material type **/
+        try {
+          PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
+            ItemStorageAPI.ITEM_TABLE, item, new String[]{idFieldName}, true, false, 0, 1, replyHandler -> {
+            if(replyHandler.succeeded()){
+              List<Item> mtypeList = (List<Item>) replyHandler.result()[0];
+              if(mtypeList.size() > 0){
+                String message = "Can not delete material type, "+ materialtypeId + ". " +
+                    mtypeList.size()  + " items associated with it";
+                log.error(message);
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
+                  .withPlainBadRequest(message)));
+                return;
+              }
+              else{
+                log.info("Attemping delete of unused material type, "+ materialtypeId);
+              }
               try {
-                PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-                  ItemStorageAPI.ITEM_TABLE, item, new String[]{"_id"}, true, false, 0, 1, replyHandler -> {
-                  if(replyHandler.succeeded()){
-                    List<Item> mtypeList = (List<Item>) replyHandler.result()[0];
-                    if(mtypeList.size() > 0){
-                      String message = "Can not delete material type, "+ materialtypeId + ". " +
-                          mtypeList.size()  + " items associated with it";
-                      log.error(message);
-                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                        .withPlainBadRequest(message)));
-                      return;
-                    }
-                    else{
-                      log.info("Attemping delete of unused material type, "+ materialtypeId);
-                    }
+                PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(MATERIAL_TYPE_TABLE, materialtypeId,
+                  reply -> {
                     try {
-                      PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(MATERIAL_TYPE_TABLE, materialtypeId,
-                        reply -> {
-                          try {
-                            if(reply.succeeded()){
-                              if(reply.result().getUpdated() == 1){
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                                  .withNoContent()));
-                              }
-                              else{
-                                log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                                  .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError,1 , reply.result().getUpdated()))));
-                              }
-                            }
-                            else{
-                              log.error(reply.cause().getMessage(), reply.cause());
-                              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                            }
-                          } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                              .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                          }
-                        });
+                      if(reply.succeeded()){
+                        if(reply.result().getUpdated() == 1){
+                          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
+                            .withNoContent()));
+                        }
+                        else{
+                          log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
+                            .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError,1 , reply.result().getUpdated()))));
+                        }
+                      }
+                      else{
+                        log.error(reply.cause().getMessage(), reply.cause());
+                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
+                          .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                      }
                     } catch (Exception e) {
                       log.error(e.getMessage(), e);
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
                         .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
                     }
-                  }
-                  else{
-                    log.error(replyHandler.cause().getMessage(), replyHandler.cause());
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                  }
-                });
+                  });
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
                   .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
               }
             }
-          }
-        });
+            else{
+              log.error(replyHandler.cause().getMessage(), replyHandler.cause());
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
+                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+            }
+          });
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
+            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        }
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse

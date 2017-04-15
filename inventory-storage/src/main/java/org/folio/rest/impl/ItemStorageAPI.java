@@ -1,13 +1,5 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,10 +16,8 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.model.MaterialType;
 import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
-import org.folio.rest.jaxrs.resource.MaterialTypeResource.DeleteMaterialTypeByMaterialtypeIdResponse;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -38,6 +28,14 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -156,13 +154,13 @@ public class ItemStorageAPI implements ItemStorageResource {
    */
   private void getMT(Vertx vertx, String tenantId, Item item, Handler<AsyncResult<Integer>> handler) throws Exception{
     Mtype mtype = new Mtype();
-    MaterialType mt = item.getMaterialType();
-    if(mt == null){
+    String mtID = item.getMaterialTypeId();
+    if(mtID == null){
       //allow null material types so that they can be added after a record is created
       handler.handle(io.vertx.core.Future.succeededFuture(1));
     }else{
-      mtype.setName(item.getMaterialType().getName());
-      /** check if the material type name exists, if not, can not add it to the item **/
+      mtype.setId(mtID);
+      /** check if the material type exists, if not, can not add the item **/
       PostgresClient.getInstance(vertx, tenantId).get(
         MaterialTypeAPI.MATERIAL_TYPE_TABLE, mtype, new String[]{"_id"}, true, false, 0, 1, check -> {
           if(check.succeeded()){
@@ -181,6 +179,7 @@ public class ItemStorageAPI implements ItemStorageResource {
       });
     }
   }
+
   @Validate
   @Override
   public void postItemStorageItems(
@@ -210,13 +209,15 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
+          /**This should be replaced with a foreign key / cache since a lookup into the MT table
+           * every time an item is inserted is wasteful and slows down the insert process */
           getMT(vertxContext.owner(), tenantId, entity, replyHandler -> {
               int res = replyHandler.result();
               if(res == 0){
-                String message = "Can not add " + entity.getMaterialType().getName() + ". Material type not found";
+                String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
                 log.error(message);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                  .withPlainNotFound(message)));
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.PostItemStorageItemsResponse
+                  .withPlainBadRequest(message)));
               }
               else if(res == -1){
                 asyncResultHandler.handle(Future.succeededFuture(
@@ -437,10 +438,10 @@ public class ItemStorageAPI implements ItemStorageResource {
           getMT(vertxContext.owner(), tenantId, entity, replyHandler -> {
               int res = replyHandler.result();
               if(res == 0){
-                String message = "Can not add " + entity.getMaterialType().getName() + ". Material type not found";
+                String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
                 log.error(message);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteMaterialTypeByMaterialtypeIdResponse
-                  .withPlainNotFound(message)));
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutItemStorageItemsByItemIdResponse
+                  .withPlainBadRequest(message)));
               }
               else if(res == -1){
                 asyncResultHandler.handle(Future.succeededFuture(

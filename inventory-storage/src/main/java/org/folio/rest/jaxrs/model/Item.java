@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "title",
     "barcode",
     "status",
-    "materialType",
+    "materialTypeId",
     "location"
 })
 public class Item {
@@ -49,9 +49,8 @@ public class Item {
     @JsonProperty("status")
     @Valid
     private Status status;
-    @JsonProperty("materialType")
-    @Valid
-    private MaterialType materialType;
+    @JsonProperty("materialTypeId")
+    private String materialTypeId;
     @JsonProperty("location")
     @Valid
     private Location location;
@@ -194,25 +193,25 @@ public class Item {
     /**
      * 
      * @return
-     *     The materialType
+     *     The materialTypeId
      */
-    @JsonProperty("materialType")
-    public MaterialType getMaterialType() {
-        return materialType;
+    @JsonProperty("materialTypeId")
+    public String getMaterialTypeId() {
+        return materialTypeId;
     }
 
     /**
      * 
-     * @param materialType
-     *     The materialType
+     * @param materialTypeId
+     *     The materialTypeId
      */
-    @JsonProperty("materialType")
-    public void setMaterialType(MaterialType materialType) {
-        this.materialType = materialType;
+    @JsonProperty("materialTypeId")
+    public void setMaterialTypeId(String materialTypeId) {
+        this.materialTypeId = materialTypeId;
     }
 
-    public Item withMaterialType(MaterialType materialType) {
-        this.materialType = materialType;
+    public Item withMaterialTypeId(String materialTypeId) {
+        this.materialTypeId = materialTypeId;
         return this;
     }
 

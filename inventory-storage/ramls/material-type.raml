@@ -13,12 +13,16 @@ schemas:
   - mtypes: !include schema/materialtypes.json
   - item: !include schema/item.json
   - items: !include schema/items.json
-
+  - errors: !include ../raml-util/schemas/errors.schema
+  - error: !include ../raml-util/schemas/error.schema
+  - parameters: !include ../raml-util/schemas/parameters.schema
+  
 traits:
   - secured: !include ../raml-util/traits/auth.raml
   - pageable: !include ../raml-util/traits/pageable.raml
   - searchable: !include ../raml-util/traits/searchable.raml
   - language: !include ../raml-util/traits/language.raml
+  - validate: !include ../raml-util/traits/validation.raml
 
 resourceTypes:
   - collection: !include ../raml-util/rtypes/collection.raml
@@ -40,7 +44,9 @@ resourceTypes:
     description: Return a list of material types
   post:
     description: Create a new material type
+    is: [validate]
   /{materialtypeId}:
+    description: Pass in the MT code
     type:
       collection-item:
         exampleItem: !include examples/materialtype.json
