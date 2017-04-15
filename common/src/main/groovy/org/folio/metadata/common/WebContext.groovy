@@ -15,6 +15,11 @@ class WebContext implements Context {
   }
 
   @Override
+  String getToken() {
+    getHeader("X-Okapi-Token", "")
+  }
+
+  @Override
   String getOkapiLocation() {
     getHeader("X-Okapi-Url", "")
   }

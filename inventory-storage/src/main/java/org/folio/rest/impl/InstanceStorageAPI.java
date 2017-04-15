@@ -135,6 +135,13 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           if(entity.getId() == null) {
             entity.setId(UUID.randomUUID().toString());
           }
+          else {
+            if(isUUID(entity.getId())) {
+              io.vertx.core.Future.succeededFuture(
+                InstanceStorageResource.PostInstanceStorageInstancesResponse
+                  .withPlainBadRequest("ID must be a UUID"));
+            }
+          }
 
           postgresClient.save("instance", entity.getId(), entity,
             reply -> {
@@ -152,7 +159,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       InstanceStorageResource.PostInstanceStorageInstancesResponse
-                        .withPlainBadRequest("ID must both be a UUID")));
+                        .withPlainBadRequest("ID must be a UUID")));
                 }
               } catch (Exception e) {
                 e.printStackTrace();
@@ -483,5 +490,15 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
   private boolean blankTenantId(String tenantId) {
     return tenantId == null || tenantId == "" || tenantId == "folio_shared";
+  }
+
+  private boolean isUUID(String id) {
+    try {
+      UUID.fromString(id);
+      return true;
+    }
+    catch(IllegalArgumentException e) {
+      return false;
+    }
   }
 }

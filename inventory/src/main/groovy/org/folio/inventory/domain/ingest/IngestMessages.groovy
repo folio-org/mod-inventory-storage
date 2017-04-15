@@ -21,6 +21,7 @@ class IngestMessages {
   private static Map<String, String> headers(jobId, Context context) {
     ["jobId"        : jobId,
      "tenantId"     : context.tenantId,
+     "token"     : context.token,
      "okapiLocation": context.okapiLocation]
   }
 

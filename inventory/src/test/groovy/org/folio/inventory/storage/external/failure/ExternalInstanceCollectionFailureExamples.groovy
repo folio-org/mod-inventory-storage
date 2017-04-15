@@ -130,7 +130,7 @@ abstract class ExternalInstanceCollectionFailureExamples {
   protected abstract check(Failure failure)
 
   private InstanceCollection createCollection() {
-    collectionProvider.getInstanceCollection("test_tenant")
+    collectionProvider.getInstanceCollection("test_tenant", "")
   }
 
 }

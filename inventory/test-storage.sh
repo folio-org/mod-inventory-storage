@@ -42,6 +42,31 @@ curl -w '\n' -X POST -D -   \
 
 cd ../inventory
 
+echo "Create book material type"
+
+book_json=$(cat ./bookMaterialType.json)
+
+curl -w '\n' -X POST -D -   \
+     -H "Content-type: application/json"   \
+     -H "Accept: */*"   \
+     -H "X-Okapi-Tenant: test_tenant" \
+     -d "${book_json}" \
+     http://localhost:9408/material-type
+
+curl -w '\n' -X POST -D -   \
+     -H "Content-type: application/json"   \
+     -H "Accept: */*"   \
+     -H "X-Okapi-Tenant: test_tenant_1" \
+     -d "${book_json}" \
+     http://localhost:9408/material-type
+
+curl -w '\n' -X POST -D -   \
+     -H "Content-type: application/json"   \
+     -H "Accept: */*"   \
+     -H "X-Okapi-Tenant: test_tenant_2" \
+     -d "${book_json}" \
+     http://localhost:9408/material-type
+
 #run the tests
 gradle -Dinventory.storage.address="${inventory_storage_address}" clean testExternalStorage
 

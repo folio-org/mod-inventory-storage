@@ -1,9 +1,6 @@
 package org.folio.inventory.storage
 
-import org.folio.inventory.domain.CollectionProvider
-import org.folio.inventory.domain.Instance
-import org.folio.inventory.domain.InstanceCollection
-import org.folio.inventory.domain.Item
+import org.folio.inventory.domain.*
 import org.folio.metadata.common.WaitForAllFutures
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.domain.Success
@@ -17,6 +14,8 @@ import static org.folio.metadata.common.FutureAssistance.*
 abstract class InstanceCollectionExamples {
   private static final String firstTenantId = "test_tenant_1"
   private static final String secondTenantId = "test_tenant_2"
+  private static final String firstTenantToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInRlbmFudCI6ImRlbW9fdGVuYW50In0.29VPjLI6fLJzxQW0UhQ0jsvAn8xHz501zyXAxRflXfJ9wuDzT8TDf-V75PjzD7fe2kHjSV2dzRXbstt3BTtXIQ"
+  private static final String secondTenantToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInRlbmFudCI6ImRlbW9fdGVuYW50In0.63jTgc15Kil946OdOGYZur_8xVWEUURANx87FAOQajh9TJbsnCMbjE164JQqNLMWShCyi9FOX0Kr1RFuiHTFAQ"
 
   private final CollectionProvider collectionProvider
 
@@ -29,15 +28,16 @@ abstract class InstanceCollectionExamples {
   public void before() {
     def emptied = new CompletableFuture()
 
-    collectionProvider.getInstanceCollection(firstTenantId).empty(
-      succeed(emptied), fail(emptied))
+    emptyCollection(collectionProvider.getInstanceCollection(firstTenantId,
+      firstTenantToken))
 
-    waitForCompletion(emptied)
+    emptyCollection(collectionProvider.getInstanceCollection(secondTenantId,
+      secondTenantToken))
   }
 
   @Test
   void canBeEmptied() {
-    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId, firstTenantToken)
     addSomeExamples(collection)
 
     def emptied = new CompletableFuture()
@@ -58,7 +58,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void anInstanceCanBeAdded() {
-    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId, firstTenantToken)
 
     addSomeExamples(collection)
 
@@ -105,7 +105,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void anInstanceCanBeAddedWithAnId() {
-    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId, firstTenantToken)
 
     def addFinished = new CompletableFuture<Item>()
 
@@ -122,7 +122,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void anInstanceCanBeFoundById() {
-    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId, firstTenantToken)
 
     def firstAddFuture = new CompletableFuture<Instance>()
     def secondAddFuture = new CompletableFuture<Instance>()
@@ -159,7 +159,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void allInstancesCanBePaged() {
-    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId, firstTenantToken)
 
     def allAdded = new WaitForAllFutures()
 
@@ -188,7 +188,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void anInstanceCanBeDeleted() {
-    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId, firstTenantToken)
 
     addSomeExamples(collection)
 
@@ -224,7 +224,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void anInstanceCanBeUpdated() {
-    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId, firstTenantToken)
 
     def addFinished = new CompletableFuture<Instance>()
 
@@ -254,7 +254,7 @@ abstract class InstanceCollectionExamples {
 
   @Test
   void instancesCanBeFoundByByPartialName() {
-    def collection = collectionProvider.getInstanceCollection(firstTenantId)
+    def collection = collectionProvider.getInstanceCollection(firstTenantId, firstTenantToken)
 
     def firstAddFuture = new CompletableFuture<Instance>()
     def secondAddFuture = new CompletableFuture<Instance>()
@@ -287,10 +287,10 @@ abstract class InstanceCollectionExamples {
   @Test
   void anInstanceCanBeFoundByIdWithinATenant() {
     def firstTenantCollection = collectionProvider
-      .getInstanceCollection(firstTenantId)
+      .getInstanceCollection(firstTenantId, firstTenantToken)
 
     def secondTenantCollection = collectionProvider
-      .getInstanceCollection(secondTenantId)
+      .getInstanceCollection(secondTenantId, secondTenantToken)
 
     def addFuture = new CompletableFuture<Item>()
 
@@ -348,5 +348,13 @@ abstract class InstanceCollectionExamples {
     new Instance("Interesting Times")
       .addIdentifier('isbn', '0552167541')
       .addIdentifier('isbn', '9780552167543')
+  }
+
+  private void emptyCollection(InstanceCollection collection) {
+    def emptied = new CompletableFuture()
+
+    collection.empty(succeed(emptied), fail(emptied))
+
+    waitForCompletion(emptied)
   }
 }

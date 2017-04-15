@@ -16,6 +16,8 @@ import static org.folio.metadata.common.FutureAssistance.*
 abstract class ItemCollectionExamples {
   private static final String firstTenantId = "test_tenant_1"
   private static final String secondTenantId = "test_tenant_2"
+  private static final String firstTenantToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInRlbmFudCI6ImRlbW9fdGVuYW50In0.29VPjLI6fLJzxQW0UhQ0jsvAn8xHz501zyXAxRflXfJ9wuDzT8TDf-V75PjzD7fe2kHjSV2dzRXbstt3BTtXIQ"
+  private static final String secondTenantToken = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInRlbmFudCI6ImRlbW9fdGVuYW50In0.63jTgc15Kil946OdOGYZur_8xVWEUURANx87FAOQajh9TJbsnCMbjE164JQqNLMWShCyi9FOX0Kr1RFuiHTFAQ"
 
   private final CollectionProvider collectionProvider
 
@@ -31,13 +33,13 @@ abstract class ItemCollectionExamples {
 
   @Before
   public void before() {
-    emptyCollection(collectionProvider.getItemCollection(firstTenantId))
-    emptyCollection(collectionProvider.getItemCollection(secondTenantId))
+    emptyCollection(collectionProvider.getItemCollection(firstTenantId, firstTenantToken))
+    emptyCollection(collectionProvider.getItemCollection(secondTenantId, secondTenantToken))
   }
 
   @Test
   void canBeEmptied() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     addSomeExamples(collection)
 
@@ -59,7 +61,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void anItemCanBeAdded() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     addSomeExamples(collection)
 
@@ -104,7 +106,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void anItemCanBeAddedWithAnId() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     def addFinished = new CompletableFuture<Item>()
 
@@ -121,7 +123,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void anItemCanBeUpdated() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     def addFinished = new CompletableFuture<Item>()
 
@@ -156,10 +158,10 @@ abstract class ItemCollectionExamples {
   @Test
   void anItemCanBeFoundByIdWithinATenant() {
     def firstTenantCollection = collectionProvider
-      .getItemCollection(firstTenantId)
+      .getItemCollection(firstTenantId, firstTenantToken)
 
     def secondTenantCollection = collectionProvider
-      .getItemCollection(secondTenantId)
+      .getItemCollection(secondTenantId, secondTenantToken)
 
     def addFuture = new CompletableFuture<Item>()
 
@@ -183,7 +185,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void anItemCanBeDeleted() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     addSomeExamples(collection)
 
@@ -219,7 +221,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void allItemsCanBePaged() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     def allAdded = new WaitForAllFutures()
 
@@ -249,7 +251,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void itemsCanBeFoundByByPartialName() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
@@ -282,7 +284,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void itemsCanBeFoundByBarcode() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()
@@ -314,7 +316,7 @@ abstract class ItemCollectionExamples {
 
   @Test
   void anItemCanBeFoundById() {
-    def collection = collectionProvider.getItemCollection(firstTenantId)
+    def collection = collectionProvider.getItemCollection(firstTenantId, firstTenantToken)
 
     def firstAddFuture = new CompletableFuture<Item>()
     def secondAddFuture = new CompletableFuture<Item>()

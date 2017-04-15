@@ -6,8 +6,10 @@ import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
 class ModsIngestExamples extends Specification {
+  private final String TENANT_ID = "test_tenant"
+  private final String TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInRlbmFudCI6ImRlbW9fdGVuYW50In0.29VPjLI6fLJzxQW0UhQ0jsvAn8xHz501zyXAxRflXfJ9wuDzT8TDf-V75PjzD7fe2kHjSV2dzRXbstt3BTtXIQ"
 
-  private final HttpClient client = new HttpClient("test_tenant")
+  private final HttpClient client = new HttpClient(TENANT_ID, TOKEN)
 
   def setup() {
     def preparation = new Preparation(client)

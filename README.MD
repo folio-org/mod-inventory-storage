@@ -22,6 +22,12 @@ Provides Postgres based storage to complement the inventory module. Written in J
 
 In the inventory-storage directory.
 
+## Release Management
+
+Due to this repository containing two modules, the version numbers of each module are intended to be aligned so that a single release version can be identified.
+
+The current version number can be found in either the pom.xml or build.gradle for the inventory-storage or inventory modules respectively.
+
 # Further Documentation
 
 This readme is intended to get these modules up and running. For further information on what they do, see the [guide](doc/guide.md).

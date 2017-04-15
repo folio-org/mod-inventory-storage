@@ -6,11 +6,14 @@ import org.apache.http.entity.mime.MultipartEntityBuilder
 
 class HttpClient {
   private final String TENANT_HEADER = 'X-Okapi-Tenant'
+  private final String TOKEN_HEADER = 'X-Okapi-Token'
 
   private final String tenantId
+  private final String token
 
-  def HttpClient(String tenantId) {
+  def HttpClient(String tenantId, String token) {
     this.tenantId = tenantId
+    this.token = token
   }
 
   Tuple get(String url) {
@@ -24,6 +27,7 @@ class HttpClient {
       requestBuilder.request(Method.GET) { req ->
 
         headers.put(TENANT_HEADER, tenantId)
+        headers.put(TOKEN_HEADER, token)
 
         response.success = { resp, body ->
           new Tuple(resp, body)
@@ -53,6 +57,7 @@ class HttpClient {
       http.request(Method.POST) { req ->
 
         headers.put(TENANT_HEADER, tenantId)
+        headers.put(TOKEN_HEADER, token)
         requestContentType = 'multipart/form-data'
 
         def multipartBuilder = new MultipartEntityBuilder()
@@ -91,6 +96,7 @@ class HttpClient {
     requestBuilder.request(Method.DELETE) { req ->
 
       headers.put(TENANT_HEADER, tenantId)
+      headers.put(TOKEN_HEADER, token)
 
       response.success = { resp, body ->
         println "Status Code: ${resp.status}"
@@ -113,6 +119,7 @@ class HttpClient {
       http.request(Method.POST) { req ->
 
         headers.put(TENANT_HEADER, tenantId)
+        headers.put(TOKEN_HEADER, token)
         requestContentType = 'application/json'
         body = bodyToSend
 
@@ -146,6 +153,7 @@ class HttpClient {
     try {
       http.request(Method.PUT) { req ->
         headers.put(TENANT_HEADER, tenantId)
+        headers.put(TOKEN_HEADER, token)
         requestContentType = 'application/json'
         body = bodyToSend
 

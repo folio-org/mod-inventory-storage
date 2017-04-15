@@ -17,8 +17,9 @@ import static api.support.InstanceSamples.*
 
 class InstancesApiExamples extends Specification {
   private final String TENANT_ID = "test_tenant"
+  private final String TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInRlbmFudCI6ImRlbW9fdGVuYW50In0.29VPjLI6fLJzxQW0UhQ0jsvAn8xHz501zyXAxRflXfJ9wuDzT8TDf-V75PjzD7fe2kHjSV2dzRXbstt3BTtXIQ"
 
-  private final HttpClient client = new HttpClient(TENANT_ID)
+  private final HttpClient client = new HttpClient(TENANT_ID, TOKEN)
 
   def setup() {
     new Preparation(client).deleteInstances()

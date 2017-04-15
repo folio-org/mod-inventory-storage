@@ -54,6 +54,7 @@ class FakeInventoryStorageModule extends GroovyVerticle {
 
     router.route().handler(WebRequestDiagnostics.&outputDiagnostics)
     router.route().handler(this.&checkTenantHeader.rcurry(expectedTenants))
+    router.route().handler(this.&checkTokenHeader)
 
     router.route('/item-storage/items/*').handler(BodyHandler.create())
     router.route(HttpMethod.POST, '/item-storage/items/*').handler(this.&acceptHeaderIsJson)
@@ -434,6 +435,19 @@ class FakeInventoryStorageModule extends GroovyVerticle {
         ClientErrorResponse.badRequest(routingContext.response(),
           "Missing Content Type Header")
         break
+    }
+  }
+
+  private static void checkTokenHeader(RoutingContext routingContext) {
+
+    def tokenId = new WebContext(routingContext).token
+
+    if(tokenId != null && tokenId.trim().length() > 0) {
+      routingContext.next()
+    }
+    else {
+      ClientErrorResponse.forbidden(routingContext.response(),
+        "Missing Token")
     }
   }
 }

@@ -2,6 +2,14 @@ apply plugin: 'groovy'
 apply plugin: 'application'
 
 mainClassName = "org.folio.inventory.Launcher"
+version = "3.1.1-SNAPSHOT"
+
+ext.sharedManifest = manifest {
+  attributes(
+    "Main-Class": mainClassName,
+    "Implementation-Title": "inventory",
+    "Implementation-Version": version)
+}
 
 repositories {
   mavenCentral()
@@ -23,12 +31,6 @@ dependencies {
   testCompile 'org.apache.commons:commons-io:1.3.2'
   testCompile 'org.apache.httpcomponents:httpclient-osgi:4.5.2'
   testCompile 'com.github.jsonld-java:jsonld-java:0.9.0'
-}
-
-jar {
-  manifest {
-    attributes 'Main-Class': mainClassName
-  }
 }
 
 test {
@@ -64,10 +66,17 @@ task testExternalStorage(type: Test) {
   systemProperty 'inventory.storage.address', System.getProperty('inventory.storage.address')
 }
 
-task fatJar(type: Jar) {
-  manifest {
-    attributes 'Main-Class': mainClassName
+jar {
+  manifest = project.manifest {
+    from sharedManifest
   }
+}
+
+task fatJar(type: Jar) {
+  manifest = project.manifest {
+    from sharedManifest
+  }
+  archiveName 'inventory.jar'
   from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
   with jar
 }

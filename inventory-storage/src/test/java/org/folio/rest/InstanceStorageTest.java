@@ -152,7 +152,7 @@ public class InstanceStorageTest {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(response.getBody(), is("ID must both be a UUID"));
+    assertThat(response.getBody(), is("ID must be a UUID"));
   }
 
   @Test
