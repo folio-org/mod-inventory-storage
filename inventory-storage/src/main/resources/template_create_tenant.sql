@@ -1,5 +1,7 @@
 CREATE ROLE myuniversity_mymodule PASSWORD 'myuniversity' NOSUPERUSER NOCREATEDB INHERIT LOGIN;
 
+GRANT myuniversity_mymodule TO CURRENT_USER;
+
 CREATE SCHEMA myuniversity_mymodule AUTHORIZATION myuniversity_mymodule;
 
 CREATE TABLE myuniversity_mymodule.item (
