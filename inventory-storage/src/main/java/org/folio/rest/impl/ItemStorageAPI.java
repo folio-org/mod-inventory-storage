@@ -218,11 +218,13 @@ public class ItemStorageAPI implements ItemStorageResource {
                 log.error(message);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.PostItemStorageItemsResponse
                   .withPlainBadRequest(message)));
+                return;
               }
               else if(res == -1){
                 asyncResultHandler.handle(Future.succeededFuture(
                   ItemStorageResource.PostItemStorageItemsResponse
                     .withPlainInternalServerError("")));
+                return;
               }
               else{
                 try {

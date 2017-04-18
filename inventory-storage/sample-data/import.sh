@@ -3,7 +3,7 @@
 tenant=${1:-demo_tenant}
 item_storage_address=http://localhost:9130/item-storage/items
 instance_storage_address=http://localhost:9130/instance-storage/instances
-material_type_storage_address=http://localhost:9130/material-type
+material_type_storage_address=http://localhost:9130/material-types
 
 for f in ./mtypes/*.json; do
     curl -w '\n' -X POST -D - \

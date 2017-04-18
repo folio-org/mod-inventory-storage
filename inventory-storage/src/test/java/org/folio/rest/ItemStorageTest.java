@@ -609,7 +609,7 @@ public class ItemStorageTest {
   }
 
   private static URL getMTUrl() throws MalformedURLException {
-    return StorageTestSuite.storageUrl("/material-type");
+    return StorageTestSuite.storageUrl("/material-types");
   }
 
   private static URL itemStorageUrl() throws MalformedURLException {

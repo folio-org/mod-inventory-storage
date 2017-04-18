@@ -65,28 +65,28 @@
       ]
     },
     {
-      "id": "material-type",
+      "id": "material-types",
       "version": "1.0.0",
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/material-type",
+          "pathPattern": "/material-types",
           "permissionsRequired": ["inventory-storage.material-types.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/material-type/{id}",
+          "pathPattern": "/material-types/{id}",
           "permissionsRequired": ["inventory-storage.material-types.item.get"]
         }, {
           "methods": ["POST"],
-          "pathPattern": "/material-type",
+          "pathPattern": "/material-types",
           "permissionsRequired": ["inventory-storage.material-types.item.post"]
         }, {
           "methods": ["PUT"],
-          "pathPattern": "/material-type/{id}",
+          "pathPattern": "/material-types/{id}",
           "permissionsRequired": ["inventory-storage.material-types.item.put"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/material-type/{id}",
+          "pathPattern": "/material-types/{id}",
           "permissionsRequired": ["inventory-storage.material-types.item.delete"]
         }
       ]

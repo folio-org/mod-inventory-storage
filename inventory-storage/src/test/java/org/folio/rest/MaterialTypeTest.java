@@ -33,7 +33,7 @@ public class MaterialTypeTest {
   private static final String       SUPPORTED_CONTENT_TYPE_TEXT_DEF = "text/plain";
 
   private static final String       ITEM_URL = "/item-storage/items";
-  private static final String       MATERIAL_TYPE_URL = "/material-type/";
+  private static final String       MATERIAL_TYPE_URL = "/material-types/";
 
   private static String postRequest = "{\"name\": \"journal\"}";
   private static String putRequest = "{\"name\": \"Book\"}";

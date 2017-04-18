@@ -49,7 +49,7 @@
         "PUT",
         "DELETE"
       ],
-      "path": "/material-type",
+      "path": "/material-types",
       "level": "30",
       "type": "request-response"
     }
