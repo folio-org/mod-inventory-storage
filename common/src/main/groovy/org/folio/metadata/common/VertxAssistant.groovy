@@ -64,6 +64,31 @@ class VertxAssistant {
       });
   }
 
+  void deployVerticle(String verticleClass,
+                            Map<String, Object> config,
+                            CompletableFuture<String> deployed) {
+
+    def startTime = System.currentTimeMillis()
+
+    def options = [:]
+
+    options.config = config
+    options.worker = true
+
+    vertx.deployVerticle(verticleClass,
+      options,
+      { res ->
+        if (res.succeeded()) {
+          def elapsedTime = System.currentTimeMillis() - startTime
+          println("${verticleClass} deployed in ${elapsedTime} milliseconds")
+          deployed.complete(res.result());
+        } else {
+          deployed.completeExceptionally(res.cause());
+        }
+      });
+  }
+
+
   void undeployVerticle(String deploymentId, CompletableFuture undeployed) {
 
     vertx.undeploy(deploymentId, { res ->

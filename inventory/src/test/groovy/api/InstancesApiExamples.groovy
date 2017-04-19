@@ -16,10 +16,7 @@ import spock.lang.Specification
 import static api.support.InstanceSamples.*
 
 class InstancesApiExamples extends Specification {
-  private final String TENANT_ID = "test_tenant"
-  private final String TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInRlbmFudCI6ImRlbW9fdGVuYW50In0.29VPjLI6fLJzxQW0UhQ0jsvAn8xHz501zyXAxRflXfJ9wuDzT8TDf-V75PjzD7fe2kHjSV2dzRXbstt3BTtXIQ"
-
-  private final HttpClient client = new HttpClient(TENANT_ID, TOKEN)
+  private final HttpClient client = ApiTestSuite.createHttpClient()
 
   def setup() {
     new Preparation(client).deleteInstances()
@@ -297,7 +294,7 @@ class InstancesApiExamples extends Specification {
     def documentLoader = new DocumentLoader()
     def httpClient = CachingHttpClientBuilder
       .create()
-      .setDefaultHeaders([new BasicHeader('X-Okapi-Tenant', TENANT_ID)])
+      .setDefaultHeaders([new BasicHeader('X-Okapi-Tenant', ApiTestSuite.TENANT_ID)])
       .build()
 
     documentLoader.setHttpClient(httpClient)

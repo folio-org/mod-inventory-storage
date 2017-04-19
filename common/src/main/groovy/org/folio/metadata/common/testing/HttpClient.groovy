@@ -6,12 +6,15 @@ import org.apache.http.entity.mime.MultipartEntityBuilder
 
 class HttpClient {
   private final String TENANT_HEADER = 'X-Okapi-Tenant'
+  private final String OKAPI_URL_HEADER = 'X-Okapi-Url'
   private final String TOKEN_HEADER = 'X-Okapi-Token'
 
   private final String tenantId
   private final String token
+  private final String okapiUrl
 
-  def HttpClient(String tenantId, String token) {
+  def HttpClient(String okapiUrl, String tenantId, String token) {
+    this.okapiUrl = okapiUrl
     this.tenantId = tenantId
     this.token = token
   }
@@ -26,6 +29,7 @@ class HttpClient {
     try {
       requestBuilder.request(Method.GET) { req ->
 
+        headers.put(OKAPI_URL_HEADER, okapiUrl)
         headers.put(TENANT_HEADER, tenantId)
         headers.put(TOKEN_HEADER, token)
 
@@ -56,6 +60,7 @@ class HttpClient {
     try {
       http.request(Method.POST) { req ->
 
+        headers.put(OKAPI_URL_HEADER, okapiUrl)
         headers.put(TENANT_HEADER, tenantId)
         headers.put(TOKEN_HEADER, token)
         requestContentType = 'multipart/form-data'
@@ -95,6 +100,7 @@ class HttpClient {
 
     requestBuilder.request(Method.DELETE) { req ->
 
+      headers.put(OKAPI_URL_HEADER, okapiUrl)
       headers.put(TENANT_HEADER, tenantId)
       headers.put(TOKEN_HEADER, token)
 
@@ -118,6 +124,7 @@ class HttpClient {
     try {
       http.request(Method.POST) { req ->
 
+        headers.put(OKAPI_URL_HEADER, okapiUrl)
         headers.put(TENANT_HEADER, tenantId)
         headers.put(TOKEN_HEADER, token)
         requestContentType = 'application/json'
@@ -152,6 +159,7 @@ class HttpClient {
 
     try {
       http.request(Method.PUT) { req ->
+        headers.put(OKAPI_URL_HEADER, okapiUrl)
         headers.put(TENANT_HEADER, tenantId)
         headers.put(TOKEN_HEADER, token)
         requestContentType = 'application/json'
