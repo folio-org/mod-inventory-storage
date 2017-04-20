@@ -1,1 +1,1 @@
-../okapi-registration/managed-deployment/undeploy.py
+okapi-registration/managed-deployment/undeploy.py
