@@ -8,7 +8,7 @@
       "status": {
         "name": "Available"
       },
-      "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+      "materialTypeId": "240886da-17d9-435f-985e-21111e586fc8",
       "location": {
         "name": "Main Library"
       }
@@ -21,9 +21,7 @@
       "status": {
         "name": "Available"
       },
-      "materialType": {
-        "name": "Book"
-      },
+      "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
       "location": {
         "name": "Main Library"
       }
