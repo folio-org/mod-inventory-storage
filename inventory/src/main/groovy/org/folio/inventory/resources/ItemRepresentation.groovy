@@ -24,8 +24,9 @@ class ItemRepresentation {
     }
 
     if(item.materialType != null) {
-      representation.put("materialType",
-        new JsonObject().put("name", item.materialType))
+      representation.put("materialType", new JsonObject()
+          .put("id", item.materialType.id))
+//          .put("name", ""))
     }
 
     if(item.location != null) {

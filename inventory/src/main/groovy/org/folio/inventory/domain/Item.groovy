@@ -6,11 +6,11 @@ class Item {
   final String barcode
   final String instanceId
   final String status
-  final String materialType
+  final Map materialType
   final String location
 
   def Item(String id, String title, String barcode,
-           String instanceId, String status, String materialType,
+           String instanceId, String status, Map materialType,
            String location) {
     this.id = id
     this.title = title
@@ -22,7 +22,7 @@ class Item {
   }
 
   def Item(String title, String barcode,
-           String instanceId, String status, String materialType,
+           String instanceId, String status, Map materialType,
            String location) {
     this(null, title, barcode, instanceId, status, materialType, location)
   }

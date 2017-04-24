@@ -75,8 +75,6 @@ run `gradle build` from the root directory. In order to build an executable Jar 
 
 run `mvn install` from the inventory-storage directory.
 
-Must have the RAML Module Builder installed (see https://github.com/folio-org/raml-module-builder for instructions) beforehand.
-
 To run the tests against both embedded and external databases, run `./build.sh` from the inventory-storage directory.
 
 # Running the Modules
@@ -156,32 +154,6 @@ Whilst some requests may currently not require tenant information (it is likely 
 |------|------------|
 |Inventory| http://localhost:9403/inventory |
 |Inventory Storage| http://localhost:9407/item-storage/ and http://localhost:9407/instance-storage/ |
-
-# Running the Tests
-
-The best way to run the tests is to run `./full-test.sh`
-
-Okapi needs to be already running, without changing the address it uses (unlike when running Okapi for running the modules in Docker containers).
-
-The modules should *not* be started before running the tests, as this can cause confusing results. The tests start an instance themselves during setup.
-
-The script performs the following steps:
-
-1. Creates a test tenant (with ID test_tenant)
-2. Registers the modules with Okapi (they run on a different port than usual during the tests)
-3. Builds and runs the tests (API tests run both directly and via Okapi Proxy - except for Inventory Storage)
-4. Deregister the modules from Okapi
-5. Deletes the test tenant
-
-Due to the clean up output (steps 4 and 5) being quite verbose (will be improved in future versions), it is necessary to scroll up in the output to see the test results.
-
-If Okapi is running with a different okapiurl property set (like can be done with the `start-okapi.sh` script), then the same URL needs to be provided to this script for the tests to pass.
-
-### Which Gradle Targets are Executed
-
-Step 3 above executes the `test` (which includes running the API tests direct to the modules) and `testApiViaOkapi` targets to execute the tests.
-
-Due to the modules running for the tests being bound to different ports, it is necessary to use slightly different registration steps than for when running the modules themselves (via parameterised scripts). For this reason, it is not recommended to run that target outside of the `full-test.sh` script unless willing to perform the registration steps in another manner.
 
 # Operating System Support
 

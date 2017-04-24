@@ -6,7 +6,7 @@ tenant_id=${3:-demo_tenant}
 okapi_proxy_address=${4:-http://localhost:9130}
 module_id=${5:-inventory-storage}
 
-../okapi-registration/unmanaged-deployment/register.sh \
+./okapi-registration/unmanaged-deployment/register.sh \
   ${module_direct_address} \
   ${module_instance_id} \
   ${module_id} \

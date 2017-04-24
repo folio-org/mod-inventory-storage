@@ -84,7 +84,7 @@
   ],
   "requires" : [ {
     "id" : "item-storage",
-    "version" : "1.3"
+    "version" : "2.0"
     },
     {
       "id": "instance-storage",

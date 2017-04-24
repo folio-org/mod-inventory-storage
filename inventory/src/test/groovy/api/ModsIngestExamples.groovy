@@ -2,6 +2,7 @@ package api
 
 import api.support.Preparation
 import org.folio.metadata.common.testing.HttpClient
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
@@ -14,6 +15,7 @@ class ModsIngestExamples extends Specification {
     preparation.deleteItems()
   }
 
+  @Ignore("MODS ingestion is temporarily unavailable due to material type changes")
   void "Ingest some MODS records"() {
     given:
       def modsFile = loadFileFromResource(
@@ -37,6 +39,7 @@ class ModsIngestExamples extends Specification {
       }
   }
 
+  @Ignore("MODS ingestion is temporarily unavailable due to material type changes")
   void "Refuse ingest for multiple files"() {
     given:
       def modsFile =

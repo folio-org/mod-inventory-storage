@@ -28,12 +28,12 @@
     "materialType": {
       "type": "object",
       "properties": {
-        "name": {
+        "id": {
           "type": "string"
         }
       },
       "required": [
-        "name"
+        "id"
       ]
     },
     "location": {

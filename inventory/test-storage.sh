@@ -1,78 +1,46 @@
 #!/usr/bin/env bash
 
-inventory_storage_address=${1:-http://localhost:9408}
+tenant_id="test_tenant"
+okapi_proxy_address="http://localhost:9130"
 
-database_name="test"
-admin_user_name="inventory_storage_admin"
-admin_password="admin"
+echo "Check if Okapi is contactable"
+curl -w '\n' -X GET -D -   \
+     "${okapi_proxy_address}/_/env" || exit 1
 
-#set up the inventory storage databases
-cd ../inventory-storage
+echo "Create ${tenant_id} tenant"
+./create-tenant.sh ${tenant_id}
 
-cd database-setup
+echo "Activate inventory storage for ${tenant_id}"
+activate_json=$(cat ./registration/activate.json)
+activate_json="${activate_json/moduleidhere/inventory-storage}"
 
-./drop-db.sh ${database_name}
-./drop-role.sh "test_tenant_inventory_storage"
-./drop-role.sh "test_tenant_1_inventory_storage"
-./drop-role.sh "test_tenant_2_inventory_storage"
+curl -w '\n' -X POST -D - \
+     -H "Content-type: application/json" \
+     -d "${activate_json}"  \
+     "${okapi_proxy_address}/_/proxy/tenants/${tenant_id}/modules"
 
-./create-admin-role.sh ${admin_user_name} ${password}
-./create-db.sh ${database_name} ${admin_user_name}
+echo "Run API tests"
 
-cd ..
+gradle -Dokapi.address="${okapi_address}" clean testStorageViaOkapi
 
-#start the inventory storage module with correct database config
-./start.sh 9408 "$(pwd)/external-test-postgres-conf.json" test_tenant_1
+test_results=$?
 
-echo "Initialising Tenant: test_tenant_2"
+echo "Deactivate inventory storage for ${tenant_id}"
+curl -X DELETE -D - -w '\n' "${okapi_proxy_address}/_/proxy/tenants/${tenant_id}/modules/inventory-storage"
 
-curl -w '\n' -X POST -D -   \
-     -H "Content-type: application/json"   \
-     -H "Accept: */*"   \
-     -H "X-Okapi-Tenant: test_tenant_2" \
-     http://localhost:9408/_/tenant
+echo "Deleting ${tenant_id}"
+./delete-tenant.sh ${tenant_id}
 
-echo "Initialising Tenant: test_tenant"
+echo "Need to manually remove test_tenant storage as Tenant API no longer invoked on deactivation"
 
-curl -w '\n' -X POST -D -   \
-     -H "Content-type: application/json"   \
-     -H "Accept: */*"   \
-     -H "X-Okapi-Tenant: test_tenant" \
-     http://localhost:9408/_/tenant
-
-cd ../inventory
-
-echo "Create book material type"
-
-book_json=$(cat ./bookMaterialType.json)
-
-curl -w '\n' -X POST -D -   \
-     -H "Content-type: application/json"   \
-     -H "Accept: */*"   \
-     -H "X-Okapi-Tenant: test_tenant" \
-     -d "${book_json}" \
-     http://localhost:9408/material-type
-
-curl -w '\n' -X POST -D -   \
-     -H "Content-type: application/json"   \
-     -H "Accept: */*"   \
-     -H "X-Okapi-Tenant: test_tenant_1" \
-     -d "${book_json}" \
-     http://localhost:9408/material-type
-
-curl -w '\n' -X POST -D -   \
-     -H "Content-type: application/json"   \
-     -H "Accept: */*"   \
-     -H "X-Okapi-Tenant: test_tenant_2" \
-     -d "${book_json}" \
-     http://localhost:9408/material-type
-
-#run the tests
-gradle -Dinventory.storage.address="${inventory_storage_address}" clean testExternalStorage
-
-#stop the inventory storage module
-cd ../inventory-storage
-
-./stop.sh
-
-cd ../inventory
+if [ $test_results != 0 ]; then
+    echo '--------------------------------------'
+    echo 'BUILD FAILED'
+    echo '--------------------------------------'
+    exit 1;
+else
+    echo '--------------------------------------'
+    echo 'BUILD SUCCEEDED'
+    echo '--------------------------------------'
+    exit 1;
+fi

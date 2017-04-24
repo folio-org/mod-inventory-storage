@@ -47,23 +47,23 @@ task testApiDirect(type: Test) {
 task testApiViaOkapi(type: Test) {
   include '**/api/ApiTestSuite.class'
 
-  systemProperty 'okapi.use', 'true'
+  systemProperty 'use.okapi.initial.requests', 'true'
+  systemProperty 'use.okapi.storage.requests', 'true'
 
   def okapiAddress = System.getProperty('okapi.address') ?: 'http://localhost:9130'
 
   systemProperty 'okapi.address', okapiAddress
 }
 
-task testExternalStorage(type: Test) {
-  exclude '**/External**CollectionExamples.class'
-  include '**/storage/external/ExternalStorageSuite.class'
+task testStorageViaOkapi(type: Test) {
   include '**/api/ApiTestSuite.class'
 
-  systemProperty 'inventory.storage.use', 'external'
+  systemProperty 'use.okapi.initial.requests', 'false'
+  systemProperty 'use.okapi.storage.requests', 'true'
 
-  println "Inventory Storage Config: ${System.getProperty('inventory.storage.address')}"
+  def okapiAddress = System.getProperty('okapi.address') ?: 'http://localhost:9130'
 
-  systemProperty 'inventory.storage.address', System.getProperty('inventory.storage.address')
+  systemProperty 'okapi.address', okapiAddress
 }
 
 jar {

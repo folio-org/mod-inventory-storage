@@ -26,6 +26,10 @@ class ModsIngestion {
   }
 
   private ingest(RoutingContext routingContext) {
+    ServerErrorResponse.internalError(routingContext.response(),
+      "Temporarily unable to process MODS files (due to material type changes)")
+    return
+
     if(routingContext.fileUploads().size() > 1) {
       ClientErrorResponse.badRequest(routingContext.response(),
         "Cannot parse multiple files in a single request")
@@ -48,10 +52,6 @@ class ModsIngestion {
   }
 
   private FileSystem readUploadedFile(RoutingContext routingContext) {
-    readFile(routingContext)
-  }
-
-  private FileSystem readFile(RoutingContext routingContext) {
     routingContext.vertx().fileSystem().readFile(uploadFileName(routingContext),
       { result ->
         if (result.succeeded()) {
@@ -84,6 +84,7 @@ class ModsIngestion {
         }
       })
   }
+
 
   private String statusLocation(RoutingContext routingContext, jobId) {
 

@@ -1,5 +1,7 @@
 package api
 
+import io.vertx.core.json.Json
+import io.vertx.core.json.JsonObject
 import org.folio.inventory.InventoryVerticle
 import org.folio.metadata.common.VertxAssistant
 import org.folio.metadata.common.testing.HttpClient
@@ -26,30 +28,58 @@ public class ApiTestSuite {
 
   private static final String TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsInRlbmFudCI6ImRlbW9fdGVuYW50In0.29VPjLI6fLJzxQW0UhQ0jsvAn8xHz501zyXAxRflXfJ9wuDzT8TDf-V75PjzD7fe2kHjSV2dzRXbstt3BTtXIQ"
 
+  private static String bookMaterialTypeId
+
   private static VertxAssistant vertxAssistant = new VertxAssistant();
   private static String inventoryModuleDeploymentId
   private static String fakeModulesDeploymentId
 
+  private static Boolean useOkapiForApiRequests =
+    (System.getProperty("use.okapi.initial.requests") ?: "").toBoolean()
+  private static Boolean useOkapiForStorageRequests =
+    (System.getProperty("use.okapi.storage.requests") ?: "").toBoolean()
+  private static String okapiAddress = System.getProperty("okapi.address", "")
+
   @BeforeClass
-  public static void before() {
+  static void before() {
+
+    println("Use Okapi For Initial Requests:" + System.getProperty("use.okapi.initial.requests"))
+    println("Use Okapi For Storage Requests:" + System.getProperty("use.okapi.storage.requests"))
+
     startVertx()
     startFakeModules()
+    createBookMaterialType()
     startInventoryVerticle()
   }
 
   @AfterClass
-  public static void after() {
+  static void after() {
     stopInventoryVerticle()
     stopFakeModules()
     stopVertx()
   }
 
-  static HttpClient createHttpClient() {
-    new HttpClient(okapiUrl(), TENANT_ID, TOKEN)
+  static String getBookMaterialType() {
+    bookMaterialTypeId
   }
 
-  static String okapiUrl() {
-    FakeOkapi.address
+  static HttpClient createHttpClient() {
+    new HttpClient(storageOkapiUrl(), TENANT_ID, TOKEN)
+  }
+
+  static String storageOkapiUrl() {
+    if(useOkapiForStorageRequests) {
+      okapiAddress
+    }
+    else {
+      FakeOkapi.address
+    }
+  }
+
+  static String apiRoot() {
+    def directRoot = "http://localhost:${ApiTestSuite.INVENTORY_VERTICLE_TEST_PORT}"
+
+    useOkapiForApiRequests ? okapiAddress : directRoot
   }
 
   private static stopVertx() {
@@ -60,25 +90,11 @@ public class ApiTestSuite {
     vertxAssistant.start()
   }
 
-  private static String apiRoot() {
-    def okapiRoot = System.getProperty("okapi.address", "")
-    def directRoot = "http://localhost:${ApiTestSuite.INVENTORY_VERTICLE_TEST_PORT}"
-
-    def useOkapi = (System.getProperty("okapi.use") ?: "").toBoolean()
-
-    useOkapi ? okapiRoot : directRoot
-  }
-
   private static startInventoryVerticle() {
     def deployed = new CompletableFuture()
 
     def storageType = "okapi"
     def storageLocation = ""
-
-//    if(System.getProperty('inventory.storage.use', "") == "external") {
-//      storageType = "external"
-//      storageLocation = System.getProperty('inventory.storage.address', "")
-//    }
 
     println("Storage Type: ${storageType}")
     println("Storage Location: ${storageLocation}")
@@ -96,25 +112,65 @@ public class ApiTestSuite {
   private static stopInventoryVerticle() {
     def undeployed = new CompletableFuture()
 
-    vertxAssistant.undeployVerticle(inventoryModuleDeploymentId, undeployed)
+    if(inventoryModuleDeploymentId != null) {
+      vertxAssistant.undeployVerticle(inventoryModuleDeploymentId, undeployed)
 
-    undeployed.get(20000, TimeUnit.MILLISECONDS)
+      undeployed.get(20000, TimeUnit.MILLISECONDS)
+    }
   }
 
   private static startFakeModules() {
-    def fakeModulesDeployed = new CompletableFuture<>();
+    if(!useOkapiForStorageRequests) {
+      def fakeModulesDeployed = new CompletableFuture<>();
 
-      vertxAssistant.deployVerticle(FakeOkapi.class.getName(),
-        [:], fakeModulesDeployed);
+        vertxAssistant.deployVerticle(FakeOkapi.class.getName(),
+          [:], fakeModulesDeployed);
 
-    fakeModulesDeploymentId = fakeModulesDeployed.get(10, TimeUnit.SECONDS);
+      fakeModulesDeploymentId = fakeModulesDeployed.get(10, TimeUnit.SECONDS);
+    }
   }
 
   private static stopFakeModules() {
-    def undeployed = new CompletableFuture()
+    if(!useOkapiForStorageRequests && fakeModulesDeploymentId != null) {
+      def undeployed = new CompletableFuture()
 
-    vertxAssistant.undeployVerticle(fakeModulesDeploymentId, undeployed)
+      vertxAssistant.undeployVerticle(fakeModulesDeploymentId, undeployed)
 
-    undeployed.get(20000, TimeUnit.MILLISECONDS)
+      undeployed.get(20000, TimeUnit.MILLISECONDS)
+    }
+  }
+
+  private static def createBookMaterialType() {
+    def client = createHttpClient()
+
+    def materialTypesUrl = new URL("${storageOkapiUrl()}/material-types")
+
+    def (getResponse, wrappedMaterialTypes) = client.get(materialTypesUrl)
+
+    if(getResponse.status != 200) {
+      println("Material Type API unavailable")
+      assert false
+    }
+
+    def existingMaterialTypes = wrappedMaterialTypes.mtypes
+
+    if(existingMaterialTypes.stream()
+      .noneMatch({ it.name == "Book" })) {
+
+      def bookMaterialType = new JsonObject()
+        .put("name", "Book");
+
+      def (postResponse, createdMaterialType) = client.post(materialTypesUrl,
+        Json.encodePrettily(bookMaterialType))
+
+      assert postResponse.status == 201
+
+      bookMaterialTypeId = createdMaterialType.id
+    }
+    else {
+      bookMaterialTypeId = existingMaterialTypes.stream()
+        .filter({ it.name == "Book" })
+        .findFirst().get().id
+    }
   }
 }

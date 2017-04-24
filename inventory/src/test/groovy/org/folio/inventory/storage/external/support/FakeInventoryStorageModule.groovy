@@ -331,6 +331,8 @@ class FakeInventoryStorageModule extends GroovyVerticle {
   private static def getMapFromBody(RoutingContext routingContext) {
     if (hasBody(routingContext)) {
 
+      println("Body received by fake: ${routingContext.getBodyAsString()}")
+
       routingContext.getBodyAsJson()
     } else {
       new HashMap<String, Object>()
