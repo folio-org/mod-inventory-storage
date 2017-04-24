@@ -1,13 +1,15 @@
 package org.folio.inventory.resources.ingest
 
-import io.vertx.groovy.core.file.FileSystem
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
+import org.folio.inventory.CollectionResourceClient
 import org.folio.inventory.domain.ingest.IngestMessages
 import org.folio.inventory.parsing.ModsParser
 import org.folio.inventory.parsing.UTF8LiteralCharacterEncoding
 import org.folio.inventory.storage.Storage
+import org.folio.inventory.support.JsonArrayHelper
+import org.folio.inventory.support.http.client.OkapiHttpClient
 import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.response.*
 import org.folio.metadata.common.domain.Success
@@ -26,17 +28,68 @@ class ModsIngestion {
   }
 
   private ingest(RoutingContext routingContext) {
-    ServerErrorResponse.internalError(routingContext.response(),
-      "Temporarily unable to process MODS files (due to material type changes)")
-    return
-
     if(routingContext.fileUploads().size() > 1) {
       ClientErrorResponse.badRequest(routingContext.response(),
         "Cannot parse multiple files in a single request")
       return
     }
 
-    readUploadedFile(routingContext)
+    def context = new WebContext(routingContext)
+
+    def client = new OkapiHttpClient(routingContext.vertx().createHttpClient(),
+      new URL(context.okapiLocation), context.tenantId,
+      context.token,
+      { ServerErrorResponse.internalError(routingContext.response(),
+      "Failed to retrieve material types: ${it}")})
+
+    def materialTypesClient = new CollectionResourceClient(client,
+      new URL(context.okapiLocation + "/material-types"))
+
+    //TODO: Will only work for book material type
+    materialTypesClient.getMany(
+      "query=" + URLEncoder.encode("name=\"Book\"", "UTF-8"),
+      { response ->
+        if(response.statusCode != 200) {
+          ServerErrorResponse.internalError(routingContext.response(),
+            "Unable to retrieve material types: ${response.statusCode}: ${response.body}")
+        }
+        else {
+          def bookMaterialTypeId =
+            JsonArrayHelper.toList(response.json.getJsonArray("mtypes"))
+              .first().getString("id")
+
+          routingContext.vertx().fileSystem().readFile(uploadFileName(routingContext),
+          { result ->
+            if (result.succeeded()) {
+              def uploadedFileContents = result.result().toString()
+
+              def records = new ModsParser(new UTF8LiteralCharacterEncoding())
+                .parseRecords(uploadedFileContents)
+
+              def convertedRecords = new IngestRecordConverter().toJson(records)
+
+              storage.getIngestJobCollection(context)
+                .add(new IngestJob(IngestJobState.REQUESTED),
+                { Success success ->
+
+                  IngestMessages.start(convertedRecords,
+                    ["book": bookMaterialTypeId], success.result.id, context)
+                    .send(routingContext.vertx())
+
+                  RedirectResponse.accepted(routingContext.response(),
+                    statusLocation(routingContext, success.result.id))
+                },
+                {
+                  println("Creating Ingest Job failed")
+                })
+
+            } else {
+              ServerErrorResponse.internalError(
+                routingContext.response(), result.cause().toString())
+            }
+          })
+      }
+    })
   }
 
   private status(RoutingContext routingContext) {
@@ -51,39 +104,6 @@ class ModsIngestion {
       }, FailureResponseConsumer.serverError(routingContext.response()))
   }
 
-  private FileSystem readUploadedFile(RoutingContext routingContext) {
-    routingContext.vertx().fileSystem().readFile(uploadFileName(routingContext),
-      { result ->
-        if (result.succeeded()) {
-          def uploadedFileContents = result.result().toString()
-
-          def records = new ModsParser(new UTF8LiteralCharacterEncoding())
-            .parseRecords(uploadedFileContents)
-
-          def convertedRecords = new IngestRecordConverter().toJson(records)
-
-          def context = new WebContext(routingContext)
-
-          storage.getIngestJobCollection(context)
-            .add(new IngestJob(IngestJobState.REQUESTED),
-            { Success success ->
-
-              IngestMessages.start(convertedRecords, success.result.id, context)
-                .send(routingContext.vertx())
-
-              RedirectResponse.accepted(routingContext.response(),
-                statusLocation(routingContext, success.result.id))
-            },
-            {
-              println("Creating Ingest Job failed")
-            })
-
-        } else {
-          ServerErrorResponse.internalError(
-            routingContext.response(), result.cause().toString())
-        }
-      })
-  }
 
 
   private String statusLocation(RoutingContext routingContext, jobId) {

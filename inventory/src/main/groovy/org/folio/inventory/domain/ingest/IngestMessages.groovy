@@ -6,10 +6,12 @@ import org.folio.metadata.common.Context
 import org.folio.metadata.common.messaging.JsonMessage
 
 class IngestMessages {
-  static start(records, jobId, Context context) {
+  static start(records, Map materialTypes, jobId, Context context) {
     new JsonMessage(Messages.START_INGEST.Address,
     headers(jobId, context),
-    new JsonObject(["records" : records]))
+    new JsonObject()
+      .put("records", records)
+      .put("materialTypes", materialTypes))
   }
 
   static completed(jobId, Context context) {

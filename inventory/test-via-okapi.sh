@@ -26,7 +26,7 @@ curl -w '\n' -X POST -D - \
 echo "Register inventory module"
 ./register.sh ${inventory_direct_address} ${inventory_instance_id} ${tenant_id}
 
-gradle -Dokapi.address="${okapi_address}" testApiViaOkapi
+gradle -Dokapi.address="${okapi_address}" clean cleanTest testApiViaOkapi
 
 test_results=$?
 

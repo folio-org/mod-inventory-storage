@@ -32,6 +32,7 @@ class IngestMessageProcessor {
     def allInstances = new CollectAll<Instance>()
 
     def records = message.body().records
+    def materialTypes = message.body().materialTypes
 
     def context = new MessagingContext(message.headers())
 
@@ -53,7 +54,7 @@ class IngestMessageProcessor {
             record.title,
             record.barcode,
             instances.find({ it.title == record.title })?.id,
-            "Available", "Book", "Main Library")
+            "Available", ["id": materialTypes.book], "Main Library")
       })
       .forEach({ itemCollection.add(it, allItems.receive(),
         { Failure failure -> println("Ingest Creation Failed: ${failure.reason}") })

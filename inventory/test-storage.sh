@@ -21,7 +21,7 @@ curl -w '\n' -X POST -D - \
 
 echo "Run API tests"
 
-gradle -Dokapi.address="${okapi_address}" clean testStorageViaOkapi
+gradle -Dokapi.address="${okapi_address}" clean cleanTest testStorageViaOkapi
 
 test_results=$?
 

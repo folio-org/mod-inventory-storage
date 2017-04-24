@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
   ModsIngestExamples.class
 ])
 
-public class ApiTestSuite {
+class ApiTestSuite {
   public static final INVENTORY_VERTICLE_TEST_PORT = 9603
   public static final String TENANT_ID = "test_tenant"
 
