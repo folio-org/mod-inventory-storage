@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 tenant_id=${1:-demo_tenant}
-storage_type=${2:-memory}
+storage_type=${2:-okapi}
 storage_location=${3:-''}
 inventory_root_address=${4:-http://localhost:9403/inventory}
 

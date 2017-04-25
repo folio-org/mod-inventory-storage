@@ -6,7 +6,6 @@ import org.folio.inventory.domain.InstanceCollection
 import org.folio.inventory.domain.ItemCollection
 import org.folio.inventory.domain.ingest.IngestJobCollection
 import org.folio.inventory.storage.external.ExternalStorageCollections
-import org.folio.inventory.storage.memory.InMemoryCollections
 import org.folio.metadata.common.Context
 
 import java.util.function.Function
@@ -40,15 +39,9 @@ class Storage {
           new ExternalStorageCollections(vertx, context.okapiLocation) })
         break
 
-      case "memory":
-        def inMemoryCollections = new InMemoryCollections()
-
-        return new Storage({ context -> inMemoryCollections })
-        break
-
       default:
         throw new IllegalArgumentException(
-          "Storage type must be one of [external, okapi, memory]")
+          "Storage type must be one of [external, okapi]")
     }
   }
 
