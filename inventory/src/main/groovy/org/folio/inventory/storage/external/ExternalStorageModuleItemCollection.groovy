@@ -293,7 +293,11 @@ class ExternalStorageModuleItemCollection
     itemToSend.put("barcode", item.barcode)
     itemToSend.put("instanceId", item.instanceId)
     itemToSend.put("status", new JsonObject().put("name", item.status))
-    itemToSend.put("materialTypeId", item.materialType?.get("id").toString())
+
+    if(item?.materialType?.id != null) {
+      itemToSend.put("materialTypeId", item.materialType.id.toString())
+    }
+    
     itemToSend.put("location",
       new JsonObject().put("name", item.location))
     itemToSend
