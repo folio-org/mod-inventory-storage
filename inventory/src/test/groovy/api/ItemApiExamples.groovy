@@ -142,6 +142,43 @@ class ItemApiExamples extends Specification {
       selfLinkShouldBeReachable(createdItem)
   }
 
+  void "Can create an item without a material type"() {
+    given:
+      def createdInstance = createInstance(
+        smallAngryPlanet(UUID.randomUUID()))
+
+      def newItemRequest = new JsonObject()
+        .put("title", createdInstance.title)
+        .put("instanceId", createdInstance.id)
+        .put("barcode", "645398607547")
+        .put("status", new JsonObject().put("name", "Available"))
+        .put("location", new JsonObject().put("name", "Annex Library"))
+
+    when:
+      def (postResponse, _) = client.post(
+        new URL("${ApiRoot.items()}"),
+        Json.encodePrettily(newItemRequest))
+
+    then:
+      def location = postResponse.headers.location.toString()
+
+      assert postResponse.status == 201
+      assert location != null
+
+      def (getResponse, createdItem) = client.get(location)
+
+      assert getResponse.status == 200
+
+      assert createdItem.id != null
+      assert createdItem.title == "Long Way to a Small Angry Planet"
+      assert createdItem.barcode == "645398607547"
+      assert createdItem?.status?.name == "Available"
+      assert createdItem?.location?.name == "Annex Library"
+
+      selfLinkRespectsWayResourceWasReached(createdItem)
+      selfLinkShouldBeReachable(createdItem)
+  }
+
   void "Can update an existing item"() {
     given:
       def createdInstance = createInstance(
