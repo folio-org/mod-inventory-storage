@@ -307,8 +307,11 @@ class ItemApiExamples extends Specification {
       createItem(smallAngryInstance.title, smallAngryInstance.id,
         "175848607547")
 
-      createItem(smallAngryInstance.title, smallAngryInstance.id,
-        "645334645247")
+      def girlOnTheTrainInstance = createInstance(
+        girlOnTheTrain(UUID.randomUUID()))
+
+      createItem(girlOnTheTrainInstance.title, girlOnTheTrainInstance.id,
+        "645334645247", dvdMaterialType())
 
       def nodInstance = createInstance(nod(UUID.randomUUID()))
 
@@ -505,8 +508,11 @@ class ItemApiExamples extends Specification {
   }
 
   private void hasMaterialType(item) {
-    assert item?.materialType?.id == ApiTestSuite.bookMaterialType
-    assert item?.materialType?.name == "Book"
+    assert item?.materialType?.id == ApiTestSuite.bookMaterialType ||
+      item?.materialType?.id == ApiTestSuite.dvdMaterialType
+
+    assert item?.materialType?.name == "Book" ||
+      item?.materialType?.name == "DVD"
   }
 
   private void hasLocation(item) {
@@ -518,14 +524,21 @@ class ItemApiExamples extends Specification {
   }
 
   private JsonObject createItem(String title, String instanceId, String barcode) {
+    createItem(title, instanceId, barcode, bookMaterialType())
+  }
+
+  private JsonObject createItem(
+    String title,
+    String instanceId,
+    String barcode,
+    JsonObject materialType) {
+
     def newItemRequest = new JsonObject()
       .put("title", title)
       .put("instanceId", instanceId)
       .put("barcode", barcode)
       .put("status", new JsonObject().put("name", "Available"))
-      .put("materialType", new JsonObject()
-        .put("id", "${ApiTestSuite.bookMaterialType}")
-        .put("name", "Book"))
+      .put("materialType", materialType)
       .put("location", new JsonObject().put("name", "Main Library"))
 
     def (createItemResponse, _) = client.post(ApiRoot.items(),
@@ -538,5 +551,17 @@ class ItemApiExamples extends Specification {
     assert response.status == 200
 
     createdItem
+  }
+
+  private JsonObject bookMaterialType() {
+    new JsonObject()
+      .put("id", "${ApiTestSuite.bookMaterialType}")
+      .put("name", "Book")
+  }
+
+  private JsonObject dvdMaterialType() {
+    new JsonObject()
+      .put("id", "${ApiTestSuite.dvdMaterialType}")
+      .put("name", "DVD")
   }
 }

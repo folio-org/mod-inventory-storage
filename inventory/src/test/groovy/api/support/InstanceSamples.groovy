@@ -76,4 +76,13 @@ class InstanceSamples {
       .put("value", value);
   }
 
+  static JsonObject girlOnTheTrain(UUID id) {
+    def identifiers = new JsonArray()
+
+    identifiers.add(identifier("asin", "B01LO7PJOE"))
+
+    return createInstanceRequest(id, "The Girl on the Train",
+      identifiers)
+  }
+
 }
