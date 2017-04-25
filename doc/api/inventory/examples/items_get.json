@@ -8,7 +8,8 @@
       "name" : "Available"
     },
     "materialType": {
-      "id": "00358d64-50a9-474c-9865-465c137165eb"
+      "id": "fcf3d3dc-b27f-4ce4-a530-542ea53cacb5",
+      "name": "Book"
     },
     "location": {
       "name": "Main Library"
@@ -23,7 +24,8 @@
       "name" : "Available"
     },
     "materialType": {
-      "id": "fcf3d3dc-b27f-4ce4-a530-542ea53cacb5"
+      "id": "fcf3d3dc-b27f-4ce4-a530-542ea53cacb5",
+      "name": "Book"
     },
     "location": {
       "name": "Main Library"
