@@ -1,8 +1,9 @@
 package org.folio.rest;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.*;
+import org.junit.*;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -13,19 +14,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 
 public class ItemStorageTest {
 
@@ -183,6 +174,59 @@ public class ItemStorageTest {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
     assertThat(postResponse.getBody(), is("ID and instance ID must both be a UUID"));
+  }
+
+  @Test
+  public void canCreateAnItemWithoutMaterialType()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    UUID instanceId = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("instanceId", instanceId.toString());
+    itemToCreate.put("title", "Nod");
+    itemToCreate.put("barcode", "565578437802");
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postResponse.getJson();
+
+    assertThat(itemFromPost.getString("id"), is(id.toString()));
+    assertThat(itemFromPost.getString("instanceId"), is(instanceId.toString()));
+    assertThat(itemFromPost.getString("title"), is("Nod"));
+    assertThat(itemFromPost.getString("barcode"), is("565578437802"));
+    assertThat(itemFromPost.getJsonObject("status").getString("name"),
+      is("Available"));
+    assertThat(itemFromPost.getJsonObject("location").getString("name"),
+      is("Main Library"));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(id.toString()));
+    assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
+    assertThat(itemFromGet.getString("title"), is("Nod"));
+    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"),
+      is("Available"));
+    assertThat(itemFromGet.getJsonObject("location").getString("name"),
+      is("Main Library"));
   }
 
   @Test
