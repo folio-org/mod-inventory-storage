@@ -3,14 +3,20 @@ package org.folio.inventory.resources
 import io.vertx.groovy.ext.web.Router
 import io.vertx.groovy.ext.web.RoutingContext
 import io.vertx.groovy.ext.web.handler.BodyHandler
+import org.folio.inventory.CollectionResourceClient
 import org.folio.inventory.domain.Item
 import org.folio.inventory.storage.Storage
+import org.folio.inventory.support.http.client.OkapiHttpClient
+import org.folio.inventory.support.http.client.Response
 import org.folio.metadata.common.WebContext
 import org.folio.metadata.common.api.request.PagingParameters
 import org.folio.metadata.common.api.request.VertxBodyParser
 import org.folio.metadata.common.api.response.*
 import org.folio.metadata.common.domain.Failure
 import org.folio.metadata.common.domain.Success
+
+import java.util.concurrent.CompletableFuture
+import java.util.stream.Collectors
 
 class Items {
 
@@ -20,7 +26,7 @@ class Items {
     this.storage = storage
   }
 
-  public void register(Router router) {
+  void register(Router router) {
     router.post(relativeItemsPath() + "*").handler(BodyHandler.create())
     router.put(relativeItemsPath() + "*").handler(BodyHandler.create())
 
@@ -51,16 +57,13 @@ class Items {
       storage.getItemCollection(context).findAll(
         pagingParameters,
         { Success success ->
-        JsonResponse.success(routingContext.response(),
-          new ItemRepresentation(relativeItemsPath()).toJson(success.result,
-            context)) },
-        FailureResponseConsumer.serverError(routingContext.response()))
+          respondWithManyItems(routingContext, context, success.result)
+        }, FailureResponseConsumer.serverError(routingContext.response()))
     }
     else {
       storage.getItemCollection(context).findByCql(search,
-        pagingParameters, {
-        JsonResponse.success(routingContext.response(),
-          new ItemRepresentation(relativeItemsPath()).toJson(it.result, context))
+        pagingParameters, { Success success ->
+        respondWithManyItems(routingContext, context, success.result)
       }, FailureResponseConsumer.serverError(routingContext.response()))
     }
   }
@@ -151,18 +154,58 @@ class Items {
   void getById(RoutingContext routingContext) {
     def context = new WebContext(routingContext)
 
+    def materialTypesClient = createMaterialTypesClient(routingContext, context)
+
     storage.getItemCollection(context).findById(
       routingContext.request().getParam("id"),
-      { Success it ->
-        if(it.result != null) {
-          JsonResponse.success(routingContext.response(),
-            new ItemRepresentation(relativeItemsPath())
-              .toJson(it.result, context))
+      { Success itemResponse ->
+        def item = itemResponse.result
+
+        if(item != null) {
+          if(item?.materialType?.id != null) {
+            materialTypesClient.get(item.materialType.id,
+              { materialTypeResponse ->
+              if(materialTypeResponse.statusCode == 200) {
+                JsonResponse.success(routingContext.response(),
+                  new ItemRepresentation(relativeItemsPath())
+                    .toJson(item, materialTypeResponse.json, context))
+              } else if (materialTypeResponse.statusCode == 404) {
+                JsonResponse.success(routingContext.response(),
+                  new ItemRepresentation(relativeItemsPath())
+                    .toJson(item, context))
+              } else {
+                ServerErrorResponse.internalError(routingContext.response(),
+                  String.format("Failed to get material type with ID: %s:, %s",
+                    item.materialType.id, materialTypeResponse.getBody()));
+              }
+            })
+          }
+          else {
+            JsonResponse.success(routingContext.response(),
+              new ItemRepresentation(relativeItemsPath())
+                .toJson(item, context))
+          }
         }
         else {
           ClientErrorResponse.notFound(routingContext.response())
         }
       }, FailureResponseConsumer.serverError(routingContext.response()))
+  }
+
+  private CollectionResourceClient createMaterialTypesClient(
+    RoutingContext routingContext,
+    WebContext context) {
+
+    def client = new OkapiHttpClient(routingContext.vertx().createHttpClient(),
+      new URL(context.okapiLocation), context.tenantId,
+      context.token,
+      {
+        ServerErrorResponse.internalError(routingContext.response(),
+          "Failed to retrieve material types: ${it}")
+      })
+
+    new CollectionResourceClient(client,
+      new URL(context.okapiLocation + "/material-types"))
   }
 
   private static String relativeItemsPath() {
@@ -173,6 +216,47 @@ class Items {
     new Item(itemRequest.id, itemRequest.title,
       itemRequest.barcode, itemRequest.instanceId, itemRequest?.status?.name,
       itemRequest?.materialType, itemRequest?.location?.name)
+  }
+
+  private respondWithManyItems(
+    RoutingContext routingContext,
+    WebContext context,
+    List<Item> items) {
+
+    def materialTypesClient = createMaterialTypesClient(routingContext, context)
+
+    def allFutures = new ArrayList<CompletableFuture<Response>>()
+
+    def materialTypeIds = items.stream()
+      .map({ it?.materialType?.id })
+      .filter({ it != null })
+      .distinct()
+      .collect(Collectors.toList())
+
+    materialTypeIds.each { id ->
+      def newFuture = new CompletableFuture<>()
+
+      allFutures.add(newFuture)
+
+      materialTypesClient.get(id, { response -> newFuture.complete(response) })
+    }
+
+    CompletableFuture<Void> allDoneFuture = CompletableFuture.allOf(*allFutures)
+
+    allDoneFuture.thenAccept({ v ->
+      def materialTypeResponses = allFutures.stream()
+        .map({ future -> future.join() })
+        .collect(Collectors.toList())
+
+      def foundMaterialTypes = materialTypeResponses.stream()
+        .filter({ it.getStatusCode() == 200 })
+        .map({ it.getJson() })
+        .collect(Collectors.toMap({ it.getString("id") }, { it }))
+
+      JsonResponse.success(routingContext.response(),
+        new ItemRepresentation(relativeItemsPath()).toJson(items,
+          foundMaterialTypes, context))
+    });
   }
 }
 

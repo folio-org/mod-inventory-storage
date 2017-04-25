@@ -12,6 +12,17 @@ class ItemRepresentation {
     this.relativeItemsPath = relativeItemsPath
   }
 
+  JsonObject toJson(Item item, JsonObject materialType, WebContext context) {
+    def representation = toJson(item, context)
+
+    if(materialType != null) {
+      representation.getJsonObject("materialType")
+        .put("name", materialType.getString("name"))
+    }
+
+    representation
+  }
+
   JsonObject toJson(Item item, WebContext context) {
     def representation = new JsonObject()
     representation.put("id", item.id)
@@ -25,8 +36,7 @@ class ItemRepresentation {
 
     if(item.materialType != null) {
       representation.put("materialType", new JsonObject()
-          .put("id", item.materialType.id))
-//          .put("name", ""))
+        .put("id", item.materialType.id))
     }
 
     if(item.location != null) {
@@ -37,6 +47,26 @@ class ItemRepresentation {
     representation.put('links',
       ['self': context.absoluteUrl(
         "${relativeItemsPath}/${item.id}").toString()])
+
+    representation
+  }
+
+  JsonObject toJson(
+    List<Item> items,
+    Map<String, JsonObject> materialTypes,
+    WebContext context) {
+
+    def representation = new JsonObject()
+
+    def results = new JsonArray()
+
+    items.each { item ->
+      def materialType = materialTypes.get(item?.materialType?.id)
+
+      results.add(toJson(item, materialType, context))
+    }
+
+    representation.put("items", results)
 
     representation
   }

@@ -31,11 +31,12 @@ class ItemApiExamples extends Specification {
         .put("barcode", "645398607547")
         .put("status", new JsonObject().put("name", "Available"))
         .put("materialType", new JsonObject()
-          .put("id", "${ApiTestSuite.bookMaterialType}"))
+          .put("id", "${ApiTestSuite.bookMaterialType}")
+          .put("name", "Book"))
         .put("location", new JsonObject().put("name", "Annex Library"))
 
     when:
-      def (postResponse, __) = client.post(
+      def (postResponse, _) = client.post(
         new URL("${ApiRoot.items()}"),
         Json.encodePrettily(newItemRequest))
 
@@ -54,6 +55,7 @@ class ItemApiExamples extends Specification {
       assert createdItem.barcode == "645398607547"
       assert createdItem?.status?.name == "Available"
       assert createdItem?.materialType?.id == ApiTestSuite.bookMaterialType
+      assert createdItem?.materialType?.name == "Book"
       assert createdItem?.location?.name == "Annex Library"
 
       selfLinkRespectsWayResourceWasReached(createdItem)
@@ -72,7 +74,8 @@ class ItemApiExamples extends Specification {
         .put("title", createdInstance.title)
         .put("instanceId", createdInstance.id)
         .put("materialType", new JsonObject()
-          .put("id", "${ApiTestSuite.bookMaterialType}"))
+          .put("id", "${ApiTestSuite.bookMaterialType}")
+          .put("name", "Book"))
         .put("barcode", "645398607547")
 
     when:
@@ -108,11 +111,12 @@ class ItemApiExamples extends Specification {
         .put("barcode", "645398607547")
         .put("status", new JsonObject().put("name", "Available"))
         .put("materialType", new JsonObject()
-          .put("id", "${ApiTestSuite.bookMaterialType}"))
+          .put("id", "${ApiTestSuite.bookMaterialType}")
+          .put("name", "Book"))
         .put("location", new JsonObject().put("name", "Annex Library"))
 
     when:
-      def (postResponse, __) = client.post(
+      def (postResponse, _) = client.post(
         new URL("${ApiRoot.items()}"),
         Json.encodePrettily(newItemRequest))
 
@@ -131,6 +135,7 @@ class ItemApiExamples extends Specification {
       assert createdItem.barcode == "645398607547"
       assert createdItem?.status?.name == "Available"
       assert createdItem?.materialType?.id == ApiTestSuite.bookMaterialType
+      assert createdItem?.materialType?.name == "Book"
       assert createdItem?.location?.name == "Annex Library"
 
       selfLinkRespectsWayResourceWasReached(createdItem)
@@ -166,6 +171,7 @@ class ItemApiExamples extends Specification {
       assert updatedItem.barcode == "645398607547"
       assert updatedItem?.status?.name == "Checked Out"
       assert updatedItem?.materialType?.id == ApiTestSuite.bookMaterialType
+      assert updatedItem?.materialType?.name == "Book"
       assert updatedItem?.location?.name == "Main Library"
 
       selfLinkRespectsWayResourceWasReached(updatedItem)
@@ -181,7 +187,8 @@ class ItemApiExamples extends Specification {
         .put("barcode", "546747342365")
         .put("status", new JsonObject().put("name", "Available"))
         .put("materialType", new JsonObject()
-          .put("id", "${ApiTestSuite.bookMaterialType}"))
+          .put("id", "${ApiTestSuite.bookMaterialType}")
+          .put("name", "Book"))
         .put("location", new JsonObject().put("name", "Main Library"))
 
     when:
@@ -371,6 +378,18 @@ class ItemApiExamples extends Specification {
       items.each {
         selfLinkShouldBeReachable(it)
       }
+
+      items.each {
+        hasMaterialType(it)
+      }
+
+      items.each {
+        hasStatus(it)
+      }
+
+      items.each {
+        hasLocation(it)
+      }
   }
 
   void "Cannot create a second item with the same barcode"() {
@@ -390,7 +409,8 @@ class ItemApiExamples extends Specification {
         .put("barcode", "645398607547")
         .put("status", new JsonObject().put("name", "Available"))
         .put("materialType", new JsonObject()
-          .put("id", "${ApiTestSuite.bookMaterialType}"))
+          .put("id", "${ApiTestSuite.bookMaterialType}")
+          .put("name", "Book"))
         .put("location", new JsonObject().put("name", "Main Library"))
 
       def (createItemResponse, createItemBody) = client.post(ApiRoot.items(),
@@ -448,7 +468,8 @@ class ItemApiExamples extends Specification {
   }
 
   private void hasMaterialType(item) {
-    assert item?.materialType?.id != null
+    assert item?.materialType?.id == ApiTestSuite.bookMaterialType
+    assert item?.materialType?.name == "Book"
   }
 
   private void hasLocation(item) {
@@ -466,7 +487,8 @@ class ItemApiExamples extends Specification {
       .put("barcode", barcode)
       .put("status", new JsonObject().put("name", "Available"))
       .put("materialType", new JsonObject()
-        .put("id", "${ApiTestSuite.bookMaterialType}"))
+        .put("id", "${ApiTestSuite.bookMaterialType}")
+        .put("name", "Book"))
       .put("location", new JsonObject().put("name", "Main Library"))
 
     def (createItemResponse, _) = client.post(ApiRoot.items(),

@@ -73,6 +73,7 @@ class ModsIngestExamples extends Specification {
     assert items.every({ it.instanceId != null })
     assert items.every({ it?.status?.name == "Available" })
     assert items.every({ it?.materialType?.id == ApiTestSuite.bookMaterialType })
+    assert items.every({ it?.materialType?.name == "Book" })
     assert items.every({ it?.location?.name == "Main Library" })
 
     assert items.any({
