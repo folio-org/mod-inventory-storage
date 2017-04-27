@@ -5,7 +5,7 @@ build/
 .gradle/
 metrics/
 *.log
-doc/api/generated/
+**/doc/api/generated/
 node_modules/
 **/docker/tmp
 target/

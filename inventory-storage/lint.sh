@@ -19,17 +19,16 @@ replace_changed_schema_file() {
   mv ${schema_file}.original ${schema_file}
 }
 
-instances_schema_file="inventory-storage/ramls/schema/instances.json"
-items_schema_file="inventory-storage/ramls/schema/items.json"
+instances_schema_file="ramls/schema/instances.json"
+items_schema_file="ramls/schema/items.json"
 
 npm install
 
 replace_references_in_schema ${instances_schema_file} instance
 replace_references_in_schema ${items_schema_file} item
 
-./node_modules/.bin/eslint inventory-storage/ramls/instance-storage.raml
-./node_modules/.bin/eslint inventory-storage/ramls/item-storage.raml
-./node_modules/.bin/eslint doc/api/inventory/inventory.raml
+./node_modules/.bin/eslint ramls/instance-storage.raml
+./node_modules/.bin/eslint ramls/item-storage.raml
 
 replace_changed_schema_file ${instances_schema_file}
 replace_changed_schema_file ${items_schema_file}
