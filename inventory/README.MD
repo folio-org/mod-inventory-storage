@@ -6,27 +6,11 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 # Goal
 
-FOLIO compatible module suite to provide Knowledge Base and Metadata capabilities.
+FOLIO compatible inventory module.
 
-# Included Modules
+Provides basic physical item inventory management, currently limited to basic representations of local instances and items, which can only be created via a MODS import. 
 
-## Inventory
-
-Provides basic physical item inventory management, currently limited to basic representations of local instances and items, which can only be created via a MODS import. Written in Groovy and uses Gradle as its build system.
-
-In the inventory directory.
-
-## Inventory Storage
-
-Provides Postgres based storage to complement the inventory module. Written in Java, uses the raml-module-builder and uses Maven as its build system.
-
-In the inventory-storage directory.
-
-## Release Management
-
-Due to this repository containing two modules, the version numbers of each module are intended to be aligned so that a single release version can be identified.
-
-The current version number can be found in either the pom.xml or build.gradle for the inventory-storage or inventory modules respectively.
+Written in Groovy and uses Gradle as its build system.
 
 # Further Documentation
 
@@ -37,8 +21,6 @@ This readme is intended to get these modules up and running. For further informa
 - Java 8 JDK
 - Apache Groovy 2.4.8
 - Gradle 3.3
-- Maven 3.3.9
-- Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
 - Node 6.4.0 (for API linting and documentation generation)
 - NPM 3.10.3 (for API linting and documentation generation)
 - Python 3.6.0 (for nice to have parts of deployment scripts, e.g. is used to remove environment variables from Okapi)
@@ -52,7 +34,7 @@ There are some common RAML definitions that are shared between FOLIO projects vi
 
 To initialise these please run `git submodule init && git submodule update` in the root directory.
 
-If these are not initialised, the inventory-storage module will fail to build correctly, and other operations may also fail.
+If these are not initialised, document generation and API linting operations may fail.
 
 More information is available on the [developer site](http://dev.folio.org/doc/setup#update-git-submodules).
 
@@ -60,38 +42,25 @@ More information is available on the [developer site](http://dev.folio.org/doc/s
 
 If sdkman is installed, run `source ./setup-environment.sh` to setup the shell with the appropriate versions of Gradle and Groovy.
 
-## Postgres
+# Building
 
-Run the `setup-test-db.sh` script in the inventory-storage directory to setup Postgres with a database to be used in tests.
-This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
+run `gradle build` from the root directory. 
 
-# Building the Modules
+In order to build an executable Jar (e.g. for Okapi to deploy), run `gradle fatJar`.
 
-## Inventory
-
-run `gradle build` from the root directory. In order to build an executable Jar (e.g. for Okapi to deploy), run `gradle fatJar`.
-
-## Inventory Storage
-
-run `mvn install` from the inventory-storage directory.
-
-To run the tests against both embedded and external databases, run `./build.sh` from the inventory-storage directory.
-
-# Running the Modules
+# Running
 
 ## Preparation
 
+In order to activate the inventory module for a tenant, the dependencies described in the [Module Descriptor](ModuleDescriptor.json]) need to be fulfilled.
+
+The simplest way to fulfil these is to use the [inventory storage module](http://https://github.com/folio-org/mod-inventory-storage).
+
 ## Sample Data
 
-Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing.
+Importing/ingesting of sample data is done via Okapi, so modules must be deployed and activated prior to importing.
 
-### Inventory
-
-To load some sample data for the inventory storage module, run `./example-ingest.sh` from the inventory/sample-data directory.
-
-### Inventory Storage
-
-To load some sample data for the inventory storage module, run `./import.sh` from the inventory-storage/sample-data directory.
+To load some sample data run `./import-sample-data.sh` from the root directory.
 
 ## Running Okapi
 
@@ -101,25 +70,11 @@ A script for building and running Okapi is provided. Run `../mod-metadata/start-
 
 As this runs Okapi using Postgres storage, some database preparation is required. This can be achieved by running `./create-okapi-database.sh` from the root of this repository.
 
-## Demo
+## Managed by Okapi
 
-The best way to run all of the modules in this suite together.
+To register the module with deployment instructions and activate it for a demo tenant, run `./start-managed-demo.sh` from the root directory.
 
-Okapi needs to be running (see above) prior to running these scripts.
-
-To start the modules run the `./start-demo.sh` script from the root directory, which performs the following steps:
-
-* Creates a demo tenant (with ID demo_tenant, see Appendix 1 for more info)
-* Sets up a demo database
-* Registers the modules with Okapi (see Appendix 1 for more info)
-* Starts each module
-* Creates some sample data
-
-To stop the modules run `./stop-demo.sh` from the root directory, which performs the following steps:
-
-* Stops the modules
-* Unregisters the modules from Okapi
-* Removes the demo tenant
+To deactivate and unregister the module, run `./stop-managed-demo.sh` from the root directory.
 
 ## Natively
 
@@ -127,7 +82,7 @@ Run `./start.sh` from the root directory.
 
 To stop them, run `./stop.sh` from the root directory.
 
-# Using the Modules
+# Making Requests
 
 These modules provide HTTP based APIs rather than any UI themselves.
 
@@ -135,25 +90,11 @@ As FOLIO is a multi-tenant system, many of the requests made to these modules ar
 
 Therefore, it is suggested that requests to the API are made via tools such as curl or [postman](https://www.getpostman.com/), or via a browser plugin for adding headers, such as [Requestly](https://chrome.google.com/webstore/detail/requestly/mdnleldcmiljblolnjhpnblkcekpdkpa).
 
-## Okapi Root Addresses
+## Okapi Root Address
 
 It is recommended that the modules are located via Okapi. Access via Okapi requires passing the X-Okapi-Tenant header (see the Okapi guide above for details).
 
-|Module|Root Address|
-|------|------------|
-|Inventory| http://localhost:9130/inventory |
-|Inventory Storage| http://localhost:9130/item-storage/ and http://localhost:9130/instance-storage/ |
-
-## Direct Root Addresses
-
-For diagnostic purposes, it can sometimes be useful to connect directly to module APIs. Below is a list of root addresses for these modules.
-
-Whilst some requests may currently not require tenant information (it is likely that if not all, the vast majority will do in the future), it is recommended that all requests provide an X-Okapi-Tenant header.
-
-|Module|Root Address|
-|------|------------|
-|Inventory| http://localhost:9403/inventory |
-|Inventory Storage| http://localhost:9407/item-storage/ and http://localhost:9407/instance-storage/ |
+http://localhost:9130/inventory
 
 # Operating System Support
 
