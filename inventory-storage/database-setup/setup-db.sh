@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if ! command -v psql >/dev/null 2>&1; then
+  echo 'Error: psql is not installed.' >&2
+  exit 1
+fi
+
 database_name=${1:-}
 schema_name=${2:-}
 admin_user_name=${3:-}
