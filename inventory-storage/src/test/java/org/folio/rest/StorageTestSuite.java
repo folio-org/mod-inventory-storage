@@ -29,6 +29,7 @@ import org.junit.runners.Suite;
 
 @Suite.SuiteClasses({
   InstanceStorageTest.class,
+  LoanTypeTest.class,
   MaterialTypeTest.class,
   ItemStorageTest.class
 })

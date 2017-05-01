@@ -2,7 +2,7 @@ apply plugin: 'groovy'
 apply plugin: 'application'
 
 mainClassName = "org.folio.inventory.Launcher"
-version = "4.0.1-SNAPSHOT"
+version = "4.1.0"
 
 ext.sharedManifest = manifest {
   attributes(
