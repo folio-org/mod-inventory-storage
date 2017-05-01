@@ -6,25 +6,18 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 # Goal
 
-FOLIO compatible inventory module.
+FOLIO compatible inventory storage module.
 
-Provides basic physical item inventory management, currently limited to basic representations of local instances and items, which can only be created via a MODS import. 
-
-Written in Groovy and uses Gradle as its build system.
-
-# Further Documentation
-
-This readme is intended to get these modules up and running. For further information on what they do, see the [guide](doc/guide.md).
+Provides PostgreSQL based storage to complement the [inventory module](http://github.com/folio-rg/mod-inventory). Written in Java, using the raml-module-builder and uses Maven as its build system.
 
 # Prerequisites
 
 - Java 8 JDK
-- Apache Groovy 2.4.8
-- Gradle 3.3
+- Maven 3.3.9
+- Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
 - Node 6.4.0 (for API linting and documentation generation)
 - NPM 3.10.3 (for API linting and documentation generation)
 - Python 3.6.0 (for nice to have parts of deployment scripts, e.g. is used to remove environment variables from Okapi)
-- [SDKMan](http://sdkman.io/) (recommended for installing Gradle and Groovy)
 
 # Preparation
 
@@ -34,31 +27,28 @@ There are some common RAML definitions that are shared between FOLIO projects vi
 
 To initialise these please run `git submodule init && git submodule update` in the root directory.
 
-If these are not initialised, document generation and API linting operations may fail.
+If these are not initialised, the module will fail to build correctly, and other operations may also fail.
 
 More information is available on the [developer site](http://dev.folio.org/doc/setup#update-git-submodules).
 
-## Groovy and Grails
+## Postgres
 
-If sdkman is installed, run `source ./setup-environment.sh` to setup the shell with the appropriate versions of Gradle and Groovy.
+Run the `setup-test-db.sh` script in the root directory to setup Postgres with a database to be used in tests.
+This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
 
 # Building
 
-run `gradle build` from the root directory. 
+run `mvn install` from the root directory.
 
-In order to build an executable Jar (e.g. for Okapi to deploy), run `gradle fatJar`.
+To run the tests against both embedded and external databases, run `./build.sh` from the root directory.
 
 # Running
 
 ## Preparation
 
-In order to activate the inventory module for a tenant, the dependencies described in the [Module Descriptor](ModuleDescriptor.json]) need to be fulfilled.
-
-The simplest way to fulfil these is to use the [inventory storage module](http://https://github.com/folio-org/mod-inventory-storage).
-
 ## Sample Data
 
-Importing/ingesting of sample data is done via Okapi, so modules must be deployed and activated prior to importing.
+Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing.
 
 To load some sample data run `./import-sample-data.sh` from the root directory.
 
@@ -66,7 +56,7 @@ To load some sample data run `./import-sample-data.sh` from the root directory.
 
 Make sure that [Okapi](https://github.com/folio-org/okapi) is running on its default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for instructions).
 
-A script for building and running Okapi is provided. Run `../mod-metadata/start-okapi.sh` from the root of the Okapi source.
+A script for building and running Okapi is provided. Run `../mod-inventory-storage/start-okapi.sh` from the root of the Okapi source.
 
 As this runs Okapi using Postgres storage, some database preparation is required. This can be achieved by running `./create-okapi-database.sh` from the root of this repository.
 
@@ -94,7 +84,8 @@ Therefore, it is suggested that requests to the API are made via tools such as c
 
 It is recommended that the modules are located via Okapi. Access via Okapi requires passing the X-Okapi-Tenant header (see the Okapi guide above for details).
 
-http://localhost:9130/inventory
+http://localhost:9130/instance-storage
+http://localhost:9130/item-storage
 
 # Operating System Support
 

@@ -1,6 +1,0 @@
-{
-  "srvcId" : "inventory",
-  "descriptor" : {
-    "exec" : "java -Dport=%p -jar ../mod-metadata/inventory/build/libs/inventory.jar"
-  }
-}

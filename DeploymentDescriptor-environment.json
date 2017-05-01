@@ -1,7 +1,7 @@
 {
   "srvcId" : "inventory-storage",
   "descriptor" : {
-    "exec" : "java -jar ../mod-metadata/inventory-storage/target/inventory-storage-fat.jar -Dhttp.port=%p",
+    "exec" : "java -jar ../mod-inventory-storage/target/inventory-storage-fat.jar -Dhttp.port=%p",
     "env": [
       { "name" : "db.username", "value" : "demo_inventory_storage_admin" },
       { "name" : "db.password", "value" : "admin" },

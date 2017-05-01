@@ -1,6 +1,0 @@
-{
-  "srvcId" : "inventory-storage",
-  "descriptor" : {
-    "exec" : "java -jar ../mod-metadata/inventory-storage/target/inventory-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
-  }
-}

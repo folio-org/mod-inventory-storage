@@ -1,12 +1,17 @@
 *.class
-
-build/
-.idea/
-.gradle/
-metrics/
 *.log
-**/doc/api/generated/
-node_modules/
-**/docker/tmp
+metrics/
+client/
+#mvn build
 target/
+#vert.x
+.vertx/
 file-uploads/
+#netbeans
+nbproject/
+#eclipse
+.project
+.settings/
+.classpath
+#idea
+.idea/
