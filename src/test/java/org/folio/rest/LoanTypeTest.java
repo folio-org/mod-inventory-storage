@@ -28,8 +28,8 @@ public class LoanTypeTest {
   private static final String       ITEM_URL = "/item-storage/items";
   private static final String       LOAN_TYPE_URL = "/loan-types/";
 
-  private static String postRequest = "{\"name\": \"14 days\"}";
-  private static String putRequest  = "{\"name\": \"reading room\"}";
+  private static String postRequest = "{\"name\": \"Can circulate\"}";
+  private static String putRequest  = "{\"name\": \"Reading room\"}";
 
   @Test
   public void kickoff() {
