@@ -97,6 +97,9 @@ The guide and other [documentation](doc) for this module.
 
 Other [modules](http://dev.folio.org/source-code/#server-side).
 
+See project [MODINVSTOR](https://issues.folio.org/browse/MODINVSTOR)
+at the [FOLIO issue tracker](http://dev.folio.org/community/guide-issues).
+
 Other FOLIO Developer documentation is at [dev.folio.org](http://dev.folio.org/)
 
 # Appendix 1 - Okapi Registration
