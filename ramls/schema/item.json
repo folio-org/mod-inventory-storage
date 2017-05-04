@@ -25,6 +25,12 @@
     "materialTypeId": {
       "type": "string"
     },
+    "permanentLoanTypeId": {
+      "type": "string"
+    },
+    "temporaryLoanTypeId": {
+      "type": "string"
+    },
     "location": {
       "type": "object",
       "properties": {

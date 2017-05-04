@@ -5,10 +5,13 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.net.URL;
 
 public class HttpClient {
+  private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
 
@@ -35,21 +38,18 @@ public class HttpClient {
     request.headers().add("Accept","application/json, text/plain");
     request.headers().add("Content-type","application/json");
 
-    if(tenantId != null) {
+    if (tenantId != null) {
       request.headers().add(TENANT_HEADER, tenantId);
     }
 
-    if(body != null) {
-      String encodedBody = Json.encodePrettily(body);
-
-      System.out.println(String.format("POST %s, Request: %s",
-        url.toString(), encodedBody));
-
-      request.end(encodedBody);
-    }
-    else {
+    if (body == null) {
       request.end();
+      return;
     }
+
+    String encodedBody = Json.encodePrettily(body);
+    log.debug("POST {0}, Request: {1}", url.toString(), encodedBody);
+    request.end(encodedBody);
   }
 
   public void get(URL url,

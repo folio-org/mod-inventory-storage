@@ -7,10 +7,10 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loantype;
 import org.folio.rest.jaxrs.model.Loantypes;
 import org.folio.rest.jaxrs.resource.LoanTypesResource;
+import org.folio.rest.persist.DatabaseExceptionUtils;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -21,11 +21,13 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
@@ -93,7 +95,7 @@ public class LoanTypeAPI implements LoanTypesResource {
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         String message = messages.getMessage(lang, MessageConsts.InternalServerError);
-        if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
+        if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesResponse
@@ -210,6 +212,12 @@ public class LoanTypeAPI implements LoanTypesResource {
     });
   }
 
+  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
+        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+  }
+
   @Validate
   @Override
   public void deleteLoanTypesByLoantypeId(String loantypeId, String lang,
@@ -217,82 +225,40 @@ public class LoanTypeAPI implements LoanTypesResource {
       Context vertxContext) throws Exception {
 
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
-        Item item = new Item();
-        item.setMaterialTypeId(loantypeId);
-        /* FIXME:
-         check
-        item.setPermantentLoanTypeId(loantypeId);
-        OR
-        item.setTemporaryLoanTypeId(loantypeId);
-        */
-
-        /** check if any item is using this loan type **/
-        try {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-              ItemStorageAPI.ITEM_TABLE, item, new String[]{idFieldName}, true, false, 0, 1, replyHandler -> {
-                if (replyHandler.succeeded()) {
-                  @SuppressWarnings("unchecked")
-                  List<Item> loantypeList = (List<Item>) replyHandler.result()[0];
-                  if (loantypeList.size() > 0) {
-                    String message = "Can not delete loan type, "+ loantypeId + ". " +
-                        loantypeList.size()  + " items associated with it";
-                    log.error(message);
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                        .withPlainBadRequest(message)));
+        String tenantId = TenantTool.tenantId(okapiHeaders);
+        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+        postgres.delete(LOAN_TYPE_TABLE, loantypeId,
+            reply -> {
+              try {
+                if (reply.failed()) {
+                  Throwable t = reply.cause();
+                  String msg = DatabaseExceptionUtils.foreignKeyViolation(t);
+                  if (msg == null) {
+                    internalServerErrorDuringDelete(t, lang, asyncResultHandler);
                     return;
                   }
-                  else{
-                    log.info("Attemping delete of unused loan type, "+ loantypeId);
-                  }
-                  try {
-                    PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(LOAN_TYPE_TABLE, loantypeId,
-                        reply -> {
-                          try {
-                            if (reply.succeeded()) {
-                              if (reply.result().getUpdated() == 1) {
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                                    .withNoContent()));
-                              }
-                              else{
-                                log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                                    .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError,1 , reply.result().getUpdated()))));
-                              }
-                            }
-                            else{
-                              log.error(reply.cause().getMessage(), reply.cause());
-                              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                                  .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                            }
-                          } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                          }
-                        });
-                  } catch (Exception e) {
-                    log.error(e.getMessage(), e);
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                  }
+                  log.info(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
+                      .withPlainBadRequest(msg)));
+                  return;
                 }
-                else{
-                  log.error(replyHandler.cause().getMessage(), replyHandler.cause());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                int updated = reply.result().getUpdated();
+                if (updated != 1) {
+                  String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                  log.error(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
+                      .withPlainNotFound(msg)));
+                  return;
                 }
-              });
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-              .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-        }
+                asyncResultHandler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
+                        .withNoContent()));
+              } catch (Exception e) {
+                internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              }
+            });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
       }
     });
   }

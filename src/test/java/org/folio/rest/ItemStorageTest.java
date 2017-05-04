@@ -3,7 +3,11 @@ package org.folio.rest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.*;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;

@@ -19,6 +19,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 
 public class LoanTypeTest {
@@ -28,78 +29,83 @@ public class LoanTypeTest {
   private static final String       ITEM_URL = "/item-storage/items";
   private static final String       LOAN_TYPE_URL = "/loan-types/";
 
-  private static String postRequest = "{\"name\": \"Can circulate\"}";
+  private static String postRequestCirculate = "{\"name\": \"Can circulate\"}";
+  private static String postRequestCourse    = "{\"name\": \"Course reserve\"}";
   private static String putRequest  = "{\"name\": \"Reading room\"}";
 
   @Test
-  public void kickoff() {
-    try {
-      /** add a loan type */
-      JsonResponse createURLResponse =
-          send(LOAN_TYPE_URL, HttpMethod.POST, postRequest, 201, HTTP_CREATED);
-      //fix to read from location header
-      String loanTypeID = createURLResponse.getJson().getString("id");
+  public void kickoff() throws Exception {
+    /** add a loan type */
+    JsonObject response =
+        send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCirculate, 201, HTTP_CREATED);
+    //fix to read from location header
+    String loanTypeID = response.getString("id");
 
-      /** add a duplicate loan type name */
-      send(LOAN_TYPE_URL, HttpMethod.POST, postRequest, 422, 422);
+    /** get loan type by id will return 200 */
+    response = send(LOAN_TYPE_URL + loanTypeID, HttpMethod.GET, null, 200, HTTP_OK);
+    assertThat(response.getString("name"), is("Can circulate"));
 
-      /** add a duplicate loan type id */
-      send(LOAN_TYPE_URL, HttpMethod.POST, createLoanType("over night", loanTypeID), 422, 422);
+    /** add a duplicate loan type name */
+    send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCirculate, 422, 422);
 
-      /** update the loan type */
-      send(LOAN_TYPE_URL+loanTypeID, HttpMethod.PUT, putRequest, 204, HTTP_NO_CONTENT);
+    /** add a duplicate loan type id */
+    send(LOAN_TYPE_URL, HttpMethod.POST, createLoanType("over night", loanTypeID), 422, 422);
 
-      /** get loan type by id will return 200 */
-      send(LOAN_TYPE_URL + loanTypeID, HttpMethod.GET, null, 200, HTTP_OK);
+    /** update the loan type */
+    send(LOAN_TYPE_URL+loanTypeID, HttpMethod.PUT, putRequest, 204, HTTP_NO_CONTENT);
 
-      /** get bad loan id will return 404 */
-      String badId = "12345678-1234-1234-1234-1234567890ab";
-      send(LOAN_TYPE_URL + badId, HttpMethod.GET, null, 404, HTTP_NOT_FOUND);
+    /** get loan type by id */
+    response = send(LOAN_TYPE_URL + loanTypeID, HttpMethod.GET, null, 200, HTTP_OK);
+    assertThat(response.getString("name"), is("Reading room"));
 
-      /** add an item */
-      JsonResponse addItemURLResponse =
-          send(ITEM_URL, HttpMethod.POST, createItem(loanTypeID), 201, HTTP_CREATED);
-      String itemID = addItemURLResponse.getJson().getString("id");
+    /** get bad loan id will return 404 */
+    String badId = "12345678-1234-1234-1234-1234567890ab";
+    send(LOAN_TYPE_URL + badId, HttpMethod.GET, null, 404, HTTP_NOT_FOUND);
 
-      /** add an item with id */
-      JsonResponse addItemWithIdURLResponse =
-          send(ITEM_URL, HttpMethod.POST, createItem(loanTypeID), 201, HTTP_CREATED);
-      String itemID2 = addItemWithIdURLResponse.getJson().getString("id");
+    /** add a course reserve loan type */
+    response = send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCourse, 201, HTTP_CREATED);
+    //fix to read from location header
+    String courseLoanTypeID = response.getString("id");
 
-      /** get all loan types */
-      JsonResponse getAllURLResponse =
-          send(LOAN_TYPE_URL, HttpMethod.GET, null, 200, HTTP_OK);
-      assertThat(getAllURLResponse.getJson().getInteger("totalRecords"), is(1));
+    /** add an item with permanent loan type */
+    response = send(ITEM_URL, HttpMethod.POST, createItem(loanTypeID, null), 201, HTTP_CREATED);
+    String itemID = response.getString("id");
 
-      /** delete loan type - should fail as there is an item associated with the loan type */
-      // FIXME: will be implemented by METADATA-59
-      // send(LOAN_TYPE_URL+loanTypeID, HttpMethod.DELETE, null, 204, HTTP_BAD_REQUEST);
+    /** add an item with permanent and temporary loan type */
+    response = send(ITEM_URL, HttpMethod.POST, createItem(loanTypeID, courseLoanTypeID), 201, HTTP_CREATED);
+    String itemID2 = response.getString("id");
 
-      /** delete item belonging to an loan type */
-      send(ITEM_URL+"/"+itemID, HttpMethod.DELETE, null, 204, HTTP_NO_CONTENT);
+    /** get all loan types */
+    response = send(LOAN_TYPE_URL, HttpMethod.GET, null, 200, HTTP_OK);
+    assertThat(response.getInteger("totalRecords"), is(2));
 
-      /** delete an loan type - should fail as there is still an item associated with it */
-      // FIXME: will be implemented by METADATA-59
-      // send(LOAN_TYPE_URL+loanTypeID, HttpMethod.DELETE, null, 204, HTTP_BAD_REQUEST);
+    /** delete loan type in use - should fail as there is an item associated with the loan type */
+    send(LOAN_TYPE_URL+      loanTypeID, HttpMethod.DELETE, null, 204, HTTP_BAD_REQUEST);
+    send(LOAN_TYPE_URL+courseLoanTypeID, HttpMethod.DELETE, null, 204, HTTP_BAD_REQUEST);
 
-      /** delete item belonging to an loan type */
-      send(ITEM_URL+"/"+itemID2, HttpMethod.DELETE, null, 204, HTTP_NO_CONTENT);
+    /** delete item with the course reserve loan type */
+    send(ITEM_URL+"/"+itemID2, HttpMethod.DELETE, null, 204, HTTP_NO_CONTENT);
 
-      /** delete an loan type with no items attached */
-      send(LOAN_TYPE_URL+loanTypeID, HttpMethod.DELETE, null, 204, HTTP_NO_CONTENT);
+    /** delete the course reserve loan type, no items use it, should succeed */
+    send(LOAN_TYPE_URL+courseLoanTypeID, HttpMethod.DELETE, null, 204, HTTP_NO_CONTENT);
 
-      /** delete non existant loan type */
-      send(LOAN_TYPE_URL+loanTypeID, HttpMethod.DELETE, null, 404, HTTP_NOT_FOUND);
+    /** delete the first loan type that is still in use, should fail */
+    send(LOAN_TYPE_URL+      loanTypeID, HttpMethod.DELETE, null, 204, HTTP_BAD_REQUEST);
 
-      /** update non existant loan type */
-      send(LOAN_TYPE_URL+loanTypeID, HttpMethod.PUT, putRequest, 404, HTTP_NOT_FOUND);
+    /** delete item with the first loan type */
+    send(ITEM_URL+"/"+itemID, HttpMethod.DELETE, null, 204, HTTP_NO_CONTENT);
 
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    /** delete the first loan type with no items attached */
+    send(LOAN_TYPE_URL+loanTypeID, HttpMethod.DELETE, null, 204, HTTP_NO_CONTENT);
+
+    /** delete non existant loan type */
+    send(LOAN_TYPE_URL+loanTypeID, HttpMethod.DELETE, null, 404, HTTP_NOT_FOUND);
+
+    /** update non existant loan type */
+    send(LOAN_TYPE_URL+loanTypeID, HttpMethod.PUT, putRequest, 404, HTTP_NOT_FOUND);
   }
 
-  private JsonResponse send(String urlPath, HttpMethod method, String content,
+  private JsonObject send(String urlPath, HttpMethod method, String content,
       int errorCode, int expectedStatusCode) throws Exception {
     String url = StorageTestSuite.storageUrl(urlPath).toString();
     CompletableFuture<JsonResponse> future = new CompletableFuture<>();
@@ -108,7 +114,13 @@ public class LoanTypeTest {
     JsonResponse response = future.get(5, TimeUnit.SECONDS);
     assertThat(url + " - " + method + " - " + content,
         response.getStatusCode(), is(expectedStatusCode));
-    return response;
+    try {
+      return response.getJson();
+    }
+    catch (DecodeException e) {
+      // No body at all or not in JSON format.
+      return null;
+    }
   }
 
   private void send(String url, HttpMethod method, String content,
@@ -144,14 +156,20 @@ public class LoanTypeTest {
     request.end(buffer);
   }
 
-  /** Create a JSON String of an item with the given loan type id */
-  private static String createItem(String loanTypeId) {
+  /** Create a JSON String of an item; set permanentLoanTypeId and temporaryLoanTypeId
+   * if the passed variable is not null */
+  private static String createItem(String permanentLoanTypeId, String temporaryLoanTypeId) {
     JsonObject item = new JsonObject();
 
     item.put("instanceId", ""+UUID.randomUUID());
     item.put("title", "abcd");
     item.put("barcode", "12345");
-    item.put("loanTypeId", loanTypeId);
+    if (permanentLoanTypeId != null) {
+      item.put("permanentLoanTypeId", permanentLoanTypeId);
+    }
+    if (temporaryLoanTypeId != null) {
+      item.put("temporaryLoanTypeId", temporaryLoanTypeId);
+    }
 
     return item.encode();
   }

@@ -4,6 +4,8 @@
   "title": "",
   "barcode": "",
   "materialTypeId": "",
+  "permanentLoanTypeId": "",
+  "temporaryLoanTypeId": "",
   "status": {
     "name": "Available"
   },
