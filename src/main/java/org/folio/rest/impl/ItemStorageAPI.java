@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
+import org.folio.rest.persist.DatabaseExceptionUtils;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -241,16 +242,13 @@ public class ItemStorageAPI implements ItemStorageResource {
                                 .withJsonCreated(reply.result(), stream)));
                         }
                         else {
-                          String message = reply.cause().getMessage();
-
-                          if(message.contains("invalid input syntax for uuid")) {
+                          String message = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                          if (message != null) {
                             asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                ItemStorageResource.PostItemStorageItemsResponse
-                                  .withPlainBadRequest(
-                                    "ID and instance ID must both be a UUID")));
-                          }
-                          else {
+                                Future.succeededFuture(
+                                  ItemStorageResource.PostItemStorageItemsResponse
+                                    .withPlainBadRequest(message)));
+                          } else {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 ItemStorageResource.PostItemStorageItemsResponse
@@ -470,11 +468,19 @@ public class ItemStorageAPI implements ItemStorageResource {
                                         PutItemStorageItemsByItemIdResponse
                                           .withNoContent()));
                                   } else {
-                                    asyncResultHandler.handle(
-                                      Future.succeededFuture(
-                                        PutItemStorageItemsByItemIdResponse
-                                          .withPlainInternalServerError(
-                                            update.cause().getMessage())));
+                                    String message = DatabaseExceptionUtils.badRequestMessage(update.cause());
+                                    if (message != null) {
+                                      asyncResultHandler.handle(
+                                          Future.succeededFuture(
+                                            PutItemStorageItemsByItemIdResponse
+                                              .withPlainBadRequest(message)));
+                                    } else {
+                                      asyncResultHandler.handle(
+                                        Future.succeededFuture(
+                                          PutItemStorageItemsByItemIdResponse
+                                            .withPlainInternalServerError(
+                                              update.cause().getMessage())));
+                                    }
                                   }
                                 } catch (Exception e) {
                                   asyncResultHandler.handle(
@@ -547,6 +553,7 @@ public class ItemStorageAPI implements ItemStorageResource {
           .withPlainInternalServerError(e.getMessage())));
     }
   }
+
   @Validate
   @Override
   public void deleteItemStorageItemsByItemId(

@@ -104,6 +104,12 @@ public class LoanTypeAPI implements LoanTypesResource {
     });
   }
 
+  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(PostLoanTypesResponse
+        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+  }
+
   @Validate
   @Override
   public void postLoanTypes(String lang, Loantype entity, Map<String, String> okapiHeaders,
@@ -111,12 +117,10 @@ public class LoanTypeAPI implements LoanTypesResource {
 
     vertxContext.runOnContext(v -> {
       try {
-        String id = UUID.randomUUID().toString();
-        if (entity.getId() == null) {
+        String id = entity.getId();
+        if (id == null) {
+          id = UUID.randomUUID().toString();
           entity.setId(id);
-        }
-        else{
-          id = entity.getId();
         }
 
         String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -131,32 +135,30 @@ public class LoanTypeAPI implements LoanTypesResource {
                   stream.setData(entity);
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostLoanTypesResponse.withJsonCreated(
                       LOCATION_PREFIX + ret, stream)));
-                }
-                else{
-                  log.error(reply.cause().getMessage(), reply.cause());
-                  if (isDuplicate(reply.cause().getMessage())) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostLoanTypesResponse
-                        .withJsonUnprocessableEntity(
-                            org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
-                                "name", entity.getName(), "Loan Type exists"))));
+                } else {
+                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  if (msg == null) {
+                    internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                    return;
                   }
-                  else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostLoanTypesResponse
-                        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                  }
+                  log.info(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(PostLoanTypesResponse
+                      .withPlainBadRequest(msg)));
                 }
               } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostLoanTypesResponse
-                    .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                internalServerErrorDuringPost(e, lang, asyncResultHandler);
               }
             });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostLoanTypesResponse
-            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        internalServerErrorDuringPost(e, lang, asyncResultHandler);
       }
     });
+  }
+
+  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
+        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
@@ -175,39 +177,33 @@ public class LoanTypeAPI implements LoanTypesResource {
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(LOAN_TYPE_TABLE, Loantype.class, c, true,
             reply -> {
               try {
-                if (reply.succeeded()) {
-                  @SuppressWarnings("unchecked")
-                  List<Loantype> userGroup = (List<Loantype>) reply.result()[0];
-                  if (userGroup.isEmpty()) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                        .withPlainNotFound(loantypeId)));
+                if (reply.failed()) {
+                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  if (msg == null) {
+                    internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
+                    return;
                   }
-                  else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                        .withJsonOK(userGroup.get(0))));
-                  }
+                  log.info(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(GetLoanTypesByLoantypeIdResponse.
+                      withPlainNotFound(msg)));
+                  return;
+                }
+                @SuppressWarnings("unchecked")
+                List<Loantype> userGroup = (List<Loantype>) reply.result()[0];
+                if (userGroup.isEmpty()) {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
+                      .withPlainNotFound(loantypeId)));
                 }
                 else{
-                  log.error(reply.cause().getMessage(), reply.cause());
-                  if (isInvalidUUID(reply.cause().getMessage())) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                        .withPlainNotFound(loantypeId)));
-                  }
-                  else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                  }
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
+                      .withJsonOK(userGroup.get(0))));
                 }
               } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                    .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                internalServerErrorDuringGetById(e, lang, asyncResultHandler);
               }
             });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        internalServerErrorDuringGetById(e, lang, asyncResultHandler);
       }
     });
   }
@@ -232,10 +228,9 @@ public class LoanTypeAPI implements LoanTypesResource {
             reply -> {
               try {
                 if (reply.failed()) {
-                  Throwable t = reply.cause();
-                  String msg = DatabaseExceptionUtils.foreignKeyViolation(t);
+                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
                   if (msg == null) {
-                    internalServerErrorDuringDelete(t, lang, asyncResultHandler);
+                    internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
                     return;
                   }
                   log.info(msg);
@@ -263,6 +258,12 @@ public class LoanTypeAPI implements LoanTypesResource {
     });
   }
 
+  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
+        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+  }
+
   @Validate
   @Override
   public void putLoanTypesByLoantypeId(String loantypeId, String lang, Loantype entity,
@@ -283,45 +284,26 @@ public class LoanTypeAPI implements LoanTypesResource {
                   if (reply.result().getUpdated() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
                         .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
-                  }
-                  else{
+                  } else{
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
                         .withNoContent()));
                   }
-                }
-                else{
-                  log.error(reply.cause().getMessage());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-                      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                } else {
+                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  if (msg == null) {
+                    internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                    return;
+                  }
+                  log.info(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
+                      .withPlainBadRequest(msg)));
                 }
               } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-                    .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                internalServerErrorDuringPut(e, lang, asyncResultHandler);
               }
             });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-      }
+        internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
     });
   }
-
-  private boolean isDuplicate(String errorMessage) {
-    if (errorMessage != null && errorMessage.contains("duplicate key value violates unique constraint")) {
-      return true;
-    }
-    return false;
-  }
-
-  private boolean isInvalidUUID(String errorMessage) {
-    if (errorMessage != null && errorMessage.contains("invalid input syntax for uuid")) {
-      return true;
-    }
-    else{
-      return false;
-    }
-  }
-
 }

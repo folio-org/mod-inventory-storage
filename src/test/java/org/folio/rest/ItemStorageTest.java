@@ -177,7 +177,7 @@ public class ItemStorageTest {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(postResponse.getBody(), is("ID and instance ID must both be a UUID"));
+    assertThat(postResponse.getBody(), is("invalid input syntax for uuid: \"1234\""));
   }
 
   @Test

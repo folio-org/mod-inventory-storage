@@ -14,21 +14,21 @@ import com.github.mauricio.async.db.postgresql.messages.backend.ErrorMessage;
 public class DatabaseExceptionUtilsTest {
   @Test
   public void nullThrowable() {
-    assertThat(DatabaseExceptionUtils.foreignKeyViolation(null), is(nullValue()));
+    assertThat(DatabaseExceptionUtils.badRequestMessage(null), is(nullValue()));
   }
 
   @Test
   public void throwable() {
-    assertThat(DatabaseExceptionUtils.foreignKeyViolation(new Throwable()), is(nullValue()));
+    assertThat(DatabaseExceptionUtils.badRequestMessage(new Throwable()), is(nullValue()));
   }
 
   @Test
   public void databaseException() {
-    assertThat(DatabaseExceptionUtils.foreignKeyViolation(new DatabaseException("")), is(nullValue()));
+    assertThat(DatabaseExceptionUtils.badRequestMessage(new DatabaseException("")), is(nullValue()));
   }
 
   private void assertIsNull(ErrorMessage errorMessage) {
-    assertThat(DatabaseExceptionUtils.foreignKeyViolation(new GenericDatabaseException(errorMessage)), is(nullValue()));
+    assertThat(DatabaseExceptionUtils.badRequestMessage(new GenericDatabaseException(errorMessage)), is(nullValue()));
   }
 
   @Test
