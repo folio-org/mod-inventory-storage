@@ -3,7 +3,11 @@ package org.folio.rest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.*;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -173,7 +177,7 @@ public class ItemStorageTest {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(postResponse.getBody(), is("ID and instance ID must both be a UUID"));
+    assertThat(postResponse.getBody(), is("invalid input syntax for uuid: \"1234\""));
   }
 
   @Test

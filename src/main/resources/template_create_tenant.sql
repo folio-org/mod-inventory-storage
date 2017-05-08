@@ -4,20 +4,6 @@ GRANT myuniversity_mymodule TO CURRENT_USER;
 
 CREATE SCHEMA myuniversity_mymodule AUTHORIZATION myuniversity_mymodule;
 
-CREATE TABLE myuniversity_mymodule.item (
-  _id UUID PRIMARY KEY,
-  jsonb JSONB NOT NULL
-);
-
-GRANT ALL ON myuniversity_mymodule.item TO myuniversity_mymodule;
-
-CREATE TABLE myuniversity_mymodule.instance (
-  _id UUID PRIMARY KEY,
-  jsonb JSONB NOT NULL
-);
-
-GRANT ALL ON myuniversity_mymodule.instance TO myuniversity_mymodule;
-
 -- *** loan type start *** --
 -- loan type table
 CREATE TABLE IF NOT EXISTS myuniversity_mymodule.loan_type (
@@ -65,3 +51,28 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_date_mtype BEFORE UPDATE ON myuniversity_mymodule.material_type FOR EACH ROW EXECUTE PROCEDURE  update_modified_column_mtype();
 GRANT ALL ON myuniversity_mymodule.material_type TO myuniversity_mymodule;
 -- *** material type end *** --
+
+CREATE TABLE myuniversity_mymodule.item (
+  _id UUID PRIMARY KEY,
+  jsonb JSONB NOT NULL,
+  permanentLoanTypeId UUID REFERENCES myuniversity_mymodule.loan_type,
+  temporaryLoanTypeId UUID REFERENCES myuniversity_mymodule.loan_type
+);
+CREATE OR REPLACE FUNCTION update_item_references()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.permanentLoanTypeId = NEW.jsonb->>'permanentLoanTypeId';
+  NEW.temporaryLoanTypeId = NEW.jsonb->>'temporaryLoanTypeId';
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_item_references
+  BEFORE INSERT OR UPDATE ON myuniversity_mymodule.item
+  FOR EACH ROW EXECUTE PROCEDURE update_item_references();
+GRANT ALL ON myuniversity_mymodule.item TO myuniversity_mymodule;
+
+CREATE TABLE myuniversity_mymodule.instance (
+  _id UUID PRIMARY KEY,
+  jsonb JSONB NOT NULL
+);
+GRANT ALL ON myuniversity_mymodule.instance TO myuniversity_mymodule;
