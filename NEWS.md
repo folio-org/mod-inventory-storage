@@ -1,0 +1,19 @@
+## 4.2.0 2017-05-08
+
+* Provide permanent and temporary loan type associations for items
+
+## 4.1.0 2017-05-01
+
+* Provide loan type controlled vocabulary (see METADATA-59)
+
+## 4.0.0 2017-04-25
+
+* Use UUID to reference material types in inventory storage module
+
+## 3.0.0 2017-04-04
+
+* Required permissions for requests
+
+## 2.0.0 2017-04-03
+
+* Material type controlled vocabulary
