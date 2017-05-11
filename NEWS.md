@@ -1,3 +1,8 @@
+## 5.0.0 Unreleased
+
+* Upgrade to RAML Module Builder 11.0.0
+* Upgrade to CQL2PJSON 
+
 ## 4.2.0 2017-05-08
 
 * Provide permanent and temporary loan type associations for items
