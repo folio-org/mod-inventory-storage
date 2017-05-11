@@ -1,7 +1,7 @@
 ## 5.0.0 Unreleased
 
 * Upgrade to RAML Module Builder 11.0.0
-* Upgrade to CQL2PJSON 
+* Upgrade to cql2pgjson 1.1.0 
 
 ## 4.2.0 2017-05-08
 
