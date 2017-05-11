@@ -1,4 +1,4 @@
-package org.folio.rest;
+package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.*;
 import static org.hamcrest.CoreMatchers.is;

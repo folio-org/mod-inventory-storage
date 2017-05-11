@@ -1,4 +1,4 @@
-package org.folio.rest;
+package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
