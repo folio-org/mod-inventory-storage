@@ -1,4 +1,4 @@
-package org.folio.rest;
+package org.folio.rest.api;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
