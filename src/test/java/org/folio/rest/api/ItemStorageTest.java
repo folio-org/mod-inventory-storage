@@ -3,11 +3,7 @@ package org.folio.rest.api;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.*;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -19,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
@@ -269,6 +266,74 @@ public class ItemStorageTest {
       is(materialTypeID));
     assertThat(item.getJsonObject("location").getString("name"),
       is("Main Library"));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInItem()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    JsonObject requestWithAdditionalProperty = nod();
+
+    requestWithAdditionalProperty.put("somethingAdditional", "foo");
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
+
+    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInItemStatus()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    JsonObject requestWithAdditionalProperty = nod();
+
+    requestWithAdditionalProperty
+      .put("status", new JsonObject().put("somethingAdditional", "foo"));
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
+
+    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInItemLocation()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    JsonObject requestWithAdditionalProperty = nod();
+
+    requestWithAdditionalProperty
+      .put("location", new JsonObject().put("somethingAdditional", "foo"));
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
+
+    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
   }
 
   @Test

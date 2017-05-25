@@ -1,21 +1,5 @@
 package org.folio.rest.api;
 
-import static java.net.HttpURLConnection.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.net.MalformedURLException;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.junit.Assert;
-import org.junit.Test;
-
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
@@ -24,6 +8,21 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.ResponseHandler;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.net.MalformedURLException;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static java.net.HttpURLConnection.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 public class LoanTypeTest {
 
@@ -150,9 +149,6 @@ public class LoanTypeTest {
     JsonObject response =
         send(ITEM_URL, HttpMethod.POST, createItem(newLoanType(), newLoanType()), HTTP_CREATED);
     String itemId = response.getString("id");
-
-    String putRequest = response.copy().put("fooBar", "any value").toString();
-    send(ITEM_URL+itemId, HttpMethod.PUT, putRequest, HTTP_NO_CONTENT);
 
     String nonExistentLoanId = UUID.randomUUID().toString();
 

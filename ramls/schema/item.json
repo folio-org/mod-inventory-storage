@@ -20,7 +20,8 @@
         "name": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "materialTypeId": {
       "type": "string"
@@ -37,9 +38,11 @@
         "name": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
+  "additionalProperties": false,
   "required": [
     "instanceId",
     "barcode"
