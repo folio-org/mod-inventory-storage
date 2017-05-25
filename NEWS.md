@@ -1,6 +1,7 @@
 ## 5.0.0 Unreleased
 
 * Disallow additional properties in item requests
+* Disallow additional properties in instance requests
 * Upgrade to RAML Module Builder 11.0.0
 * Upgrade to cql2pgjson 1.1.0
 
