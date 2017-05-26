@@ -11,6 +11,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.net.MalformedURLException;
@@ -22,12 +23,12 @@ import java.util.concurrent.TimeoutException;
 
 import static java.net.HttpURLConnection.*;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class LoanTypeTest {
 
   private static final String       SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-  private static final int          HTTP_INVALID_CONTENT = 422;
 
   private static final String       ITEM_URL = "/item-storage/items/";
   private static final String       LOAN_TYPE_URL = "/loan-types/";
@@ -36,124 +37,151 @@ public class LoanTypeTest {
   private static String postRequestCourse    = "{\"name\": \"Course reserve\"}";
   private static String putRequest  = "{\"name\": \"Reading room\"}";
 
-  @Test
-  public void kickoff() {
-    /** add a loan type */
-    JsonObject response =
-        send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCirculate, HTTP_CREATED);
-    //fix to read from location header
-    String loanTypeID = response.getString("id");
+  @Before
+  public void beforeEach()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
 
-    /** get loan type by id will return 200 */
-    response = send(LOAN_TYPE_URL + loanTypeID, HttpMethod.GET, null, HTTP_OK);
+    StorageTestSuite.deleteAll(StorageTestSuite.storageUrl(ITEM_URL));
+    StorageTestSuite.deleteAll(StorageTestSuite.storageUrl(LOAN_TYPE_URL));
+  }
+
+  @Test
+  public void canCreateALoanType() {
+    JsonObject response = send(LOAN_TYPE_URL, HttpMethod.POST,
+      postRequestCirculate, HTTP_CREATED);
+
+    assertThat(response.getString("id"), notNullValue());
     assertThat(response.getString("name"), is("Can circulate"));
+  }
 
-    /** add a duplicate loan type name */
+  @Test
+  public void cannotCreateALoanTypeWithSameName() {
+    send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCirculate, HTTP_CREATED);
+
     send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCirculate, HTTP_BAD_REQUEST);
+  }
 
-    /** add a duplicate loan type id */
-    send(LOAN_TYPE_URL, HttpMethod.POST, createLoanType("over night", loanTypeID), HTTP_BAD_REQUEST);
+  @Test
+  public void cannotCreateALoanTypeWithSameId() {
+    JsonObject createResponse = send(LOAN_TYPE_URL, HttpMethod.POST,
+      postRequestCirculate, HTTP_CREATED);
 
-    /** update the loan type */
-    send(LOAN_TYPE_URL+loanTypeID, HttpMethod.PUT, putRequest, HTTP_NO_CONTENT);
+    String loanTypeID = createResponse.getString("id");
 
-    /** get loan type by id */
-    response = send(LOAN_TYPE_URL + loanTypeID, HttpMethod.GET, null, HTTP_OK);
-    assertThat(response.getString("name"), is("Reading room"));
+    send(LOAN_TYPE_URL, HttpMethod.POST,
+      createLoanType("over night", loanTypeID), HTTP_BAD_REQUEST);
+  }
 
-    /** get non existing loan id will return 404 */
-    String nonexistentLoanId = "12345678-1234-1234-1234-1234567890ab";
-    send(LOAN_TYPE_URL + nonexistentLoanId, HttpMethod.GET, null, HTTP_NOT_FOUND);
+  @Test
+  public void canGetALoanTypeById() {
+    JsonObject createResponse = send(LOAN_TYPE_URL, HttpMethod.POST,
+      postRequestCirculate, HTTP_CREATED);
 
-    /** add a course reserve loan type */
-    response = send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCourse, HTTP_CREATED);
     //fix to read from location header
-    String courseLoanTypeID = response.getString("id");
+    String loanTypeID = createResponse.getString("id");
 
-    /** add an item with permanent loan type */
-    response = send(ITEM_URL, HttpMethod.POST, createItem(loanTypeID, null), HTTP_CREATED);
-    String itemID = response.getString("id");
+    JsonObject getResponse = send(LOAN_TYPE_URL + loanTypeID, HttpMethod.GET,
+      null, HTTP_OK);
 
-    /** add an item with permanent and temporary loan type */
-    response = send(ITEM_URL, HttpMethod.POST, createItem(loanTypeID, courseLoanTypeID), HTTP_CREATED);
-    String itemID2 = response.getString("id");
+    assertThat(getResponse.getString("id"), is(loanTypeID));
+    assertThat(getResponse.getString("name"), is("Can circulate"));
+  }
 
-    /** get all loan types */
-    response = send(LOAN_TYPE_URL, HttpMethod.GET, null, HTTP_OK);
+  @Test
+  public void cannotGetALoanTypeThatDoesNotExist() {
+    send(LOAN_TYPE_URL + UUID.randomUUID(), HttpMethod.GET, null, HTTP_NOT_FOUND);
+  }
+
+  @Test
+  public void canGetAllLoanTypes() {
+    send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCirculate, HTTP_CREATED);
+    send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCourse, HTTP_CREATED);
+
+    JsonObject response = send(LOAN_TYPE_URL, HttpMethod.GET, null, HTTP_OK);
+
     assertThat(response.getInteger("totalRecords"), is(2));
-
-    /** delete loan type in use - should fail as there is an item associated with the loan type */
-    send(LOAN_TYPE_URL+      loanTypeID, HttpMethod.DELETE, null, HTTP_BAD_REQUEST);
-    send(LOAN_TYPE_URL+courseLoanTypeID, HttpMethod.DELETE, null, HTTP_BAD_REQUEST);
-
-    /** delete item with the course reserve loan type */
-    send(ITEM_URL+itemID2, HttpMethod.DELETE, null, HTTP_NO_CONTENT);
-
-    /** delete the course reserve loan type, no items use it, should succeed */
-    send(LOAN_TYPE_URL+courseLoanTypeID, HttpMethod.DELETE, null, HTTP_NO_CONTENT);
-
-    /** delete the first loan type that is still in use, should fail */
-    send(LOAN_TYPE_URL+      loanTypeID, HttpMethod.DELETE, null, HTTP_BAD_REQUEST);
-
-    /** delete item with the first loan type */
-    send(ITEM_URL+itemID, HttpMethod.DELETE, null, HTTP_NO_CONTENT);
-
-    /** delete the first loan type with no items attached */
-    send(LOAN_TYPE_URL+loanTypeID, HttpMethod.DELETE, null, HTTP_NO_CONTENT);
-
-    /** update non existent loan type */
-    send(LOAN_TYPE_URL+loanTypeID, HttpMethod.PUT, putRequest, HTTP_NOT_FOUND);
   }
 
   @Test
-  public void deleteNonexistentLoanType() {
-    send(LOAN_TYPE_URL+UUID.randomUUID().toString(), HttpMethod.DELETE, null, HTTP_NOT_FOUND);
+  public void canDeleteAnUnusedLoanType() {
+    JsonObject createResponse = send(LOAN_TYPE_URL, HttpMethod.POST,
+      postRequestCirculate, HTTP_CREATED);
+
+    //fix to read from location header
+    String loanTypeID = createResponse.getString("id");
+
+    send(LOAN_TYPE_URL + loanTypeID, HttpMethod.DELETE, null, HTTP_NO_CONTENT);
   }
 
   @Test
-  public void updateNonexistentLoanType() {
+  public void cannotDeleteALoanTypePermanentlyAssociatedToAnItem() {
+    JsonObject createResponse = send(LOAN_TYPE_URL, HttpMethod.POST,
+      postRequestCirculate, HTTP_CREATED);
+
+    String loanTypeID = createResponse.getString("id");
+
+    send(ITEM_URL, HttpMethod.POST, createItem(loanTypeID, null), HTTP_CREATED);
+
+    send(LOAN_TYPE_URL + loanTypeID, HttpMethod.DELETE, null, HTTP_BAD_REQUEST);
+  }
+
+  @Test
+  public void cannotDeleteALoanTypeTemporarilyAssociatedToAnItem() {
+    JsonObject circulateCreateResponse = send(LOAN_TYPE_URL, HttpMethod.POST,
+      postRequestCirculate, HTTP_CREATED);
+
+    String circulateLoanTypeId = circulateCreateResponse.getString("id");
+
+    JsonObject reserveCreateResponse = send(LOAN_TYPE_URL, HttpMethod.POST,
+      postRequestCourse, HTTP_CREATED);
+
+    String reserveLoanTypeId = reserveCreateResponse.getString("id");
+
+    send(ITEM_URL, HttpMethod.POST,
+      createItem(circulateLoanTypeId, reserveLoanTypeId), HTTP_CREATED);
+
+    send(LOAN_TYPE_URL + reserveLoanTypeId, HttpMethod.DELETE, null,
+      HTTP_BAD_REQUEST);
+  }
+
+  @Test
+  public void cannotDeleteLoanTypeThatDoesNotExist() {
+    send(LOAN_TYPE_URL + UUID.randomUUID(), HttpMethod.DELETE, null, HTTP_NOT_FOUND);
+  }
+
+  @Test
+  public void canUpdateALoanType() {
+    JsonObject createResponse = send(LOAN_TYPE_URL, HttpMethod.POST,
+      postRequestCirculate, HTTP_CREATED);
+
+    //fix to read from location header
+    String loanTypeID = createResponse.getString("id");
+
+    send(LOAN_TYPE_URL+loanTypeID, HttpMethod.PUT, putRequest, HTTP_NO_CONTENT);
+  }
+
+  @Test
+  public void cannotUpdateLoanTypeThatDoesNotExist() {
     String id = UUID.randomUUID().toString();
-    String content = "{\"name\": \"My name is " + id + "\", \"id\": \"" + id + "\"}";
-    send(LOAN_TYPE_URL+id, HttpMethod.PUT, content, HTTP_NOT_FOUND);
+
+    send(LOAN_TYPE_URL+id, HttpMethod.PUT, putRequest, HTTP_NOT_FOUND);
   }
 
   @Test
-  public void createItemWithNonexistingPermanentLoanTypeId() {
+  public void cannotCreateItemWithPermanentLoanTypeThatDoesNotExist() {
     String nonexistentLoanId = UUID.randomUUID().toString();
+
     send(ITEM_URL, HttpMethod.POST, createItem(nonexistentLoanId, null), HTTP_BAD_REQUEST);
   }
 
   @Test
-  public void createItemWithNonexistingTemporaryLoanTypeId() {
+  public void cannotCreateItemWithTemporaryLoanTypeThatDoesNotExist() {
     String nonexistentLoanId = UUID.randomUUID().toString();
+
     send(ITEM_URL, HttpMethod.POST, createItem(null, nonexistentLoanId), HTTP_BAD_REQUEST);
-  }
-
-  /**
-   * Create a new loan type with random name.
-   * @return the new loan type's id
-   */
-  private String newLoanType() {
-    String randomName = "My name is " + UUID.randomUUID().toString();
-    String content = "{\"name\": \"" + randomName + "\"}";
-    JsonObject response = send(LOAN_TYPE_URL, HttpMethod.POST, content, HTTP_CREATED);
-    // FIXME: read from location header
-    return response.getString("id");
-  }
-
-  /**
-   * Changing the field to an non existing UUID must fail.
-   * @param field - the field to change
-   */
-  private void updateItemWithNonexistingId(String field) {
-    JsonObject response =
-        send(ITEM_URL, HttpMethod.POST, createItem(newLoanType(), newLoanType()), HTTP_CREATED);
-    String itemId = response.getString("id");
-
-    String nonExistentLoanId = UUID.randomUUID().toString();
-
-    putRequest = response.copy().put(field, nonExistentLoanId).toString();
-    send(ITEM_URL+itemId, HttpMethod.PUT, putRequest, HTTP_BAD_REQUEST);
   }
 
   @Test
@@ -169,6 +197,7 @@ public class LoanTypeTest {
   private JsonObject send(String urlPath, HttpMethod method, String content,
       int expectedStatusCode) {
     String url;
+
     try {
       if (urlPath.endsWith("/")) {
         urlPath = urlPath.substring(0, urlPath.length()-1);
@@ -177,17 +206,21 @@ public class LoanTypeTest {
     } catch (MalformedURLException e) {
       throw new IllegalArgumentException(e);
     }
+
     CompletableFuture<JsonResponse> future = new CompletableFuture<>();
     Handler<HttpClientResponse> handler = ResponseHandler.json(future);
     send(url, method, content, handler);
     JsonResponse response;
+
     try {
       response = future.get(5, TimeUnit.SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new IllegalStateException(e);
     }
-    assertThat(url + " - " + method + " - " + content,
+
+    assertThat(url + " - " + method + " - " + content + ":" + response.getBody(),
         response.getStatusCode(), is(expectedStatusCode));
+
     try {
       return response.getJson();
     }
@@ -260,4 +293,31 @@ public class LoanTypeTest {
     return item.encode();
   }
 
+  /**
+   * Changing the field to an non existing UUID must fail.
+   * @param field - the field to change
+   */
+  private void updateItemWithNonexistingId(String field) {
+    JsonObject response =
+      send(ITEM_URL, HttpMethod.POST, createItem(newLoanType(), newLoanType()), HTTP_CREATED);
+    String itemId = response.getString("id");
+
+    String nonExistentLoanId = UUID.randomUUID().toString();
+
+    JsonObject putRequest = response.copy().put(field, nonExistentLoanId);
+
+    send(ITEM_URL+itemId, HttpMethod.PUT, putRequest.toString(), HTTP_BAD_REQUEST);
+  }
+
+  /**
+   * Create a new loan type with random name.
+   * @return the new loan type's id
+   */
+  private String newLoanType() {
+    String randomName = "My name is " + UUID.randomUUID().toString();
+    String content = "{\"name\": \"" + randomName + "\"}";
+    JsonObject response = send(LOAN_TYPE_URL, HttpMethod.POST, content, HTTP_CREATED);
+    // FIXME: read from location header
+    return response.getString("id");
+  }
 }

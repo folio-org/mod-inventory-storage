@@ -1,21 +1,22 @@
 package org.folio.rest.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.Response;
-
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loantype;
 import org.folio.rest.jaxrs.model.Loantypes;
+import org.folio.rest.jaxrs.resource.ItemStorageResource;
 import org.folio.rest.jaxrs.resource.LoanTypesResource;
-import org.folio.rest.persist.DatabaseExceptionUtils;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.DatabaseExceptionUtils;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -25,13 +26,10 @@ import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Implements the loan type persistency using postgres jsonb.
@@ -44,16 +42,6 @@ public class LoanTypeAPI implements LoanTypesResource {
   private static final Logger log                 = LoggerFactory.getLogger(LoanTypeAPI.class);
   private final Messages messages                 = Messages.getInstance();
   private String idFieldName                      = "_id";
-
-
-  public LoanTypeAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
-  }
-
-  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_TYPE_TABLE+".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-  }
 
   @Validate
   @Override
@@ -104,12 +92,6 @@ public class LoanTypeAPI implements LoanTypesResource {
     });
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PostLoanTypesResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   @Validate
   @Override
   public void postLoanTypes(String lang, Loantype entity, Map<String, String> okapiHeaders,
@@ -153,12 +135,6 @@ public class LoanTypeAPI implements LoanTypesResource {
         internalServerErrorDuringPost(e, lang, asyncResultHandler);
       }
     });
-  }
-
-  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
@@ -208,12 +184,6 @@ public class LoanTypeAPI implements LoanTypesResource {
     });
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   @Validate
   @Override
   public void deleteLoanTypesByLoantypeId(String loantypeId, String lang,
@@ -258,12 +228,6 @@ public class LoanTypeAPI implements LoanTypesResource {
     });
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   @Validate
   @Override
   public void putLoanTypesByLoantypeId(String loantypeId, String lang, Loantype entity,
@@ -305,5 +269,69 @@ public class LoanTypeAPI implements LoanTypesResource {
       } catch (Exception e) {
         internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
     });
+  }
+
+  @Override
+  public void deleteLoanTypes(String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+    throws Exception {
+
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+
+    try {
+      vertxContext.runOnContext(v -> {
+        PostgresClient postgresClient = PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+        postgresClient.mutate(String.format("DELETE FROM %s_%s.loan_type",
+          tenantId, "inventory_storage"),
+          reply -> {
+            if (reply.succeeded()) {
+              asyncResultHandler.handle(Future.succeededFuture(
+                ItemStorageResource.DeleteItemStorageItemsResponse.noContent()
+                  .build()));
+            } else {
+              asyncResultHandler.handle(Future.succeededFuture(
+                ItemStorageResource.DeleteItemStorageItemsResponse.
+                  withPlainInternalServerError(reply.cause().getMessage())));
+            }
+          });
+      });
+    }
+    catch(Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        ItemStorageResource.DeleteItemStorageItemsResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
+
+  }
+
+  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
+      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+  }
+
+  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(PostLoanTypesResponse
+      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+  }
+
+  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
+      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+  }
+
+  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
+      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+  }
+
+  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(LOAN_TYPE_TABLE+".jsonb");
+    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 }
