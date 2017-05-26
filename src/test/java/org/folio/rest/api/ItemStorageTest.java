@@ -45,7 +45,6 @@ public class ItemStorageTest {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemStorageUrl());
-
   }
 
   @After
