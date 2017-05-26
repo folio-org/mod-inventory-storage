@@ -58,6 +58,16 @@ public class LoanTypeTest {
   }
 
   @Test
+  public void cannotCreateALoanTypeWithAdditionalProperties() {
+    JsonObject requestWithAdditionalProperties = new JsonObject()
+      .put("name", "Can Circulate")
+      .put("additional", "foo");
+
+    send(LOAN_TYPE_URL, HttpMethod.POST,
+      requestWithAdditionalProperties.toString(), HTTP_BAD_REQUEST);
+  }
+
+  @Test
   public void cannotCreateALoanTypeWithSameName() {
     send(LOAN_TYPE_URL, HttpMethod.POST, postRequestCirculate, HTTP_CREATED);
 
