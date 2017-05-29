@@ -3,12 +3,20 @@ package org.folio.rest.persist;
 import com.github.mauricio.async.db.exceptions.DatabaseException;
 import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
 import com.github.mauricio.async.db.postgresql.messages.backend.ErrorMessage;
-import org.junit.Ignore;
+
+import scala.Predef;
+import scala.Tuple2;
+import scala.collection.JavaConverters;
+
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 //import org.folio.rest.tools.utils.UtilityClassTester;
 
@@ -29,22 +37,20 @@ public class DatabaseExceptionUtilsTest {
   }
 
   @Test
-  @Ignore
-  public void nullErrorMessage() {
-    assertIsNull(null);
-  }
-
-  @Test
-  @Ignore
-  public void nullFields() {
-    assertIsNull(new ErrorMessage(null));
-  }
-
-  @Test
-  @Ignore
   public void noField() {
-    scala.collection.immutable.Map<Object, String> map = new scala.collection.immutable.HashMap<Object, String>();
-    assertIsNull(new ErrorMessage(map));
+    @SuppressWarnings("unchecked")
+    ErrorMessage m = new ErrorMessage(scalaMap(Collections.EMPTY_MAP));
+    assertThat(DatabaseExceptionUtils.badRequestMessage(new GenericDatabaseException(m)), is(nullValue()));
+  }
+
+  @Test
+  public void foreignKeyViolation() {
+    assertString("23503", "some detail", "the message", "the message: some detail");
+  }
+
+  @Test
+  public void invalidTextRepresentation() {
+    assertString("22P02", "detail", "message", "message");
   }
 
   @Test
@@ -52,7 +58,20 @@ public class DatabaseExceptionUtilsTest {
     // UtilityClassTester.assertUtilityClass(DatabaseExceptionUtilsTest.class);
   }
 
-  private void assertIsNull(ErrorMessage errorMessage) {
-    assertThat(DatabaseExceptionUtils.badRequestMessage(new GenericDatabaseException(errorMessage)), is(nullValue()));
+  private void assertString(String sqlstate, String detail, String message, String expected) {
+    Map<Object, String> javaMap = new HashMap<>();
+    javaMap.put('C', sqlstate);
+    javaMap.put('D', detail);
+    javaMap.put('M', message);
+    ErrorMessage errorMessage = new ErrorMessage(scalaMap(javaMap));
+    String actual = DatabaseExceptionUtils.badRequestMessage(new GenericDatabaseException(errorMessage));
+    assertThat(actual, is(expected));
+  }
+
+  /**
+   * @return javaMap as an immutable scala map
+   */
+  private scala.collection.immutable.Map<Object, String> scalaMap(Map<Object, String> javaMap) {
+    return JavaConverters.mapAsScalaMapConverter(javaMap).asScala().toMap(Predef.<Tuple2<Object, String>>conforms());
   }
 }
