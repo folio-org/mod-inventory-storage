@@ -2,14 +2,12 @@ package org.folio.rest.persist;
 
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
 import com.github.mauricio.async.db.postgresql.messages.backend.ErrorMessage;
 
 import scala.collection.JavaConverters;
 
-public class DatabaseExceptionUtils {
+public final class DatabaseExceptionUtils {
   private DatabaseExceptionUtils() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
   }
@@ -30,13 +28,16 @@ public class DatabaseExceptionUtils {
     ErrorMessage errorMessage = ((GenericDatabaseException) throwable).errorMessage();
     Map<Object,String> fields = JavaConverters.mapAsJavaMapConverter(errorMessage.fields()).asJava();
     String sqlstate = fields.get('C');
+    if (sqlstate == null) {
+      return null;
+    }
 
     // https://www.postgresql.org/docs/current/static/errcodes-appendix.html
     final String foreignKeyViolation = "23503";
     final String uniqueViolation = "23505";
     final String invalidTextRepresentation = "22P02";
-    String detail = StringUtils.defaultString(fields.get('D'));
-    String message = StringUtils.defaultString(fields.get('M'));
+    String detail = fields.getOrDefault('D', "");
+    String message = fields.getOrDefault('M', "");
     switch (sqlstate) {
     case foreignKeyViolation:
       // insert or update on table "item" violates foreign key constraint "item_permanentloantypeid_fkey":
