@@ -9,7 +9,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loantype;
 import org.folio.rest.jaxrs.model.Loantypes;
-import org.folio.rest.jaxrs.resource.ItemStorageResource;
 import org.folio.rest.jaxrs.resource.LoanTypesResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -283,16 +282,16 @@ public class LoanTypeAPI implements LoanTypesResource {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("DELETE FROM %s_%s.loan_type",
-          tenantId, "inventory_storage"),
+        postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+          tenantId, "inventory_storage", LOAN_TYPE_TABLE),
           reply -> {
             if (reply.succeeded()) {
               asyncResultHandler.handle(Future.succeededFuture(
-                ItemStorageResource.DeleteItemStorageItemsResponse.noContent()
+                LoanTypesResource.DeleteLoanTypesResponse.noContent()
                   .build()));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                ItemStorageResource.DeleteItemStorageItemsResponse.
+                LoanTypesResource.DeleteLoanTypesResponse.
                   withPlainInternalServerError(reply.cause().getMessage())));
             }
           });
@@ -300,7 +299,7 @@ public class LoanTypeAPI implements LoanTypesResource {
     }
     catch(Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-        ItemStorageResource.DeleteItemStorageItemsResponse.
+        LoanTypesResource.DeleteLoanTypesResponse.
           withPlainInternalServerError(e.getMessage())));
     }
 

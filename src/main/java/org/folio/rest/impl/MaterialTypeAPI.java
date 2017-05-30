@@ -1,22 +1,19 @@
 package org.folio.rest.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.Response;
-
+import io.vertx.core.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.model.Mtypes;
 import org.folio.rest.jaxrs.resource.MaterialTypesResource;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -25,12 +22,10 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author shale
@@ -336,9 +331,39 @@ public class MaterialTypeAPI implements MaterialTypesResource {
     });
   }
 
-  private CQLWrapper getCQL(String table, String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(table+".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+  @Override
+  public void deleteMaterialTypes(String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+    throws Exception {
+
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+
+    try {
+      vertxContext.runOnContext(v -> {
+        PostgresClient postgresClient = PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+        postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+          tenantId, "inventory_storage", MATERIAL_TYPE_TABLE),
+          reply -> {
+            if (reply.succeeded()) {
+              asyncResultHandler.handle(Future.succeededFuture(
+                MaterialTypesResource.DeleteMaterialTypesResponse.noContent()
+                  .build()));
+            } else {
+              asyncResultHandler.handle(Future.succeededFuture(
+                MaterialTypesResource.DeleteMaterialTypesResponse.
+                  withPlainInternalServerError(reply.cause().getMessage())));
+            }
+          });
+      });
+    }
+    catch(Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        MaterialTypesResource.DeleteMaterialTypesResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
+
   }
 
   private boolean isDuplicate(String errorMessage){
