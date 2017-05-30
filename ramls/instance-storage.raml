@@ -9,7 +9,7 @@ documentation:
     content: <b>Storage for instances in the inventory</b>
 
 schemas:
- - instance: !include schema/instance.json
+ - instance.json: !include schema/instance.json
  - instances: !include schema/instances.json
 
 traits:
@@ -29,7 +29,7 @@ resourceTypes:
       collection:
         exampleCollection: !include  examples/instances_get.json
         schemaCollection: instances
-        schemaItem: instance
+        schemaItem: instance.json
         exampleItem: !include  examples/instance_get.json
     get:
       is: [pageable,
@@ -50,7 +50,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/instance_get.json
-          schema: instance
+          schema: instance.json
       get:
         responses:
           200:
