@@ -25,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class MaterialTypeTest {
@@ -90,6 +91,29 @@ public class MaterialTypeTest {
     JsonResponse response = createMaterialType(id, "Book");
 
     assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInMaterialType()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture();
+
+    JsonObject requestWithAdditionalProperty = new JsonObject()
+      .put("name", "Journal")
+      .put("somethingAdditional", "foo");
+
+    send(materialTypeUrl().toString(), HttpMethod.POST,
+      requestWithAdditionalProperty.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.json(createMaterialType));
+
+    TextResponse response = createMaterialType.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
   }
 
   @Test
