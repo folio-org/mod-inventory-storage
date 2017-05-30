@@ -9,13 +9,13 @@ documentation:
     content: This documents the API calls that can be made to query and manage loan types of the system
 
 schemas:
-  - loantype: !include schema/loantype.json
+  - loantype.json: !include schema/loantype.json
   - loantypes: !include schema/loantypes.json
-  - item: !include schema/item.json
+  - item.json: !include schema/item.json
   - items: !include schema/items.json
   - errors: !include ../raml-util/schemas/errors.schema
-  - error: !include ../raml-util/schemas/error.schema
-  - parameters: !include ../raml-util/schemas/parameters.schema
+  - error.schema: !include ../raml-util/schemas/error.schema
+  - parameters.schema: !include ../raml-util/schemas/parameters.schema
 
 traits:
   - secured: !include ../raml-util/traits/auth.raml
@@ -35,7 +35,7 @@ resourceTypes:
       exampleCollection: !include examples/loantypes.json
       exampleItem: !include examples/loantype.json
       schemaCollection: loantypes
-      schemaItem: loantype
+      schemaItem: loantype.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -50,4 +50,4 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/loantype.json
-        schema: loantype
+        schema: loantype.json
