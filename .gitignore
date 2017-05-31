@@ -15,3 +15,5 @@ nbproject/
 .classpath
 #idea
 .idea/
+#npm
+node_modules
