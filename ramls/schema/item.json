@@ -9,7 +9,9 @@
       "type": "string"
     },
     "title": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
     },
     "barcode": {
       "type": "string"
@@ -42,5 +44,8 @@
       "additionalProperties": false
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "required": [
+    "title"
+  ]
 }
