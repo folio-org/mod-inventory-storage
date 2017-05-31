@@ -105,6 +105,41 @@ public class ItemStorageTest {
   }
 
   @Test
+  public void canCreateAnItemWithMinimalProperties()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("barcode", "565578437802");
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postResponse.getJson();
+
+    assertThat(itemFromPost.getString("id"), is(id.toString()));
+    assertThat(itemFromPost.getString("barcode"), is("565578437802"));
+
+    JsonResponse getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(id.toString()));
+    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+  }
+
+  @Test
   public void canCreateAnItemWithoutProvidingID()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
