@@ -44,7 +44,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "instanceId",
     "barcode"
   ]
 }

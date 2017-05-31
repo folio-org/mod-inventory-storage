@@ -4,6 +4,7 @@
 * Disallow additional properties in instance requests
 * Disallow additional properties in loan type requests
 * Disallow additional properties in material type requests
+* Items no longer require relating to an instance (instanceId is optional)
 * Upgrade to RAML Module Builder 11.0.0
 * Upgrade to cql2pgjson 1.1.0
 
