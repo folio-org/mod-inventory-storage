@@ -8,12 +8,16 @@ import org.junit.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -112,7 +116,8 @@ public class ItemStorageTest {
     UUID id = UUID.randomUUID();
 
     JsonObject itemToCreate = new JsonObject()
-      .put("id", id.toString());
+      .put("id", id.toString())
+      .put("title", "Nod");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -121,7 +126,8 @@ public class ItemStorageTest {
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(String.format("Failed to create item: %s", postResponse.getBody()),
+      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject itemFromPost = postResponse.getJson();
 
@@ -176,6 +182,62 @@ public class ItemStorageTest {
       is(materialTypeID));
     assertThat(itemFromGet.getJsonObject("location").getString("name"),
       is("Main Library"));
+  }
+
+  @Test
+  public void cannotCreateAnItemWithBlankTitle()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("title", "");
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(422));
+
+    List<JsonObject> errors = JsonArrayHelper.toList(
+      postResponse.getJson().getJsonArray("errors"));
+
+    assertThat(errors.size(), is(1));
+    assertThat(errors, hasItem(
+      validationErrorMatches("size must be between 1 and 255", "title")));
+  }
+
+  @Test
+  public void cannotCreateAnItemWithTitleOver255Characters()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("title", String.join("", Collections.nCopies(256, "X")));
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+
+    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(422));
+
+    List<JsonObject> errors = JsonArrayHelper.toList(
+      postResponse.getJson().getJsonArray("errors"));
+
+    assertThat(errors.size(), is(1));
+    assertThat(errors, hasItem(
+      validationErrorMatches("size must be between 1 and 255", "title")));
   }
 
   @Test
