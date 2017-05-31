@@ -112,8 +112,7 @@ public class ItemStorageTest {
     UUID id = UUID.randomUUID();
 
     JsonObject itemToCreate = new JsonObject()
-      .put("id", id.toString())
-      .put("barcode", "565578437802");
+      .put("id", id.toString());
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -127,7 +126,6 @@ public class ItemStorageTest {
     JsonObject itemFromPost = postResponse.getJson();
 
     assertThat(itemFromPost.getString("id"), is(id.toString()));
-    assertThat(itemFromPost.getString("barcode"), is("565578437802"));
 
     JsonResponse getResponse = getById(id);
 
@@ -136,7 +134,6 @@ public class ItemStorageTest {
     JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
-    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
   }
 
   @Test
