@@ -12,11 +12,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class MaterialTypes {
+public class MaterialTypesClient {
   private final HttpClient client;
   private final URL materialTypesUrl;
 
-  public MaterialTypes(HttpClient client, URL materialTypesUrl) {
+  public MaterialTypesClient(HttpClient client, URL materialTypesUrl) {
     this.client = client;
     this.materialTypesUrl = materialTypesUrl;
   }
@@ -32,8 +32,8 @@ public class MaterialTypes {
     client.post(materialTypesUrl, materialTypeRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(completed));
 
-    JsonResponse mtPostResponse = completed.get(5, TimeUnit.SECONDS);
+    JsonResponse response = completed.get(5, TimeUnit.SECONDS);
 
-    return mtPostResponse.getJson().getString("id");
+    return response.getJson().getString("id");
   }
 }

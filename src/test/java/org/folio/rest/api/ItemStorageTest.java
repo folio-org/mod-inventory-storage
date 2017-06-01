@@ -3,8 +3,12 @@ package org.folio.rest.api;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.*;
-import org.folio.rest.support.client.MaterialTypes;
-import org.junit.*;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.folio.rest.support.client.MaterialTypesClient;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -17,8 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.api.StorageTestSuite.itemsUrl;
-import static org.folio.rest.api.StorageTestSuite.materialTypesUrl;
+import static org.folio.rest.api.StorageTestSuite.*;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -30,7 +33,8 @@ public class ItemStorageTest {
 
   private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
 
-  private static String materialTypeID;
+  private static String journalMaterialTypeID;
+  private static String canCirculateLoanTypeID;
 
   @BeforeClass
   public static void beforeAny()
@@ -41,8 +45,10 @@ public class ItemStorageTest {
 
     StorageTestSuite.deleteAll(itemsUrl());
     StorageTestSuite.deleteAll(materialTypesUrl());
+    StorageTestSuite.deleteAll(loanTypesUrl());
 
-    materialTypeID = new MaterialTypes(client, materialTypesUrl()).create("journal");
+    journalMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("journal");
+    canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesUrl()).create("Can Circulate");
   }
 
   @Before
@@ -90,7 +96,9 @@ public class ItemStorageTest {
     assertThat(itemFromPost.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(itemFromPost.getString("materialTypeId"),
-      is(materialTypeID));
+      is(journalMaterialTypeID));
+    assertThat(itemFromPost.getString("permanentLoanTypeId"),
+      is(canCirculateLoanTypeID));
     assertThat(itemFromPost.getJsonObject("location").getString("name"),
       is("Main Library"));
 
@@ -107,7 +115,9 @@ public class ItemStorageTest {
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(itemFromGet.getString("materialTypeId"),
-      is(materialTypeID));
+      is(journalMaterialTypeID));
+    assertThat(itemFromGet.getString("permanentLoanTypeId"),
+      is(canCirculateLoanTypeID));
     assertThat(itemFromGet.getJsonObject("location").getString("name"),
       is("Main Library"));
   }
@@ -121,7 +131,8 @@ public class ItemStorageTest {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
-      .put("materialTypeId", materialTypeID)
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", "Nod");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
@@ -184,7 +195,9 @@ public class ItemStorageTest {
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(itemFromGet.getString("materialTypeId"),
-      is(materialTypeID));
+      is(journalMaterialTypeID));
+    assertThat(itemFromGet.getString("permanentLoanTypeId"),
+      is(canCirculateLoanTypeID));
     assertThat(itemFromGet.getJsonObject("location").getString("name"),
       is("Main Library"));
   }
@@ -198,7 +211,8 @@ public class ItemStorageTest {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
-      .put("materialTypeId", materialTypeID)
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", "");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
@@ -227,7 +241,8 @@ public class ItemStorageTest {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
-      .put("materialTypeId", materialTypeID)
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", String.join("", Collections.nCopies(256, "X")));
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
@@ -262,7 +277,8 @@ public class ItemStorageTest {
     itemToCreate.put("title", "Nod");
     itemToCreate.put("barcode", "565578437802");
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("materialTypeId", materialTypeID);
+    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
 
     CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
@@ -288,6 +304,7 @@ public class ItemStorageTest {
 
     itemToCreate.put("id", id.toString());
     itemToCreate.put("title", "Nod");
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -339,7 +356,9 @@ public class ItemStorageTest {
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(item.getString("materialTypeId"),
-      is(materialTypeID));
+      is(journalMaterialTypeID));
+    assertThat(item.getString("permanentLoanTypeId"),
+      is(canCirculateLoanTypeID));
     assertThat(item.getJsonObject("location").getString("name"),
       is("Main Library"));
   }
@@ -452,7 +471,7 @@ public class ItemStorageTest {
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(item.getString("materialTypeId"),
-      is(materialTypeID));
+      is(journalMaterialTypeID));
     assertThat(item.getJsonObject("location").getString("name"),
       is("Annex Library"));
   }
@@ -498,7 +517,7 @@ public class ItemStorageTest {
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(item.getString("materialTypeId"),
-      is(materialTypeID));
+      is(journalMaterialTypeID));
     assertThat(item.getJsonObject("location").getString("name"),
       is("Annex Library"));
   }
@@ -813,7 +832,8 @@ public class ItemStorageTest {
     itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("materialTypeId", materialTypeID);
+    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
 
     return itemToCreate;
