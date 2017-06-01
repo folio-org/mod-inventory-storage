@@ -249,4 +249,28 @@ public class StorageTestSuite {
       assert false;
     }
   }
+
+  static URL materialTypesUrl() throws MalformedURLException {
+    return materialTypesUrl("");
+  }
+
+  static URL materialTypesUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/material-types" + subPath);
+  }
+
+  static URL loanTypesUrl() throws MalformedURLException {
+    return loanTypesUrl("");
+  }
+
+  static URL loanTypesUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/loan-types" + subPath);
+  }
+
+  static URL itemsUrl() throws MalformedURLException {
+    return itemsUrl("");
+  }
+
+  static URL itemsUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/item-storage/items" + subPath);
+  }
 }
