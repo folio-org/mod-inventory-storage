@@ -10,7 +10,7 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.client.MaterialTypes;
+import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class LoanTypeTest {
     StorageTestSuite.deleteAll(materialTypesUrl());
     StorageTestSuite.deleteAll(loanTypesUrl());
 
-    materialTypeID = new MaterialTypes(
+    materialTypeID = new MaterialTypesClient(
       new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
       materialTypesUrl()).create("Journal");
   }
@@ -226,10 +226,15 @@ public class LoanTypeTest {
   public void cannotCreateItemWithTemporaryLoanTypeThatDoesNotExist()
     throws MalformedURLException {
 
+    JsonObject circulateCreateResponse = send(loanTypesUrl(), HttpMethod.POST,
+      postRequestCirculate, HTTP_CREATED);
+
+    String circulateLoanTypeId = circulateCreateResponse.getString("id");
+
     String nonexistentLoanId = UUID.randomUUID().toString();
 
-    send(itemsUrl(), HttpMethod.POST, createItem(null, nonexistentLoanId),
-      HTTP_BAD_REQUEST);
+    send(itemsUrl(), HttpMethod.POST,
+      createItem(circulateLoanTypeId, nonexistentLoanId), HTTP_BAD_REQUEST);
   }
 
   @Test

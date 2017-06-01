@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.client.LoanTypesClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,8 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.api.StorageTestSuite.itemsUrl;
-import static org.folio.rest.api.StorageTestSuite.materialTypesUrl;
+import static org.folio.rest.api.StorageTestSuite.*;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -35,6 +35,8 @@ public class MaterialTypeTest {
   private static final int          UNPROCESSABLE_ENTITY = 422;
   private static final String       SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
+  private String canCirculateLoanTypeID;
+
   @Before
   public void beforeEach()
     throws InterruptedException,
@@ -44,6 +46,11 @@ public class MaterialTypeTest {
 
     StorageTestSuite.deleteAll(itemsUrl());
     StorageTestSuite.deleteAll(materialTypesUrl());
+    StorageTestSuite.deleteAll(loanTypesUrl());
+
+    canCirculateLoanTypeID = new LoanTypesClient(
+      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      loanTypesUrl()).create("Can Circulate");
   }
 
   @Test
@@ -337,14 +344,14 @@ public class MaterialTypeTest {
     request.end(buffer);
   }
 
-  private static JsonObject createItemRequest(String mtId) {
+  private JsonObject createItemRequest(String materialTypeId) {
 
     JsonObject item = new JsonObject();
 
-    item.put("instanceId", ""+UUID.randomUUID());
     item.put("title", "abcd");
     item.put("barcode", "12345");
-    item.put("materialTypeId", mtId);
+    item.put("materialTypeId", materialTypeId);
+    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
     return item;
   }
