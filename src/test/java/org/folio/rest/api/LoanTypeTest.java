@@ -10,6 +10,7 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.client.MaterialTypes;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,8 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static java.net.HttpURLConnection.*;
-import static org.folio.rest.api.StorageTestSuite.itemsUrl;
-import static org.folio.rest.api.StorageTestSuite.loanTypesUrl;
+import static org.folio.rest.api.StorageTestSuite.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -32,6 +32,8 @@ import static org.junit.Assert.assertThat;
 public class LoanTypeTest {
 
   private static final String       SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
+
+  private static String materialTypeID;
 
   private static String postRequestCirculate = "{\"name\": \"Can circulate\"}";
   private static String postRequestCourse    = "{\"name\": \"Course reserve\"}";
@@ -45,7 +47,12 @@ public class LoanTypeTest {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsUrl());
+    StorageTestSuite.deleteAll(materialTypesUrl());
     StorageTestSuite.deleteAll(loanTypesUrl());
+
+    materialTypeID = new MaterialTypes(
+      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      materialTypesUrl()).create("Journal");
   }
 
   @Test
@@ -306,9 +313,12 @@ public class LoanTypeTest {
     item.put("instanceId", "" + UUID.randomUUID());
     item.put("title", "Book of all even numbers");
     item.put("barcode", "12345");
+    item.put("materialTypeId", materialTypeID);
+
     if (permanentLoanTypeId != null) {
       item.put("permanentLoanTypeId", permanentLoanTypeId);
     }
+
     if (temporaryLoanTypeId != null) {
       item.put("temporaryLoanTypeId", temporaryLoanTypeId);
     }
