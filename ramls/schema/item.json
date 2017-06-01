@@ -46,6 +46,7 @@
   },
   "additionalProperties": false,
   "required": [
-    "title"
+    "title",
+    "materialTypeId"
   ]
 }

@@ -121,6 +121,7 @@ public class ItemStorageTest {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
+      .put("materialTypeId", materialTypeID)
       .put("title", "Nod");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
@@ -197,6 +198,7 @@ public class ItemStorageTest {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
+      .put("materialTypeId", materialTypeID)
       .put("title", "");
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
@@ -225,11 +227,12 @@ public class ItemStorageTest {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
+      .put("materialTypeId", materialTypeID)
       .put("title", String.join("", Collections.nCopies(256, "X")));
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
-    client.post(itemStorageUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+    client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
@@ -275,21 +278,16 @@ public class ItemStorageTest {
   }
 
   @Test
-  public void canCreateAnItemWithoutMaterialType()
+  public void cannotCreateAnItemWithoutMaterialType()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
 
     JsonObject itemToCreate = new JsonObject();
 
     itemToCreate.put("id", id.toString());
-    itemToCreate.put("instanceId", instanceId.toString());
     itemToCreate.put("title", "Nod");
-    itemToCreate.put("barcode", "565578437802");
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -298,33 +296,14 @@ public class ItemStorageTest {
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(postResponse.getStatusCode(), is(422));
 
-    JsonObject itemFromPost = postResponse.getJson();
+    List<JsonObject> errors = JsonArrayHelper.toList(
+      postResponse.getJson().getJsonArray("errors"));
 
-    assertThat(itemFromPost.getString("id"), is(id.toString()));
-    assertThat(itemFromPost.getString("instanceId"), is(instanceId.toString()));
-    assertThat(itemFromPost.getString("title"), is("Nod"));
-    assertThat(itemFromPost.getString("barcode"), is("565578437802"));
-    assertThat(itemFromPost.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(itemFromPost.getJsonObject("location").getString("name"),
-      is("Main Library"));
-
-    JsonResponse getResponse = getById(id);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject itemFromGet = getResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(id.toString()));
-    assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
-    assertThat(itemFromGet.getString("title"), is("Nod"));
-    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
-    assertThat(itemFromGet.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(itemFromGet.getJsonObject("location").getString("name"),
-      is("Main Library"));
+    assertThat(errors.size(), is(1));
+    assertThat(errors, hasItem(
+      validationErrorMatches("may not be null", "materialTypeId")));
   }
 
   @Test

@@ -7,6 +7,7 @@
 * Items do not require relating to an instance (instanceId is optional)
 * Items do not require a barcode
 * Items require a title (between 1 and 255 characters)
+* Items require a reference to a material type
 * Upgrade to RAML Module Builder 11.0.0
 * Upgrade to cql2pgjson 1.1.0
 
