@@ -69,7 +69,7 @@ pipeline {
  
       stage('Deploy Docker') {
          when {
-            branch = 'master'
+            branch 'master'
          }
          steps {
             echo "Pushing Docker image ${env.docker_image}:${env.POM_VERSION} to Docker Hub..."
