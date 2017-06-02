@@ -23,10 +23,6 @@ pipeline {
  
       stage('Checkout') {
          steps {          
-            /* checkout([$class: 'GitSCM', branches: [[name: '**']], doGenerateSubmoduleConfigurations: false, 
-                      extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, 
-                      recursiveSubmodules: true, reference: '', trackingSubmodules: false]], submoduleCfg: []]) */ 
-
             checkout([
                $class: 'GitSCM',
                branches: scm.branches,
@@ -39,7 +35,7 @@ pipeline {
                userRemoteConfigs: scm.userRemoteConfigs
             ])
 
-            echo "env.BRANCH_NAME"
+            echo "$env.BRANCH_NAME"
 
          }   
       } 
@@ -51,7 +47,7 @@ pipeline {
                env.POM_VERSION = pom.version
             }
 
-            echo "env.POM_VERSION"
+            echo "$env.POM_VERSION"
 
             withMaven(jdk: 'OpenJDK 8 on Ubuntu Docker Slave Node', 
                       maven: 'Maven on Ubuntu Docker Slave Node', 
