@@ -16,7 +16,6 @@ pipeline {
             script {
                currentBuild.displayName = "#${env.BUILD_NUMBER}-${env.JOB_BASE_NAME}"
             }
-                
             step([$class: 'WsCleanup'])
          }
       }
@@ -35,8 +34,7 @@ pipeline {
                userRemoteConfigs: scm.userRemoteConfigs
             ])
 
-            echo "$env.BRANCH_NAME"
-
+            echo " Checked out $env.BRANCH_NAME"
          }   
       } 
         
@@ -63,18 +61,34 @@ pipeline {
       stage('Build Docker') {
          steps {
             script {
-               docker.withRegistry('https://index.docker.io/v1/', 'DockerHubIDJenkins') {
-                    
-                   // def dockerImage = docker.build("${env.docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}", '--no-cache .')
-                   def dockerImage = docker.build("${env.docker_image}:${env.POM_VERSION}", '--no-cache .')
-                   /* dockerImage.push()
-                   dockerImage.push('latest') */
-                   //sh "docker rmi ${docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}"
-                   sh "docker rmi ${docker_image}:${env.POM_VERSION}"
-                   // sh "docker rmi ${docker_image}:latest"
-               }
+               def dockerImage = docker.build("${env.docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}", '--no-cache .')
+               // def dockerImage = docker.build("${env.docker_image}:${env.POM_VERSION}", '--no-cache .')
             }
          } 
       } 
+ 
+      stage('Deploy Docker') {
+         when {
+            branch = 'master'
+         }
+         steps {
+            echo "Pushing Docker image ${env.docker_image}:${env.POM_VERSION} to Docker Hub..."
+            script {
+               docker.withRegistry('https://index.docker.io/v1/', 'DockerHubIDJenkins') {
+                  dockerImage.push()
+                  // dockerImage.push('latest') */
+               }
+            }
+         }
+      }
+
+      stage('Clean Up') {
+         steps {
+            sh "docker rmi ${docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}"
+            // sh "docker rmi ${docker_image}:${env.POM_VERSION}"
+            // sh "docker rmi ${docker_image}:latest"
+         }
+      }
+
    }
 }
