@@ -72,7 +72,6 @@ pipeline {
                    //sh "docker rmi ${docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}"
                    sh "docker rmi ${docker_image}:${env.POM_VERSION}"
                    // sh "docker rmi ${docker_image}:latest"
-
                }
             }
          } 
