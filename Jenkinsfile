@@ -61,8 +61,7 @@ pipeline {
       stage('Build Docker') {
          steps {
             script {
-               //docker.build("${env.docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}", '--no-cache .')
-               docker.build("${env.docker_image}", '--no-cache .')
+               docker.build("${env.docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}", '--no-cache .')
                // def dockerImage = docker.build("${env.docker_image}:${env.POM_VERSION}", '--no-cache .')
             }
          } 
@@ -76,7 +75,8 @@ pipeline {
             echo "Pushing Docker image ${env.docker_image}:${env.POM_VERSION} to Docker Hub..."
             script {
                docker.withRegistry('https://index.docker.io/v1/', 'DockerHubIDJenkins') {
-                  docker.${env.docker_image}.push("${env.POM_VERSION}-${env.BUILD_NUMBER}")
+                  def dockerImage =  docker.image("${env.docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}")
+                  dockerImage.push()
                   // dockerImage.push('latest') */
                }
             }
