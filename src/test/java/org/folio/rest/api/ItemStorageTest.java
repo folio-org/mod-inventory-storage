@@ -22,10 +22,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.folio.rest.api.StorageTestSuite.*;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
@@ -222,7 +222,7 @@ public class ItemStorageTest {
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(422));
+    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
     List<JsonObject> errors = JsonArrayHelper.toList(
       postResponse.getJson().getJsonArray("errors"));
@@ -252,7 +252,7 @@ public class ItemStorageTest {
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(422));
+    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
     List<JsonObject> errors = JsonArrayHelper.toList(
       postResponse.getJson().getJsonArray("errors"));
@@ -313,7 +313,7 @@ public class ItemStorageTest {
 
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(422));
+    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
     List<JsonObject> errors = JsonArrayHelper.toList(
       postResponse.getJson().getJsonArray("errors"));
@@ -374,15 +374,15 @@ public class ItemStorageTest {
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
     client.post(itemsUrl(), requestWithAdditionalProperty,
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
-    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
   @Test
@@ -397,15 +397,15 @@ public class ItemStorageTest {
     requestWithAdditionalProperty
       .put("status", new JsonObject().put("somethingAdditional", "foo"));
 
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
     client.post(itemsUrl(), requestWithAdditionalProperty,
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
-    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
   @Test
@@ -420,15 +420,15 @@ public class ItemStorageTest {
     requestWithAdditionalProperty
       .put("location", new JsonObject().put("somethingAdditional", "foo"));
 
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
 
     client.post(itemsUrl(), requestWithAdditionalProperty,
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
-    TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
   @Test
@@ -743,7 +743,7 @@ public class ItemStorageTest {
     TextResponse response = postCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), is("Tenant Must Be Provided"));
+    assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
   @Test
@@ -761,7 +761,7 @@ public class ItemStorageTest {
     TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), is("Tenant Must Be Provided"));
+    assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
   @Test
@@ -776,7 +776,7 @@ public class ItemStorageTest {
     TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), is("Tenant Must Be Provided"));
+    assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
   private JsonResponse getById(UUID id)

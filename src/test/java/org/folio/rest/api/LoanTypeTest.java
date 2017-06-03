@@ -8,6 +8,7 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.MaterialTypesClient;
@@ -75,7 +76,7 @@ public class LoanTypeTest {
       .put("additional", "foo");
 
     send(loanTypesUrl(), HttpMethod.POST,
-      requestWithAdditionalProperties.toString(), HTTP_BAD_REQUEST);
+      requestWithAdditionalProperties.toString(), AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY);
   }
 
   @Test
