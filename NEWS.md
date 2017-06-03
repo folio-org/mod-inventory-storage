@@ -9,6 +9,10 @@
 * Items require a title (between 1 and 255 characters)
 * Items require a reference to a material type
 * Items require a reference to a permanent loan type
+* Provides item-storage interface version 3.0
+* Provides instance-storage interface version 2.0
+* Provides material-types interface version 2.0
+* Provides loan-types interface version 2.0
 * Upgrade to RAML Module Builder 12.1.2
 
 ## 4.2.0 2017-05-08
