@@ -37,10 +37,10 @@ public class LoanTypeAPI implements LoanTypesResource {
 
   public static final String LOAN_TYPE_TABLE   = "loan_type";
 
-  private static final String LOCATION_PREFIX       = "/loan-types/";
-  private static final Logger log                 = LoggerFactory.getLogger(LoanTypeAPI.class);
-  private final Messages messages                 = Messages.getInstance();
-  private String idFieldName                      = "_id";
+  private static final String LOCATION_PREFIX  = "/loan-types/";
+  private static final Logger log              = LoggerFactory.getLogger(LoanTypeAPI.class);
+  private final Messages messages              = Messages.getInstance();
+  private String idFieldName                   = "_id";
 
   @Validate
   @Override

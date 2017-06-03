@@ -7,9 +7,7 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.*;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,15 +23,14 @@ import java.util.concurrent.TimeoutException;
 
 import static org.folio.rest.api.StorageTestSuite.*;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 public class MaterialTypeTest {
 
-  private static final int          UNPROCESSABLE_ENTITY = 422;
-  private static final String       SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
+  private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
   private String canCirculateLoanTypeID;
 
@@ -80,7 +77,7 @@ public class MaterialTypeTest {
 
     JsonResponse response = createMaterialType("Journal");
 
-    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
@@ -96,7 +93,7 @@ public class MaterialTypeTest {
 
     JsonResponse response = createMaterialType(id, "Book");
 
-    assertThat(response.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
@@ -106,7 +103,7 @@ public class MaterialTypeTest {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createMaterialType = new CompletableFuture();
 
     JsonObject requestWithAdditionalProperty = new JsonObject()
       .put("name", "Journal")
@@ -114,12 +111,12 @@ public class MaterialTypeTest {
 
     send(materialTypesUrl().toString(), HttpMethod.POST,
       requestWithAdditionalProperty.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
-      ResponseHandler.json(createMaterialType));
+      ResponseHandler.jsonErrors(createMaterialType));
 
-    TextResponse response = createMaterialType.get(5, TimeUnit.SECONDS);
+    JsonErrorResponse response = createMaterialType.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(), containsString("Json content error Unrecognized field"));
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
   @Test

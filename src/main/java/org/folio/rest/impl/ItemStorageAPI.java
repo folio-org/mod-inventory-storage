@@ -62,12 +62,6 @@ public class ItemStorageAPI implements ItemStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-    if (blankTenantId(tenantId)) {
-      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
-
-      return;
-    }
-
     try {
       vertxContext.runOnContext(v -> {
         try {
@@ -145,42 +139,6 @@ public class ItemStorageAPI implements ItemStorageResource {
     }
   }
 
-  /**
-   *
-   * @param vertx
-   * @param tenantId
-   * @param item
-   * @param handler
-   * @throws Exception
-   */
-  private void getMT(Vertx vertx, String tenantId, Item item, Handler<AsyncResult<Integer>> handler) throws Exception{
-    Mtype mtype = new Mtype();
-    String mtID = item.getMaterialTypeId();
-    if(mtID == null){
-      //allow null material types so that they can be added after a record is created
-      handler.handle(io.vertx.core.Future.succeededFuture(1));
-    }else{
-      mtype.setId(mtID);
-      /** check if the material type exists, if not, can not add the item **/
-      PostgresClient.getInstance(vertx, tenantId).get(
-        MaterialTypeAPI.MATERIAL_TYPE_TABLE, mtype, new String[]{"_id"}, true, false, 0, 1, check -> {
-          if(check.succeeded()){
-            List<Mtype> mtypeList0 = (List<Mtype>) check.result()[0];
-            if(mtypeList0.size() == 0){
-              handler.handle(io.vertx.core.Future.succeededFuture(0));
-            }
-            else{
-              handler.handle(io.vertx.core.Future.succeededFuture(1));
-            }
-          }
-          else{
-            log.error(check.cause().getLocalizedMessage(), check.cause());
-            handler.handle(io.vertx.core.Future.succeededFuture(-1));
-          }
-      });
-    }
-  }
-
   @Validate
   @Override
   public void postItemStorageItems(
@@ -192,12 +150,6 @@ public class ItemStorageAPI implements ItemStorageResource {
     throws Exception {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    if (blankTenantId(tenantId)) {
-      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
-
-      return;
-    }
 
     try {
       PostgresClient postgresClient =
@@ -212,7 +164,7 @@ public class ItemStorageAPI implements ItemStorageResource {
         try {
           /**This should be replaced with a foreign key / cache since a lookup into the MT table
            * every time an item is inserted is wasteful and slows down the insert process */
-          getMT(vertxContext.owner(), tenantId, entity, replyHandler -> {
+          getMaterialType(vertxContext.owner(), tenantId, entity, replyHandler -> {
               int res = replyHandler.result();
               if(res == 0){
                 String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
@@ -295,12 +247,6 @@ public class ItemStorageAPI implements ItemStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-    if (blankTenantId(tenantId)) {
-      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
-
-      return;
-    }
-
     Criteria a = new Criteria();
 
     a.addField("'id'");
@@ -368,12 +314,6 @@ public class ItemStorageAPI implements ItemStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-    if (blankTenantId(tenantId)) {
-      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
-
-      return;
-    }
-
     try {
       vertxContext.runOnContext(v -> {
         PostgresClient postgresClient = PostgresClient.getInstance(
@@ -414,12 +354,6 @@ public class ItemStorageAPI implements ItemStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-    if (blankTenantId(tenantId)) {
-      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
-
-      return;
-    }
-
     try {
       PostgresClient postgresClient =
         PostgresClient.getInstance(
@@ -435,7 +369,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 
       vertxContext.runOnContext(v -> {
         try {
-          getMT(vertxContext.owner(), tenantId, entity, replyHandler -> {
+          getMaterialType(vertxContext.owner(), tenantId, entity, replyHandler -> {
               int res = replyHandler.result();
               if(res == 0){
                 String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
@@ -566,12 +500,6 @@ public class ItemStorageAPI implements ItemStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-    if (blankTenantId(tenantId)) {
-      badRequestResult(asyncResultHandler, BLANK_TENANT_MESSAGE);
-
-      return;
-    }
-
     try {
       PostgresClient postgresClient =
         PostgresClient.getInstance(
@@ -624,4 +552,46 @@ public class ItemStorageAPI implements ItemStorageResource {
     return tenantId == null || tenantId == "" || tenantId == "folio_shared";
   }
 
+  /**
+   *
+   * @param vertx
+   * @param tenantId
+   * @param item
+   * @param handler
+   * @throws Exception
+   */
+  private void getMaterialType(
+    Vertx vertx,
+    String tenantId,
+    Item item,
+    Handler<AsyncResult<Integer>> handler) throws Exception{
+
+    Mtype mtype = new Mtype();
+
+    String mtID = item.getMaterialTypeId();
+
+    if(mtID == null) {
+      //allow null material types so that they can be added after a record is created
+      handler.handle(io.vertx.core.Future.succeededFuture(1));
+    } else {
+      mtype.setId(mtID);
+      /** check if the material type exists, if not, can not add the item **/
+      PostgresClient.getInstance(vertx, tenantId).get(
+        MaterialTypeAPI.MATERIAL_TYPE_TABLE, mtype, new String[]{"_id"}, true, false, 0, 1, check -> {
+          if(check.succeeded()) {
+            List<Mtype> mtypeList0 = (List<Mtype>) check.result()[0];
+            if(mtypeList0.size() == 0){
+              handler.handle(io.vertx.core.Future.succeededFuture(0));
+            }
+            else {
+              handler.handle(io.vertx.core.Future.succeededFuture(1));
+            }
+          }
+          else {
+            log.error(check.cause().getLocalizedMessage(), check.cause());
+            handler.handle(io.vertx.core.Future.succeededFuture(-1));
+          }
+        });
+    }
+  }
 }
