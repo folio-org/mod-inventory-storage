@@ -24,7 +24,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>11.0.0</version>
+      <version>12.1.2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

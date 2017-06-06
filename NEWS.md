@@ -1,7 +1,19 @@
 ## 5.0.0 Unreleased
 
-* Upgrade to RAML Module Builder 11.0.0
-* Upgrade to cql2pgjson 1.1.0 
+* Disallow additional properties in item requests
+* Disallow additional properties in instance requests
+* Disallow additional properties in loan type requests
+* Disallow additional properties in material type requests
+* Items do not require relating to an instance (instanceId is optional)
+* Items do not require a barcode
+* Items require a title (between 1 and 255 characters)
+* Items require a reference to a material type
+* Items require a reference to a permanent loan type
+* Provides item-storage interface version 3.0
+* Provides instance-storage interface version 2.0
+* Provides material-types interface version 2.0
+* Provides loan-types interface version 2.0
+* Upgrade to RAML Module Builder 12.1.2
 
 ## 4.2.0 2017-05-08
 

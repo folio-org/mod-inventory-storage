@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -182,6 +183,52 @@ public class InstanceStorageTest {
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
     assertThat(itemFromGet.getString("title"), is("Nod"));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInInstance()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID());
+
+    requestWithAdditionalProperty.put("somethingAdditional", "foo");
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+
+    client.post(instanceStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+  }
+
+  @Test
+  public void cannotProvideAdditionalPropertiesInInstanceIdentifiers()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID());
+
+    requestWithAdditionalProperty
+      .getJsonArray("identifiers").add(identifier("isbn", "5645678432576")
+      .put("somethingAdditional", "foo"));
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+
+    client.post(instanceStorageUrl(), requestWithAdditionalProperty,
+      StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
   @Test
@@ -454,7 +501,7 @@ public class InstanceStorageTest {
     TextResponse response = postCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), is("Tenant Must Be Provided"));
+    assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
   @Test
@@ -472,7 +519,7 @@ public class InstanceStorageTest {
     TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), is("Tenant Must Be Provided"));
+    assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
   @Test
@@ -487,7 +534,7 @@ public class InstanceStorageTest {
     TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), is("Tenant Must Be Provided"));
+    assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
   private void createInstance(JsonObject instanceToCreate)

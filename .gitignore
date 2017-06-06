@@ -1,7 +1,7 @@
 *.class
 *.log
 metrics/
-client/
+src/main/**/client/
 #mvn build
 target/
 #vert.x
@@ -15,3 +15,5 @@ nbproject/
 .classpath
 #idea
 .idea/
+#npm
+node_modules

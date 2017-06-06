@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Item Storage
-version: v2.1
+version: v3.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -11,12 +11,16 @@ documentation:
 schemas:
  - item.json: !include schema/item.json
  - items: !include schema/items.json
+ - errors: !include ../raml-util/schemas/errors.schema
+ - error.schema: !include ../raml-util/schemas/error.schema
+ - parameters.schema: !include ../raml-util/schemas/parameters.schema
 
 traits:
  - secured: !include ../raml-util/traits/auth.raml
  - language: !include ../raml-util/traits/language.raml
  - pageable: !include ../raml-util/traits/pageable.raml
  - searchable: !include ../raml-util/traits/searchable.raml
+ - validate: !include ../raml-util/traits/validation.raml
 
 resourceTypes:
  - collection: !include ../raml-util/rtypes/collection.raml
@@ -37,6 +41,7 @@ resourceTypes:
                         example: "title=\"*uproot*\""},
           ]
     post:
+      is: [validate]
     delete:
       responses:
         204:

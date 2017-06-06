@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Loan Types API
-version: v1.0
+version: v2.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -42,6 +42,16 @@ resourceTypes:
       pageable
     ]
     description: Return a list of loan types
+  delete:
+    description: "Delete all loan types"
+    responses:
+      204:
+        description: "All loan types deleted"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "Internal server error, contact administrator"
   post:
     description: Create a new loan type
     is: [validate]

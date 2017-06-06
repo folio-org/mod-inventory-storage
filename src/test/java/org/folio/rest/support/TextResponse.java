@@ -11,4 +11,10 @@ public class TextResponse extends Response {
   public String getBody() {
     return body;
   }
+
+  @Override
+  public String toString() {
+    return String.format("Status Code: %s Body: %s",
+      getStatusCode(), getBody());
+  }
 }

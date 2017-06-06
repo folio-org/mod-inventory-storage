@@ -1,11 +1,20 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
+import org.folio.rest.RestVerticle;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -14,17 +23,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.RestVerticle;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 @RunWith(Suite.class)
 
@@ -119,21 +119,21 @@ public class StorageTestSuite {
   static void deleteAll(URL rootUrl) {
     HttpClient client = new HttpClient(getVertx());
 
-    CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
+    CompletableFuture<TextResponse> deleteAllFinished = new CompletableFuture();
 
     try {
       client.delete(rootUrl, TENANT_ID,
-        ResponseHandler.empty(deleteAllFinished));
+        ResponseHandler.text(deleteAllFinished));
 
-      Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
+      TextResponse response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
       if(response.getStatusCode() != 204) {
-        System.out.println("WARNING!!!!! Delete all items preparation failed");
+        Assert.fail("Delete all preparation failed: " +
+          response.getBody());
       }
     }
     catch(Exception e) {
-      System.out.println("WARNING!!!!! Unable to delete all items: " +
-        e.getMessage());
+      Assert.fail("WARNING!!!!! Unable to delete all: " + e.getMessage());
     }
   }
 
@@ -248,5 +248,29 @@ public class StorageTestSuite {
         + e.getMessage());
       assert false;
     }
+  }
+
+  static URL materialTypesUrl() throws MalformedURLException {
+    return materialTypesUrl("");
+  }
+
+  static URL materialTypesUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/material-types" + subPath);
+  }
+
+  static URL loanTypesUrl() throws MalformedURLException {
+    return loanTypesUrl("");
+  }
+
+  static URL loanTypesUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/loan-types" + subPath);
+  }
+
+  static URL itemsUrl() throws MalformedURLException {
+    return itemsUrl("");
+  }
+
+  static URL itemsUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/item-storage/items" + subPath);
   }
 }

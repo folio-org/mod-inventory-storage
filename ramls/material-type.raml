@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Material Types API
-version: v1.3
+version: v2.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -45,6 +45,16 @@ resourceTypes:
   post:
     description: Create a new material type
     is: [validate]
+  delete:
+    description: "Delete all material types"
+    responses:
+      204:
+        description: "All material types deleted"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "Internal server error, contact administrator"
   /{materialtypeId}:
     description: Pass in the MT code
     type:
