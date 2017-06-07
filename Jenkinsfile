@@ -90,6 +90,24 @@ pipeline {
             // sh "docker rmi ${docker_image}:latest"
          }
       }
+   }  // end Stages
 
-   }
+   post { 
+      failure { 
+         githubNotify account: 'id-jenkins', context: '', 
+                      credentialsId: '95acaa9f-04ff-4b45-93db-7f27f8f5fff1', 
+                      description: 'Build failed', 
+                      gitApiUrl: '', repo: '', sha: '', 
+                      status: 'FAILURE', targetUrl: ''
+      }
+
+      success {
+         githubNotify account: 'id-jenkins', context: '', 
+                      credentialsId: '95acaa9f-04ff-4b45-93db-7f27f8f5fff1', 
+                      description: 'Build successful', 
+                      gitApiUrl: '', repo: '', sha: '', 
+                      status: 'SUCCESS', targetUrl: ''
+      }
+   }  // end Post
+     
 }
