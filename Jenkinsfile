@@ -94,19 +94,11 @@ pipeline {
 
    post { 
       failure { 
-         githubNotify account: 'id-jenkins', context: '', 
-                      credentialsId: '95acaa9f-04ff-4b45-93db-7f27f8f5fff1', 
-                      description: 'Build failed', 
-                      gitApiUrl: 'https://api.github.com', repo: '', sha: '', 
-                      status: 'FAILURE', targetUrl: ''
+         githubNotify description: 'Build failed', status: 'FAILURE'
       }
 
       success {
-         githubNotify account: 'id-jenkins', context: '', 
-                      credentialsId: '95acaa9f-04ff-4b45-93db-7f27f8f5fff1', 
-                      description: 'Build successful', 
-                      gitApiUrl: 'https://api.github.com', repo: '', sha: '', 
-                      status: 'SUCCESS', targetUrl: ''
+         githubNotify description: 'Build successful', status: 'SUCCESS'
       }
    }  // end Post
      
