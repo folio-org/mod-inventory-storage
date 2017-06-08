@@ -47,6 +47,30 @@
     <ramlfiles_util_path>${basedir}/raml-util</ramlfiles_util_path>
   </properties>
 
+  <distributionManagement>
+    <repository>
+      <id>folio-nexus</id>
+      <name>FOLIO Release Repository</name>
+      <url>https://repository.folio.org/repository/maven-releases/</url>
+      <uniqueVersion>false</uniqueVersion>
+      <layout>default</layout>
+    </repository>
+    <snapshotRepository>
+      <id>folio-nexus</id>
+      <name>FOLIO Snapshot Repository</name>
+      <uniqueVersion>true</uniqueVersion>
+      <url>https://repository.folio.org/repository/maven-snapshots/</url>
+      <layout>default</layout>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <scm>
+    <url>https://github.com/folio-org/mod-inventory-storage</url>
+    <connection>scm:git:git://github.com:folio-org/mod-inventory-storage.git</connection>
+    <developerConnection>scm:git:git@github.com:folio-org/mod-inventory-storage.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
   <build>
     <resources>
       <resource>
