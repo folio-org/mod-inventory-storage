@@ -100,6 +100,8 @@ pipeline {
                echo 'Deploying java artifacts to Maven'
                sh 'mvn deploy:deploy'
             }
+         }
+      }
 
       stage('Clean Up') {
          steps {
