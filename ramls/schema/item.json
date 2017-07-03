@@ -34,14 +34,13 @@
     "temporaryLoanTypeId": {
       "type": "string"
     },
-    "location": {
+    "permanentLocation": {
       "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
+      "$ref": "shelflocation.json"
+    },
+    "temporaryLocation": {
+      "type": "object",
+      "$ref": "shelflocation.json"
     }
   },
   "additionalProperties": false,

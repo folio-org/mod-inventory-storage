@@ -119,6 +119,33 @@
       ]
     },
     {
+      "id": "shelf-locations",
+      "version": "2.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/shelf-locations",
+          "permissionsRequired": ["inventory-storage.shelf-locations.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/shelf-locations/{id}",
+          "permissionsRequired": ["inventory-storage.shelf-locations.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/shelf-locations",
+          "permissionsRequired": ["inventory-storage.shelf-locations.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/shelf-locations/{id}",
+          "permissionsRequired": ["inventory-storage.shelf-locations.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/shelf-locations/{id}",
+          "permissionsRequired": ["inventory-storage.shelf-locations.item.delete"]
+        }
+      ]
+    },
+    {
       "id" : "_tenant",
       "version" : "1.0",
       "interfaceType": "system",
@@ -245,6 +272,31 @@
       "description": "delete individual material-type from storage"
     },
     {
+      "permissionName": "inventory-storage.shelf-locations.collection.get",
+      "displayName": "inventory storage - get shelf location collection",
+      "description": "get shelf location collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.shelf-locations.item.get",
+      "displayName": "inventory storage - get individual shelf location",
+      "description": "get individual shelf location from storage"
+    },
+    {
+      "permissionName": "inventory-storage.shelf-locations.item.post",
+      "displayName": "inventory storage - create individual shelf location",
+      "description": "create individual shelf location in storage"
+    },
+    {
+      "permissionName": "inventory-storage.shelf-locations.item.put",
+      "displayName": "inventory storage - modify shelf location",
+      "description": "modify shelf location in storage"
+    },
+    {
+      "permissionName": "inventory-storage.shelf-locations.item.delete",
+      "displayName": "inventory storage - delete individual shelf location",
+      "description": "delete individual shelf location from storage"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -270,7 +322,12 @@
         "inventory-storage.material-types.item.get",
         "inventory-storage.material-types.item.post",
         "inventory-storage.material-types.item.put",
-        "inventory-storage.material-types.item.delete"
+        "inventory-storage.material-types.item.delete",
+        "inventory-storage.shelf-locations.collection.get",
+        "inventory-storage.shelf-locations.item.get",
+        "inventory-storage.shelf-locations.item.post",
+        "inventory-storage.shelf-locations.item.put",
+        "inventory-storage.shelf-locations.item.delete"
       ]
     }
   ]

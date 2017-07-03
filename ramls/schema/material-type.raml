@@ -1,0 +1,64 @@
+#%RAML 0.8
+title: Material Types API
+version: v2.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Material Types API
+    content: This documents the API calls that can be made to query and manage material types of the system
+
+schemas:
+  - materialtype.json: !include schema/materialtype.json
+  - mtypes: !include schema/materialtypes.json
+  - item.json: !include schema/item.json
+  - items: !include schema/items.json
+  - errors: !include ../raml-util/schemas/errors.schema
+  - error.schema: !include ../raml-util/schemas/error.schema
+  - parameters.schema: !include ../raml-util/schemas/parameters.schema
+
+traits:
+  - secured: !include ../raml-util/traits/auth.raml
+  - pageable: !include ../raml-util/traits/pageable.raml
+  - searchable: !include ../raml-util/traits/searchable.raml
+  - language: !include ../raml-util/traits/language.raml
+  - validate: !include ../raml-util/traits/validation.raml
+
+resourceTypes:
+  - collection: !include ../raml-util/rtypes/collection.raml
+  - collection-item: !include ../raml-util/rtypes/item-collection.raml
+  - get-delete-only: !include ../raml-util/rtypes/get-delete.raml
+
+/material-types:
+  type:
+    collection:
+      exampleCollection: !include examples/materialtypes.json
+      exampleItem: !include examples/materialtype.json
+      schemaCollection: mtypes
+      schemaItem: materialtype.json
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of material types
+  post:
+    description: Create a new material type
+    is: [validate]
+  delete:
+    description: "Delete all material types"
+    responses:
+      204:
+        description: "All material types deleted"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "Internal server error, contact administrator"
+  /{materialtypeId}:
+    description: Pass in the MT code
+    type:
+      collection-item:
+        exampleItem: !include examples/materialtype.json
+        schema: materialtype.json
+
