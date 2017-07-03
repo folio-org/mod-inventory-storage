@@ -34,6 +34,7 @@ import static org.junit.Assert.assertThat;
   MaterialTypeTest.class,
   ItemStorageTest.class
 })
+@SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
 
   public static final String TENANT_ID = "test_tenant";
@@ -102,7 +103,7 @@ public class StorageTestSuite {
 
     removeTenant(TENANT_ID);
 
-    CompletableFuture undeploymentComplete = new CompletableFuture<String>();
+    CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
 
     vertx.close(res -> {
       if(res.succeeded()) {
@@ -119,7 +120,7 @@ public class StorageTestSuite {
   static void deleteAll(URL rootUrl) {
     HttpClient client = new HttpClient(getVertx());
 
-    CompletableFuture<TextResponse> deleteAllFinished = new CompletableFuture();
+    CompletableFuture<TextResponse> deleteAllFinished = new CompletableFuture<>();
 
     try {
       client.delete(rootUrl, TENANT_ID,
@@ -135,6 +136,12 @@ public class StorageTestSuite {
     catch(Exception e) {
       Assert.fail("WARNING!!!!! Unable to delete all: " + e.getMessage());
     }
+  }
+
+  static void deleteAll() throws MalformedURLException {
+    deleteAll(itemsUrl());
+    deleteAll(materialTypesUrl());
+    deleteAll(loanTypesUrl());
   }
 
   static void checkForMismatchedIDs(String table) {
@@ -161,7 +168,7 @@ public class StorageTestSuite {
     PostgresClient dbClient = PostgresClient.getInstance(
       getVertx(), tenantId);
 
-    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture();
+    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture<>();
 
     String sql = String.format("SELECT null FROM %s_%s.%s" +
         " WHERE CAST(_id AS VARCHAR(50)) != jsonb->>'id'",
@@ -182,7 +189,7 @@ public class StorageTestSuite {
   private static void startVerticle(DeploymentOptions options)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    CompletableFuture deploymentComplete = new CompletableFuture<String>();
+    CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
       if(res.succeeded()) {
@@ -200,7 +207,7 @@ public class StorageTestSuite {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture();
+    CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
 
     try {
       HttpClient client = new HttpClient(vertx);
@@ -227,7 +234,7 @@ public class StorageTestSuite {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture();
+    CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
 
     try {
       HttpClient client = new HttpClient(vertx);

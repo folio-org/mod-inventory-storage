@@ -23,24 +23,15 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class InstanceStorageTest {
-
-  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
+public class InstanceStorageTest extends TestBase {
 
   @Before
-  public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(instanceStorageUrl());
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("instance");
   }
 
