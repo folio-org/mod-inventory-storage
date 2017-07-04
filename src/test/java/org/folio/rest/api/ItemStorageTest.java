@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
 import org.folio.rest.support.*;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
@@ -29,42 +30,24 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class ItemStorageTest {
-
-  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
+public class ItemStorageTest extends TestBase {
 
   private static String journalMaterialTypeID;
   private static String canCirculateLoanTypeID;
 
   @BeforeClass
-  public static void beforeAny()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    StorageTestSuite.deleteAll(itemsUrl());
-    StorageTestSuite.deleteAll(materialTypesUrl());
-    StorageTestSuite.deleteAll(loanTypesUrl());
-
+  public static void beforeAny() throws Exception {
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("journal");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesUrl()).create("Can Circulate");
   }
 
   @Before
-  public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(itemsUrl());
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("item");
   }
 

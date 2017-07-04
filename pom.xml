@@ -261,6 +261,7 @@
             <include>org/folio/rest/api/StorageTestSuite.java</include>
             <include>org/folio/rest/**</include>
           </includes>
+          <argLine>-Duser.language=en -Duser.region=US</argLine>
         </configuration>
       </plugin>
     </plugins>
