@@ -18,7 +18,7 @@ pipeline {
                currentBuild.displayName = "#${env.BUILD_NUMBER}-${env.JOB_BASE_NAME}"
             }
 
-            slackSend '"Build started: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"'
+            slackSend "Build started: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
             step([$class: 'WsCleanup'])
          }
       }
@@ -118,18 +118,18 @@ pipeline {
 
       failure {
          slackSend(color: '#FF0000',
-                   message: "Build successful: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+                   message: "Build failed: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
          mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com', 
               replyTo: '', subject: "Build failed: ${env.JOB_NAME} ${env.BUILD_NUMBER}",
               to: 'folio-jenkins.backend@indexdata.com'
       }
 
       unstable {
-         slackSend(color:'#008000',
+         slackSend(color:'#FFFF00',
                    message: "Build unstable: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
 
-         mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com', replyTo: '',
-                   subject: "Build unstable: ${env.JOB_NAME} ${env.BUILD_NUMBER}",
+         mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com', 
+              replyTo: '', subject: "Build unstable: ${env.JOB_NAME} ${env.BUILD_NUMBER}",
                    to: 'folio-jenkins.backend@indexdata.com'
       }
 
