@@ -95,9 +95,9 @@ pipeline {
                       maven: 'Maven on Ubuntu Docker Slave Node',
                       options: [junitPublisher(disabled: true,
                                 ignoreAttachments: false),
-                                artifactsPublisher(disabled: false)]) {
+                                artifactsPublisher(disabled: true)]) {
                echo 'Deploying java artifacts to Maven'
-               sh 'mvn deploy:deploy'
+               sh 'mvn deploy -DskipTests'
             }
          }
       }
