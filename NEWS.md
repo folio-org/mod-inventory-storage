@@ -1,5 +1,7 @@
 ## 5.0.1 Unreleased
 
+* UIIT-33 Sorting on material-type should be by MT name, not ID (include upgrade of RMB)
+
 ## 5.0.0 2017-06-07
 
 * Disallow additional properties in item requests
