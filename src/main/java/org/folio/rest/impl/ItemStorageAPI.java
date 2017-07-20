@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,6 +30,7 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -43,10 +45,46 @@ public class ItemStorageAPI implements ItemStorageResource {
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
   public static final String ITEM_TABLE = "item";
+  public static final String ITEM_MATERIALTPYE_VIEW = "items_mt_view";
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
   private final Messages messages = Messages.getInstance();
+
+  private String convertQuery(String cql){
+    if(cql != null){
+      return cql.replaceAll("(?i)materialTypeId.|(?i)materialType.", ITEM_MATERIALTPYE_VIEW+".mt_jsonb.");
+    }
+    return cql;
+  }
+
+  /**
+   * right now, just query the join view if a cql was passed in, otherwise work with the
+   * master items table. this can be optimized in the future to check if there is really a need
+   * to use the join view due to cross table cqling - like returning items sorted by material type
+   * @param cql
+   * @return
+   */
+  private String getTableName(String cql) {
+    if(cql != null){
+      return ITEM_MATERIALTPYE_VIEW;
+    }
+    return ITEM_TABLE;
+  }
+
+  /**
+   * additional querying across tables should add the field to the end of the Arrays.asList
+   * and then add a replace to the converyQuery function
+   * @param query
+   * @param limit
+   * @param offset
+   * @return
+   * @throws FieldException
+   */
+  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(ITEM_MATERIALTPYE_VIEW+".jsonb",ITEM_MATERIALTPYE_VIEW+".mt_jsonb"));
+    return new CQLWrapper(cql2pgJson, convertQuery(query)).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+  }
 
   @Validate
   @Override
@@ -70,12 +108,9 @@ public class ItemStorageAPI implements ItemStorageResource {
 
           String[] fieldList = {"*"};
 
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON("item.jsonb");
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
-            .setLimit(new Limit(limit))
-            .setOffset(new Offset(offset));
+          CQLWrapper cql = getCQL(query,limit,offset);
 
-          postgresClient.get("item", Item.class, fieldList, cql, true, false,
+          postgresClient.get(getTableName(query), Item.class, fieldList, cql, true, false,
             reply -> {
               try {
 
