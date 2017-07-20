@@ -44,7 +44,8 @@ pipeline {
       stage('Build') {
          steps {
             script {
-               def pom = readMavenPom file: 'pom.xml' env.POM_VERSION = pom.version
+               def pom = readMavenPom file: 'pom.xml' 
+               env.POM_VERSION = pom.version
             }
 
             echo "$env.POM_VERSION"
