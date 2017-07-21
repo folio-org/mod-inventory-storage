@@ -4,13 +4,13 @@ pipeline {
       docker_repository = 'folioci'
       docker_image = "${env.docker_repository}/mod-inventory-storage"
    }
-    
+
    agent {
       node {
          label 'folio-jenkins-slave-docker'
       }
    }
-    
+
    stages {
       stage('Prep') {
          steps {
@@ -22,54 +22,54 @@ pipeline {
             step([$class: 'WsCleanup'])
          }
       }
- 
+
       stage('Checkout') {
-         steps {          
+         steps {
             checkout([
                $class: 'GitSCM',
                branches: scm.branches,
-               extensions: scm.extensions + [[$class: 'SubmoduleOption', 
-                                                       disableSubmodules: false, 
-                                                       parentCredentials: false, 
-                                                       recursiveSubmodules: true, 
-                                                       reference: '', 
-                                                       trackingSubmodules: false]], 
+               extensions: scm.extensions + [[$class: 'SubmoduleOption',
+                                                       disableSubmodules: false,
+                                                       parentCredentials: false,
+                                                       recursiveSubmodules: true,
+                                                       reference: '',
+                                                       trackingSubmodules: false]],
                userRemoteConfigs: scm.userRemoteConfigs
             ])
 
             echo " Checked out $env.BRANCH_NAME"
-         }   
-      } 
-        
+         }
+      }
+
       stage('Build') {
          steps {
             script {
-               def pom = readMavenPom file: 'pom.xml' 
+               def pom = readMavenPom file: 'pom.xml'
                env.POM_VERSION = pom.version
             }
 
             echo "$env.POM_VERSION"
 
-            withMaven(jdk: 'OpenJDK 8 on Ubuntu Docker Slave Node', 
-                      maven: 'Maven on Ubuntu Docker Slave Node', 
-                      options: [junitPublisher(disabled: false, 
-                                ignoreAttachments: false), 
+            withMaven(jdk: 'OpenJDK 8 on Ubuntu Docker Slave Node',
+                      maven: 'Maven on Ubuntu Docker Slave Node',
+                      options: [junitPublisher(disabled: false,
+                                ignoreAttachments: false),
                                 artifactsPublisher(disabled: false)]) {
-                    
+
                sh 'mvn clean integration-test'
             }
          }
       }
-        
+
       stage('Build Docker') {
          steps {
             echo 'Building Docker image'
             script {
                docker.build("${env.docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER}", '--no-cache .')
             }
-         } 
-      } 
- 
+         }
+      }
+
       stage('Deploy to Docker Repo') {
          when {
             branch 'master'
@@ -85,7 +85,7 @@ pipeline {
             }
          }
       }
-   
+
       stage('Deploy to Maven Repo') {
          when {
             branch 'master'
@@ -108,18 +108,18 @@ pipeline {
             sh "docker rmi ${docker_image}:latest || exit 0"
          }
       }
-   }  
+   }
 
-   post { 
-      success { 
-         slackSend(color: '#008000', 
+   post {
+      success {
+         slackSend(color: '#008000',
                    message: "Build successful: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
       }
 
       failure {
          slackSend(color: '#FF0000',
                    message: "Build failed: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
-         mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com', 
+         mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com',
               replyTo: '', subject: "Build failed: ${env.JOB_NAME} ${env.BUILD_NUMBER}",
               to: 'folio-jenkins.backend@indexdata.com'
       }
@@ -128,7 +128,7 @@ pipeline {
          slackSend(color:'#FFFF00',
                    message: "Build unstable: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
 
-         mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com', 
+         mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com',
               replyTo: '', subject: "Build unstable: ${env.JOB_NAME} ${env.BUILD_NUMBER}",
                    to: 'folio-jenkins.backend@indexdata.com'
       }
@@ -136,12 +136,12 @@ pipeline {
       changed {
          slackSend(color:'#008000',
                    message: "Build back to normal: ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
-         mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com', 
+         mail bcc: '', body: "${env.BUILD_URL}", cc: '', from: 'folio-jenkins@indexdata.com',
          replyTo: '', subject: "Build back to normal: ${env.JOB_NAME} ${env.BUILD_NUMBER}",
          to: 'folio-jenkins.backend@indexdata.com'
       }
 
-   }  
+   }
 
 }
-     
+
