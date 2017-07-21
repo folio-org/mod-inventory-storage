@@ -60,7 +60,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   /**
    * right now, just query the join view if a cql was passed in, otherwise work with the
-   * master items table. this can be optimized in the future to check if there is really a need
+   * master items table. This can be optimized in the future to check if there is really a need
    * to use the join view due to cross table cqling - like returning items sorted by material type
    * @param cql
    * @return
@@ -74,7 +74,7 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   /**
    * additional querying across tables should add the field to the end of the Arrays.asList
-   * and then add a replace to the converyQuery function
+   * and then add a replace to the convertQuery function
    * @param query
    * @param limit
    * @param offset
