@@ -45,7 +45,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
   public static final String ITEM_TABLE = "item";
-  public static final String ITEM_MATERIALTPYE_VIEW = "items_mt_view";
+  public static final String ITEM_MATERIALTYPE_VIEW = "items_mt_view";
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
@@ -53,28 +53,28 @@ public class ItemStorageAPI implements ItemStorageResource {
 
   private String convertQuery(String cql){
     if(cql != null){
-      return cql.replaceAll("(?i)materialTypeId.|(?i)materialType.", ITEM_MATERIALTPYE_VIEW+".mt_jsonb.");
+      return cql.replaceAll("(?i)materialTypeId.|(?i)materialType.", ITEM_MATERIALTYPE_VIEW+".mt_jsonb.");
     }
     return cql;
   }
 
   /**
    * right now, just query the join view if a cql was passed in, otherwise work with the
-   * master items table. this can be optimized in the future to check if there is really a need
+   * master items table. This can be optimized in the future to check if there is really a need
    * to use the join view due to cross table cqling - like returning items sorted by material type
    * @param cql
    * @return
    */
   private String getTableName(String cql) {
     if(cql != null){
-      return ITEM_MATERIALTPYE_VIEW;
+      return ITEM_MATERIALTYPE_VIEW;
     }
     return ITEM_TABLE;
   }
 
   /**
    * additional querying across tables should add the field to the end of the Arrays.asList
-   * and then add a replace to the converyQuery function
+   * and then add a replace to the convertQuery function
    * @param query
    * @param limit
    * @param offset
@@ -82,7 +82,7 @@ public class ItemStorageAPI implements ItemStorageResource {
    * @throws FieldException
    */
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(ITEM_MATERIALTPYE_VIEW+".jsonb",ITEM_MATERIALTPYE_VIEW+".mt_jsonb"));
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(ITEM_MATERIALTYPE_VIEW+".jsonb",ITEM_MATERIALTYPE_VIEW+".mt_jsonb"));
     return new CQLWrapper(cql2pgJson, convertQuery(query)).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
