@@ -1,6 +1,7 @@
-## 5.0.1 Unreleased
+## 5.1.1 Unreleased
 
 * UIIT-33 Sorting on material-type should be by MT name, not ID (include upgrade of RMB)
+* Include implementation version in `id` in Module Descriptor
 
 ## 5.0.0 2017-06-07
 
