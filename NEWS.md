@@ -1,3 +1,7 @@
+## 5.1.2 Unreleased
+
+* MODINVSTOR-13 materialType query fails
+
 ## 5.1.1 Unreleased
 
 * UIIT-33 Sorting on material-type should be by MT name, not ID (include upgrade of RMB)
