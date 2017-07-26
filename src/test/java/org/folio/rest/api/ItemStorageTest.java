@@ -800,6 +800,8 @@ public class ItemStorageTest extends TestBase {
     //non existant material type - 0 results
     String url7 = url+URLEncoder.encode("title=title and materialType.name=abc* sortby materialType.name", "UTF-8");
 
+    String url8 = url+URLEncoder.encode("materialType="+videolMaterialTypeID, "UTF-8");
+
     CompletableFuture<JsonResponse> cqlCF1 = new CompletableFuture();
     CompletableFuture<JsonResponse> cqlCF2 = new CompletableFuture();
     CompletableFuture<JsonResponse> cqlCF3 = new CompletableFuture();
@@ -807,11 +809,12 @@ public class ItemStorageTest extends TestBase {
     CompletableFuture<JsonResponse> cqlCF5 = new CompletableFuture();
     CompletableFuture<JsonResponse> cqlCF6 = new CompletableFuture();
     CompletableFuture<JsonResponse> cqlCF7 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF8 = new CompletableFuture();
 
-    String[] urls = new String[]{url1, url2, url3, url4, url5, url6, url7};
-    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]{cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6, cqlCF7};
+    String[] urls = new String[]{url1, url2, url3, url4, url5, url6, url7, url8};
+    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]{cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6, cqlCF7, cqlCF8};
 
-    for(int i=0; i<7; i++){
+    for(int i=0; i<8; i++){
       CompletableFuture<JsonResponse> cf = cqlCF[i];
       String cqlURL = urls[i];
       client.get(cqlURL, StorageTestSuite.TENANT_ID, ResponseHandler.json(cf));
@@ -820,6 +823,7 @@ public class ItemStorageTest extends TestBase {
       assertThat(cqlResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
       System.out.println(cqlResponse.getBody() +
         "\nStatus - " + cqlResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + cqlURL);
+
       if(i==6){
         assertThat(0, is(cqlResponse.getJson().getInteger("totalRecords")));
       } else if(i==5){
