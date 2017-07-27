@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Item Storage
-version: v3.0
+version: v3.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -37,7 +37,7 @@ resourceTypes:
         exampleItem: !include  examples/item_get.json
     get:
       is: [pageable,
-         searchable: {description: "by title (using CQL)",
+         searchable: {description: "using CQL (indexes for item and material type)",
                         example: "title=\"*uproot*\""},
           ]
     post:
