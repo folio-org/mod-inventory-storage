@@ -1,5 +1,5 @@
 {
-  "id": "inventory-storage-5.1.0-SNAPSHOT",
+  "id": "inventory-storage-5.1.0",
   "name": "Inventory Storage Module",
   "provides": [
     {
