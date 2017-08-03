@@ -1,9 +1,9 @@
-## 5.1.0 Unreleased
+## 5.1.0 2017-08-03
 
 * MODINVSTOR-12 Searching and sorting on material type properties (e.g. materialType.name)
 * Upgrade RAML Module Builder to version 13.0.2
 * Include implementation version in `id` in Module Descriptor
-* Provides item-storage interface version 3.1 (notes additional CQL indexes in comments)  
+* Provides item-storage interface version 3.1 (notes additional CQL indexes in comments)
 
 ## 5.0.0 2017-06-07
 
