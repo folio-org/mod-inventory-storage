@@ -1,0 +1,6 @@
+{
+  "srvcId": "${artifactId}-${version}",
+  "descriptor" : {
+    "exec" : "java -jar ../mod-inventory-storage/target/inventory-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
+  }
+}
