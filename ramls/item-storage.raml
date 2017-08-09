@@ -9,22 +9,22 @@ documentation:
     content: <b>Storage for items in the inventory</b>
 
 schemas:
- - item.json: !include schema/item.json
- - items: !include schema/items.json
- - errors: !include ../raml-util/schemas/errors.schema
- - error.schema: !include ../raml-util/schemas/error.schema
- - parameters.schema: !include ../raml-util/schemas/parameters.schema
+ - item.json: !include item.json
+ - items: !include items.json
+ - errors: !include raml-util/schemas/errors.schema
+ - error.schema: !include raml-util/schemas/error.schema
+ - parameters.schema: !include raml-util/schemas/parameters.schema
 
 traits:
- - secured: !include ../raml-util/traits/auth.raml
- - language: !include ../raml-util/traits/language.raml
- - pageable: !include ../raml-util/traits/pageable.raml
- - searchable: !include ../raml-util/traits/searchable.raml
- - validate: !include ../raml-util/traits/validation.raml
+ - secured: !include raml-util/traits/auth.raml
+ - language: !include raml-util/traits/language.raml
+ - pageable: !include raml-util/traits/pageable.raml
+ - searchable: !include raml-util/traits/searchable.raml
+ - validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
- - collection: !include ../raml-util/rtypes/collection.raml
- - collection-item: !include ../raml-util/rtypes/item-collection.raml
+ - collection: !include raml-util/rtypes/collection.raml
+ - collection-item: !include raml-util/rtypes/item-collection.raml
 
 /item-storage:
   /items:
