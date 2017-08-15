@@ -3,7 +3,7 @@
   "descriptor" : {
     "exec" : "java -jar ../mod-inventory-storage/target/mod-inventory-storage-fat.jar -Dhttp.port=%p",
     "env": [
-      { "name" : "db.username", "value" : "demo_inventory_storage_admin" },
+      { "name" : "db.username", "value" : "demo_mod_inventory_storage_admin" },
       { "name" : "db.password", "value" : "admin" },
       { "name" : "db.database", "value" : "demo" }
     ]

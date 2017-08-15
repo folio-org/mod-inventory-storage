@@ -19,7 +19,7 @@ external_test_results=$?
 env db.host=localhost \
     db.port=5432 \
     db.database=test \
-    db.username=inventory_storage_admin \
+    db.username=mod_inventory_storage_admin \
     db.password=admin \
     mvn test -Dorg.folio.inventory.storage.test.database=environment
 
