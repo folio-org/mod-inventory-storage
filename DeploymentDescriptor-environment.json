@@ -1,7 +1,7 @@
 {
-  "srvcId" : "inventory-storage-5.1.1-SNAPSHOT",
+  "srvcId" : "mod-inventory-storage-5.1.1-SNAPSHOT",
   "descriptor" : {
-    "exec" : "java -jar ../mod-inventory-storage/target/inventory-storage-fat.jar -Dhttp.port=%p",
+    "exec" : "java -jar ../mod-inventory-storage/target/mod-inventory-storage-fat.jar -Dhttp.port=%p",
     "env": [
       { "name" : "db.username", "value" : "demo_inventory_storage_admin" },
       { "name" : "db.password", "value" : "admin" },
