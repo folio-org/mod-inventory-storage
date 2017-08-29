@@ -102,6 +102,16 @@ pipeline {
          }
       }
 
+      stage('Publish Module Descriptor') {
+        when {
+          branch 'master'
+        }
+        steps {
+          sh "sed -i 's/\\(\\\"id\\\"\\s*:\\s*\\\".*-SNAPSHOT\\)/\\1.'\"${env.BUILD_NUMBER}\"'/' ${env.WORKSPACE}/target/ModuleDescriptor.json"
+          sh "curl -X POST -w '\n' -D - -d @${env.WORKSPACE}/target/ModuleDescriptor.json -f http://folio-registry.aws.indexdata.com:9130/_/proxy/modules"
+        }
+      }
+
       stage('Clean Up') {
          steps {
             sh "docker rmi ${docker_image}:${env.POM_VERSION}-${env.BUILD_NUMBER} || exit 0"
