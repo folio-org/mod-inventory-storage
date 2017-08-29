@@ -33,12 +33,12 @@ if [ "${storage}" = "external" ]; then
 
   ./setup-demo-db.sh
 
-  ./register-managed.sh DeploymentDescriptor-environment.json
+  ./register-managed.sh target/DeploymentDescriptor-environment.json
 
 elif [ "${storage}" = "embedded" ]; then
   echo "Running Inventory Storage module using embedded PostgreSQL storage"
 
-  ./register-managed.sh DeploymentDescriptor.json
+  ./register-managed.sh target/DeploymentDescriptor.json
 
 else
   echo "Unknown storage mechanism: ${storage}"
