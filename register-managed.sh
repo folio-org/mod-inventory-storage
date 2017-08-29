@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-deployment_descriptor=${1:-DeploymentDescriptor-environment.json}
+deployment_descriptor=${1:-target/DeploymentDescriptor-environment.json}
 tenant_id=${2:-demo_tenant}
 okapi_proxy_address=${3:-http://localhost:9130}
 module_id=${4:-inventory-storage-5.1.1-SNAPSHOT}
