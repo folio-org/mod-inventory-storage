@@ -10,7 +10,7 @@ documentation:
 
 schemas:
   - shelflocation.json: !include schema/shelflocation.json
-  - shelflocations: !include schema/shelflocations.json
+  - shelflocations.json: !include schema/shelflocations.json
 
 traits:
   - secured: !include ../raml-util/traits/auth.raml
@@ -29,7 +29,7 @@ resourceTypes:
     collection:
       exampleCollection: !include examples/shelflocations.json
       exampleItem: !include examples/shelflocation.json
-      schemaCollection: shelflocations
+      schemaCollection: shelflocations.json
       schemaItem: shelflocation.json
   get:
     is: [
@@ -51,22 +51,22 @@ resourceTypes:
           text/plain:
             example: "Internal server error, contact administrator"
   /{materialtypeId}:
-    description: Pass in the shelf location id
+    description: "Pass in the shelf location id"
     type:
       collection-item:
         exampleItem: !include examples/shelflocation.json
         schema: shelflocation.json
-      get:
-        responses:
-          501:
-            description: "Not implemented yet"
-      put:
-        responses:
-          501:
-            description: "Not implemented yet"
-      delete:
-        responses:
-          501:
-            description: "Not implemented yet"
+    get:
+      responses:
+        501:
+          description: "Not implemented yet"
+    put:
+      responses:
+        501:
+          description: "Not implemented yet"
+    delete:
+      responses:
+        501:
+          description: "Not implemented yet"
 
 
