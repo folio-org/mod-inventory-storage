@@ -35,12 +35,10 @@
       "type": "string"
     },
     "permanentLocation": {
-      "type": "object",
-      "$ref": "shelflocation.json"
+      "type": "string"
     },
     "temporaryLocation": {
-      "type": "object",
-      "$ref": "shelflocation.json"
+      "type": "string"
     }
   },
   "additionalProperties": false,
