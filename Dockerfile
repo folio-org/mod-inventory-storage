@@ -1,6 +1,6 @@
 FROM openjdk:8-jre
 
-ENV VERTICLE_FILE inventory-storage-fat.jar
+ENV VERTICLE_FILE mod-inventory-storage-fat.jar
 
 # Set the location of the verticles
 ENV VERTICLE_HOME /usr/verticles
