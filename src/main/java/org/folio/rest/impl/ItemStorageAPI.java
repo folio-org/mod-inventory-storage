@@ -31,12 +31,14 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.jaxrs.model.Shelflocation;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -47,6 +49,8 @@ public class ItemStorageAPI implements ItemStorageResource {
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
   private final Messages messages = Messages.getInstance();
+  
+   
 
   @Validate
   @Override
@@ -180,46 +184,71 @@ public class ItemStorageAPI implements ItemStorageResource {
                 return;
               }
               else{
-                try {
-                  postgresClient.save("item", entity.getId(), entity,
-                    reply -> {
-                      try {
-                        if(reply.succeeded()) {
-                          OutStream stream = new OutStream();
-                          stream.setData(entity);
+                Future<Shelflocation> permLocFuture;
+                Future<Shelflocation> tempLocFuture;
+                if(entity.getPermanentLocation() != null) {
+                  permLocFuture = getShelfLocation(vertxContext.owner(), tenantId, 
+                        entity.getPermanentLocation());
+                } else {
+                  permLocFuture = Future.succeededFuture();
+                }
+                if(entity.getTemporaryLocation() != null) {
+                  tempLocFuture = getShelfLocation(vertxContext.owner(), tenantId,
+                          entity.getTemporaryLocation());
+                } else {
+                  tempLocFuture = Future.succeededFuture();
+                }
+                CompositeFuture compositeFuture = CompositeFuture.all(
+                        tempLocFuture, permLocFuture);
+                compositeFuture.setHandler(compRes -> {
+                  if(compRes.failed()) {
+                    String message = "Attempting to specify non-existent permanent or temporary locations";
+                    log.error(message);
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.PostItemStorageItemsResponse
+                  .withPlainBadRequest(message)));
+                  } else {
+                    try {
+                      postgresClient.save("item", entity.getId(), entity,
+                        reply -> {
+                          try {
+                            if(reply.succeeded()) {
+                              OutStream stream = new OutStream();
+                              stream.setData(entity);
 
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              ItemStorageResource.PostItemStorageItemsResponse
-                                .withJsonCreated(reply.result(), stream)));
-                        }
-                        else {
-                          String message = DatabaseExceptionUtils.badRequestMessage(reply.cause());
-                          if (message != null) {
-                            asyncResultHandler.handle(
+                              asyncResultHandler.handle(
                                 Future.succeededFuture(
                                   ItemStorageResource.PostItemStorageItemsResponse
-                                    .withPlainBadRequest(message)));
-                          } else {
+                                    .withJsonCreated(reply.result(), stream)));
+                            }
+                            else {
+                              String message = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                              if (message != null) {
+                                asyncResultHandler.handle(
+                                    Future.succeededFuture(
+                                      ItemStorageResource.PostItemStorageItemsResponse
+                                        .withPlainBadRequest(message)));
+                              } else {
+                                asyncResultHandler.handle(
+                                  Future.succeededFuture(
+                                    ItemStorageResource.PostItemStorageItemsResponse
+                                      .withPlainInternalServerError(
+                                        reply.cause().getMessage())));
+                              }
+                            }
+                          } catch (Exception e) {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 ItemStorageResource.PostItemStorageItemsResponse
-                                  .withPlainInternalServerError(
-                                    reply.cause().getMessage())));
+                                  .withPlainInternalServerError(e.getMessage())));
                           }
-                        }
-                      } catch (Exception e) {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            ItemStorageResource.PostItemStorageItemsResponse
-                              .withPlainInternalServerError(e.getMessage())));
-                      }
-                    });
-                } catch (Exception e) {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    ItemStorageResource.PostItemStorageItemsResponse
-                      .withPlainInternalServerError(e.getMessage())));
-                }
+                        });
+                    } catch (Exception e) {
+                      asyncResultHandler.handle(Future.succeededFuture(
+                        ItemStorageResource.PostItemStorageItemsResponse
+                          .withPlainInternalServerError(e.getMessage())));
+                    }
+                  }
+                });                
               }
           });
         } catch (Exception e) {
@@ -593,5 +622,35 @@ public class ItemStorageAPI implements ItemStorageResource {
           }
         });
     }
+  }
+  
+  private Future<Shelflocation> getShelfLocation(
+    Vertx vertx,
+    String tenantId,
+    String locationId
+  ) {
+    Future<Shelflocation> future = Future.future();
+    try {
+      Criteria crit = new Criteria(ShelfLocationAPI.SHELF_LOCATION_SCHEMA_PATH);
+      crit.addField(ShelfLocationAPI.ID_FIELD_NAME);
+      crit.setOperation("=");
+      crit.setValue(locationId);
+      PostgresClient.getInstance(vertx, tenantId).get(ShelfLocationAPI.SHELF_LOCATION_TABLE, 
+              Shelflocation.class, new Criterion(crit), true, false, getReply -> {
+        if(getReply.failed()) {
+          future.fail(getReply.cause());
+        } else {
+          List<Shelflocation> locationList = (List<Shelflocation>)getReply.result()[0];
+          if(locationList.size() < 1) {
+            future.fail("No location found");
+          } else {
+            future.complete(locationList.get(0));
+          }
+        }
+      });
+    } catch(Exception e) {
+      future.fail(e);
+    }
+    return future;
   }
 }

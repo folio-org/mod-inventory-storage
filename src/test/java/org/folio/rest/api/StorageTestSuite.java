@@ -250,6 +250,14 @@ public class StorageTestSuite {
     }
   }
 
+  static URL shelfLocationsUrl() throws MalformedURLException {
+    return shelfLocationsUrl("");
+  }
+  
+  static URL shelfLocationsUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/shelf-locations" + subPath);
+  }
+  
   static URL materialTypesUrl() throws MalformedURLException {
     return materialTypesUrl("");
   }

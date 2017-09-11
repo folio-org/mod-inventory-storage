@@ -24,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 import static org.folio.rest.api.StorageTestSuite.*;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
+import org.folio.rest.support.client.ShelfLocationsClient;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -35,6 +36,8 @@ public class ItemStorageTest {
 
   private static String journalMaterialTypeID;
   private static String canCirculateLoanTypeID;
+  private static String permLocationId;
+  private static String tempLocationId;
 
   @BeforeClass
   public static void beforeAny()
@@ -49,6 +52,8 @@ public class ItemStorageTest {
 
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("journal");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesUrl()).create("Can Circulate");
+    permLocationId = new ShelfLocationsClient(client, shelfLocationsUrl()).create("Permanent Place");
+    tempLocationId = new ShelfLocationsClient(client, shelfLocationsUrl()).create("Temporary Place");
   }
 
   @Before
@@ -134,6 +139,7 @@ public class ItemStorageTest {
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", "Nod");
+  
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 

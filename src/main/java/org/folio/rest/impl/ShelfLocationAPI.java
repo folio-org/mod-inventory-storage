@@ -21,6 +21,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
+import java.util.UUID;
 import org.folio.rest.jaxrs.model.ShelflocationsJson;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -144,6 +145,9 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         String tenantId = getTenant(okapiHeaders);
         PostgresClient.getInstance(vertxContext.owner(), tenantId).save(SHELF_LOCATION_TABLE, entity, reply -> {
           try {
+            if(entity.getId() == null) {
+              entity.setId(UUID.randomUUID().toString());
+            }
             if(reply.failed()) {
               String message = logAndSaveError(reply.cause());
               if(isDuplicate(message)) {
