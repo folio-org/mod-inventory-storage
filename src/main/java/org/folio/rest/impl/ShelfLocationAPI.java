@@ -143,11 +143,13 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = getTenant(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(SHELF_LOCATION_TABLE, entity, reply -> {
-          try {
-            if(entity.getId() == null) {
-              entity.setId(UUID.randomUUID().toString());
-            }
+        String id = entity.getId();
+        if(id == null) {
+          id = UUID.randomUUID().toString();
+          entity.setId(id);
+        }
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(SHELF_LOCATION_TABLE, id, entity, reply -> {
+          try {        
             if(reply.failed()) {
               String message = logAndSaveError(reply.cause());
               if(isDuplicate(message)) {

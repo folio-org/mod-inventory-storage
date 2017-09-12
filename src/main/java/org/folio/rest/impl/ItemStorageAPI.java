@@ -202,7 +202,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                         tempLocFuture, permLocFuture);
                 compositeFuture.setHandler(compRes -> {
                   if(compRes.failed()) {
-                    String message = "Attempting to specify non-existent permanent or temporary locations";
+                    String message = "Attempting to specify non-existent location";
                     log.error(message);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.PostItemStorageItemsResponse
                   .withPlainBadRequest(message)));
