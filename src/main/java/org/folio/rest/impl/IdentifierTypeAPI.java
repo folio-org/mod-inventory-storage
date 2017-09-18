@@ -163,7 +163,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
 
   @Validate
   @Override
-  public void getIdentifierTypesByIdentifierTypeId(String loantypeId, String lang,
+  public void getIdentifierTypesByIdentifierTypeId(String identifierTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
 
@@ -172,7 +172,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
         String tenantId = TenantTool.tenantId(okapiHeaders);
 
         Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+loantypeId+"'"));
+            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+identifierTypeId+"'"));
 
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(IDENTIFIER_TYPE_TABLE, IdentifierType.class, c, true,
             reply -> {
@@ -224,7 +224,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(IDENTIFIER_TYPE_TABLE, loantypeId,
+        postgres.delete(IDENTIFIER_TYPE_TABLE, identifierTypeId,
             reply -> {
               try {
                 if (reply.failed()) {

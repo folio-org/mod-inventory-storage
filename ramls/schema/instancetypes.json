@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "intanceTypes": {
+    "instanceTypes": {
       "id": "instanceType",
       "type": "array",
       "items": {

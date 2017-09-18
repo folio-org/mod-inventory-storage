@@ -163,7 +163,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
 
   @Validate
   @Override
-  public void getInstanceTypesByInstanceTypeId(String loantypeId, String lang,
+  public void getInstanceTypesByInstanceTypeId(String instanceTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
 
@@ -172,7 +172,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
         String tenantId = TenantTool.tenantId(okapiHeaders);
 
         Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+loantypeId+"'"));
+            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+instanceTypeId+"'"));
 
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(INSTANCE_TYPE_TABLE, InstanceType.class, c, true,
             reply -> {
@@ -224,7 +224,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(INSTANCE_TYPE_TABLE, loantypeId,
+        postgres.delete(INSTANCE_TYPE_TABLE, instanceTypeId,
             reply -> {
               try {
                 if (reply.failed()) {

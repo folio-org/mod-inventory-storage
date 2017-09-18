@@ -163,7 +163,7 @@ public class ContributorTypeAPI implements ContributorTypesResource {
 
   @Validate
   @Override
-  public void getContributorTypesByContributorTypeId(String loantypeId, String lang,
+  public void getContributorTypesByContributorTypeId(String contributorTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
 
@@ -172,7 +172,7 @@ public class ContributorTypeAPI implements ContributorTypesResource {
         String tenantId = TenantTool.tenantId(okapiHeaders);
 
         Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+loantypeId+"'"));
+            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+contributorTypeId+"'"));
 
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CONTRIBUTOR_TYPE_TABLE, ContributorType.class, c, true,
             reply -> {
@@ -224,7 +224,7 @@ public class ContributorTypeAPI implements ContributorTypesResource {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(CONTRIBUTOR_TYPE_TABLE, loantypeId,
+        postgres.delete(CONTRIBUTOR_TYPE_TABLE, contributorTypeId,
             reply -> {
               try {
                 if (reply.failed()) {

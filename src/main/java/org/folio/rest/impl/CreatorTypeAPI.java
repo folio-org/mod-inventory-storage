@@ -163,7 +163,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
 
   @Validate
   @Override
-  public void getCreatorTypesByCreatorTypeId(String loantypeId, String lang,
+  public void getCreatorTypesByCreatorTypeId(String creatorTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
 
@@ -172,7 +172,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
         String tenantId = TenantTool.tenantId(okapiHeaders);
 
         Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+loantypeId+"'"));
+            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+creatorTypeId+"'"));
 
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CREATOR_TYPE_TABLE, CreatorType.class, c, true,
             reply -> {
@@ -224,7 +224,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(CREATOR_TYPE_TABLE, loantypeId,
+        postgres.delete(CREATOR_TYPE_TABLE, creatorTypeId,
             reply -> {
               try {
                 if (reply.failed()) {

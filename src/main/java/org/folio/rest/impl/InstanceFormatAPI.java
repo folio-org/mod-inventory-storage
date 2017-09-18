@@ -163,7 +163,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
 
   @Validate
   @Override
-  public void getInstanceFormatsByInstanceFormatId(String loantypeId, String lang,
+  public void getInstanceFormatsByInstanceFormatId(String instanceFormatId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
 
@@ -172,7 +172,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
         String tenantId = TenantTool.tenantId(okapiHeaders);
 
         Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+loantypeId+"'"));
+            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+instanceFormatId+"'"));
 
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(INSTANCE_FORMAT_TABLE, InstanceFormat.class, c, true,
             reply -> {
@@ -224,7 +224,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(INSTANCE_FORMAT_TABLE, loantypeId,
+        postgres.delete(INSTANCE_FORMAT_TABLE, instanceFormatId,
             reply -> {
               try {
                 if (reply.failed()) {
