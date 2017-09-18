@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "contributerTypes": {
+      "id": "contributorType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "contributorType"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "contributorTypes",
+    "totalRecords"
+  ]
+}

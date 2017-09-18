@@ -8,24 +8,94 @@
     "title": {
       "type": "string"
     },
+    "altTitle": {
+      "type": "string"
+    },
+    "series": {
+      "type": "string"
+    },
+    "creators": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "creatorTypeId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ]
+      }
+    },
+    "contributors": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "contributorTypeId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ]
+      }
+    },
+    "publisher": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "instanceTypeId": {
+      "type": "string"
+    },
+    "instanceFormatId": {
+      "type": "string"
+    },
     "identifiers": {
       "type": "array",
       "minItems": 0,
       "items": {
         "type": "object",
         "properties": {
-          "namespace": {
+          "value": {
             "type": "string"
           },
-          "value": {
+          "typeId": {
             "type": "string"
           }
         },
         "required": [
-          "namespace",
-          "value"
+          "value",
+          "type"
         ]
       }
+    },
+    "source": {
+      "type": "string"
+    },
+    "languageCodes": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
+    "verstion" : {
+      "type": "string"
     }
   },
   "required": [

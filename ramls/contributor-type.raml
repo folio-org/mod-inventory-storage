@@ -1,0 +1,51 @@
+#%RAML 0.8
+title: Contributor Types API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Contributor Types API
+    content: This documents the API calls that can be made to query and manage contributor types
+
+schemas:
+  - contributorType: !include schema/contributortype.json
+  - contributorTypes: !include schema/contributortypes.json
+  - errors: !include ../raml-util/schemas/errors.schema
+  - error: !include ../raml-util/schemas/error.schema
+  - parameters: !include ../raml-util/schemas/parameters.schema
+
+traits:
+  - secured: !include ../raml-util/traits/auth.raml
+  - pageable: !include ../raml-util/traits/pageable.raml
+  - searchable: !include ../raml-util/traits/searchable.raml
+  - language: !include ../raml-util/traits/language.raml
+  - validate: !include ../raml-util/traits/validation.raml
+
+resourceTypes:
+  - collection: !include ../raml-util/rtypes/collection.raml
+  - collection-item: !include ../raml-util/rtypes/item-collection.raml
+  - get-delete-only: !include ../raml-util/rtypes/get-delete.raml
+
+/contributor-types:
+  type:
+    collection:
+      exampleCollection: !include examples/contributortypes.json
+      exampleItem: !include examples/contributortype.json
+      schemaCollection: contributorTypes
+      schemaItem: contributorType
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of contributor types
+  post:
+    description: Create a new contributor type
+    is: [validate]
+  /{contributorTypeId}:
+    description: Pass in the contributor type id
+    type:
+      collection-item:
+        exampleItem: !include examples/contributortype.json
+        schema: contributorType
