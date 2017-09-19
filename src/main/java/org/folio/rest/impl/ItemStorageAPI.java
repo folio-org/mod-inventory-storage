@@ -186,15 +186,15 @@ public class ItemStorageAPI implements ItemStorageResource {
               else{
                 Future<Shelflocation> permLocFuture;
                 Future<Shelflocation> tempLocFuture;
-                if(entity.getPermanentLocation() != null) {
+                if(entity.getPermanentLocationId() != null) {
                   permLocFuture = getShelfLocation(vertxContext.owner(), tenantId, 
-                        entity.getPermanentLocation());
+                        entity.getPermanentLocationId());
                 } else {
                   permLocFuture = Future.succeededFuture();
                 }
-                if(entity.getTemporaryLocation() != null) {
+                if(entity.getTemporaryLocationId() != null) {
                   tempLocFuture = getShelfLocation(vertxContext.owner(), tenantId,
-                          entity.getTemporaryLocation());
+                          entity.getTemporaryLocationId());
                 } else {
                   tempLocFuture = Future.succeededFuture();
                 }

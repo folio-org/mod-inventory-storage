@@ -41,6 +41,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.containsString;
 
 public class ItemStorageTest {
 
@@ -116,9 +117,9 @@ public class ItemStorageTest {
       is(journalMaterialTypeID));
     assertThat(itemFromPost.getString("permanentLoanTypeId"),
       is(canCirculateLoanTypeID));
-    assertThat(itemFromPost.getString("temporaryLocation"),
+    assertThat(itemFromPost.getString("temporaryLocationId"),
       is(annexLocationId));
-    assertThat(itemFromPost.getString("permanentLocation"),
+    assertThat(itemFromPost.getString("permanentLocationId"),
       is(mainLibraryLocationId));
 
     JsonResponse getResponse = getById(id);
@@ -137,9 +138,9 @@ public class ItemStorageTest {
       is(journalMaterialTypeID));
     assertThat(itemFromGet.getString("permanentLoanTypeId"),
       is(canCirculateLoanTypeID));
-    assertThat(itemFromGet.getString("temporaryLocation"),
+    assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLocationId));
-    assertThat(itemFromGet.getString("permanentLocation"),
+    assertThat(itemFromGet.getString("permanentLocationId"),
       is(mainLibraryLocationId));
   }
 
@@ -220,9 +221,9 @@ public class ItemStorageTest {
       is(journalMaterialTypeID));
     assertThat(itemFromGet.getString("permanentLoanTypeId"),
       is(canCirculateLoanTypeID));
-    assertThat(itemFromGet.getString("temporaryLocation"),
+    assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLocationId));
-    assertThat(itemFromGet.getString("permanentLocation"),
+    assertThat(itemFromGet.getString("permanentLocationId"),
       is(mainLibraryLocationId));
   }
 
@@ -269,7 +270,7 @@ public class ItemStorageTest {
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", "LandOfNod")
-      .put("permanentLocation", badLocation);
+      .put("permanentLocationId", badLocation);
     
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
@@ -330,8 +331,8 @@ public class ItemStorageTest {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("permanentLocation", mainLibraryLocationId);
-    itemToCreate.put("temporaryLocation", annexLocationId);
+    itemToCreate.put("permanentLocationId", mainLibraryLocationId);
+    itemToCreate.put("temporaryLocationId", annexLocationId);
 
     CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
 
@@ -411,9 +412,9 @@ public class ItemStorageTest {
       is(journalMaterialTypeID));
     assertThat(item.getString("permanentLoanTypeId"),
       is(canCirculateLoanTypeID));
-    assertThat(item.getString("temporaryLocation"),
+    assertThat(item.getString("temporaryLocationId"),
       is(annexLocationId));
-    assertThat(item.getString("permanentLocation"),
+    assertThat(item.getString("permanentLocationId"),
       is(mainLibraryLocationId));
   }
 
@@ -502,8 +503,8 @@ public class ItemStorageTest {
 
     JsonObject replacement = itemToCreate.copy();
       replacement.put("barcode", "125845734657")
-              .put("temporaryLocation", mainLibraryLocationId)
-              .put("permanentLocation", annexLocationId);
+              .put("temporaryLocationId", mainLibraryLocationId)
+              .put("permanentLocationId", annexLocationId);
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
 
@@ -529,9 +530,9 @@ public class ItemStorageTest {
       is("Available"));
     assertThat(item.getString("materialTypeId"),
       is(journalMaterialTypeID));
-    assertThat(item.getString("permanentLocation"),
+    assertThat(item.getString("permanentLocationId"),
       is(annexLocationId));
-    assertThat(item.getString("temporaryLocation"),
+    assertThat(item.getString("temporaryLocationId"),
       is(mainLibraryLocationId));
   }
 
@@ -550,8 +551,8 @@ public class ItemStorageTest {
 
     JsonObject replacement = itemToCreate.copy();
     replacement.put("barcode", "036587275931");
-    replacement.put("temporaryLocation", mainLibraryLocationId);
-    replacement.put("permanentLocation", annexLocationId);
+    replacement.put("temporaryLocationId", mainLibraryLocationId);
+    replacement.put("permanentLocationId", annexLocationId);
    
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
@@ -578,9 +579,9 @@ public class ItemStorageTest {
       is("Available"));
     assertThat(item.getString("materialTypeId"),
       is(journalMaterialTypeID));
-    assertThat(item.getString("permanentLocation"),
+    assertThat(item.getString("permanentLocationId"),
       is(annexLocationId));
-    assertThat(item.getString("temporaryLocation"),
+    assertThat(item.getString("temporaryLocationId"),
       is(mainLibraryLocationId));
   }
 
@@ -897,8 +898,8 @@ public class ItemStorageTest {
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     //itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
-    itemToCreate.put("permanentLocation", mainLibraryLocationId);
-    itemToCreate.put("temporaryLocation", annexLocationId);
+    itemToCreate.put("permanentLocationId", mainLibraryLocationId);
+    itemToCreate.put("temporaryLocationId", annexLocationId);
 
     return itemToCreate;
   }
