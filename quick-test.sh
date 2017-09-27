@@ -4,7 +4,7 @@
 
 ./setup-test-db.sh
 
-mvn -q clean test -Dorg.folio.inventory.storage.test.database=external
+mvn -q clean org.jacoco:jacoco-maven-plugin:prepare-agent test -Dorg.folio.inventory.storage.test.database=external
 
 test_results=$?
 
