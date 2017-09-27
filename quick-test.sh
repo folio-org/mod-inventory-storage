@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+rm -rf target/
+
 ./destroy-test-db.sh
 
 ./setup-test-db.sh
