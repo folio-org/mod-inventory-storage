@@ -44,6 +44,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
+    <argLine></argLine>
   </properties>
 
   <distributionManagement>
@@ -292,6 +293,11 @@
             <include>org/folio/rest/api/StorageTestSuite.java</include>
             <include>org/folio/rest/**</include>
           </includes>
+          <!-- 3 tests of ItemStorageTest fail when run with de (= German) locale because
+               of translated error messages.
+               https://stackoverflow.com/questions/23190107/cannot-use-jacoco-jvm-args-and-surefire-jvm-args-together-in-maven
+          -->
+          <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
         </configuration>
       </plugin>
     </plugins>
