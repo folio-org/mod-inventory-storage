@@ -29,19 +29,6 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
 
 public class ItemStorageTest {
 
@@ -62,6 +49,7 @@ public class ItemStorageTest {
     StorageTestSuite.deleteAll(itemsUrl());
     StorageTestSuite.deleteAll(materialTypesUrl());
     StorageTestSuite.deleteAll(loanTypesUrl());
+    StorageTestSuite.deleteAll(shelfLocationsUrl());
 
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("journal");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesUrl()).create("Can Circulate");
