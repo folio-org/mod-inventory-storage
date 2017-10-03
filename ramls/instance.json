@@ -29,7 +29,7 @@
         },
         "required": [
           "name",
-          "type"
+          "creatorTypeId"
         ]
       }
     },
@@ -48,7 +48,7 @@
         },
         "required": [
           "name",
-          "type"
+          "contributorTypeId"
         ]
       }
     },
@@ -81,7 +81,7 @@
         "additionalProperties": false,
         "required": [
           "value",
-          "type"
+          "typeId"
         ]
       }
     },
@@ -95,7 +95,7 @@
         "type": "string"
       }
     },
-    "verstion" : {
+    "version" : {
       "type": "string"
     }
   },
