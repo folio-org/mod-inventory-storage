@@ -9,18 +9,18 @@ documentation:
     content: <b>Storage for instances in the inventory</b>
 
 schemas:
- - instance.json: !include schema/instance.json
- - instances: !include schema/instances.json
+ - instance.json: !include instance.json
+ - instances: !include instances.json
 
 traits:
- - secured: !include ../raml-util/traits/auth.raml
- - language: !include ../raml-util/traits/language.raml
- - pageable: !include ../raml-util/traits/pageable.raml
- - searchable: !include ../raml-util/traits/searchable.raml
+ - secured: !include raml-util/traits/auth.raml
+ - language: !include raml-util/traits/language.raml
+ - pageable: !include raml-util/traits/pageable.raml
+ - searchable: !include raml-util/traits/searchable.raml
 
 resourceTypes:
- - collection: !include ../raml-util/rtypes/collection.raml
- - collection-item: !include ../raml-util/rtypes/item-collection.raml
+ - collection: !include raml-util/rtypes/collection.raml
+ - collection-item: !include raml-util/rtypes/item-collection.raml
 
 /instance-storage:
   /instances:

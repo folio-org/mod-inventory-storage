@@ -2,12 +2,12 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "items": {
-      "id": "items",
+    "instances": {
+      "id": "instances",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref" : "item.json"
+        "$ref": "instance.json"
       }
     },
     "totalRecords": {
@@ -15,7 +15,7 @@
     }
   },
   "required": [
-    "items",
+    "instances",
     "totalRecords"
   ]
 }

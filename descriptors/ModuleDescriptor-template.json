@@ -1,5 +1,5 @@
 {
-  "id": "inventory-storage",
+  "id": "${artifactId}-${version}",
   "name": "Inventory Storage Module",
   "provides": [
     {

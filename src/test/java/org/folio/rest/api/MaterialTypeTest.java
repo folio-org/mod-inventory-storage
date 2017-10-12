@@ -28,7 +28,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-public class MaterialTypeTest {
+public class MaterialTypeTest extends TestBase {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 

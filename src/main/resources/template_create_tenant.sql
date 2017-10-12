@@ -95,3 +95,9 @@ CREATE TABLE myuniversity_mymodule.instance (
   jsonb JSONB NOT NULL
 );
 GRANT ALL ON myuniversity_mymodule.instance TO myuniversity_mymodule;
+
+-- left join view of items and material type to allow querying / sorting across both tables
+CREATE VIEW myuniversity_mymodule.items_mt_view AS select i._id,i.jsonb as jsonb, mt.jsonb as mt_jsonb from myuniversity_mymodule.item i
+left join myuniversity_mymodule.material_type mt on i.jsonb->>'materialTypeId' = mt.jsonb->>'id';
+
+GRANT ALL ON myuniversity_mymodule.items_mt_view TO myuniversity_mymodule;

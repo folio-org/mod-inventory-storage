@@ -1,18 +1,19 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.folio.rest.support.client.MaterialTypesClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.folio.rest.api.StorageTestSuite.itemsUrl;
+import static org.folio.rest.api.StorageTestSuite.loanTypesUrl;
+import static org.folio.rest.api.StorageTestSuite.materialTypesUrl;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -29,12 +30,28 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.folio.rest.support.client.MaterialTypesClient;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
-public class ItemStorageTest {
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
-  private static HttpClient client = new HttpClient(StorageTestSuite.getVertx());
+public class ItemStorageTest extends TestBase {
 
   private static String journalMaterialTypeID;
+  private static String booklMaterialTypeID;
+  private static String videolMaterialTypeID;
   private static String canCirculateLoanTypeID;
   private static String mainLibraryLocationId;
   private static String annexLocationId;
@@ -52,25 +69,20 @@ public class ItemStorageTest {
     StorageTestSuite.deleteAll(shelfLocationsUrl());
 
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("journal");
+    booklMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("book");
+    videolMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("video");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesUrl()).create("Can Circulate");
     mainLibraryLocationId = new ShelfLocationsClient(client, shelfLocationsUrl()).create("Main Library");
     annexLocationId = new ShelfLocationsClient(client, shelfLocationsUrl()).create("Annex Library");
   }
 
   @Before
-  public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(itemsUrl());
   }
 
   @After
-  public void checkIdsAfterEach()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
+  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("item");
   }
 
@@ -830,6 +842,71 @@ public class ItemStorageTest {
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
+  @Test
+  public void testCrossTableQueries() throws Exception {
+    String url = itemsUrl() + "?query=";
+
+    createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
+      "A journal title", "036000291452", journalMaterialTypeID));
+    createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
+      "A book title", "036000291452", booklMaterialTypeID));
+    createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
+      "A video title", "036000291452", videolMaterialTypeID));
+
+    //query on item and sort by material type
+    String url1 = url+URLEncoder.encode("title=title sortBy materialType.name/sort.descending", "UTF-8");
+    String url2 = url+URLEncoder.encode("title=title sortBy materialType.name/sort.ascending", "UTF-8");
+    //query and sort on material type via items end point
+    String url3 = url+URLEncoder.encode("materialType.name=Journal* sortBy materialType.name/sort.descending", "UTF-8");
+    //query on item sort on item and material type
+    String url4 = url+URLEncoder.encode("title=title sortby materialType.name title", "UTF-8");
+    //query on item and material type sort by material type
+    String url5 = url+URLEncoder.encode("title=title and materialType.name=Journal* sortby materialType.name", "UTF-8");
+    //query on item and sort by item
+    String url6 = url+URLEncoder.encode("title=abc sortBy materialType.name", "UTF-8");
+    //non existant material type - 0 results
+    String url7 = url+URLEncoder.encode("title=title and materialType.name=abc* sortby materialType.name", "UTF-8");
+
+    String url8 = url+URLEncoder.encode("materialType="+videolMaterialTypeID, "UTF-8");
+
+    CompletableFuture<JsonResponse> cqlCF1 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF2 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF3 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF4 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF5 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF6 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF7 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF8 = new CompletableFuture();
+
+    String[] urls = new String[]{url1, url2, url3, url4, url5, url6, url7, url8};
+    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]{cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6, cqlCF7, cqlCF8};
+
+    for(int i=0; i<8; i++){
+      CompletableFuture<JsonResponse> cf = cqlCF[i];
+      String cqlURL = urls[i];
+      client.get(cqlURL, StorageTestSuite.TENANT_ID, ResponseHandler.json(cf));
+
+      JsonResponse cqlResponse = cf.get(5, TimeUnit.SECONDS);
+      assertThat(cqlResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+      System.out.println(cqlResponse.getBody() +
+        "\nStatus - " + cqlResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + cqlURL);
+
+      if(i==6){
+        assertThat(0, is(cqlResponse.getJson().getInteger("totalRecords")));
+      } else if(i==5){
+        assertThat(0, is(cqlResponse.getJson().getInteger("totalRecords")));
+      } else if(i==4){
+        assertThat(1, is(cqlResponse.getJson().getInteger("totalRecords")));
+      } else if(i==0){
+        assertThat("A video title" , is(cqlResponse.getJson().getJsonArray("items").getJsonObject(0).getString("title")));
+      }else if(i==1){
+        assertThat("A book title" , is(cqlResponse.getJson().getJsonArray("items").getJsonObject(0).getString("title")));
+      }else if(i==2){
+        assertThat(1, is(cqlResponse.getJson().getInteger("totalRecords")));
+      }
+    }
+  }
+
   private JsonResponse getById(UUID id)
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
@@ -868,10 +945,19 @@ public class ItemStorageTest {
   }
 
   private JsonObject createItemRequest(
+      UUID id,
+      UUID instanceId,
+      String title,
+      String barcode) {
+    return createItemRequest(id, instanceId, title, barcode, journalMaterialTypeID);
+  }
+
+  private JsonObject createItemRequest(
     UUID id,
     UUID instanceId,
     String title,
-    String barcode) {
+    String barcode,
+    String materialType) {
 
     JsonObject itemToCreate = new JsonObject();
 
@@ -883,7 +969,7 @@ public class ItemStorageTest {
     itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("materialTypeId", materialType);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     //itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
     itemToCreate.put("permanentLocationId", mainLibraryLocationId);

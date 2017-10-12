@@ -2,6 +2,6 @@
   "host" : "localhost",
   "port" : 5432,
   "database" : "test",
-  "username" : "inventory_storage_admin",
+  "username" : "mod_inventory_storage_admin",
   "password" : "admin"
 }

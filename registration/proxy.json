@@ -1,5 +1,5 @@
 {
-  "id": "inventory-storage",
+  "id": "mod-inventory-storage-5.1.1-SNAPSHOT",
   "name": "Inventory Storage Module",
   "provides": [
     {

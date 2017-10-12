@@ -283,7 +283,7 @@ public class LoanTypeAPI implements LoanTypesResource {
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
-          tenantId, "inventory_storage", LOAN_TYPE_TABLE),
+          tenantId, "mod_inventory_storage", LOAN_TYPE_TABLE),
           reply -> {
             if (reply.succeeded()) {
               asyncResultHandler.handle(Future.succeededFuture(

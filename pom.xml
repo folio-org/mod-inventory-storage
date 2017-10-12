@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>inventory-storage</artifactId>
+  <artifactId>mod-inventory-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>5.0.1-SNAPSHOT</version>
+  <version>5.1.1-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -24,7 +24,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>12.1.2</version>
+      <version>13.0.2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -44,7 +44,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <ramlfiles_util_path>${basedir}/raml-util</ramlfiles_util_path>
+    <argLine></argLine>
   </properties>
 
   <distributionManagement>
@@ -205,19 +205,51 @@
             </configuration>
           </execution>
           <execution>
-            <id>copy-resources-2</id>
-            <phase>process-resources</phase>
+            <id>filter-descriptor-inputs</id>
+            <phase>generate-resources</phase>
             <goals>
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/classes/apidocs/raml-util</outputDirectory>
+              <outputDirectory>${project.build.directory}</outputDirectory>
               <resources>
                 <resource>
-                  <directory>${ramlfiles_util_path}</directory>
+                  <directory>${basedir}/descriptors</directory>
+                  <include>*Descriptor*-template.json</include>
                   <filtering>true</filtering>
                 </resource>
               </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>com.coderplus.maven.plugins</groupId>
+        <artifactId>copy-rename-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <id>rename-descriptor-outputs</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>rename</goal>
+            </goals>
+            <configuration>
+              <fileSets>
+                <fileSet>
+                  <sourceFile>${project.build.directory}/ModuleDescriptor-template.json</sourceFile>
+                  <destinationFile>${project.build.directory}/ModuleDescriptor.json</destinationFile>
+                </fileSet>
+                <fileSet>
+                  <sourceFile>${project.build.directory}/DeploymentDescriptor-template.json</sourceFile>
+                  <destinationFile>${project.build.directory}/DeploymentDescriptor.json</destinationFile>
+                </fileSet>
+                <fileSet>
+                  <sourceFile>${project.build.directory}/DeploymentDescriptor-environment-template.json</sourceFile>
+                  <destinationFile>${project.build.directory}/DeploymentDescriptor-environment.json</destinationFile>
+                </fileSet>
+              </fileSets>
             </configuration>
           </execution>
         </executions>
@@ -261,6 +293,11 @@
             <include>org/folio/rest/api/StorageTestSuite.java</include>
             <include>org/folio/rest/**</include>
           </includes>
+          <!-- 3 tests of ItemStorageTest fail when run with de (= German) locale because
+               of translated error messages.
+               https://stackoverflow.com/questions/23190107/cannot-use-jacoco-jvm-args-and-surefire-jvm-args-together-in-maven
+          -->
+          <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
         </configuration>
       </plugin>
     </plugins>

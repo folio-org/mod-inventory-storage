@@ -1,4 +1,14 @@
-## 5.0.1 Unreleased
+## 5.1.1 Unreleased
+
+* Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)
+* Adds mod- prefix to names of the built artifacts (FOLIO-813)
+
+## 5.1.0 2017-08-03
+
+* MODINVSTOR-12 Searching and sorting on material type properties (e.g. materialType.name)
+* Upgrade RAML Module Builder to version 13.0.2
+* Include implementation version in `id` in Module Descriptor
+* Provides item-storage interface version 3.1 (notes additional CQL indexes in comments)
 
 ## 5.0.0 2017-06-07
 
