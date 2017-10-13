@@ -44,7 +44,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
   public static final String SHELF_LOCATION_TABLE = "shelflocation";
   public static final Logger logger = LoggerFactory.getLogger(ShelfLocationAPI.class);
   public static final String URL_PREFIX = "/shelflocations";
-  public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/schema/shelflocation.json";
+  public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/shelflocation.json";
   public static final String ID_FIELD_NAME = "'id'";
 
   private String getErrorResponse(String response) {
