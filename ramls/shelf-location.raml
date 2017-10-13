@@ -9,23 +9,23 @@ documentation:
     content: This documents the API calls that can be made to query and manage shelf locations types of the system
 
 schemas:
-  - shelflocation.json: !include schema/shelflocation.json
-  - shelflocations.json: !include schema/shelflocations.json
-  - errors: !include ../raml-util/schemas/errors.schema
-  - error.schema: !include ../raml-util/schemas/error.schema
-  - parameters.schema: !include ../raml-util/schemas/parameters.schema
+  - shelflocation.json: !include shelflocation.json
+  - shelflocations.json: !include shelflocations.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
 
 traits:
-  - secured: !include ../raml-util/traits/auth.raml
-  - pageable: !include ../raml-util/traits/pageable.raml
-  - searchable: !include ../raml-util/traits/searchable.raml
-  - language: !include ../raml-util/traits/language.raml
-  - validate: !include ../raml-util/traits/validation.raml
+  - secured: !include raml-util/traits/auth.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+  - language: !include raml-util/traits/language.raml
+  - validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include ../raml-util/rtypes/collection.raml
-  - collection-item: !include ../raml-util/rtypes/item-collection.raml
-  - get-delete-only: !include ../raml-util/rtypes/get-delete.raml
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+  - get-delete-only: !include raml-util/rtypes/get-delete.raml
 
 /shelf-locations:
   type:
