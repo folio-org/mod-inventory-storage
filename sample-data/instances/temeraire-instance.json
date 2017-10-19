@@ -3,11 +3,11 @@
   "title": "Temeraire",
   "identifiers": [
     {
-      "namespace": "isbn",
+      "typeId": "isbn",
       "value": "1447294130"
     },
     {
-      "namespace": "isbn",
+      "typeId": "isbn",
       "value": "9781447294130"
     }
   ]

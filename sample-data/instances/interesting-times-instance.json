@@ -3,11 +3,11 @@
   "title": "Interesting Times",
   "identifiers": [
     {
-      "namespace": "isbn",
+      "typeId": "isbn",
       "value": "0552142352"
     },
     {
-      "namespace": "isbn",
+      "typeId": "isbn",
       "value": "9780552142352"
     }
   ]

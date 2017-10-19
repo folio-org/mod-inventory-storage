@@ -570,9 +570,9 @@ public class InstanceStorageTest extends TestBase {
       identifiers);
   }
 
-  private JsonObject identifier(String namespace, String value) {
+  private JsonObject identifier(String typeId, String value) {
     return new JsonObject()
-      .put("namespace", namespace)
+      .put("typeId", typeId)
       .put("value", value);
   }
 
