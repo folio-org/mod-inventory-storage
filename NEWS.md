@@ -1,3 +1,8 @@
+## 6.0.0 Unreleased
+
+* Remove location objects from Item record, and store a UUID for a location record instead
+* Implement /shelflocations endpoint for CRUD of location records
+
 ## 5.1.1 Unreleased
 
 * Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)
