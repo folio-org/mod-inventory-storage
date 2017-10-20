@@ -119,6 +119,33 @@
       ]
     },
     {
+      "id": "identifier-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/identifier-types",
+          "permissionsRequired": ["inventory-storage.identifier-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/identifier-types/{id}",
+          "permissionsRequired": ["inventory-storage.identifier-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/identifier-types",
+          "permissionsRequired": ["inventory-storage.identifier-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/identifier-types/{id}",
+          "permissionsRequired": ["inventory-storage.identifier-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/identifier-types/{id}",
+          "permissionsRequired": ["inventory-storage.identifier-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id" : "_tenant",
       "version" : "1.0",
       "interfaceType": "system",
@@ -245,6 +272,31 @@
       "description": "delete individual material-type from storage"
     },
     {
+      "permissionName": "inventory-storage.identifier-types.collection.get",
+      "displayName": "inventory storage - get identifier-type collection",
+      "description": "get identifier-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.identifier-types.item.get",
+      "displayName": "inventory storage - get individual identifier-type",
+      "description": "get individual identifier-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.identifier-types.item.post",
+      "displayName": "inventory storage - create individual identifier-type",
+      "description": "create individual identifier-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.identifier-types.item.put",
+      "displayName": "inventory storage - modify identifier-type",
+      "description": "modify identifier-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.identifier-types.item.delete",
+      "displayName": "inventory storage - delete individual identifier-type",
+      "description": "delete individual identifier-type from storage"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -270,7 +322,12 @@
         "inventory-storage.material-types.item.get",
         "inventory-storage.material-types.item.post",
         "inventory-storage.material-types.item.put",
-        "inventory-storage.material-types.item.delete"
+        "inventory-storage.material-types.item.delete",
+        "inventory-storage.identifier-types.collection.get",
+        "inventory-storage.identifier-types.item.get",
+        "inventory-storage.identifier-types.item.post",
+        "inventory-storage.identifier-types.item.put",
+        "inventory-storage.identifier-types.item.delete"
       ]
     }
   ]

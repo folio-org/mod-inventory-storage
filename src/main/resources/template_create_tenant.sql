@@ -4,6 +4,8 @@ GRANT myuniversity_mymodule TO CURRENT_USER;
 
 CREATE SCHEMA myuniversity_mymodule AUTHORIZATION myuniversity_mymodule;
 
+-- **** item table and related look-up tables **** --
+
 -- *** loan type start *** --
 -- loan type table
 CREATE TABLE IF NOT EXISTS myuniversity_mymodule.loan_type (
@@ -71,14 +73,38 @@ CREATE TRIGGER update_item_references
   FOR EACH ROW EXECUTE PROCEDURE update_item_references();
 GRANT ALL ON myuniversity_mymodule.item TO myuniversity_mymodule;
 
-CREATE TABLE myuniversity_mymodule.instance (
-  _id UUID PRIMARY KEY,
-  jsonb JSONB NOT NULL
-);
-GRANT ALL ON myuniversity_mymodule.instance TO myuniversity_mymodule;
-
 -- left join view of items and material type to allow querying / sorting across both tables
 CREATE VIEW myuniversity_mymodule.items_mt_view AS select i._id,i.jsonb as jsonb, mt.jsonb as mt_jsonb from myuniversity_mymodule.item i
 left join myuniversity_mymodule.material_type mt on i.jsonb->>'materialTypeId' = mt.jsonb->>'id';
 
 GRANT ALL ON myuniversity_mymodule.items_mt_view TO myuniversity_mymodule;
+
+-- **** instance table and related look-up tables **** --
+-- *** identifier type start *** --
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.identifier_type (
+ _id UUID PRIMARY KEY,
+ jsonb jsonb NOT NULL,
+ creation_date date not null default current_timestamp,
+ update_date date not null default current_timestamp
+);
+-- allow querying jsonb in identifier type table
+CREATE INDEX idxgin_identifier_type ON myuniversity_mymodule.identifier_type USING gin (jsonb jsonb_path_ops);
+-- unique constraint
+CREATE UNIQUE INDEX identifier_type_unique_idx ON myuniversity_mymodule.identifier_type((jsonb->>'name'));
+-- update the update_date column when record is updated
+CREATE OR REPLACE FUNCTION update_modified_column_identifier_type()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.update_date = current_timestamp;
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_date_identifier_type BEFORE UPDATE ON myuniversity_mymodule.identifier_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_identifier_type();
+GRANT ALL ON myuniversity_mymodule.identifier_type TO myuniversity_mymodule;
+-- *** identitifier type end *** --
+
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.instance (
+  _id UUID PRIMARY KEY,
+  jsonb JSONB NOT NULL
+);
+GRANT ALL ON myuniversity_mymodule.instance TO myuniversity_mymodule;
