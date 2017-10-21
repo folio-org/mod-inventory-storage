@@ -1,14 +1,15 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.itemsUrl;
-import static org.folio.rest.api.StorageTestSuite.loanTypesUrl;
-import static org.folio.rest.api.StorageTestSuite.materialTypesUrl;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.*;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.folio.rest.support.client.MaterialTypesClient;
+import org.folio.rest.support.client.ShelfLocationsClient;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -25,27 +26,9 @@ import java.util.concurrent.TimeoutException;
 import static org.folio.rest.api.StorageTestSuite.*;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
-import org.folio.rest.support.client.ShelfLocationsClient;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonErrorResponse;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.folio.rest.support.client.MaterialTypesClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 public class ItemStorageTest extends TestBase {
 
@@ -156,7 +139,7 @@ public class ItemStorageTest extends TestBase {
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", "Nod");
-  
+
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -261,29 +244,29 @@ public class ItemStorageTest extends TestBase {
   public void cannotAddANonExistentLocation()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
-    
+
     String badLocation = UUID.randomUUID().toString();
     String id = UUID.randomUUID().toString();
-    
+
     JsonObject itemToCreate = new JsonObject()
       .put("id", id)
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", "LandOfNod")
       .put("permanentLocationId", badLocation);
-    
+
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
-    
+
     JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
-    
+
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    
+
     assertThat(postResponse.getBody(), is("Attempting to specify non-existent location"));
-    
+
   }
-          
+
   @Test
   public void cannotCreateAnItemWithTitleOver255Characters()
     throws MalformedURLException, InterruptedException,
@@ -343,7 +326,10 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(postResponse.getBody(), is("invalid input syntax for uuid: \"1234\""));
+    //Postgresql 10.0 has a different error message for invalid UUID
+    assertThat(postResponse.getBody(), anyOf(
+      is("invalid input syntax for type uuid: \"1234\""),
+      is("invalid input syntax for uuid: \"1234\"")));
   }
 
   @Test
@@ -553,7 +539,7 @@ public class ItemStorageTest extends TestBase {
     replacement.put("barcode", "036587275931");
     replacement.put("temporaryLocationId", mainLibraryLocationId);
     replacement.put("permanentLocationId", annexLocationId);
-   
+
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
 
