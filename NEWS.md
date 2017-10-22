@@ -1,7 +1,9 @@
 ## 6.0.0 Unreleased
 
-* Remove location objects from Item record, and store a UUID for a location record instead
-* Implement /shelflocations endpoint for CRUD of location records
+* Removes `location` property from Item record, and store a UUID for a (permanent and temporary) location record instead
+* Implement `/shelf-locations` endpoint for CRUD of location records
+* Provides `item-storage` 4.0 interface
+* Provides `shelf-locations` 1.0 interface
 
 ## 5.1.1 Unreleased
 
