@@ -215,7 +215,7 @@
               <resources>
                 <resource>
                   <directory>${basedir}/descriptors</directory>
-                  <include>*Descriptor*-template.json</include>
+                  <include>*-template.json</include>
                   <filtering>true</filtering>
                 </resource>
               </resources>
@@ -248,6 +248,10 @@
                 <fileSet>
                   <sourceFile>${project.build.directory}/DeploymentDescriptor-environment-template.json</sourceFile>
                   <destinationFile>${project.build.directory}/DeploymentDescriptor-environment.json</destinationFile>
+                </fileSet>
+                <fileSet>
+                  <sourceFile>${project.build.directory}/Activate-template.json</sourceFile>
+                  <destinationFile>${project.build.directory}/Activate.json</destinationFile>
                 </fileSet>
               </fileSets>
             </configuration>
