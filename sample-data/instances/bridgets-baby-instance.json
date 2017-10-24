@@ -1,7 +1,8 @@
 {
   "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
   "title": "Bridget Jones's Baby",
-  "altTitle": "An alternative title",
+  "alternativeTitles": ["First alternative title", 
+                        "Second alternative title"],
   "publisher": "A publisher",
   "identifiers": [
     { "typeId": "7f907515-a1bf-4513-8a38-92e1a07c539d",

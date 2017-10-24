@@ -8,8 +8,12 @@
     "title": {
       "type": "string"
     },
-    "altTitle": {
-      "type": "string"
+    "alternativeTitles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "series": {
       "type": "string"
