@@ -56,8 +56,12 @@
         ]
       }
     },
-    "publisher": {
-      "type": "string"
+    "publishers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "date": {
       "type": "string",
