@@ -42,6 +42,17 @@ public class LoanTypeAPI implements LoanTypesResource {
   private final Messages messages              = Messages.getInstance();
   private String idFieldName                   = "_id";
 
+  /**
+   * Return the PostgresClient instance for the vertx and the tenant.
+   * @param vertxContext  context to take the vertx from
+   * @param okapiHeaders  headers to take the tenantId from
+   * @return the PostgresClient
+   */
+  PostgresClient getPostgresClient(Context vertxContext, Map<String, String> okapiHeaders) {
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+    return PostgresClient.getInstance(vertxContext.owner(), tenantId);
+  }
+
   @Validate
   @Override
   public void getLoanTypes(String query, int offset, int limit, String lang,
@@ -52,9 +63,8 @@ public class LoanTypeAPI implements LoanTypesResource {
      */
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCQL(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(LOAN_TYPE_TABLE, Loantype.class,
+        getPostgresClient(vertxContext, okapiHeaders).get(LOAN_TYPE_TABLE, Loantype.class,
             new String[]{"*"}, cql, true, true,
             reply -> {
               try {
@@ -104,8 +114,7 @@ public class LoanTypeAPI implements LoanTypesResource {
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
+        getPostgresClient(vertxContext, okapiHeaders).save(
             LOAN_TYPE_TABLE, id, entity,
             reply -> {
               try {
@@ -144,12 +153,10 @@ public class LoanTypeAPI implements LoanTypesResource {
 
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-
         Criterion c = new Criterion(
             new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+loantypeId+"'"));
 
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(LOAN_TYPE_TABLE, Loantype.class, c, true,
+        getPostgresClient(vertxContext, okapiHeaders).get(LOAN_TYPE_TABLE, Loantype.class, c, true,
             reply -> {
               try {
                 if (reply.failed()) {
@@ -191,8 +198,7 @@ public class LoanTypeAPI implements LoanTypesResource {
 
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+        PostgresClient postgres = getPostgresClient(vertxContext, okapiHeaders);
         postgres.delete(LOAN_TYPE_TABLE, loantypeId,
             reply -> {
               try {
@@ -234,12 +240,11 @@ public class LoanTypeAPI implements LoanTypesResource {
       Context vertxContext) throws Exception {
 
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(loantypeId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+        getPostgresClient(vertxContext, okapiHeaders).update(
             LOAN_TYPE_TABLE, entity, loantypeId,
             reply -> {
               try {
@@ -279,10 +284,7 @@ public class LoanTypeAPI implements LoanTypesResource {
 
     try {
       vertxContext.runOnContext(v -> {
-        PostgresClient postgresClient = PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-        postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+        getPostgresClient(vertxContext, okapiHeaders).mutate(String.format("DELETE FROM %s_%s.%s",
           tenantId, "mod_inventory_storage", LOAN_TYPE_TABLE),
           reply -> {
             if (reply.succeeded()) {
