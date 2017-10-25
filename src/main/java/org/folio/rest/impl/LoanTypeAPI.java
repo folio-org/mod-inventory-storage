@@ -35,6 +35,7 @@ import java.util.UUID;
  */
 public class LoanTypeAPI implements LoanTypesResource {
 
+  /** postgresql table name of the loan type */
   public static final String LOAN_TYPE_TABLE   = "loan_type";
 
   private static final String LOCATION_PREFIX  = "/loan-types/";
@@ -280,10 +281,9 @@ public class LoanTypeAPI implements LoanTypesResource {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
     throws Exception {
 
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-
     try {
       vertxContext.runOnContext(v -> {
+        String tenantId = TenantTool.tenantId(okapiHeaders);
         getPostgresClient(vertxContext, okapiHeaders).mutate(String.format("DELETE FROM %s_%s.%s",
           tenantId, "mod_inventory_storage", LOAN_TYPE_TABLE),
           reply -> {
