@@ -103,6 +103,53 @@ CREATE TRIGGER update_date_identifier_type BEFORE UPDATE ON myuniversity_mymodul
 GRANT ALL ON myuniversity_mymodule.identifier_type TO myuniversity_mymodule;
 -- *** identitifier type end *** --
 
+-- *** contributor type start *** --
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.contributor_type (
+ _id UUID PRIMARY KEY,
+ jsonb jsonb NOT NULL,
+ creation_date date not null default current_timestamp,
+ update_date date not null default current_timestamp
+);
+-- allow querying jsonb in contributor type table
+CREATE INDEX idxgin_contributor_type ON myuniversity_mymodule.contributor_type USING gin (jsonb jsonb_path_ops);
+-- unique constraint
+CREATE UNIQUE INDEX contributor_type_unique_idx ON myuniversity_mymodule.contributor_type((jsonb->>'name'));
+-- update the update_date column when record is updated
+CREATE OR REPLACE FUNCTION update_modified_column_contributor_type()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.update_date = current_timestamp;
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_date_contributor_type BEFORE UPDATE ON myuniversity_mymodule.contributor_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_identifier_type();
+GRANT ALL ON myuniversity_mymodule.contributor_type TO myuniversity_mymodule;
+-- *** contributor type end *** --
+
+-- *** creator type start *** --
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.creator_type (
+ _id UUID PRIMARY KEY,
+ jsonb jsonb NOT NULL,
+ creation_date date not null default current_timestamp,
+ update_date date not null default current_timestamp
+);
+-- allow querying jsonb in creator type table
+CREATE INDEX idxgin_creator_type ON myuniversity_mymodule.creator_type USING gin (jsonb jsonb_path_ops);
+-- unique constraint
+CREATE UNIQUE INDEX creator_type_unique_idx ON myuniversity_mymodule.creator_type((jsonb->>'name'));
+-- update the update_date column when record is updated
+CREATE OR REPLACE FUNCTION update_modified_column_creator_type()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.update_date = current_timestamp;
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_date_creator_type BEFORE UPDATE ON myuniversity_mymodule.creator_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_identifier_type();
+GRANT ALL ON myuniversity_mymodule.creator_type TO myuniversity_mymodule;
+-- *** creator type end *** --
+
+
 CREATE TABLE IF NOT EXISTS myuniversity_mymodule.instance (
   _id UUID PRIMARY KEY,
   jsonb JSONB NOT NULL

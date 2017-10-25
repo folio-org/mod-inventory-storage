@@ -146,6 +146,60 @@
       ]
     },
     {
+      "id": "contributor-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/contributor-types",
+          "permissionsRequired": ["inventory-storage.contributor-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/contributor-types/{id}",
+          "permissionsRequired": ["inventory-storage.contributor-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/contributor-types",
+          "permissionsRequired": ["inventory-storage.contributor-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/contributor-types/{id}",
+          "permissionsRequired": ["inventory-storage.contributor-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/contributor-types/{id}",
+          "permissionsRequired": ["inventory-storage.contributor-types.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "creator-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/creator-types",
+          "permissionsRequired": ["inventory-storage.creator-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/creator-types/{id}",
+          "permissionsRequired": ["inventory-storage.creator-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/creator-types",
+          "permissionsRequired": ["inventory-storage.creator-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/creator-types/{id}",
+          "permissionsRequired": ["inventory-storage.creator-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/creator-types/{id}",
+          "permissionsRequired": ["inventory-storage.creator-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id" : "_tenant",
       "version" : "1.0",
       "interfaceType": "system",
@@ -297,6 +351,57 @@
       "description": "delete individual identifier-type from storage"
     },
     {
+      "permissionName": "inventory-storage.contributor-types.collection.get",
+      "displayName": "inventory storage - get contributor-type collection",
+      "description": "get contributor-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.contributor-types.item.get",
+      "displayName": "inventory storage - get individual contributor-type",
+      "description": "get individual contributor-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.contributor-types.item.post",
+      "displayName": "inventory storage - create individual contributor-type",
+      "description": "create individual contributor-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.contributor-types.item.put",
+      "displayName": "inventory storage - modify contributor-type",
+      "description": "modify contributor-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.contributor-types.item.delete",
+      "displayName": "inventory storage - delete individual contributor-type",
+      "description": "delete individual contributor-type from storage"
+    },
+
+    {
+      "permissionName": "inventory-storage.creator-types.collection.get",
+      "displayName": "inventory storage - get creator-type collection",
+      "description": "get creator-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.creator-types.item.get",
+      "displayName": "inventory storage - get individual creator-type",
+      "description": "get individual creator-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.creator-types.item.post",
+      "displayName": "inventory storage - create individual creator-type",
+      "description": "create individual creator-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.creator-types.item.put",
+      "displayName": "inventory storage - modify creator-type",
+      "description": "modify creator-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.creator-types.item.delete",
+      "displayName": "inventory storage - delete individual creator-type",
+      "description": "delete individual creator-type from storage"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -327,7 +432,17 @@
         "inventory-storage.identifier-types.item.get",
         "inventory-storage.identifier-types.item.post",
         "inventory-storage.identifier-types.item.put",
-        "inventory-storage.identifier-types.item.delete"
+        "inventory-storage.identifier-types.item.delete",
+        "inventory-storage.contributor-types.collection.get",
+        "inventory-storage.contributor-types.item.get",
+        "inventory-storage.contributor-types.item.post",
+        "inventory-storage.contributor-types.item.put",
+        "inventory-storage.contributor-types.item.delete",
+        "inventory-storage.creator-types.collection.get",
+        "inventory-storage.creator-types.item.get",
+        "inventory-storage.creator-types.item.post",
+        "inventory-storage.creator-types.item.put",
+        "inventory-storage.creator-types.item.delete"
       ]
     }
   ]
