@@ -14,7 +14,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Shelflocation;
-import org.folio.rest.jaxrs.model.ShelflocationsJson;
+import org.folio.rest.jaxrs.model.Shelflocations;
 import org.folio.rest.jaxrs.resource.ShelfLocationsResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -136,11 +136,11 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
                       GetShelfLocationsResponse.withPlainBadRequest(
                               getErrorResponse(message))));
             } else {
-              ShelflocationsJson shelflocations = new ShelflocationsJson();
-              List<Shelflocation> shelflocationList = (List<Shelflocation>)reply.result()[0];
-              shelflocations.setShelflocations(shelflocationList);
-              shelflocations.setTotalRecords((Integer)reply.result()[1]);
-              asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelflocations)));
+              Shelflocations shelfLocations = new Shelflocations();
+              List<Shelflocation> shelfLocationsList = (List<Shelflocation>)reply.result()[0];
+              shelfLocations.setShelflocations(shelfLocationsList);
+              shelfLocations.setTotalRecords((Integer)reply.result()[1]);
+              asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelfLocations)));
             }
           } catch(Exception e) {
             String message = logAndSaveError(e);

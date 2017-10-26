@@ -10,7 +10,7 @@ documentation:
 
 schemas:
   - shelflocation.json: !include shelflocation.json
-  - shelflocations.json: !include shelflocations.json
+  - shelflocations: !include shelflocations.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
@@ -32,7 +32,7 @@ resourceTypes:
     collection:
       exampleCollection: !include examples/shelflocations.json
       exampleItem: !include examples/shelflocation.json
-      schemaCollection: shelflocations.json
+      schemaCollection: shelflocations
       schemaItem: shelflocation.json
   get:
     is: [
