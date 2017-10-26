@@ -47,12 +47,6 @@ To run the tests against both embedded and external databases, run `./build.sh` 
 
 ## Preparation
 
-## Sample Data
-
-Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing.
-
-To load some sample data run `./import-sample-data.sh` from the root directory.
-
 ## Running Okapi
 
 Make sure that [Okapi](https://github.com/folio-org/okapi) is running on its default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for instructions).
@@ -61,17 +55,17 @@ A script for building and running Okapi is provided. Run `../mod-inventory-stora
 
 As this runs Okapi using Postgres storage, some database preparation is required. This can be achieved by running `./create-okapi-database.sh` from the root of this repository.
 
-## Managed by Okapi
+## Registration
 
 To register the module with deployment instructions and activate it for a demo tenant, run `./start-managed-demo.sh` from the root directory.
 
 To deactivate and unregister the module, run `./stop-managed-demo.sh` from the root directory.
 
-## Natively
+## Sample Data
 
-Run `./start.sh` from the root directory.
+Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing.
 
-To stop them, run `./stop.sh` from the root directory.
+To load some sample data run `./import-sample-data.sh` from the root directory.
 
 # Making Requests
 
@@ -103,79 +97,7 @@ at the [FOLIO issue tracker](http://dev.folio.org/community/guide-issues).
 
 Other FOLIO Developer documentation is at [dev.folio.org](http://dev.folio.org/)
 
-# Appendix 1 - Okapi Registration
-
-As an alternative to the demo scripts, it is possible to perform Okapi tenant and module setup via a set of smaller scripts, see below for more information on these steps.
-
-### Preparing a Tenant
-
-Run `./create-tenant.sh` from the root directory to set up a test tenant (named our).
-
-The output should be something similar to:
-
-```
-HTTP/1.1 201 Created
-Content-Type: application/json
-Location: /_/proxy/tenants/demo_tenant
-Content-Length: 81
-
-{
-  "id" : "demo_tenant",
-  "name" : "A Library",
-  "description" : "A library"
-}
-```
-
-The tenant can be deleted by running `./delete-tenant.sh`
-
-### Registering the Modules With Okapi
-
-Run `./register.sh` from the root directory.
-
-The last output should be something similar to:
-
-```
-HTTP/1.1 201 Created
-Content-Type: application/json
-Location: /_/discovery/modules/knowledge-base-core/localhost-9401
-Content-Length: 104
-
-{
-  "instId" : "localhost-9401",
-  "srvcId" : "knowledge-base-core",
-  "url" : "http://localhost:9401"
-}
-HTTP/1.1 201 Created
-Content-Type: application/json
-Location: /_/proxy/modules/knowledge-base-core
-Content-Length: 375
-
-{
-  "id" : "knowledge-base-core",
-  "name" : "Core Knowledge Base Module",
-  "provides" : [ {
-    "id" : "knowledge-base-core",
-    "version" : "0.1"
-  } ],
-  "routingEntries" : [ {
-    "methods" : [ "GET", "POST" ],
-    "path" : "/knowledge-base",
-    "level" : "30",
-    "type" : "request-response",
-    "permissionsRequired" : null,
-    "permissionsDesired" : null
-  } ]
-}
-HTTP/1.1 200 OK
-Content-Type: application/json
-Content-Length: 34
-
-{
-  "id" : "knowledge-base-core"
-}
-```
-
-# Appendix 2 - Docker Information
+# Appendix 1 - Docker Information
 
 ## When Using the Modules as Docker Containers
 

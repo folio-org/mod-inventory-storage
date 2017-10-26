@@ -1,14 +1,15 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.itemsUrl;
-import static org.folio.rest.api.StorageTestSuite.loanTypesUrl;
-import static org.folio.rest.api.StorageTestSuite.materialTypesUrl;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.*;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.folio.rest.support.client.MaterialTypesClient;
+import org.folio.rest.support.client.ShelfLocationsClient;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -22,22 +23,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.AdditionalHttpStatusCodes;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonErrorResponse;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.folio.rest.support.client.MaterialTypesClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.api.StorageTestSuite.*;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 
 public class ItemStorageTest extends TestBase {
 
@@ -45,13 +36,27 @@ public class ItemStorageTest extends TestBase {
   private static String booklMaterialTypeID;
   private static String videolMaterialTypeID;
   private static String canCirculateLoanTypeID;
+  private static String mainLibraryLocationId;
+  private static String annexLocationId;
 
   @BeforeClass
-  public static void beforeAny() throws Exception {
+  public static void beforeAny()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    StorageTestSuite.deleteAll(itemsUrl());
+    StorageTestSuite.deleteAll(materialTypesUrl());
+    StorageTestSuite.deleteAll(loanTypesUrl());
+    StorageTestSuite.deleteAll(shelfLocationsUrl());
+
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("journal");
     booklMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("book");
     videolMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("video");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesUrl()).create("Can Circulate");
+    mainLibraryLocationId = new ShelfLocationsClient(client, shelfLocationsUrl()).create("Main Library");
+    annexLocationId = new ShelfLocationsClient(client, shelfLocationsUrl()).create("Annex Library");
   }
 
   @Before
@@ -95,8 +100,10 @@ public class ItemStorageTest extends TestBase {
       is(journalMaterialTypeID));
     assertThat(itemFromPost.getString("permanentLoanTypeId"),
       is(canCirculateLoanTypeID));
-    assertThat(itemFromPost.getJsonObject("location").getString("name"),
-      is("Main Library"));
+    assertThat(itemFromPost.getString("temporaryLocationId"),
+      is(annexLocationId));
+    assertThat(itemFromPost.getString("permanentLocationId"),
+      is(mainLibraryLocationId));
 
     JsonResponse getResponse = getById(id);
 
@@ -114,8 +121,10 @@ public class ItemStorageTest extends TestBase {
       is(journalMaterialTypeID));
     assertThat(itemFromGet.getString("permanentLoanTypeId"),
       is(canCirculateLoanTypeID));
-    assertThat(itemFromGet.getJsonObject("location").getString("name"),
-      is("Main Library"));
+    assertThat(itemFromGet.getString("temporaryLocationId"),
+      is(annexLocationId));
+    assertThat(itemFromGet.getString("permanentLocationId"),
+      is(mainLibraryLocationId));
   }
 
   @Test
@@ -130,6 +139,7 @@ public class ItemStorageTest extends TestBase {
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", "Nod");
+
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -194,8 +204,10 @@ public class ItemStorageTest extends TestBase {
       is(journalMaterialTypeID));
     assertThat(itemFromGet.getString("permanentLoanTypeId"),
       is(canCirculateLoanTypeID));
-    assertThat(itemFromGet.getJsonObject("location").getString("name"),
-      is("Main Library"));
+    assertThat(itemFromGet.getString("temporaryLocationId"),
+      is(annexLocationId));
+    assertThat(itemFromGet.getString("permanentLocationId"),
+      is(mainLibraryLocationId));
   }
 
   @Test
@@ -226,6 +238,33 @@ public class ItemStorageTest extends TestBase {
     assertThat(errors.size(), is(1));
     assertThat(errors, hasItem(
       validationErrorMatches("size must be between 1 and 255", "title")));
+  }
+
+  @Test
+  public void cannotAddANonExistentLocation()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    String badLocation = UUID.randomUUID().toString();
+    String id = UUID.randomUUID().toString();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id)
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("title", "LandOfNod")
+      .put("permanentLocationId", badLocation);
+
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    assertThat(postResponse.getBody(), is("Attempting to specify non-existent location"));
+
   }
 
   @Test
@@ -275,7 +314,8 @@ public class ItemStorageTest extends TestBase {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
+    itemToCreate.put("permanentLocationId", mainLibraryLocationId);
+    itemToCreate.put("temporaryLocationId", annexLocationId);
 
     CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
 
@@ -286,7 +326,10 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(postResponse.getBody(), is("invalid input syntax for uuid: \"1234\""));
+    //Postgresql 10.0 has a different error message for invalid UUID
+    assertThat(postResponse.getBody(), anyOf(
+      is("invalid input syntax for type uuid: \"1234\""),
+      is("invalid input syntax for uuid: \"1234\"")));
   }
 
   @Test
@@ -355,8 +398,10 @@ public class ItemStorageTest extends TestBase {
       is(journalMaterialTypeID));
     assertThat(item.getString("permanentLoanTypeId"),
       is(canCirculateLoanTypeID));
-    assertThat(item.getJsonObject("location").getString("name"),
-      is("Main Library"));
+    assertThat(item.getString("temporaryLocationId"),
+      is(annexLocationId));
+    assertThat(item.getString("permanentLocationId"),
+      is(mainLibraryLocationId));
   }
 
   @Test
@@ -404,6 +449,8 @@ public class ItemStorageTest extends TestBase {
     assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
 
+  //Test invalid due to data format change
+  /*
   @Test
   public void cannotProvideAdditionalPropertiesInItemLocation()
     throws InterruptedException,
@@ -426,6 +473,7 @@ public class ItemStorageTest extends TestBase {
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
   }
+*/
 
   @Test
   public void canReplaceAnItemAtSpecificLocation()
@@ -440,9 +488,9 @@ public class ItemStorageTest extends TestBase {
     createItem(itemToCreate);
 
     JsonObject replacement = itemToCreate.copy();
-      replacement.put("barcode", "125845734657");
-      replacement.put("location",
-        new JsonObject().put("name", "Annex Library"));
+      replacement.put("barcode", "125845734657")
+              .put("temporaryLocationId", mainLibraryLocationId)
+              .put("permanentLocationId", annexLocationId);
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
 
@@ -468,8 +516,10 @@ public class ItemStorageTest extends TestBase {
       is("Available"));
     assertThat(item.getString("materialTypeId"),
       is(journalMaterialTypeID));
-    assertThat(item.getJsonObject("location").getString("name"),
-      is("Annex Library"));
+    assertThat(item.getString("permanentLocationId"),
+      is(annexLocationId));
+    assertThat(item.getString("temporaryLocationId"),
+      is(mainLibraryLocationId));
   }
 
   @Test
@@ -487,8 +537,9 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject replacement = itemToCreate.copy();
     replacement.put("barcode", "036587275931");
-    replacement.put("location",
-      new JsonObject().put("name", "Annex Library"));
+    replacement.put("temporaryLocationId", mainLibraryLocationId);
+    replacement.put("permanentLocationId", annexLocationId);
+
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
 
@@ -514,8 +565,10 @@ public class ItemStorageTest extends TestBase {
       is("Available"));
     assertThat(item.getString("materialTypeId"),
       is(journalMaterialTypeID));
-    assertThat(item.getJsonObject("location").getString("name"),
-      is("Annex Library"));
+    assertThat(item.getString("permanentLocationId"),
+      is(annexLocationId));
+    assertThat(item.getString("temporaryLocationId"),
+      is(mainLibraryLocationId));
   }
 
   @Test
@@ -904,7 +957,9 @@ public class ItemStorageTest extends TestBase {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", materialType);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
+    //itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
+    itemToCreate.put("permanentLocationId", mainLibraryLocationId);
+    itemToCreate.put("temporaryLocationId", annexLocationId);
 
     return itemToCreate;
   }
