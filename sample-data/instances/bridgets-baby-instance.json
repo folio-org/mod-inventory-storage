@@ -3,7 +3,6 @@
   "title": "Bridget Jones's Baby",
   "alternativeTitles": ["First alternative title", 
                         "Second alternative title"],
-  "publishers": ["First publisher", "Second publisher"],
   "identifiers": [
     { 
       "typeId": "7f907515-a1bf-4513-8a38-92e1a07c539d",
@@ -29,6 +28,17 @@
       "contributorTypeId": "2e48e713-17f3-7c13-09f8-23845bb210ab",
       "name": "Contributor 2"
     }
-
+  ],
+  "publication": [
+    {
+      "publisher": "University of Oxford",
+      "place": "UK",
+      "dateOfPublication": "2017"
+    },
+    {
+      "publisher": "Cambridge University Press",
+      "place": "UK",
+      "dateOfPublication": "2014"
+    }
   ]
 }

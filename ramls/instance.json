@@ -15,8 +15,15 @@
       },
       "uniqueItems": true
     },
-    "series": {
+    "edition": {
       "type": "string"
+    },
+    "series": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "creators": {
       "type": "array",
@@ -56,12 +63,23 @@
         ]
       }
     },
-    "publishers": {
+    "publication": {
       "type": "array",
       "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+        "type": "object",
+        "properties": {
+          "publisher": {
+            "type": "string"
+          },
+          "place": {
+            "type": "string"
+          },
+          "dateOfPublication": {
+            "type": "string"
+          }
+        },
+        "uniqueItems": true
+      }
     },
     "date": {
       "type": "string",
@@ -91,6 +109,12 @@
           "value",
           "typeId"
         ]
+      }
+    },
+    "subjects": {
+      "type": "array",
+      "items": {
+        "type": "string"
       }
     },
     "source": {
