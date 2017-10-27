@@ -1,44 +1,43 @@
 {
   "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
-  "title": "Bridget Jones's Baby",
-  "alternativeTitles": ["First alternative title", 
-                        "Second alternative title"],
+  "title": "Bridget Jones's Baby: the diaries",
+  "edition": "First American Edition",
   "identifiers": [
     { 
-      "typeId": "7f907515-a1bf-4513-8a38-92e1a07c539d",
-      "value": "B01LHE7MIU"
+      "typeId": "5d164f4b-0b15-4e42-ae75-cfcf85318ad9",
+      "value": "ocn956625961"
     }
   ],
   "creators": [
     {
-      "creatorTypeId": "2e48e713-17f3-7c13-09f8-23845bb210aa",
-      "name": "Creator A"
-    },
-    {
-      "creatorTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0a",
-      "name": "Creator B"
+      "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+      "name": "Fielding, Helen"
     }
   ],
-  "contributors": [
-    {
-      "contributorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2b",
-      "name": "Contributor 1"
-    },
-    {
-      "contributorTypeId": "2e48e713-17f3-7c13-09f8-23845bb210ab",
-      "name": "Contributor 2"
-    }
+  "subjects": [
+    "Jones, Bridget", "(Fictitious character)", "Fiction",
+    "Pregnant women", "Fiction",
+    "England", "Fiction", 
+    "Humorous fiction",
+    "Diary fiction"
+  ],
+  "classification": [
+    "PR6056.I4588"
   ],
   "publication": [
     {
-      "publisher": "University of Oxford",
-      "place": "UK",
-      "dateOfPublication": "2017"
-    },
-    {
-      "publisher": "Cambridge University Press",
-      "place": "UK",
-      "dateOfPublication": "2014"
+      "publisher": "Alfred A. Knopf",
+      "place": "New York",
+      "dateOfPublication": "2016"
     }
+  ],
+  "physicalDescriptions": [
+    "219 pages ; 20 cm."
+  ],
+  "languages": [
+    "eng"
+  ],
+  "notes": [
+    "Bridget Jones finds herself unexpectedly pregnant at the eleventh hour. However, her joyful pregnancy is dominated by one crucial but awkward question --who is the father? Could it be honorable, decent, notable human rights lawyer, Mark Darcy? Or, is it charming, witty, and totally despicable, Daniel Cleaver?"
   ]
 }

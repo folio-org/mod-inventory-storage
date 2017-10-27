@@ -90,7 +90,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "uniqueItems": true
     },
     "classification": {
       "type": "array",
