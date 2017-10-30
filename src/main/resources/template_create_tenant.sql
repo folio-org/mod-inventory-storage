@@ -195,6 +195,29 @@ CREATE TRIGGER update_date_instance_format BEFORE UPDATE ON myuniversity_mymodul
 GRANT ALL ON myuniversity_mymodule.instance_format TO myuniversity_mymodule;
 -- *** instance format end *** --
 
+-- *** classification type start *** --
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.classification_type (
+ _id UUID PRIMARY KEY,
+ jsonb jsonb NOT NULL,
+ creation_date date not null default current_timestamp,
+ update_date date not null default current_timestamp
+);
+-- allow querying jsonb in classification type table
+CREATE INDEX idxgin_classification_type ON myuniversity_mymodule.classification_type USING gin (jsonb jsonb_path_ops);
+-- unique constraint
+CREATE UNIQUE INDEX classification_type_unique_idx ON myuniversity_mymodule.classification_type((jsonb->>'name'));
+-- update the update_date column when record is updated
+CREATE OR REPLACE FUNCTION update_modified_column_classification_type()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.update_date = current_timestamp;
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_date_classification_type BEFORE UPDATE ON myuniversity_mymodule.classification_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_classification_type();
+GRANT ALL ON myuniversity_mymodule.classification_type TO myuniversity_mymodule;
+-- *** classification type end *** --
+
 
 CREATE TABLE IF NOT EXISTS myuniversity_mymodule.instance (
   _id UUID PRIMARY KEY,

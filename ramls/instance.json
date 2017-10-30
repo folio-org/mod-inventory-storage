@@ -93,10 +93,23 @@
       },
       "uniqueItems": true
     },
-    "classification": {
+    "classifications": {
       "type": "array",
+      "minItems": 0,
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "classificationNumber": {
+            "type": "string"
+          },
+          "classificationTypeId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "classificationNumber",
+          "classificationTypeId"
+        ]
       }
     },
     "publication": {

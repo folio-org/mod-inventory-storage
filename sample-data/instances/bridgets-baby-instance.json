@@ -21,8 +21,11 @@
     "Humorous fiction",
     "Diary fiction"
   ],
-  "classification": [
-    "PR6056.I4588"
+  "classifications": [
+    {
+      "classificationTypeId": "ce176ace-a53e-4b4d-aa89-725ed7b2edac",
+      "classificationNumber": "PR6056.I4588"
+    }
   ],
   "publication": [
     {
@@ -31,6 +34,7 @@
       "dateOfPublication": "2016"
     }
   ],
+  "instanceTypeId": "2e48e713-17f3-7c13-09f8-23845bb210ac",
   "physicalDescriptions": [
     "219 pages ; 20 cm."
   ],

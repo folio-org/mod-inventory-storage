@@ -39,8 +39,11 @@
   "subjects": [
     "World music.", "Jazz"
   ],
-  "classification": [
-    "M1366.S67"
+  "classifications": [
+    {
+      "classificationTypeId": "ce176ace-a53e-4b4d-aa89-725ed7b2edac",
+      "classificationNumber": "M1366.S67"
+    }
   ],
   "publication": [
     {
@@ -49,6 +52,7 @@
       "dateOfPublication": "[2017]"
     }
   ],
+  "instanceTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2c",
   "instanceFormatId": "309c3a3d-d54c-4519-b978-2c5c2de78d95", 
   "physicalDescriptions": [
     "1 audio disc: digital; 4 3/4 in."

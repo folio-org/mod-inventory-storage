@@ -227,6 +227,60 @@
       ]
     },
     {
+      "id": "instance-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-types",
+          "permissionsRequired": ["inventory-storage.instance-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-types",
+          "permissionsRequired": ["inventory-storage.instance-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-types.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "classification-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/classification-types",
+          "permissionsRequired": ["inventory-storage.classification-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/classification-types/{id}",
+          "permissionsRequired": ["inventory-storage.classification-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/classification-types",
+          "permissionsRequired": ["inventory-storage.classification-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/classification-types/{id}",
+          "permissionsRequired": ["inventory-storage.classification-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/classification-types/{id}",
+          "permissionsRequired": ["inventory-storage.classification-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id" : "_tenant",
       "version" : "1.0",
       "interfaceType": "system",
@@ -453,6 +507,57 @@
       "description": "delete individual instance format from storage"
     },
     {
+      "permissionName": "inventory-storage.instance-types.collection.get",
+      "displayName": "inventory storage - get formats collection",
+      "description": "get creator-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-types.item.get",
+      "displayName": "inventory storage - get individual format",
+      "description": "get individual instance format from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-types.item.post",
+      "displayName": "inventory storage - create individual format",
+      "description": "create individual instance format in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-types.item.put",
+      "displayName": "inventory storage - modify format",
+      "description": "modify instance format in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-types.item.delete",
+      "displayName": "inventory storage - delete individual instance type",
+      "description": "delete instance type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.classification-types.collection.get",
+      "displayName": "inventory storage - get formats collection",
+      "description": "get creator-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.classification-types.item.get",
+      "displayName": "inventory storage - get individual format",
+      "description": "get individual instance format from storage"
+    },
+    {
+      "permissionName": "inventory-storage.classification-types.item.post",
+      "displayName": "inventory storage - create individual format",
+      "description": "create individual instance format in storage"
+    },
+    {
+      "permissionName": "inventory-storage.classification-types.item.put",
+      "displayName": "inventory storage - modify format",
+      "description": "modify instance format in storage"
+    },
+    {
+      "permissionName": "inventory-storage.classification-types.item.delete",
+      "displayName": "inventory storage - delete individual classification type",
+      "description": "delete individual classification qualifier from storage"
+    },
+
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -498,7 +603,18 @@
         "inventory-storage.instance-formats.item.get",
         "inventory-storage.instance-formats.item.post",
         "inventory-storage.instance-formats.item.put",
-        "inventory-storage.instance-formats.item.delete"
+        "inventory-storage.instance-formats.item.delete",
+        "inventory-storage.instance-types.collection.get",
+        "inventory-storage.instance-types.item.get",
+        "inventory-storage.instance-types.item.post",
+        "inventory-storage.instance-types.item.put",
+        "inventory-storage.instance-types.item.delete",
+        "inventory-storage.classification-types.collection.get",
+        "inventory-storage.classification-types.item.get",
+        "inventory-storage.classification-types.item.post",
+        "inventory-storage.classification-types.item.put",
+        "inventory-storage.classification-types.item.delete"
+
       ]
     }
   ]

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "classificationTypes": {
+      "id": "classificationType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "classificationType"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "classificationTypes",
+    "totalRecords"
+  ]
+}
+
