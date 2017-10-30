@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.folio.rest.support.client;
 
 import io.vertx.core.json.JsonObject;
@@ -23,13 +18,13 @@ import org.folio.rest.support.ResponseHandler;
 public class ShelfLocationsClient {
   private final HttpClient client;
   private final URL shelfLocationsUrl;
-  
+
   public ShelfLocationsClient(HttpClient client, URL shelfLocationsUrl) {
     this.client = client;
     this.shelfLocationsUrl = shelfLocationsUrl;
   }
-  
-  public String create(String name) 
+
+  public String create(String name)
           throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<JsonResponse> completed = new CompletableFuture();
@@ -44,5 +39,5 @@ public class ShelfLocationsClient {
 
     return response.getJson().getString("id");
   }
-  
+
 }
