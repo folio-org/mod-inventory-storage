@@ -52,8 +52,8 @@ public class ItemStorageAPI implements ItemStorageResource {
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
   private final Messages messages = Messages.getInstance();
-  
-   
+
+
 
   private String convertQuery(String cql){
     if(cql != null){
@@ -222,7 +222,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                 Future<Shelflocation> permLocFuture;
                 Future<Shelflocation> tempLocFuture;
                 if(entity.getPermanentLocationId() != null) {
-                  permLocFuture = getShelfLocation(vertxContext.owner(), tenantId, 
+                  permLocFuture = getShelfLocation(vertxContext.owner(), tenantId,
                         entity.getPermanentLocationId());
                 } else {
                   permLocFuture = Future.succeededFuture();
@@ -283,7 +283,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                           .withPlainInternalServerError(e.getMessage())));
                     }
                   }
-                });                
+                });
               }
           });
         } catch (Exception e) {
@@ -658,7 +658,7 @@ public class ItemStorageAPI implements ItemStorageResource {
         });
     }
   }
-  
+
   private Future<Shelflocation> getShelfLocation(
     Vertx vertx,
     String tenantId,
@@ -670,7 +670,7 @@ public class ItemStorageAPI implements ItemStorageResource {
       crit.addField(ShelfLocationAPI.ID_FIELD_NAME);
       crit.setOperation("=");
       crit.setValue(locationId);
-      PostgresClient.getInstance(vertx, tenantId).get(ShelfLocationAPI.SHELF_LOCATION_TABLE, 
+      PostgresClient.getInstance(vertx, tenantId).get(ShelfLocationAPI.SHELF_LOCATION_TABLE,
               Shelflocation.class, new Criterion(crit), true, false, getReply -> {
         if(getReply.failed()) {
           future.fail(getReply.cause());
