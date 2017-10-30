@@ -38,9 +38,9 @@ import io.vertx.core.logging.LoggerFactory;
  */
 public class InstanceFormatAPI implements InstanceFormatsResource {
 
-  public static final String INSTANCE_FORMAT_TABLE   = "instance_type";
+  public static final String INSTANCE_FORMAT_TABLE   = "instance_format";
 
-  private static final String LOCATION_PREFIX       = "/instance-types/";
+  private static final String LOCATION_PREFIX       = "/instance-formats/";
   private static final Logger log                 = LoggerFactory.getLogger(InstanceFormatAPI.class);
   private final Messages messages                 = Messages.getInstance();
   private String idFieldName                      = "_id";
@@ -61,7 +61,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     /**
-     * http://host:port/instances/instance-types
+     * http://host:port/instances/instance-formats
      */
     vertxContext.runOnContext(v -> {
       try {

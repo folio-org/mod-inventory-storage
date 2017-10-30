@@ -122,7 +122,7 @@ BEGIN
   RETURN NEW;
 END;
 $$ language 'plpgsql';
-CREATE TRIGGER update_date_contributor_type BEFORE UPDATE ON myuniversity_mymodule.contributor_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_identifier_type();
+CREATE TRIGGER update_date_contributor_type BEFORE UPDATE ON myuniversity_mymodule.contributor_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_contributor_type();
 GRANT ALL ON myuniversity_mymodule.contributor_type TO myuniversity_mymodule;
 -- *** contributor type end *** --
 
@@ -145,9 +145,55 @@ BEGIN
   RETURN NEW;
 END;
 $$ language 'plpgsql';
-CREATE TRIGGER update_date_creator_type BEFORE UPDATE ON myuniversity_mymodule.creator_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_identifier_type();
+CREATE TRIGGER update_date_creator_type BEFORE UPDATE ON myuniversity_mymodule.creator_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_creator_type();
 GRANT ALL ON myuniversity_mymodule.creator_type TO myuniversity_mymodule;
 -- *** creator type end *** --
+
+-- *** instance type start *** --
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.instance_type (
+ _id UUID PRIMARY KEY,
+ jsonb jsonb NOT NULL,
+ creation_date date not null default current_timestamp,
+ update_date date not null default current_timestamp
+);
+-- allow querying jsonb in instance type table
+CREATE INDEX idxgin_instance_type ON myuniversity_mymodule.instance_type USING gin (jsonb jsonb_path_ops);
+-- unique constraint
+CREATE UNIQUE INDEX instance_type_unique_idx ON myuniversity_mymodule.instance_type((jsonb->>'name'));
+-- update the update_date column when record is updated
+CREATE OR REPLACE FUNCTION update_modified_column_instance_type()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.update_date = current_timestamp;
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_date_instance_type BEFORE UPDATE ON myuniversity_mymodule.instance_type FOR EACH ROW EXECUTE PROCEDURE update_modified_column_instance_type();
+GRANT ALL ON myuniversity_mymodule.instance_type TO myuniversity_mymodule;
+-- *** instance type end *** --
+
+-- *** instance format start *** --
+CREATE TABLE IF NOT EXISTS myuniversity_mymodule.instance_format (
+ _id UUID PRIMARY KEY,
+ jsonb jsonb NOT NULL,
+ creation_date date not null default current_timestamp,
+ update_date date not null default current_timestamp
+);
+-- allow querying jsonb in instance format table
+CREATE INDEX idxgin_instance_format ON myuniversity_mymodule.instance_format USING gin (jsonb jsonb_path_ops);
+-- unique constraint
+CREATE UNIQUE INDEX instance_format_unique_idx ON myuniversity_mymodule.instance_format((jsonb->>'name'));
+-- update the update_date column when record is updated
+CREATE OR REPLACE FUNCTION update_modified_column_instance_format()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.update_date = current_timestamp;
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_date_instance_format BEFORE UPDATE ON myuniversity_mymodule.instance_format FOR EACH ROW EXECUTE PROCEDURE update_modified_column_instance_format();
+GRANT ALL ON myuniversity_mymodule.instance_format TO myuniversity_mymodule;
+-- *** instance format end *** --
 
 
 CREATE TABLE IF NOT EXISTS myuniversity_mymodule.instance (

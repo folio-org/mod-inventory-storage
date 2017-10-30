@@ -200,6 +200,33 @@
       ]
     },
     {
+      "id": "instance-formats",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-formats",
+          "permissionsRequired": ["inventory-storage.instance-formats.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-formats/{id}",
+          "permissionsRequired": ["inventory-storage.instance-formats.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-formats",
+          "permissionsRequired": ["inventory-storage.instance-formats.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-formats/{id}",
+          "permissionsRequired": ["inventory-storage.instance-formats.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-formats/{id}",
+          "permissionsRequired": ["inventory-storage.instance-formats.item.delete"]
+        }
+      ]
+    },
+    {
       "id" : "_tenant",
       "version" : "1.0",
       "interfaceType": "system",
@@ -375,7 +402,6 @@
       "displayName": "inventory storage - delete individual contributor-type",
       "description": "delete individual contributor-type from storage"
     },
-
     {
       "permissionName": "inventory-storage.creator-types.collection.get",
       "displayName": "inventory storage - get creator-type collection",
@@ -400,6 +426,31 @@
       "permissionName": "inventory-storage.creator-types.item.delete",
       "displayName": "inventory storage - delete individual creator-type",
       "description": "delete individual creator-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-formats.collection.get",
+      "displayName": "inventory storage - get formats collection",
+      "description": "get creator-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-formats.item.get",
+      "displayName": "inventory storage - get individual format",
+      "description": "get individual instance format from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-formats.item.post",
+      "displayName": "inventory storage - create individual format",
+      "description": "create individual instance format in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-formats.item.put",
+      "displayName": "inventory storage - modify format",
+      "description": "modify instance format in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-formats.item.delete",
+      "displayName": "inventory storage - delete individual format",
+      "description": "delete individual instance format from storage"
     },
     {
       "permissionName": "inventory-storage.all",
@@ -442,7 +493,12 @@
         "inventory-storage.creator-types.item.get",
         "inventory-storage.creator-types.item.post",
         "inventory-storage.creator-types.item.put",
-        "inventory-storage.creator-types.item.delete"
+        "inventory-storage.creator-types.item.delete",
+        "inventory-storage.instance-formats.collection.get",
+        "inventory-storage.instance-formats.item.get",
+        "inventory-storage.instance-formats.item.post",
+        "inventory-storage.instance-formats.item.put",
+        "inventory-storage.instance-formats.item.delete"
       ]
     }
   ]
