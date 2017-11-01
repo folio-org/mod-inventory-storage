@@ -1,0 +1,83 @@
+{
+  "tables": [
+    {
+      "tableName": "loan_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },
+    {
+      "tableName": "material_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },    
+    {
+      "tableName": "shelflocation",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },
+    {
+      "tableName": "item",
+      "generateId": false,
+      "pkColumnName": "_id",
+      "foreignKeys": [
+        {
+          "fieldName": "permanentLoanTypeId",
+          "targetTable": "loan_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLoanTypeId",
+          "targetTable": "loan_type",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance",
+      "generateId": false,
+      "pkColumnName": "_id"
+    }
+  ],
+  "views": [
+    {
+      "viewName": "items_mt_view",
+      "pkColumnName": "_id",
+      "table": {
+        "tableName": "item",
+        "joinOnField": "materialTypeId"
+      },
+      "joinTable": {
+        "tableName": "material_type",
+        "joinOnField": "id",
+        "jsonFieldAlias": "mt_jsonb"
+      }
+    }
+  ]
+}

@@ -18,6 +18,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Mtype;
+import org.folio.rest.jaxrs.model.Shelflocation;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
 import org.folio.rest.persist.DatabaseExceptionUtils;
 import org.folio.rest.persist.PostgresClient;
@@ -40,7 +41,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.jaxrs.model.Shelflocation;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -119,11 +119,11 @@ public class ItemStorageAPI implements ItemStorageResource {
               try {
 
                 if(reply.succeeded()) {
-                  List<Item> items = (List<Item>) reply.result()[0];
+                  List<Item> items = (List<Item>) reply.result().getResults();
 
                   Items itemList = new Items();
                   itemList.setItems(items);
-                  itemList.setTotalRecords((Integer) reply.result()[1]);
+                  itemList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(Future.succeededFuture(
                     ItemStorageResource.GetItemStorageItemsResponse.
@@ -329,7 +329,7 @@ public class ItemStorageAPI implements ItemStorageResource {
             reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Item> itemList = (List<Item>) reply.result()[0];
+                  List<Item> itemList = (List<Item>) reply.result().getResults();
                   if (itemList.size() == 1) {
                     Item item = itemList.get(0);
 
@@ -451,7 +451,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                   postgresClient.get("item", Item.class, criterion, true, false,
                     reply -> {
                       if(reply.succeeded()) {
-                        List<Item> itemList = (List<Item>) reply.result()[0];
+                        List<Item> itemList = (List<Item>) reply.result().getResults();
                         if (itemList.size() == 1) {
                           try {
                             postgresClient.update("item", entity, criterion, true,
@@ -643,7 +643,7 @@ public class ItemStorageAPI implements ItemStorageResource {
       PostgresClient.getInstance(vertx, tenantId).get(
         MaterialTypeAPI.MATERIAL_TYPE_TABLE, mtype, new String[]{"_id"}, true, false, 0, 1, check -> {
           if(check.succeeded()) {
-            List<Mtype> mtypeList0 = (List<Mtype>) check.result()[0];
+            List<Mtype> mtypeList0 = (List<Mtype>) check.result().getResults();
             if(mtypeList0.size() == 0){
               handler.handle(io.vertx.core.Future.succeededFuture(0));
             }
@@ -675,7 +675,7 @@ public class ItemStorageAPI implements ItemStorageResource {
         if(getReply.failed()) {
           future.fail(getReply.cause());
         } else {
-          List<Shelflocation> locationList = (List<Shelflocation>)getReply.result()[0];
+          List<Shelflocation> locationList = (List<Shelflocation>)getReply.result().getResults();
           if(locationList.size() < 1) {
             future.fail("No location found");
           } else {
