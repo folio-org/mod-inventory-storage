@@ -26,6 +26,12 @@
           "tOps": "ADD"
         }
       ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ],
       "ginIndex": true
     },    
     {
@@ -55,6 +61,17 @@
         {
           "fieldName": "temporaryLoanTypeId",
           "targetTable": "loan_type",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": false
+        },
+        {
+          "fieldName": "materialTypeId",
           "tOps": "ADD"
         }
       ]
