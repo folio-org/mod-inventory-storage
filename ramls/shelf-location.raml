@@ -1,0 +1,75 @@
+#%RAML 0.8
+title: Shelf Location API
+version: v1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Shelf Locations API
+    content: This documents the API calls that can be made to query and manage shelf locations types of the system
+
+schemas:
+  - shelflocation.json: !include shelflocation.json
+  - shelflocations: !include shelflocations.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
+
+traits:
+  - secured: !include raml-util/traits/auth.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+  - language: !include raml-util/traits/language.raml
+  - validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+
+/shelf-locations:
+  type:
+    collection:
+      exampleCollection: !include examples/shelflocations.json
+      exampleItem: !include examples/shelflocation.json
+      schemaCollection: shelflocations
+      schemaItem: shelflocation.json
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of shelf locations
+  post:
+    description: Create a new shelf location
+    is: [validate]
+  delete:
+    description: "Delete all shelf locations"
+    responses:
+      204:
+        description: "All shelf locations deleted"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "Internal server error, contact administrator"
+  /{id}:
+    description: "Pass in the shelf location id"
+    type:
+      collection-item:
+        exampleItem: !include examples/shelflocation.json
+        schema: shelflocation.json
+    get:
+      responses:
+        501:
+          description: "Not implemented yet"
+    put:
+      responses:
+        501:
+          description: "Not implemented yet"
+    delete:
+      responses:
+        501:
+          description: "Not implemented yet"
+
+

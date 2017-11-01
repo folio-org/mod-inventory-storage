@@ -7,9 +7,7 @@
   "permanentLoanTypeId": "2b94c631-fca9-a892-c730-03ee529ffe27",
   "temporaryLoanTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0e",
   "status": {
-    "name": "Checked Out"
+    "name": "Checked out"
   },
-  "location": {
-    "name": "Main Library"
-  }
+  "permanentLocationId": "fcd64ce1-6995-48f0-840e-89ffa2288371"
 }

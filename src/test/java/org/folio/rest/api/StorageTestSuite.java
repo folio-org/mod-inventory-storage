@@ -32,7 +32,8 @@ import static org.junit.Assert.assertThat;
   InstanceStorageTest.class,
   LoanTypeTest.class,
   MaterialTypeTest.class,
-  ItemStorageTest.class
+  ItemStorageTest.class,
+  ShelfLocationsTest.class
 })
 @SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
@@ -255,6 +256,14 @@ public class StorageTestSuite {
         + e.getMessage());
       assert false;
     }
+  }
+
+  static URL shelfLocationsUrl() throws MalformedURLException {
+    return shelfLocationsUrl("");
+  }
+
+  static URL shelfLocationsUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/shelf-locations" + subPath);
   }
 
   static URL materialTypesUrl() throws MalformedURLException {

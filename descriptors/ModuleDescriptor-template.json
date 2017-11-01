@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "3.1",
+      "version": "4.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -115,6 +115,33 @@
           "methods": ["DELETE"],
           "pathPattern": "/material-types/{id}",
           "permissionsRequired": ["inventory-storage.material-types.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "shelf-locations",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/shelf-locations",
+          "permissionsRequired": ["inventory-storage.shelf-locations.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/shelf-locations/{id}",
+          "permissionsRequired": ["inventory-storage.shelf-locations.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/shelf-locations",
+          "permissionsRequired": ["inventory-storage.shelf-locations.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/shelf-locations/{id}",
+          "permissionsRequired": ["inventory-storage.shelf-locations.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/shelf-locations/{id}",
+          "permissionsRequired": ["inventory-storage.shelf-locations.item.delete"]
         }
       ]
     },
@@ -407,6 +434,31 @@
       "description": "delete individual material-type from storage"
     },
     {
+      "permissionName": "inventory-storage.shelf-locations.collection.get",
+      "displayName": "inventory storage - get shelf location collection",
+      "description": "get shelf location collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.shelf-locations.item.get",
+      "displayName": "inventory storage - get individual shelf location",
+      "description": "get individual shelf location from storage"
+    },
+    {
+      "permissionName": "inventory-storage.shelf-locations.item.post",
+      "displayName": "inventory storage - create individual shelf location",
+      "description": "create individual shelf location in storage"
+    },
+    {
+      "permissionName": "inventory-storage.shelf-locations.item.put",
+      "displayName": "inventory storage - modify shelf location",
+      "description": "modify shelf location in storage"
+    },
+    {
+      "permissionName": "inventory-storage.shelf-locations.item.delete",
+      "displayName": "inventory storage - delete individual shelf location",
+      "description": "delete individual shelf location from storage"
+    },
+    {
       "permissionName": "inventory-storage.identifier-types.collection.get",
       "displayName": "inventory storage - get identifier-type collection",
       "description": "get identifier-type collection from storage"
@@ -556,7 +608,6 @@
       "displayName": "inventory storage - delete individual classification type",
       "description": "delete individual classification qualifier from storage"
     },
-
     {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
@@ -584,6 +635,11 @@
         "inventory-storage.material-types.item.post",
         "inventory-storage.material-types.item.put",
         "inventory-storage.material-types.item.delete",
+        "inventory-storage.shelf-locations.collection.get",
+        "inventory-storage.shelf-locations.item.get",
+        "inventory-storage.shelf-locations.item.post",
+        "inventory-storage.shelf-locations.item.put",
+        "inventory-storage.shelf-locations.item.delete",
         "inventory-storage.identifier-types.collection.get",
         "inventory-storage.identifier-types.item.get",
         "inventory-storage.identifier-types.item.post",
@@ -614,7 +670,6 @@
         "inventory-storage.classification-types.item.post",
         "inventory-storage.classification-types.item.put",
         "inventory-storage.classification-types.item.delete"
-
       ]
     }
   ]

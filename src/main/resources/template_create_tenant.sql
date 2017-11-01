@@ -54,6 +54,25 @@ CREATE TRIGGER update_date_mtype BEFORE UPDATE ON myuniversity_mymodule.material
 GRANT ALL ON myuniversity_mymodule.material_type TO myuniversity_mymodule;
 -- *** material type end *** --
 
+-- *** shelf location start *** --
+CREATE TABLE myuniversity_mymodule.shelflocation(
+	_id UUID PRIMARY KEY,
+	jsonb jsonb NOT NULL,
+	creation_date date not null default current_timestamp,
+	update_date date not null default current_timestamp
+);
+CREATE INDEX idxgin_shelflocation ON myuniversity_mymodule.shelflocation USING gin (jsonb jsonb_path_ops);
+CREATE UNIQUE INDEX shelflocation_unique_idx ON myuniversity_mymodule.shelflocation((jsonb->>'name'));
+CREATE OR REPLACE FUNCTION update_modified_column_shelflocation()
+RETURNS TRIGGER AS $$
+BEGIN
+	NEW.update_date = current_timestamp;
+	RETURN NEW;
+END;
+$$ language 'plpgsql';
+CREATE TRIGGER update_date_shelflocation BEFORE UPDATE ON myuniversity_mymodule.shelflocation FOR EACH ROW EXECUTE PROCEDURE update_modified_column_shelflocation();
+GRANT ALL ON myuniversity_mymodule.shelflocation TO myuniversity_mymodule;
+-- *** shelf location end *** --
 CREATE TABLE myuniversity_mymodule.item (
   _id UUID PRIMARY KEY,
   jsonb JSONB NOT NULL,

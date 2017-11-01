@@ -34,14 +34,11 @@
     "temporaryLoanTypeId": {
       "type": "string"
     },
-    "location": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
+    "permanentLocationId": {
+      "type": "string"
+    },
+    "temporaryLocationId": {
+      "type": "string"
     }
   },
   "additionalProperties": false,
