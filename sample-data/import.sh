@@ -78,6 +78,14 @@ for f in ./instancetypes/*.json; do
          "${instance_type_storage_address}"
 done
 
+for f in ./instanceformats/*.json; do
+    curl -w '\n' -X POST -D - \
+         -H "Content-type: application/json" \
+         -H "X-Okapi-Tenant: ${tenant}" \
+         -d @$f \
+         "${instance_format_storage_address}"
+done
+
 for f in ./classificationtypes/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
