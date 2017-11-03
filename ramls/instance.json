@@ -50,7 +50,7 @@
     },
     "creators": {
       "type": "array",
-      "minItems": 0,
+      "minItems": 1,
       "items": {
         "type": "object",
         "properties": {
@@ -165,6 +165,8 @@
   },
   "additionalProperties": false,
   "required": [
-    "title"
+    "source",
+    "title",
+    "instanceTypeid"
   ]
 }
