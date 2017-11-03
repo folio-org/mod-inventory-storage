@@ -3,11 +3,11 @@
   "title": "Nod",
   "identifiers": [
     {
-      "typeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
+      "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
       "value": "0956687695"
     },
     {
-      "typeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
+      "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
       "value": "9780956687695"
     }
   ],

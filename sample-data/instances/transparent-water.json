@@ -3,23 +3,23 @@
   "title": "Transparent water",
   "identifiers": [
     { 
-      "typeId": "5d164f4b-0b15-4e42-ae75-cfcf85318ad9",
+      "identifierTypeId": "5d164f4b-0b15-4e42-ae75-cfcf85318ad9",
       "value": "ocn968777846"
     },
     { 
-      "typeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
+      "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
       "value": "9786316800312"
     },    
     { 
-      "typeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
+      "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
       "value": "6316800312"
     },
     {
-      "typeId": "b5d8cdc4-9441-487c-90cf-0c7ec97728eb",
+      "identifierTypeId": "b5d8cdc4-9441-487c-90cf-0c7ec97728eb",
       "value": "OTA-1031 Otá Records"
     },
     {
-      "typeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
+      "identifierTypeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
       "value": "(OCoLC)968777846"
     }
   ],

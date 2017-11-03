@@ -4,7 +4,7 @@
   "alternativeTitles": ["First alternative title", 
                         "Second alternative title"],
   "identifiers": [
-    { "typeId": "7f907515-a1bf-4513-8a38-92e1a07c539d",
+    { "identifierTypeId": "7f907515-a1bf-4513-8a38-92e1a07c539d",
       "value": "B01LO7PJOE"
     }
   ],

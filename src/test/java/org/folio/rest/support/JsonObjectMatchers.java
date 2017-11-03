@@ -8,18 +8,18 @@ import org.hamcrest.TypeSafeMatcher;
 import java.util.List;
 
 public class JsonObjectMatchers {
-  public static Matcher identifierMatches(String typeId, String value) {
+  public static Matcher identifierMatches(String identifierTypeId, String value) {
 
     return new TypeSafeMatcher<JsonObject>() {
       @Override
       public void describeTo(Description description) {
         description.appendText(String.format(
-          "an identifier with typeId: %s and value: %s", typeId, value));
+          "an identifier with identifierTypeId: %s and value: %s", identifierTypeId, value));
       }
 
       @Override
       protected boolean matchesSafely(JsonObject entry) {
-        return entry.getString("typeId").equals(typeId)
+        return entry.getString("identifierTypeId").equals(identifierTypeId)
           && entry.getString("value").equals(value);
       }
     };
