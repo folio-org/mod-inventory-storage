@@ -1,21 +1,21 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.core.Response;
+
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Shelflocation;
 import org.folio.rest.jaxrs.model.Shelflocations;
 import org.folio.rest.jaxrs.resource.ShelfLocationsResource;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -25,10 +25,12 @@ import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -132,9 +134,9 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
                               getErrorResponse(message))));
             } else {
               Shelflocations shelfLocations = new Shelflocations();
-              List<Shelflocation> shelfLocationsList = (List<Shelflocation>)reply.result()[0];
+              List<Shelflocation> shelfLocationsList = (List<Shelflocation>)reply.result().getResults();
               shelfLocations.setShelflocations(shelfLocationsList);
-              shelfLocations.setTotalRecords((Integer)reply.result()[1]);
+              shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
               asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelfLocations)));
             }
           } catch(Exception e) {
@@ -235,7 +237,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
                       GetShelfLocationsByIdResponse.withPlainInternalServerError(
                               getErrorResponse(message))));
           } else {
-            List<Shelflocation> locationList = (List<Shelflocation>)getReply.result()[0];
+            List<Shelflocation> locationList = (List<Shelflocation>)getReply.result().getResults();
             if(locationList.size() < 1) {
               asyncResultHandler.handle(Future.succeededFuture(
                       GetShelfLocationsByIdResponse.withPlainNotFound(
@@ -393,7 +395,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           if(getReply.failed()) {
             future.fail(getReply.cause());
           } else {
-            List<Item> itemList = (List<Item>)getReply.result()[0];
+            List<Item> itemList = (List<Item>)getReply.result().getResults();
             if(itemList.isEmpty()) {
               future.complete(false);
             } else {

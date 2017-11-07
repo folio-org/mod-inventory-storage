@@ -4,6 +4,7 @@
 * Implement `/shelf-locations` endpoint for CRUD of location records
 * Provides `item-storage` 4.0 interface
 * Provides `shelf-locations` 1.0 interface
+* Upgrade to RMB v15.0.2 MODINVSTOR-20
 
 ## 5.1.1 Unreleased
 

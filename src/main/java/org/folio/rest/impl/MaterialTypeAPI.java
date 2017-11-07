@@ -1,19 +1,22 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.*;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.core.Response;
+
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.model.Mtypes;
 import org.folio.rest.jaxrs.resource.MaterialTypesResource;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -22,10 +25,13 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  * @author shale
@@ -69,9 +75,9 @@ public class MaterialTypeAPI implements MaterialTypesResource {
                 if(reply.succeeded()){
                   Mtypes mtypes = new Mtypes();
                   @SuppressWarnings("unchecked")
-                  List<Mtype> mtype = (List<Mtype>) reply.result()[0];
+                  List<Mtype> mtype = (List<Mtype>) reply.result().getResults();
                   mtypes.setMtypes(mtype);
-                  mtypes.setTotalRecords((Integer)reply.result()[1]);
+                  mtypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypesResponse.withJsonOK(
                     mtypes)));
                 }
@@ -172,7 +178,7 @@ public class MaterialTypeAPI implements MaterialTypesResource {
               try {
                 if(reply.succeeded()){
                   @SuppressWarnings("unchecked")
-                  List<Mtype> userGroup = (List<Mtype>) reply.result()[0];
+                  List<Mtype> userGroup = (List<Mtype>) reply.result().getResults();
                   if(userGroup.isEmpty()){
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypesByMaterialtypeIdResponse
                       .withPlainNotFound(materialtypeId)));
@@ -223,7 +229,7 @@ public class MaterialTypeAPI implements MaterialTypesResource {
           PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
             ItemStorageAPI.ITEM_TABLE, item, new String[]{idFieldName}, true, false, 0, 1, replyHandler -> {
             if(replyHandler.succeeded()){
-              List<Item> mtypeList = (List<Item>) replyHandler.result()[0];
+              List<Item> mtypeList = (List<Item>) replyHandler.result().getResults();
               if(mtypeList.size() > 0){
                 String message = "Can not delete material type, "+ materialtypeId + ". " +
                     mtypeList.size()  + " items associated with it";
