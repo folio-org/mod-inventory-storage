@@ -63,11 +63,11 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Instance> instances = (List<Instance>) reply.result()[0];
+                  List<Instance> instances = (List<Instance>) reply.result().getResults();
 
                   Instances instanceList = new Instances();
                   instanceList.setInstances(instances);
-                  instanceList.setTotalRecords((Integer)reply.result()[1]);
+                  instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     InstanceStorageResource.GetInstanceStorageInstancesResponse.
@@ -228,7 +228,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<Instance> instanceList = (List<Instance>) reply.result()[0];
+                  List<Instance> instanceList = (List<Instance>) reply.result().getResults();
                   if (instanceList.size() == 1) {
                     Instance instance = instanceList.get(0);
 
@@ -353,7 +353,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           postgresClient.get("instance", Instance.class, criterion, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<Instance> itemList = (List<Instance>) reply.result()[0];
+                List<Instance> itemList = (List<Instance>) reply.result().getResults();
 
                 if (itemList.size() == 1) {
                   try {

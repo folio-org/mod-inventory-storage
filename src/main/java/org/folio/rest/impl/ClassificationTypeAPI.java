@@ -74,9 +74,9 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                 if (reply.succeeded()) {
                   ClassificationTypes instanceTypes = new ClassificationTypes();
                   @SuppressWarnings("unchecked")
-                  List<ClassificationType> instanceType = (List<ClassificationType>) reply.result()[0];
+                  List<ClassificationType> instanceType = (List<ClassificationType>) reply.result().getResults();
                   instanceTypes.setClassificationTypes(instanceType);
-                  instanceTypes.setTotalRecords((Integer)reply.result()[1]);
+                  instanceTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesResponse.withJsonOK(
                       instanceTypes)));
                 }
@@ -189,7 +189,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<ClassificationType> instanceType = (List<ClassificationType>) reply.result()[0];
+                List<ClassificationType> instanceType = (List<ClassificationType>) reply.result().getResults();
                 if (instanceType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesByClassificationTypeIdResponse
                       .withPlainNotFound(instanceTypeId)));

@@ -1,21 +1,18 @@
 package org.folio.rest.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.Response;
-
+import io.vertx.core.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.IdentifierType;
 import org.folio.rest.jaxrs.model.IdentifierTypes;
 import org.folio.rest.jaxrs.resource.IdentifierTypesResource;
-import org.folio.rest.persist.DatabaseExceptionUtils;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.DatabaseExceptionUtils;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -25,13 +22,10 @@ import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Implements the instance identifier type persistency using postgres jsonb.
@@ -74,9 +68,9 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                 if (reply.succeeded()) {
                   IdentifierTypes identifierTypes = new IdentifierTypes();
                   @SuppressWarnings("unchecked")
-                  List<IdentifierType> identifierType = (List<IdentifierType>) reply.result()[0];
+                  List<IdentifierType> identifierType = (List<IdentifierType>) reply.result().getResults();
                   identifierTypes.setIdentifierTypes(identifierType);
-                  identifierTypes.setTotalRecords((Integer)reply.result()[1]);
+                  identifierTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesResponse.withJsonOK(
                       identifierTypes)));
                 }
@@ -189,7 +183,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<IdentifierType> identifierType = (List<IdentifierType>) reply.result()[0];
+                List<IdentifierType> identifierType = (List<IdentifierType>) reply.result().getResults();
                 if (identifierType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse
                       .withPlainNotFound(identifierTypeId)));

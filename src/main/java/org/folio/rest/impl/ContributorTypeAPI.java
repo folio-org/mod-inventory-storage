@@ -1,21 +1,18 @@
 package org.folio.rest.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.Response;
-
+import io.vertx.core.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ContributorType;
 import org.folio.rest.jaxrs.model.ContributorTypes;
 import org.folio.rest.jaxrs.resource.ContributorTypesResource;
-import org.folio.rest.persist.DatabaseExceptionUtils;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.DatabaseExceptionUtils;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -25,13 +22,10 @@ import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Implements the instance contributor type persistency using postgres jsonb.
@@ -74,9 +68,9 @@ public class ContributorTypeAPI implements ContributorTypesResource {
                 if (reply.succeeded()) {
                   ContributorTypes contributorTypes = new ContributorTypes();
                   @SuppressWarnings("unchecked")
-                  List<ContributorType> contributorType = (List<ContributorType>) reply.result()[0];
+                  List<ContributorType> contributorType = (List<ContributorType>) reply.result().getResults();
                   contributorTypes.setContributorTypes(contributorType);
-                  contributorTypes.setTotalRecords((Integer)reply.result()[1]);
+                  contributorTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorTypesResponse.withJsonOK(
                       contributorTypes)));
                 }
@@ -189,7 +183,7 @@ public class ContributorTypeAPI implements ContributorTypesResource {
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<ContributorType> contributorType = (List<ContributorType>) reply.result()[0];
+                List<ContributorType> contributorType = (List<ContributorType>) reply.result().getResults();
                 if (contributorType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorTypesByContributorTypeIdResponse
                       .withPlainNotFound(contributorTypeId)));

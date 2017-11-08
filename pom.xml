@@ -24,7 +24,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>13.0.2</version>
+      <version>15.0.2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -173,27 +173,6 @@
             <version>1.8.9</version>
           </dependency>
         </dependencies>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>properties-maven-plugin</artifactId>
-        <version>1.0.0</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>set-system-properties</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <properties>
-            <property>
-              <name>log4j.configuration</name>
-              <value>${project.baseUri}src/main/resources/log4j.properties</value>
-            </property>
-          </properties>
-        </configuration>
       </plugin>
 
       <plugin>
