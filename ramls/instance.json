@@ -167,6 +167,7 @@
   "required": [
     "source",
     "title",
+    "creators",
     "instanceTypeId"
   ]
 }
