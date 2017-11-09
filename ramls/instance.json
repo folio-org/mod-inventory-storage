@@ -167,6 +167,6 @@
   "required": [
     "source",
     "title",
-    "instanceTypeid"
+    "instanceTypeId"
   ]
 }
