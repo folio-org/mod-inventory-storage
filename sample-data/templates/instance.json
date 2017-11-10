@@ -1,10 +1,18 @@
 {
   "id": "",
   "title": "",
+  "source": "",
+  "creators": [
+    {
+      "creatorTypeId": "",
+      "name": ""
+    }
+  ],
   "identifiers": [
     {
-      "namespace": "",
+      "instanceTypeId": "",
       "value": ""
     }
-  ]
+  ],
+  "instanceTypeId" ""
 }

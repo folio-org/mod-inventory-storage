@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "creatorTypes": {
+      "id": "creatorType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "creatorType"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "creatorTypes",
+    "totalRecords"
+  ]
+}

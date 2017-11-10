@@ -1,14 +1,22 @@
 {
   "id": "6506b79b-7702-48b2-9774-a1c538fdd34e",
+  "source": "Sample",
   "title": "Nod",
+  "creators": [
+    {
+      "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+      "name": "Barnes, Adrian"
+    }
+  ],
   "identifiers": [
     {
-      "namespace": "isbn",
+      "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
       "value": "0956687695"
     },
     {
-      "namespace": "isbn",
+      "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
       "value": "9780956687695"
     }
-  ]
+  ],
+  "instanceTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2c"
 }

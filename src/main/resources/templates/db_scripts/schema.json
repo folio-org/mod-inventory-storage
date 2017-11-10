@@ -33,7 +33,7 @@
         }
       ],
       "ginIndex": true
-    },    
+    },
     {
       "tableName": "shelflocation",
       "withMetadata": false,
@@ -43,6 +43,126 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },
+    {
+      "tableName": "identifier_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },
+    {
+      "tableName": "contributor_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },
+    {
+      "tableName": "creator_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },
+    {
+      "tableName": "instance_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },
+    {
+      "tableName": "instance_format",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": true
+    },
+    {
+      "tableName": "classification_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
           "tOps": "ADD"
         }
       ],

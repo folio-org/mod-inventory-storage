@@ -1,13 +1,25 @@
+##
+
 ## 6.0.0 Unreleased
 
+* Provides `instance-storage` 2.0 interface (MODINVSTOR-17)
+* Instances: Add controlled vocabularies, providing following interfaces: (MODINVSTOR-17)
+*   `identifier-types` 1.0
+*   `contributor-types` 1.0
+*   `creator-types` 1.0
+*   `instance-formats` 1.0
+*   `instance-types` 1.0
+*   `classification-types` 1.0
+* Instances: `identifiers` property refactored, multiple changes (MODINVSTOR-17)
+* Instances: Fields added: source (mandatory), alternativeTitles, creators (mandatory),
+*  contributors, subjects, classifications, publication, urls,
+*  instanceTypeId (mandatory) instanceFormatId, physicalDescriptions,
+*  languages, notes.                                                   (MODINVSTOR-17)
 * Removes `location` property from Item record, and store a UUID for a (permanent and temporary) location record instead
 * Implement `/shelf-locations` endpoint for CRUD of location records
 * Provides `item-storage` 4.0 interface
 * Provides `shelf-locations` 1.0 interface
 * Upgrade to RMB v15.0.2 MODINVSTOR-20
-
-## 5.1.1 Unreleased
-
 * Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)
 * Adds mod- prefix to names of the built artifacts (FOLIO-813)
 

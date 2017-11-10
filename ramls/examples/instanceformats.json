@@ -1,0 +1,17 @@
+{
+  "instanceFormats": [
+    {
+      "id": "2b94c631-fca9-a892-c730-03ee529ffe27",
+      "name": "Sound recording"
+    },
+    {
+      "id": "2e48e713-17f3-7c13-09f8-23845bb210a4",
+      "name": "Videorecording"
+    },
+    {
+      "id": "e8b311a6-3b21-03f2-2269-dd9310cb2d0e",
+      "name": "Unspecified"
+    }
+  ],
+  "totalRecords": 3
+}

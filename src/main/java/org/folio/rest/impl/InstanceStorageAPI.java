@@ -1,8 +1,21 @@
 package org.folio.rest.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Instances;
+import org.folio.rest.jaxrs.resource.InstanceStorageResource;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.OutStream;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -10,24 +23,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-
-import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.Instances;
-import org.folio.rest.jaxrs.resource.InstanceStorageResource;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class InstanceStorageAPI implements InstanceStorageResource {
 
