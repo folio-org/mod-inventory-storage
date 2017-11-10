@@ -2,7 +2,7 @@
 
 ## 6.0.0 Unreleased
 
-* Provides `instance-storage` 2.0 interface (MODINVSTOR-17)
+* Provides `instance-storage` 3.0 interface (MODINVSTOR-17)
 * Instances: Add controlled vocabularies, providing following interfaces: (MODINVSTOR-17)
 *   `identifier-types` 1.0
 *   `contributor-types` 1.0
