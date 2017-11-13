@@ -9,7 +9,7 @@ documentation:
     content: This documents the API calls that can be made to query and manage instance resource types
 
 schemas:
-  - instanceType: !include instancetype.json
+  - instancetype.json: !include instancetype.json
   - instanceTypes: !include instancetypes.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
@@ -33,7 +33,7 @@ resourceTypes:
       exampleCollection: !include examples/instancetypes.json
       exampleItem: !include examples/instancetype.json
       schemaCollection: instanceTypes
-      schemaItem: instanceType
+      schemaItem: instancetype.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -48,4 +48,4 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/instancetype.json
-        schema: instanceType
+        schema: instancetype.json

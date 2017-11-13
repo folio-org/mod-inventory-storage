@@ -9,18 +9,18 @@ documentation:
     content: This documents the API calls that can be made to query and manage instance formats
 
 schemas:
-  - instanceFormat: !include instanceformat.json
+  - instanceformat.json: !include instanceformat.json
   - instanceFormats: !include instanceformats.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
 
 traits:
- - secured: !include raml-util/traits/auth.raml
- - language: !include raml-util/traits/language.raml
- - pageable: !include raml-util/traits/pageable.raml
- - searchable: !include raml-util/traits/searchable.raml
- - validate: !include raml-util/traits/validation.raml
+  - secured: !include raml-util/traits/auth.raml
+  - language: !include raml-util/traits/language.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+  - validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
   - collection: !include raml-util/rtypes/collection.raml
@@ -33,7 +33,7 @@ resourceTypes:
       exampleCollection: !include examples/instanceformats.json
       exampleItem: !include examples/instanceformat.json
       schemaCollection: instanceFormats
-      schemaItem: instanceFormat
+      schemaItem: instanceformat.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -48,4 +48,4 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/instanceformat.json
-        schema: instanceFormat
+        schema: instanceformat.json

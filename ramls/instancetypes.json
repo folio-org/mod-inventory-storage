@@ -7,7 +7,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "instanceType"
+        "$ref": "instancetype.json"
       }
     },
     "totalRecords": {

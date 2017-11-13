@@ -9,7 +9,7 @@ documentation:
     content: This documents the API calls that can be made to query and manage classification qualifier resource types
 
 schemas:
-  - classificationType: !include classificationtype.json
+  - classificationtype.json: !include classificationtype.json
   - classificationTypes: !include classificationtypes.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
@@ -33,7 +33,7 @@ resourceTypes:
       exampleCollection: !include examples/classificationtypes.json
       exampleItem: !include examples/classificationtype.json
       schemaCollection: classificationTypes
-      schemaItem: classificationType
+      schemaItem: classificationtype.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -48,5 +48,5 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/classificationtype.json
-        schema: classificationType
+        schema: classificationtype.json
 

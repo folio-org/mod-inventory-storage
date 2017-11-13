@@ -9,7 +9,7 @@ documentation:
     content: This documents the API calls that can be made to query and manage contributor types
 
 schemas:
-  - contributorType: !include contributortype.json
+  - contributortype.json: !include contributortype.json
   - contributorTypes: !include contributortypes.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
@@ -33,7 +33,7 @@ resourceTypes:
       exampleCollection: !include examples/contributortypes.json
       exampleItem: !include examples/contributortype.json
       schemaCollection: contributorTypes
-      schemaItem: contributorType
+      schemaItem: contributortype.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -48,4 +48,4 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/contributortype.json
-        schema: contributorType
+        schema: contributortype.json

@@ -3,15 +3,15 @@
   "source": "Sample",
   "title": "Transparent water",
   "identifiers": [
-    { 
+    {
       "identifierTypeId": "5d164f4b-0b15-4e42-ae75-cfcf85318ad9",
       "value": "ocn968777846"
     },
-    { 
+    {
       "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
       "value": "9786316800312"
-    },    
-    { 
+    },
+    {
       "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
       "value": "6316800312"
     },
@@ -53,7 +53,7 @@
     }
   ],
   "instanceTypeId": "2e48e713-17f3-7c13-09f8-23845bb210ac",
-  "instanceFormatId": "309c3a3d-d54c-4519-b978-2c5c2de78d95", 
+  "instanceFormatId": "309c3a3d-d54c-4519-b978-2c5c2de78d95",
   "physicalDescriptions": [
     "1 audio disc: digital; 4 3/4 in."
   ],
