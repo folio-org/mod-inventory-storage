@@ -130,7 +130,7 @@
         "uniqueItems": true
       }
     },
-    "urls" : {
+    "urls": {
       "type": "array",
       "items": {
         "type": "string"
