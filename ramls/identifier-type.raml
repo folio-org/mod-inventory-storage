@@ -9,7 +9,7 @@ documentation:
     content: This documents the API calls that can be made to query and manage instance identifier types
 
 schemas:
-  - identifierType: !include identifiertype.json
+  - identifiertype.json: !include identifiertype.json
   - identifierTypes: !include identifiertypes.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
@@ -33,7 +33,7 @@ resourceTypes:
       exampleCollection: !include examples/identifiertypes.json
       exampleItem: !include examples/identifiertype.json
       schemaCollection: identifierTypes
-      schemaItem: identifierType
+      schemaItem: identifiertype.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -48,4 +48,4 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/identifiertype.json
-        schema: identifierType
+        schema: identifiertype.json

@@ -9,7 +9,7 @@ documentation:
     content: This documents the API calls that can be made to query and manage instance formats
 
 schemas:
-  - instanceFormat: !include instanceformat.json
+  - instanceformat.json: !include instanceformat.json
   - instanceFormats: !include instanceformats.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
@@ -33,7 +33,7 @@ resourceTypes:
       exampleCollection: !include examples/instanceformats.json
       exampleItem: !include examples/instanceformat.json
       schemaCollection: instanceFormats
-      schemaItem: instanceFormat
+      schemaItem: instanceformat.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -48,4 +48,4 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/instanceformat.json
-        schema: instanceFormat
+        schema: instanceformat.json
