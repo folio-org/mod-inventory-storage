@@ -200,6 +200,18 @@
       "tableName": "instance",
       "generateId": false,
       "pkColumnName": "_id"
+    },
+    {
+      "tableName": "holdings_record",
+      "generateId": false,
+      "pkColumnName": "_id",
+      "foreignKeys": [
+        {
+          "fieldName": "permanentLocationId",
+          "targetTable": "shelflocation",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "views": [

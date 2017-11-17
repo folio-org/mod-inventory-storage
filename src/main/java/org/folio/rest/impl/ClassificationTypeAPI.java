@@ -38,7 +38,7 @@ import io.vertx.core.logging.LoggerFactory;
  */
 public class ClassificationTypeAPI implements ClassificationTypesResource {
 
-  public static final String INSTANCE_TYPE_TABLE   = "classification_type";
+  public static final String CLASSIFICATION_TYPE_TABLE   = "classification_type";
 
   private static final String LOCATION_PREFIX       = "/classification-types/";
   private static final Logger log                 = LoggerFactory.getLogger(ClassificationTypeAPI.class);
@@ -51,7 +51,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(INSTANCE_TYPE_TABLE+".jsonb");
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(CLASSIFICATION_TYPE_TABLE+".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
@@ -67,7 +67,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCQL(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(INSTANCE_TYPE_TABLE, ClassificationType.class,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CLASSIFICATION_TYPE_TABLE, ClassificationType.class,
             new String[]{"*"}, cql, true, true,
             reply -> {
               try {
@@ -125,7 +125,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
 
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
-            INSTANCE_TYPE_TABLE, id, entity,
+            CLASSIFICATION_TYPE_TABLE, id, entity,
             reply -> {
               try {
                 if (reply.succeeded()) {
@@ -174,7 +174,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
         Criterion c = new Criterion(
             new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+instanceTypeId+"'"));
 
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(INSTANCE_TYPE_TABLE, ClassificationType.class, c, true,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CLASSIFICATION_TYPE_TABLE, ClassificationType.class, c, true,
             reply -> {
               try {
                 if (reply.failed()) {
@@ -224,7 +224,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(INSTANCE_TYPE_TABLE, instanceTypeId,
+        postgres.delete(CLASSIFICATION_TYPE_TABLE, instanceTypeId,
             reply -> {
               try {
                 if (reply.failed()) {
@@ -277,7 +277,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
           entity.setId(instanceTypeId);
         }
         PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-            INSTANCE_TYPE_TABLE, entity, instanceTypeId,
+            CLASSIFICATION_TYPE_TABLE, entity, instanceTypeId,
             reply -> {
               try {
                 if (reply.succeeded()) {

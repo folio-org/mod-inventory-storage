@@ -1,0 +1,60 @@
+#%RAML 0.8
+title: Holdings Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Holdings Records Storage API
+    content: <b>Storage for holdings in the inventory</b>
+
+schemas:
+  - holdingsrecord.json: !include holdingsrecord.json
+  - holdingsRecords: !include holdingsrecords.json
+
+traits:
+  - secured: !include raml-util/traits/auth.raml
+  - language: !include raml-util/traits/language.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+
+resourceTypes:
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+
+/holdings-storage:
+  /holdings:
+    displayName: Holdings
+    type:
+      collection:
+        exampleCollection: !include  examples/holdingsrecords_get.json
+        schemaCollection: holdingsRecords
+        schemaItem: holdingsrecord.json
+        exampleItem: !include  examples/holdingsrecord_get.json
+    get:
+      is: [pageable,
+           searchable: {description: "by instance ID (using CQL)",
+                        example: "instanceId=\"2b94c631-fca9-a892-c730-03ee529ffe2a\""},
+          ]
+    post:
+    delete:
+      responses:
+        204:
+          description: "All holdings deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+    /{holdingsRecordId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/holdingsrecord_get.json
+          schema: holdingsrecord.json
+      get:
+        responses:
+          200:
+            body:
+#              type: holdinsgrecord
+            description: |
+              Get Holdings Record by holdingsRecordId

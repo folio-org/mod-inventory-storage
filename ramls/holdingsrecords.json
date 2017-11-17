@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "holdingsRecords": {
+      "id": "holdingsRecord",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "holdingsrecord.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "holdingsRecords",
+    "totalRecords"
+  ]
+}
+
