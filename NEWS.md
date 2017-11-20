@@ -2,6 +2,8 @@
 
 ## 6.0.0 Unreleased
 
+* Provides `holdings-storage` 1.0 interface (MODINVSTOR-25)
+* Adds `holdingsRecordId` to item (MODINVSTOR-25)
 * Provides `instance-storage` 3.0 interface (MODINVSTOR-17)
 * Instances: Add controlled vocabularies, providing following interfaces: (MODINVSTOR-17)
 *   `identifier-types` 1.0
@@ -14,7 +16,7 @@
 * Instances: Fields added: source (mandatory), alternativeTitles, creators (mandatory),
 *  contributors, subjects, classifications, publication, urls,
 *  instanceTypeId (mandatory) instanceFormatId, physicalDescriptions,
-*  languages, notes.                                                   (MODINVSTOR-17)
+*  languages, notes. (MODINVSTOR-17)
 * Removes `location` property from Item record, and store a UUID for a (permanent and temporary) location record instead
 * Implement `/shelf-locations` endpoint for CRUD of location records
 * Provides `item-storage` 4.0 interface
