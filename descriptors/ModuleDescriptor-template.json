@@ -34,6 +34,37 @@
       ]
     },
     {
+      "id": "holdings-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-storage/holdings",
+          "permissionsRequired": ["inventory-storage.holdings.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-storage/holdings/{id}",
+          "permissionsRequired": ["inventory-storage.holdings.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/holdings-storage/holdings",
+          "permissionsRequired": ["inventory-storage.holdings.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/holdings-storage/holdings/{id}",
+          "permissionsRequired": ["inventory-storage.holdings.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/holdings-storage/holdings/{id}",
+          "permissionsRequired": ["inventory-storage.holdings.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/holdings-storage/holdings",
+          "permissionsRequired": ["inventory-storage.holdings.collection.delete"]
+        }
+      ]
+    },
+    {
       "id": "instance-storage",
       "version": "3.0",
       "handlers": [
@@ -354,6 +385,36 @@
       "description": "delete individual item from storage"
     },
     {
+      "permissionName": "inventory-storage.holdings.collection.get",
+      "displayName": "inventory storage - get holdings collection",
+      "description": "get holdings collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings.collection.delete",
+      "displayName": "inventory storage - delete entire holdings collection",
+      "description": "delete entire holdings collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings.item.get",
+      "displayName": "inventory storage - get individual holdings record",
+      "description": "get individual holdings record from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings.item.post",
+      "displayName": "inventory storage - create individual holdings record",
+      "description": "create individual holdings record in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings.item.put",
+      "displayName": "inventory storage - modify holdings record",
+      "description": "modify holdings record in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings.item.delete",
+      "displayName": "inventory storage - delete individual holdings record",
+      "description": "delete individual holdings record from storage"
+    },
+    {
       "permissionName": "inventory-storage.instances.collection.get",
       "displayName": "inventory storage - get instance collection",
       "description": "get instance collection from storage"
@@ -619,6 +680,12 @@
         "inventory-storage.items.item.put",
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
+        "inventory-storage.holdings.collection.get",
+        "inventory-storage.holdings.item.get",
+        "inventory-storage.holdings.item.post",
+        "inventory-storage.holdings.item.put",
+        "inventory-storage.holdings.item.delete",
+        "inventory-storage.holdings.collection.delete",
         "inventory-storage.instances.collection.get",
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",
