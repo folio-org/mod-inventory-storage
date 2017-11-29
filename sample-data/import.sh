@@ -39,14 +39,6 @@ for f in ./shelf-locations/*.json; do
          "${shelf_location_storage_address}"
 done
 
-for f in ./items/*.json; do
-    curl -w '\n' -X POST -D - \
-         -H "Content-type: application/json" \
-         -H "X-Okapi-Tenant: ${tenant}" \
-         -d @$f \
-         "${item_storage_address}"
-done
-
 for f in ./identifiertypes/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
@@ -109,4 +101,12 @@ for f in ./holdingsrecords/*.json; do
          -H "X-Okapi-Tenant: ${tenant}" \
          -d @$f \
          "${holdings_storage_address}"
+done
+
+for f in ./items/*.json; do
+    curl -w '\n' -X POST -D - \
+         -H "Content-type: application/json" \
+         -H "X-Okapi-Tenant: ${tenant}" \
+         -d @$f \
+         "${item_storage_address}"
 done
