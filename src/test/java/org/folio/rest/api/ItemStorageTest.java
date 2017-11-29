@@ -75,9 +75,9 @@ public class ItemStorageTest extends TestBase {
     ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
 
-    JsonObject itemToCreate = nod(id, instanceId);
+    JsonObject itemToCreate = nod(id, holdingsRecordId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -91,8 +91,7 @@ public class ItemStorageTest extends TestBase {
     JsonObject itemFromPost = postResponse.getJson();
 
     assertThat(itemFromPost.getString("id"), is(id.toString()));
-    assertThat(itemFromPost.getString("instanceId"), is(instanceId.toString()));
-    assertThat(itemFromPost.getString("title"), is("Nod"));
+    assertThat(itemFromPost.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(itemFromPost.getString("barcode"), is("565578437802"));
     assertThat(itemFromPost.getJsonObject("status").getString("name"),
       is("Available"));
@@ -102,8 +101,6 @@ public class ItemStorageTest extends TestBase {
       is(canCirculateLoanTypeID));
     assertThat(itemFromPost.getString("temporaryLocationId"),
       is(annexLocationId));
-    assertThat(itemFromPost.getString("permanentLocationId"),
-      is(mainLibraryLocationId));
 
     JsonResponse getResponse = getById(id);
 
@@ -112,8 +109,7 @@ public class ItemStorageTest extends TestBase {
     JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
-    assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
-    assertThat(itemFromGet.getString("title"), is("Nod"));
+    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
@@ -123,8 +119,6 @@ public class ItemStorageTest extends TestBase {
       is(canCirculateLoanTypeID));
     assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLocationId));
-    assertThat(itemFromGet.getString("permanentLocationId"),
-      is(mainLibraryLocationId));
   }
 
   @Test
@@ -169,9 +163,9 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID instanceId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
 
-    JsonObject itemToCreate = nod(null, instanceId);
+    JsonObject itemToCreate = nod(null, holdingsRecordId);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
 
@@ -195,8 +189,7 @@ public class ItemStorageTest extends TestBase {
     JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(newId));
-    assertThat(itemFromGet.getString("instanceId"), is(instanceId.toString()));
-    assertThat(itemFromGet.getString("title"), is("Nod"));
+    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
@@ -206,10 +199,7 @@ public class ItemStorageTest extends TestBase {
       is(canCirculateLoanTypeID));
     assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLocationId));
-    assertThat(itemFromGet.getString("permanentLocationId"),
-      is(mainLibraryLocationId));
   }
-
   @Test
   public void cannotCreateAnItemWithBlankTitle()
     throws MalformedURLException, InterruptedException,
@@ -303,18 +293,17 @@ public class ItemStorageTest extends TestBase {
     ExecutionException, TimeoutException {
 
     String id = "1234";
-    UUID instanceId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
 
     JsonObject itemToCreate = new JsonObject();
 
-    itemToCreate.put("id", id.toString());
-    itemToCreate.put("instanceId", instanceId.toString());
+    itemToCreate.put("id", id);
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("title", "Nod");
     itemToCreate.put("barcode", "565578437802");
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("permanentLocationId", mainLibraryLocationId);
     itemToCreate.put("temporaryLocationId", annexLocationId);
 
     CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
@@ -368,9 +357,9 @@ public class ItemStorageTest extends TestBase {
     ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
 
-    JsonObject itemToCreate = nod(id, instanceId);
+    JsonObject itemToCreate = nod(id, holdingsRecordId);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture();
 
@@ -389,8 +378,7 @@ public class ItemStorageTest extends TestBase {
     JsonObject item = getResponse.getJson();
 
     assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("instanceId"), is(instanceId.toString()));
-    assertThat(item.getString("title"), is("Nod"));
+    assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(item.getString("barcode"), is("565578437802"));
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
@@ -400,8 +388,6 @@ public class ItemStorageTest extends TestBase {
       is(canCirculateLoanTypeID));
     assertThat(item.getString("temporaryLocationId"),
       is(annexLocationId));
-    assertThat(item.getString("permanentLocationId"),
-      is(mainLibraryLocationId));
   }
 
   @Test
@@ -481,16 +467,15 @@ public class ItemStorageTest extends TestBase {
     ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
 
-    JsonObject itemToCreate = smallAngryPlanet(id, instanceId);
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
 
     createItem(itemToCreate);
 
     JsonObject replacement = itemToCreate.copy();
       replacement.put("barcode", "125845734657")
-              .put("temporaryLocationId", mainLibraryLocationId)
-              .put("permanentLocationId", annexLocationId);
+              .put("temporaryLocationId", mainLibraryLocationId);
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
 
@@ -509,15 +494,12 @@ public class ItemStorageTest extends TestBase {
     JsonObject item = getResponse.getJson();
 
     assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("instanceId"), is(instanceId.toString()));
-    assertThat(item.getString("title"), is("Long Way to a Small Angry Planet"));
+    assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(item.getString("barcode"), is("125845734657"));
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(item.getString("materialTypeId"),
       is(journalMaterialTypeID));
-    assertThat(item.getString("permanentLocationId"),
-      is(annexLocationId));
     assertThat(item.getString("temporaryLocationId"),
       is(mainLibraryLocationId));
   }
@@ -528,9 +510,9 @@ public class ItemStorageTest extends TestBase {
     ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
 
-    JsonObject itemToCreate = createItemRequest(id, instanceId,
+    JsonObject itemToCreate = createItemRequest(id, holdingsRecordId,
       "The Time Traveller's Wife", "036587275931");
 
     createItem(itemToCreate);
@@ -538,8 +520,6 @@ public class ItemStorageTest extends TestBase {
     JsonObject replacement = itemToCreate.copy();
     replacement.put("barcode", "036587275931");
     replacement.put("temporaryLocationId", mainLibraryLocationId);
-    replacement.put("permanentLocationId", annexLocationId);
-
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture();
 
@@ -558,15 +538,12 @@ public class ItemStorageTest extends TestBase {
     JsonObject item = getResponse.getJson();
 
     assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("instanceId"), is(instanceId.toString()));
-    assertThat(item.getString("title"), is("The Time Traveller's Wife"));
+    assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(item.getString("barcode"), is("036587275931"));
     assertThat(item.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(item.getString("materialTypeId"),
       is(journalMaterialTypeID));
-    assertThat(item.getString("permanentLocationId"),
-      is(annexLocationId));
     assertThat(item.getString("temporaryLocationId"),
       is(mainLibraryLocationId));
   }
@@ -576,9 +553,9 @@ public class ItemStorageTest extends TestBase {
     MalformedURLException, TimeoutException, ExecutionException {
 
     UUID id = UUID.randomUUID();
-    UUID instanceId = UUID.randomUUID();
+    UUID holdingsRecordId = UUID.randomUUID();
 
-    JsonObject itemToCreate = smallAngryPlanet(id, instanceId);
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
 
     createItem(itemToCreate);
 
@@ -932,15 +909,15 @@ public class ItemStorageTest extends TestBase {
 
   private JsonObject createItemRequest(
       UUID id,
-      UUID instanceId,
+      UUID holdingsRecordId,
       String title,
       String barcode) {
-    return createItemRequest(id, instanceId, title, barcode, journalMaterialTypeID);
+    return createItemRequest(id, holdingsRecordId, title, barcode, journalMaterialTypeID);
   }
 
   private JsonObject createItemRequest(
     UUID id,
-    UUID instanceId,
+    UUID holdingsRecordId,
     String title,
     String barcode,
     String materialType) {
@@ -951,14 +928,13 @@ public class ItemStorageTest extends TestBase {
       itemToCreate.put("id", id.toString());
     }
 
-    itemToCreate.put("instanceId", instanceId.toString());
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", materialType);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     //itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
-    itemToCreate.put("permanentLocationId", mainLibraryLocationId);
     itemToCreate.put("temporaryLocationId", annexLocationId);
 
     return itemToCreate;
@@ -973,8 +949,8 @@ public class ItemStorageTest extends TestBase {
     return smallAngryPlanet(UUID.randomUUID(), UUID.randomUUID());
   }
 
-  private JsonObject nod(UUID itemId, UUID instanceId) {
-    return createItemRequest(itemId, instanceId,
+  private JsonObject nod(UUID itemId, UUID holdingsRecordId) {
+    return createItemRequest(itemId, holdingsRecordId,
       "Nod", "565578437802");
   }
 
