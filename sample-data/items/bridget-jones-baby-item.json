@@ -8,5 +8,10 @@
   "temporaryLoanTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0e",
   "status": {
     "name": "Checked out"
-  }
+  },
+  "enumeration": "(enumeration)",
+  "chronology": "(chronology)",
+  "pieceIdentifiers": ["(pieceIdentifier 1)", "(pieceIdentifier 2)"],
+  "numberOfPieces": "(number of pieces)",
+  "notes": [ "(note 1)", "(note 2)" ]
 }
