@@ -11,8 +11,7 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "material_type",
@@ -25,14 +24,7 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "shelflocation",
@@ -45,8 +37,7 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "identifier_type",
@@ -65,8 +56,7 @@
           "fieldName": "id",
           "tOps": "ADD"
         }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "contributor_type",
@@ -85,8 +75,7 @@
           "fieldName": "id",
           "tOps": "ADD"
         }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "creator_type",
@@ -105,8 +94,7 @@
           "fieldName": "id",
           "tOps": "ADD"
         }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "instance_type",
@@ -125,8 +113,7 @@
           "fieldName": "id",
           "tOps": "ADD"
         }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "instance_format",
@@ -145,8 +132,7 @@
           "fieldName": "id",
           "tOps": "ADD"
         }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "classification_type",
@@ -165,8 +151,7 @@
           "fieldName": "id",
           "tOps": "ADD"
         }
-      ],
-      "ginIndex": true
+      ]
     },
     {
       "tableName": "item",
@@ -182,24 +167,92 @@
           "fieldName": "temporaryLoanTypeId",
           "targetTable": "loan_type",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "materialTypeId",
+          "targetTable": "material_type",
+          "tOps": "ADD"
         }
       ],
       "index": [
         {
+          "fieldName": "materialTypeId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "title",
           "tOps": "ADD",
-          "caseSensitive": false
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": true,
+          "removeAccents": false
+        }
+      ],
+      "ginIndex": [
+        {
+          "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         },
         {
           "fieldName": "materialTypeId",
-          "tOps": "ADD"
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ]
     },
     {
       "tableName": "instance",
       "generateId": false,
-      "pkColumnName": "_id"
+      "pkColumnName": "_id",
+      "ginIndex": [
+        {
+          "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ]
     },
     {
       "tableName": "holdings_record",
