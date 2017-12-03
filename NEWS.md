@@ -1,5 +1,3 @@
-##
-
 ## 6.0.0 Unreleased
 
 * Adds optional properties `enumeration`, `chronology`, `pieceIdentifiers`, `numberOfPieces`, `notes` to holdingsRecord (MODINVSTOR-34)
@@ -22,7 +20,7 @@
 * Implement `/shelf-locations` endpoint for CRUD of location records
 * Provides `item-storage` 4.0 interface
 * Provides `shelf-locations` 1.0 interface
-* Upgrade to RMB v15.0.2 MODINVSTOR-20
+* Upgrade to RMB v16.0.1 (MODINVSTOR-20, MODINVSTOR-18, MODINVSTOR-38)
 * Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)
 * Adds mod- prefix to names of the built artifacts (FOLIO-813)
 
