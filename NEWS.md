@@ -1,6 +1,6 @@
 ## 6.0.0 Unreleased
 
-* Provides `holdings-storage` 1.0 interface (MODINVSTOR-25)
+  * Provides `holdings-storage` 1.0 interface (MODINVSTOR-25)
 * Adds `holdingsRecordId` to item (MODINVSTOR-25)
 * Provides `instance-storage` 3.0 interface (MODINVSTOR-17)
 * Instances: Add controlled vocabularies, providing following interfaces: (MODINVSTOR-17)
@@ -19,7 +19,7 @@
 * Implement `/shelf-locations` endpoint for CRUD of location records
 * Provides `item-storage` 4.0 interface
 * Provides `shelf-locations` 1.0 interface
-* Upgrade to RMB v16.0.0 (MODINVSTOR-20, MODINVSTOR-18)
+* Upgrade to RMB v16.0.1 (MODINVSTOR-20, MODINVSTOR-18, MODINVSTOR-38)
 * Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)
 * Adds mod- prefix to names of the built artifacts (FOLIO-813)
 
