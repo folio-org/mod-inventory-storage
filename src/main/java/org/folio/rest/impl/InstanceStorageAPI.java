@@ -1,21 +1,9 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.Instances;
-import org.folio.rest.jaxrs.resource.InstanceStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -23,9 +11,25 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Instances;
+import org.folio.rest.jaxrs.resource.InstanceStorageResource;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.OutStream;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 
 public class InstanceStorageAPI implements InstanceStorageResource {
 
@@ -33,6 +37,23 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
+  public static final String INSTANCE_HOLDINGS_VIEW = "instance_holding_view";
+  public static final String INSTANCE_TABLE =  "instance";
+  private String tableName =  "instance";
+
+
+  private CQLWrapper handleCQL(String query, int limit, int offset) throws FieldException {
+    if(query != null){
+      if(query.contains("holdingsRecords.")){
+        tableName = INSTANCE_HOLDINGS_VIEW;
+        query = query.replaceAll("(?i)holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
+        CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_HOLDINGS_VIEW+".jsonb",INSTANCE_HOLDINGS_VIEW+".ho_jsonb"));
+        return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+      }
+    }
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_TABLE+".jsonb"));
+    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+  }
 
   @Override
   public void getInstanceStorageInstances(
@@ -54,12 +75,9 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
           String[] fieldList = {"*"};
 
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON("instance.jsonb");
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
-            .setLimit(new Limit(limit))
-            .setOffset(new Offset(offset));
+          CQLWrapper cql = handleCQL(query, limit, offset);
 
-          postgresClient.get("instance", Instance.class, fieldList, cql,
+          postgresClient.get(tableName, Instance.class, fieldList, cql,
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
