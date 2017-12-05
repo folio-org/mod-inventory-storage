@@ -1,27 +1,34 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
+
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.TextResponse;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class InstanceStorageTest extends TestBase {
 
@@ -532,6 +539,139 @@ public class InstanceStorageTest extends TestBase {
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
+
+  @Test
+  public void testCrossTableQueries() throws Exception {
+
+    System.out.println("--------------------------------------------------------------------------------------------------------------------");
+
+    String url = instanceStorageUrl() + "?query=";
+
+    String holdingsURL = "/holdings-storage/holdings";
+
+    //////// create instance objects /////////////////////////////
+    JsonArray identifiers = new JsonArray();
+    identifiers.add(identifier("isbn", "9781473619777"));
+    JsonArray creators = new JsonArray();
+    creators.add(creator("personal name", "Chambers, Becky"));
+
+    UUID idJ1 = UUID.randomUUID();
+    JsonObject j1 = createInstanceRequest(idJ1, "TEST1", "Long Way to a Small Angry Planet 1",
+      identifiers, creators, "resource type id");
+    UUID idJ2 = UUID.randomUUID();
+    JsonObject j2 = createInstanceRequest(idJ2, "TEST2", "Long Way to a Small Angry Planet 2",
+      identifiers, creators, "resource type id");
+    UUID idJ3 = UUID.randomUUID();
+    JsonObject j3 = createInstanceRequest(idJ3, "TEST3", "Long Way to a Small Angry Planet 3",
+      identifiers, creators, "resource type id");
+
+    createInstance(j1);
+    createInstance(j2);
+    createInstance(j3);
+    ////////////////////// done /////////////////////////////////////
+
+    ///////// create location objects //////////////////////////////
+    UUID loc1 = UUID.fromString("11111111-dee7-48eb-b03f-d02fdf0debd0");
+    ShelfLocationsTest.createShelfLocation(loc1, "location1");
+    UUID loc2 = UUID.fromString("99999999-dee7-48eb-b03f-d02fdf0debd0");
+    ShelfLocationsTest.createShelfLocation(loc2, "location2");
+    /////////////////// done //////////////////////////////////////
+
+    /////////////////// create holdings records ///////////////////
+    JsonObject jho1 = new JsonObject();
+    String holdings1UUID = loc1.toString();
+    jho1.put("id", UUID.randomUUID().toString());
+    jho1.put("instanceId", idJ1.toString());
+    jho1.put("permanentLocationId", holdings1UUID);
+
+    JsonObject jho2 = new JsonObject();
+    String holdings2UUID = loc2.toString();
+    jho2.put("id", UUID.randomUUID().toString());
+    jho2.put("instanceId", idJ2.toString());
+    jho2.put("permanentLocationId", holdings2UUID);
+
+    JsonObject jho3 = new JsonObject();
+    jho3.put("id", UUID.randomUUID().toString());
+    jho3.put("instanceId", idJ3.toString());
+    jho3.put("permanentLocationId", holdings2UUID);
+
+    createHoldings(holdingsURL, jho1);
+    createHoldings(holdingsURL, jho2);
+    createHoldings(holdingsURL, jho3);
+    ////////////////////////done //////////////////////////////////////
+
+    String url1 = url+URLEncoder.encode("title=Long Way to a Small Angry Planet* sortBy holdingsRecords.permanentLocationId/sort.descending title", "UTF-8");
+    String url2 = url+URLEncoder.encode("title=cql.allRecords=1 sortBy holdingsRecords.permanentLocationId/sort.ascending", "UTF-8");
+    String url3 = url+URLEncoder.encode("holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 sortBy holdingsRecords.permanentLocationId/sort.descending title", "UTF-8");
+    String url4 = url+URLEncoder.encode("title=cql.allRecords=1 sortby holdingsRecords.permanentLocationId title", "UTF-8");
+    String url5 = url+URLEncoder.encode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 "
+        + "sortby holdingsRecords.permanentLocationId", "UTF-8");
+    //non existant - 0 results
+    String url6 = url+URLEncoder.encode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=abc* sortby holdingsRecords.permanentLocationId", "UTF-8");
+
+    CompletableFuture<JsonResponse> cqlCF1 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF2 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF3 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF4 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF5 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF6 = new CompletableFuture();
+
+    String[] urls = new String[]{url1, url2, url3, url4, url5, url6};
+    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]{cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6};
+
+    for(int i=0; i<6; i++){
+      CompletableFuture<JsonResponse> cf = cqlCF[i];
+      String cqlURL = urls[i];
+      client.get(cqlURL, StorageTestSuite.TENANT_ID, ResponseHandler.json(cf));
+
+      JsonResponse cqlResponse = cf.get(5, TimeUnit.SECONDS);
+      assertThat(cqlResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+      System.out.println(cqlResponse.getBody() +
+        "\nStatus - " + cqlResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + cqlURL);
+
+      if(i==0){
+        assertThat(3, is(cqlResponse.getJson().getInteger("totalRecords")));
+        assertThat("TEST2" , is(cqlResponse.getJson().getJsonArray("instances").getJsonObject(0).getString("source")));
+      } else if(i==1){
+        assertThat(3, is(cqlResponse.getJson().getInteger("totalRecords")));
+        assertThat("TEST1" , is(cqlResponse.getJson().getJsonArray("instances").getJsonObject(0).getString("source")));
+      } else if(i==2){
+        assertThat(2, is(cqlResponse.getJson().getInteger("totalRecords")));
+        assertThat("TEST2" , is(cqlResponse.getJson().getJsonArray("instances").getJsonObject(0).getString("source")));
+      } else if(i==3){
+        assertThat("TEST1" , is(cqlResponse.getJson().getJsonArray("instances").getJsonObject(0).getString("source")));
+      }else if(i==4){
+        assertThat(2, is(cqlResponse.getJson().getInteger("totalRecords")));
+      }else if(i==5){
+        assertThat(0, is(cqlResponse.getJson().getInteger("totalRecords")));
+      }
+    }
+    StorageTestSuite.deleteAll(StorageTestSuite.storageUrl(holdingsURL));
+    StorageTestSuite.deleteAll(StorageTestSuite.shelfLocationsUrl());
+  }
+
+  private void createHoldings(String path, JsonObject holdingsToCreate)
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+
+      CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+
+      try {
+        client.post(StorageTestSuite.storageUrl(path), holdingsToCreate,
+          StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
+
+        TextResponse response = createCompleted.get(2, TimeUnit.SECONDS);
+
+        if (response.getStatusCode() != 201) {
+          System.out.println("WARNING!!!!! Create holdings preparation failed: "
+            + response.getBody());
+        }
+      }
+      catch(Exception e) {
+        System.out.println("WARNING!!!!! Create holdings preparation failed: "
+          + e.getMessage());
+      }
+    }
 
   private void createInstance(JsonObject instanceToCreate)
     throws MalformedURLException, InterruptedException,

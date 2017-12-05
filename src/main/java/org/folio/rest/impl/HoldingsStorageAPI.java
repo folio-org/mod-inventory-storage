@@ -5,38 +5,41 @@
  */
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
+
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.resource.HoldingsStorageResource;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 
 /**
  *
  * @author ne
  */
 public class HoldingsStorageAPI implements HoldingsStorageResource {
-  
+
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
@@ -57,7 +60,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s"+HOLDINGS_RECORD_TABLE,
+        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s."+HOLDINGS_RECORD_TABLE,
           tenantId, "mod_inventory_storage"),
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -142,13 +145,13 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
 
   @Override
   public void postHoldingsStorageHoldings(
-    @DefaultValue("en") 
+    @DefaultValue("en")
     @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     HoldingsRecord entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
-    
+
         String tenantId = okapiHeaders.get(TENANT_HEADER);
 
     try {
@@ -455,7 +458,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
           .withPlainInternalServerError(e.getMessage())));
     }
   }
-  
+
   private boolean isUUID(String id) {
     try {
       UUID.fromString(id);

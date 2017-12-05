@@ -251,6 +251,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ]
     },
@@ -264,6 +270,34 @@
           "targetTable": "shelflocation",
           "tOps": "ADD"
         }
+      ],
+      "ginIndex": [
+        {
+          "fieldName": "instanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "permanentLocationId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }        
+      ],
+      "index": [
+        {
+          "fieldName": "instanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "permanentLocationId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }        
       ]
     }
   ],
@@ -279,6 +313,19 @@
         "tableName": "material_type",
         "joinOnField": "id",
         "jsonFieldAlias": "mt_jsonb"
+      }
+    },
+    {
+      "viewName": "instance_holding_view",
+      "pkColumnName": "_id",
+      "table": {
+        "tableName": "instance",
+        "joinOnField": "id"
+      },
+      "joinTable": {
+        "tableName": "holdings_record",
+        "joinOnField": "instanceId",
+        "jsonFieldAlias": "ho_jsonb"
       }
     }
   ]
