@@ -43,13 +43,12 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
 
   private CQLWrapper handleCQL(String query, int limit, int offset) throws FieldException {
-    if(query != null){
-      if(query.contains("holdingsRecords.")){
-        tableName = INSTANCE_HOLDINGS_VIEW;
-        query = query.replaceAll("(?i)holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
-        CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_HOLDINGS_VIEW+".jsonb",INSTANCE_HOLDINGS_VIEW+".ho_jsonb"));
-        return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-      }
+    if(query != null && query.contains("holdingsRecords.")){
+      tableName = INSTANCE_HOLDINGS_VIEW;
+      //ho_jsonb is the alias given holdings in the view in the DB
+      query = query.replaceAll("(?i)holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
+      CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_HOLDINGS_VIEW+".jsonb",INSTANCE_HOLDINGS_VIEW+".ho_jsonb"));
+      return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_TABLE+".jsonb"));
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
