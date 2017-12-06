@@ -655,21 +655,56 @@ public class ItemStorageTest extends TestBase {
   }
 
   @Test
+  public void canSearchForItemsByBarcodeWithLeadingZero()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    createItem(nod());
+    createItem(uprooted());
+    createItem(smallAngryPlanet().put("barcode", "036000291452"));
+    createItem(temeraire());
+    createItem(interestingTimes());
+
+    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
+
+    String url = itemsUrl() + "?query=barcode=036000291452";
+
+    client.get(url,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+
+    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(200));
+
+    JsonObject searchBody = searchResponse.getJson();
+
+    JsonArray foundItems = searchBody.getJsonArray("items");
+
+    assertThat(foundItems.size(), is(1));
+    assertThat(searchBody.getInteger("totalRecords"), is(1));
+
+    assertThat(foundItems.getJsonObject(0).getString("title"),
+      is("Long Way to a Small Angry Planet"));
+  }
+
+  @Test
   public void canSearchForItemsByBarcode()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
 
-    createItem(smallAngryPlanet());
     createItem(nod());
     createItem(uprooted());
+    createItem(smallAngryPlanet().put("barcode", "673274826203"));
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
 
-    String url = itemsUrl() + "?query=barcode=036000291452";
+    String url = itemsUrl() + "?query=barcode=673274826203";
 
     client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));

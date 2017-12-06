@@ -200,7 +200,7 @@ public class ShelfLocationsTest {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
-  private void send(String url, HttpMethod method, String content,
+  private static void send(String url, HttpMethod method, String content,
                     String contentType, Handler<HttpClientResponse> handler) {
 
     HttpClient client = StorageTestSuite.getVertx().createHttpClient();
@@ -263,7 +263,7 @@ public class ShelfLocationsTest {
     return createShelfLocation.get(5, TimeUnit.SECONDS);
   }
 
-  private JsonResponse createShelfLocation(UUID id, String name)
+  protected static JsonResponse createShelfLocation(UUID id, String name)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,

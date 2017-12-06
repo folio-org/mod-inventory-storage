@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-rm -rf target/
-
-./destroy-test-db.sh
+./clean.sh
 
 ./setup-test-db.sh
 
