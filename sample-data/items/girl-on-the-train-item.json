@@ -1,6 +1,6 @@
 {
   "id": "459afaba-5b39-468d-9072-eb1685e0ddf4",
-  "instanceId": "f31a36de-fcf8-44f9-87ef-a55d06ad21ae",
+  "holdingsRecordId": "65032151-39a5-4cef-8810-5350eb316300",
   "title": "The Girl on the Train",
   "barcode": "765475420716",
   "materialTypeId": "5ee11d91-f7e8-481d-b079-65d708582ccc",
@@ -8,6 +8,5 @@
   "status": {
     "name": "Available"
   },
-  "permanentLocationId": "fcd64ce1-6995-48f0-840e-89ffa2288371",
   "temporaryLocationId": "53cf956f-c1df-410b-8bea-27f712cca7c0"
 }

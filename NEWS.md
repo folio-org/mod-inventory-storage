@@ -1,6 +1,7 @@
 ## 6.0.0 Unreleased
 
-  * Provides `holdings-storage` 1.0 interface (MODINVSTOR-25)
+* Adds optional properties `enumeration`, `chronology`, `pieceIdentifiers`, `numberOfPieces`, `notes` to `item` (MODINVSTOR-34)
+* Provides `holdings-storage` 1.0 interface (MODINVSTOR-25)
 * Adds `holdingsRecordId` to item (MODINVSTOR-25)
 * Provides `instance-storage` 3.0 interface (MODINVSTOR-17)
 * Instances: Add controlled vocabularies, providing following interfaces: (MODINVSTOR-17)
