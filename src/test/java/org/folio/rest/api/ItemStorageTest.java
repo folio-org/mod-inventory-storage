@@ -33,8 +33,8 @@ import static org.junit.Assert.assertThat;
 public class ItemStorageTest extends TestBase {
 
   private static String journalMaterialTypeID;
-  private static String booklMaterialTypeID;
-  private static String videolMaterialTypeID;
+  private static String bookMaterialTypeID;
+  private static String videoMaterialTypeID;
   private static String canCirculateLoanTypeID;
   private static String mainLibraryLocationId;
   private static String annexLocationId;
@@ -52,8 +52,8 @@ public class ItemStorageTest extends TestBase {
     StorageTestSuite.deleteAll(shelfLocationsUrl());
 
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("journal");
-    booklMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("book");
-    videolMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("video");
+    bookMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("book");
+    videoMaterialTypeID = new MaterialTypesClient(client, materialTypesUrl()).create("video");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesUrl()).create("Can Circulate");
     mainLibraryLocationId = new ShelfLocationsClient(client, shelfLocationsUrl()).create("Main Library");
     annexLocationId = new ShelfLocationsClient(client, shelfLocationsUrl()).create("Annex Library");
@@ -79,7 +79,7 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = nod(id, holdingsRecordId);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -131,11 +131,9 @@ public class ItemStorageTest extends TestBase {
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
       .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("title", "Nod");
+      .put("permanentLoanTypeId", canCirculateLoanTypeID);
 
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -167,7 +165,7 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = nod(null, holdingsRecordId);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -213,7 +211,7 @@ public class ItemStorageTest extends TestBase {
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", "");
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -245,7 +243,7 @@ public class ItemStorageTest extends TestBase {
       .put("title", "LandOfNod")
       .put("permanentLocationId", badLocation);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
@@ -270,7 +268,7 @@ public class ItemStorageTest extends TestBase {
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("title", String.join("", Collections.nCopies(256, "X")));
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -306,7 +304,7 @@ public class ItemStorageTest extends TestBase {
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLocationId);
 
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.text(createCompleted));
@@ -334,7 +332,7 @@ public class ItemStorageTest extends TestBase {
     itemToCreate.put("title", "Nod");
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
@@ -361,7 +359,7 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = nod(id, holdingsRecordId);
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.put(itemsUrl(String.format("/%s", id)), itemToCreate,
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(createCompleted));
@@ -401,7 +399,7 @@ public class ItemStorageTest extends TestBase {
 
     requestWithAdditionalProperty.put("somethingAdditional", "foo");
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), requestWithAdditionalProperty,
       StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
@@ -424,7 +422,7 @@ public class ItemStorageTest extends TestBase {
     requestWithAdditionalProperty
       .put("status", new JsonObject().put("somethingAdditional", "foo"));
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), requestWithAdditionalProperty,
       StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
@@ -449,7 +447,7 @@ public class ItemStorageTest extends TestBase {
     requestWithAdditionalProperty
       .put("location", new JsonObject().put("somethingAdditional", "foo"));
 
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), requestWithAdditionalProperty,
       StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
@@ -477,7 +475,7 @@ public class ItemStorageTest extends TestBase {
       replacement.put("barcode", "125845734657")
               .put("temporaryLocationId", mainLibraryLocationId);
 
-    CompletableFuture<Response> replaceCompleted = new CompletableFuture();
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
     client.put(itemsUrl(String.format("/%s", id)), replacement,
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
@@ -521,7 +519,7 @@ public class ItemStorageTest extends TestBase {
     replacement.put("barcode", "036587275931");
     replacement.put("temporaryLocationId", mainLibraryLocationId);
 
-    CompletableFuture<Response> replaceCompleted = new CompletableFuture();
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
     client.put(itemsUrl(String.format("/%s", id)), replacement,
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
@@ -559,7 +557,7 @@ public class ItemStorageTest extends TestBase {
 
     createItem(itemToCreate);
 
-    CompletableFuture<Response> deleteCompleted = new CompletableFuture();
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
     client.delete(itemsUrl(String.format("/%s", id)),
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
@@ -568,7 +566,7 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     client.get(itemsUrl(String.format("/%s", id)),
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(getCompleted));
@@ -591,8 +589,8 @@ public class ItemStorageTest extends TestBase {
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture();
-    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
 
     client.get(itemsUrl() + "?limit=3", StorageTestSuite.TENANT_ID,
       ResponseHandler.json(firstPageCompleted));
@@ -632,7 +630,7 @@ public class ItemStorageTest extends TestBase {
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
 
     String url = itemsUrl() + "?query=title=\"*Up*\"";
 
@@ -737,7 +735,7 @@ public class ItemStorageTest extends TestBase {
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<TextResponse> searchCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> searchCompleted = new CompletableFuture<>();
 
     String url = itemsUrl() + "?query=t";
 
@@ -767,7 +765,7 @@ public class ItemStorageTest extends TestBase {
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<Response> deleteAllFinished = new CompletableFuture();
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     client.delete(itemsUrl(), StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(deleteAllFinished));
@@ -776,7 +774,7 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(itemsUrl(), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
@@ -796,7 +794,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<TextResponse> postCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> postCompleted = new CompletableFuture<>();
 
     client.post(itemsUrl(), smallAngryPlanet(),
       ResponseHandler.text(postCompleted));
@@ -815,7 +813,7 @@ public class ItemStorageTest extends TestBase {
     URL getInstanceUrl = itemsUrl(String.format("/%s",
       UUID.randomUUID().toString()));
 
-    CompletableFuture<TextResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> getCompleted = new CompletableFuture<>();
 
     client.get(getInstanceUrl, ResponseHandler.text(getCompleted));
 
@@ -830,7 +828,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<TextResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> getCompleted = new CompletableFuture<>();
 
     client.get(itemsUrl(), ResponseHandler.text(getCompleted));
 
@@ -847,9 +845,9 @@ public class ItemStorageTest extends TestBase {
     createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
       "A journal title", "036000291452", journalMaterialTypeID));
     createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
-      "A book title", "036000291452", booklMaterialTypeID));
+      "A book title", "036000291452", bookMaterialTypeID));
     createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
-      "A video title", "036000291452", videolMaterialTypeID));
+      "A video title", "036000291452", videoMaterialTypeID));
 
     //query on item and sort by material type
     String url1 = url+URLEncoder.encode("title=title sortBy materialType.name/sort.descending", "UTF-8");
@@ -865,19 +863,20 @@ public class ItemStorageTest extends TestBase {
     //non existant material type - 0 results
     String url7 = url+URLEncoder.encode("title=title and materialType.name=abc* sortby materialType.name", "UTF-8");
 
-    String url8 = url+URLEncoder.encode("materialType="+videolMaterialTypeID, "UTF-8");
+    String url8 = url+URLEncoder.encode("materialType="+ videoMaterialTypeID, "UTF-8");
 
-    CompletableFuture<JsonResponse> cqlCF1 = new CompletableFuture();
-    CompletableFuture<JsonResponse> cqlCF2 = new CompletableFuture();
-    CompletableFuture<JsonResponse> cqlCF3 = new CompletableFuture();
-    CompletableFuture<JsonResponse> cqlCF4 = new CompletableFuture();
-    CompletableFuture<JsonResponse> cqlCF5 = new CompletableFuture();
-    CompletableFuture<JsonResponse> cqlCF6 = new CompletableFuture();
-    CompletableFuture<JsonResponse> cqlCF7 = new CompletableFuture();
-    CompletableFuture<JsonResponse> cqlCF8 = new CompletableFuture();
+    CompletableFuture<JsonResponse> cqlCF1 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> cqlCF2 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> cqlCF3 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> cqlCF4 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> cqlCF5 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> cqlCF6 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> cqlCF7 = new CompletableFuture<>();
+    CompletableFuture<JsonResponse> cqlCF8 = new CompletableFuture<>();
 
     String[] urls = new String[]{url1, url2, url3, url4, url5, url6, url7, url8};
-    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]{cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6, cqlCF7, cqlCF8};
+    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]
+      {cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6, cqlCF7, cqlCF8};
 
     for(int i=0; i<8; i++){
       CompletableFuture<JsonResponse> cf = cqlCF[i];
@@ -911,7 +910,7 @@ public class ItemStorageTest extends TestBase {
 
     URL getItemUrl = itemsUrl(String.format("/%s", id));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
     client.get(getItemUrl, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
@@ -923,7 +922,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture();
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
 
     try {
       client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,

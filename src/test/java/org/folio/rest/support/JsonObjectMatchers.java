@@ -25,7 +25,7 @@ public class JsonObjectMatchers {
     };
   }
 
-  public static Matcher validationErrorMatches(String message, String property) {
+  public static Matcher<JsonObject> validationErrorMatches(String message, String property) {
     return new TypeSafeMatcher<JsonObject>() {
       @Override
       public void describeTo(Description description) {
