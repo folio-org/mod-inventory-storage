@@ -1,5 +1,6 @@
 ## 6.0.0 Unreleased
 
+* Adds optional property `electronicLocation` to `holdingsRecord`. Makes permanentLocationId optional (MODINVSTOR-35, UIIN-15)
 * Adds optional properties `enumeration`, `chronology`, `pieceIdentifiers`, `numberOfPieces`, `notes` to `item` (MODINVSTOR-34)
 * Provides `holdings-storage` 1.0 interface (MODINVSTOR-25)
 * Adds `holdingsRecordId` to item (MODINVSTOR-25)
