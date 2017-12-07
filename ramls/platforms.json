@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "platforms": {
+      "id": "platform",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "platform.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "platforms",
+    "totalRecords"
+  ]
+}
+

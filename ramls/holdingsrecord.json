@@ -11,6 +11,18 @@
     "permanentLocationId": {
       "type": "string"
     },
+    "electronicLocation": {
+      "type": "object",
+      "properties": {
+        "platformId": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "callNumber": {
       "type": "string"
     },
@@ -23,8 +35,7 @@
     }
   },
   "required": [
-    "instanceId",
-    "permanentLocationId"
+    "instanceId"
   ]
 }
 
