@@ -154,6 +154,25 @@
       ]
     },
     {
+      "tableName": "platform",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "item",
       "generateId": false,
       "pkColumnName": "_id",

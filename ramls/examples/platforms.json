@@ -1,0 +1,18 @@
+{
+  "platforms": [
+    {
+      "id": "aaebe6cb-baa5-4ef9-bfe4-045c32be458a",
+      "name": "Platform A"
+    },
+    {
+      "id": "eb8ae90e-b40f-435c-9589-7b1fad8814d8",
+      "name": "Platform B"
+    },
+    {
+      "id": "f6893948-62a7-49f1-86f5-72574a0e7bc9",
+      "name": "Platform C"
+    }
+  ],
+  "totalRecords": 3
+}
+

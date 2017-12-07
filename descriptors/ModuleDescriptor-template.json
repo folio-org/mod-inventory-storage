@@ -339,6 +339,33 @@
       ]
     },
     {
+      "id": "platforms",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/platforms",
+          "permissionsRequired": ["inventory-storage.platforms.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/platforms/{id}",
+          "permissionsRequired": ["inventory-storage.platforms.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/platforms",
+          "permissionsRequired": ["inventory-storage.platforms.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/platforms/{id}",
+          "permissionsRequired": ["inventory-storage.platforms.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/platforms/{id}",
+          "permissionsRequired": ["inventory-storage.platforms.item.delete"]
+        }
+      ]
+    },
+    {
       "id" : "_tenant",
       "version" : "1.0",
       "interfaceType": "system",
@@ -621,23 +648,23 @@
     },
     {
       "permissionName": "inventory-storage.instance-types.collection.get",
-      "displayName": "inventory storage - get formats collection",
-      "description": "get creator-type collection from storage"
+      "displayName": "inventory storage - get instance types collection",
+      "description": "get instance-type collection from storage"
     },
     {
       "permissionName": "inventory-storage.instance-types.item.get",
-      "displayName": "inventory storage - get individual format",
-      "description": "get individual instance format from storage"
+      "displayName": "inventory storage - get individual instance type",
+      "description": "get individual instance type from storage"
     },
     {
       "permissionName": "inventory-storage.instance-types.item.post",
-      "displayName": "inventory storage - create individual format",
-      "description": "create individual instance format in storage"
+      "displayName": "inventory storage - create individual instance type",
+      "description": "create individual instance type in storage"
     },
     {
       "permissionName": "inventory-storage.instance-types.item.put",
-      "displayName": "inventory storage - modify format",
-      "description": "modify instance format in storage"
+      "displayName": "inventory storage - modify instance type",
+      "description": "modify instance type in storage"
     },
     {
       "permissionName": "inventory-storage.instance-types.item.delete",
@@ -646,28 +673,53 @@
     },
     {
       "permissionName": "inventory-storage.classification-types.collection.get",
-      "displayName": "inventory storage - get formats collection",
-      "description": "get creator-type collection from storage"
+      "displayName": "inventory storage - get classification types collection",
+      "description": "get classification types collection from storage"
     },
     {
       "permissionName": "inventory-storage.classification-types.item.get",
-      "displayName": "inventory storage - get individual format",
-      "description": "get individual instance format from storage"
+      "displayName": "inventory storage - get individual classification type",
+      "description": "get individual classification type from storage"
     },
     {
       "permissionName": "inventory-storage.classification-types.item.post",
-      "displayName": "inventory storage - create individual format",
-      "description": "create individual instance format in storage"
+      "displayName": "inventory storage - create individual classification type",
+      "description": "create individual classification type in storage"
     },
     {
       "permissionName": "inventory-storage.classification-types.item.put",
-      "displayName": "inventory storage - modify format",
-      "description": "modify instance format in storage"
+      "displayName": "inventory storage - modify classification type",
+      "description": "modify classification type in storage"
     },
     {
       "permissionName": "inventory-storage.classification-types.item.delete",
       "displayName": "inventory storage - delete individual classification type",
       "description": "delete individual classification qualifier from storage"
+    },
+    {
+      "permissionName": "inventory-storage.platforms.collection.get",
+      "displayName": "inventory storage - get platforms collection",
+      "description": "get platforms collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.platforms.item.get",
+      "displayName": "inventory storage - get individual platform",
+      "description": "get individual platform from storage"
+    },
+    {
+      "permissionName": "inventory-storage.platforms.item.post",
+      "displayName": "inventory storage - create platform",
+      "description": "create individual platform in storage"
+    },
+    {
+      "permissionName": "inventory-storage.platforms.item.put",
+      "displayName": "inventory storage - modify platform",
+      "description": "modify platform in storage"
+    },
+    {
+      "permissionName": "inventory-storage.platforms.item.delete",
+      "displayName": "inventory storage - delete individual platform",
+      "description": "delete individual platform from storage"
     },
     {
       "permissionName": "inventory-storage.all",
@@ -736,7 +788,12 @@
         "inventory-storage.classification-types.item.get",
         "inventory-storage.classification-types.item.post",
         "inventory-storage.classification-types.item.put",
-        "inventory-storage.classification-types.item.delete"
+        "inventory-storage.classification-types.item.delete",
+        "inventory-storage.platforms.collection.get",
+        "inventory-storage.platforms.item.get",
+        "inventory-storage.platforms.item.post",
+        "inventory-storage.platforms.item.put",
+        "inventory-storage.platforms.item.delete"
       ]
     }
   ]
