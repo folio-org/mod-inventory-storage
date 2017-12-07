@@ -34,7 +34,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 /**
- * Implements the instance instance type persistency using postgres jsonb.
+ * Implements the instance classification type persistency using postgres jsonb.
  */
 public class ClassificationTypeAPI implements ClassificationTypesResource {
 
@@ -61,7 +61,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     /**
-     * http://host:port/instances/instance-types
+     * http://host:port/classification-types
      */
     vertxContext.runOnContext(v -> {
       try {

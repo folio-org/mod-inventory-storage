@@ -55,7 +55,7 @@ public class ContributorTypeAPI implements ContributorTypesResource {
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     /**
-     * http://host:port/instances/contributor-types
+     * http://host:port/contributor-types
      */
     vertxContext.runOnContext(v -> {
       try {

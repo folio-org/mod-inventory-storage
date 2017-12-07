@@ -55,7 +55,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     /**
-     * http://host:port/instances/creator-types
+     * http://host:port/creator-types
      */
     vertxContext.runOnContext(v -> {
       try {
