@@ -93,10 +93,10 @@ public class ItemStorageAPI implements ItemStorageResource {
   @Validate
   @Override
   public void getItemStorageItems(
-    @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
-    @DefaultValue("10") @Min(1L) @Max(100L) int limit,
+    int offset,
+    int limit,
     String query,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext)
