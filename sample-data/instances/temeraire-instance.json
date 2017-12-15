@@ -2,10 +2,11 @@
   "id": "cf23adf0-61ba-4887-bf82-956c4aae2260",
   "source": "Sample",
   "title": "Temeraire",
-  "creators": [
+  "contributors": [
     {
-      "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
-      "name": "Novik, Naomi"
+      "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+      "name": "Novik, Naomi",
+      "primary": true
     }
   ],
   "identifiers": [

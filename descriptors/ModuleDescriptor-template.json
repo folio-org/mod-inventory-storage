@@ -231,29 +231,29 @@
       ]
     },
     {
-      "id": "creator-types",
+      "id": "contributor-name-types",
       "version": "1.0",
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/creator-types",
-          "permissionsRequired": ["inventory-storage.creator-types.collection.get"]
+          "pathPattern": "/contributor-name-types",
+          "permissionsRequired": ["inventory-storage.contributor-name-types.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/creator-types/{id}",
-          "permissionsRequired": ["inventory-storage.creator-types.item.get"]
+          "pathPattern": "/contributor-name-types/{id}",
+          "permissionsRequired": ["inventory-storage.contributor-name-types.item.get"]
         }, {
           "methods": ["POST"],
-          "pathPattern": "/creator-types",
-          "permissionsRequired": ["inventory-storage.creator-types.item.post"]
+          "pathPattern": "/contributor-name-types",
+          "permissionsRequired": ["inventory-storage.contributor-name-types.item.post"]
         }, {
           "methods": ["PUT"],
-          "pathPattern": "/creator-types/{id}",
-          "permissionsRequired": ["inventory-storage.creator-types.item.put"]
+          "pathPattern": "/contributor-name-types/{id}",
+          "permissionsRequired": ["inventory-storage.contributor-name-types.item.put"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/creator-types/{id}",
-          "permissionsRequired": ["inventory-storage.creator-types.item.delete"]
+          "pathPattern": "/contributor-name-types/{id}",
+          "permissionsRequired": ["inventory-storage.contributor-name-types.item.delete"]
         }
       ]
     },
@@ -597,34 +597,34 @@
       "description": "delete individual contributor-type from storage"
     },
     {
-      "permissionName": "inventory-storage.creator-types.collection.get",
-      "displayName": "inventory storage - get creator-type collection",
-      "description": "get creator-type collection from storage"
+      "permissionName": "inventory-storage.contributor-name-types.collection.get",
+      "displayName": "inventory storage - get contributor-name-type collection",
+      "description": "get contributor-name-type collection from storage"
     },
     {
-      "permissionName": "inventory-storage.creator-types.item.get",
-      "displayName": "inventory storage - get individual creator-type",
-      "description": "get individual creator-type from storage"
+      "permissionName": "inventory-storage.contributor-name-types.item.get",
+      "displayName": "inventory storage - get individual contributor-name-type",
+      "description": "get individual contributor-name-type from storage"
     },
     {
-      "permissionName": "inventory-storage.creator-types.item.post",
-      "displayName": "inventory storage - create individual creator-type",
-      "description": "create individual creator-type in storage"
+      "permissionName": "inventory-storage.contributor-name-types.item.post",
+      "displayName": "inventory storage - create individual contributor-name-type",
+      "description": "create individual contributor-name-type in storage"
     },
     {
-      "permissionName": "inventory-storage.creator-types.item.put",
-      "displayName": "inventory storage - modify creator-type",
-      "description": "modify creator-type in storage"
+      "permissionName": "inventory-storage.contributor-name-types.item.put",
+      "displayName": "inventory storage - modify contributor-name-type",
+      "description": "modify contributor-name-type in storage"
     },
     {
-      "permissionName": "inventory-storage.creator-types.item.delete",
-      "displayName": "inventory storage - delete individual creator-type",
-      "description": "delete individual creator-type from storage"
+      "permissionName": "inventory-storage.contributor-name-types.item.delete",
+      "displayName": "inventory storage - delete individual contributor-name-type",
+      "description": "delete individual contributor-name-type from storage"
     },
     {
       "permissionName": "inventory-storage.instance-formats.collection.get",
       "displayName": "inventory storage - get formats collection",
-      "description": "get creator-type collection from storage"
+      "description": "get contributor-name-type collection from storage"
     },
     {
       "permissionName": "inventory-storage.instance-formats.item.get",
@@ -769,11 +769,11 @@
         "inventory-storage.contributor-types.item.post",
         "inventory-storage.contributor-types.item.put",
         "inventory-storage.contributor-types.item.delete",
-        "inventory-storage.creator-types.collection.get",
-        "inventory-storage.creator-types.item.get",
-        "inventory-storage.creator-types.item.post",
-        "inventory-storage.creator-types.item.put",
-        "inventory-storage.creator-types.item.delete",
+        "inventory-storage.contributor-name-types.collection.get",
+        "inventory-storage.contributor-name-types.item.get",
+        "inventory-storage.contributor-name-types.item.post",
+        "inventory-storage.contributor-name-types.item.put",
+        "inventory-storage.contributor-name-types.item.delete",
         "inventory-storage.instance-formats.collection.get",
         "inventory-storage.instance-formats.item.get",
         "inventory-storage.instance-formats.item.post",

@@ -4,9 +4,9 @@ import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.CreatorType;
-import org.folio.rest.jaxrs.model.CreatorTypes;
-import org.folio.rest.jaxrs.resource.CreatorTypesResource;
+import org.folio.rest.jaxrs.model.ContributorNameType;
+import org.folio.rest.jaxrs.model.ContributorNameTypes;
+import org.folio.rest.jaxrs.resource.ContributorNameTypesResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -28,60 +28,60 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Implements the instance creator type persistency using postgres jsonb.
+ * Implements the instance contributor name type persistency using postgres jsonb.
  */
-public class CreatorTypeAPI implements CreatorTypesResource {
+public class ContributorNameTypeAPI implements ContributorNameTypesResource {
 
-  public static final String CREATOR_TYPE_TABLE   = "creator_type";
+  public static final String CONTRIBUTOR_NAME_TYPE_TABLE   = "contributor_name_type";
 
-  private static final String LOCATION_PREFIX       = "/creator-types/";
-  private static final Logger log                 = LoggerFactory.getLogger(CreatorTypeAPI.class);
+  private static final String LOCATION_PREFIX       = "/contributor-name-types/";
+  private static final Logger log                 = LoggerFactory.getLogger(ContributorNameTypeAPI.class);
   private final Messages messages                 = Messages.getInstance();
   private String idFieldName                      = "_id";
 
 
-  public CreatorTypeAPI(Vertx vertx, String tenantId) {
+  public ContributorNameTypeAPI(Vertx vertx, String tenantId) {
     PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(CREATOR_TYPE_TABLE+".jsonb");
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(CONTRIBUTOR_NAME_TYPE_TABLE+".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
   @Validate
   @Override
-  public void getCreatorTypes(String query, int offset, int limit, String lang,
+  public void getContributorNameTypes(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     /**
-     * http://host:port/creator-types
+     * http://host:port/contributor-name-types
      */
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCQL(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CREATOR_TYPE_TABLE, CreatorType.class,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CONTRIBUTOR_NAME_TYPE_TABLE, ContributorNameType.class,
             new String[]{"*"}, cql, true, true,
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  CreatorTypes creatorTypes = new CreatorTypes();
+                  ContributorNameTypes ContributorNameTypes = new ContributorNameTypes();
                   @SuppressWarnings("unchecked")
-                  List<CreatorType> creatorType = (List<CreatorType>) reply.result().getResults();
-                  creatorTypes.setCreatorTypes(creatorType);
-                  creatorTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCreatorTypesResponse.withJsonOK(
-                      creatorTypes)));
+                  List<ContributorNameType> ContributorNameType = (List<ContributorNameType>) reply.result().getResults();
+                  ContributorNameTypes.setContributorNameTypes(ContributorNameType);
+                  ContributorNameTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse.withJsonOK(
+                      ContributorNameTypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCreatorTypesResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
                       .withPlainBadRequest(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCreatorTypesResponse
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
                     .withPlainInternalServerError(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
@@ -92,7 +92,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCreatorTypesResponse
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
             .withPlainInternalServerError(message)));
       }
     });
@@ -100,13 +100,13 @@ public class CreatorTypeAPI implements CreatorTypesResource {
 
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PostCreatorTypesResponse
+    handler.handle(Future.succeededFuture(PostContributorNameTypesResponse
         .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
-  public void postCreatorTypes(String lang, CreatorType entity, Map<String, String> okapiHeaders,
+  public void postContributorNameTypes(String lang, ContributorNameType entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
 
     vertxContext.runOnContext(v -> {
@@ -119,7 +119,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
 
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
-            CREATOR_TYPE_TABLE, id, entity,
+            CONTRIBUTOR_NAME_TYPE_TABLE, id, entity,
             reply -> {
               try {
                 if (reply.succeeded()) {
@@ -127,7 +127,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
                   entity.setId((String) ret);
                   OutStream stream = new OutStream();
                   stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCreatorTypesResponse.withJsonCreated(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostContributorNameTypesResponse.withJsonCreated(
                       LOCATION_PREFIX + ret, stream)));
                 } else {
                   String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
@@ -136,7 +136,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PostCreatorTypesResponse
+                  asyncResultHandler.handle(Future.succeededFuture(PostContributorNameTypesResponse
                       .withPlainBadRequest(msg)));
                 }
               } catch (Exception e) {
@@ -151,13 +151,13 @@ public class CreatorTypeAPI implements CreatorTypesResource {
 
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetCreatorTypesByCreatorTypeIdResponse
+    handler.handle(Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
         .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
-  public void getCreatorTypesByCreatorTypeId(String creatorTypeId, String lang,
+  public void getContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
 
@@ -166,9 +166,9 @@ public class CreatorTypeAPI implements CreatorTypesResource {
         String tenantId = TenantTool.tenantId(okapiHeaders);
 
         Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+creatorTypeId+"'"));
+            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+ContributorNameTypeId+"'"));
 
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CREATOR_TYPE_TABLE, CreatorType.class, c, true,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CONTRIBUTOR_NAME_TYPE_TABLE, ContributorNameType.class, c, true,
             reply -> {
               try {
                 if (reply.failed()) {
@@ -178,19 +178,19 @@ public class CreatorTypeAPI implements CreatorTypesResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetCreatorTypesByCreatorTypeIdResponse.
+                  asyncResultHandler.handle(Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse.
                       withPlainNotFound(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<CreatorType> creatorType = (List<CreatorType>) reply.result().getResults();
-                if (creatorType.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCreatorTypesByCreatorTypeIdResponse
-                      .withPlainNotFound(creatorTypeId)));
+                List<ContributorNameType> ContributorNameType = (List<ContributorNameType>) reply.result().getResults();
+                if (ContributorNameType.isEmpty()) {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
+                      .withPlainNotFound(ContributorNameTypeId)));
                 }
                 else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCreatorTypesByCreatorTypeIdResponse
-                      .withJsonOK(creatorType.get(0))));
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
+                      .withJsonOK(ContributorNameType.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -204,13 +204,13 @@ public class CreatorTypeAPI implements CreatorTypesResource {
 
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(DeleteCreatorTypesByCreatorTypeIdResponse
+    handler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
         .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
-  public void deleteCreatorTypesByCreatorTypeId(String creatorTypeId, String lang,
+  public void deleteContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
 
@@ -218,7 +218,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(CREATOR_TYPE_TABLE, creatorTypeId,
+        postgres.delete(CONTRIBUTOR_NAME_TYPE_TABLE, ContributorNameTypeId,
             reply -> {
               try {
                 if (reply.failed()) {
@@ -228,7 +228,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteCreatorTypesByCreatorTypeIdResponse
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
                       .withPlainBadRequest(msg)));
                   return;
                 }
@@ -236,11 +236,11 @@ public class CreatorTypeAPI implements CreatorTypesResource {
                 if (updated != 1) {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteCreatorTypesByCreatorTypeIdResponse
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
                       .withPlainNotFound(msg)));
                   return;
                 }
-                asyncResultHandler.handle(Future.succeededFuture(DeleteCreatorTypesByCreatorTypeIdResponse
+                asyncResultHandler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
                         .withNoContent()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
@@ -254,13 +254,13 @@ public class CreatorTypeAPI implements CreatorTypesResource {
 
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PutCreatorTypesByCreatorTypeIdResponse
+    handler.handle(Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
         .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
-  public void putCreatorTypesByCreatorTypeId(String creatorTypeId, String lang, CreatorType entity,
+  public void putContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang, ContributorNameType entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
 
@@ -268,18 +268,18 @@ public class CreatorTypeAPI implements CreatorTypesResource {
       String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
-          entity.setId(creatorTypeId);
+          entity.setId(ContributorNameTypeId);
         }
         PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-            CREATOR_TYPE_TABLE, entity, creatorTypeId,
+            CONTRIBUTOR_NAME_TYPE_TABLE, entity, ContributorNameTypeId,
             reply -> {
               try {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCreatorTypesByCreatorTypeIdResponse
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
                         .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCreatorTypesByCreatorTypeIdResponse
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
                         .withNoContent()));
                   }
                 } else {
@@ -289,7 +289,7 @@ public class CreatorTypeAPI implements CreatorTypesResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PutCreatorTypesByCreatorTypeIdResponse
+                  asyncResultHandler.handle(Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
                       .withPlainBadRequest(msg)));
                 }
               } catch (Exception e) {

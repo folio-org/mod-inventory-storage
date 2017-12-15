@@ -48,25 +48,6 @@
         ]
       }
     },
-    "creators": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "creatorTypeId": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "creatorTypeId"
-        ]
-      }
-    },
     "contributors": {
       "type": "array",
       "minItems": 0,
@@ -78,11 +59,18 @@
           },
           "contributorTypeId": {
             "type": "string"
+          },
+          "contributorNameTypeId": {
+            "type": "string"
+          },
+          "primary": {
+            "type": "boolean"
           }
         },
+        "additionalProperties": false,
         "required": [
           "name",
-          "contributorTypeId"
+          "contributorNameTypeId"
         ]
       }
     },
@@ -106,6 +94,7 @@
             "type": "string"
           }
         },
+        "additionalProperties": false,
         "required": [
           "classificationNumber",
           "classificationTypeId"
@@ -167,7 +156,6 @@
   "required": [
     "source",
     "title",
-    "creators",
     "instanceTypeId"
   ]
 }

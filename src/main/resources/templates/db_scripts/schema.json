@@ -78,7 +78,7 @@
       ]
     },
     {
-      "tableName": "creator_type",
+      "tableName": "contributor_name_type",
       "withMetadata": false,
       "pkColumnName": "_id",
       "generateId": false,

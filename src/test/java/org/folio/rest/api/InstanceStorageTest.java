@@ -130,8 +130,8 @@ public class InstanceStorageTest extends TestBase {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier("isbn", "9781473619777"));
 
-    JsonArray creators = new JsonArray();
-    creators.add(creator("personal name", "Chambers, Becky"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor("personal name", "Chambers, Becky"));
 
     JsonObject instanceToCreate = new JsonObject();
 
@@ -139,7 +139,7 @@ public class InstanceStorageTest extends TestBase {
     instanceToCreate.put("source", "TEST");
     instanceToCreate.put("title", "Long Way to a Small Angry Planet");
     instanceToCreate.put("identifiers", identifiers);
-    instanceToCreate.put("creators", creators);
+    instanceToCreate.put("contributors", contributors);
     instanceToCreate.put("instanceTypeId", "resource type id");
 
     CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
@@ -585,18 +585,18 @@ public class InstanceStorageTest extends TestBase {
     //////// create instance objects /////////////////////////////
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier("isbn", "9781473619777"));
-    JsonArray creators = new JsonArray();
-    creators.add(creator("personal name", "Chambers, Becky"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor("personal name", "Chambers, Becky"));
 
     UUID idJ1 = UUID.randomUUID();
     JsonObject j1 = createInstanceRequest(idJ1, "TEST1", "Long Way to a Small Angry Planet 1",
-      identifiers, creators, "resource type id");
+      identifiers, contributors, "resource type id");
     UUID idJ2 = UUID.randomUUID();
     JsonObject j2 = createInstanceRequest(idJ2, "TEST2", "Long Way to a Small Angry Planet 2",
-      identifiers, creators, "resource type id");
+      identifiers, contributors, "resource type id");
     UUID idJ3 = UUID.randomUUID();
     JsonObject j3 = createInstanceRequest(idJ3, "TEST3", "Long Way to a Small Angry Planet 3",
-      identifiers, creators, "resource type id");
+      identifiers, contributors, "resource type id");
 
     createInstance(j1);
     createInstance(j2);
@@ -743,11 +743,11 @@ public class InstanceStorageTest extends TestBase {
   private JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier("isbn", "9781473619777"));
-    JsonArray creators = new JsonArray();
-    creators.add(creator("personal name", "Chambers, Becky"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor("personal name", "Chambers, Becky"));
 
     return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, creators, "resource type id");
+      identifiers, contributors, "resource type id");
   }
 
   private JsonObject identifier(String identifierTypeId, String value) {
@@ -756,9 +756,9 @@ public class InstanceStorageTest extends TestBase {
       .put("value", value);
   }
 
-  private JsonObject creator(String creatorTypeId, String name) {
+  private JsonObject contributor(String contributorNameTypeId, String name) {
     return new JsonObject()
-      .put("creatorTypeId", creatorTypeId)
+      .put("contributorNameTypeId", contributorNameTypeId)
       .put("name", name);
   }
 
@@ -781,7 +781,7 @@ public class InstanceStorageTest extends TestBase {
     String source,
     String title,
     JsonArray identifiers,
-    JsonArray creators,
+    JsonArray contributors,
     String instanceTypeId) {
 
     JsonObject instanceToCreate = new JsonObject();
@@ -793,7 +793,7 @@ public class InstanceStorageTest extends TestBase {
     instanceToCreate.put("title", title);
     instanceToCreate.put("source", source);
     instanceToCreate.put("identifiers", identifiers);
-    instanceToCreate.put("creators", creators);
+    instanceToCreate.put("contributors", contributors);
     instanceToCreate.put("instanceTypeId", instanceTypeId);
 
     return instanceToCreate;
@@ -803,10 +803,10 @@ public class InstanceStorageTest extends TestBase {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier("asin", "B01D1PLMDO"));
 
-    JsonArray creators = new JsonArray();
-    creators.add(creator("personal name", "Barnes, Adrian"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor("personal name", "Barnes, Adrian"));
     return createInstanceRequest(id, "TEST", "Nod",
-      identifiers, creators, "resource type id");
+      identifiers, contributors, "resource type id");
   }
 
   private JsonObject uprooted(UUID id) {
@@ -815,11 +815,11 @@ public class InstanceStorageTest extends TestBase {
     identifiers.add(identifier("isbn", "1447294149"));
     identifiers.add(identifier("isbn", "9781447294146"));
 
-    JsonArray creators = new JsonArray();
-    creators.add(creator("personal name", "Novik, Naomi"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor("personal name", "Novik, Naomi"));
 
     return createInstanceRequest(id, "TEST", "Uprooted",
-      identifiers, creators, "resource type id");
+      identifiers, contributors, "resource type id");
   }
 
   private JsonObject temeraire(UUID id) {
@@ -828,10 +828,10 @@ public class InstanceStorageTest extends TestBase {
     identifiers.add(identifier("isbn", "0007258712"));
     identifiers.add(identifier("isbn", "9780007258710"));
 
-    JsonArray creators = new JsonArray();
-    creators.add(creator("personal name", "Novik, Naomi"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor("personal name", "Novik, Naomi"));
     return createInstanceRequest(id, "TEST", "Temeraire",
-      identifiers, creators, "resource type id");
+      identifiers, contributors, "resource type id");
   }
 
   private JsonObject interestingTimes(UUID id) {
@@ -840,9 +840,9 @@ public class InstanceStorageTest extends TestBase {
     identifiers.add(identifier("isbn", "0552167541"));
     identifiers.add(identifier("isbn", "9780552167541"));
 
-    JsonArray creators = new JsonArray();
-    creators.add(creator("personal name", "Pratchett, Terry"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor("personal name", "Pratchett, Terry"));
     return createInstanceRequest(id, "TEST", "Interesting Times",
-      identifiers, creators, "resource type id");
+      identifiers, contributors, "resource type id");
   }
 }

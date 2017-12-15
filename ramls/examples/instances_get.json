@@ -4,10 +4,11 @@
       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
       "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
       "source": "Local: MARC",
-      "creators": [
+      "contributors": [
         {
           "name": "Sigal, Ari",
-          "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a"
+          "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+          "primary": true
         }
       ],
       "identifiers": [
@@ -26,10 +27,11 @@
       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
       "title": "ADVANCING RESEARCH METHODS WITH NEW TECHNOLOGIES.",
       "source": "Local: MARC",
-      "creators": [
+      "contributors": [
         {
           "name": "Sappleton, Natalie",
-          "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a"
+          "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+          "primary": true
         }
       ],
       "identifiers": [

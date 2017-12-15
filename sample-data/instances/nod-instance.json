@@ -2,10 +2,11 @@
   "id": "6506b79b-7702-48b2-9774-a1c538fdd34e",
   "source": "Sample",
   "title": "Nod",
-  "creators": [
+  "contributors": [
     {
-      "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
-      "name": "Barnes, Adrian"
+      "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+      "name": "Barnes, Adrian",
+      "primary": true
     }
   ],
   "identifiers": [

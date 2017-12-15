@@ -9,14 +9,16 @@
       "value": "B01LO7PJOE"
     }
   ],
-  "creators": [
+  "contributors": [
     {
-      "creatorTypeId": "2e48e713-17f3-7c13-09f8-23845bb210aa",
-      "name": "Creator A"
+      "contributorNameTypeId": "2e48e713-17f3-7c13-09f8-23845bb210aa",
+      "name": "Creator A",
+      "primary": true
     },
     {
-      "creatorTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0a",
-      "name": "Creator B"
+      "contributorNameTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0a",
+      "name": "Creator B",
+      "primary": false
     }
   ],
   "instanceTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2c"

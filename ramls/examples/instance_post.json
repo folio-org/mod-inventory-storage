@@ -2,10 +2,11 @@
   "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
   "source": "Local: MARC",
   "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-  "creators": [
+  "contributors": [
     {
       "name": "Sigal, Ari",
-      "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a"
+      "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+      "primary": true
     }
   ],
   "identifiers": [
