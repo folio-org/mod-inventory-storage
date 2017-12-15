@@ -1,6 +1,8 @@
 ## 6.0.0 Unreleased
 
+* Adds optional property `electronicLocation` to `holdingsRecord`. Makes permanentLocationId optional (MODINVSTOR-35, UIIN-15)
 * Adds optional properties `enumeration`, `chronology`, `pieceIdentifiers`, `numberOfPieces`, `notes` to `item` (MODINVSTOR-34)
+* `title` is now optional for an `item` (MODINVSTOR-31) 
 * Provides `holdings-storage` 1.0 interface (MODINVSTOR-25)
 * Adds `holdingsRecordId` to item (MODINVSTOR-25)
 * Provides `instance-storage` 3.0 interface (MODINVSTOR-17)
@@ -18,7 +20,7 @@
 *  languages, notes. (MODINVSTOR-17)
 * Removes `location` property from Item record, and store a UUID for a (permanent and temporary) location record instead
 * Implement `/shelf-locations` endpoint for CRUD of location records
-* Provides `item-storage` 4.0 interface
+* Provides `item-storage` 4.1 interface (MODINVSTOR-31)
 * Provides `shelf-locations` 1.0 interface
 * Upgrade to RMB v16.0.2 (MODINVSTOR-20, MODINVSTOR-18, MODINVSTOR-38)
 * Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)

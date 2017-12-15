@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Implements the instance instance type persistency using postgres jsonb.
+ * Implements the instance type persistency using postgres jsonb.
  */
 public class InstanceTypeAPI implements InstanceTypesResource {
 
@@ -55,7 +55,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     /**
-     * http://host:port/instances/instance-types
+     * http://host:port/instance-types
      */
     vertxContext.runOnContext(v -> {
       try {

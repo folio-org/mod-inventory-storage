@@ -225,9 +225,8 @@ public class StorageTestSuite {
         response.getStatusCode(), is(201));
 
     } catch(Exception e) {
-      System.out.println("WARNING!!!!! Tenant preparation failed: "
-        + e.getMessage());
-      assert false;
+      assertThat(e.getMessage(),
+        true, is(false));
     }
   }
 

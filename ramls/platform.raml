@@ -1,0 +1,52 @@
+#%RAML 0.8
+title: Platforms API
+version: v2.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Platforms API
+    content: This documents the API calls that can be made to query and manage platforms for electronic resources
+
+schemas:
+  - platform.json: !include platform.json
+  - platforms: !include platforms.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
+
+traits:
+  - secured: !include raml-util/traits/auth.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+  - language: !include raml-util/traits/language.raml
+  - validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+
+/platforms:
+  type:
+    collection:
+      exampleCollection: !include examples/platforms.json
+      exampleItem: !include examples/platform.json
+      schemaCollection: platforms
+      schemaItem: platform.json
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of platforms for electronic resources
+  post:
+    description: Create a new platform
+    is: [validate]
+  /{platformId}:
+    description: Pass in the platform id
+    type:
+      collection-item:
+        exampleItem: !include examples/platform.json
+        schema: platform.json
+

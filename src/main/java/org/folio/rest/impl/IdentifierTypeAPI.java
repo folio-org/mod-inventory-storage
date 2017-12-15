@@ -55,7 +55,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
     /**
-     * http://host:port/instances/identifier-types
+     * http://host:port/identifier-types
      */
     vertxContext.runOnContext(v -> {
       try {
