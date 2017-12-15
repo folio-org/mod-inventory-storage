@@ -302,7 +302,7 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        }        
+        }
       ],
       "index": [
         {
@@ -316,7 +316,7 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        }        
+        }
       ]
     }
   ],
