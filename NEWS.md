@@ -5,6 +5,7 @@
 * No longer provides `creator-types` 1.0 interface (MODINVSTOR-33)
 * Provides `contributor-name-types` 1.0 interface (MODINVSTOR-33
 * Provides `instance-storage` 4.0 interface (MODINVSTOR-33)
+* Provides `item-storage` 5.0 interface (MODINVSTOR-29)
 
 ## 6.0.0 2017-12-20
 
