@@ -129,6 +129,7 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
+      .put("holdingsRecordId", UUID.randomUUID().toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID);
 
@@ -208,6 +209,7 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id)
+      .put("holdingsRecordId", UUID.randomUUID().toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("temporaryLocationId", badLocation);
@@ -266,6 +268,7 @@ public class ItemStorageTest extends TestBase {
     JsonObject itemToCreate = new JsonObject();
 
     itemToCreate.put("id", id.toString());
+    itemToCreate.put("holdingsRecordId", UUID.randomUUID().toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();

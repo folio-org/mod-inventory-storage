@@ -1,5 +1,6 @@
 ## 7.0.0 Unreleased
 
+* Require `holdingsRecordId` from `item` (MODINVSTOR-44)
 * Removes `creators` from `instance` (MODINVSTOR-33)
 * Removes `title` from `item` (MODINVSTOR-29)
 * Removes `instanceId` from `item` (MODINVSTOR-29)

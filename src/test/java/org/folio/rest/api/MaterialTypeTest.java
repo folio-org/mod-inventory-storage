@@ -268,7 +268,7 @@ public class MaterialTypeTest extends TestBase {
 
     JsonObject item = createItemRequest(materialTypeId.toString());
 
-    CompletableFuture<JsonResponse> createItemCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createItemCompleted = new CompletableFuture<>();
 
     send(itemsUrl().toString(), HttpMethod.POST, item.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
@@ -346,6 +346,7 @@ public class MaterialTypeTest extends TestBase {
     JsonObject item = new JsonObject();
 
     item.put("barcode", "12345");
+    item.put("holdingsRecordId", UUID.randomUUID().toString());
     item.put("materialTypeId", materialTypeId);
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);
 

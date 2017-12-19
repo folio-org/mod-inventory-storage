@@ -59,6 +59,7 @@
   "additionalProperties": false,
   "required": [
     "materialTypeId",
-    "permanentLoanTypeId"
+    "permanentLoanTypeId",
+    "holdingsRecordId"
   ]
 }
