@@ -8,8 +8,7 @@ import org.hamcrest.TypeSafeMatcher;
 import java.util.List;
 
 public class JsonObjectMatchers {
-  public static Matcher identifierMatches(String identifierTypeId, String value) {
-
+  public static Matcher<JsonObject> identifierMatches(String identifierTypeId, String value) {
     return new TypeSafeMatcher<JsonObject>() {
       @Override
       public void describeTo(Description description) {
@@ -44,7 +43,7 @@ public class JsonObjectMatchers {
     };
   }
 
-  public static Matcher hasSoleMessgeContaining(String message) {
+  public static Matcher<List<JsonObject>> hasSoleMessgeContaining(String message) {
     return new TypeSafeMatcher<List<JsonObject>>() {
       @Override
       public void describeTo(Description description) {
