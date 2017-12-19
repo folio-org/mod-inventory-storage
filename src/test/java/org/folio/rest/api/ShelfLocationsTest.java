@@ -238,7 +238,7 @@ public class ShelfLocationsTest {
     item.put("barcode", "12345");
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);
     item.put("materialTypeId", journalMaterialTypeID);
-    item.put("permanentLocationId", permanentLocationId);
+    item.put("temporaryLocationId", permanentLocationId);
 
     return item;
   }

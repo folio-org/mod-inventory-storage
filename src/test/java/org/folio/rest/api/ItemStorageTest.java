@@ -210,7 +210,7 @@ public class ItemStorageTest extends TestBase {
       .put("id", id)
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("permanentLocationId", badLocation);
+      .put("temporaryLocationId", badLocation);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
@@ -221,7 +221,6 @@ public class ItemStorageTest extends TestBase {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
     assertThat(postResponse.getBody(), is("Attempting to specify non-existent location"));
-
   }
 
   @Test

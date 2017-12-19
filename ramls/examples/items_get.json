@@ -8,8 +8,7 @@
         "name": "Available"
       },
       "materialTypeId": "240886da-17d9-435f-985e-21111e586fc8",
-      "permanentLoanTypeId": "2e48e713-17f3-7c13-09f8-23845bb210a4",
-      "permanentLocationId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231"
+      "permanentLoanTypeId": "2e48e713-17f3-7c13-09f8-23845bb210a4"
     },
     {
       "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
@@ -21,7 +20,6 @@
       "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
       "permanentLoanTypeId": "2b94c631-fca9-a892-c730-03ee529ffe27",
       "temporaryLoanTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0e",
-      "permanentLocationId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
       "temporaryLocationId": "0df935eb-f3f4-4741-9ac6-33c500174b96"
     }
   ],

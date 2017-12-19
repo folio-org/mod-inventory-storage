@@ -1,59 +1,45 @@
 package org.folio.rest.impl;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-
+import io.vertx.core.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.model.Shelflocation;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
-import org.folio.rest.persist.DatabaseExceptionUtils;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.DatabaseExceptionUtils;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
-  // Has to be lowercase because raml-module-builder uses case sensitive
-  // lower case headers
-  public static final String ITEM_TABLE = "item";
-  public static final String ITEM_MATERIALTYPE_VIEW = "items_mt_view";
+  static final String ITEM_TABLE = "item";
+  private static final String ITEM_MATERIALTYPE_VIEW = "items_mt_view";
+
+  // Has to be lowercase because raml-module-builder uses case sensitive headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
-  private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
-  private final Messages messages = Messages.getInstance();
-
-
 
   private String convertQuery(String cql){
     if(cql != null){
@@ -221,23 +207,16 @@ public class ItemStorageAPI implements ItemStorageResource {
                 return;
               }
               else{
-                Future<Shelflocation> permLocFuture;
-                Future<Shelflocation> tempLocFuture;
-                if(entity.getPermanentLocationId() != null) {
-                  permLocFuture = getShelfLocation(vertxContext.owner(), tenantId,
-                        entity.getPermanentLocationId());
-                } else {
-                  permLocFuture = Future.succeededFuture();
-                }
+                Future<Shelflocation> temporaryLocationFuture;
+
                 if(entity.getTemporaryLocationId() != null) {
-                  tempLocFuture = getShelfLocation(vertxContext.owner(), tenantId,
+                  temporaryLocationFuture = getShelfLocation(vertxContext.owner(), tenantId,
                           entity.getTemporaryLocationId());
                 } else {
-                  tempLocFuture = Future.succeededFuture();
+                  temporaryLocationFuture = Future.succeededFuture();
                 }
-                CompositeFuture compositeFuture = CompositeFuture.all(
-                        tempLocFuture, permLocFuture);
-                compositeFuture.setHandler(compRes -> {
+
+                temporaryLocationFuture.setHandler(compRes -> {
                   if(compRes.failed()) {
                     String message = "Attempting to specify non-existent location";
                     log.error(message);
@@ -606,16 +585,6 @@ public class ItemStorageAPI implements ItemStorageResource {
         ItemStorageResource.DeleteItemStorageItemsByItemIdResponse
           .withPlainInternalServerError("Error")));
     }
-  }
-
-  private void badRequestResult(
-    Handler<AsyncResult<Response>> asyncResultHandler, String message) {
-    asyncResultHandler.handle(Future.succeededFuture(
-      GetItemStorageItemsResponse.withPlainBadRequest(message)));
-  }
-
-  private boolean blankTenantId(String tenantId) {
-    return tenantId == null || tenantId == "" || tenantId == "folio_shared";
   }
 
   /**
