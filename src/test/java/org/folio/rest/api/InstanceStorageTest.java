@@ -7,20 +7,24 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
@@ -449,6 +453,45 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
+  public void canSortInstancesByTitle()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+
+    //Lower case title as sorting behaves differently between OS
+    createInstance(makeTitleLowerCase(nod(UUID.randomUUID())));
+    createInstance(makeTitleLowerCase(uprooted(UUID.randomUUID())));
+    createInstance(makeTitleLowerCase(smallAngryPlanet(UUID.randomUUID())));
+
+    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
+
+    String url = String.format("%s?query=%s", instanceStorageUrl(),
+      URLEncoder.encode("cql.allRecords=1 sortBy title", "UTF-8"));
+
+    client.get(url,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+
+    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(200));
+
+    JsonObject searchBody = searchResponse.getJson();
+
+    List<JsonObject> foundInstances = JsonArrayHelper.toList(
+      searchBody.getJsonArray("instances"));
+
+    assertThat(foundInstances.size(), is(3));
+
+    List<String> titles = foundInstances.stream()
+      .map(instance -> instance.getString("title"))
+      .collect(Collectors.toList());
+
+    assertThat(titles, contains("long way to a small angry planet", "nod", "uprooted"));
+  }
+
+  @Test
   public void canDeleteAllInstances()
     throws MalformedURLException,
     InterruptedException,
@@ -533,6 +576,8 @@ public class InstanceStorageTest extends TestBase {
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
+
+
 
   @Test
   public void testCrossTableQueries() throws Exception {
@@ -805,5 +850,9 @@ public class InstanceStorageTest extends TestBase {
     creators.add(creator("personal name", "Pratchett, Terry"));
     return createInstanceRequest(id, "TEST", "Interesting Times",
       identifiers, creators, "resource type id");
+  }
+
+  private JsonObject makeTitleLowerCase(JsonObject instance) {
+    return instance.put("title", instance.getString("title").toLowerCase());
   }
 }
