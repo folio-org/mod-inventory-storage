@@ -345,7 +345,6 @@ public class MaterialTypeTest extends TestBase {
 
     JsonObject item = new JsonObject();
 
-    item.put("title", "abcd");
     item.put("barcode", "12345");
     item.put("materialTypeId", materialTypeId);
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);

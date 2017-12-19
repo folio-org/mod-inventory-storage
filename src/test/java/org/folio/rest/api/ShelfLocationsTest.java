@@ -1,22 +1,12 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.itemsUrl;
-import static org.folio.rest.api.StorageTestSuite.loanTypesUrl;
-import static org.folio.rest.api.StorageTestSuite.materialTypesUrl;
-import static org.folio.rest.api.StorageTestSuite.shelfLocationsUrl;
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.JsonResponse;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.TextResponse;
@@ -26,13 +16,19 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static org.folio.rest.api.StorageTestSuite.*;
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
 
 
@@ -182,7 +178,7 @@ public class ShelfLocationsTest {
     createShelfLocation(locationId, "Main Library");
 
     JsonObject item = createItemRequest(locationId.toString());
-    CompletableFuture<JsonResponse> createItemCompleted = new CompletableFuture();
+    CompletableFuture<JsonResponse> createItemCompleted = new CompletableFuture<>();
 
     send(itemsUrl().toString(), HttpMethod.POST, item.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
@@ -239,7 +235,6 @@ public class ShelfLocationsTest {
 
     JsonObject item = new JsonObject();
 
-    item.put("title", "abcd");
     item.put("barcode", "12345");
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);
     item.put("materialTypeId", journalMaterialTypeID);
@@ -254,7 +249,7 @@ public class ShelfLocationsTest {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<JsonResponse> createShelfLocation = new CompletableFuture();
+    CompletableFuture<JsonResponse> createShelfLocation = new CompletableFuture<>();
     String createSLURL = shelfLocationsUrl().toString();
 
     send(createSLURL, HttpMethod.POST, new JsonObject().put("name", name).toString(),
@@ -269,7 +264,7 @@ public class ShelfLocationsTest {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<JsonResponse> createShelfLocation = new CompletableFuture();
+    CompletableFuture<JsonResponse> createShelfLocation = new CompletableFuture<>();
 
     JsonObject request = new JsonObject()
       .put("id", id.toString())

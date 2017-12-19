@@ -5,7 +5,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 public class HttpResponseMatchers {
-  public static Matcher statusCodeIs(int statusCode) {
+  public static Matcher<TextResponse> statusCodeIs(int statusCode) {
     return new TypeSafeDiagnosingMatcher<TextResponse>() {
       @Override
       public void describeTo(Description description) {
