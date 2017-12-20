@@ -1,4 +1,4 @@
-## 6.0.0 Unreleased
+## 6.0.0 2017-12-20
 
 * Adds optional property `electronicLocation` to `holdingsRecord`. Makes permanentLocationId optional (MODINVSTOR-35, UIIN-15)
 * Adds optional properties `enumeration`, `chronology`, `pieceIdentifiers`, `numberOfPieces`, `notes` to `item` (MODINVSTOR-34)
@@ -22,7 +22,8 @@
 * Implement `/shelf-locations` endpoint for CRUD of location records
 * Provides `item-storage` 4.1 interface (MODINVSTOR-31)
 * Provides `shelf-locations` 1.0 interface
-* Upgrade to RMB v16.0.2 (MODINVSTOR-20, MODINVSTOR-18, MODINVSTOR-38)
+* Upgrades to RAML Module Builder v16.0.3 (MODINVSTOR-20, MODINVSTOR-18, MODINVSTOR-38, MODINVSTOR-43)
+* Fixes sorting by title for instances (MODINVSTOR-43)
 * Generates Descriptors at build time from templates in ./descriptors (FOLIO-701)
 * Adds mod- prefix to names of the built artifacts (FOLIO-813)
 
