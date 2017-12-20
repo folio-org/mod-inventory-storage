@@ -11,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -419,39 +420,74 @@ public class InstanceStorageTest extends TestBase {
     assertThat(secondPage.getInteger("totalRecords"), is(5));
   }
 
-  @Test
-  public void canSearchForInstancesByTitle()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  /**
+   * Run a get request using the provided cql query.
+   * <p>
+   * Example: searchForInstances("title = t*");
+   * <p>
+   * The example produces "?query=title+%3D+t*&limit=3"
+   * @param parameters
+   * @return the response as an JsonObject
+   */
+  private JsonObject searchForInstances(String cql) {
+    try {
+      createInstance(smallAngryPlanet(UUID.randomUUID()));
+      createInstance(nod(UUID.randomUUID()));
+      createInstance(uprooted(UUID.randomUUID()));
+      createInstance(temeraire(UUID.randomUUID()));
+      createInstance(interestingTimes(UUID.randomUUID()));
 
-    createInstance(smallAngryPlanet(UUID.randomUUID()));
-    createInstance(nod(UUID.randomUUID()));
-    createInstance(uprooted(UUID.randomUUID()));
-    createInstance(temeraire(UUID.randomUUID()));
-    createInstance(interestingTimes(UUID.randomUUID()));
+      CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<JsonResponse>();
 
-    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture();
+      String url = instanceStorageUrl().toString() + "?query="
+          + URLEncoder.encode(cql, StandardCharsets.UTF_8.name());
 
-    String url = instanceStorageUrl() + "?query=title=\"*Up*\"";
+      client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+      JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+      assertThat(searchResponse.getStatusCode(), is(200));
+      return searchResponse.getJson();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
 
-    client.get(url,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-
-    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(searchResponse.getStatusCode(), is(200));
-
-    JsonObject searchBody = searchResponse.getJson();
-
+  /**
+   * Assert that the cql query returns the expectedTitles in that order.
+   * @param cql  query to run
+   * @param expectedTitles  titles
+   */
+  private void canSort(String cql, String [] expectedTitles) {
+    JsonObject searchBody = searchForInstances(cql);
+    assertThat(searchBody.getInteger("totalRecords"), is(expectedTitles.length));
     JsonArray foundInstances = searchBody.getJsonArray("instances");
+    assertThat(foundInstances.size(), is(expectedTitles.length));
+    String [] titles = new String [expectedTitles.length];
+    for (int i=0; i<expectedTitles.length; i++) {
+      titles[i] = foundInstances.getJsonObject(i).getString("title");
+    }
+    assertThat(titles, is(expectedTitles));
+  }
 
-    assertThat(foundInstances.size(), is(1));
-    assertThat(searchBody.getInteger("totalRecords"), is(1));
+@Test
+  public void canSearchForInstancesByTitle() {
+    canSort("title=\"*Up*\"", new String [] { "Uprooted" });
+  }
 
-    assertThat(foundInstances.getJsonObject(0).getString("title"),
-      is("Uprooted"));
+  @Test
+  public void canSearchForInstancesByTitleAdj() {
+    canSort("title adj \"*Up*\"", new String [] { "Uprooted" });
+  }
+
+  @Test
+  public void canSortAscending() {
+    canSort("cql.allRecords=1 sortBy title", new String []
+        { "Interesting Times", "Long Way to a Small Angry Planet", "Nod", "Temeraire", "Uprooted" });
+  }
+
+  @Test
+  public void canSortDescending() {
+    canSort("cql.allRecords=1 sortBy title/sort.descending", new String []
+        { "Uprooted", "Temeraire", "Nod", "Long Way to a Small Angry Planet", "Interesting Times" });
   }
 
   @Test
