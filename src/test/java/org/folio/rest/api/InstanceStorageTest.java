@@ -7,24 +7,21 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
@@ -417,78 +414,75 @@ public class InstanceStorageTest extends TestBase {
     assertThat(secondPage.getInteger("totalRecords"), is(5));
   }
 
-  @Test
-  public void canSearchForInstancesByTitle()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  /**
+   * Run a get request using the provided cql query.
+   * <p>
+   * Example: searchForInstances("title = t*");
+   * <p>
+   * The example produces "?query=title+%3D+t*&limit=3"
+   * @param parameters
+   * @return the response as an JsonObject
+   */
+  private JsonObject searchForInstances(String cql) {
+    try {
+      // RMB ensures en_US locale so that sorting behaves that same in all environments
+      createInstance(smallAngryPlanet(UUID.randomUUID()));
+      createInstance(nod(UUID.randomUUID()));
+      createInstance(uprooted(UUID.randomUUID()));
+      createInstance(temeraire(UUID.randomUUID()));
+      createInstance(interestingTimes(UUID.randomUUID()));
 
-    createInstance(smallAngryPlanet(UUID.randomUUID()));
-    createInstance(nod(UUID.randomUUID()));
-    createInstance(uprooted(UUID.randomUUID()));
-    createInstance(temeraire(UUID.randomUUID()));
-    createInstance(interestingTimes(UUID.randomUUID()));
+      CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<JsonResponse>();
 
-    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
+      String url = instanceStorageUrl().toString() + "?query="
+          + URLEncoder.encode(cql, StandardCharsets.UTF_8.name());
 
-    String url = instanceStorageUrl() + "?query=title=\"*Up*\"";
+      client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+      JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+      assertThat(searchResponse.getStatusCode(), is(200));
+      return searchResponse.getJson();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
 
-    client.get(url,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-
-    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(searchResponse.getStatusCode(), is(200));
-
-    JsonObject searchBody = searchResponse.getJson();
-
+  /**
+   * Assert that the cql query returns the expectedTitles in that order.
+   * @param cql  query to run
+   * @param expectedTitles  titles in the expected order
+   */
+  private void canSort(String cql, String ... expectedTitles) {
+    JsonObject searchBody = searchForInstances(cql);
+    assertThat(searchBody.getInteger("totalRecords"), is(expectedTitles.length));
     JsonArray foundInstances = searchBody.getJsonArray("instances");
-
-    assertThat(foundInstances.size(), is(1));
-    assertThat(searchBody.getInteger("totalRecords"), is(1));
-
-    assertThat(foundInstances.getJsonObject(0).getString("title"),
-      is("Uprooted"));
+    assertThat(foundInstances.size(), is(expectedTitles.length));
+    String [] titles = new String [expectedTitles.length];
+    for (int i=0; i<expectedTitles.length; i++) {
+      titles[i] = foundInstances.getJsonObject(i).getString("title");
+    }
+    assertThat(titles, is(expectedTitles));
   }
 
   @Test
-  public void canSortInstancesByTitle()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+  public void canSearchForInstancesByTitle() {
+    canSort("title=\"*Up*\"", "Uprooted");
+  }
 
-    //Lower case title as sorting behaves differently between OS
-    createInstance(makeTitleLowerCase(nod(UUID.randomUUID())));
-    createInstance(makeTitleLowerCase(uprooted(UUID.randomUUID())));
-    createInstance(makeTitleLowerCase(smallAngryPlanet(UUID.randomUUID())));
+  @Test
+  public void canSearchForInstancesByTitleAdj() {
+    canSort("title adj \"*Up*\"", "Uprooted");
+  }
 
-    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
+  @Test
+  public void canSortAscending() {
+    canSort("cql.allRecords=1 sortBy title",
+        "Interesting Times", "Long Way to a Small Angry Planet", "Nod", "Temeraire", "Uprooted");
+  }
 
-    String url = String.format("%s?query=%s", instanceStorageUrl(),
-      URLEncoder.encode("cql.allRecords=1 sortBy title", "UTF-8"));
-
-    client.get(url,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-
-    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(searchResponse.getStatusCode(), is(200));
-
-    JsonObject searchBody = searchResponse.getJson();
-
-    List<JsonObject> foundInstances = JsonArrayHelper.toList(
-      searchBody.getJsonArray("instances"));
-
-    assertThat(foundInstances.size(), is(3));
-
-    List<String> titles = foundInstances.stream()
-      .map(instance -> instance.getString("title"))
-      .collect(Collectors.toList());
-
-    assertThat(titles, contains("long way to a small angry planet", "nod", "uprooted"));
+  @Test
+  public void canSortDescending() {
+    canSort("cql.allRecords=1 sortBy title/sort.descending",
+        "Uprooted", "Temeraire", "Nod", "Long Way to a Small Angry Planet", "Interesting Times");
   }
 
   @Test
@@ -656,8 +650,8 @@ public class InstanceStorageTest extends TestBase {
     CompletableFuture<JsonResponse> cqlCF6 = new CompletableFuture<>();
 
     String[] urls = new String[]{url1, url2, url3, url4, url5, url6};
-    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]{
-      cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6};
+    @SuppressWarnings("unchecked")
+    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]{cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6};
 
     for(int i=0; i<6; i++){
       CompletableFuture<JsonResponse> cf = cqlCF[i];
@@ -850,9 +844,5 @@ public class InstanceStorageTest extends TestBase {
     creators.add(creator("personal name", "Pratchett, Terry"));
     return createInstanceRequest(id, "TEST", "Interesting Times",
       identifiers, creators, "resource type id");
-  }
-
-  private JsonObject makeTitleLowerCase(JsonObject instance) {
-    return instance.put("title", instance.getString("title").toLowerCase());
   }
 }
