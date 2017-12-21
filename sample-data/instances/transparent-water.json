@@ -24,16 +24,18 @@
       "value": "(OCoLC)968777846"
     }
   ],
-  "creators": [
-    {
-      "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
-      "name": "Sosa, Omar, composer, performer."
-    }
-  ],
   "contributors": [
     {
+      "name": "Sosa, Omar",
+      "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+      "contributorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2b",                               
+      "primary": true
+    },
+    {
+      "name": "Keita, Seckou, 1977-",
+      "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
       "contributorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2b",
-      "name": "Keita, Seckou, 1977- composer, performer."
+      "primary": false
     }
   ],
   "subjects": [

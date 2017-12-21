@@ -316,8 +316,7 @@ public class LoanTypeTest extends TestBase {
   private static String createItem(String permanentLoanTypeId, String temporaryLoanTypeId) {
     JsonObject item = new JsonObject();
 
-    item.put("instanceId", "" + UUID.randomUUID());
-    item.put("title", "Book of all even numbers");
+    item.put("holdingsRecordId", UUID.randomUUID().toString());
     item.put("barcode", "12345");
     item.put("materialTypeId", materialTypeID);
 

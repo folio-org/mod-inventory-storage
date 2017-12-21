@@ -5,16 +5,8 @@
     "id": {
       "type": "string"
     },
-    "instanceId": {
-      "type": "string"
-    },
     "holdingsRecordId": {
       "type": "string"
-    },
-    "title": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 255
     },
     "barcode": {
       "type": "string"
@@ -60,9 +52,6 @@
     "temporaryLoanTypeId": {
       "type": "string"
     },
-    "permanentLocationId": {
-      "type": "string"
-    },
     "temporaryLocationId": {
       "type": "string"
     }
@@ -70,6 +59,7 @@
   "additionalProperties": false,
   "required": [
     "materialTypeId",
-    "permanentLoanTypeId"
+    "permanentLoanTypeId",
+    "holdingsRecordId"
   ]
 }

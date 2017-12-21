@@ -2,12 +2,12 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "creatorTypes": {
-      "id": "creatorType",
+    "contributorNameTypes": {
+      "id": "contributorNameType",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "creatortype.json"
+        "$ref": "contributornametype.json"
       }
     },
     "totalRecords": {
@@ -15,7 +15,7 @@
     }
   },
   "required": [
-    "creatorTypes",
+    "contributorNameTypes",
     "totalRecords"
   ]
 }

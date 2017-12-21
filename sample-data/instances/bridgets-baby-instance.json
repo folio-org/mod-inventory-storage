@@ -9,10 +9,11 @@
       "value": "ocn956625961"
     }
   ],
-  "creators": [
+  "contributors": [
     {
-      "creatorTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
-      "name": "Fielding, Helen"
+      "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+      "name": "Fielding, Helen",
+      "primary": true
     }
   ],
   "subjects": [

@@ -15,7 +15,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -130,6 +129,7 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
+      .put("holdingsRecordId", UUID.randomUUID().toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID);
 
@@ -198,35 +198,6 @@ public class ItemStorageTest extends TestBase {
     assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLocationId));
   }
-  @Test
-  public void cannotCreateAnItemWithBlankTitle()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    UUID id = UUID.randomUUID();
-
-    JsonObject itemToCreate = new JsonObject()
-      .put("id", id.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("title", "");
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-
-    List<JsonObject> errors = JsonArrayHelper.toList(
-      postResponse.getJson().getJsonArray("errors"));
-
-    assertThat(errors.size(), is(1));
-    assertThat(errors, hasItem(
-      validationErrorMatches("size must be between 1 and 255", "title")));
-  }
 
   @Test
   public void cannotAddANonExistentLocation()
@@ -238,10 +209,10 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id)
+      .put("holdingsRecordId", UUID.randomUUID().toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("title", "LandOfNod")
-      .put("permanentLocationId", badLocation);
+      .put("temporaryLocationId", badLocation);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
     client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
@@ -252,37 +223,6 @@ public class ItemStorageTest extends TestBase {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
     assertThat(postResponse.getBody(), is("Attempting to specify non-existent location"));
-
-  }
-
-  @Test
-  public void cannotCreateAnItemWithTitleOver255Characters()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    UUID id = UUID.randomUUID();
-
-    JsonObject itemToCreate = new JsonObject()
-      .put("id", id.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("title", String.join("", Collections.nCopies(256, "X")));
-
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-
-    client.post(itemsUrl(), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-
-    List<JsonObject> errors = JsonArrayHelper.toList(
-      postResponse.getJson().getJsonArray("errors"));
-
-    assertThat(errors.size(), is(1));
-    assertThat(errors, hasItem(
-      validationErrorMatches("size must be between 1 and 255", "title")));
   }
 
   @Test
@@ -297,7 +237,6 @@ public class ItemStorageTest extends TestBase {
 
     itemToCreate.put("id", id);
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
-    itemToCreate.put("title", "Nod");
     itemToCreate.put("barcode", "565578437802");
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
@@ -329,7 +268,7 @@ public class ItemStorageTest extends TestBase {
     JsonObject itemToCreate = new JsonObject();
 
     itemToCreate.put("id", id.toString());
-    itemToCreate.put("title", "Nod");
+    itemToCreate.put("holdingsRecordId", UUID.randomUUID().toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
@@ -503,50 +442,6 @@ public class ItemStorageTest extends TestBase {
   }
 
   @Test
-  public void canReplaceAnItemWithASingleQuoteInTheTitle()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    UUID id = UUID.randomUUID();
-    UUID holdingsRecordId = UUID.randomUUID();
-
-    JsonObject itemToCreate = createItemRequest(id, holdingsRecordId,
-      "The Time Traveller's Wife", "036587275931");
-
-    createItem(itemToCreate);
-
-    JsonObject replacement = itemToCreate.copy();
-    replacement.put("barcode", "036587275931");
-    replacement.put("temporaryLocationId", mainLibraryLocationId);
-
-    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
-
-    client.put(itemsUrl(String.format("/%s", id)), replacement,
-      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
-
-    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    JsonResponse getResponse = getById(id);
-
-    //PUT currently cannot return a response
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject item = getResponse.getJson();
-
-    assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
-    assertThat(item.getString("barcode"), is("036587275931"));
-    assertThat(item.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(item.getString("materialTypeId"),
-      is(journalMaterialTypeID));
-    assertThat(item.getString("temporaryLocationId"),
-      is(mainLibraryLocationId));
-  }
-
-  @Test
   public void canDeleteAnItem() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
@@ -618,41 +513,6 @@ public class ItemStorageTest extends TestBase {
   }
 
   @Test
-  public void canSearchForItemsByTitle()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    createItem(smallAngryPlanet());
-    createItem(nod());
-    createItem(uprooted());
-    createItem(temeraire());
-    createItem(interestingTimes());
-
-    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
-
-    String url = itemsUrl() + "?query=title=\"*Up*\"";
-
-    client.get(url,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-
-    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(searchResponse.getStatusCode(), is(200));
-
-    JsonObject searchBody = searchResponse.getJson();
-
-    JsonArray foundItems = searchBody.getJsonArray("items");
-
-    assertThat(foundItems.size(), is(1));
-    assertThat(searchBody.getInteger("totalRecords"), is(1));
-
-    assertThat(foundItems.getJsonObject(0).getString("title"),
-      is("Uprooted"));
-  }
-
-  @Test
   public void canSearchForItemsByBarcodeWithLeadingZero()
     throws MalformedURLException,
     InterruptedException,
@@ -683,8 +543,8 @@ public class ItemStorageTest extends TestBase {
     assertThat(foundItems.size(), is(1));
     assertThat(searchBody.getInteger("totalRecords"), is(1));
 
-    assertThat(foundItems.getJsonObject(0).getString("title"),
-      is("Long Way to a Small Angry Planet"));
+    assertThat(foundItems.getJsonObject(0).getString("barcode"),
+      is("036000291452"));
   }
 
   @Test
@@ -718,8 +578,8 @@ public class ItemStorageTest extends TestBase {
     assertThat(foundItems.size(), is(1));
     assertThat(searchBody.getInteger("totalRecords"), is(1));
 
-    assertThat(foundItems.getJsonObject(0).getString("title"),
-      is("Long Way to a Small Angry Planet"));
+    assertThat(foundItems.getJsonObject(0).getString("barcode"),
+      is("673274826203"));
   }
 
   @Test
@@ -843,25 +703,30 @@ public class ItemStorageTest extends TestBase {
     String url = itemsUrl() + "?query=";
 
     createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
-      "A journal title", "036000291452", journalMaterialTypeID));
+      "036000291452", journalMaterialTypeID));
     createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
-      "A book title", "036000291452", bookMaterialTypeID));
+      "036000291443", bookMaterialTypeID));
     createItem(createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
-      "A video title", "036000291452", videoMaterialTypeID));
+      "036000291415", videoMaterialTypeID));
 
     //query on item and sort by material type
-    String url1 = url+URLEncoder.encode("title=title sortBy materialType.name/sort.descending", "UTF-8");
-    String url2 = url+URLEncoder.encode("title=title sortBy materialType.name/sort.ascending", "UTF-8");
+    String url1 = url+URLEncoder.encode("barcode=03600* sortBy materialType.name/sort.descending", "UTF-8");
+    String url2 = url+URLEncoder.encode("barcode=03600* sortBy materialType.name/sort.ascending", "UTF-8");
+
     //query and sort on material type via items end point
     String url3 = url+URLEncoder.encode("materialType.name=Journal* sortBy materialType.name/sort.descending", "UTF-8");
+
     //query on item sort on item and material type
-    String url4 = url+URLEncoder.encode("title=title sortby materialType.name title", "UTF-8");
+    String url4 = url+URLEncoder.encode("barcode=036000* sortby materialType.name title", "UTF-8");
+
     //query on item and material type sort by material type
-    String url5 = url+URLEncoder.encode("title=title and materialType.name=Journal* sortby materialType.name", "UTF-8");
+    String url5 = url+URLEncoder.encode("barcode=036000* and materialType.name=Journal* sortby materialType.name", "UTF-8");
+
     //query on item and sort by item
-    String url6 = url+URLEncoder.encode("title=abc sortBy materialType.name", "UTF-8");
+    String url6 = url+URLEncoder.encode("barcode=abc sortBy materialType.name", "UTF-8");
+
     //non existant material type - 0 results
-    String url7 = url+URLEncoder.encode("title=title and materialType.name=abc* sortby materialType.name", "UTF-8");
+    String url7 = url+URLEncoder.encode("barcode=036000* and materialType.name=abc* sortby materialType.name", "UTF-8");
 
     String url8 = url+URLEncoder.encode("materialType="+ videoMaterialTypeID, "UTF-8");
 
@@ -895,9 +760,9 @@ public class ItemStorageTest extends TestBase {
       } else if(i==4){
         assertThat(1, is(cqlResponse.getJson().getInteger("totalRecords")));
       } else if(i==0){
-        assertThat("A video title" , is(cqlResponse.getJson().getJsonArray("items").getJsonObject(0).getString("title")));
+        assertThat("036000291415", is(cqlResponse.getJson().getJsonArray("items").getJsonObject(0).getString("barcode")));
       }else if(i==1){
-        assertThat("A book title" , is(cqlResponse.getJson().getJsonArray("items").getJsonObject(0).getString("title")));
+        assertThat("036000291443", is(cqlResponse.getJson().getJsonArray("items").getJsonObject(0).getString("barcode")));
       }else if(i==2){
         assertThat(1, is(cqlResponse.getJson().getInteger("totalRecords")));
       }
@@ -944,15 +809,13 @@ public class ItemStorageTest extends TestBase {
   private JsonObject createItemRequest(
       UUID id,
       UUID holdingsRecordId,
-      String title,
       String barcode) {
-    return createItemRequest(id, holdingsRecordId, title, barcode, journalMaterialTypeID);
+    return createItemRequest(id, holdingsRecordId, barcode, journalMaterialTypeID);
   }
 
   private JsonObject createItemRequest(
     UUID id,
     UUID holdingsRecordId,
-    String title,
     String barcode,
     String materialType) {
 
@@ -963,20 +826,17 @@ public class ItemStorageTest extends TestBase {
     }
 
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
-    itemToCreate.put("title", title);
     itemToCreate.put("barcode", barcode);
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", materialType);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    //itemToCreate.put("location", new JsonObject().put("name", "Main Library"));
     itemToCreate.put("temporaryLocationId", annexLocationId);
 
     return itemToCreate;
   }
 
-  private JsonObject smallAngryPlanet(UUID itemId, UUID instanceId) {
-    return createItemRequest(itemId, instanceId,
-      "Long Way to a Small Angry Planet", "036000291452");
+  private JsonObject smallAngryPlanet(UUID itemId, UUID holdingId) {
+    return createItemRequest(itemId, holdingId, "036000291452");
   }
 
   private JsonObject smallAngryPlanet() {
@@ -984,8 +844,7 @@ public class ItemStorageTest extends TestBase {
   }
 
   private JsonObject nod(UUID itemId, UUID holdingsRecordId) {
-    return createItemRequest(itemId, holdingsRecordId,
-      "Nod", "565578437802");
+    return createItemRequest(itemId, holdingsRecordId, "565578437802");
   }
 
   private JsonObject nod() {
@@ -993,17 +852,14 @@ public class ItemStorageTest extends TestBase {
   }
 
   private JsonObject uprooted() {
-    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
-      "Uprooted", "657670342075");
+    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(), "657670342075");
   }
 
   private JsonObject temeraire() {
-    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
-      "Temeraire", "232142443432");
+    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(), "232142443432");
   }
 
   private JsonObject interestingTimes() {
-    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(),
-      "Interesting Times", "56454543534");
+    return createItemRequest(UUID.randomUUID(), UUID.randomUUID(), "56454543534");
   }
 }

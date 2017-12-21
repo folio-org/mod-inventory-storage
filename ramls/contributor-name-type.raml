@@ -1,16 +1,16 @@
 #%RAML 0.8
-title: Creator Types API
+title: Contributor Name Types API
 version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
 documentation:
-  - title: Creator Types API
-    content: This documents the API calls that can be made to query and manage creator types
+  - title: Contributor Name Types API
+    content: This documents the API calls that can be made to query and manage contributor name types
 
 schemas:
-  - creatortype.json: !include creatortype.json
-  - creatorTypes: !include creatortypes.json
+  - contributornametype.json: !include contributornametype.json
+  - contributorNameTypes: !include contributornametypes.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
@@ -27,25 +27,25 @@ resourceTypes:
   - collection-item: !include raml-util/rtypes/item-collection.raml
   - get-delete-only: !include raml-util/rtypes/get-delete.raml
 
-/creator-types:
+/contributor-name-types:
   type:
     collection:
-      exampleCollection: !include examples/creatortypes.json
-      exampleItem: !include examples/creatortype.json
-      schemaCollection: creatorTypes
-      schemaItem: creatortype.json
+      exampleCollection: !include examples/contributornametypes.json
+      exampleItem: !include examples/contributornametype.json
+      schemaCollection: contributorNameTypes
+      schemaItem: contributornametype.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
       pageable
     ]
-    description: Return a list of creator types
+    description: Return a list of contributor name types
   post:
-    description: Create a new creator type
+    description: Create a new contributer name type
     is: [validate]
-  /{creatorTypeId}:
-    description: Pass in the creator type id
+  /{contributorNameTypeId}:
+    description: Pass in the contributer name type id
     type:
       collection-item:
-        exampleItem: !include examples/creatortype.json
-        schema: creatortype.json
+        exampleItem: !include examples/contributornametype.json
+        schema: contributornametype.json

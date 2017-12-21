@@ -1,3 +1,16 @@
+## 7.0.0 Unreleased
+
+* Require `holdingsRecordId` from `item` (MODINVSTOR-44)
+* Removes `creators` from `instance` (MODINVSTOR-33)
+* Removes `title` from `item` (MODINVSTOR-29)
+* Removes `instanceId` from `item` (MODINVSTOR-29)
+* Removes `permanentLocationId` from `item` (MODINVSTOR-29)
+* Adds `contributorNameTypeId` to `contributors` in `instances` (MODINVSTOR-33)
+* No longer provides `creator-types` 1.0 interface (MODINVSTOR-33)
+* Provides `contributor-name-types` 1.0 interface (MODINVSTOR-33
+* Provides `instance-storage` 4.0 interface (MODINVSTOR-33)
+* Provides `item-storage` 5.0 interface (MODINVSTOR-29)
+
 ## 6.0.0 2017-12-20
 
 * Adds optional property `electronicLocation` to `holdingsRecord`. Makes permanentLocationId optional (MODINVSTOR-35, UIIN-15)
