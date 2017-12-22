@@ -1,0 +1,23 @@
+{
+  "id": "69640328-788e-43fc-9c3c-af39e243f3b7",
+  "source": "Sample",
+  "title": "ABA Journal",
+  "publication": [
+    {
+      "publisher": "American Bar Association",
+      "place": "Chicago, Ill.",
+      "dateOfPublication": "1915-1983"
+    }
+  ],
+  "identifiers": [
+    {
+      "identifierTypeId": "913300b2-03ed-469a-8179-c1092c991227",
+      "value": "0747-0088"
+    },
+    {
+      "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb",
+      "value": "84641839"
+    }
+  ],
+  "instanceTypeId": "a35947c6-795f-41d4-9c34-e5668d925d3f"
+}
