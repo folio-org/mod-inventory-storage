@@ -1,5 +1,6 @@
 ## 7.0.0 Unreleased
 
+* Add metadata generation (dates and update user) to instance records (MODINVSTOR-37) 
 * Require `holdingsRecordId` from `item` (MODINVSTOR-44)
 * Removes `creators` from `instance` (MODINVSTOR-33)
 * Removes `title` from `item` (MODINVSTOR-29)
