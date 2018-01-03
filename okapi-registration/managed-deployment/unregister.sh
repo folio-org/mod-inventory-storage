@@ -20,7 +20,9 @@ then
 
   pip3 install requests
 
-  python3 undeploy-managed.py ${module_id} ${tenant_id} ${okapi_proxy_address}
+  script_directory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+  python3 ${script_directory}/unregister.py ${module_id} ${tenant_id} ${okapi_proxy_address}
 
 else
   echo "Install Python3 to undeploy managed module from Okapi automatically"
