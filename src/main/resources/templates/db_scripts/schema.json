@@ -254,6 +254,7 @@
     },
     {
       "tableName": "instance",
+      "withMetadata": true,
       "generateId": false,
       "pkColumnName": "_id",
       "ginIndex": [
