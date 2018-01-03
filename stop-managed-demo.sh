@@ -5,10 +5,7 @@ tenant_id=${1:-demo_tenant}
 echo "Unregistering Inventory Storage Module"
 ./unregister-managed.sh ${tenant_id}
 
-echo "Deleting Tenant"
-./delete-tenant.sh
-
-if  which python3
+if which python3
 then
   pip3 install requests
 
