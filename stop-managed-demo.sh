@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 
-inventory_storage_instance_id=${1:-}
-tenant_id=${2:-demo_tenant}
+tenant_id=${1:-demo_tenant}
 
 echo "Unregistering Inventory Storage Module"
-./unregister-managed.sh ${inventory_storage_instance_id} ${tenant_id}
+./unregister-managed.sh ${tenant_id}
 
-echo "Deleting Tenant"
-./delete-tenant.sh
-
-if  which python3
+if which python3
 then
   pip3 install requests
 
