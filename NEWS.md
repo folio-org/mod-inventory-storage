@@ -1,14 +1,17 @@
-## 7.0.0 Unreleased
+## 7.0.1 Unreleased
 
 * Add metadata generation (dates and update user) to instance records (MODINVSTOR-37) 
-* Require `holdingsRecordId` from `item` (MODINVSTOR-44)
-* Removes `creators` from `instance` (MODINVSTOR-33)
-* Removes `title` from `item` (MODINVSTOR-29)
-* Removes `instanceId` from `item` (MODINVSTOR-29)
-* Removes `permanentLocationId` from `item` (MODINVSTOR-29)
+
+## 7.0.0 2018-01-03
+
+* Require `holdingsRecordId` from `items` (MODINVSTOR-44)
+* Removes `creators` from `instances` (MODINVSTOR-33)
+* Removes `title` from `items` (MODINVSTOR-29)
+* Removes `instanceId` from `items` (MODINVSTOR-29)
+* Removes `permanentLocationId` from `items` (MODINVSTOR-29)
 * Adds `contributorNameTypeId` to `contributors` in `instances` (MODINVSTOR-33)
 * No longer provides `creator-types` 1.0 interface (MODINVSTOR-33)
-* Provides `contributor-name-types` 1.0 interface (MODINVSTOR-33
+* Provides `contributor-name-types` 1.0 interface (MODINVSTOR-33)
 * Provides `instance-storage` 4.0 interface (MODINVSTOR-33)
 * Provides `item-storage` 5.0 interface (MODINVSTOR-29)
 

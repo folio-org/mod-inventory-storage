@@ -18,7 +18,7 @@ Provides PostgreSQL based storage to complement the [inventory module](http://gi
 - Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
 - Node 6.4.0 (for API linting and documentation generation)
 - NPM 3.10.3 (for API linting and documentation generation)
-- Python 3.6.0 (for nice to have parts of deployment scripts, e.g. is used to remove environment variables from Okapi)
+- Python 3.6.0 (for un-registering module during managed deployment scripts)
 
 # Preparation
 
