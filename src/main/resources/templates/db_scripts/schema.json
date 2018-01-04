@@ -263,6 +263,30 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+		{
+          "fieldName": "contributors",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "identifiers",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "instanceTypeId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "languages",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "index": [
