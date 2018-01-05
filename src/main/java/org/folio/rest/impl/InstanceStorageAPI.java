@@ -238,7 +238,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
       String[] fieldList = {"*"};
 
-      CQLWrapper cql = handleCQL(String.format("id=%s", instanceId), 1, 0);
+      CQLWrapper cql = handleCQL(String.format("id==%s", instanceId), 1, 0);
 
       log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
