@@ -474,6 +474,11 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
+  public void canSearchForInstancesUsingSimilarQueryToUILookAheadSearch() {
+    canSort("title=\"up*\" or contributors=\"name\": \"up*\" or identifiers=\"value\": \"up*\"", "Uprooted");
+  }
+
+  @Test
   public void canSortAscending() {
     canSort("cql.allRecords=1 sortBy title",
         "Interesting Times", "Long Way to a Small Angry Planet", "Nod", "Temeraire", "Uprooted");
