@@ -236,17 +236,15 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
+      String[] fieldList = {"*"};
 
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(instanceId);
+      CQLWrapper cql = handleCQL(String.format("id=%s", instanceId), 1, 0);
 
-      Criterion criterion = new Criterion(a);
+      log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("instance", Instance.class, criterion, true, false,
+          postgresClient.get(tableName, Instance.class, fieldList, cql, true, false,
             reply -> {
               try {
                 if (reply.succeeded()) {
