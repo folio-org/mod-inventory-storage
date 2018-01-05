@@ -302,6 +302,14 @@
           "caseSensitive": false,
           "removeAccents": true
         }
+      ],
+      "likeIndex": [
+        {
+          "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
       ]
     },
     {
