@@ -1,4 +1,4 @@
-## 7.1.0 Unreleased
+## 7.1.0 2018-01-08
 
 * Add metadata generation (dates and update user) to instance records (MODINVSTOR-37) 
 * Provides `instance-storage` 4.1 interface (MODINVSTOR-37)
