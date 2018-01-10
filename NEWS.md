@@ -1,3 +1,7 @@
+## 7.2.0 Unreleased
+
+* Introduce searching for instances with an item with a given barcode (e.g. `item.barcode==683029605940`, MODINVSTOR-49)
+
 ## 7.1.0 2018-01-08
 
 * Add metadata generation (dates and update user) to instance records (MODINVSTOR-37) 
