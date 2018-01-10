@@ -288,4 +288,20 @@ public class StorageTestSuite {
   static URL itemsUrl(String subPath) throws MalformedURLException {
     return storageUrl("/item-storage/items" + subPath);
   }
+
+  static URL instancesUrl() throws MalformedURLException {
+    return instancesUrl("");
+  }
+
+  static URL instancesUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/instance-storage/instances" + subPath);
+  }
+
+  static URL holdingsUrl() throws MalformedURLException {
+    return holdingsUrl("");
+  }
+
+  static URL holdingsUrl(String subPath) throws MalformedURLException {
+    return storageUrl("/holdings-storage/holdings" + subPath);
+  }
 }

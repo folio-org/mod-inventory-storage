@@ -46,6 +46,8 @@ public class ItemStorageTest extends TestBase {
     TimeoutException {
 
     StorageTestSuite.deleteAll(itemsUrl());
+    StorageTestSuite.deleteAll(holdingsUrl());
+    StorageTestSuite.deleteAll(instancesUrl());
     StorageTestSuite.deleteAll(materialTypesUrl());
     StorageTestSuite.deleteAll(loanTypesUrl());
     StorageTestSuite.deleteAll(shelfLocationsUrl());
