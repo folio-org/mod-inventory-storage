@@ -325,28 +325,36 @@
     {
       "viewName": "items_mt_view",
       "pkColumnName": "_id",
-      "table": {
-        "tableName": "item",
-        "joinOnField": "materialTypeId"
-      },
-      "joinTable": {
-        "tableName": "material_type",
-        "joinOnField": "id",
-        "jsonFieldAlias": "mt_jsonb"
-      }
+      "join": [
+        {
+          "table": {
+            "tableName": "item",
+            "joinOnField": "materialTypeId"
+          },
+          "joinTable": {
+            "tableName": "material_type",
+            "joinOnField": "id",
+            "jsonFieldAlias": "mt_jsonb"
+          }
+        }
+      ]
     },
     {
       "viewName": "instance_holding_view",
       "pkColumnName": "_id",
-      "table": {
-        "tableName": "instance",
-        "joinOnField": "id"
-      },
-      "joinTable": {
-        "tableName": "holdings_record",
-        "joinOnField": "instanceId",
-        "jsonFieldAlias": "ho_jsonb"
-      }
+      "join": [
+        {
+          "table": {
+            "tableName": "instance",
+            "joinOnField": "id"
+          },
+          "joinTable": {
+            "tableName": "holdings_record",
+            "joinOnField": "instanceId",
+            "jsonFieldAlias": "ho_jsonb"
+          }
+        }
+      ]
     }
   ]
 }
