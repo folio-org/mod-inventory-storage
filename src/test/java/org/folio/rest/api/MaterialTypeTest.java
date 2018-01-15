@@ -23,9 +23,8 @@ import java.util.concurrent.TimeoutException;
 
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -44,6 +43,9 @@ public class MaterialTypeTest extends TestBase {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
@@ -105,7 +107,7 @@ public class MaterialTypeTest extends TestBase {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonErrorResponse> createMaterialType = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createMaterialType = new CompletableFuture<>();
 
     JsonObject requestWithAdditionalProperty = new JsonObject()
       .put("name", "Journal")
@@ -361,7 +363,7 @@ public class MaterialTypeTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture();
+    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture<>();
     String createMTURL = materialTypesStorageUrl("").toString();
 
     send(createMTURL, HttpMethod.POST, new JsonObject().put("name", name).toString(),
@@ -376,7 +378,7 @@ public class MaterialTypeTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture();
+    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture<>();
 
     JsonObject request = new JsonObject()
       .put("id", id.toString())

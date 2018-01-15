@@ -27,10 +27,10 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class InstanceStorageTest extends TestBase {
-
   @Before
   public void beforeEach() throws MalformedURLException {
-
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
@@ -46,13 +46,11 @@ public class InstanceStorageTest extends TestBase {
 
     UUID id = UUID.randomUUID();
 
-    URL postInstanceUrl = instancesStorageUrl("");
-
     JsonObject instanceToCreate = smallAngryPlanet(id);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID,
+    client.post(instancesStorageUrl(""), instanceToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
@@ -87,13 +85,11 @@ public class InstanceStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    URL postInstanceUrl = instancesStorageUrl("");
-
     JsonObject instanceToCreate = smallAngryPlanet(null);
 
     CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
 
-    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID,
+    client.post(instancesStorageUrl(""), instanceToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     JsonResponse response = createCompleted.get(5, TimeUnit.SECONDS);
@@ -127,8 +123,6 @@ public class InstanceStorageTest extends TestBase {
 
     String id = "6556456";
 
-    URL postInstanceUrl = instancesStorageUrl("");
-
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier("isbn", "9781473619777"));
 
@@ -146,7 +140,7 @@ public class InstanceStorageTest extends TestBase {
 
     CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
 
-    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID,
+    client.post(instancesStorageUrl(""), instanceToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.text(createCompleted));
 
     TextResponse response = createCompleted.get(5, TimeUnit.SECONDS);
@@ -679,8 +673,6 @@ public class InstanceStorageTest extends TestBase {
         assertThat(0, is(cqlResponse.getJson().getInteger("totalRecords")));
       }
     }
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
   }
 
   private void createHoldings(JsonObject holdingsToCreate) {
@@ -795,7 +787,6 @@ public class InstanceStorageTest extends TestBase {
   }
 
   private JsonObject uprooted(UUID id) {
-
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier("isbn", "1447294149"));
     identifiers.add(identifier("isbn", "9781447294146"));
@@ -820,7 +811,6 @@ public class InstanceStorageTest extends TestBase {
   }
 
   private JsonObject interestingTimes(UUID id) {
-
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier("isbn", "0552167541"));
     identifiers.add(identifier("isbn", "9780552167541"));

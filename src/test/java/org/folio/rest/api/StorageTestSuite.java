@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -138,12 +137,6 @@ public class StorageTestSuite {
     catch(Exception e) {
       Assert.fail("WARNING!!!!! Unable to delete all: " + e.getMessage());
     }
-  }
-
-  static void deleteAll() throws MalformedURLException {
-    deleteAll(itemsStorageUrl(""));
-    deleteAll(materialTypesStorageUrl(""));
-    deleteAll(loanTypesStorageUrl(""));
   }
 
   static void checkForMismatchedIDs(String table) {

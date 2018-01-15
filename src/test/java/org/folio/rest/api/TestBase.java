@@ -28,12 +28,14 @@ public class TestBase {
     }
 
     client = new HttpClient(vertx);
-
-    StorageTestSuite.deleteAll();
   }
 
   @AfterClass
-  public static void testBaseAfterClass() throws InterruptedException, ExecutionException, TimeoutException {
+  public static void testBaseAfterClass()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
     if (invokeStorageTestSuiteAfter) {
       StorageTestSuite.after();
     }

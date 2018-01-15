@@ -45,9 +45,6 @@ public class ItemStorageTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
@@ -63,6 +60,8 @@ public class ItemStorageTest extends TestBase {
   @Before
   public void beforeEach() throws MalformedURLException {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
   @After
