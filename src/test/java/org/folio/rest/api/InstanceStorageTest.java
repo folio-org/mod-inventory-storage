@@ -3,6 +3,11 @@ package org.folio.rest.api;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.*;
+import org.folio.rest.support.builders.HoldingRequestBuilder;
+import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.folio.rest.support.client.MaterialTypesClient;
+import org.folio.rest.support.client.ShelfLocationsClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,11 +32,33 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class InstanceStorageTest extends TestBase {
+  private UUID mainLibraryLocationId;
+  private UUID bookMaterialTypeId;
+  private UUID canCirculateLoanTypeId;
+
   @Before
-  public void beforeEach() throws MalformedURLException {
+  public void beforeEach()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
+
+    bookMaterialTypeId = UUID.fromString(
+      new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
+
+    mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
+      locationsStorageUrl("")).create("Main Library"));
+
+    canCirculateLoanTypeId = UUID.fromString(new LoanTypesClient(client,
+      loanTypesStorageUrl("")).create("Can Circulate"));
   }
 
   @After
@@ -469,6 +496,53 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
+  public void canSearchByBarcode()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID expectedInstanceId = UUID.randomUUID();
+    UUID expectedHoldingId = UUID.randomUUID();
+
+    createInstance(smallAngryPlanet(expectedInstanceId));
+
+    createHoldings(new HoldingRequestBuilder()
+      .withId(expectedHoldingId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .forInstance(expectedInstanceId)
+      .create());
+
+    createItem(new ItemRequestBuilder()
+      .forHolding(expectedHoldingId)
+      .withBarcode("706949453641")
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create());
+
+    UUID otherInstanceId = UUID.randomUUID();
+    UUID otherHoldingId = UUID.randomUUID();
+
+    createInstance(nod(otherInstanceId));
+
+    createHoldings(new HoldingRequestBuilder()
+      .withId(otherHoldingId)
+      .forInstance(otherInstanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .create());
+
+    createItem(new ItemRequestBuilder()
+      .forHolding(expectedHoldingId)
+      .withMaterialType(bookMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withBarcode("766043059304")
+      .create());
+
+    //Use == as exact match is intended for barcode
+    canSort("item.barcode==706949453641", "Long Way to a Small Angry Planet");
+  }
+
+  @Test
   public void canSortAscending() {
     canSort("cql.allRecords=1 sortBy title",
         "Interesting Times", "Long Way to a Small Angry Planet", "Nod", "Temeraire", "Uprooted");
@@ -675,46 +749,38 @@ public class InstanceStorageTest extends TestBase {
     }
   }
 
-  private void createHoldings(JsonObject holdingsToCreate) {
+  private void createHoldings(JsonObject holdingsToCreate)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
       CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
 
-      try {
-        client.post(holdingsStorageUrl(""), holdingsToCreate,
-          StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
-
-        TextResponse response = createCompleted.get(2, TimeUnit.SECONDS);
-
-        if (response.getStatusCode() != 201) {
-          System.out.println("WARNING!!!!! Create holdings preparation failed: "
-            + response.getBody());
-        }
-      }
-      catch(Exception e) {
-        System.out.println("WARNING!!!!! Create holdings preparation failed: "
-          + e.getMessage());
-      }
-    }
-
-  private void createInstance(JsonObject instanceToCreate) {
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
-
-    try {
-
-      client.post(instancesStorageUrl(""), instanceToCreate,
+      client.post(holdingsStorageUrl(""), holdingsToCreate,
         StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
 
       TextResponse response = createCompleted.get(2, TimeUnit.SECONDS);
 
-      if (response.getStatusCode() != 201) {
-        System.out.println("WARNING!!!!! Create instance preparation failed: "
-          + response.getBody());
-      }
+    assertThat(String.format("Create holdings failed: %s", response.getBody()),
+      response.getStatusCode(), is(201));
     }
-    catch(Exception e) {
-      System.out.println("WARNING!!!!! Create instance preparation failed: "
-        + e.getMessage());
-    }
+
+  private void createInstance(JsonObject instanceToCreate)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(instancesStorageUrl(""), instanceToCreate,
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(createCompleted));
+
+    TextResponse response = createCompleted.get(2, TimeUnit.SECONDS);
+
+    assertThat(String.format("Create instance failed: %s", response.getBody()),
+      response.getStatusCode(), is(201));
   }
 
   private JsonObject smallAngryPlanet(UUID id) {
@@ -819,5 +885,22 @@ public class InstanceStorageTest extends TestBase {
     contributors.add(contributor("personal name", "Pratchett, Terry"));
     return createInstanceRequest(id, "TEST", "Interesting Times",
       identifiers, contributors, "resource type id");
+  }
+
+  private void createItem(JsonObject itemToCreate)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    TextResponse response = createCompleted.get(2, TimeUnit.SECONDS);
+
+    assertThat(String.format("Create item failed: %s", response.getBody()),
+      response.getStatusCode(), is(201));
   }
 }

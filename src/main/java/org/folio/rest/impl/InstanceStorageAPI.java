@@ -39,20 +39,34 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
-  private static final String BLANK_TENANT_MESSAGE = "Tenant Must Be Provided";
   public static final String INSTANCE_HOLDINGS_VIEW = "instance_holding_view";
+  public static final String INSTANCE_HOLDINGS_ITEMS_VIEW = "instance_holding_item_view";
   public static final String INSTANCE_TABLE =  "instance";
   private String tableName =  "instance";
 
-
   private CQLWrapper handleCQL(String query, int limit, int offset) throws FieldException {
-    if(query != null && query.contains("holdingsRecords.")){
+    if(query != null && query.contains("holdingsRecords.")) {
       tableName = INSTANCE_HOLDINGS_VIEW;
       //ho_jsonb is the alias given holdings in the view in the DB
       query = query.replaceAll("(?i)holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
-      CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_HOLDINGS_VIEW+".jsonb",INSTANCE_HOLDINGS_VIEW+".ho_jsonb"));
+
+      CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_HOLDINGS_VIEW+".jsonb",
+        INSTANCE_HOLDINGS_VIEW+".ho_jsonb"));
+
       return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
     }
+
+    if(query != null && query.contains("item.")) {
+      tableName = INSTANCE_HOLDINGS_ITEMS_VIEW;
+      //it_jsonb is the alias given items in the view in the DB
+      query = query.replaceAll("(?i)item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
+
+      CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_HOLDINGS_ITEMS_VIEW+".jsonb",
+        INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb"));
+
+      return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+    }
+
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(INSTANCE_TABLE+".jsonb"));
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }

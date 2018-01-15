@@ -5,6 +5,7 @@ import org.folio.rest.support.HttpClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import java.net.MalformedURLException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -34,7 +35,8 @@ public class TestBase {
   public static void testBaseAfterClass()
     throws InterruptedException,
     ExecutionException,
-    TimeoutException {
+    TimeoutException,
+    MalformedURLException {
 
     if (invokeStorageTestSuiteAfter) {
       StorageTestSuite.after();

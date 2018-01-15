@@ -99,8 +99,10 @@ public class StorageTestSuite {
 
   @AfterClass
   public static void after()
-    throws InterruptedException, ExecutionException,
-    TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
 
     removeTenant(TENANT_ID);
 
@@ -196,10 +198,14 @@ public class StorageTestSuite {
     deploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  private static void prepareTenant(String tenantId) {
+  private static void prepareTenant(String tenantId)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
     CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
 
-    try {
       HttpClient client = new HttpClient(vertx);
 
       client.post(storageUrl("/_/tenant"), null, tenantId,
@@ -212,34 +218,27 @@ public class StorageTestSuite {
 
       assertThat(failureMessage,
         response.getStatusCode(), is(201));
-
-    } catch(Exception e) {
-      assertThat(e.getMessage(),
-        true, is(false));
-    }
   }
 
-  private static void removeTenant(String tenantId) {
+  private static void removeTenant(String tenantId)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
     CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
 
-    try {
-      HttpClient client = new HttpClient(vertx);
+    HttpClient client = new HttpClient(vertx);
 
-      client.delete(storageUrl("/_/tenant"), tenantId,
-        ResponseHandler.text(tenantDeleted));
+    client.delete(storageUrl("/_/tenant"), tenantId,
+      ResponseHandler.text(tenantDeleted));
 
-      TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
+    TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
 
-      String failureMessage = String.format("Tenant cleanup failed: %s: %s",
-        response.getStatusCode(), response.getBody());
+    String failureMessage = String.format("Tenant cleanup failed: %s: %s",
+      response.getStatusCode(), response.getBody());
 
-      assertThat(failureMessage,
-        response.getStatusCode(), is(204));
-
-    } catch(Exception e) {
-      System.out.println("WARNING!!!!! Tenant cleanup failed: "
-        + e.getMessage());
-      assert false;
-    }
+    assertThat(failureMessage,
+      response.getStatusCode(), is(204));
   }
 }
