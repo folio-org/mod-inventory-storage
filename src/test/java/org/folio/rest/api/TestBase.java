@@ -1,14 +1,12 @@
 package org.folio.rest.api;
 
-import java.net.MalformedURLException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
+import io.vertx.core.Vertx;
 import org.folio.rest.support.HttpClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import io.vertx.core.Vertx;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * When not run from StorageTestSuite then this class invokes StorageTestSuite.before() and
@@ -35,7 +33,7 @@ public class TestBase {
   }
 
   @AfterClass
-  public static void testBaseAfterClass() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  public static void testBaseAfterClass() throws InterruptedException, ExecutionException, TimeoutException {
     if (invokeStorageTestSuiteAfter) {
       StorageTestSuite.after();
     }

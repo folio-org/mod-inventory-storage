@@ -25,7 +25,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static java.net.HttpURLConnection.*;
-import static org.folio.rest.api.StorageTestSuite.*;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -47,20 +49,20 @@ public class LoanTypeTest extends TestBase {
     TimeoutException,
     MalformedURLException {
 
-    StorageTestSuite.deleteAll(itemsUrl());
-    StorageTestSuite.deleteAll(materialTypesUrl());
-    StorageTestSuite.deleteAll(loanTypesUrl());
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     materialTypeID = new MaterialTypesClient(
       new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
-      materialTypesUrl()).create("Journal");
+      materialTypesStorageUrl("")).create("Journal");
   }
 
   @Test
   public void canCreateALoanType()
     throws MalformedURLException {
 
-    JsonObject response = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject response = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     assertThat(response.getString("id"), notNullValue());
@@ -75,7 +77,7 @@ public class LoanTypeTest extends TestBase {
       .put("name", "Can Circulate")
       .put("additional", "foo");
 
-    send(loanTypesUrl(), HttpMethod.POST,
+    send(loanTypesStorageUrl(""), HttpMethod.POST,
       requestWithAdditionalProperties.toString(), AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY);
   }
 
@@ -83,21 +85,21 @@ public class LoanTypeTest extends TestBase {
   public void cannotCreateALoanTypeWithSameName()
     throws MalformedURLException {
 
-    send(loanTypesUrl(), HttpMethod.POST, postRequestCirculate, HTTP_CREATED);
+    send(loanTypesStorageUrl(""), HttpMethod.POST, postRequestCirculate, HTTP_CREATED);
 
-    send(loanTypesUrl(), HttpMethod.POST, postRequestCirculate, HTTP_BAD_REQUEST);
+    send(loanTypesStorageUrl(""), HttpMethod.POST, postRequestCirculate, HTTP_BAD_REQUEST);
   }
 
   @Test
   public void cannotCreateALoanTypeWithSameId()
     throws MalformedURLException {
 
-    JsonObject createResponse = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject createResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     String loanTypeID = createResponse.getString("id");
 
-    send(loanTypesUrl(), HttpMethod.POST,
+    send(loanTypesStorageUrl(""), HttpMethod.POST,
       createLoanType("over night", loanTypeID), HTTP_BAD_REQUEST);
   }
 
@@ -105,13 +107,13 @@ public class LoanTypeTest extends TestBase {
   public void canGetALoanTypeById()
     throws MalformedURLException {
 
-    JsonObject createResponse = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject createResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     //fix to read from location header
     String loanTypeID = createResponse.getString("id");
 
-    JsonObject getResponse = send(loanTypesUrl("/" + loanTypeID), HttpMethod.GET,
+    JsonObject getResponse = send(loanTypesStorageUrl("/" + loanTypeID), HttpMethod.GET,
       null, HTTP_OK);
 
     assertThat(getResponse.getString("id"), is(loanTypeID));
@@ -122,17 +124,17 @@ public class LoanTypeTest extends TestBase {
   public void cannotGetALoanTypeThatDoesNotExist()
     throws MalformedURLException {
 
-    send(loanTypesUrl("/" + UUID.randomUUID()), HttpMethod.GET, null, HTTP_NOT_FOUND);
+    send(loanTypesStorageUrl("/" + UUID.randomUUID()), HttpMethod.GET, null, HTTP_NOT_FOUND);
   }
 
   @Test
   public void canGetAllLoanTypes()
     throws MalformedURLException {
 
-    send(loanTypesUrl(), HttpMethod.POST, postRequestCirculate, HTTP_CREATED);
-    send(loanTypesUrl(), HttpMethod.POST, postRequestCourse, HTTP_CREATED);
+    send(loanTypesStorageUrl(""), HttpMethod.POST, postRequestCirculate, HTTP_CREATED);
+    send(loanTypesStorageUrl(""), HttpMethod.POST, postRequestCourse, HTTP_CREATED);
 
-    JsonObject response = send(loanTypesUrl(), HttpMethod.GET, null, HTTP_OK);
+    JsonObject response = send(loanTypesStorageUrl(""), HttpMethod.GET, null, HTTP_OK);
 
     assertThat(response.getInteger("totalRecords"), is(2));
   }
@@ -141,47 +143,47 @@ public class LoanTypeTest extends TestBase {
   public void canDeleteAnUnusedLoanType()
     throws MalformedURLException {
 
-    JsonObject createResponse = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject createResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     //fix to read from location header
     String loanTypeID = createResponse.getString("id");
 
-    send(loanTypesUrl("/" + loanTypeID), HttpMethod.DELETE, null, HTTP_NO_CONTENT);
+    send(loanTypesStorageUrl("/" + loanTypeID), HttpMethod.DELETE, null, HTTP_NO_CONTENT);
   }
 
   @Test
   public void cannotDeleteALoanTypePermanentlyAssociatedToAnItem()
     throws MalformedURLException {
 
-    JsonObject createResponse = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject createResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     String loanTypeID = createResponse.getString("id");
 
-    send(itemsUrl(), HttpMethod.POST, createItem(loanTypeID, null), HTTP_CREATED);
+    send(itemsStorageUrl(""), HttpMethod.POST, createItem(loanTypeID, null), HTTP_CREATED);
 
-    send(loanTypesUrl("/" + loanTypeID), HttpMethod.DELETE, null, HTTP_BAD_REQUEST);
+    send(loanTypesStorageUrl("/" + loanTypeID), HttpMethod.DELETE, null, HTTP_BAD_REQUEST);
   }
 
   @Test
   public void cannotDeleteALoanTypeTemporarilyAssociatedToAnItem()
     throws MalformedURLException {
 
-    JsonObject circulateCreateResponse = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject circulateCreateResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     String circulateLoanTypeId = circulateCreateResponse.getString("id");
 
-    JsonObject reserveCreateResponse = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject reserveCreateResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCourse, HTTP_CREATED);
 
     String reserveLoanTypeId = reserveCreateResponse.getString("id");
 
-    send(itemsUrl(), HttpMethod.POST,
+    send(itemsStorageUrl(""), HttpMethod.POST,
       createItem(circulateLoanTypeId, reserveLoanTypeId), HTTP_CREATED);
 
-    send(loanTypesUrl("/" + reserveLoanTypeId), HttpMethod.DELETE, null,
+    send(loanTypesStorageUrl("/" + reserveLoanTypeId), HttpMethod.DELETE, null,
       HTTP_BAD_REQUEST);
   }
 
@@ -189,19 +191,19 @@ public class LoanTypeTest extends TestBase {
   public void cannotDeleteLoanTypeThatDoesNotExist()
     throws MalformedURLException {
 
-    send(loanTypesUrl("/" + UUID.randomUUID()), HttpMethod.DELETE, null, HTTP_NOT_FOUND);
+    send(loanTypesStorageUrl("/" + UUID.randomUUID()), HttpMethod.DELETE, null, HTTP_NOT_FOUND);
   }
 
   @Test
   public void canUpdateALoanType() throws MalformedURLException {
 
-    JsonObject createResponse = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject createResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     //fix to read from location header
     String loanTypeID = createResponse.getString("id");
 
-    send(loanTypesUrl("/" + loanTypeID), HttpMethod.PUT, putRequest, HTTP_NO_CONTENT);
+    send(loanTypesStorageUrl("/" + loanTypeID), HttpMethod.PUT, putRequest, HTTP_NO_CONTENT);
   }
 
   @Test
@@ -210,7 +212,7 @@ public class LoanTypeTest extends TestBase {
 
     String id = UUID.randomUUID().toString();
 
-    send(loanTypesUrl("/" + id), HttpMethod.PUT, putRequest, HTTP_NOT_FOUND);
+    send(loanTypesStorageUrl("/" + id), HttpMethod.PUT, putRequest, HTTP_NOT_FOUND);
   }
 
   @Test
@@ -219,7 +221,7 @@ public class LoanTypeTest extends TestBase {
 
     String nonexistentLoanId = UUID.randomUUID().toString();
 
-    send(itemsUrl(), HttpMethod.POST, createItem(nonexistentLoanId, null),
+    send(itemsStorageUrl(""), HttpMethod.POST, createItem(nonexistentLoanId, null),
       HTTP_BAD_REQUEST);
   }
 
@@ -227,14 +229,14 @@ public class LoanTypeTest extends TestBase {
   public void cannotCreateItemWithTemporaryLoanTypeThatDoesNotExist()
     throws MalformedURLException {
 
-    JsonObject circulateCreateResponse = send(loanTypesUrl(), HttpMethod.POST,
+    JsonObject circulateCreateResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     String circulateLoanTypeId = circulateCreateResponse.getString("id");
 
     String nonexistentLoanId = UUID.randomUUID().toString();
 
-    send(itemsUrl(), HttpMethod.POST,
+    send(itemsStorageUrl(""), HttpMethod.POST,
       createItem(circulateLoanTypeId, nonexistentLoanId), HTTP_BAD_REQUEST);
   }
 
@@ -350,7 +352,7 @@ public class LoanTypeTest extends TestBase {
   private void updateItemWithNonexistingId(String field)
     throws MalformedURLException {
 
-    JsonObject response = send(itemsUrl(), HttpMethod.POST,
+    JsonObject response = send(itemsStorageUrl(""), HttpMethod.POST,
       createItem(newLoanType(), newLoanType()), HTTP_CREATED);
 
     String itemId = response.getString("id");
@@ -359,7 +361,7 @@ public class LoanTypeTest extends TestBase {
 
     JsonObject putRequest = response.copy().put(field, nonExistentLoanId);
 
-    send(itemsUrl("/" + itemId), HttpMethod.PUT, putRequest.toString(),
+    send(itemsStorageUrl("/" + itemId), HttpMethod.PUT, putRequest.toString(),
       HTTP_BAD_REQUEST);
   }
 
@@ -372,7 +374,7 @@ public class LoanTypeTest extends TestBase {
 
     String randomName = "My name is " + UUID.randomUUID().toString();
     String content = "{\"name\": \"" + randomName + "\"}";
-    JsonObject response = send(loanTypesUrl(), HttpMethod.POST, content, HTTP_CREATED);
+    JsonObject response = send(loanTypesStorageUrl(""), HttpMethod.POST, content, HTTP_CREATED);
     // FIXME: read from location header
     return response.getString("id");
   }

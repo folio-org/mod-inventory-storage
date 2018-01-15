@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -100,7 +101,7 @@ public class StorageTestSuite {
   @AfterClass
   public static void after()
     throws InterruptedException, ExecutionException,
-    TimeoutException, MalformedURLException {
+    TimeoutException {
 
     removeTenant(TENANT_ID);
 
@@ -140,25 +141,23 @@ public class StorageTestSuite {
   }
 
   static void deleteAll() throws MalformedURLException {
-    deleteAll(itemsUrl());
-    deleteAll(materialTypesUrl());
-    deleteAll(loanTypesUrl());
+    deleteAll(itemsStorageUrl(""));
+    deleteAll(materialTypesStorageUrl(""));
+    deleteAll(loanTypesStorageUrl(""));
   }
 
   static void checkForMismatchedIDs(String table) {
-    String tenantId = TENANT_ID;
-
     try {
       ResultSet results = getRecordsWithUnmatchedIds(
-        tenantId, table);
+        TENANT_ID, table);
 
       Integer mismatchedRowCount = results.getNumRows();
 
       assertThat(mismatchedRowCount, is(0));
     }
     catch(Exception e) {
-      System.out.println(String.format(
-        "WARNING!!!!! Unable to determine mismatched ID rows"));
+      System.out.println(
+        "WARNING!!!!! Unable to determine mismatched ID rows");
     }
   }
 
@@ -204,10 +203,7 @@ public class StorageTestSuite {
     deploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  private static void prepareTenant(String tenantId)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+  private static void prepareTenant(String tenantId) {
     CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
 
     try {
@@ -230,10 +226,7 @@ public class StorageTestSuite {
     }
   }
 
-  private static void removeTenant(String tenantId)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+  private static void removeTenant(String tenantId) {
     CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
 
     try {
@@ -255,53 +248,5 @@ public class StorageTestSuite {
         + e.getMessage());
       assert false;
     }
-  }
-
-  static URL shelfLocationsUrl() throws MalformedURLException {
-    return shelfLocationsUrl("");
-  }
-
-  static URL shelfLocationsUrl(String subPath) throws MalformedURLException {
-    return storageUrl("/shelf-locations" + subPath);
-  }
-
-  static URL materialTypesUrl() throws MalformedURLException {
-    return materialTypesUrl("");
-  }
-
-  static URL materialTypesUrl(String subPath) throws MalformedURLException {
-    return storageUrl("/material-types" + subPath);
-  }
-
-  static URL loanTypesUrl() throws MalformedURLException {
-    return loanTypesUrl("");
-  }
-
-  static URL loanTypesUrl(String subPath) throws MalformedURLException {
-    return storageUrl("/loan-types" + subPath);
-  }
-
-  static URL itemsUrl() throws MalformedURLException {
-    return itemsUrl("");
-  }
-
-  static URL itemsUrl(String subPath) throws MalformedURLException {
-    return storageUrl("/item-storage/items" + subPath);
-  }
-
-  static URL instancesUrl() throws MalformedURLException {
-    return instancesUrl("");
-  }
-
-  static URL instancesUrl(String subPath) throws MalformedURLException {
-    return storageUrl("/instance-storage/instances" + subPath);
-  }
-
-  static URL holdingsUrl() throws MalformedURLException {
-    return holdingsUrl("");
-  }
-
-  static URL holdingsUrl(String subPath) throws MalformedURLException {
-    return storageUrl("/holdings-storage/holdings" + subPath);
   }
 }
