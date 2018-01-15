@@ -33,6 +33,7 @@ import static org.junit.Assert.assertThat;
 
 public class InstanceStorageTest extends TestBase {
   private UUID mainLibraryLocationId;
+  private UUID annexLocationId;
   private UUID bookMaterialTypeId;
   private UUID canCirculateLoanTypeId;
 
@@ -56,6 +57,9 @@ public class InstanceStorageTest extends TestBase {
 
     mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
       locationsStorageUrl("")).create("Main Library"));
+
+    annexLocationId = UUID.fromString(new ShelfLocationsClient(client,
+      locationsStorageUrl("")).create("Annex Library"));
 
     canCirculateLoanTypeId = UUID.fromString(new LoanTypesClient(client,
       loanTypesStorageUrl("")).create("Can Circulate"));
@@ -540,6 +544,71 @@ public class InstanceStorageTest extends TestBase {
 
     //Use == as exact match is intended for barcode
     canSort("item.barcode==706949453641", "Long Way to a Small Angry Planet");
+  }
+
+  // This is intended to demonstrate usage of the two different views
+  @Test
+  public void canSearchByBarcodeAndPermanentLocation()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+
+    UUID smallAngryPlanetInstanceId = UUID.randomUUID();
+    UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
+
+    createInstance(smallAngryPlanet(smallAngryPlanetInstanceId));
+
+    createHoldings(new HoldingRequestBuilder()
+      .withId(mainLibrarySmallAngryHoldingId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .forInstance(smallAngryPlanetInstanceId)
+      .create());
+
+    createItem(new ItemRequestBuilder()
+      .forHolding(mainLibrarySmallAngryHoldingId)
+      .withBarcode("706949453641")
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create());
+
+    UUID annexSmallAngryHoldingId = UUID.randomUUID();
+
+    createHoldings(new HoldingRequestBuilder()
+      .withId(annexSmallAngryHoldingId)
+      .withPermanentLocation(annexLocationId)
+      .forInstance(smallAngryPlanetInstanceId)
+      .create());
+
+    createItem(new ItemRequestBuilder()
+      .forHolding(annexSmallAngryHoldingId)
+      .withBarcode("70704539201")
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create());
+
+    UUID nodInstanceId = UUID.randomUUID();
+    UUID nodHoldingId = UUID.randomUUID();
+
+    createInstance(nod(nodInstanceId));
+
+    createHoldings(new HoldingRequestBuilder()
+      .withId(nodHoldingId)
+      .forInstance(nodInstanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .create());
+
+    createItem(new ItemRequestBuilder()
+      .forHolding(nodHoldingId)
+      .withMaterialType(bookMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withBarcode("766043059304")
+      .create());
+
+    //Use == as exact match is intended for barcode and location ID
+    canSort(String.format("item.barcode==706949453641 and holdingsRecords.permanentLocationId==%s",
+      mainLibraryLocationId),
+      "Long Way to a Small Angry Planet");
   }
 
   @Test
