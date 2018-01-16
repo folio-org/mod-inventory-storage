@@ -155,7 +155,7 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
-  public void canCreateAnItemAtSpecificLocation()
+  public void canCreateAnInstanceAtSpecificLocation()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
