@@ -401,19 +401,11 @@ public class ItemStorageAPI implements ItemStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(itemId);
-
-      Criterion criterion = new Criterion(a);
-
       vertxContext.runOnContext(v -> {
         try {
           getMaterialType(vertxContext.owner(), tenantId, entity, replyHandler -> {
               int res = replyHandler.result();
-              if(res == 0){
+              if(res == 0) {
                 String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
                 log.error(message);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutItemStorageItemsByItemIdResponse
@@ -424,15 +416,23 @@ public class ItemStorageAPI implements ItemStorageResource {
                   ItemStorageResource.PostItemStorageItemsResponse
                     .withPlainInternalServerError("")));
               }
-              else{
+              else {
                 try {
-                  postgresClient.get("item", Item.class, criterion, true, false,
+                  String[] fieldList = {"*"};
+
+                  String query = String.format("id==%s", itemId);
+
+                  CQLWrapper cql = getCQL(query, 1, 0);
+
+                  log.info(String.format("SQL generated from CQL: %s", cql.toString()));
+
+                  postgresClient.get(getTableName(query), Item.class, fieldList, cql, true, false,
                     reply -> {
                       if(reply.succeeded()) {
                         List<Item> itemList = (List<Item>) reply.result().getResults();
                         if (itemList.size() == 1) {
                           try {
-                            postgresClient.update("item", entity, criterion, true,
+                            postgresClient.update("item", entity, entity.getId(),
                               update -> {
                                 try {
                                   if (update.succeeded()) {
