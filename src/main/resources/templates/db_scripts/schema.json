@@ -349,6 +349,12 @@
       ],
       "index": [
         {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "instanceId",
           "tOps": "ADD",
           "caseSensitive": false,

@@ -1,8 +1,23 @@
 package org.folio.rest.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.HoldingsRecords;
+import org.folio.rest.jaxrs.resource.HoldingsStorageResource;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.OutStream;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -10,24 +25,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-
-import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.model.HoldingsRecords;
-import org.folio.rest.jaxrs.resource.HoldingsStorageResource;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  *
@@ -35,11 +35,12 @@ import io.vertx.core.Handler;
  */
 public class HoldingsStorageAPI implements HoldingsStorageResource {
 
+  private static final Logger log = LoggerFactory.getLogger(HoldingsStorageAPI.class);
+
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
-
 
   @Override
   public void deleteHoldingsStorageHoldings(
@@ -207,7 +208,6 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
         HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
           .withPlainInternalServerError(e.getMessage())));
     }
-
   }
 
   @Override
@@ -224,17 +224,18 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(holdingsRecordId);
-
-      Criterion criterion = new Criterion(a);
-
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, criterion, true, false,
+          String[] fieldList = {"*"};
+
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON(HOLDINGS_RECORD_TABLE+".jsonb");
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, String.format("id==%s", holdingsRecordId))
+            .setLimit(new Limit(1))
+            .setOffset(new Offset(0));
+
+          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
+
+          postgresClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cql, true, false,
             reply -> {
               try {
                 if (reply.succeeded()) {
