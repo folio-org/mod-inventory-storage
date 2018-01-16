@@ -1,6 +1,15 @@
 ## 7.2.0 Unreleased
 
-* Add like indexes for `title`, `contributors` and `identifiers` of `instances` (MODINVSTOR-48)
+* Add the following GIN indexes for `instances` (MODINVSTOR-48): 
+  - `contributors`
+  - `identifiers`
+  - `instanceTypeId`
+  - `languages`
+  - `classifications`
+  - `subjects`
+* Add the following b-tree indexes for `instances` (MODINVSTOR-48):
+  - `contributors`
+  - `publication`
 * Use CQL to get an instance by ID (in order to use available index, MODINVSTOR-48)
 
 ## 7.1.0 2018-01-08
