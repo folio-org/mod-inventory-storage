@@ -18,14 +18,15 @@ import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.api.StorageTestSuite.*;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -45,18 +46,18 @@ public class ShelfLocationsTest {
     TimeoutException,
     MalformedURLException {
 
-    StorageTestSuite.deleteAll(itemsUrl());
-    StorageTestSuite.deleteAll(shelfLocationsUrl());
-    StorageTestSuite.deleteAll(loanTypesUrl());
-    StorageTestSuite.deleteAll(materialTypesUrl());
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
     canCirculateLoanTypeID = new LoanTypesClient(
       new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
-      loanTypesUrl()).create("Can Circulate");
+      loanTypesStorageUrl("")).create("Can Circulate");
 
     journalMaterialTypeID = new MaterialTypesClient(
       new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
-      materialTypesUrl()).create("Journal");
+      materialTypesStorageUrl("")).create("Journal");
   }
 
   @Test
@@ -131,7 +132,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<TextResponse> updated = new CompletableFuture<>();
 
-    send(shelfLocationsUrl("/" + id.toString()).toString(), HttpMethod.PUT,
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.text(updated));
 
@@ -159,7 +160,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
 
-    send(shelfLocationsUrl("/" + id.toString()).toString(), HttpMethod.DELETE, null,
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.text(deleteCompleted));
 
     TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
@@ -180,7 +181,7 @@ public class ShelfLocationsTest {
     JsonObject item = createItemRequest(locationId.toString());
     CompletableFuture<JsonResponse> createItemCompleted = new CompletableFuture<>();
 
-    send(itemsUrl().toString(), HttpMethod.POST, item.toString(),
+    send(itemsStorageUrl(""), HttpMethod.POST, item.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
 
     JsonResponse createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
@@ -188,7 +189,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
 
-    send(shelfLocationsUrl(locationId.toString()).toString(),
+    send(locationsStorageUrl(locationId.toString()),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.text(deleteCompleted));
 
@@ -196,8 +197,8 @@ public class ShelfLocationsTest {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
-  private static void send(String url, HttpMethod method, String content,
-                    String contentType, Handler<HttpClientResponse> handler) {
+  private static void send(URL url, HttpMethod method, String content,
+                           String contentType, Handler<HttpClientResponse> handler) {
 
     HttpClient client = StorageTestSuite.getVertx().createHttpClient();
     HttpClientRequest request;
@@ -208,16 +209,16 @@ public class ShelfLocationsTest {
     Buffer buffer = Buffer.buffer(content);
 
     if (method == HttpMethod.POST) {
-      request = client.postAbs(url);
+      request = client.postAbs(url.toString());
     }
     else if (method == HttpMethod.DELETE) {
-      request = client.deleteAbs(url);
+      request = client.deleteAbs(url.toString());
     }
     else if (method == HttpMethod.GET) {
-      request = client.getAbs(url);
+      request = client.getAbs(url.toString());
     }
     else {
-      request = client.putAbs(url);
+      request = client.putAbs(url.toString());
     }
     request.exceptionHandler(error -> {
       Assert.fail(error.getLocalizedMessage());
@@ -251,9 +252,8 @@ public class ShelfLocationsTest {
     TimeoutException {
 
     CompletableFuture<JsonResponse> createShelfLocation = new CompletableFuture<>();
-    String createSLURL = shelfLocationsUrl().toString();
 
-    send(createSLURL, HttpMethod.POST, new JsonObject().put("name", name).toString(),
+    send(locationsStorageUrl(""), HttpMethod.POST, new JsonObject().put("name", name).toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createShelfLocation));
 
     return createShelfLocation.get(5, TimeUnit.SECONDS);
@@ -271,7 +271,7 @@ public class ShelfLocationsTest {
       .put("id", id.toString())
       .put("name", name);
 
-    send(shelfLocationsUrl().toString(), HttpMethod.POST, request.toString(),
+    send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createShelfLocation));
 
     return createShelfLocation.get(5, TimeUnit.SECONDS);
@@ -285,7 +285,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-    send(shelfLocationsUrl("/" + id.toString()).toString(), HttpMethod.GET,
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);

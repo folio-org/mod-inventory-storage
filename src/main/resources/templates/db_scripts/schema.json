@@ -195,6 +195,12 @@
       ],
       "index": [
         {
+          "fieldName": "holdingsRecordId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "materialTypeId",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -325,28 +331,65 @@
     {
       "viewName": "items_mt_view",
       "pkColumnName": "_id",
-      "table": {
-        "tableName": "item",
-        "joinOnField": "materialTypeId"
-      },
-      "joinTable": {
-        "tableName": "material_type",
-        "joinOnField": "id",
-        "jsonFieldAlias": "mt_jsonb"
-      }
+      "join": [
+        {
+          "table": {
+            "tableName": "item",
+            "joinOnField": "materialTypeId"
+          },
+          "joinTable": {
+            "tableName": "material_type",
+            "joinOnField": "id",
+            "jsonFieldAlias": "mt_jsonb"
+          }
+        }
+      ]
     },
     {
       "viewName": "instance_holding_view",
       "pkColumnName": "_id",
-      "table": {
-        "tableName": "instance",
-        "joinOnField": "id"
-      },
-      "joinTable": {
-        "tableName": "holdings_record",
-        "joinOnField": "instanceId",
-        "jsonFieldAlias": "ho_jsonb"
-      }
+      "join": [
+        {
+          "table": {
+            "tableName": "instance",
+            "joinOnField": "id"
+          },
+          "joinTable": {
+            "tableName": "holdings_record",
+            "joinOnField": "instanceId",
+            "jsonFieldAlias": "ho_jsonb"
+          }
+        }
+      ]
+    },
+    {
+      "viewName": "instance_holding_item_view",
+      "pkColumnName": "_id",
+      "join": [
+        {
+          "table": {
+            "tableName": "instance",
+            "joinOnField": "id"
+          },
+          "joinTable": {
+            "tableName": "holdings_record",
+            "joinOnField": "instanceId",
+            "jsonFieldAlias": "ho_jsonb"
+          }
+        },
+        {
+          "table": {
+            "tableName": "holdings_record",
+            "joinOnField": "id",
+            "jsonFieldAlias": "ho2_jsonb"
+          },
+          "joinTable": {
+            "tableName": "item",
+            "joinOnField": "holdingsRecordId",
+            "jsonFieldAlias": "it_jsonb"
+          }
+        }
+      ]
     }
   ]
 }

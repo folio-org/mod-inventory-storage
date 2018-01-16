@@ -21,9 +21,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.api.StorageTestSuite.*;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -41,13 +42,16 @@ public class MaterialTypeTest extends TestBase {
     TimeoutException,
     MalformedURLException {
 
-    StorageTestSuite.deleteAll(itemsUrl());
-    StorageTestSuite.deleteAll(materialTypesUrl());
-    StorageTestSuite.deleteAll(loanTypesUrl());
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     canCirculateLoanTypeID = new LoanTypesClient(
       new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
-      loanTypesUrl()).create("Can Circulate");
+      loanTypesStorageUrl("")).create("Can Circulate");
   }
 
   @Test
@@ -103,13 +107,13 @@ public class MaterialTypeTest extends TestBase {
     TimeoutException,
     ExecutionException {
 
-    CompletableFuture<JsonErrorResponse> createMaterialType = new CompletableFuture();
+    CompletableFuture<JsonErrorResponse> createMaterialType = new CompletableFuture<>();
 
     JsonObject requestWithAdditionalProperty = new JsonObject()
       .put("name", "Journal")
       .put("somethingAdditional", "foo");
 
-    send(materialTypesUrl().toString(), HttpMethod.POST,
+    send(materialTypesStorageUrl("").toString(), HttpMethod.POST,
       requestWithAdditionalProperty.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.jsonErrors(createMaterialType));
 
@@ -157,7 +161,7 @@ public class MaterialTypeTest extends TestBase {
 
     CompletableFuture<TextResponse> updated = new CompletableFuture<>();
 
-    send(materialTypesUrl("/" + id.toString()).toString(), HttpMethod.PUT,
+    send(materialTypesStorageUrl("/" + id.toString()).toString(), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.text(updated));
 
@@ -192,7 +196,7 @@ public class MaterialTypeTest extends TestBase {
 
     CompletableFuture<TextResponse> updated = new CompletableFuture<>();
 
-    send(materialTypesUrl("/" + id.toString()).toString(), HttpMethod.PUT,
+    send(materialTypesStorageUrl("/" + id.toString()).toString(), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.text(updated));
 
@@ -225,7 +229,7 @@ public class MaterialTypeTest extends TestBase {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-    send(materialTypesUrl().toString(), HttpMethod.GET,
+    send(materialTypesStorageUrl("").toString(), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     JsonResponse getResponse = getCompleted.get(5, TimeUnit.SECONDS);
@@ -247,7 +251,7 @@ public class MaterialTypeTest extends TestBase {
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
 
-    send(materialTypesUrl("/" + id.toString()).toString(), HttpMethod.DELETE, null,
+    send(materialTypesStorageUrl("/" + id.toString()).toString(), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.text(deleteCompleted));
 
     TextResponse deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
@@ -270,7 +274,7 @@ public class MaterialTypeTest extends TestBase {
 
     CompletableFuture<JsonResponse> createItemCompleted = new CompletableFuture<>();
 
-    send(itemsUrl().toString(), HttpMethod.POST, item.toString(),
+    send(itemsStorageUrl("").toString(), HttpMethod.POST, item.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
 
     JsonResponse createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
@@ -279,7 +283,7 @@ public class MaterialTypeTest extends TestBase {
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
 
-    send(materialTypesUrl(materialTypeId.toString()).toString(),
+    send(materialTypesStorageUrl(materialTypeId.toString()).toString(),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.text(deleteCompleted));
 
@@ -297,7 +301,7 @@ public class MaterialTypeTest extends TestBase {
 
     CompletableFuture<TextResponse> deleteCompleted = new CompletableFuture<>();
 
-    send(materialTypesUrl("/" + UUID.randomUUID().toString()).toString(),
+    send(materialTypesStorageUrl("/" + UUID.randomUUID().toString()).toString(),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.text(deleteCompleted));
 
@@ -359,8 +363,8 @@ public class MaterialTypeTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture();
-    String createMTURL = materialTypesUrl().toString();
+    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture<>();
+    String createMTURL = materialTypesStorageUrl("").toString();
 
     send(createMTURL, HttpMethod.POST, new JsonObject().put("name", name).toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createMaterialType));
@@ -374,13 +378,13 @@ public class MaterialTypeTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture();
+    CompletableFuture<JsonResponse> createMaterialType = new CompletableFuture<>();
 
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", name);
 
-    send(materialTypesUrl().toString(), HttpMethod.POST, request.toString(),
+    send(materialTypesStorageUrl("").toString(), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createMaterialType));
 
     return createMaterialType.get(5, TimeUnit.SECONDS);
@@ -394,7 +398,7 @@ public class MaterialTypeTest extends TestBase {
 
     CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
 
-    send(materialTypesUrl("/" + id.toString()).toString(), HttpMethod.GET,
+    send(materialTypesStorageUrl("/" + id.toString()).toString(), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
