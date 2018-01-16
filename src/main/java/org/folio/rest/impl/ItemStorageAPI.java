@@ -4,10 +4,7 @@ import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.model.Mtype;
-import org.folio.rest.jaxrs.model.Shelflocation;
+import org.folio.rest.jaxrs.model.*;
 import org.folio.rest.jaxrs.resource.ItemStorageResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -292,21 +289,21 @@ public class ItemStorageAPI implements ItemStorageResource {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
-    Criteria a = new Criteria();
-
-    a.addField("'id'");
-    a.setOperation("=");
-    a.setValue(itemId);
-
-    Criterion criterion = new Criterion(a);
-
     try {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
+      String[] fieldList = {"*"};
+
+      String query = String.format("id==%s", itemId);
+
+      CQLWrapper cql = getCQL(query, 1, 0);
+
+      log.info(String.format("SQL generated from CQL: %s", cql.toString()));
+
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get("item", Item.class, criterion, true, false,
+          postgresClient.get(getTableName(query), Item.class, fieldList, cql, true, false,
             reply -> {
               try {
                 if(reply.succeeded()) {
