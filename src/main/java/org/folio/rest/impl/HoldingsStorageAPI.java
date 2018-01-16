@@ -352,25 +352,25 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(holdingsRecordId);
-
-      Criterion criterion = new Criterion(a);
-
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, criterion, true, false,
+          String[] fieldList = {"*"};
+
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON(HOLDINGS_RECORD_TABLE+".jsonb");
+          CQLWrapper cql = new CQLWrapper(cql2pgJson, String.format("id==%s", holdingsRecordId))
+            .setLimit(new Limit(1))
+            .setOffset(new Offset(0));
+
+          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
+
+          postgresClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cql, true, false,
             reply -> {
               if(reply.succeeded()) {
                 List<HoldingsRecord> itemList = (List<HoldingsRecord>) reply.result().getResults();
 
                 if (itemList.size() == 1) {
                   try {
-                    postgresClient.update(HOLDINGS_RECORD_TABLE, entity, criterion,
-                      true,
+                    postgresClient.update(HOLDINGS_RECORD_TABLE, entity, entity.getId(),
                       update -> {
                         try {
                           if(update.succeeded()) {
