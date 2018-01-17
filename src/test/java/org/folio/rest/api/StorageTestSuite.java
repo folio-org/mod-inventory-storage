@@ -206,18 +206,18 @@ public class StorageTestSuite {
 
     CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
 
-      HttpClient client = new HttpClient(vertx);
+    HttpClient client = new HttpClient(vertx);
 
-      client.post(storageUrl("/_/tenant"), null, tenantId,
-        ResponseHandler.any(tenantPrepared));
+    client.post(storageUrl("/_/tenant"), null, tenantId,
+      ResponseHandler.any(tenantPrepared));
 
-      Response response = tenantPrepared.get(10, TimeUnit.SECONDS);
+    Response response = tenantPrepared.get(10, TimeUnit.SECONDS);
 
-      String failureMessage = String.format("Tenant preparation failed: %s: %s",
-          response.getStatusCode(), response.getBody());
+    String failureMessage = String.format("Tenant preparation failed: %s: %s",
+      response.getStatusCode(), response.getBody());
 
-      assertThat(failureMessage,
-        response.getStatusCode(), is(201));
+    assertThat(failureMessage,
+      response.getStatusCode(), is(201));
   }
 
   private static void removeTenant(String tenantId)

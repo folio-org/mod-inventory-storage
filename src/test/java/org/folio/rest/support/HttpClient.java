@@ -21,17 +21,11 @@ public class HttpClient {
     client = vertx.createHttpClient();
   }
 
-  public void post(URL url,
-            Object body,
-            Handler<HttpClientResponse> responseHandler) {
-
-    post(url, body, null, responseHandler);
-  }
-
-  public void post(URL url,
-            Object body,
-            String tenantId,
-            Handler<HttpClientResponse> responseHandler) {
+  public void post(
+    URL url,
+    Object body,
+    String tenantId,
+    Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
 
@@ -52,16 +46,11 @@ public class HttpClient {
     request.end(encodedBody);
   }
 
-  public void get(URL url,
-           Handler<HttpClientResponse> responseHandler) {
-
-    get(url, null, responseHandler);
-  }
-
-  public void put(URL url,
-                  Object body,
-                  String tenantId,
-                  Handler<HttpClientResponse> responseHandler) {
+  public void put(
+    URL url,
+    Object body,
+    String tenantId,
+    Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.putAbs(url.toString(), responseHandler);
 
@@ -75,16 +64,18 @@ public class HttpClient {
     request.end(Json.encodePrettily(body));
   }
 
-  public void get(URL url,
-                   String tenantId,
-                   Handler<HttpClientResponse> responseHandler) {
+  public void get(
+    URL url,
+    String tenantId,
+    Handler<HttpClientResponse> responseHandler) {
 
     get(url.toString(), tenantId, responseHandler);
   }
 
-  public void get(String url,
-           String tenantId,
-           Handler<HttpClientResponse> responseHandler) {
+  public void get(
+    String url,
+    String tenantId,
+    Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.getAbs(url, responseHandler);
 
@@ -97,17 +88,18 @@ public class HttpClient {
     request.end();
   }
 
-  public void delete(URL url,
-              String tenantId,
-              Handler<HttpClientResponse> responseHandler) {
+  public void delete(
+    URL url,
+    String tenantId,
+    Handler<HttpClientResponse> responseHandler) {
 
     delete(url.toString(), tenantId, responseHandler);
   }
 
-
-  public void delete(String url,
-              String tenantId,
-              Handler<HttpClientResponse> responseHandler) {
+  public void delete(
+    String url,
+    String tenantId,
+    Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.deleteAbs(url, responseHandler);
 

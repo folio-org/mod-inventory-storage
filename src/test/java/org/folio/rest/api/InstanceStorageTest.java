@@ -72,8 +72,10 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canCreateAnInstance()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -113,8 +115,10 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canCreateAnInstanceWithoutProvidingID()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     JsonObject instanceToCreate = smallAngryPlanet(null);
 
@@ -149,8 +153,10 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void cannotCreateAnInstanceWithIDThatIsNotUUID()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     String id = "6556456";
 
@@ -183,8 +189,10 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canCreateAnInstanceAtSpecificLocation()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -258,8 +266,10 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canReplaceAnInstanceAtSpecificLocation()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -291,8 +301,11 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
-  public void canDeleteAnInstance() throws InterruptedException,
-    MalformedURLException, TimeoutException, ExecutionException {
+  public void canDeleteAnInstance()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
 
     UUID id = UUID.randomUUID();
 
@@ -321,8 +334,10 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canGetInstanceById()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -673,8 +688,7 @@ public class InstanceStorageTest extends TestBase {
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
 
-    client.post(instancesStorageUrl(""), instance,
-      ResponseHandler.any(postCompleted));
+    client.post(instancesStorageUrl(""), instance, null, ResponseHandler.any(postCompleted));
 
     Response response = postCompleted.get(5, TimeUnit.SECONDS);
 
@@ -692,7 +706,7 @@ public class InstanceStorageTest extends TestBase {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(getInstanceUrl, ResponseHandler.any(getCompleted));
+    client.get(getInstanceUrl, null, ResponseHandler.any(getCompleted));
 
     Response response = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -707,7 +721,7 @@ public class InstanceStorageTest extends TestBase {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(instancesStorageUrl(""), ResponseHandler.any(getCompleted));
+    client.get(instancesStorageUrl(""), null, ResponseHandler.any(getCompleted));
 
     Response response = getCompleted.get(5, TimeUnit.SECONDS);
 

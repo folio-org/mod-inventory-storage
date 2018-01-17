@@ -658,7 +658,7 @@ public class ItemStorageTest extends TestBase {
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
 
-    client.post(itemsStorageUrl(""), smallAngryPlanet(), ResponseHandler.any(postCompleted));
+    client.post(itemsStorageUrl(""), smallAngryPlanet(), null, ResponseHandler.any(postCompleted));
 
     Response response = postCompleted.get(5, TimeUnit.SECONDS);
 
@@ -676,7 +676,7 @@ public class ItemStorageTest extends TestBase {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(getInstanceUrl, ResponseHandler.any(getCompleted));
+    client.get(getInstanceUrl, null, ResponseHandler.any(getCompleted));
 
     Response response = getCompleted.get(5, TimeUnit.SECONDS);
 
@@ -691,7 +691,7 @@ public class ItemStorageTest extends TestBase {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(itemsStorageUrl(""), ResponseHandler.any(getCompleted));
+    client.get(itemsStorageUrl(""), null, ResponseHandler.any(getCompleted));
 
     Response response = getCompleted.get(5, TimeUnit.SECONDS);
 
