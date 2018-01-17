@@ -1,6 +1,8 @@
 package org.folio.rest.support.client;
 
 import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -8,8 +10,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.JsonResponse;
-import org.folio.rest.support.ResponseHandler;
 
 /**
  *
@@ -25,9 +25,11 @@ public class ShelfLocationsClient {
   }
 
   public String create(String name)
-          throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
-    CompletableFuture<JsonResponse> completed = new CompletableFuture();
+    CompletableFuture<Response> completed = new CompletableFuture<>();
 
     JsonObject shelfLocationRequest = new JsonObject()
       .put("name", name);
@@ -35,7 +37,7 @@ public class ShelfLocationsClient {
     client.post(shelfLocationsUrl, shelfLocationRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(completed));
 
-    JsonResponse response = completed.get(5, TimeUnit.SECONDS);
+    Response response = completed.get(5, TimeUnit.SECONDS);
 
     return response.getJson().getString("id");
   }

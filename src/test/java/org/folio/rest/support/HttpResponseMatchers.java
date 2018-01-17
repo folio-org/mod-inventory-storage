@@ -5,8 +5,8 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 public class HttpResponseMatchers {
-  public static Matcher<TextResponse> statusCodeIs(int statusCode) {
-    return new TypeSafeDiagnosingMatcher<TextResponse>() {
+  public static Matcher<Response> statusCodeIs(int statusCode) {
+    return new TypeSafeDiagnosingMatcher<Response>() {
       @Override
       public void describeTo(Description description) {
         description.appendText(
@@ -14,12 +14,12 @@ public class HttpResponseMatchers {
       }
 
       @Override
-      protected boolean matchesSafely(TextResponse textResponse, Description description) {
-        boolean matches = textResponse.getStatusCode() == statusCode;
+      protected boolean matchesSafely(Response Response, Description description) {
+        boolean matches = Response.getStatusCode() == statusCode;
 
         if(!matches) {
           description.appendText(String.format("Response: %s",
-            textResponse.toString()));
+            Response.toString()));
         }
 
         return matches;

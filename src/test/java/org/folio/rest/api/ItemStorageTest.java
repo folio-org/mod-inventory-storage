@@ -79,12 +79,12 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = nod(id, holdingsRecordId);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
@@ -102,7 +102,7 @@ public class ItemStorageTest extends TestBase {
     assertThat(itemFromPost.getString("temporaryLocationId"),
       is(annexLocationId));
 
-    JsonResponse getResponse = getById(id);
+    Response getResponse = getById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
@@ -134,12 +134,12 @@ public class ItemStorageTest extends TestBase {
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create item: %s", postResponse.getBody()),
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
@@ -148,7 +148,7 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(itemFromPost.getString("id"), is(id.toString()));
 
-    JsonResponse getResponse = getById(id);
+    Response getResponse = getById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
@@ -166,12 +166,12 @@ public class ItemStorageTest extends TestBase {
 
     JsonObject itemToCreate = nod(null, holdingsRecordId);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
@@ -181,7 +181,7 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(newId, is(notNullValue()));
 
-    JsonResponse getResponse = getById(UUID.fromString(newId));
+    Response getResponse = getById(UUID.fromString(newId));
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
@@ -215,11 +215,12 @@ public class ItemStorageTest extends TestBase {
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("temporaryLocationId", badLocation);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
-    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
@@ -244,12 +245,12 @@ public class ItemStorageTest extends TestBase {
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLocationId);
 
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.text(createCompleted));
 
-    TextResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
@@ -272,12 +273,12 @@ public class ItemStorageTest extends TestBase {
     itemToCreate.put("holdingsRecordId", UUID.randomUUID().toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
-    CompletableFuture<JsonResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    JsonResponse postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
@@ -308,7 +309,7 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse getResponse = getById(id);
+    Response getResponse = getById(id);
 
     //PUT currently cannot return a response
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -424,7 +425,7 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    JsonResponse getResponse = getById(id);
+    Response getResponse = getById(id);
 
     //PUT currently cannot return a response
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -485,8 +486,8 @@ public class ItemStorageTest extends TestBase {
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<JsonResponse> firstPageCompleted = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> secondPageCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> firstPageCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> secondPageCompleted = new CompletableFuture<>();
 
     client.get(itemsStorageUrl("") + "?limit=3", StorageTestSuite.TENANT_ID,
       ResponseHandler.json(firstPageCompleted));
@@ -494,8 +495,8 @@ public class ItemStorageTest extends TestBase {
     client.get(itemsStorageUrl("") + "?limit=3&offset=3", StorageTestSuite.TENANT_ID,
       ResponseHandler.json(secondPageCompleted));
 
-    JsonResponse firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
-    JsonResponse secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
+    Response firstPageResponse = firstPageCompleted.get(5, TimeUnit.SECONDS);
+    Response secondPageResponse = secondPageCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(firstPageResponse.getStatusCode(), is(200));
     assertThat(secondPageResponse.getStatusCode(), is(200));
@@ -526,14 +527,14 @@ public class ItemStorageTest extends TestBase {
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
     String url = itemsStorageUrl("") + "?query=barcode=036000291452";
 
     client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(searchResponse.getStatusCode(), is(200));
 
@@ -561,14 +562,14 @@ public class ItemStorageTest extends TestBase {
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<JsonResponse> searchCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
     String url = itemsStorageUrl("") + "?query=barcode=673274826203";
 
     client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    JsonResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(searchResponse.getStatusCode(), is(200));
 
@@ -596,14 +597,14 @@ public class ItemStorageTest extends TestBase {
     createItem(temeraire());
     createItem(interestingTimes());
 
-    CompletableFuture<TextResponse> searchCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
     String url = itemsStorageUrl("") + "?query=t";
 
     client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
 
-    TextResponse searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(searchResponse.getStatusCode(), is(500));
 
@@ -635,12 +636,12 @@ public class ItemStorageTest extends TestBase {
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     client.get(itemsStorageUrl(""), StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
 
-    JsonResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
 
     JsonObject responseBody = response.getJson();
 
@@ -655,12 +656,11 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<TextResponse> postCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
 
-    client.post(itemsStorageUrl(""), smallAngryPlanet(),
-      ResponseHandler.text(postCompleted));
+    client.post(itemsStorageUrl(""), smallAngryPlanet(), ResponseHandler.any(postCompleted));
 
-    TextResponse response = postCompleted.get(5, TimeUnit.SECONDS);
+    Response response = postCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -674,11 +674,11 @@ public class ItemStorageTest extends TestBase {
     URL getInstanceUrl = itemsStorageUrl(String.format("/%s",
       UUID.randomUUID().toString()));
 
-    CompletableFuture<TextResponse> getCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(getInstanceUrl, ResponseHandler.text(getCompleted));
+    client.get(getInstanceUrl, ResponseHandler.any(getCompleted));
 
-    TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -689,11 +689,11 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    CompletableFuture<TextResponse> getCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(itemsStorageUrl(""), ResponseHandler.text(getCompleted));
+    client.get(itemsStorageUrl(""), ResponseHandler.any(getCompleted));
 
-    TextResponse response = getCompleted.get(5, TimeUnit.SECONDS);
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -731,25 +731,25 @@ public class ItemStorageTest extends TestBase {
 
     String url8 = url+URLEncoder.encode("materialType="+ videoMaterialTypeID, "UTF-8");
 
-    CompletableFuture<JsonResponse> cqlCF1 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> cqlCF2 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> cqlCF3 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> cqlCF4 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> cqlCF5 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> cqlCF6 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> cqlCF7 = new CompletableFuture<>();
-    CompletableFuture<JsonResponse> cqlCF8 = new CompletableFuture<>();
+    CompletableFuture<Response> cqlCF1 = new CompletableFuture<>();
+    CompletableFuture<Response> cqlCF2 = new CompletableFuture<>();
+    CompletableFuture<Response> cqlCF3 = new CompletableFuture<>();
+    CompletableFuture<Response> cqlCF4 = new CompletableFuture<>();
+    CompletableFuture<Response> cqlCF5 = new CompletableFuture<>();
+    CompletableFuture<Response> cqlCF6 = new CompletableFuture<>();
+    CompletableFuture<Response> cqlCF7 = new CompletableFuture<>();
+    CompletableFuture<Response> cqlCF8 = new CompletableFuture<>();
 
     String[] urls = new String[]{url1, url2, url3, url4, url5, url6, url7, url8};
-    CompletableFuture<JsonResponse>[] cqlCF = new CompletableFuture[]
+    CompletableFuture<Response>[] cqlCF = new CompletableFuture[]
       {cqlCF1, cqlCF2, cqlCF3, cqlCF4, cqlCF5, cqlCF6, cqlCF7, cqlCF8};
 
     for(int i=0; i<8; i++){
-      CompletableFuture<JsonResponse> cf = cqlCF[i];
+      CompletableFuture<Response> cf = cqlCF[i];
       String cqlURL = urls[i];
       client.get(cqlURL, StorageTestSuite.TENANT_ID, ResponseHandler.json(cf));
 
-      JsonResponse cqlResponse = cf.get(5, TimeUnit.SECONDS);
+      Response cqlResponse = cf.get(5, TimeUnit.SECONDS);
       assertThat(cqlResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
       System.out.println(cqlResponse.getBody() +
         "\nStatus - " + cqlResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + cqlURL);
@@ -770,13 +770,13 @@ public class ItemStorageTest extends TestBase {
     }
   }
 
-  private JsonResponse getById(UUID id)
+  private Response getById(UUID id)
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     URL getItemUrl = itemsStorageUrl(String.format("/%s", id));
 
-    CompletableFuture<JsonResponse> getCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     client.get(getItemUrl, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(getCompleted));
@@ -784,17 +784,14 @@ public class ItemStorageTest extends TestBase {
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
-  private void createItem(JsonObject itemToCreate)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    CompletableFuture<TextResponse> createCompleted = new CompletableFuture<>();
+  private void createItem(JsonObject itemToCreate) {
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     try {
       client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
         ResponseHandler.text(createCompleted));
 
-      TextResponse response = createCompleted.get(2, TimeUnit.SECONDS);
+      Response response = createCompleted.get(2, TimeUnit.SECONDS);
 
       if (response.getStatusCode() != 201) {
         System.out.println("WARNING!!!!! Create item preparation failed: "

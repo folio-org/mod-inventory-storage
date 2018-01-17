@@ -7,8 +7,8 @@ import io.vertx.ext.sql.ResultSet;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.TextResponse;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -123,13 +123,13 @@ public class StorageTestSuite {
   static void deleteAll(URL rootUrl) {
     HttpClient client = new HttpClient(getVertx());
 
-    CompletableFuture<TextResponse> deleteAllFinished = new CompletableFuture<>();
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     try {
       client.delete(rootUrl, TENANT_ID,
-        ResponseHandler.text(deleteAllFinished));
+        ResponseHandler.any(deleteAllFinished));
 
-      TextResponse response = deleteAllFinished.get(5, TimeUnit.SECONDS);
+      Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
       if(response.getStatusCode() != 204) {
         Assert.fail("Delete all preparation failed: " +
@@ -204,14 +204,14 @@ public class StorageTestSuite {
     TimeoutException,
     MalformedURLException {
 
-    CompletableFuture<TextResponse> tenantPrepared = new CompletableFuture<>();
+    CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
 
       HttpClient client = new HttpClient(vertx);
 
       client.post(storageUrl("/_/tenant"), null, tenantId,
-        ResponseHandler.text(tenantPrepared));
+        ResponseHandler.any(tenantPrepared));
 
-      TextResponse response = tenantPrepared.get(10, TimeUnit.SECONDS);
+      Response response = tenantPrepared.get(10, TimeUnit.SECONDS);
 
       String failureMessage = String.format("Tenant preparation failed: %s: %s",
           response.getStatusCode(), response.getBody());
@@ -226,14 +226,14 @@ public class StorageTestSuite {
     TimeoutException,
     MalformedURLException {
 
-    CompletableFuture<TextResponse> tenantDeleted = new CompletableFuture<>();
+    CompletableFuture<Response> tenantDeleted = new CompletableFuture<>();
 
     HttpClient client = new HttpClient(vertx);
 
     client.delete(storageUrl("/_/tenant"), tenantId,
-      ResponseHandler.text(tenantDeleted));
+      ResponseHandler.any(tenantDeleted));
 
-    TextResponse response = tenantDeleted.get(10, TimeUnit.SECONDS);
+    Response response = tenantDeleted.get(10, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant cleanup failed: %s: %s",
       response.getStatusCode(), response.getBody());
