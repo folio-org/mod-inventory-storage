@@ -9,7 +9,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
-import org.folio.rest.support.JsonResponse;
+import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.Assert;
@@ -257,10 +257,10 @@ public class LoanTypeTest extends TestBase {
   private JsonObject send(URL url, HttpMethod method, String content,
                           int expectedStatusCode) {
 
-    CompletableFuture<JsonResponse> future = new CompletableFuture<>();
-    Handler<HttpClientResponse> handler = ResponseHandler.json(future);
+    CompletableFuture<Response> future = new CompletableFuture<>();
+    Handler<HttpClientResponse> handler = ResponseHandler.any(future);
     send(url, method, content, handler);
-    JsonResponse response;
+    Response response;
 
     try {
       response = future.get(5, TimeUnit.SECONDS);

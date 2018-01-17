@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import io.vertx.core.Vertx;
 import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.http.ResourceClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -14,10 +15,11 @@ import java.util.concurrent.TimeoutException;
  * StorageTestSuite.after() to allow to run a single test class, for example from within an
  * IDE during development.
  */
-@SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
-public class TestBase {
+public abstract class TestBase {
   private static boolean invokeStorageTestSuiteAfter = false;
   static HttpClient client;
+  static ResourceClient instancesClient;
+  static ResourceClient holdingsClient;
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -29,6 +31,8 @@ public class TestBase {
     }
 
     client = new HttpClient(vertx);
+    instancesClient = ResourceClient.forInstances(client);
+    holdingsClient = ResourceClient.forHoldings(client);
   }
 
   @AfterClass
