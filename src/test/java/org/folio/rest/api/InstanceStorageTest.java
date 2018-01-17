@@ -2,7 +2,10 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.*;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
@@ -10,6 +13,7 @@ import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.rest.support.client.ShelfLocationsClient;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
@@ -32,13 +36,13 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class InstanceStorageTest extends TestBase {
-  private UUID mainLibraryLocationId;
-  private UUID annexLocationId;
-  private UUID bookMaterialTypeId;
-  private UUID canCirculateLoanTypeId;
+  private static UUID mainLibraryLocationId;
+  private static UUID annexLocationId;
+  private static UUID bookMaterialTypeId;
+  private static UUID canCirculateLoanTypeId;
 
-  @Before
-  public void beforeEach()
+  @BeforeClass
+  public static void beforeAny()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -63,6 +67,13 @@ public class InstanceStorageTest extends TestBase {
 
     canCirculateLoanTypeId = UUID.fromString(new LoanTypesClient(client,
       loanTypesStorageUrl("")).create("Can Circulate"));
+  }
+
+  @Before
+  public void beforeEach() throws MalformedURLException {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
   @After
