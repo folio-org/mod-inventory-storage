@@ -10,7 +10,8 @@
 * Add the following b-tree indexes for `instances` (MODINVSTOR-48):
   - `contributors`
   - `publication`
-* Use CQL to get an instance by ID (in order to use available index, MODINVSTOR-48)
+* Use CQL to get instance, item or holding by ID (in order to use available index, MODINVSTOR-48)
+* Introduce searching for instances with an item with a given barcode (e.g. `item.barcode==683029605940`, MODINVSTOR-49)
 
 ## 7.1.0 2018-01-08
 
