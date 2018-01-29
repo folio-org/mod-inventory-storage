@@ -2,10 +2,7 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
-import org.folio.rest.support.JsonErrorResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
@@ -16,11 +13,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -641,6 +641,70 @@ public class InstanceStorageTest extends TestBase {
     canSort(String.format("item.barcode==706949453641 and holdingsRecords.permanentLocationId==%s",
       mainLibraryLocationId),
       "Long Way to a Small Angry Planet");
+  }
+
+  // This is intended to demonstrate that instances without holdings or items
+  // are not excluded from searching
+  @Test
+  public void canSearchByTitleAndBarcodeWithMissingHoldingsAndItemsAndStillGetInstances()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException, UnsupportedEncodingException {
+
+    UUID smallAngryPlanetInstanceId = UUID.randomUUID();
+    UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
+
+    createInstance(smallAngryPlanet(smallAngryPlanetInstanceId));
+
+    createHoldings(new HoldingRequestBuilder()
+      .withId(mainLibrarySmallAngryHoldingId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .forInstance(smallAngryPlanetInstanceId)
+      .create());
+
+    createItem(new ItemRequestBuilder()
+      .forHolding(mainLibrarySmallAngryHoldingId)
+      .withBarcode("706949453641")
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create());
+
+    UUID nodInstanceId = UUID.randomUUID();
+
+    createInstance(nod(nodInstanceId));
+
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
+
+    String url = instancesStorageUrl("").toString() + "?query="
+        + URLEncoder.encode("item.barcode=706949453641* or title=Nod*",
+      StandardCharsets.UTF_8.name());
+
+    client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(200));
+    JsonObject responseBody = searchResponse.getJson();
+
+    assertThat(responseBody.getInteger("totalRecords"), is(2));
+
+    List<JsonObject> foundInstances = JsonArrayHelper.toList(responseBody.getJsonArray("instances"));
+
+    assertThat(foundInstances.size(), is(2));
+
+    Optional<JsonObject> firstInstance = foundInstances.stream()
+      .filter(instance -> instance.getString("id").equals(smallAngryPlanetInstanceId.toString()))
+      .findFirst();
+
+    Optional<JsonObject> secondInstance = foundInstances.stream()
+      .filter(instance -> instance.getString("id").equals(nodInstanceId.toString()))
+      .findFirst();
+
+    assertThat("Instance with barcode should be found",
+      firstInstance.isPresent(), is(true));
+
+    assertThat("Instance with title and no holding or items, should be found",
+      secondInstance.isPresent(), is(true));
   }
 
   @Test
