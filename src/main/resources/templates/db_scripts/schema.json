@@ -396,6 +396,7 @@
     {
       "viewName": "instance_holding_view",
       "pkColumnName": "_id",
+      "joinType": "LEFT JOIN",
       "join": [
         {
           "table": {
@@ -413,6 +414,7 @@
     {
       "viewName": "instance_holding_item_view",
       "pkColumnName": "_id",
+      "joinType": "LEFT JOIN",
       "join": [
         {
           "table": {
