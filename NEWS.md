@@ -1,4 +1,4 @@
-## 7.2.1 Unreleased
+## 7.2.2 Unreleased
 
 * Add the following GIN indexes for `instances` (MODINVSTOR-48): 
   - `contributors`
@@ -12,7 +12,8 @@
   - `publication`
 * Use CQL to get instance, item or holding by ID (in order to use available index, MODINVSTOR-48)
 * Introduce searching for instances with an item with a given barcode (e.g. `item.barcode==683029605940`, MODINVSTOR-49)
-* Searching (which includes a barcode) includes instances that do not have a holding or a item (MODINVSTOR-55) 
+* Searching (which includes a barcode) includes instances that do not have a holding or a item (MODINVSTOR-55)
+* Searching containing barcode (or other item properties) is currently only supported on small sets of records
 
 ## 7.1.0 2018-01-08
 
