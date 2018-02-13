@@ -6,7 +6,7 @@
   "permanentLoanTypeId": "2b94c631-fca9-a892-c730-03ee529ffe27",
   "temporaryLoanTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0e",
   "status": {
-    "name": "Checked out"
+    "name": "Available"
   },
   "pieceIdentifiers": ["Copy 2"],
   "numberOfPieces": "1",
