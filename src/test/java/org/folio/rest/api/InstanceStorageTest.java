@@ -19,6 +19,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,15 +28,20 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.folio.rest.support.JsonObjectMatchers.contributorMatches;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class InstanceStorageTest extends TestBase {
+  private static final String TEMERAIRE_SOURCE_BINARY_BASE64 =
+      "MDAxMzluYW0gIDIyMDAwNzNJYSA0NTAwMDIwMDAxNTAwMDAwMDIwMDAxODAwMDE1MTAwMDAxNzAwMDMzMjQ1MDAxNTAwM" +
+      "DUwHiAgH2ExNDQ3Mjk0MTMwHiAgH2E5NzgxNDQ3Mjk0MTMwHjEgH2FOb3ZpaywgTmFvbWkeMDAfYVRlbWVyYWlyZSAeHQ==";
   private static UUID mainLibraryLocationId;
   private static UUID annexLocationId;
   private static UUID bookMaterialTypeId;
@@ -122,6 +128,55 @@ public class InstanceStorageTest extends TestBase {
     JsonArray identifiersFromGet = instanceFromGet.getJsonArray("identifiers");
     assertThat(identifiersFromGet.size(), is(1));
     assertThat(identifiersFromGet, hasItem(identifierMatches("isbn", "9781473619777")));
+  }
+
+  private void isTemeraire(JsonObject instance, UUID id) {
+    assertThat(instance.getString("id"), is(id.toString()));
+    assertThat(instance.getString("title"), is("Temeraire"));
+
+    JsonArray identifiers = instance.getJsonArray("identifiers");
+    assertThat(identifiers.size(), is(2));
+    assertThat(identifiers, hasItem(identifierMatches("isbn", "9780007258710")));
+    assertThat(identifiers, hasItem(identifierMatches("isbn", "0007258712")));
+
+    JsonArray contributors = instance.getJsonArray("contributors");
+    assertThat(contributors.size(), is(1));
+    assertThat(contributors, hasItem(contributorMatches("personal name", "Novik, Naomi")));
+
+    assertThat(instance.getString("sourceBinaryBase64"), is(TEMERAIRE_SOURCE_BINARY_BASE64));
+    assertThat(instance.getString("sourceBinaryFormat"), is("marc21"));
+    String base64 = instance.getString("sourceBinaryBase64");
+    String marc21 = new String(Base64.getDecoder().decode(base64), StandardCharsets.UTF_8);
+    assertThat(marc21, containsString("Temeraire"));
+  }
+
+  @Test
+  public void canCreateAnInstanceWithAllFields()
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+
+    URL postInstanceUrl = instancesStorageUrl("");
+
+    JsonObject instanceToCreate = temeraire(id);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(postInstanceUrl, instanceToCreate, StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(createCompleted));
+
+    Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    isTemeraire(response.getJson(), id);
+
+    Response getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    isTemeraire(getResponse.getJson(), id);
   }
 
   @Test
@@ -1036,8 +1091,13 @@ public class InstanceStorageTest extends TestBase {
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor("personal name", "Novik, Naomi"));
-    return createInstanceRequest(id, "TEST", "Temeraire",
-      identifiers, contributors, "resource type id");
+
+    JsonObject jsonObject = createInstanceRequest(id, "TEST", "Temeraire",
+        identifiers, contributors, "resource type id");
+    jsonObject.put("sourceBinaryBase64", TEMERAIRE_SOURCE_BINARY_BASE64);
+    jsonObject.put("sourceBinaryFormat", "marc21");
+
+    return jsonObject;
   }
 
   private JsonObject interestingTimes(UUID id) {

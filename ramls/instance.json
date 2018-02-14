@@ -8,6 +8,13 @@
     "source": {
       "type": "string"
     },
+    "sourceBinaryBase64": {
+      "type": "string"
+    },
+    "sourceBinaryFormat": {
+      "type": "string",
+      "enum": ["marc21", "mods"]
+    },
     "title": {
       "type": "string"
     },
