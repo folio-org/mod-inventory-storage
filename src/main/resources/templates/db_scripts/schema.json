@@ -24,6 +24,12 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
       ]
     },
     {
@@ -246,6 +252,12 @@
         },
         {
           "fieldName": "materialTypeId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "holdingsRecordId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
