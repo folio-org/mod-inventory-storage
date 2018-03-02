@@ -10,7 +10,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loantype;
 import org.folio.rest.jaxrs.model.Loantypes;
 import org.folio.rest.jaxrs.resource.LoanTypesResource;
-import org.folio.rest.persist.DatabaseExceptionUtils;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -129,7 +129,7 @@ public class LoanTypeAPI implements LoanTypesResource {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostLoanTypesResponse.withJsonCreated(
                       LOCATION_PREFIX + ret, stream)));
                 } else {
-                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
                     internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
                     return;
@@ -163,7 +163,7 @@ public class LoanTypeAPI implements LoanTypesResource {
             reply -> {
               try {
                 if (reply.failed()) {
-                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
                     internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
                     return;
@@ -206,7 +206,7 @@ public class LoanTypeAPI implements LoanTypesResource {
             reply -> {
               try {
                 if (reply.failed()) {
-                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
                     internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
                     return;
@@ -260,7 +260,7 @@ public class LoanTypeAPI implements LoanTypesResource {
                         .withNoContent()));
                   }
                 } else {
-                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
                     internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
                     return;

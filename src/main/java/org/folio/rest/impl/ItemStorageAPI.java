@@ -10,7 +10,7 @@ import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.DatabaseExceptionUtils;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
@@ -234,7 +234,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                                     .withJsonCreated(reply.result(), stream)));
                             }
                             else {
-                              String message = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                              String message = PgExceptionUtil.badRequestMessage(reply.cause());
                               if (message != null) {
                                 asyncResultHandler.handle(
                                     Future.succeededFuture(
@@ -444,7 +444,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                                         PutItemStorageItemsByItemIdResponse
                                           .withNoContent()));
                                   } else {
-                                    String message = DatabaseExceptionUtils.badRequestMessage(update.cause());
+                                    String message = PgExceptionUtil.badRequestMessage(update.cause());
                                     if (message != null) {
                                       asyncResultHandler.handle(
                                           Future.succeededFuture(
