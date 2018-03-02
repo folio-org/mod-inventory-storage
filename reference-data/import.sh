@@ -12,7 +12,7 @@ classification_type_storage_address=http://localhost:9130/classification-types
 shelf_location_storage_address=http://localhost:9130/shelf-locations
 platform_storage_address=http://localhost:9130/platforms
 
-for f in ./mtypes/*.json; do
+for f in ./material-types/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
@@ -20,7 +20,7 @@ for f in ./mtypes/*.json; do
          "${material_type_storage_address}"
 done
 
-for f in ./loantypes/*.json; do
+for f in ./loan-types/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
@@ -36,7 +36,7 @@ for f in ./shelf-locations/*.json; do
          "${shelf_location_storage_address}"
 done
 
-for f in ./identifiertypes/*.json; do
+for f in ./identifier-types/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
@@ -44,7 +44,7 @@ for f in ./identifiertypes/*.json; do
          "${identifier_type_storage_address}"
 done
 
-for f in ./contributornametypes/*.json; do
+for f in ./contributor-name-types/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
@@ -52,7 +52,7 @@ for f in ./contributornametypes/*.json; do
          "${contributor_name_type_storage_address}"
 done
 
-for f in ./contributortypes/*.json; do
+for f in ./contributor-types/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
@@ -60,7 +60,7 @@ for f in ./contributortypes/*.json; do
          "${contributor_type_storage_address}"
 done
 
-for f in ./instancetypes/*.json; do
+for f in ./instance-types/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
@@ -68,7 +68,7 @@ for f in ./instancetypes/*.json; do
          "${instance_type_storage_address}"
 done
 
-for f in ./instanceformats/*.json; do
+for f in ./instance-formats/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
@@ -76,7 +76,7 @@ for f in ./instanceformats/*.json; do
          "${instance_format_storage_address}"
 done
 
-for f in ./classificationtypes/*.json; do
+for f in ./classification-types/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
