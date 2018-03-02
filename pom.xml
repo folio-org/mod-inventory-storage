@@ -22,7 +22,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>18.0.1-SNAPSHOT</version>
+      <version>19.0.0</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
