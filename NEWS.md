@@ -1,4 +1,4 @@
-## 7.2.2 Unreleased
+## 7.2.2 2018-03-02
 
 * Add the following GIN indexes for `instances` (MODINVSTOR-48): 
   - `contributors`
