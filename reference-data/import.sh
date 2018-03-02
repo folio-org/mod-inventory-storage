@@ -78,7 +78,7 @@ do
       json=$(ls ${dir}/${endpoint}/*.json)
       for j in $json 
       do 
-        curl $curlOpts -X $method -d @$j ${okapiUrl}/${endpoint}"
+        curl $curlOpts -X $method -d @$j ${okapiUrl}/${endpoint}
       done
     fi
   done
