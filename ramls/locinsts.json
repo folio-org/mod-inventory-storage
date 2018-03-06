@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "locinsts": {
+      "id": "locinsts",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "locinst.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "locinsts",
+    "totalRecords"
+  ]
+}

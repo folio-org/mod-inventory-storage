@@ -40,6 +40,19 @@
       ]
     },
     {
+      "tableName": "locinstitution",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "identifier_type",
       "withMetadata": false,
       "pkColumnName": "_id",

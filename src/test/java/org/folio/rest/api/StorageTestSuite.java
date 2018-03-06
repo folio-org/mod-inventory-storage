@@ -34,7 +34,8 @@ import static org.junit.Assert.assertThat;
   ItemStorageTest.class,
   LoanTypeTest.class,
   MaterialTypeTest.class,
-  ShelfLocationsTest.class
+  ShelfLocationsTest.class,
+  LocationUnitTest.class
 })
 @SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
