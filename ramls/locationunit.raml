@@ -62,16 +62,17 @@ resourceTypes:
           exampleItem: !include examples/locinst.json
           schema: locinst.json
       get:
+        description: "Get an institution"
         responses:
-          501:
-            description: "Not implemented yet"
+          200:
+            description: "OK"
       put:
         responses:
-          501:
-            description: "Not implemented yet"
+          204:
+            description: "Institution updated"
       delete:
         responses:
-          501:
-            description: "Not implemented yet"
+          204:
+            description: "Institution deleted"
 
 
