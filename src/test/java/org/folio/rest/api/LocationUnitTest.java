@@ -25,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
 
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.http.InterfaceUrls.*;
@@ -49,7 +50,6 @@ public class LocationUnitTest {
     TimeoutException,
     MalformedURLException {
 
-    logger.warn("LocationUnitTest: beforeEach XXXX");
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(institutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
@@ -71,7 +71,6 @@ public class LocationUnitTest {
     TimeoutException,
     MalformedURLException {
 
-    logger.warn("ABout to start canCreateAnInst XXXX");
     Response response = createInst("Institute of MetaPhysics", "MPI");
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
@@ -80,31 +79,30 @@ public class LocationUnitTest {
     assertThat(response.getJson().getString("shortcode"), is("MPI"));
   }
 
-/*  @Test
-  public void cannotCreateLocationUnitWithSameName()
+  @Test
+  public void cannotCreateInstWithSameName()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
     MalformedURLException {
 
-    createInst("Institute of MetaPhysics");
-    Response response = createInst("Institute of MetaPhysics");
+    createInst("Institute of MetaPhysics", "MPI");
+    Response response = createInst("Institute of MetaPhysics", "MPI");
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
-*/
- /*
+
   @Test
-  public void cannotCreateLocationUnitWithSameId()
+  public void cannotCreateInstSameId()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    createInst(id, "Institute of MetaPhysics");
-    Response response = createInst(id, "Annex Library");
+    createInst(id, "Institute of MetaPhysics", "MPI");
+    Response response = createInst(id, "The Other Institute", "MPI");
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-  }*/
+  }
 
   @Test
   public void canGetAnInstById()
@@ -115,7 +113,7 @@ public class LocationUnitTest {
 
     UUID id = UUID.randomUUID();
     createInst(id, "Institute of MetaPhysics", "MPI");
-    Response getResponse = getById(id);
+    Response getResponse = getInstById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
@@ -135,7 +133,7 @@ public class LocationUnitTest {
 
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
-      .put("name", "Annex Library");
+      .put("name", "The Other Institute");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
@@ -147,11 +145,11 @@ public class LocationUnitTest {
 
     assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_NO_CONTENT));
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    Response getResponse = getById(id);
+    Response getResponse = getInstById(id);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("name"), is("Annex Library"));
+    assertThat(item.getString("name"), is("The Other Institute"));
   }
 
   @Test
@@ -175,6 +173,8 @@ public class LocationUnitTest {
   }
 
   /*
+  TODO - A test that checks thatn institution can not be deleted if used by
+  a location.
   @Test
   public void cannotDeleteAnInstAssociatedWithAnItem()
     throws InterruptedException,
@@ -205,6 +205,7 @@ public class LocationUnitTest {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 */
+ /* Various helpers */
   private static void send(URL url, HttpMethod method, String content,
                            String contentType, Handler<HttpClientResponse> handler) {
 
@@ -291,7 +292,7 @@ public class LocationUnitTest {
     return createLocationUnit.get(5, TimeUnit.SECONDS);
   }
 
-  private Response getById(UUID id)
+  private Response getInstById(UUID id)
     throws InterruptedException,
     ExecutionException,
     TimeoutException,

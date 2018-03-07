@@ -9,7 +9,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
@@ -210,14 +209,11 @@ public class LocationUnitAPI implements LocationUnitsResource {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = getTenant(okapiHeaders);
-        logger.warn("XXXX Get inst by id: " + id + ". ten=" + tenantId);
-        logger.warn("XXXX INST_SCHEMA_PATH=" + INST_SCHEMA_PATH + " ID=" + ID_FIELD_NAME + " TABLE=" + INSTITUTION_TABLE);
         Criteria criteria = new Criteria(INST_SCHEMA_PATH);
         criteria.addField(ID_FIELD_NAME);
         criteria.setOperation("=");
         criteria.setValue(id);
         Criterion criterion = new Criterion(criteria);
-        logger.warn("XXXX Criterion: " + criterion.toString());
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
           INSTITUTION_TABLE, Locinst.class, criterion, true,
           false, getReply -> {
