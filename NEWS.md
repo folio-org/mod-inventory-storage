@@ -1,4 +1,4 @@
-## 8.0.0 Unreleased
+## 8.0.0 2018-03-07
 
 * Upgrades RAML Module Builder to version 19.0.0 (RMB-130, MODINVSTOR-65)
 * Uses generated sources for generated code (RMB-130, MODINVSTOR-65)
