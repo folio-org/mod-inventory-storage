@@ -50,7 +50,11 @@ public class InterfaceUrls {
 
   public static URL institutionStorageUrl(String subPath)
     throws MalformedURLException {
-
     return StorageTestSuite.storageUrl("/location-units/institutions" + subPath);
+  }
+
+  public static URL campusStorageUrl(String subPath)
+    throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/location-units/campuses" + subPath);
   }
 }
