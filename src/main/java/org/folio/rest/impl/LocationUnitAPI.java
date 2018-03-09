@@ -16,11 +16,12 @@ import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Loccamp;
 import org.folio.rest.jaxrs.model.Loccamps;
 import org.folio.rest.jaxrs.model.Locinst;
 import org.folio.rest.jaxrs.model.Locinsts;
+import org.folio.rest.jaxrs.model.Loclib;
+import org.folio.rest.jaxrs.model.Loclibs;
 import org.folio.rest.jaxrs.resource.LocationUnitsResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -369,6 +370,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     return future;
   }
 
+  ////////////////////////////////////////////
   @Override
   public void deleteLocationUnitsCampuses(String lang,
     Map<String, String> okapiHeaders,
@@ -652,6 +654,295 @@ public class LocationUnitAPI implements LocationUnitsResource {
   }
 
   Future<Boolean> campInUse(String locationId, String tenantId, Context vertxContext) {
+    Future<Boolean> future = Future.future();
+    future.complete(false);
+    return future;
+  }
+
+  ////////////////////////////////////////////
+  @Override
+  public void deleteLocationUnitsLibraries(String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+    try {
+      PostgresClient postgresClient = PostgresClient.getInstance(
+        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+      postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+        tenantId, "mod_inventory_storage", CAMPUS_TABLE),
+        reply -> {
+          if (reply.succeeded()) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.DeleteLocationUnitsLibrariesResponse.noContent()
+                .build()));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.DeleteLocationUnitsLibrariesResponse
+                .withPlainInternalServerError(reply.cause().getMessage())));
+          }
+        });
+    } catch (Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        LocationUnitsResource.DeleteLocationUnitsLibrariesResponse
+          .withPlainInternalServerError(e.getMessage())));
+    }
+  }
+
+  @Override
+  public void getLocationUnitsLibraries(
+    String query, int offset, int limit,
+    String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      CQLWrapper cql = getCQL(query, limit, offset, CAMPUS_TABLE);
+      PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        .get(
+          CAMPUS_TABLE, Locinst.class, new String[]{"*"},
+          cql, true, true, reply -> {
+            if (reply.failed()) {
+              String message = logAndSaveError(reply.cause());
+              asyncResultHandler.handle(Future.succeededFuture(
+                LocationUnitsResource.GetLocationUnitsLibrariesResponse
+                  .withPlainBadRequest(getErrorResponse(message))));
+            } else {
+              Loclibs camps = new Loclibs();
+              List<Loclib> items = (List<Loclib>) reply.result().getResults();
+              camps.setLoclibs(items);
+              camps.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+              asyncResultHandler.handle(Future.succeededFuture(
+                LocationUnitsResource.GetLocationUnitsLibrariesResponse.withJsonOK(camps)));
+            }
+          });
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        LocationUnitsResource.GetLocationUnitsLibrariesResponse
+          .withPlainInternalServerError(getErrorResponse(message))));
+    }
+  }
+
+  @Override
+  public void postLocationUnitsLibraries(String lang,
+    Loclib entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) throws Exception {
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      String id = entity.getId();
+      if (id == null) {
+        id = UUID.randomUUID().toString();
+        entity.setId(id);
+      }
+      PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        .save(CAMPUS_TABLE, id, entity, reply -> {
+          try {
+            if (reply.failed()) {
+              String message = logAndSaveError(reply.cause());
+              if (isDuplicate(message)) {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  LocationUnitsResource.PostLocationUnitsLibrariesResponse
+                    .withJsonUnprocessableEntity(
+                      ValidationHelper.createValidationErrorMessage(
+                        "locinst", entity.getId(),
+                        "Institution already exists"))));
+              } else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  LocationUnitsResource.PostLocationUnitsLibrariesResponse
+                    .withPlainInternalServerError(getErrorResponse(message))));
+              }
+            } else {
+              Object responseObject = reply.result();
+              entity.setId((String) responseObject);
+              OutStream stream = new OutStream();
+              stream.setData(entity);
+              asyncResultHandler.handle(Future.succeededFuture(
+                LocationUnitsResource.PostLocationUnitsLibrariesResponse
+                  .withJsonCreated(URL_PREFIX + responseObject, stream)));
+            }
+          } catch (Exception e) {
+            String message = logAndSaveError(e);
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.PostLocationUnitsLibrariesResponse
+                .withPlainInternalServerError(getErrorResponse(message))));
+          }
+        });
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        LocationUnitsResource.PostLocationUnitsLibrariesResponse
+          .withPlainInternalServerError(getErrorResponse(message))));
+    }
+  }
+
+  @Override
+  public void getLocationUnitsLibrariesById(String id,
+    String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) throws Exception {
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
+      criteria.addField(ID_FIELD_NAME);
+      criteria.setOperation("=");
+      criteria.setValue(id);
+      Criterion criterion = new Criterion(criteria);
+      PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        .get(CAMPUS_TABLE, Loclib.class, criterion,
+          true, false, getReply -> {
+            if (getReply.failed()) {
+              String message = logAndSaveError(getReply.cause());
+              asyncResultHandler.handle(Future.succeededFuture(
+                LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
+                  .withPlainInternalServerError(getErrorResponse(message))));
+            } else {
+              List<Loclib> items = (List<Loclib>) getReply.result().getResults();
+              if (items.size() < 1) {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
+                    .withPlainNotFound(
+                      messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
+              } else if (items.size() > 1) {
+                String message = "Multiple locations found with the same id";
+                logger.error(message);
+                asyncResultHandler.handle(Future.succeededFuture(
+                  LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
+                    .withPlainInternalServerError(getErrorResponse(message))));
+              } else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                  LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
+                    .withJsonOK(items.get(0))));
+              }
+            }
+          });
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
+          .withPlainInternalServerError(
+            getErrorResponse(message))));
+    }
+  }
+
+  @Override
+  public void deleteLocationUnitsLibrariesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
+      criteria.addField(ID_FIELD_NAME);
+      criteria.setOperation("=");
+      criteria.setValue(id);
+      Criterion criterion = new Criterion(criteria);
+      try {
+        libInUse(id, tenantId, vertxContext).setHandler(res -> {
+          if (res.failed()) {
+            String message = logAndSaveError(res.cause());
+            LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+              .withPlainInternalServerError(getErrorResponse(message));
+          } else {
+            if (res.result()) {
+              asyncResultHandler.handle(Future.succeededFuture(
+                LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+                  .withPlainBadRequest("Cannot delete location, as it is in use")));
+            } else {
+              try {
+                PostgresClient.getInstance(vertxContext.owner(), tenantId)
+                  .delete(CAMPUS_TABLE, criterion, deleteReply -> {
+                    if (deleteReply.failed()) {
+                      String message = logAndSaveError(deleteReply.cause());
+                      asyncResultHandler.handle(Future.succeededFuture(
+                        LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+                          .withPlainNotFound("Not found")));
+                    } else {
+                      asyncResultHandler.handle(Future.succeededFuture(
+                        LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+                          .withNoContent()));
+                    }
+                  });
+              } catch (Exception e) {
+                String message = logAndSaveError(e);
+                asyncResultHandler.handle(Future.succeededFuture(
+                  LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+                    .withPlainInternalServerError(getErrorResponse(message))));
+              }
+            }
+          }
+        });
+      } catch (Exception e) {
+        String message = logAndSaveError(e);
+        asyncResultHandler.handle(Future.succeededFuture(
+          LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+            .withPlainInternalServerError(
+              getErrorResponse(message))));
+      }
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+          .withPlainInternalServerError(
+            getErrorResponse(message))));
+    }
+  }
+
+  @Override
+  public void putLocationUnitsLibrariesById(
+    String id,
+    String lang, Loclib entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) throws Exception {
+    try {
+      if (!id.equals(entity.getId())) {
+        String message = "Illegal operation: id cannot be changed";
+        asyncResultHandler.handle(Future.succeededFuture(
+          LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
+            .withPlainBadRequest(message)));
+        return;
+      }
+      String tenantId = getTenant(okapiHeaders);
+      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
+      criteria.addField(ID_FIELD_NAME);
+      criteria.setOperation("=");
+      criteria.setValue(id);
+      Criterion criterion = new Criterion(criteria);
+      try {
+        PostgresClient.getInstance(vertxContext.owner(), tenantId)
+          .update(CAMPUS_TABLE, entity, criterion,
+            false, updateReply -> {
+              if (updateReply.failed()) {
+                String message = logAndSaveError(updateReply.cause());
+                asyncResultHandler.handle(Future.succeededFuture(
+                  LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
+                    .withPlainInternalServerError(getErrorResponse(message))));
+              } else {
+                if (updateReply.result().getUpdated() == 0) {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
+                      .withPlainNotFound("Not found")));
+                  //Not found
+                } else {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
+                      .withNoContent()));
+                }
+              }
+            });
+      } catch (Exception e) {
+        String message = logAndSaveError(e);
+        asyncResultHandler.handle(Future.succeededFuture(
+          LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
+            .withPlainInternalServerError(getErrorResponse(message))));
+      }
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
+          .withPlainInternalServerError(getErrorResponse(message))));
+    }
+  }
+
+  Future<Boolean> libInUse(String locationId, String tenantId, Context vertxContext) {
     Future<Boolean> future = Future.future();
     future.complete(false);
     return future;

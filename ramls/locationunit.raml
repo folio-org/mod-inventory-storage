@@ -14,6 +14,8 @@ schemas:
   - locinsts: !include locinsts.json
   - loccamp.json: !include loccamp.json
   - loccamps: !include loccamps.json
+  - loclib.json: !include loclib.json
+  - loclibs: !include loclibs.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
@@ -127,5 +129,54 @@ resourceTypes:
         responses:
           204:
             description: "Campus deleted"
-
-
+  /libraries:
+    type:
+      collection:
+        exampleCollection: !include examples/loclibs.json
+        exampleItem: !include examples/loclib.json
+        schemaCollection: loclibs
+        schemaItem: loclib.json
+    get:
+      is: [
+        searchable: {description: "with valid searchable fields", example: "name=aaa"},
+        pageable
+      ]
+      description: Return a list of libraries
+      responses:
+        200:
+          description: "OK"
+    post:
+      description: Create a new library
+      is: [validate]
+      responses:
+        201:
+          description: "Created"
+    delete:
+      description: "Delete all libraries"
+      responses:
+        204:
+          description: "All libraries deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+    /{id}:
+      description: "Pass in the library id"
+      type:
+        collection-item:
+          exampleItem: !include examples/loclib.json
+          schema: loclib.json
+      get:
+        description: "Get a library"
+        responses:
+          200:
+            description: "OK"
+      put:
+        responses:
+          204:
+            description: "Library updated"
+      delete:
+        responses:
+          204:
+            description: "Library deleted"

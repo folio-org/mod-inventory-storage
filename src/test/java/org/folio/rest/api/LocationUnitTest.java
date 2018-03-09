@@ -33,7 +33,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-
+// Missing tests:
+// - Add/update a campus that points to a non-existing inst
+// - delete an inst that is in use by a campus
+// - Everything about libs
 
 public class LocationUnitTest {
 
@@ -331,9 +334,6 @@ public class LocationUnitTest {
   }
 
 ////////////// Campus tests
-  // Missing tests:
-  // - Add/update One that points to a non-existing inst
-  //
   @Test
   public void canCreateACamp()
     throws InterruptedException,
