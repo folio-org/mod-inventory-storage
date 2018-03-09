@@ -11,10 +11,13 @@
     },
     "shortcode": {
       "type": "string"
+    },
+    "intitutionId": {
+      "type": "string"
     }
   },
   "additionalProperties": false,
   "required": [
-    "name"
+    "name", "intitutionId"
   ]
 }
