@@ -52,6 +52,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
   public static final String CAMPUS_TABLE = "loccampus";
   public static final String URL_PREFIX_CAMP = URL_PREFIX + "/campuses";
   public static final String CAMP_SCHEMA_PATH = "apidocs/raml/loccamp.json";
+  public static final String LIBRARY_TABLE = "loclibrary";
+  public static final String URL_PREFIX_LIB = URL_PREFIX + "/libraries";
+  public static final String LIB_SCHEMA_PATH = "apidocs/raml/loclib.json";
 
   private String getErrorResponse(String response) {
     //Check to see if we're suppressing messages or not
@@ -670,7 +673,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
       postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
-        tenantId, "mod_inventory_storage", CAMPUS_TABLE),
+        tenantId, "mod_inventory_storage", LIBRARY_TABLE),
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
@@ -697,10 +700,10 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
-      CQLWrapper cql = getCQL(query, limit, offset, CAMPUS_TABLE);
+      CQLWrapper cql = getCQL(query, limit, offset, LIBRARY_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(
-          CAMPUS_TABLE, Locinst.class, new String[]{"*"},
+          LIBRARY_TABLE, Locinst.class, new String[]{"*"},
           cql, true, true, reply -> {
             if (reply.failed()) {
               String message = logAndSaveError(reply.cause());
@@ -708,12 +711,12 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 LocationUnitsResource.GetLocationUnitsLibrariesResponse
                   .withPlainBadRequest(getErrorResponse(message))));
             } else {
-              Loclibs camps = new Loclibs();
+              Loclibs lib = new Loclibs();
               List<Loclib> items = (List<Loclib>) reply.result().getResults();
-              camps.setLoclibs(items);
-              camps.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+              lib.setLoclibs(items);
+              lib.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsLibrariesResponse.withJsonOK(camps)));
+                LocationUnitsResource.GetLocationUnitsLibrariesResponse.withJsonOK(lib)));
             }
           });
     } catch (Exception e) {
@@ -737,7 +740,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
         entity.setId(id);
       }
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .save(CAMPUS_TABLE, id, entity, reply -> {
+        .save(LIBRARY_TABLE, id, entity, reply -> {
           try {
             if (reply.failed()) {
               String message = logAndSaveError(reply.cause());
@@ -784,13 +787,13 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) throws Exception {
     try {
       String tenantId = getTenant(okapiHeaders);
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
+      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
       Criterion criterion = new Criterion(criteria);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .get(CAMPUS_TABLE, Loclib.class, criterion,
+        .get(LIBRARY_TABLE, Loclib.class, criterion,
           true, false, getReply -> {
             if (getReply.failed()) {
               String message = logAndSaveError(getReply.cause());
@@ -830,7 +833,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
   public void deleteLocationUnitsLibrariesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
     try {
       String tenantId = getTenant(okapiHeaders);
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
+      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
@@ -849,7 +852,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
             } else {
               try {
                 PostgresClient.getInstance(vertxContext.owner(), tenantId)
-                  .delete(CAMPUS_TABLE, criterion, deleteReply -> {
+                  .delete(LIBRARY_TABLE, criterion, deleteReply -> {
                     if (deleteReply.failed()) {
                       String message = logAndSaveError(deleteReply.cause());
                       asyncResultHandler.handle(Future.succeededFuture(
@@ -901,14 +904,14 @@ public class LocationUnitAPI implements LocationUnitsResource {
         return;
       }
       String tenantId = getTenant(okapiHeaders);
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
+      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
       Criterion criterion = new Criterion(criteria);
       try {
         PostgresClient.getInstance(vertxContext.owner(), tenantId)
-          .update(CAMPUS_TABLE, entity, criterion,
+          .update(LIBRARY_TABLE, entity, criterion,
             false, updateReply -> {
               if (updateReply.failed()) {
                 String message = logAndSaveError(updateReply.cause());

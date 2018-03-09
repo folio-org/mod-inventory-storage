@@ -36,8 +36,10 @@ import static org.junit.Assert.assertThat;
 // Missing tests:
 // - Add/update a campus that points to a non-existing inst
 // - delete an inst that is in use by a campus
-// - Everything about libs
-
+// - Add/update a library that points to a non-existing campus
+// - delete a campus that is in use by a library
+// (The code for these checks is missing!)
+//
 public class LocationUnitTest {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
@@ -56,6 +58,7 @@ public class LocationUnitTest {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(institutionStorageUrl(""));
     StorageTestSuite.deleteAll(campusStorageUrl(""));
+    StorageTestSuite.deleteAll(libraryStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
@@ -69,6 +72,20 @@ public class LocationUnitTest {
   }
 
   ////////////////// General helpers
+  /*
+  private JsonObject createItemRequest(String temporaryLocationId) {
+
+    JsonObject item = new JsonObject();
+
+    item.put("holdingsRecordId", UUID.randomUUID().toString());
+    item.put("barcode", "12345");
+    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    item.put("materialTypeId", journalMaterialTypeID);
+    item.put("temporaryLocationId", temporaryLocationId);
+
+    return item;
+  }
+   */
   private static void send(URL url, HttpMethod method, String content,
     String contentType, Handler<HttpClientResponse> handler) {
 
@@ -459,20 +476,182 @@ public class LocationUnitTest {
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
+////////////////////////////////////// Library test helpers
 
+  private static Response createLib(UUID id, String name, String code, UUID campId)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
-  /*
-  private JsonObject createItemRequest(String temporaryLocationId) {
+    CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
 
-    JsonObject item = new JsonObject();
+    JsonObject request = new JsonObject();
+    if (id != null) {
+      request.put("id", id.toString());
+    }
+    request
+      .put("name", name)
+      .put("shortcode", code)
+      .put("campusId", campId.toString());
 
-    item.put("holdingsRecordId", UUID.randomUUID().toString());
-    item.put("barcode", "12345");
-    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    item.put("materialTypeId", journalMaterialTypeID);
-    item.put("temporaryLocationId", temporaryLocationId);
+    send(libraryStorageUrl(""), HttpMethod.POST, request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
-    return item;
+    return createLocationUnit.get(5, TimeUnit.SECONDS);
   }
-   */
+
+  private Response getLibById(UUID id)
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    send(libraryStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+////////////// Library tests
+  @Test
+  public void canCreateALib()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+
+    Response response = createLib(null, "Main Library", "RS", campId);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(response.getJson().getString("id"), notNullValue());
+    assertThat(response.getJson().getString("name"), is("Main Library"));
+    assertThat(response.getJson().getString("shortcode"), is("RS"));
+  }
+
+  @Test
+  public void cannotCreateLibWithSameName()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+
+    createLib(null, "Main Library", "RS", campId);
+    Response response = createLib(null, "Main Library", "RS", campId);
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
+  public void cannotCreateLibSameId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+
+    UUID id = UUID.randomUUID();
+    createLib(id, "Main Library", "RS", campId);
+    Response response = createLib(id, "Library on the other Side of the River", "OS", campId);
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
+  public void canGetALibById()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+
+    UUID id = UUID.randomUUID();
+    createLib(id, "Main Library", "RS", campId);
+    Response getResponse = getLibById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getString("name"), is("Main Library"));
+    assertThat(item.getString("campusId"), is(campId.toString()));
+  }
+
+  @Test
+  public void canUpdateALib()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+
+    UUID id = UUID.randomUUID();
+    createLib(id, "Main Library", "MPI", campId);
+
+    JsonObject updateRequest = new JsonObject()
+      .put("id", id.toString())
+      .put("name", "The Other Library")
+      .put("campusId", campId.toString());
+
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+
+    send(libraryStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getLibById(id);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getString("name"), is("The Other Library"));
+  }
+
+  @Test
+  public void canDeleteALib()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+
+    UUID id = UUID.randomUUID();
+
+    createLib(id, "Main Library", "RS", campId);
+
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+
+    send(libraryStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
+
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
 }
