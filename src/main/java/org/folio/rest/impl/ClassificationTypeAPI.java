@@ -10,7 +10,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ClassificationType;
 import org.folio.rest.jaxrs.model.ClassificationTypes;
 import org.folio.rest.jaxrs.resource.ClassificationTypesResource;
-import org.folio.rest.persist.DatabaseExceptionUtils;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -136,7 +136,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostClassificationTypesResponse.withJsonCreated(
                       LOCATION_PREFIX + ret, stream)));
                 } else {
-                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
                     internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
                     return;
@@ -178,7 +178,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
             reply -> {
               try {
                 if (reply.failed()) {
-                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
                     internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
                     return;
@@ -228,7 +228,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
             reply -> {
               try {
                 if (reply.failed()) {
-                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
                     internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
                     return;
@@ -289,7 +289,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                         .withNoContent()));
                   }
                 } else {
-                  String msg = DatabaseExceptionUtils.badRequestMessage(reply.cause());
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
                     internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
                     return;

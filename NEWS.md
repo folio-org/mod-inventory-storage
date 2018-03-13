@@ -1,23 +1,30 @@
-## 7.2.2 Unreleased
+## 8.0.0 2018-03-07
 
-* Add the following GIN indexes for `instances` (MODINVSTOR-48): 
+* Upgrades RAML Module Builder to version 19.0.0 (RMB-130, MODINVSTOR-65)
+* Uses generated sources for generated code (RMB-130, MODINVSTOR-65)
+* Uses `PgExceptionUtil` from RAML Module Builder to handle database exceptions (May change some server error response messages, MODINVSTOR-52)
+* Uses embedded PostgreSQL 10.1 during tests (MODINVSTOR-65)
+
+## 7.2.2 2018-03-02
+
+* Adds the following GIN indexes for `instances` (MODINVSTOR-48): 
   - `contributors`
   - `identifiers`
   - `instanceTypeId`
   - `languages`
   - `classifications`
   - `subjects`
-* Add the following b-tree indexes for `instances` (MODINVSTOR-48):
+* Adds the following b-tree indexes for `instances` (MODINVSTOR-48):
   - `contributors`
   - `publication`
-* Use CQL to get instance, item or holding by ID (in order to use available index, MODINVSTOR-48)
-* Introduce searching for instances with an item with a given barcode (e.g. `item.barcode==683029605940`, MODINVSTOR-49)
+* Uses CQL to get instance, item or holding by ID (in order to use available index, MODINVSTOR-48)
+* Introduces searching for instances with an item with a given barcode (e.g. `item.barcode==683029605940`, MODINVSTOR-49)
 * Searching (which includes a barcode) includes instances that do not have a holding or a item (MODINVSTOR-55)
 * Searching containing barcode (or other item properties) is currently only supported on small sets of records
 
 ## 7.1.0 2018-01-08
 
-* Add metadata generation (dates and update user) to instance records (MODINVSTOR-37) 
+* Adds metadata generation (dates and update user) to instance records (MODINVSTOR-37) 
 * Provides `instance-storage` 4.1 interface (MODINVSTOR-37)
 
 ## 7.0.0 2018-01-03
