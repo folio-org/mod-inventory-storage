@@ -32,7 +32,7 @@ import static org.junit.Assert.assertThat;
 
 
 
-public class ShelfLocationsTest {
+public class LocationsTest {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private String canCirculateLoanTypeID;
@@ -46,7 +46,7 @@ public class ShelfLocationsTest {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locationsStorageUrl("")); // TODO inst/camp/lib as well
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
@@ -60,13 +60,13 @@ public class ShelfLocationsTest {
   }
 
   @Test
-  public void canCreateShelfLocation()
+  public void canCreateLocation()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
     MalformedURLException {
 
-    Response response = createShelfLocation("Main Library");
+    Response response = createLocation("Main Library");
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -74,39 +74,39 @@ public class ShelfLocationsTest {
   }
 
 /*  @Test
-  public void cannotCreateShelfLocationWithSameName()
+  public void cannotCreateLocationWithSameName()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
     MalformedURLException {
 
-    createShelfLocation("Main Library");
-    Response response = createShelfLocation("Main Library");
+    createLocation("Main Library");
+    Response response = createLocation("Main Library");
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void cannotCreateShelfLocationWithSameId()
+  public void cannotCreateLocationWithSameId()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    createShelfLocation(id, "Main Library");
-    Response response = createShelfLocation(id, "Annex Library");
+    createLocation(id, "Main Library");
+    Response response = createLocation(id, "Annex Library");
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }*/
 
   @Test
-  public void canGetAShelfLocationById()
+  public void canGetALocationById()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    createShelfLocation(id, "Main Library");
+    createLocation(id, "Main Library");
     Response getResponse = getById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -116,14 +116,14 @@ public class ShelfLocationsTest {
   }
 
   @Test
-  public void canUpdateAShelfLocation()
+  public void canUpdateALocation()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    createShelfLocation(id, "Main Library");
+    createLocation(id, "Main Library");
 
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
@@ -131,7 +131,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
-    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
 
@@ -147,7 +147,7 @@ public class ShelfLocationsTest {
   }
 
   @Test
-  public void canDeleteAShelfLocation()
+  public void canDeleteALocation()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -155,11 +155,11 @@ public class ShelfLocationsTest {
 
     UUID id = UUID.randomUUID();
 
-    createShelfLocation(id, "Main Library");
+    createLocation(id, "Main Library");
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
 
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
@@ -167,7 +167,7 @@ public class ShelfLocationsTest {
   }
 
   @Test
-  public void cannotDeleteAShelfLocationAssociatedWithAnItem()
+  public void cannotDeleteALocationAssociatedWithAnItem()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -175,7 +175,7 @@ public class ShelfLocationsTest {
 
     UUID locationId = UUID.randomUUID();
 
-    createShelfLocation(locationId, "Main Library");
+    createLocation(locationId, "Main Library");
 
     JsonObject item = createItemRequest(locationId.toString());
     CompletableFuture<Response> createItemCompleted = new CompletableFuture<>();
@@ -188,7 +188,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(ShelfLocationsStorageUrl(locationId.toString()),
+    send(locationsStorageUrl(locationId.toString()),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(deleteCompleted));
 
@@ -244,36 +244,36 @@ public class ShelfLocationsTest {
     return item;
   }
 
-  private Response createShelfLocation(String name)
+  private Response createLocation(String name)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<Response> createShelfLocation = new CompletableFuture<>();
+    CompletableFuture<Response> createLocation = new CompletableFuture<>();
 
-    send(ShelfLocationsStorageUrl(""), HttpMethod.POST, new JsonObject().put("name", name).toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createShelfLocation));
+    send(locationsStorageUrl(""), HttpMethod.POST, new JsonObject().put("name", name).toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
 
-    return createShelfLocation.get(5, TimeUnit.SECONDS);
+    return createLocation.get(5, TimeUnit.SECONDS);
   }
 
-  protected static Response createShelfLocation(UUID id, String name)
+  protected static Response createLocation(UUID id, String name)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<Response> createShelfLocation = new CompletableFuture<>();
+    CompletableFuture<Response> createLocation = new CompletableFuture<>();
 
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", name);
 
-    send(ShelfLocationsStorageUrl(""), HttpMethod.POST, request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createShelfLocation));
+    send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
 
-    return createShelfLocation.get(5, TimeUnit.SECONDS);
+    return createLocation.get(5, TimeUnit.SECONDS);
   }
 
   private Response getById(UUID id)
@@ -284,7 +284,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);

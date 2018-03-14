@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "isactive": {
+      "type": "boolean"
+    },
+    "institution": {
+      "type": "string"
+    },
+    "campus": {
+      "type": "string"
+    },
+    "library": {
+      "type": "string"
+    },
+    "parking": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "code",
+    "institution",
+    "campus",
+    "library"
+  ]
+}

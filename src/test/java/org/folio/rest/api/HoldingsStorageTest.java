@@ -40,15 +40,15 @@ public class HoldingsStorageTest extends TestBase {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Main Library"));
+      ShelfLocationsStorageUrl("")).create("Main Library"));
 
     annexLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Annex Library"));
+      ShelfLocationsStorageUrl("")).create("Annex Library"));
   }
 
   @Before

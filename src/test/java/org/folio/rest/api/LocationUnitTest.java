@@ -56,9 +56,9 @@ public class LocationUnitTest {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(institutionStorageUrl(""));
-    StorageTestSuite.deleteAll(campusStorageUrl(""));
-    StorageTestSuite.deleteAll(libraryStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
@@ -131,7 +131,7 @@ public class LocationUnitTest {
       .put("name", name)
       .put("shortcode", code);
 
-    send(institutionStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locInstitutionStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return createLocationUnit.get(5, TimeUnit.SECONDS);
@@ -150,7 +150,7 @@ public class LocationUnitTest {
       .put("name", name)
       .put("shortcode", code);
 
-    send(institutionStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locInstitutionStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return createLocationUnit.get(5, TimeUnit.SECONDS);
@@ -164,7 +164,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    send(institutionStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
@@ -244,7 +244,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
-    send(institutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
 
@@ -272,7 +272,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(institutionStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
 
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
@@ -304,7 +304,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(institutionStorageUrl(locationId.toString()),
+    send(locInstitutionStorageUrl(locationId.toString()),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(deleteCompleted));
 
@@ -330,7 +330,7 @@ public class LocationUnitTest {
       .put("shortcode", code)
       .put("intitutionId", instId.toString());
 
-    send(campusStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locCampusStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return createLocationUnit.get(5, TimeUnit.SECONDS);
@@ -344,7 +344,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    send(campusStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
@@ -440,7 +440,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
-    send(campusStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = updated.get(5, TimeUnit.SECONDS);
@@ -470,7 +470,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(campusStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
 
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
@@ -495,7 +495,7 @@ public class LocationUnitTest {
       .put("shortcode", code)
       .put("campusId", campId.toString());
 
-    send(libraryStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locLibraryStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return createLocationUnit.get(5, TimeUnit.SECONDS);
@@ -509,7 +509,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    send(libraryStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
@@ -616,7 +616,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
-    send(libraryStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = updated.get(5, TimeUnit.SECONDS);
@@ -648,7 +648,7 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(libraryStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
 
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
