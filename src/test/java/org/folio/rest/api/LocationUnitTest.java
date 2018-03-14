@@ -119,7 +119,8 @@ public class LocationUnitTest {
   }
 
   ///////////////////////////////////////////////////////  Inst test helpers
-  private Response createInst(String name, String code)
+  // May also be used from other tests
+  public static Response createInst(String name, String code)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -137,7 +138,7 @@ public class LocationUnitTest {
     return createLocationUnit.get(5, TimeUnit.SECONDS);
   }
 
-  private static Response createInst(UUID id, String name, String code)
+  public static Response createInst(UUID id, String name, String code)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -313,7 +314,7 @@ public class LocationUnitTest {
   }
 */
 ////////////////////////////////////// Campus test helpers
-  private static Response createCamp(UUID id, String name, String code, UUID instId)
+  public static Response createCamp(UUID id, String name, String code, UUID instId)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -321,14 +322,13 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
 
-    JsonObject request = new JsonObject();
-    if (id != null) {
-      request.put("id", id.toString());
-    }
-    request
+    JsonObject request = new JsonObject()
       .put("name", name)
       .put("shortcode", code)
       .put("intitutionId", instId.toString());
+    if (id != null) {
+      request.put("id", id.toString());
+    }
 
     send(locCampusStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
@@ -478,7 +478,7 @@ public class LocationUnitTest {
   }
 ////////////////////////////////////// Library test helpers
 
-  private static Response createLib(UUID id, String name, String code, UUID campId)
+  public static Response createLib(UUID id, String name, String code, UUID campId)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -486,14 +486,13 @@ public class LocationUnitTest {
 
     CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
 
-    JsonObject request = new JsonObject();
-    if (id != null) {
-      request.put("id", id.toString());
-    }
-    request
+    JsonObject request = new JsonObject()
       .put("name", name)
       .put("shortcode", code)
       .put("campusId", campId.toString());
+    if (id != null) {
+      request.put("id", id.toString());
+    }
 
     send(locLibraryStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));

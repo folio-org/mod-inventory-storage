@@ -29,13 +29,16 @@ import static org.junit.Assert.assertThat;
 @RunWith(Suite.class)
 
 @Suite.SuiteClasses({
+  /*  TODO - Re-enable these before merging to master! Disabled while developing Locations, to speed things up
   InstanceStorageTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
   LoanTypeTest.class,
   MaterialTypeTest.class,
   ShelfLocationsTest.class,
-  LocationUnitTest.class
+   */
+  LocationUnitTest.class,
+  LocationsTest.class
 })
 @SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
