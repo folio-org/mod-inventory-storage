@@ -213,7 +213,7 @@ public class LocationsTest {
 
   When we switch items over to pointing to the new Locations, re-enable this
   test.
-  
+
   @Test
   public void cannotDeleteALocationAssociatedWithAnItem()
     throws InterruptedException,
@@ -314,7 +314,6 @@ public class LocationsTest {
     putIfNotNull(request, "code", code);
     send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
-    logger.warn("createLocation: " + request.encode());
     return createLocation.get(5, TimeUnit.SECONDS);
   }
 
