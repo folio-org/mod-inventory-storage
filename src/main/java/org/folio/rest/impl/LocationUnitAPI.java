@@ -414,7 +414,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       CQLWrapper cql = getCQL(query, limit, offset, CAMPUS_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(
-          CAMPUS_TABLE, Locinst.class, new String[]{"*"},
+          CAMPUS_TABLE, Loccamp.class, new String[]{"*"},
           cql, true, true, reply -> {
             if (reply.failed()) {
               String message = logAndSaveError(reply.cause());
@@ -460,8 +460,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
                   LocationUnitsResource.PostLocationUnitsCampusesResponse
                     .withJsonUnprocessableEntity(
                       ValidationHelper.createValidationErrorMessage(
-                        "locinst", entity.getId(),
-                        "Institution already exists"))));
+                        "loccamp", entity.getId(),
+                        "Campus already exists"))));
               } else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   LocationUnitsResource.PostLocationUnitsCampusesResponse
@@ -703,7 +703,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       CQLWrapper cql = getCQL(query, limit, offset, LIBRARY_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(
-          LIBRARY_TABLE, Locinst.class, new String[]{"*"},
+          LIBRARY_TABLE, Loclib.class, new String[]{"*"},
           cql, true, true, reply -> {
             if (reply.failed()) {
               String message = logAndSaveError(reply.cause());
@@ -749,8 +749,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
                   LocationUnitsResource.PostLocationUnitsLibrariesResponse
                     .withJsonUnprocessableEntity(
                       ValidationHelper.createValidationErrorMessage(
-                        "locinst", entity.getId(),
-                        "Institution already exists"))));
+                        "loclib", entity.getId(),
+                        "Library already exists"))));
               } else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   LocationUnitsResource.PostLocationUnitsLibrariesResponse

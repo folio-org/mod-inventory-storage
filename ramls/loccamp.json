@@ -12,7 +12,7 @@
     "shortcode": {
       "type": "string"
     },
-    "intitutionId": {
+    "institutionId": {
       "type": "string"
     }
   },

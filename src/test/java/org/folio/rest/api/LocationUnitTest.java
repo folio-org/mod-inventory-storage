@@ -325,7 +325,7 @@ public class LocationUnitTest {
     JsonObject request = new JsonObject()
       .put("name", name)
       .put("shortcode", code)
-      .put("intitutionId", instId.toString());
+      .put("institutionId", instId.toString());
     if (id != null) {
       request.put("id", id.toString());
     }
@@ -436,7 +436,7 @@ public class LocationUnitTest {
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
       .put("name", "The Other Campus")
-      .put("intitutionId", instId.toString());
+      .put("institutionId", instId.toString());
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
