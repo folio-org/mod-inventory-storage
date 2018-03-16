@@ -52,7 +52,7 @@ public class InstanceStorageTest extends TestBase {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
@@ -60,10 +60,10 @@ public class InstanceStorageTest extends TestBase {
       new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
 
     mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Main Library"));
+      ShelfLocationsStorageUrl("")).create("Main Library"));
 
     annexLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Annex Library"));
+      ShelfLocationsStorageUrl("")).create("Annex Library"));
 
     canCirculateLoanTypeId = UUID.fromString(new LoanTypesClient(client,
       loanTypesStorageUrl("")).create("Can Circulate"));

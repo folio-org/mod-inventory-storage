@@ -51,7 +51,7 @@ public class ResourceClient {
   }
 
   public static ResourceClient forLocations(HttpClient client) {
-    return new ResourceClient(client, InterfaceUrls::locationsStorageUrl,
+    return new ResourceClient(client, InterfaceUrls::ShelfLocationsStorageUrl,
       "locations", "shelflocations");
   }
 

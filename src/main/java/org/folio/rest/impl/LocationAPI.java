@@ -8,9 +8,6 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Shelflocation;
-import org.folio.rest.jaxrs.model.Shelflocations;
-import org.folio.rest.jaxrs.resource.ShelfLocationsResource;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -31,17 +28,20 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.Locations;
+import org.folio.rest.jaxrs.resource.LocationsResource;
 
 /**
  *
  * @author kurt
  */
-public class ShelfLocationAPI implements ShelfLocationsResource {
+public class LocationAPI implements LocationsResource {
   private final Messages messages = Messages.getInstance();
-  public static final String SHELF_LOCATION_TABLE = "shelflocation";
-  public static final Logger logger = LoggerFactory.getLogger(ShelfLocationAPI.class);
-  public static final String URL_PREFIX = "/shelflocations";
-  public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/shelflocation.json";
+  public static final String LOCATION_TABLE = "location";
+  public static final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
+  public static final String URL_PREFIX = "/locations";
+  public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
 
   private String getErrorResponse(String response) {
@@ -72,8 +72,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
   }
 
   @Override
-  public void deleteShelfLocations(
-          String lang,
+  public void deleteLocations(          String lang,
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
@@ -85,29 +84,28 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
       postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
-        tenantId, "mod_inventory_storage", SHELF_LOCATION_TABLE),
+        tenantId, "mod_inventory_storage", LOCATION_TABLE),
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
-              ShelfLocationsResource.DeleteShelfLocationsResponse.noContent()
+              LocationsResource.DeleteLocationsResponse.noContent()
                 .build()));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              ShelfLocationsResource.DeleteShelfLocationsResponse.
+              LocationsResource.DeleteLocationsResponse.
                 withPlainInternalServerError(reply.cause().getMessage())));
           }
         });
     }    catch(Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-        ShelfLocationsResource.DeleteShelfLocationsResponse.
+        LocationsResource.DeleteLocationsResponse.
           withPlainInternalServerError(e.getMessage())));
     }
 
   }
 
   @Override
-  public void getShelfLocations(
-        String query,
+  public void getLocations(        String query,
         int offset,
         int limit,
         String lang,
@@ -117,45 +115,42 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         throws Exception {
     try {
       String tenantId = getTenant(okapiHeaders);
-      CQLWrapper cql = getCQL(query, limit, offset, SHELF_LOCATION_TABLE);
+      CQLWrapper cql = getCQL(query, limit, offset, LOCATION_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(
-          SHELF_LOCATION_TABLE, Shelflocation.class, new String[]{"*"},
-          cql, true, true, reply -> {
+          LOCATION_TABLE, Location.class,
+          new String[]{"*"}, cql, true, true, reply -> {
             try {
               if (reply.failed()) {
                 String message = logAndSaveError(reply.cause());
                 asyncResultHandler.handle(Future.succeededFuture(
-                  GetShelfLocationsResponse.withPlainBadRequest(
-                    getErrorResponse(message))));
+                  GetLocationsResponse.withPlainBadRequest(getErrorResponse(message))));
               } else {
-                Shelflocations shelfLocations = new Shelflocations();
-                List<Shelflocation> shelfLocationsList = (List<Shelflocation>) reply.result().getResults();
-                shelfLocations.setShelflocations(shelfLocationsList);
+                Locations shelfLocations = new Locations();
+                List<Location> shelfLocationsList = (List<Location>) reply.result().getResults();
+                shelfLocations.setLocations(shelfLocationsList);
                 shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelfLocations)));
+                asyncResultHandler.handle(Future.succeededFuture(
+                  GetLocationsResponse.withJsonOK(shelfLocations)));
               }
             } catch (Exception e) {
               String message = logAndSaveError(e);
               asyncResultHandler.handle(Future.succeededFuture(
-                GetShelfLocationsResponse.withPlainInternalServerError(
-                  getErrorResponse(message))));
+                GetLocationsResponse.withPlainInternalServerError(getErrorResponse(message))));
             }
           });
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        GetShelfLocationsResponse.withPlainInternalServerError(
+        GetLocationsResponse.withPlainInternalServerError(
           getErrorResponse(message))));
     }
   }
 
 
   @Override
-  public void postShelfLocations(
-          String lang,
-          Shelflocation entity,
-          Map<String, String> okapiHeaders,
+  public void postLocations(          String lang,
+    Location entity,          Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
           throws Exception {
@@ -167,20 +162,19 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         entity.setId(id);
       }
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .save(SHELF_LOCATION_TABLE, id, entity, reply -> {
+        .save(LOCATION_TABLE, id, entity, reply -> {
         try {
           if (reply.failed()) {
             String message = logAndSaveError(reply.cause());
             if (isDuplicate(message)) {
               asyncResultHandler.handle(Future.succeededFuture(
-                PostShelfLocationsResponse.withJsonUnprocessableEntity(
+                PostLocationsResponse.withJsonUnprocessableEntity(
                   ValidationHelper.createValidationErrorMessage(
                     "shelflocation", entity.getId(),
                     "Location already exists"))));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                PostShelfLocationsResponse.withPlainInternalServerError(
-                  getErrorResponse(message))));
+                PostLocationsResponse.withPlainInternalServerError(getErrorResponse(message))));
             }
           } else {
             Object responseObject = reply.result();
@@ -188,27 +182,23 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
             OutStream stream = new OutStream();
             stream.setData(entity);
             asyncResultHandler.handle(Future.succeededFuture(
-              PostShelfLocationsResponse.withJsonCreated(
-                URL_PREFIX + responseObject, stream)));
+              PostLocationsResponse.withJsonCreated(URL_PREFIX + responseObject, stream)));
           }
         } catch (Exception e) {
           String message = logAndSaveError(e);
           asyncResultHandler.handle(Future.succeededFuture(
-            PostShelfLocationsResponse.withPlainInternalServerError(
-              getErrorResponse(message))));
+            PostLocationsResponse.withPlainInternalServerError(getErrorResponse(message))));
         }
       });
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        PostShelfLocationsResponse.withPlainInternalServerError(
-          getErrorResponse(message))));
+        PostLocationsResponse.withPlainInternalServerError(getErrorResponse(message))));
     }
   }
 
   @Override
-  public void getShelfLocationsById(
-          String id,
+  public void getLocationsById(          String id,
           String lang,
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
@@ -222,41 +212,35 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
       criteria.setValue(id);
       Criterion criterion = new Criterion(criteria);
       PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-        SHELF_LOCATION_TABLE, Shelflocation.class, criterion, true,
-        false, getReply -> {
+        LOCATION_TABLE, Location.class, criterion, true, false, getReply -> {
           if (getReply.failed()) {
             String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              GetShelfLocationsByIdResponse.withPlainInternalServerError(
-                getErrorResponse(message))));
+              GetLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
           } else {
-            List<Shelflocation> locationList = (List<Shelflocation>) getReply.result().getResults();
+            List<Location> locationList = (List<Location>) getReply.result().getResults();
             if (locationList.size() < 1) {
               asyncResultHandler.handle(Future.succeededFuture(
-                GetShelfLocationsByIdResponse.withPlainNotFound(
-                  messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
+                GetLocationsByIdResponse.withPlainNotFound(messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
             } else if (locationList.size() > 1) {
               String message = "Multiple locations found with the same id";
               logger.error(message);
               asyncResultHandler.handle(Future.succeededFuture(
-                GetShelfLocationsByIdResponse.withPlainInternalServerError(
-                  getErrorResponse(message))));
+                GetLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
             } else {
-              asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsByIdResponse.withJsonOK(locationList.get(0))));
+              asyncResultHandler.handle(Future.succeededFuture(GetLocationsByIdResponse.withJsonOK(locationList.get(0))));
             }
           }
         });
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        GetShelfLocationsByIdResponse.withPlainInternalServerError(
-          getErrorResponse(message))));
+        GetLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
     }
   }
 
   @Override
-  public void deleteShelfLocationsById(
-          String id,
+  public void deleteLocationsById(          String id,
           String lang, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
@@ -272,30 +256,27 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         locationInUse(id, tenantId, vertxContext).setHandler(res -> {
           if (res.failed()) {
             String message = logAndSaveError(res.cause());
-            DeleteShelfLocationsByIdResponse.withPlainInternalServerError(
-              getErrorResponse(message));
+            DeleteLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message));
           } else {
             if (res.result()) {
               asyncResultHandler.handle(Future.succeededFuture(
-                DeleteShelfLocationsByIdResponse.withPlainBadRequest(
-                  "Cannot delete location, as it is in use")));
+                DeleteLocationsByIdResponse.withPlainBadRequest("Cannot delete location, as it is in use")));
             } else {
               try {
-                PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(SHELF_LOCATION_TABLE, criterion, deleteReply -> {
+                PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(LOCATION_TABLE, criterion, deleteReply -> {
                   if (deleteReply.failed()) {
                     String message = logAndSaveError(deleteReply.cause());
                     asyncResultHandler.handle(Future.succeededFuture(
-                      DeleteShelfLocationsByIdResponse.withPlainNotFound("Not found")));
+                      DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
                   } else {
                     asyncResultHandler.handle(Future.succeededFuture(
-                      DeleteShelfLocationsByIdResponse.withNoContent()));
+                      DeleteLocationsByIdResponse.withNoContent()));
                   }
                 });
               } catch (Exception e) {
                 String message = logAndSaveError(e);
                 asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteShelfLocationsByIdResponse.withPlainInternalServerError(
-                    getErrorResponse(message))));
+                  DeleteLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
               }
             }
           }
@@ -303,23 +284,19 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
       } catch (Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
-          DeleteShelfLocationsByIdResponse.withPlainInternalServerError(
-            getErrorResponse(message))));
+          DeleteLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
       }
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        DeleteShelfLocationsByIdResponse.withPlainInternalServerError(
-          getErrorResponse(message))));
+        DeleteLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
     }
   }
 
   @Override
-  public void putShelfLocationsById(
-          String id,
+  public void putLocationsById(          String id,
           String lang,
-          Shelflocation entity,
-          Map<String, String> okapiHeaders,
+    Location entity,          Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
           throws Exception {
@@ -327,7 +304,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
       if (!id.equals(entity.getId())) {
         String message = "Illegal operation: id cannot be changed";
         asyncResultHandler.handle(Future.succeededFuture(
-          PutShelfLocationsByIdResponse.withPlainBadRequest(message)));
+          PutLocationsByIdResponse.withPlainBadRequest(message)));
         return;
       }
       String tenantId = getTenant(okapiHeaders);
@@ -338,40 +315,37 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
       Criterion criterion = new Criterion(criteria);
       try {
         PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-          SHELF_LOCATION_TABLE, entity, criterion, false, updateReply -> {
+          LOCATION_TABLE, entity, criterion, false, updateReply -> {
             if (updateReply.failed()) {
               String message = logAndSaveError(updateReply.cause());
               asyncResultHandler.handle(Future.succeededFuture(
-                PutShelfLocationsByIdResponse.withPlainInternalServerError(
-                  getErrorResponse(message))));
+                PutLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
             } else {
               if (updateReply.result().getUpdated() == 0) {
                 asyncResultHandler.handle(Future.succeededFuture(
-                  PutShelfLocationsByIdResponse.withPlainNotFound("Not found")));
+                  PutLocationsByIdResponse.withPlainNotFound("Not found")));
                 //Not found
               } else {
                 asyncResultHandler.handle(Future.succeededFuture(
-                  PutShelfLocationsByIdResponse.withNoContent()));
+                  PutLocationsByIdResponse.withNoContent()));
               }
             }
           });
       } catch (Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
-          PutShelfLocationsByIdResponse.withPlainInternalServerError(
-            getErrorResponse(message))));
+          PutLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
       }
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        PutShelfLocationsByIdResponse.withPlainInternalServerError(
-          getErrorResponse(message))));
+        PutLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
     }
   }
 
   Future<Boolean> locationInUse(String locationId, String tenantId, Context vertxContext) {
     Future<Boolean> future = Future.future();
-    //Get all items where the temporary or permanent locationis this location id
+    //Get all items where the temporary future or permanent future is this location id
     String query = "permanentLocation == " + locationId + " OR temporarylocation == " + locationId;
     try {
       CQLWrapper cql = getCQL(query, 10, 0, ItemStorageAPI.ITEM_TABLE);

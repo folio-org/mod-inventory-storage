@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "second-level location unit",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "shortcode": {
+      "type": "string"
+    },
+    "institutionId": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name", "intitutionId"
+  ]
+}

@@ -51,14 +51,14 @@ public class ItemStorageTest extends TestBase {
 
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
 
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("journal");
     bookMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book");
     videoMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("video");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesStorageUrl("")).create("Can Circulate");
-    mainLibraryLocationId = new ShelfLocationsClient(client, locationsStorageUrl("")).create("Main Library");
-    annexLocationId = new ShelfLocationsClient(client, locationsStorageUrl("")).create("Annex Library");
+    mainLibraryLocationId = new ShelfLocationsClient(client, ShelfLocationsStorageUrl("")).create("Main Library");
+    annexLocationId = new ShelfLocationsClient(client, ShelfLocationsStorageUrl("")).create("Annex Library");
   }
 
   @Before

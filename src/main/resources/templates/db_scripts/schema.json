@@ -40,6 +40,79 @@
       ]
     },
     {
+      "tableName": "locinstitution",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "loccampus",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "loclibrary",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "location",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "institution",
+          "targetTable": "locinstitution",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "campus",
+          "targetTable": "loccampus",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "library",
+          "targetTable": "loclibrary",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "identifier_type",
       "withMetadata": false,
       "pkColumnName": "_id",
