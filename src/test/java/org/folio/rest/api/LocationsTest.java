@@ -173,9 +173,10 @@ public class LocationsTest {
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
       .put("name", "Annex Library")
-      .put("institution", instID.toString())
-      .put("campus", campID.toString())
-      .put("library", libID.toString())
+      .put("institutionId", instID.toString())
+      .put("campusId", campID.toString())
+      .put("libraryId", libID.toString())
+      .put("isActive", true)
       .put("code", "AA/BB");
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
@@ -308,9 +309,9 @@ public class LocationsTest {
     JsonObject request = new JsonObject()
       .put("name", name);
     putIfNotNull(request, "id", id);
-    putIfNotNull(request, "institution", inst);
-    putIfNotNull(request, "campus", camp);
-    putIfNotNull(request, "library", lib);
+    putIfNotNull(request, "institutionId", inst);
+    putIfNotNull(request, "campusId", camp);
+    putIfNotNull(request, "libraryId", lib);
     putIfNotNull(request, "code", code);
     send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));

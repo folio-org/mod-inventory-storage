@@ -4,10 +4,10 @@
       "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
       "name": "Miller General Stacks",
       "code": "UA/CB/LC/GS",
-      "isactive": true,
-      "institution": "4b2a3d97-01c3-4ef3-98a5-ae4e853429b4",
-      "campus": "b595d838-b1d5-409e-86ac-af3b41bde0be",
-      "library": "e2889f93-92f2-4937-b944-5452a575367e",
+      "isActive": true,
+      "institutionId": "4b2a3d97-01c3-4ef3-98a5-ae4e853429b4",
+      "campusId": "b595d838-b1d5-409e-86ac-af3b41bde0be",
+      "libraryId": "e2889f93-92f2-4937-b944-5452a575367e",
       "parking": {
         "a": "b",
         "foo": "bar"
@@ -17,10 +17,10 @@
       "id": "97ee6cd9-17ef-47f8-acbb-ec16fb2cb98d",
       "name": "Special Reading Room",
       "code": "UX/BB/LC/RR",
-      "isactive": true,
-      "institution": "4b2a3d97-01c3-4ef3-98a5-ae4e853429b4",
-      "campus": "b595d838-b1d5-409e-86ac-af3b41bde0be",
-      "library": "a23d1dbc-e7ba-4c00-baf4-9770bdfb87c6",
+      "isActive": true,
+      "institutionId": "4b2a3d97-01c3-4ef3-98a5-ae4e853429b4",
+      "campusId": "b595d838-b1d5-409e-86ac-af3b41bde0be",
+      "libraryId": "a23d1dbc-e7ba-4c00-baf4-9770bdfb87c6",
       "parking": {
         "foo": "gryf"
       }

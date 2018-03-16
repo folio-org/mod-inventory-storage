@@ -11,16 +11,16 @@
     "code": {
       "type": "string"
     },
-    "isactive": {
+    "isActive": {
       "type": "boolean"
     },
-    "institution": {
+    "institutionId": {
       "type": "string"
     },
-    "campus": {
+    "campusId": {
       "type": "string"
     },
-    "library": {
+    "libraryId": {
       "type": "string"
     },
     "parking": {
@@ -31,8 +31,8 @@
   "required": [
     "name",
     "code",
-    "institution",
-    "campus",
-    "library"
+    "institutionId",
+    "campusId",
+    "libraryId"
   ]
 }

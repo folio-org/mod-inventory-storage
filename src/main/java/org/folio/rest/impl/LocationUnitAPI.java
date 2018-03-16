@@ -55,6 +55,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
   public static final String LIBRARY_TABLE = "loclibrary";
   public static final String URL_PREFIX_LIB = URL_PREFIX + "/libraries";
   public static final String LIB_SCHEMA_PATH = "apidocs/raml/loclib.json";
+  private static final String MOD_NAME = "mod_inventory_storage";
 
   private String getErrorResponse(String response) {
     //Check to see if we're suppressing messages or not
@@ -93,7 +94,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
       postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
-        tenantId, "mod_inventory_storage", INSTITUTION_TABLE),
+        tenantId, MOD_NAME, INSTITUTION_TABLE),
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
@@ -222,7 +223,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 .withPlainInternalServerError(getErrorResponse(message))));
           } else {
             List<Locinst> instlist = (List<Locinst>) getReply.result().getResults();
-            if (instlist.size() < 1) {
+            if (instlist.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
                   .withPlainNotFound(
@@ -268,16 +269,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
             if (res.result()) {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                  .withPlainBadRequest("Cannot delete location, as it is in use")));
+                  .withPlainBadRequest("Cannot delete institution, as it is in use")));
             } else {
               try {
                 PostgresClient.getInstance(vertxContext.owner(), tenantId)
                   .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
                   if (deleteReply.failed()) {
-                    String message = logAndSaveError(deleteReply.cause());
+                    logAndSaveError(deleteReply.cause());
                     asyncResultHandler.handle(Future.succeededFuture(
                       LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                        .withPlainNotFound("Not found")));
+                        .withPlainNotFound("Institution not found")));
                   } else {
                     asyncResultHandler.handle(Future.succeededFuture(
                       LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
@@ -342,8 +343,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
               if (updateReply.result().getUpdated() == 0) {
                 asyncResultHandler.handle(Future.succeededFuture(
                   LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
-                    .withPlainNotFound("Not found")));
-                //Not found
+                    .withPlainNotFound("Institution not found")));
               } else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
@@ -384,7 +384,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
       postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
-        tenantId, "mod_inventory_storage", CAMPUS_TABLE),
+        tenantId, MOD_NAME, CAMPUS_TABLE),
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
@@ -513,7 +513,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
                   .withPlainInternalServerError(getErrorResponse(message))));
             } else {
               List<Loccamp> items = (List<Loccamp>) getReply.result().getResults();
-              if (items.size() < 1) {
+              if (items.isEmpty()) {
                 asyncResultHandler.handle(Future.succeededFuture(
                   LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
                     .withPlainNotFound(
@@ -559,16 +559,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
             if (res.result()) {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-                  .withPlainBadRequest("Cannot delete location, as it is in use")));
+                  .withPlainBadRequest("Cannot delete campus, as it is in use")));
             } else {
               try {
                 PostgresClient.getInstance(vertxContext.owner(), tenantId)
                   .delete(CAMPUS_TABLE, criterion, deleteReply -> {
                     if (deleteReply.failed()) {
-                      String message = logAndSaveError(deleteReply.cause());
+                      logAndSaveError(deleteReply.cause());
                       asyncResultHandler.handle(Future.succeededFuture(
                         LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-                          .withPlainNotFound("Not found")));
+                          .withPlainNotFound("Campus not found")));
                     } else {
                       asyncResultHandler.handle(Future.succeededFuture(
                         LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
@@ -633,8 +633,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 if (updateReply.result().getUpdated() == 0) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
-                      .withPlainNotFound("Not found")));
-                  //Not found
+                      .withPlainNotFound("Campus not found")));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
                     LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
@@ -673,7 +672,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
       postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
-        tenantId, "mod_inventory_storage", LIBRARY_TABLE),
+        tenantId, MOD_NAME, LIBRARY_TABLE),
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
@@ -802,7 +801,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
                   .withPlainInternalServerError(getErrorResponse(message))));
             } else {
               List<Loclib> items = (List<Loclib>) getReply.result().getResults();
-              if (items.size() < 1) {
+              if (items.isEmpty()) {
                 asyncResultHandler.handle(Future.succeededFuture(
                   LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
                     .withPlainNotFound(
@@ -848,16 +847,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
             if (res.result()) {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-                  .withPlainBadRequest("Cannot delete location, as it is in use")));
+                  .withPlainBadRequest("Cannot delete library, as it is in use")));
             } else {
               try {
                 PostgresClient.getInstance(vertxContext.owner(), tenantId)
                   .delete(LIBRARY_TABLE, criterion, deleteReply -> {
                     if (deleteReply.failed()) {
-                      String message = logAndSaveError(deleteReply.cause());
+                      logAndSaveError(deleteReply.cause());
                       asyncResultHandler.handle(Future.succeededFuture(
                         LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-                          .withPlainNotFound("Not found")));
+                          .withPlainNotFound("Library not found")));
                     } else {
                       asyncResultHandler.handle(Future.succeededFuture(
                         LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
@@ -922,8 +921,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 if (updateReply.result().getUpdated() == 0) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
-                      .withPlainNotFound("Not found")));
-                  //Not found
+                      .withPlainNotFound("Library not found")));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
                     LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse

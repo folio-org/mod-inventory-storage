@@ -39,27 +39,15 @@ import org.folio.rest.jaxrs.resource.LocationsResource;
 public class LocationAPI implements LocationsResource {
   private final Messages messages = Messages.getInstance();
   public static final String LOCATION_TABLE = "location";
-  public static final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
+  private final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
   public static final String URL_PREFIX = "/locations";
   public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
-
-  private String getErrorResponse(String response) {
-    //Check to see if we're suppressing messages or not
-    return response;
-  }
 
   private String logAndSaveError(Throwable err) {
     String message = err.getLocalizedMessage();
     logger.error(message, err);
     return message;
-  }
-
-  private boolean isDuplicate(String message) {
-    if(message != null && message.contains("duplicate key value violates unique constraint")) {
-      return true;
-    }
-    return false;
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
@@ -76,75 +64,63 @@ public class LocationAPI implements LocationsResource {
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
-          throws Exception{
-     String tenantId = TenantTool.tenantId(okapiHeaders);
-
-    try {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+  {
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+    PostgresClient.getInstance(vertxContext.owner(), TenantTool.calculateTenantId(tenantId))
+      .mutate(String.format("DELETE FROM %s_%s.%s",
         tenantId, "mod_inventory_storage", LOCATION_TABLE),
-        reply -> {
-          if (reply.succeeded()) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              LocationsResource.DeleteLocationsResponse.noContent()
-                .build()));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-              LocationsResource.DeleteLocationsResponse.
-                withPlainInternalServerError(reply.cause().getMessage())));
-          }
-        });
-    }    catch(Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationsResource.DeleteLocationsResponse.
-          withPlainInternalServerError(e.getMessage())));
-    }
-
+      reply -> {
+        if (reply.succeeded()) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            LocationsResource.DeleteLocationsResponse.noContent()
+              .build()));
+        } else {
+          asyncResultHandler.handle(Future.succeededFuture(
+            LocationsResource.DeleteLocationsResponse.
+              withPlainInternalServerError(reply.cause().getMessage())));
+        }
+      });
   }
 
+  // Note, this is the way to get rid of unnecessary try-catch blocks. Use the
+  // same everywhere!
   @Override
-  public void getLocations(        String query,
-        int offset,
-        int limit,
-        String lang,
-        Map<String, String>okapiHeaders,
-        Handler<AsyncResult<Response>>asyncResultHandler,
-        Context vertxContext)
-        throws Exception {
+  public void getLocations(
+    String query,
+    int offset,
+    int limit,
+    String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    String tenantId = getTenant(okapiHeaders);
+    CQLWrapper cql;
     try {
-      String tenantId = getTenant(okapiHeaders);
-      CQLWrapper cql = getCQL(query, limit, offset, LOCATION_TABLE);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .get(
-          LOCATION_TABLE, Location.class,
-          new String[]{"*"}, cql, true, true, reply -> {
-            try {
-              if (reply.failed()) {
-                String message = logAndSaveError(reply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
-                  GetLocationsResponse.withPlainBadRequest(getErrorResponse(message))));
-              } else {
-                Locations shelfLocations = new Locations();
-                List<Location> shelfLocationsList = (List<Location>) reply.result().getResults();
-                shelfLocations.setLocations(shelfLocationsList);
-                shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                asyncResultHandler.handle(Future.succeededFuture(
-                  GetLocationsResponse.withJsonOK(shelfLocations)));
-              }
-            } catch (Exception e) {
-              String message = logAndSaveError(e);
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationsResponse.withPlainInternalServerError(getErrorResponse(message))));
-            }
-          });
-    } catch (Exception e) {
+      cql = getCQL(query, limit, offset, LOCATION_TABLE);
+    } catch (FieldException e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        GetLocationsResponse.withPlainInternalServerError(
-          getErrorResponse(message))));
+        GetLocationsResponse.withPlainBadRequest(message)));
+      return;
     }
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .get(LOCATION_TABLE, Location.class,
+        new String[]{"*"}, cql, true, true, reply -> {
+          // netbeans, please indent here!
+          if (reply.failed()) {
+            String message = logAndSaveError(reply.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
+              GetLocationsResponse.withPlainBadRequest(message)));
+          } else {
+            Locations shelfLocations = new Locations();
+            List<Location> shelfLocationsList = (List<Location>) reply.result().getResults();
+            shelfLocations.setLocations(shelfLocationsList);
+            shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+            asyncResultHandler.handle(Future.succeededFuture(
+              GetLocationsResponse.withJsonOK(shelfLocations)));
+          }
+        });
   }
 
 
@@ -166,7 +142,8 @@ public class LocationAPI implements LocationsResource {
         try {
           if (reply.failed()) {
             String message = logAndSaveError(reply.cause());
-            if (isDuplicate(message)) {
+            if (message != null
+              && message.contains("duplicate key value violates unique constraint")) {
               asyncResultHandler.handle(Future.succeededFuture(
                 PostLocationsResponse.withJsonUnprocessableEntity(
                   ValidationHelper.createValidationErrorMessage(
@@ -174,7 +151,7 @@ public class LocationAPI implements LocationsResource {
                     "Location already exists"))));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                PostLocationsResponse.withPlainInternalServerError(getErrorResponse(message))));
+                PostLocationsResponse.withPlainInternalServerError(message)));
             }
           } else {
             Object responseObject = reply.result();
@@ -187,13 +164,13 @@ public class LocationAPI implements LocationsResource {
         } catch (Exception e) {
           String message = logAndSaveError(e);
           asyncResultHandler.handle(Future.succeededFuture(
-            PostLocationsResponse.withPlainInternalServerError(getErrorResponse(message))));
+            PostLocationsResponse.withPlainInternalServerError(message)));
         }
       });
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        PostLocationsResponse.withPlainInternalServerError(getErrorResponse(message))));
+        PostLocationsResponse.withPlainInternalServerError(message)));
     }
   }
 
@@ -216,17 +193,18 @@ public class LocationAPI implements LocationsResource {
           if (getReply.failed()) {
             String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
+              GetLocationsByIdResponse.withPlainInternalServerError(message)));
           } else {
             List<Location> locationList = (List<Location>) getReply.result().getResults();
-            if (locationList.size() < 1) {
+            if (locationList.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationsByIdResponse.withPlainNotFound(messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
+                GetLocationsByIdResponse.withPlainNotFound(
+                  messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
             } else if (locationList.size() > 1) {
               String message = "Multiple locations found with the same id";
               logger.error(message);
               asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
+                GetLocationsByIdResponse.withPlainInternalServerError(message)));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(GetLocationsByIdResponse.withJsonOK(locationList.get(0))));
             }
@@ -235,7 +213,7 @@ public class LocationAPI implements LocationsResource {
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        GetLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
+        GetLocationsByIdResponse.withPlainInternalServerError(message)));
     }
   }
 
@@ -245,52 +223,34 @@ public class LocationAPI implements LocationsResource {
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
           throws Exception {
-    try {
-      String tenantId = getTenant(okapiHeaders);
-      Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      Criterion criterion = new Criterion(criteria);
-      try {
-        locationInUse(id, tenantId, vertxContext).setHandler(res -> {
-          if (res.failed()) {
-            String message = logAndSaveError(res.cause());
-            DeleteLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message));
-          } else {
-            if (res.result()) {
+    String tenantId = getTenant(okapiHeaders);
+    Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
+    criteria.addField(ID_FIELD_NAME);
+    criteria.setOperation("=");
+    criteria.setValue(id);
+    Criterion criterion = new Criterion(criteria);
+    locationInUse(id, tenantId, vertxContext).setHandler(res -> {
+      if (res.failed()) {
+        String message = logAndSaveError(res.cause());
+        DeleteLocationsByIdResponse.withPlainInternalServerError(message);
+      } else {
+        if (res.result()) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            DeleteLocationsByIdResponse.withPlainBadRequest("Cannot delete location, as it is in use")));
+        } else {
+          PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(LOCATION_TABLE, criterion, deleteReply -> {
+            if (deleteReply.failed()) {
+              logAndSaveError(deleteReply.cause());
               asyncResultHandler.handle(Future.succeededFuture(
-                DeleteLocationsByIdResponse.withPlainBadRequest("Cannot delete location, as it is in use")));
+                DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
             } else {
-              try {
-                PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(LOCATION_TABLE, criterion, deleteReply -> {
-                  if (deleteReply.failed()) {
-                    String message = logAndSaveError(deleteReply.cause());
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
-                  } else {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      DeleteLocationsByIdResponse.withNoContent()));
-                  }
-                });
-              } catch (Exception e) {
-                String message = logAndSaveError(e);
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
-              }
+              asyncResultHandler.handle(Future.succeededFuture(
+                DeleteLocationsByIdResponse.withNoContent()));
             }
-          }
-        });
-      } catch (Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-          DeleteLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
+          });
+        }
       }
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        DeleteLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
-    }
+    });
   }
 
   @Override
@@ -313,33 +273,27 @@ public class LocationAPI implements LocationsResource {
       criteria.setOperation("=");
       criteria.setValue(id);
       Criterion criterion = new Criterion(criteria);
-      try {
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-          LOCATION_TABLE, entity, criterion, false, updateReply -> {
-            if (updateReply.failed()) {
-              String message = logAndSaveError(updateReply.cause());
+      PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+        LOCATION_TABLE, entity, criterion, false, updateReply -> {
+          if (updateReply.failed()) {
+            String message = logAndSaveError(updateReply.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
+              PutLocationsByIdResponse.withPlainInternalServerError(message)));
+          } else {
+            if (updateReply.result().getUpdated() == 0) {
               asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
+                PutLocationsByIdResponse.withPlainNotFound("Not found")));
+              //Not found
             } else {
-              if (updateReply.result().getUpdated() == 0) {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  PutLocationsByIdResponse.withPlainNotFound("Not found")));
-                //Not found
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  PutLocationsByIdResponse.withNoContent()));
-              }
+              asyncResultHandler.handle(Future.succeededFuture(
+                PutLocationsByIdResponse.withNoContent()));
             }
-          });
-      } catch (Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-          PutLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
-      }
+          }
+        });
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        PutLocationsByIdResponse.withPlainInternalServerError(getErrorResponse(message))));
+        PutLocationsByIdResponse.withPlainInternalServerError(message)));
     }
   }
 

@@ -130,7 +130,7 @@ public class LocationUnitTest {
 
     JsonObject request = new JsonObject()
       .put("name", name)
-      .put("shortcode", code);
+      .put("code", code);
 
     send(locInstitutionStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
@@ -149,7 +149,7 @@ public class LocationUnitTest {
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", name)
-      .put("shortcode", code);
+      .put("code", code);
 
     send(locInstitutionStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
@@ -184,7 +184,7 @@ public class LocationUnitTest {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("name"), is("Institute of MetaPhysics"));
-    assertThat(response.getJson().getString("shortcode"), is("MPI"));
+    assertThat(response.getJson().getString("code"), is("MPI"));
   }
 
   @Test
@@ -324,7 +324,7 @@ public class LocationUnitTest {
 
     JsonObject request = new JsonObject()
       .put("name", name)
-      .put("shortcode", code)
+      .put("code", code)
       .put("institutionId", instId.toString());
     if (id != null) {
       request.put("id", id.toString());
@@ -366,7 +366,7 @@ public class LocationUnitTest {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("name"), is("Riverside Campus"));
-    assertThat(response.getJson().getString("shortcode"), is("RS"));
+    assertThat(response.getJson().getString("code"), is("RS"));
   }
 
   @Test
@@ -488,7 +488,7 @@ public class LocationUnitTest {
 
     JsonObject request = new JsonObject()
       .put("name", name)
-      .put("shortcode", code)
+      .put("code", code)
       .put("campusId", campId.toString());
     if (id != null) {
       request.put("id", id.toString());
@@ -532,7 +532,7 @@ public class LocationUnitTest {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("name"), is("Main Library"));
-    assertThat(response.getJson().getString("shortcode"), is("RS"));
+    assertThat(response.getJson().getString("code"), is("RS"));
   }
 
   @Test

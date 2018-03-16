@@ -9,7 +9,7 @@
     "name": {
       "type": "string"
     },
-    "shortcode": {
+    "code": {
       "type": "string"
     },
     "institutionId": {
