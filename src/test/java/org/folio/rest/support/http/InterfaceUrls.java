@@ -18,7 +18,7 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/loan-types" + subPath);
   }
 
-  public static URL locationsStorageUrl(String subPath)
+  public static URL ShelfLocationsStorageUrl(String subPath)
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/shelf-locations" + subPath);
@@ -46,5 +46,26 @@ public class InterfaceUrls {
     throws MalformedURLException {
 
     return StorageTestSuite.storageUrl("/instance-storage/instances" + subPath);
+  }
+
+  public static URL locationsStorageUrl(String subPath)
+    throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl("/locations" + subPath);
+  }
+
+  public static URL locInstitutionStorageUrl(String subPath)
+    throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/location-units/institutions" + subPath);
+  }
+
+  public static URL locCampusStorageUrl(String subPath)
+    throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/location-units/campuses" + subPath);
+  }
+
+  public static URL locLibraryStorageUrl(String subPath)
+    throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/location-units/libraries" + subPath);
   }
 }
