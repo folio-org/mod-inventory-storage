@@ -96,17 +96,17 @@
       ],
       "foreignKeys": [
         {
-          "fieldName": "institution",
+          "fieldName": "institutionId",
           "targetTable": "locinstitution",
           "tOps": "ADD"
         },
         {
-          "fieldName": "campus",
+          "fieldName": "campusId",
           "targetTable": "loccampus",
           "tOps": "ADD"
         },
         {
-          "fieldName": "library",
+          "fieldName": "libraryId",
           "targetTable": "loclibrary",
           "tOps": "ADD"
         }
