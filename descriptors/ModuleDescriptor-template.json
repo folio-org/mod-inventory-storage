@@ -642,7 +642,6 @@
       "displayName": "inventory storage - delete individual shelf location",
       "description": "delete individual shelf location from storage"
     },
-
     {
       "permissionName": "inventory-storage.location-units.institutions.collection.get",
       "displayName": "inventory storage - location units - get institution collection",
@@ -668,7 +667,6 @@
       "displayName": "inventory storage - location units - delete individual institution",
       "description": "delete individual institution"
     },
-
     {
       "permissionName": "inventory-storage.location-units.campuses.collection.get",
       "displayName": "inventory storage - location units - get campus collection",
@@ -694,7 +692,6 @@
       "displayName": "inventory storage - location units - delete individual campus",
       "description": "delete individual campus"
     },
-
     {
       "permissionName": "inventory-storage.location-units.libraries.collection.get",
       "displayName": "inventory storage - location units - get library collection",
@@ -720,7 +717,6 @@
       "displayName": "inventory storage - location units - delete individual library",
       "description": "delete individual library"
     },
-
     {
       "permissionName": "inventory-storage.locations.collection.get",
       "displayName": "inventory storage - locations - get location collection",
@@ -746,7 +742,6 @@
       "displayName": "inventory storage - locations - delete individual location",
       "description": "delete individual location"
     },
-
     {
       "permissionName": "inventory-storage.identifier-types.collection.get",
       "displayName": "inventory storage - get identifier-type collection",
@@ -979,7 +974,7 @@
         "inventory-storage.locations.item.get",
         "inventory-storage.locations.item.post",
         "inventory-storage.locations.item.put",
-        "inventory-storage.locatios.item.delete",
+        "inventory-storage.locations.item.delete",
         "inventory-storage.identifier-types.collection.get",
         "inventory-storage.identifier-types.item.get",
         "inventory-storage.identifier-types.item.post",
