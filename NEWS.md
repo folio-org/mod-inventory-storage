@@ -1,3 +1,9 @@
+## 8.1.0 Unreleased
+
+* Introduces multi-level (institution, campus, library and location) location model (MODINVSTOR-70)
+* Provides `locations` 1.0 interface (MODINVSTOR-70)
+* Provides `location-units` 1.0 interface (MODINVSTOR-70)
+
 ## 8.0.0 2018-03-07
 
 * Upgrades RAML Module Builder to version 19.0.0 (RMB-130, MODINVSTOR-65)
