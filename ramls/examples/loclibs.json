@@ -1,0 +1,17 @@
+{
+  "loclibs": [
+    {
+      "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
+      "name": "Main Library",
+      "code": "ML",
+      "campusId": "e838c9f0-e559-4872-958f-d9bc97ca1210"
+    },
+    {
+      "id": "0df935eb-f3f4-4741-9ac6-33c500174b96",
+      "name": "Agriculture Library Reserve",
+      "code": "ALR",
+      "campusId": "e838c9f0-e559-4872-958f-d9bc97ca1210"
+    }
+  ],
+  "totalRecords": 2
+}

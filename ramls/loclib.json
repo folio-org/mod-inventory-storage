@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "third-level location unit",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "campusId": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name", "campusId"
+  ]
+}
