@@ -1,5 +1,6 @@
-## 8.1.0 Unreleased
+## 8.2.1 Unreleased
 
+* Stops hiding database related errors when creating instances or holdings (MODINVSTOR-72)
 * Introduces multi-level (institution, campus, library and location) location model (MODINVSTOR-70)
 * Provides `locations` 1.0 interface (MODINVSTOR-70)
 * Provides `location-units` 1.0 interface (MODINVSTOR-70)
