@@ -185,7 +185,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
-                        .withPlainBadRequest("ID must be a UUID")));
+                        .withPlainBadRequest(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 e.printStackTrace();
