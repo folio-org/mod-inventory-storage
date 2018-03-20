@@ -6,7 +6,8 @@ baseUri: http://github.com/org/folio/mod-inventory-storage
 
 documentation:
   - title: Locations API
-    content: This documents the API calls that can be made to query and manage  (shelf)locations of the system
+    content: This documents the API calls that can be made to query and manage
+      (shelf) locations of the system
 
 schemas:
   - location.json: !include location.json
@@ -39,15 +40,15 @@ resourceTypes:
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
       pageable
     ]
-    description: Return a list of  locations
+    description: Return a list of locations
   post:
-    description: Create a new  location
+    description: Create a new location
     is: [validate]
   delete:
-    description: "Delete all  locations"
+    description: "Delete all locations"
     responses:
       204:
-        description: "All  locations deleted"
+        description: "All locations deleted"
       500:
         description: "Internal server error, e.g. due to misconfiguration"
         body:
@@ -71,5 +72,3 @@ resourceTypes:
       responses:
         501:
           description: "Not implemented yet"
-
-
