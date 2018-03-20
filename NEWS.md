@@ -13,7 +13,7 @@
 
 ## 7.2.2 2018-03-02
 
-* Adds the following GIN indexes for `instances` (MODINVSTOR-48): 
+* Adds the following GIN indexes for `instances` (MODINVSTOR-48):
   - `contributors`
   - `identifiers`
   - `instanceTypeId`
@@ -30,7 +30,7 @@
 
 ## 7.1.0 2018-01-08
 
-* Adds metadata generation (dates and update user) to instance records (MODINVSTOR-37) 
+* Adds metadata generation (dates and update user) to instance records (MODINVSTOR-37)
 * Provides `instance-storage` 4.1 interface (MODINVSTOR-37)
 
 ## 7.0.0 2018-01-03
