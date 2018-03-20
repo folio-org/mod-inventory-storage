@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2015-2018, Index Data
- * All rights reserved.
- * See the file LICENSE for details.
- */
 package org.folio.rest.impl;
 
 import io.vertx.core.AsyncResult;
