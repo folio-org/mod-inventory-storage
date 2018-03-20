@@ -115,8 +115,7 @@
           "dateOfPublication": {
             "type": "string"
           }
-        },
-        "uniqueItems": true
+        }
       }
     },
     "urls": {
