@@ -37,6 +37,9 @@ public class ShelfLocationsTest {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private String canCirculateLoanTypeID;
   private String journalMaterialTypeID;
+  private UUID instID;
+  private UUID campID;
+  private UUID libID;
 
   @Before
   public void beforeEach()
@@ -47,6 +50,12 @@ public class ShelfLocationsTest {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
+
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
@@ -57,6 +66,13 @@ public class ShelfLocationsTest {
     journalMaterialTypeID = new MaterialTypesClient(
       new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
       materialTypesStorageUrl("")).create("Journal");
+
+    instID = UUID.randomUUID();
+    LocationUnitTest.createInst(instID, "Primary Institution", "PI");
+    campID = UUID.randomUUID();
+    LocationUnitTest.createCamp(campID, "Central Campus", "CC", instID);
+    libID = UUID.randomUUID();
+    LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
   }
 
   @Test
@@ -66,37 +82,14 @@ public class ShelfLocationsTest {
     TimeoutException,
     MalformedURLException {
 
+    LocationsTest.createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X");
+
     Response response = createShelfLocation("Main Library");
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("name"), is("Main Library"));
   }
-
-/*  @Test
-  public void cannotCreateShelfLocationWithSameName()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
-    createShelfLocation("Main Library");
-    Response response = createShelfLocation("Main Library");
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-  }
-
-  @Test
-  public void cannotCreateShelfLocationWithSameId()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
-    UUID id = UUID.randomUUID();
-    createShelfLocation(id, "Main Library");
-    Response response = createShelfLocation(id, "Annex Library");
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-  }*/
 
   @Test
   public void canGetAShelfLocationById()
@@ -106,7 +99,7 @@ public class ShelfLocationsTest {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    createShelfLocation(id, "Main Library");
+    LocationsTest.createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X");
     Response getResponse = getById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -115,89 +108,7 @@ public class ShelfLocationsTest {
     assertThat(item.getString("name"), is("Main Library"));
   }
 
-  @Test
-  public void canUpdateAShelfLocation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
-    UUID id = UUID.randomUUID();
-    createShelfLocation(id, "Main Library");
-
-    JsonObject updateRequest = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Annex Library");
-
-    CompletableFuture<Response> updated = new CompletableFuture<>();
-
-    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
-      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
-      ResponseHandler.any(updated));
-
-    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
-
-    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    Response getResponse = getById(id);
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    JsonObject item = getResponse.getJson();
-    assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("name"), is("Annex Library"));
-  }
-
-  @Test
-  public void canDeleteAShelfLocation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
-    UUID id = UUID.randomUUID();
-
-    createShelfLocation(id, "Main Library");
-
-    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-
-    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
-
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-  }
-
-  @Test
-  public void cannotDeleteAShelfLocationAssociatedWithAnItem()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
-    UUID locationId = UUID.randomUUID();
-
-    createShelfLocation(locationId, "Main Library");
-
-    JsonObject item = createItemRequest(locationId.toString());
-    CompletableFuture<Response> createItemCompleted = new CompletableFuture<>();
-
-    send(itemsStorageUrl(""), HttpMethod.POST, item.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
-
-    Response createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(createItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-
-    send(ShelfLocationsStorageUrl(locationId.toString()),
-      HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
-      ResponseHandler.any(deleteCompleted));
-
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-  }
-
-  private static void send(URL url, HttpMethod method, String content,
-                           String contentType, Handler<HttpClientResponse> handler) {
+  private static void send(URL url, HttpMethod method, String content,                           String contentType, Handler<HttpClientResponse> handler) {
 
     HttpClient client = StorageTestSuite.getVertx().createHttpClient();
     HttpClientRequest request;

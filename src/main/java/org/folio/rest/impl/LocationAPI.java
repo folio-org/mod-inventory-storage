@@ -41,7 +41,7 @@ public class LocationAPI implements LocationsResource {
   public static final String LOCATION_TABLE = "location";
   private final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
   public static final String URL_PREFIX = "/locations";
-  public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
+  public static final String LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
 
   private String logAndSaveError(Throwable err) {
@@ -183,7 +183,7 @@ public class LocationAPI implements LocationsResource {
           throws Exception {
     try {
       String tenantId = getTenant(okapiHeaders);
-      Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
+      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
@@ -224,7 +224,7 @@ public class LocationAPI implements LocationsResource {
           Context vertxContext)
           throws Exception {
     String tenantId = getTenant(okapiHeaders);
-    Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
+    Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
     criteria.addField(ID_FIELD_NAME);
     criteria.setOperation("=");
     criteria.setValue(id);
@@ -268,7 +268,7 @@ public class LocationAPI implements LocationsResource {
         return;
       }
       String tenantId = getTenant(okapiHeaders);
-      Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
+      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);

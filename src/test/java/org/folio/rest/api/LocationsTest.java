@@ -298,7 +298,7 @@ public class LocationsTest {
     }
   }
 
-  public Response createLocation(UUID id, String name,
+  public static Response createLocation(UUID id, String name,
     UUID inst, UUID camp, UUID lib, String code)
     throws MalformedURLException,
     InterruptedException,
