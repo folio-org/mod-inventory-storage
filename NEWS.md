@@ -4,6 +4,7 @@
 * Introduces multi-level (institution, campus, library and location) location model (MODINVSTOR-70, MODINVSTOR-91)
 * Provides `locations` 1.0 interface (MODINVSTOR-70)
 * Provides `location-units` 1.0 interface (MODINVSTOR-70)
+* Provides `contributor-name-types` 1.1 interface (MODINVSTOR-66)
 
 ## 8.0.0 2018-03-07
 
