@@ -738,7 +738,7 @@
       "description": "modify location"
     },
     {
-      "permissionName": "inventory-storage.locatios.item.delete",
+      "permissionName": "inventory-storage.locations.item.delete",
       "displayName": "inventory storage - locations - delete individual location",
       "description": "delete individual location"
     },
