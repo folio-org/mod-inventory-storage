@@ -32,6 +32,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.util.ArrayList;
+import org.apache.commons.lang.NotImplementedException;
 import static org.folio.rest.impl.LocationAPI.LOCATION_SCHEMA_PATH;
 import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
 import org.folio.rest.jaxrs.model.Location;
@@ -85,7 +86,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
           throws Exception{
-     String tenantId = TenantTool.tenantId(okapiHeaders);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
 
     try {
       PostgresClient postgresClient = PostgresClient.getInstance(
@@ -227,7 +228,10 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
-          throws Exception {
+    throws Exception {
+    throw new NotImplementedException("Updating shelf-locations is DEPRECATED. "
+      + "Use the new locations insterface instead");
+    /*
     try {
       String tenantId = getTenant(okapiHeaders);
       String id = entity.getId();
@@ -273,6 +277,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         PostShelfLocationsResponse.withPlainInternalServerError(
           getErrorResponse(message))));
     }
+     */
   }
 
   @Override

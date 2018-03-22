@@ -82,9 +82,8 @@ public class ShelfLocationsTest {
     TimeoutException,
     MalformedURLException {
 
-    LocationsTest.createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X");
-
-    Response response = createShelfLocation("Main Library");
+    Response response = LocationsTest.createLocation(null, "Main Library",
+      instID, campID, libID, "PI/CC/ML/X");
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -142,6 +141,7 @@ public class ShelfLocationsTest {
     request.end(buffer);
   }
 
+  /*
   private JsonObject createItemRequest(String temporaryLocationId) {
 
     JsonObject item = new JsonObject();
@@ -154,39 +154,7 @@ public class ShelfLocationsTest {
 
     return item;
   }
-
-  private Response createShelfLocation(String name)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    CompletableFuture<Response> createShelfLocation = new CompletableFuture<>();
-
-    send(ShelfLocationsStorageUrl(""), HttpMethod.POST, new JsonObject().put("name", name).toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createShelfLocation));
-
-    return createShelfLocation.get(5, TimeUnit.SECONDS);
-  }
-
-  protected static Response createShelfLocation(UUID id, String name)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    CompletableFuture<Response> createShelfLocation = new CompletableFuture<>();
-
-    JsonObject request = new JsonObject()
-      .put("id", id.toString())
-      .put("name", name);
-
-    send(ShelfLocationsStorageUrl(""), HttpMethod.POST, request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createShelfLocation));
-
-    return createShelfLocation.get(5, TimeUnit.SECONDS);
-  }
-
+*/
   private Response getById(UUID id)
     throws InterruptedException,
     ExecutionException,

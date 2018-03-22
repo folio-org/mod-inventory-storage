@@ -408,7 +408,7 @@
       "foreignKeys": [
         {
           "fieldName": "permanentLocationId",
-          "targetTable": "shelflocation",
+          "targetTable": "location",
           "tOps": "ADD"
         }
       ],
