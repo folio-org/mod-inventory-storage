@@ -211,6 +211,28 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void canListInsts()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    createInst("Institute of MetaPhysics", "MPI");
+    createInst("The Other Institute", "OI");
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    send(locInstitutionStorageUrl("/"), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getInteger("totalRecords"), is(2));
+  }
+
+  @Test
   public void canUpdateAnInst()
     throws InterruptedException,
     ExecutionException,
@@ -402,6 +424,28 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void canListCamps()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createCamp(null, "Riverside Campus", "RSC", instId);
+    createCamp(null, "Other Side Campus", "OSC", instId);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locCampusStorageUrl("/"), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getInteger("totalRecords"), is(2));
+  }
+
+  @Test
   public void canUpdateACamp()
     throws InterruptedException,
     ExecutionException,
@@ -564,7 +608,7 @@ public class LocationUnitTest {
     createCamp(campId, "Riverside Campus", "RS", instId);
 
     UUID id = UUID.randomUUID();
-    createLib(id, "Main Library", "RS", campId);
+    createLib(id, "Main Library", "ML", campId);
     Response getResponse = getLibById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -572,6 +616,30 @@ public class LocationUnitTest {
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Main Library"));
     assertThat(item.getString("campusId"), is(campId.toString()));
+  }
+
+  @Test
+  public void canListLibs()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+    createLib(null, "Main Library", "ML", campId);
+    createLib(null, "Side Library", "SL", campId);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locLibraryStorageUrl("/"), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getInteger("totalRecords"), is(2));
   }
 
   @Test
