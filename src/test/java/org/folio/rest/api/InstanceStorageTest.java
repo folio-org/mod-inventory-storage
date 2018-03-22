@@ -7,7 +7,6 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
-import org.folio.rest.support.client.ShelfLocationsClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;

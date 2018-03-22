@@ -49,7 +49,6 @@ public class ShelfLocationsTest {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
 
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
@@ -141,20 +140,6 @@ public class ShelfLocationsTest {
     request.end(buffer);
   }
 
-  /*
-  private JsonObject createItemRequest(String temporaryLocationId) {
-
-    JsonObject item = new JsonObject();
-
-    item.put("holdingsRecordId", UUID.randomUUID().toString());
-    item.put("barcode", "12345");
-    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    item.put("materialTypeId", journalMaterialTypeID);
-    item.put("temporaryLocationId", temporaryLocationId);
-
-    return item;
-  }
-*/
   private Response getById(UUID id)
     throws InterruptedException,
     ExecutionException,

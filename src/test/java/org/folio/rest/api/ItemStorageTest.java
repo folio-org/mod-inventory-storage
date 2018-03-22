@@ -59,8 +59,6 @@ public class ItemStorageTest extends TestBase {
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
 
-    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
-
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("journal");
     bookMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book");
     videoMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("video");

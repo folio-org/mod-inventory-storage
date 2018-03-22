@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
-import org.folio.rest.support.client.ShelfLocationsClient;
 import org.junit.*;
 
 import java.net.HttpURLConnection;
@@ -46,7 +45,6 @@ public class HoldingsStorageTest extends TestBase {
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
 
-    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
