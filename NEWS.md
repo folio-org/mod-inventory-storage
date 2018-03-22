@@ -1,3 +1,6 @@
+## 8.2.3 Unreleased
+* Removing SQ warnings and improving test coverage in the new locations and location-units (MODINVSTOR-89)
+
 ## 8.2.1 Unreleased
 
 * Stops hiding database related errors when creating instances or holdings (MODINVSTOR-72)
