@@ -53,13 +53,12 @@ shift $((OPTIND -1))
 okapiUrl=${okapiUrl:-http://localhost:9130}
 tenant=${tenant:-demo_tenant}
 dataDirs=${dataDirs:-'.'}
-modEndpoints_a='material-types loan-types shelf-locations'
+modEndpoints_a='material-types loan-types'
 modEndpoints_b='location-units/institutions location-units/campuses location-units/libraries'
 modEndpoints_c='locations identifier-types contributor-types'
 modEndpoints_d='contributor-name-types instance-types instance-formats classification-types platforms'
 modEndpoints="$modEndpoints_a $modEndpoints_b $modEndpoints_c $modEndpoints_d"
 method=POST
-
 
 for dir in "${dataDirs[@]}";
 do
