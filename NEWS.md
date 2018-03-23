@@ -1,5 +1,6 @@
 ## 8.2.3 Unreleased
 * Removing SQ warnings and improving test coverage in the new locations and location-units (MODINVSTOR-89)
+* Add optional field `contributorTypeText` to `instance.contributors` (MODINVSTOR-93)
 
 ## 8.2.2 Unreleased
 
