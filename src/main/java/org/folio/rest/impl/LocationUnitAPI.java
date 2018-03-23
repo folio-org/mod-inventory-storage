@@ -199,7 +199,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .get(INSTITUTION_TABLE, Locinst.class, criterion,          true, false, getReply -> {
+      .get(INSTITUTION_TABLE, Locinst.class, criterion, true, false, getReply -> {
           if (getReply.failed()) {
             String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
@@ -212,12 +212,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
                   .withPlainNotFound(
                     messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else if (instlist.size() > 1) {
-              String message = "Multiple institutions found with the same id";
-              logger.error(message);
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-                  .withPlainInternalServerError(message)));
+              // We can safely ignore the case that we have more than one with
+              // the same id, RMB has a primary key on ID, will not allow it
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse

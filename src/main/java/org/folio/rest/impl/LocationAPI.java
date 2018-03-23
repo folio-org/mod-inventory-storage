@@ -125,110 +125,108 @@ public class LocationAPI implements LocationsResource {
 
 
   @Override
-  public void postLocations(          String lang,
-    Location entity,          Map<String, String> okapiHeaders,
-          Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-          throws Exception {
-    try {
-      String tenantId = getTenant(okapiHeaders);
-      String id = entity.getId();
-      if (id == null) {
-        id = UUID.randomUUID().toString();
-        entity.setId(id);
-      }
-      PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .save(LOCATION_TABLE, id, entity, reply -> {
-        try {
-          if (reply.failed()) {
-            String message = logAndSaveError(reply.cause());
-            if (message != null
-              && message.contains("duplicate key value violates unique constraint")) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PostLocationsResponse.withJsonUnprocessableEntity(
-                  ValidationHelper.createValidationErrorMessage(
-                    "shelflocation", entity.getId(),
-                    "Location already exists"))));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PostLocationsResponse.withPlainInternalServerError(message)));
-            }
-          } else {
-            Object responseObject = reply.result();
-            entity.setId((String) responseObject);
-            OutStream stream = new OutStream();
-            stream.setData(entity);
+  public void postLocations(String lang,
+    Location entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    String tenantId = getTenant(okapiHeaders);
+    String id = entity.getId();
+    if (id == null) {
+      id = UUID.randomUUID().toString();
+      entity.setId(id);
+    }
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .save(LOCATION_TABLE, id, entity, reply -> {
+        if (reply.failed()) {
+          String message = logAndSaveError(reply.cause());
+          if (message != null
+            && message.contains("duplicate key value violates unique constraint")) {
             asyncResultHandler.handle(Future.succeededFuture(
-              PostLocationsResponse.withJsonCreated(URL_PREFIX + responseObject, stream)));
+              PostLocationsResponse.withJsonUnprocessableEntity(
+                ValidationHelper.createValidationErrorMessage(
+                  "shelflocation", entity.getId(),
+                  "Location already exists"))));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+              PostLocationsResponse.withPlainInternalServerError(message)));
           }
-        } catch (Exception e) {
-          String message = logAndSaveError(e);
+        } else {
+          Object responseObject = reply.result();
+          entity.setId((String) responseObject);
+          OutStream stream = new OutStream();
+          stream.setData(entity);
           asyncResultHandler.handle(Future.succeededFuture(
-            PostLocationsResponse.withPlainInternalServerError(message)));
+            PostLocationsResponse.withJsonCreated(URL_PREFIX + responseObject, stream)));
         }
       });
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        PostLocationsResponse.withPlainInternalServerError(message)));
-    }
   }
 
   @Override
-  public void getLocationsById(          String id,
-          String lang,
-          Map<String, String> okapiHeaders,
-          Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-          throws Exception {
+  public void getLocationsById(String id,
+    String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    String tenantId = getTenant(okapiHeaders);
+    Criterion criterion;
     try {
-      String tenantId = getTenant(okapiHeaders);
       Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
-      Criterion criterion = new Criterion(criteria);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-        LOCATION_TABLE, Location.class, criterion, true, false, getReply -> {
-          if (getReply.failed()) {
-            String message = logAndSaveError(getReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationsByIdResponse.withPlainInternalServerError(message)));
-          } else {
-            List<Location> locationList = (List<Location>) getReply.result().getResults();
-            if (locationList.isEmpty()) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationsByIdResponse.withPlainNotFound(
-                  messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else if (locationList.size() > 1) {
-              String message = "Multiple locations found with the same id";
-              logger.error(message);
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationsByIdResponse.withPlainInternalServerError(message)));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(GetLocationsByIdResponse.withJsonOK(locationList.get(0))));
-            }
-          }
-        });
+      criterion = new Criterion(criteria);
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         GetLocationsByIdResponse.withPlainInternalServerError(message)));
+      return;
     }
+    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
+      LOCATION_TABLE, Location.class, criterion, true, false, getReply -> {
+        if (getReply.failed()) {
+          String message = logAndSaveError(getReply.cause());
+          asyncResultHandler.handle(Future.succeededFuture(
+            GetLocationsByIdResponse.withPlainInternalServerError(message)));
+        } else {
+          List<Location> locationList = (List<Location>) getReply.result().getResults();
+          if (locationList.isEmpty()) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              GetLocationsByIdResponse.withPlainNotFound(
+                messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
+          } else if (locationList.size() > 1) {
+            String message = "Multiple locations found with the same id";
+            logger.error(message);
+            asyncResultHandler.handle(Future.succeededFuture(
+              GetLocationsByIdResponse.withPlainInternalServerError(message)));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(GetLocationsByIdResponse.withJsonOK(locationList.get(0))));
+          }
+        }
+      });
   }
 
   @Override
-  public void deleteLocationsById(          String id,
-          String lang, Map<String, String> okapiHeaders,
-          Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-          throws Exception {
+  public void deleteLocationsById(String id,
+    String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
     String tenantId = getTenant(okapiHeaders);
-    Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
-    criteria.addField(ID_FIELD_NAME);
-    criteria.setOperation("=");
-    criteria.setValue(id);
-    Criterion criterion = new Criterion(criteria);
+    Criterion criterion;
+    try {
+      Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
+      criteria.addField(ID_FIELD_NAME);
+      criteria.setOperation("=");
+      criteria.setValue(id);
+      criterion = new Criterion(criteria);
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        GetLocationsByIdResponse.withPlainInternalServerError(message)));
+      return;
+    }
     locationInUse(id, tenantId, vertxContext).setHandler(res -> {
       if (res.failed()) {
         String message = logAndSaveError(res.cause());
@@ -236,9 +234,11 @@ public class LocationAPI implements LocationsResource {
       } else {
         if (res.result()) {
           asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationsByIdResponse.withPlainBadRequest("Cannot delete location, as it is in use")));
+            DeleteLocationsByIdResponse
+              .withPlainBadRequest("Cannot delete location, as it is in use")));
         } else {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(LOCATION_TABLE, criterion, deleteReply -> {
+          PostgresClient.getInstance(vertxContext.owner(), tenantId)
+            .delete(LOCATION_TABLE, criterion, deleteReply -> {
             if (deleteReply.failed()) {
               logAndSaveError(deleteReply.cause());
               asyncResultHandler.handle(Future.succeededFuture(
@@ -254,50 +254,52 @@ public class LocationAPI implements LocationsResource {
   }
 
   @Override
-  public void putLocationsById(          String id,
-          String lang,
-    Location entity,          Map<String, String> okapiHeaders,
-          Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-          throws Exception {
+  public void putLocationsById(String id,
+    String lang, Location entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    if (!id.equals(entity.getId())) {
+      String message = "Illegal operation: id cannot be changed";
+      asyncResultHandler.handle(Future.succeededFuture(
+        PutLocationsByIdResponse.withPlainBadRequest(message)));
+      return;
+    }
+    String tenantId = getTenant(okapiHeaders);
+    Criterion criterion;
     try {
-      if (!id.equals(entity.getId())) {
-        String message = "Illegal operation: id cannot be changed";
-        asyncResultHandler.handle(Future.succeededFuture(
-          PutLocationsByIdResponse.withPlainBadRequest(message)));
-        return;
-      }
-      String tenantId = getTenant(okapiHeaders);
       Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
-      Criterion criterion = new Criterion(criteria);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-        LOCATION_TABLE, entity, criterion, false, updateReply -> {
-          if (updateReply.failed()) {
-            String message = logAndSaveError(updateReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              PutLocationsByIdResponse.withPlainInternalServerError(message)));
-          } else {
-            if (updateReply.result().getUpdated() == 0) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationsByIdResponse.withPlainNotFound("Not found")));
-              //Not found
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationsByIdResponse.withNoContent()));
-            }
-          }
-        });
+      criterion = new Criterion(criteria);
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         PutLocationsByIdResponse.withPlainInternalServerError(message)));
+      return;
     }
+    PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+      LOCATION_TABLE, entity, criterion, false, updateReply -> {
+        if (updateReply.failed()) {
+          String message = logAndSaveError(updateReply.cause());
+          asyncResultHandler.handle(Future.succeededFuture(
+            PutLocationsByIdResponse.withPlainInternalServerError(message)));
+        } else {
+          if (updateReply.result().getUpdated() == 0) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              PutLocationsByIdResponse.withPlainNotFound("Not found")));
+            //Not found
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+              PutLocationsByIdResponse.withNoContent()));
+          }
+        }
+      });
   }
 
-  Future<Boolean> locationInUse(String locationId, String tenantId, Context vertxContext) {
+  private Future<Boolean> locationInUse(String locationId, String tenantId, Context vertxContext) {
     Future<Boolean> future = Future.future();
     //Get all items where the temporary future or permanent future is this location id
     String query = "permanentLocation == " + locationId + " OR temporarylocation == " + locationId;
