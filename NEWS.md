@@ -1,5 +1,6 @@
 ## 8.2.3 Unreleased
 * Removing SQ warnings and improving test coverage in the new locations and location-units (MODINVSTOR-89)
+* Adds metadata generation (dates and update user) to item, holding, material type and loan type records (MODINVSTOR-71)
 
 ## 8.2.2 Unreleased
 
