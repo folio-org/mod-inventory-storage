@@ -271,14 +271,10 @@ public class LocationUnitTest {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-
     createInst(id, "Institute of MetaPhysics", "MPI");
-
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-
     send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
-
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
