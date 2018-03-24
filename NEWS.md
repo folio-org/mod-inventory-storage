@@ -1,3 +1,8 @@
+## 9.0.0 Unreleased
+
+* GET requests to `/shelf-locations` proxy records from new location model (MODINVSTOR-85)
+* POST/PUT/DELETE requests to `/shelf-locations` are rejected (MODINVSTOR-85)
+
 ## 8.2.2 Unreleased
 
 * Stops hiding database related errors when creating instances or holdings (MODINVSTOR-72)
