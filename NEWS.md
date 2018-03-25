@@ -1,10 +1,12 @@
-## 8.2.3 Unreleased
+## 8.3.0 Unreleased
+* Adds metadata generation (dates and update user) to item, holding, material type and loan type records (MODINVSTOR-71)
 * Removing SQ warnings and improving test coverage in the new locations and location-units (MODINVSTOR-89)
-
-## 8.2.2 Unreleased
-
 * Stops hiding database related errors when creating instances or holdings (MODINVSTOR-72)
 * Introduces multi-level (institution, campus, library and location) location model (MODINVSTOR-70, MODINVSTOR-91)
+* Provides `item-storage` 5.1 interface (MODINVSTOR-71)
+* Provides `holdings-storage` 1.1 interface (MODINVSTOR-71)
+* Provides `loan-types` 2.1 interface (MODINVSTOR-71)
+* Provides `material-types` 2.1 interface (MODINVSTOR-71)
 * Provides `locations` 1.0 interface (MODINVSTOR-70)
 * Provides `location-units` 1.0 interface (MODINVSTOR-70)
 * Provides `contributor-name-types` 1.1 interface (MODINVSTOR-66)
