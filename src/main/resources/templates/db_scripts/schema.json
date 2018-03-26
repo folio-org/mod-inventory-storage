@@ -2,7 +2,7 @@
   "tables": [
     {
       "tableName": "loan_type",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -15,7 +15,7 @@
     },
     {
       "tableName": "material_type",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -28,7 +28,7 @@
     },
     {
       "tableName": "shelflocation",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -247,6 +247,7 @@
     },
     {
       "tableName": "item",
+      "withMetadata": true,
       "generateId": false,
       "pkColumnName": "_id",
       "foreignKeys": [
@@ -403,6 +404,7 @@
     },
     {
       "tableName": "holdings_record",
+      "withMetadata": true,
       "generateId": false,
       "pkColumnName": "_id",
       "foreignKeys": [
