@@ -3,12 +3,20 @@
 * GET requests to `/shelf-locations` proxy records from new location model (MODINVSTOR-85)
 * POST/PUT/DELETE requests to `/shelf-locations` are rejected (MODINVSTOR-85)
 
-## 8.2.2 Unreleased
-
+## 8.4.0 Unreleased
+* Add optional field `contributorTypeText` to `instance.contributors` (MODINVSTOR-93)
+* Adds metadata generation (dates and update user) to item, holding, material type and loan type records (MODINVSTOR-71)
+* Removing SQ warnings and improving test coverage in the new locations and location-units (MODINVSTOR-89)
 * Stops hiding database related errors when creating instances or holdings (MODINVSTOR-72)
 * Introduces multi-level (institution, campus, library and location) location model (MODINVSTOR-70, MODINVSTOR-91)
+* Provides `instance-storage` 4.2 interface (MODINVSTOR-93)
+* Provides `item-storage` 5.1 interface (MODINVSTOR-71)
+* Provides `holdings-storage` 1.1 interface (MODINVSTOR-71)
+* Provides `loan-types` 2.1 interface (MODINVSTOR-71)
+* Provides `material-types` 2.1 interface (MODINVSTOR-71)
 * Provides `locations` 1.0 interface (MODINVSTOR-70)
 * Provides `location-units` 1.0 interface (MODINVSTOR-70)
+* Provides `contributor-name-types` 1.1 interface (MODINVSTOR-66)
 
 ## 8.0.0 2018-03-07
 

@@ -6,6 +6,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -169,6 +170,24 @@ public class LocationsTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Main Library"));
+  }
+
+  @Test
+  public void canListLocations()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML");
+    createLocation(null, "Annex Library", instID, campID, libID, "PI/CC/AL");
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locationsStorageUrl("/"), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getInteger("totalRecords"), is(2));
   }
 
   @Test

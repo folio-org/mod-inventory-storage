@@ -60,6 +60,9 @@
           "contributorTypeId": {
             "type": "string"
           },
+          "contributorTypeText": {
+            "type": "string"
+          },
           "contributorNameTypeId": {
             "type": "string"
           },
