@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "5.1",
+      "version": "5.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -35,7 +35,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -66,7 +66,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "4.2",
+      "version": "4.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -97,7 +97,7 @@
     },
     {
       "id": "loan-types",
-      "version": "2.1",
+      "version": "2.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -124,7 +124,7 @@
     },
     {
       "id": "material-types",
-      "version": "2.1",
+      "version": "2.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -151,7 +151,7 @@
     },
     {
       "id": "shelf-locations",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -178,7 +178,7 @@
     },
     {
       "id": "location-units",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -247,7 +247,7 @@
     },
     {
       "id": "locations",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -274,7 +274,7 @@
     },
     {
       "id": "identifier-types",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -301,7 +301,7 @@
     },
     {
       "id": "contributor-types",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -328,7 +328,7 @@
     },
     {
       "id": "contributor-name-types",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -355,7 +355,7 @@
     },
     {
       "id": "instance-formats",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -382,7 +382,7 @@
     },
     {
       "id": "instance-types",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -409,7 +409,7 @@
     },
     {
       "id": "classification-types",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -436,7 +436,7 @@
     },
     {
       "id": "platforms",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
