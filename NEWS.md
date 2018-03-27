@@ -1,4 +1,5 @@
-## 8.5.0 Unreleased
+## 8.5.0 2018-03-27
+
 * Add optional field `contributorTypeText` to `instance.contributors` (MODINVSTOR-93)
 * Adds metadata generation (dates and update user) to item, holding, material type and loan type records (MODINVSTOR-71)
 * Removing SQ warnings and improving test coverage in the new locations and location-units (MODINVSTOR-89)
