@@ -46,7 +46,7 @@ public class ShelfLocationsTest {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
@@ -131,7 +131,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
-    send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
 
@@ -159,7 +159,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(locationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
 
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
@@ -188,7 +188,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(locationsStorageUrl(locationId.toString()),
+    send(ShelfLocationsStorageUrl(locationId.toString()),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(deleteCompleted));
 
@@ -252,7 +252,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<Response> createShelfLocation = new CompletableFuture<>();
 
-    send(locationsStorageUrl(""), HttpMethod.POST, new JsonObject().put("name", name).toString(),
+    send(ShelfLocationsStorageUrl(""), HttpMethod.POST, new JsonObject().put("name", name).toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createShelfLocation));
 
     return createShelfLocation.get(5, TimeUnit.SECONDS);
@@ -270,7 +270,7 @@ public class ShelfLocationsTest {
       .put("id", id.toString())
       .put("name", name);
 
-    send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(ShelfLocationsStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createShelfLocation));
 
     return createShelfLocation.get(5, TimeUnit.SECONDS);
@@ -284,7 +284,7 @@ public class ShelfLocationsTest {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    send(locationsStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);

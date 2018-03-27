@@ -21,6 +21,7 @@ import java.util.function.Predicate;
 
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -40,15 +41,15 @@ public class HoldingsStorageTest extends TestBase {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Main Library"));
+      ShelfLocationsStorageUrl("")).create("Main Library"));
 
     annexLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Annex Library"));
+      ShelfLocationsStorageUrl("")).create("Annex Library"));
   }
 
   @Before
@@ -159,7 +160,7 @@ public class HoldingsStorageTest extends TestBase {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(response.getBody(), is("ID must be a UUID"));
+    assertThat(response.getBody(), containsString("invalid input syntax for type uuid"));
   }
 
   @Test

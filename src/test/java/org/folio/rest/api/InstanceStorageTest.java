@@ -30,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -52,7 +53,7 @@ public class InstanceStorageTest extends TestBase {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
@@ -60,10 +61,10 @@ public class InstanceStorageTest extends TestBase {
       new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
 
     mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Main Library"));
+      ShelfLocationsStorageUrl("")).create("Main Library"));
 
     annexLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Annex Library"));
+      ShelfLocationsStorageUrl("")).create("Annex Library"));
 
     canCirculateLoanTypeId = UUID.fromString(new LoanTypesClient(client,
       loanTypesStorageUrl("")).create("Can Circulate"));
@@ -195,7 +196,7 @@ public class InstanceStorageTest extends TestBase {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(response.getBody(), is("ID must be a UUID"));
+    assertThat(response.getBody(), containsString("invalid input syntax for type uuid"));
   }
 
   @Test

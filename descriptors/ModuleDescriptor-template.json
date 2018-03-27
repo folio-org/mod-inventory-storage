@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "5.0",
+      "version": "5.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -35,7 +35,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -66,7 +66,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "4.1",
+      "version": "4.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -97,7 +97,7 @@
     },
     {
       "id": "loan-types",
-      "version": "2.0",
+      "version": "2.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -124,7 +124,7 @@
     },
     {
       "id": "material-types",
-      "version": "2.0",
+      "version": "2.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -173,6 +173,102 @@
           "methods": ["DELETE"],
           "pathPattern": "/shelf-locations/{id}",
           "permissionsRequired": ["inventory-storage.shelf-locations.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "location-units",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/location-units/institutions",
+          "permissionsRequired": ["inventory-storage.location-units.institutions.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/location-units/institutions/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.institutions.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/location-units/institutions",
+          "permissionsRequired": ["inventory-storage.location-units.institutions.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/location-units/institutions/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.institutions.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/location-units/institutions/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.institutions.item.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/location-units/campuses",
+          "permissionsRequired": ["inventory-storage.location-units.campuses.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/location-units/campuses/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.campuses.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/location-units/campuses",
+          "permissionsRequired": ["inventory-storage.location-units.campuses.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/location-units/campuses/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.campuses.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/location-units/campuses/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.campuses.item.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/location-units/libraries",
+          "permissionsRequired": ["inventory-storage.location-units.libraries.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/location-units/libraries/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.libraries.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/location-units/libraries",
+          "permissionsRequired": ["inventory-storage.location-units.libraries.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/location-units/libraries/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.libraries.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/location-units/libraries/{id}",
+          "permissionsRequired": ["inventory-storage.location-units.libraries.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "locations",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/locations",
+          "permissionsRequired": ["inventory-storage.locations.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/locations/{id}",
+          "permissionsRequired": ["inventory-storage.locations.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/locations",
+          "permissionsRequired": ["inventory-storage.locations.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/locations/{id}",
+          "permissionsRequired": ["inventory-storage.locations.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/locations/{id}",
+          "permissionsRequired": ["inventory-storage.locatios.item.delete"]
         }
       ]
     },
@@ -232,7 +328,7 @@
     },
     {
       "id": "contributor-name-types",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -547,6 +643,106 @@
       "description": "delete individual shelf location from storage"
     },
     {
+      "permissionName": "inventory-storage.location-units.institutions.collection.get",
+      "displayName": "inventory storage - location units - get institution collection",
+      "description": "Get institution collection"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.institutions.item.get",
+      "displayName": "inventory storage - location units - get individual institution",
+      "description": "get individual institution"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.institutions.item.post",
+      "displayName": "inventory storage - location units - create individual institution",
+      "description": "create individual instution"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.institutions.item.put",
+      "displayName": "inventory storage - location units - modify institution",
+      "description": "modify institution"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.institutions.item.delete",
+      "displayName": "inventory storage - location units - delete individual institution",
+      "description": "delete individual institution"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.campuses.collection.get",
+      "displayName": "inventory storage - location units - get campus collection",
+      "description": "Get campus collection"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.campuses.item.get",
+      "displayName": "inventory storage - location units - get individual campus",
+      "description": "get individual campus"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.campuses.item.post",
+      "displayName": "inventory storage - location units - create individual campus",
+      "description": "create individual instution"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.campuses.item.put",
+      "displayName": "inventory storage - location units - modify campus",
+      "description": "modify campus"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.campuses.item.delete",
+      "displayName": "inventory storage - location units - delete individual campus",
+      "description": "delete individual campus"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.libraries.collection.get",
+      "displayName": "inventory storage - location units - get library collection",
+      "description": "Get library collection"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.libraries.item.get",
+      "displayName": "inventory storage - location units - get individual library",
+      "description": "get individual library"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.libraries.item.post",
+      "displayName": "inventory storage - location units - create individual library",
+      "description": "create individual instution"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.libraries.item.put",
+      "displayName": "inventory storage - location units - modify library",
+      "description": "modify library"
+    },
+    {
+      "permissionName": "inventory-storage.location-units.libraries.item.delete",
+      "displayName": "inventory storage - location units - delete individual library",
+      "description": "delete individual library"
+    },
+    {
+      "permissionName": "inventory-storage.locations.collection.get",
+      "displayName": "inventory storage - locations - get location collection",
+      "description": "get location collection"
+    },
+    {
+      "permissionName": "inventory-storage.locations.item.get",
+      "displayName": "inventory storage - locations - get individual location",
+      "description": "get individual location"
+    },
+    {
+      "permissionName": "inventory-storage.locations.item.post",
+      "displayName": "inventory storage - locations - create individual location",
+      "description": "create individual location"
+    },
+    {
+      "permissionName": "inventory-storage.locations.item.put",
+      "displayName": "inventory storage - locations - modify location",
+      "description": "modify location"
+    },
+    {
+      "permissionName": "inventory-storage.locations.item.delete",
+      "displayName": "inventory storage - locations - delete individual location",
+      "description": "delete individual location"
+    },
+    {
       "permissionName": "inventory-storage.identifier-types.collection.get",
       "displayName": "inventory storage - get identifier-type collection",
       "description": "get identifier-type collection from storage"
@@ -759,6 +955,26 @@
         "inventory-storage.shelf-locations.item.post",
         "inventory-storage.shelf-locations.item.put",
         "inventory-storage.shelf-locations.item.delete",
+        "inventory-storage.location-units.institutions.collection.get",
+        "inventory-storage.location-units.institutions.item.get",
+        "inventory-storage.location-units.institutions.item.post",
+        "inventory-storage.location-units.institutions.item.put",
+        "inventory-storage.location-units.institutions.item.delete",
+        "inventory-storage.location-units.campuses.collection.get",
+        "inventory-storage.location-units.campuses.item.get",
+        "inventory-storage.location-units.campuses.item.post",
+        "inventory-storage.location-units.campuses.item.put",
+        "inventory-storage.location-units.campuses.item.delete",
+        "inventory-storage.location-units.libraries.collection.get",
+        "inventory-storage.location-units.libraries.item.get",
+        "inventory-storage.location-units.libraries.item.post",
+        "inventory-storage.location-units.libraries.item.put",
+        "inventory-storage.location-units.libraries.item.delete",
+        "inventory-storage.locations.collection.get",
+        "inventory-storage.locations.item.get",
+        "inventory-storage.locations.item.post",
+        "inventory-storage.locations.item.put",
+        "inventory-storage.locations.item.delete",
         "inventory-storage.identifier-types.collection.get",
         "inventory-storage.identifier-types.item.get",
         "inventory-storage.identifier-types.item.post",
@@ -796,5 +1012,12 @@
         "inventory-storage.platforms.item.delete"
       ]
     }
-  ]
+  ],
+    "launchDescriptor": {
+    "dockerImage": "${artifactId}:${version}",
+    "dockerArgs": {
+      "HostConfig": { "PortBindings": { "8081/tcp":  [{ "HostPort": "%p" }] } }
+    },
+    "dockerPull" : false
+  }
 }

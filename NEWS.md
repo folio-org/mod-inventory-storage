@@ -1,23 +1,45 @@
-## 7.2.2 Unreleased
+## 8.4.0 Unreleased
+* Add optional field `contributorTypeText` to `instance.contributors` (MODINVSTOR-93)
+* Adds metadata generation (dates and update user) to item, holding, material type and loan type records (MODINVSTOR-71)
+* Removing SQ warnings and improving test coverage in the new locations and location-units (MODINVSTOR-89)
+* Stops hiding database related errors when creating instances or holdings (MODINVSTOR-72)
+* Introduces multi-level (institution, campus, library and location) location model (MODINVSTOR-70, MODINVSTOR-91)
+* Provides `instance-storage` 4.2 interface (MODINVSTOR-93)
+* Provides `item-storage` 5.1 interface (MODINVSTOR-71)
+* Provides `holdings-storage` 1.1 interface (MODINVSTOR-71)
+* Provides `loan-types` 2.1 interface (MODINVSTOR-71)
+* Provides `material-types` 2.1 interface (MODINVSTOR-71)
+* Provides `locations` 1.0 interface (MODINVSTOR-70)
+* Provides `location-units` 1.0 interface (MODINVSTOR-70)
+* Provides `contributor-name-types` 1.1 interface (MODINVSTOR-66)
 
-* Add the following GIN indexes for `instances` (MODINVSTOR-48): 
+## 8.0.0 2018-03-07
+
+* Upgrades RAML Module Builder to version 19.0.0 (RMB-130, MODINVSTOR-65)
+* Uses generated sources for generated code (RMB-130, MODINVSTOR-65)
+* Uses `PgExceptionUtil` from RAML Module Builder to handle database exceptions (May change some server error response messages, MODINVSTOR-52)
+* Uses embedded PostgreSQL 10.1 during tests (MODINVSTOR-65)
+
+## 7.2.2 2018-03-02
+
+* Adds the following GIN indexes for `instances` (MODINVSTOR-48):
   - `contributors`
   - `identifiers`
   - `instanceTypeId`
   - `languages`
   - `classifications`
   - `subjects`
-* Add the following b-tree indexes for `instances` (MODINVSTOR-48):
+* Adds the following b-tree indexes for `instances` (MODINVSTOR-48):
   - `contributors`
   - `publication`
-* Use CQL to get instance, item or holding by ID (in order to use available index, MODINVSTOR-48)
-* Introduce searching for instances with an item with a given barcode (e.g. `item.barcode==683029605940`, MODINVSTOR-49)
+* Uses CQL to get instance, item or holding by ID (in order to use available index, MODINVSTOR-48)
+* Introduces searching for instances with an item with a given barcode (e.g. `item.barcode==683029605940`, MODINVSTOR-49)
 * Searching (which includes a barcode) includes instances that do not have a holding or a item (MODINVSTOR-55)
 * Searching containing barcode (or other item properties) is currently only supported on small sets of records
 
 ## 7.1.0 2018-01-08
 
-* Add metadata generation (dates and update user) to instance records (MODINVSTOR-37) 
+* Adds metadata generation (dates and update user) to instance records (MODINVSTOR-37)
 * Provides `instance-storage` 4.1 interface (MODINVSTOR-37)
 
 ## 7.0.0 2018-01-03
