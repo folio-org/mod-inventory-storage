@@ -204,7 +204,7 @@ public class ItemStorageAPI implements ItemStorageResource {
                 return;
               }
               else{
-                Future<Shelflocation> temporaryLocationFuture;
+                Future<Location> temporaryLocationFuture;
 
                 if(entity.getTemporaryLocationId() != null) {
                   temporaryLocationFuture = getShelfLocation(vertxContext.owner(), tenantId,
@@ -627,23 +627,23 @@ public class ItemStorageAPI implements ItemStorageResource {
     }
   }
 
-  private Future<Shelflocation> getShelfLocation(
+  private Future<Location> getShelfLocation(
     Vertx vertx,
     String tenantId,
     String locationId
   ) {
-    Future<Shelflocation> future = Future.future();
+    Future<Location> future = Future.future();
     try {
-      Criteria crit = new Criteria(ShelfLocationAPI.SHELF_LOCATION_SCHEMA_PATH);
-      crit.addField(ShelfLocationAPI.ID_FIELD_NAME);
+      Criteria crit = new Criteria(LocationAPI.LOCATION_SCHEMA_PATH);
+      crit.addField(LocationAPI.ID_FIELD_NAME);
       crit.setOperation("=");
       crit.setValue(locationId);
-      PostgresClient.getInstance(vertx, tenantId).get(ShelfLocationAPI.SHELF_LOCATION_TABLE,
-              Shelflocation.class, new Criterion(crit), true, false, getReply -> {
+      PostgresClient.getInstance(vertx, tenantId).get(LocationAPI.LOCATION_TABLE,
+        Location.class, new Criterion(crit), true, false, getReply -> {
         if(getReply.failed()) {
           future.fail(getReply.cause());
         } else {
-          List<Shelflocation> locationList = (List<Shelflocation>)getReply.result().getResults();
+          List<Location> locationList = (List<Location>) getReply.result().getResults();
           if(locationList.size() < 1) {
             future.fail("No location found");
           } else {

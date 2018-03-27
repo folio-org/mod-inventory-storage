@@ -45,6 +45,7 @@ public class LocationUnitTest {
     throws MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));

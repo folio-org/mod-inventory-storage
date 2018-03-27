@@ -1,3 +1,8 @@
+## 9.0.0 Unreleased
+
+* GET requests to `/shelf-locations` proxy records from new location model (MODINVSTOR-85)
+* POST/PUT/DELETE requests to `/shelf-locations` are rejected (MODINVSTOR-85)
+
 ## 8.5.0 2018-03-27
 
 * Add optional field `contributorTypeText` to `instance.contributors` (MODINVSTOR-93)

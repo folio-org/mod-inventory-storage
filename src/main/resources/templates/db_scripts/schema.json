@@ -27,19 +27,6 @@
       ]
     },
     {
-      "tableName": "shelflocation",
-      "withMetadata": true,
-      "pkColumnName": "_id",
-      "generateId": false,
-      "withAuditing": false,
-      "uniqueIndex": [
-        {
-          "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ]
-    },
-    {
       "tableName": "locinstitution",
       "withMetadata": false,
       "pkColumnName": "_id",
@@ -410,7 +397,7 @@
       "foreignKeys": [
         {
           "fieldName": "permanentLocationId",
-          "targetTable": "shelflocation",
+          "targetTable": "location",
           "tOps": "ADD"
         }
       ],

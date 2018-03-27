@@ -1,18 +1,21 @@
 package org.folio.rest.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.core.Response;
-
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.Locations;
+import org.folio.rest.jaxrs.resource.LocationsResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -22,15 +25,10 @@ import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.jaxrs.model.Location;
-import org.folio.rest.jaxrs.model.Locations;
-import org.folio.rest.jaxrs.resource.LocationsResource;
+import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  *
@@ -41,7 +39,7 @@ public class LocationAPI implements LocationsResource {
   public static final String LOCATION_TABLE = "location";
   private final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
   public static final String URL_PREFIX = "/locations";
-  public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
+  public static final String LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
 
   private String logAndSaveError(Throwable err) {
@@ -123,11 +121,12 @@ public class LocationAPI implements LocationsResource {
         });
   }
 
-
   @Override
-  public void postLocations(String lang,
-    Location entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void postLocations(
+    String lang,
+    Location entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
@@ -163,16 +162,17 @@ public class LocationAPI implements LocationsResource {
   }
 
   @Override
-  public void getLocationsById(String id,
+  public void getLocationsById(
+    String id,
     String lang,
     Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+    Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
     Criterion criterion;
     try {
-      Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
+      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
@@ -183,6 +183,7 @@ public class LocationAPI implements LocationsResource {
         GetLocationsByIdResponse.withPlainInternalServerError(message)));
       return;
     }
+
     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
       LOCATION_TABLE, Location.class, criterion, true, false, getReply -> {
         if (getReply.failed()) {
@@ -208,15 +209,17 @@ public class LocationAPI implements LocationsResource {
   }
 
   @Override
-  public void deleteLocationsById(String id,
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+  public void deleteLocationsById(
+    String id,
+    String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
     Criterion criterion;
     try {
-      Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
+      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
@@ -227,6 +230,7 @@ public class LocationAPI implements LocationsResource {
         GetLocationsByIdResponse.withPlainInternalServerError(message)));
       return;
     }
+
     locationInUse(id, tenantId, vertxContext).setHandler(res -> {
       if (res.failed()) {
         String message = logAndSaveError(res.cause());
@@ -234,11 +238,9 @@ public class LocationAPI implements LocationsResource {
       } else {
         if (res.result()) {
           asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationsByIdResponse
-              .withPlainBadRequest("Cannot delete location, as it is in use")));
+            DeleteLocationsByIdResponse.withPlainBadRequest("Cannot delete location, as it is in use")));
         } else {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId)
-            .delete(LOCATION_TABLE, criterion, deleteReply -> {
+          PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(LOCATION_TABLE, criterion, deleteReply -> {
             if (deleteReply.failed()) {
               logAndSaveError(deleteReply.cause());
               asyncResultHandler.handle(Future.succeededFuture(
@@ -254,10 +256,12 @@ public class LocationAPI implements LocationsResource {
   }
 
   @Override
-  public void putLocationsById(String id,
-    String lang, Location entity,
+  public void putLocationsById(
+    String id,
+    String lang,
+    Location entity,
     Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+    Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
     if (!id.equals(entity.getId())) {
@@ -266,10 +270,12 @@ public class LocationAPI implements LocationsResource {
         PutLocationsByIdResponse.withPlainBadRequest(message)));
       return;
     }
+
     String tenantId = getTenant(okapiHeaders);
     Criterion criterion;
+
     try {
-      Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
+      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
@@ -280,6 +286,7 @@ public class LocationAPI implements LocationsResource {
         PutLocationsByIdResponse.withPlainInternalServerError(message)));
       return;
     }
+
     PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
       LOCATION_TABLE, entity, criterion, false, updateReply -> {
         if (updateReply.failed()) {
@@ -299,7 +306,7 @@ public class LocationAPI implements LocationsResource {
       });
   }
 
-  private Future<Boolean> locationInUse(String locationId, String tenantId, Context vertxContext) {
+  Future<Boolean> locationInUse(String locationId, String tenantId, Context vertxContext) {
     Future<Boolean> future = Future.future();
     //Get all items where the temporary future or permanent future is this location id
     String query = "permanentLocation == " + locationId + " OR temporarylocation == " + locationId;

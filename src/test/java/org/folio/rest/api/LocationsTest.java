@@ -40,13 +40,28 @@ import static org.junit.Assert.assertThat;
 
 
 public class LocationsTest {
-  private Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
+  private static Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private String canCirculateLoanTypeID;
   private String journalMaterialTypeID;
-  private UUID instID;
-  private UUID campID;
-  private UUID libID;
+  private static UUID instID;
+  private static UUID campID;
+  private static UUID libID;
+
+  protected static void createLocUnits(boolean force) {
+    try {
+      if (force || instID == null) {
+        instID = UUID.randomUUID();
+        LocationUnitTest.createInst(instID, "Primary Institution", "PI");
+        campID = UUID.randomUUID();
+        LocationUnitTest.createCamp(campID, "Central Campus", "CC", instID);
+        libID = UUID.randomUUID();
+        LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
+      }
+    } catch (Exception e) { // should not happen
+      throw new AssertionError("CreateLocUnits failed:", e);
+    }
+  }
 
   @Before
   public void beforeEach()
@@ -71,12 +86,7 @@ public class LocationsTest {
       new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
       materialTypesStorageUrl("")).create("Journal");
 
-    instID = UUID.randomUUID();
-    LocationUnitTest.createInst(instID, "Primary Institution", "PI");
-    campID = UUID.randomUUID();
-    LocationUnitTest.createCamp(campID, "Central Campus", "CC", instID);
-    libID = UUID.randomUUID();
-    LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
+    createLocUnits(true);
 
   }
 
@@ -225,15 +235,6 @@ public class LocationsTest {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
-  /*
-  This test does not work! It tries to create an item object that points to
-  our new kind of Location object. But RMB sees that the UUID for the location
-  does not point to a valid (old-style) shelf-location item, and helpfully
-  refuses to create the item...
-
-  When we switch items over to pointing to the new Locations, re-enable this
-  test.
-
   @Test
   public void cannotDeleteALocationAssociatedWithAnItem()
     throws InterruptedException,
@@ -241,7 +242,6 @@ public class LocationsTest {
     TimeoutException,
     MalformedURLException {
 
-    logger.warn("cannotDeleteALocationAssociatedWithAnItem starting XXXX");
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X");
     JsonObject item = createItemRequest(id.toString());
@@ -256,9 +256,8 @@ public class LocationsTest {
       ResponseHandler.any(deleteCompleted));
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    logger.warn("cannotDeleteALocationAssociatedWithAnItem done XXXX");
   }
-*/
+
   ///////////////////////////// helpers
   private static void send(URL url, HttpMethod method, String content,
                            String contentType, Handler<HttpClientResponse> handler) {
@@ -317,7 +316,7 @@ public class LocationsTest {
     }
   }
 
-  public Response createLocation(UUID id, String name,
+  public static Response createLocation(UUID id, String name,
     UUID inst, UUID camp, UUID lib, String code)
     throws MalformedURLException,
     InterruptedException,
@@ -335,6 +334,28 @@ public class LocationsTest {
     send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
     return createLocation.get(5, TimeUnit.SECONDS);
+  }
+
+  /**
+   * Helper to create a Location record the way old shelfLocations were created.
+   * Used mostly while migrating to new Locations
+   *
+   * @param id
+   * @param name
+   * @return
+   */
+  public static UUID createLocation(UUID id, String name, String code) {
+    try {
+      createLocUnits(false);
+      if (id == null) {
+        id = UUID.randomUUID();
+      }
+      createLocation(id, name, instID, campID, libID, code);
+    } catch (Exception e) {
+      throw new AssertionError("CreateLocation failed:", e);
+    }
+    logger.debug("createLocation " + id + " '" + name + "' i=" + instID);
+    return id;
   }
 
   private Response getById(UUID id)

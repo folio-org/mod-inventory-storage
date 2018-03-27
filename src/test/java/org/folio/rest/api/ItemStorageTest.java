@@ -2,10 +2,11 @@ package org.folio.rest.api;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.support.*;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
-import org.folio.rest.support.client.ShelfLocationsClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,6 +31,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 public class ItemStorageTest extends TestBase {
+  private static Logger logger = LoggerFactory.getLogger(ItemStorageTest.class);
 
   private static String journalMaterialTypeID;
   private static String bookMaterialTypeID;
@@ -51,14 +53,21 @@ public class ItemStorageTest extends TestBase {
 
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
+
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
 
     journalMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("journal");
     bookMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book");
     videoMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("video");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesStorageUrl("")).create("Can Circulate");
-    mainLibraryLocationId = new ShelfLocationsClient(client, ShelfLocationsStorageUrl("")).create("Main Library");
-    annexLocationId = new ShelfLocationsClient(client, ShelfLocationsStorageUrl("")).create("Annex Library");
+
+    LocationsTest.createLocUnits(true);
+    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Item)", "It/M").toString();
+    annexLocationId = LocationsTest.createLocation(null, "Annex Library (item)", "It/A").toString();
+
   }
 
   @Before

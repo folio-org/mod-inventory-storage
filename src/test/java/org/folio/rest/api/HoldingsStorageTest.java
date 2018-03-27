@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
-import org.folio.rest.support.client.ShelfLocationsClient;
 import org.junit.*;
 
 import java.net.HttpURLConnection;
@@ -41,15 +40,18 @@ public class HoldingsStorageTest extends TestBase {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    StorageTestSuite.deleteAll(ShelfLocationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
-    mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      ShelfLocationsStorageUrl("")).create("Main Library"));
+    LocationsTest.createLocUnits(true);
+    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (H)", "H/M");
+    annexLibraryLocationId = LocationsTest.createLocation(null, "Annex Library (H)", "H/A");
 
-    annexLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      ShelfLocationsStorageUrl("")).create("Annex Library"));
   }
 
   @Before
