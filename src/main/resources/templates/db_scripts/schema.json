@@ -115,7 +115,7 @@
           "tOps": "ADD"
         }
       ]
-    }
+    },
     {
       "tableName": "identifier_type",
       "withMetadata": false,
