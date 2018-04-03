@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
@@ -19,9 +18,7 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
-import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
@@ -31,8 +28,16 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.util.ArrayList;
+import org.apache.commons.lang.NotImplementedException;
+import static org.folio.rest.impl.LocationAPI.LOCATION_SCHEMA_PATH;
+import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
+import org.folio.rest.jaxrs.model.Location;
 
 /**
+ * This is the old shelf-location interface, now deprecated. We are working on
+ * making this a read-only proxy to the new locations interface, to make
+ * transition easier. In the end all this will have to die!
  *
  * @author kurt
  */
@@ -55,13 +60,6 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
     return message;
   }
 
-  private boolean isDuplicate(String message) {
-    if(message != null && message.contains("duplicate key value violates unique constraint")) {
-      return true;
-    }
-    return false;
-  }
-
   private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
@@ -71,43 +69,10 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
     return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
   }
 
-  @Override
-  public void deleteShelfLocations(
-          String lang,
-          Map<String, String> okapiHeaders,
-          Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-          throws Exception{
-     String tenantId = TenantTool.tenantId(okapiHeaders);
-
-    try {
-      vertxContext.runOnContext(v -> {
-        PostgresClient postgresClient = PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-        postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
-          tenantId, "mod_inventory_storage", SHELF_LOCATION_TABLE),
-          reply -> {
-            if (reply.succeeded()) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                ShelfLocationsResource.DeleteShelfLocationsResponse.noContent()
-                  .build()));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                ShelfLocationsResource.DeleteShelfLocationsResponse.
-                  withPlainInternalServerError(reply.cause().getMessage())));
-            }
-          });
-      });
-    }
-    catch(Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        ShelfLocationsResource.DeleteShelfLocationsResponse.
-          withPlainInternalServerError(e.getMessage())));
-    }
-
-  }
-
+  /**
+   * Get a list of the new locations, and fake old kind of shelf-locations out
+   * of them.
+   */
   @Override
   public void getShelfLocations(
         String query,
@@ -118,43 +83,100 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         Handler<AsyncResult<Response>>asyncResultHandler,
         Context vertxContext)
         throws Exception {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = getTenant(okapiHeaders);
-        CQLWrapper cql = getCQL(query, limit, offset, SHELF_LOCATION_TABLE);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId)
-                .get(
-                SHELF_LOCATION_TABLE, Shelflocation.class, new String[]{"*"},
-                cql, true, true, reply -> {
-          try {
-            if(reply.failed()) {
-              String message = logAndSaveError(reply.cause());
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      CQLWrapper cql = getCQL(query, limit, offset, LocationAPI.LOCATION_TABLE);
+      PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        .get(
+          LocationAPI.LOCATION_TABLE, Location.class, new String[]{"*"},
+          cql, true, true, reply -> {
+            try {
+              if (reply.failed()) {
+                String message = logAndSaveError(reply.cause());
+                asyncResultHandler.handle(Future.succeededFuture(
+                  GetShelfLocationsResponse.withPlainBadRequest(message)));
+              } else {
+                Shelflocations shelfLocations = new Shelflocations();
+                List<Location> locationsList = (List<Location>) reply.result().getResults();
+                List<Shelflocation> shelfLocationsList = new ArrayList<>(locationsList.size());
+                for (Location loc : locationsList) {
+                  Shelflocation sl = new Shelflocation();
+                  sl.setId(loc.getId());
+                  sl.setName(loc.getName());
+                  shelfLocationsList.add(sl);
+                }
+                shelfLocations.setShelflocations(shelfLocationsList);
+                shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelfLocations)));
+              }
+            } catch (Exception e) {
+              String message = logAndSaveError(e);
               asyncResultHandler.handle(Future.succeededFuture(
-                      GetShelfLocationsResponse.withPlainBadRequest(
-                              getErrorResponse(message))));
-            } else {
-              Shelflocations shelfLocations = new Shelflocations();
-              List<Shelflocation> shelfLocationsList = (List<Shelflocation>)reply.result().getResults();
-              shelfLocations.setShelflocations(shelfLocationsList);
-              shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-              asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelfLocations)));
+                GetShelfLocationsResponse.withPlainInternalServerError(message)));
             }
-          } catch(Exception e) {
-            String message = logAndSaveError(e);
-            asyncResultHandler.handle(Future.succeededFuture(
-                    GetShelfLocationsResponse.withPlainInternalServerError(
-                            getErrorResponse(message))));
-          }
-        });
-      } catch(Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-                GetShelfLocationsResponse.withPlainInternalServerError(
-                            getErrorResponse(message))));
-      }
-    });
+          });
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        GetShelfLocationsResponse.withPlainInternalServerError(message)));
+    }
   }
 
+  /**
+   * Get a new-kind of Location object, and convert it to old-style
+   * shelf-location.
+   */
+  @Override
+  public void getShelfLocationsById(
+    String id,
+    String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext)
+    throws Exception {
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
+      criteria.addField(ID_FIELD_NAME);
+      criteria.setOperation("=");
+      criteria.setValue(id);
+      Criterion criterion = new Criterion(criteria);
+      PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
+        LOCATION_TABLE, Location.class, criterion, true,
+        false, getReply -> {
+          if (getReply.failed()) {
+            String message = logAndSaveError(getReply.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
+              GetShelfLocationsByIdResponse.withPlainInternalServerError(
+                message)));
+          } else {
+            List<Location> locationList = (List<Location>) getReply.result().getResults();
+            if (locationList.size() < 1) {
+              asyncResultHandler.handle(Future.succeededFuture(
+                GetShelfLocationsByIdResponse.withPlainNotFound(
+                  messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
+            } else if (locationList.size() > 1) {
+              String message = "Multiple locations found with the same id";
+              logger.error(message);
+              asyncResultHandler.handle(Future.succeededFuture(
+                GetShelfLocationsByIdResponse
+                  .withPlainInternalServerError(message)));
+            } else {
+              Location loc = locationList.get(0);
+              Shelflocation sl = new Shelflocation();
+              sl.setId(loc.getId());
+              sl.setName(loc.getName());
+              asyncResultHandler.handle(Future.succeededFuture(
+                GetShelfLocationsByIdResponse.withJsonOK(sl)));
+            }
+          }
+        });
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        GetShelfLocationsByIdResponse.withPlainInternalServerError(message)));
+    }
+  }
 
   @Override
   public void postShelfLocations(
@@ -163,103 +185,20 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
-          throws Exception {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = getTenant(okapiHeaders);
-        String id = entity.getId();
-        if(id == null) {
-          id = UUID.randomUUID().toString();
-          entity.setId(id);
-        }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(SHELF_LOCATION_TABLE, id, entity, reply -> {
-          try {
-            if(reply.failed()) {
-              String message = logAndSaveError(reply.cause());
-              if(isDuplicate(message)) {
-                asyncResultHandler.handle(Future.succeededFuture(
-                        PostShelfLocationsResponse.withJsonUnprocessableEntity(
-                                ValidationHelper.createValidationErrorMessage(
-                                        "shelflocation", entity.getId(),
-                                        "Location already exists"))));
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                        PostShelfLocationsResponse.withPlainInternalServerError(
-                                getErrorResponse(message))));
-              }
-            } else {
-              Object responseObject = reply.result();
-              entity.setId((String)responseObject);
-              OutStream stream = new OutStream();
-              stream.setData(entity);
-              asyncResultHandler.handle(Future.succeededFuture(
-                      PostShelfLocationsResponse.withJsonCreated(
-                              URL_PREFIX + responseObject, stream)));
-            }
-          } catch(Exception e) {
-            String message = logAndSaveError(e);
-            asyncResultHandler.handle(Future.succeededFuture(
-                    PostShelfLocationsResponse.withPlainInternalServerError(
-                            getErrorResponse(message))));
-          }
-        });
-      } catch(Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-                PostShelfLocationsResponse.withPlainInternalServerError(
-                        getErrorResponse(message))));
-      }
-    });
+    throws Exception {
+    throw new NotImplementedException("Creating shelf-locations is DEPRECATED. "
+      + "Use the new locations insterface instead");
   }
 
   @Override
-  public void getShelfLocationsById(
-          String id,
-          String lang,
-          Map<String, String> okapiHeaders,
-          Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-          throws Exception {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = getTenant(okapiHeaders);
-        Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
-        criteria.addField(ID_FIELD_NAME);
-        criteria.setOperation("=");
-        criteria.setValue(id);
-        Criterion criterion = new Criterion(criteria);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-                SHELF_LOCATION_TABLE, Shelflocation.class, criterion, true,
-                false, getReply -> {
-          if(getReply.failed()) {
-            String message = logAndSaveError(getReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-                      GetShelfLocationsByIdResponse.withPlainInternalServerError(
-                              getErrorResponse(message))));
-          } else {
-            List<Shelflocation> locationList = (List<Shelflocation>)getReply.result().getResults();
-            if(locationList.size() < 1) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                      GetShelfLocationsByIdResponse.withPlainNotFound(
-                              messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else if(locationList.size() > 1) {
-              String message = "Multiple locations found with the same id";
-              logger.error(message);
-              asyncResultHandler.handle(Future.succeededFuture(
-                      GetShelfLocationsByIdResponse.withPlainInternalServerError(
-                              getErrorResponse(message))));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsByIdResponse.withJsonOK(locationList.get(0))));
-            }
-          }
-        });
-      } catch(Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-              GetShelfLocationsByIdResponse.withPlainInternalServerError(
-                  getErrorResponse(message))));
-      }
-    });
+  public void deleteShelfLocations(
+    String lang,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext)
+    throws Exception {
+    throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. "
+      + "Use the new locations insterface instead");
   }
 
   @Override
@@ -269,59 +208,8 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
           throws Exception {
-     vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = getTenant(okapiHeaders);
-        Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
-        criteria.addField(ID_FIELD_NAME);
-        criteria.setOperation("=");
-        criteria.setValue(id);
-        Criterion criterion = new Criterion(criteria);
-        try {
-          locationInUse(id, tenantId, vertxContext).setHandler(res -> {
-            if(res.failed()) {
-              String message = logAndSaveError(res.cause());
-              DeleteShelfLocationsByIdResponse.withPlainInternalServerError(
-                      getErrorResponse(message));
-            } else {
-              if(res.result()) {
-                asyncResultHandler.handle(Future.succeededFuture(
-                        DeleteShelfLocationsByIdResponse.withPlainBadRequest(
-                                "Cannot delete location, as it is in use")));
-              } else {
-                try {
-                  PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(SHELF_LOCATION_TABLE, criterion, deleteReply -> {
-                    if(deleteReply.failed()) {
-                      String message = logAndSaveError(deleteReply.cause());
-                      asyncResultHandler.handle(Future.succeededFuture(
-                              DeleteShelfLocationsByIdResponse.withPlainNotFound("Not found")));
-                    } else {
-                      asyncResultHandler.handle(Future.succeededFuture(
-                              DeleteShelfLocationsByIdResponse.withNoContent()));
-                    }
-                  });
-                } catch(Exception e) {
-                  String message = logAndSaveError(e);
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    DeleteShelfLocationsByIdResponse.withPlainInternalServerError(
-                            getErrorResponse(message))));
-                }
-              }
-            }
-          });
-        } catch(Exception e) {
-          String message = logAndSaveError(e);
-          asyncResultHandler.handle(Future.succeededFuture(
-                      DeleteShelfLocationsByIdResponse.withPlainInternalServerError(
-                              getErrorResponse(message))));
-        }
-      } catch(Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-                    DeleteShelfLocationsByIdResponse.withPlainInternalServerError(
-                            getErrorResponse(message))));
-      }
-    });
+    throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. "
+      + "Use the new locations insterface instead");
   }
 
   @Override
@@ -333,80 +221,8 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
           throws Exception {
-    vertxContext.runOnContext(v -> {
-      try {
-        if(!id.equals(entity.getId())) {
-          String message = "Illegal operation: id cannot be changed";
-          asyncResultHandler.handle(Future.succeededFuture(
-                      PutShelfLocationsByIdResponse.withPlainBadRequest(message)));
-          return;
-        }
-        String tenantId = getTenant(okapiHeaders);
-        Criteria criteria = new Criteria(SHELF_LOCATION_SCHEMA_PATH);
-        criteria.addField(ID_FIELD_NAME);
-        criteria.setOperation("=");
-        criteria.setValue(id);
-        Criterion criterion = new Criterion(criteria);
-        try {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-                  SHELF_LOCATION_TABLE, entity, criterion, false, updateReply -> {
-            if(updateReply.failed()) {
-              String message = logAndSaveError(updateReply.cause());
-              asyncResultHandler.handle(Future.succeededFuture(
-                      PutShelfLocationsByIdResponse.withPlainInternalServerError(
-                              getErrorResponse(message))));
-            } else {
-              if(updateReply.result().getUpdated() == 0) {
-                asyncResultHandler.handle(Future.succeededFuture(
-                      PutShelfLocationsByIdResponse.withPlainNotFound("Not found")));
-              //Not found
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                      PutShelfLocationsByIdResponse.withNoContent()));
-              }
-            }
-          });
-        } catch(Exception e) {
-          String message = logAndSaveError(e);
-          asyncResultHandler.handle(Future.succeededFuture(
-                      PutShelfLocationsByIdResponse.withPlainInternalServerError(
-                              getErrorResponse(message))));
-        }
-      } catch(Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-                    PutShelfLocationsByIdResponse.withPlainInternalServerError(
-                            getErrorResponse(message))));
-      }
-    });
+    throw new NotImplementedException("Creating shelf-locations is DEPRECATED. "
+      + "Use the new locations insterface instead");
   }
 
-  Future<Boolean> locationInUse(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    //Get all items where the temporary future or permanent future is this location id
-    String query = "permanentLocation == " + locationId + " OR temporarylocation == " + locationId;
-    vertxContext.runOnContext(v -> {
-      try {
-        CQLWrapper cql = getCQL(query, 10, 0, ItemStorageAPI.ITEM_TABLE);
-        String[] fieldList = {"*"};
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-                ItemStorageAPI.ITEM_TABLE, Item.class, fieldList, cql, true, false,
-                getReply -> {
-          if(getReply.failed()) {
-            future.fail(getReply.cause());
-          } else {
-            List<Item> itemList = (List<Item>)getReply.result().getResults();
-            if(itemList.isEmpty()) {
-              future.complete(false);
-            } else {
-              future.complete(true);
-            }
-          }
-        });
-      } catch(Exception e) {
-        future.fail(e);
-      }
-    });
-    return future;
-  }
 }

@@ -60,6 +60,9 @@
           "contributorTypeId": {
             "type": "string"
           },
+          "contributorTypeText": {
+            "type": "string"
+          },
           "contributorNameTypeId": {
             "type": "string"
           },
@@ -115,8 +118,7 @@
           "dateOfPublication": {
             "type": "string"
           }
-        },
-        "uniqueItems": true
+        }
       }
     },
     "urls": {

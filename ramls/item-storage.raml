@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Item Storage
-version: v5.0
+version: v5.2
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -14,6 +14,7 @@ schemas:
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
   - secured: !include raml-util/traits/auth.raml

@@ -1,0 +1,182 @@
+#%RAML 0.8
+title: Institution level location unit
+version: v1.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Location units
+    content: This documents the API calls that can be made to query and manage
+      location units like institutions, campuses, and libraries
+
+schemas:
+  - locinst.json: !include locinst.json
+  - locinsts: !include locinsts.json
+  - loccamp.json: !include loccamp.json
+  - loccamps: !include loccamps.json
+  - loclib.json: !include loclib.json
+  - loclibs: !include loclibs.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
+
+traits:
+  - secured: !include raml-util/traits/auth.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+  - language: !include raml-util/traits/language.raml
+  - validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+
+/location-units:
+  /institutions:
+    type:
+      collection:
+        exampleCollection: !include examples/locinsts.json
+        exampleItem: !include examples/locinst.json
+        schemaCollection: locinsts
+        schemaItem: locinst.json
+    get:
+      is: [
+        searchable: {description: "with valid searchable fields", example: "name=aaa"},
+        pageable
+      ]
+      description: Return a list of institutions
+    post:
+      description: Create a new institution
+      is: [validate]
+    delete:
+      description: "Delete all institutions"
+      responses:
+        204:
+          description: "All institutions deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+    /{id}:
+      description: "Pass in the institution id"
+      type:
+        collection-item:
+          exampleItem: !include examples/locinst.json
+          schema: locinst.json
+      get:
+        description: "Get an institution"
+        responses:
+          200:
+            description: "OK"
+      put:
+        responses:
+          204:
+            description: "Institution updated"
+      delete:
+        responses:
+          204:
+            description: "Institution deleted"
+  /campuses:
+    type:
+      collection:
+        exampleCollection: !include examples/loccamps.json
+        exampleItem: !include examples/loccamp.json
+        schemaCollection: loccamps
+        schemaItem: loccamp.json
+    get:
+      is: [
+        searchable: {description: "with valid searchable fields", example: "name=aaa"},
+        pageable
+      ]
+      description: Return a list of campuses
+      responses:
+        200:
+          description: "OK"
+    post:
+      description: Create a new campus
+      is: [validate]
+      responses:
+        201:
+          description: "Created"
+    delete:
+      description: "Delete all campuses"
+      responses:
+        204:
+          description: "All campuses deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+    /{id}:
+      description: "Pass in the campus id"
+      type:
+        collection-item:
+          exampleItem: !include examples/loccamp.json
+          schema: loccamp.json
+      get:
+        description: "Get a campus"
+        responses:
+          200:
+            description: "OK"
+      put:
+        responses:
+          204:
+            description: "Campus updated"
+      delete:
+        responses:
+          204:
+            description: "Campus deleted"
+  /libraries:
+    type:
+      collection:
+        exampleCollection: !include examples/loclibs.json
+        exampleItem: !include examples/loclib.json
+        schemaCollection: loclibs
+        schemaItem: loclib.json
+    get:
+      is: [
+        searchable: {description: "with valid searchable fields", example: "name=aaa"},
+        pageable
+      ]
+      description: Return a list of libraries
+      responses:
+        200:
+          description: "OK"
+    post:
+      description: Create a new library
+      is: [validate]
+      responses:
+        201:
+          description: "Created"
+    delete:
+      description: "Delete all libraries"
+      responses:
+        204:
+          description: "All libraries deleted"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+    /{id}:
+      description: "Pass in the library id"
+      type:
+        collection-item:
+          exampleItem: !include examples/loclib.json
+          schema: loclib.json
+      get:
+        description: "Get a library"
+        responses:
+          200:
+            description: "OK"
+      put:
+        responses:
+          204:
+            description: "Library updated"
+      delete:
+        responses:
+          204:
+            description: "Library deleted"

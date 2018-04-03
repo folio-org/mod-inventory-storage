@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "loccamps": {
+      "id": "loccamps",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "loccamp.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "loccamps",
+    "totalRecords"
+  ]
+}

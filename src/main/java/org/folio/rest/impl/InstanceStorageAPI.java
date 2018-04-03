@@ -211,7 +211,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       InstanceStorageResource.PostInstanceStorageInstancesResponse
-                        .withPlainBadRequest("ID must be a UUID")));
+                        .withPlainBadRequest(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 e.printStackTrace();

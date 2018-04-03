@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang.StringUtils;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
-import org.folio.rest.support.client.ShelfLocationsClient;
 import org.junit.*;
 
 import java.net.HttpURLConnection;
@@ -21,6 +20,7 @@ import java.util.function.Predicate;
 
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -41,14 +41,17 @@ public class HoldingsStorageTest extends TestBase {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
-    mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Main Library"));
+    LocationsTest.createLocUnits(true);
+    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (H)", "H/M");
+    annexLibraryLocationId = LocationsTest.createLocation(null, "Annex Library (H)", "H/A");
 
-    annexLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Annex Library"));
   }
 
   @Before
@@ -159,7 +162,7 @@ public class HoldingsStorageTest extends TestBase {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(response.getBody(), is("ID must be a UUID"));
+    assertThat(response.getBody(), containsString("invalid input syntax for type uuid"));
   }
 
   @Test

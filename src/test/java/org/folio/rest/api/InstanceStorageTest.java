@@ -7,7 +7,6 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
-import org.folio.rest.support.client.ShelfLocationsClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -26,10 +25,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import static org.folio.rest.api.LocationsTest.createLocation;
 
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -40,6 +41,9 @@ public class InstanceStorageTest extends TestBase {
   private static UUID annexLocationId;
   private static UUID bookMaterialTypeId;
   private static UUID canCirculateLoanTypeId;
+  private static UUID instID;
+  private static UUID campID;
+  private static UUID libID;
 
   @BeforeClass
   public static void beforeAny()
@@ -53,17 +57,18 @@ public class InstanceStorageTest extends TestBase {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     bookMaterialTypeId = UUID.fromString(
       new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
 
-    mainLibraryLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Main Library"));
-
-    annexLocationId = UUID.fromString(new ShelfLocationsClient(client,
-      locationsStorageUrl("")).create("Annex Library"));
+    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Inst)", "I/M");
+    annexLocationId = LocationsTest.createLocation(null, "Annex Library (Inst)", "I/A");
 
     canCirculateLoanTypeId = UUID.fromString(new LoanTypesClient(client,
       loanTypesStorageUrl("")).create("Can Circulate"));
@@ -195,7 +200,7 @@ public class InstanceStorageTest extends TestBase {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(response.getBody(), is("ID must be a UUID"));
+    assertThat(response.getBody(), containsString("invalid input syntax for type uuid"));
   }
 
   @Test
@@ -836,9 +841,9 @@ public class InstanceStorageTest extends TestBase {
 
     ///////// create location objects //////////////////////////////
     UUID loc1 = UUID.fromString("11111111-dee7-48eb-b03f-d02fdf0debd0");
-    ShelfLocationsTest.createShelfLocation(loc1, "location1");
+    LocationsTest.createLocation(loc1, "location1", "IX/L1");
     UUID loc2 = UUID.fromString("99999999-dee7-48eb-b03f-d02fdf0debd0");
-    ShelfLocationsTest.createShelfLocation(loc2, "location2");
+    LocationsTest.createLocation(loc2, "location2", "IX/L2");
     /////////////////// done //////////////////////////////////////
 
     /////////////////// create holdings records ///////////////////

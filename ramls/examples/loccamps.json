@@ -1,0 +1,17 @@
+{
+  "loccamps": [
+    {
+      "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
+      "name": "Riverside Campus",
+      "code": "RS",
+      "institutionId": "559d83b1-1c81-4cc1-935f-8da45c1c4573"
+    },
+    {
+      "id": "0df935eb-f3f4-4741-9ac6-33c500174b96",
+      "name": "Other Side Campus",
+      "code": "OSC",
+      "institutionId": "559d83b1-1c81-4cc1-935f-8da45c1c4573"
+    }
+  ],
+  "totalRecords": 2
+}

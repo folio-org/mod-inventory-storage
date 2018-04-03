@@ -2,7 +2,7 @@
   "tables": [
     {
       "tableName": "loan_type",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -15,6 +15,45 @@
     },
     {
       "tableName": "material_type",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "locinstitution",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "loccampus",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "loclibrary",
       "withMetadata": false,
       "pkColumnName": "_id",
       "generateId": false,
@@ -33,7 +72,7 @@
       ]
     },
     {
-      "tableName": "shelflocation",
+      "tableName": "location",
       "withMetadata": false,
       "pkColumnName": "_id",
       "generateId": false,
@@ -41,6 +80,27 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "institutionId",
+          "targetTable": "locinstitution",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "campusId",
+          "targetTable": "loccampus",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "libraryId",
+          "targetTable": "loclibrary",
           "tOps": "ADD"
         }
       ]
@@ -180,6 +240,7 @@
     },
     {
       "tableName": "item",
+      "withMetadata": true,
       "generateId": false,
       "pkColumnName": "_id",
       "foreignKeys": [
@@ -342,12 +403,13 @@
     },
     {
       "tableName": "holdings_record",
+      "withMetadata": true,
       "generateId": false,
       "pkColumnName": "_id",
       "foreignKeys": [
         {
           "fieldName": "permanentLocationId",
-          "targetTable": "shelflocation",
+          "targetTable": "location",
           "tOps": "ADD"
         }
       ],

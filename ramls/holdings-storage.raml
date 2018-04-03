@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Holdings Storage
-version: v1.0
+version: v1.2
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -11,6 +11,7 @@ documentation:
 schemas:
   - holdingsrecord.json: !include holdingsrecord.json
   - holdingsRecords: !include holdingsrecords.json
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
   - secured: !include raml-util/traits/auth.raml
