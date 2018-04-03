@@ -8,7 +8,7 @@
       "institutionId": "4b2a3d97-01c3-4ef3-98a5-ae4e853429b4",
       "campusId": "b595d838-b1d5-409e-86ac-af3b41bde0be",
       "libraryId": "e2889f93-92f2-4937-b944-5452a575367e",
-      "parking": {
+      "details": {
         "a": "b",
         "foo": "bar"
       }
@@ -21,7 +21,7 @@
       "institutionId": "4b2a3d97-01c3-4ef3-98a5-ae4e853429b4",
       "campusId": "b595d838-b1d5-409e-86ac-af3b41bde0be",
       "libraryId": "a23d1dbc-e7ba-4c00-baf4-9770bdfb87c6",
-      "parking": {
+      "details": {
         "foo": "gryf"
       }
     }

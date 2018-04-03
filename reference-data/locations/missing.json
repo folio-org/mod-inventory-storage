@@ -6,7 +6,7 @@
   "institutionId": "196808cc-695e-4ce9-9c87-e5017645c40a",
   "campusId": "98d8c202-8a02-4396-a50a-1d57a5d28c29",
   "libraryId": "0d13fb8d-ccc4-478f-9335-ec65c6792201",
-  "parking": {
+  "details": {
     "foo": "none"
   }
 }
