@@ -2,7 +2,8 @@
 
 * GET requests to `/shelf-locations` proxy records from new location model (MODINVSTOR-85)
 * POST/PUT/DELETE requests to `/shelf-locations` are rejected (MODINVSTOR-85)
-* Adds missing gin index for `holdingsRecordId` (MODINVSTOR-63)
+* Adds a gin index on `holdingsRecordId` for items (MODINVSTOR-63)
+* Adds a gin index on `id` for material types (MODINVSTOR-63)
 
 ## 8.5.0 2018-03-27
 

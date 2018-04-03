@@ -24,6 +24,12 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
       ]
     },
     {
@@ -61,12 +67,6 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
           "tOps": "ADD"
         }
       ]
