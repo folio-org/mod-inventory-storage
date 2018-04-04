@@ -1,10 +1,15 @@
 
-## 9.0.0 Unreleased
+## 10.0.0 Unreleased
+
+* Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
+* Bump the version of the 'locations' interface to 2.0
+
+## 9.0.1 2018-04-04
 
 * GET requests to `/shelf-locations` proxy records from new location model (MODINVSTOR-85)
 * POST/PUT/DELETE requests to `/shelf-locations` are rejected (MODINVSTOR-85)
-* Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
-* Bump the version of the 'locations' interface to 2.0
+* Adds a gin index on `holdingsRecordId` for items (MODINVSTOR-63)
+* Adds a gin index on `id` for material types (MODINVSTOR-63)
 
 ## 8.5.0 2018-03-27
 
