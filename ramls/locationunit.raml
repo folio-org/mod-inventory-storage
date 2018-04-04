@@ -66,18 +66,8 @@ resourceTypes:
           exampleItem: !include examples/locinst.json
           schema: locinst.json
       get:
-        description: "Get an institution"
-        responses:
-          200:
-            description: "OK"
       put:
-        responses:
-          204:
-            description: "Institution updated"
       delete:
-        responses:
-          204:
-            description: "Institution deleted"
   /campuses:
     type:
       collection:
@@ -91,15 +81,9 @@ resourceTypes:
         pageable
       ]
       description: Return a list of campuses
-      responses:
-        200:
-          description: "OK"
     post:
       description: Create a new campus
       is: [validate]
-      responses:
-        201:
-          description: "Created"
     delete:
       description: "Delete all campuses"
       responses:
@@ -117,18 +101,8 @@ resourceTypes:
           exampleItem: !include examples/loccamp.json
           schema: loccamp.json
       get:
-        description: "Get a campus"
-        responses:
-          200:
-            description: "OK"
       put:
-        responses:
-          204:
-            description: "Campus updated"
       delete:
-        responses:
-          204:
-            description: "Campus deleted"
   /libraries:
     type:
       collection:
@@ -142,15 +116,9 @@ resourceTypes:
         pageable
       ]
       description: Return a list of libraries
-      responses:
-        200:
-          description: "OK"
     post:
       description: Create a new library
       is: [validate]
-      responses:
-        201:
-          description: "Created"
     delete:
       description: "Delete all libraries"
       responses:
@@ -168,15 +136,5 @@ resourceTypes:
           exampleItem: !include examples/loclib.json
           schema: loclib.json
       get:
-        description: "Get a library"
-        responses:
-          200:
-            description: "OK"
       put:
-        responses:
-          204:
-            description: "Library updated"
       delete:
-        responses:
-          204:
-            description: "Library deleted"
