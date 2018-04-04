@@ -253,7 +253,48 @@ public class ServicePointAPI implements ServicePointsResource {
           String lang, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
           Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    vertxContext.runOnContext(v -> {
+      try {
+        String tenantId = getTenant(okapiHeaders);
+        PostgresClient pgClient = getPGClient(vertxContext, tenantId);
+        checkServicepointInUse().setHandler(inUseRes -> {
+          if(inUseRes.failed()) {
+            String message = logAndSaveError(inUseRes.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
+                    DeleteServicePointsByServicepointIdResponse
+                    .withPlainInternalServerError(getErrorResponse(message))));
+          } else if(inUseRes.result()) {
+            asyncResultHandler.handle(Future.succeededFuture(
+                    DeleteServicePointsByServicepointIdResponse
+                    .withPlainBadRequest("Cannot delete service point, as it is in use")));
+          } else {
+            pgClient.delete(SERVICE_POINT_TABLE, servicepointId, deleteReply -> {
+              if(deleteReply.failed()) {
+                String message = logAndSaveError(deleteReply.cause());
+                asyncResultHandler.handle(Future.succeededFuture(
+                        DeleteServicePointsByServicepointIdResponse
+                        .withPlainInternalServerError(getErrorResponse(message))));
+              } else {
+                if(deleteReply.result().getUpdated() == 0) {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                          DeleteServicePointsByServicepointIdResponse
+                          .withPlainNotFound("Not found")));
+                } else {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                          DeleteServicePointsByServicepointIdResponse
+                          .withNoContent()));
+                }
+              }
+            });            
+          }
+        });        
+      } catch(Exception e) {
+        String message = logAndSaveError(e);
+        asyncResultHandler.handle(Future.succeededFuture(
+                DeleteServicePointsByServicepointIdResponse
+                .withPlainInternalServerError(getErrorResponse(message))));
+      }
+    });
   }
 
   @Override
@@ -261,7 +302,42 @@ public class ServicePointAPI implements ServicePointsResource {
           String lang, Servicepoint entity, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
           Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    vertxContext.runOnContext(v -> {
+      try {
+        String tenantId = getTenant(okapiHeaders);
+        PostgresClient pgClient = getPGClient(vertxContext, tenantId);
+        Criteria idCrit = new Criteria()
+                .addField(ID_FIELD)
+                .setOperation("=")
+                .setValue(servicepointId);
+        pgClient.update(SERVICE_POINT_TABLE, entity, new Criterion(idCrit),
+                false, updateReply -> {
+          if(updateReply.failed()) {
+            String message = logAndSaveError(updateReply.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
+                    PutServicePointsByServicepointIdResponse
+                    .withPlainInternalServerError(getErrorResponse(message))));
+          } else if(updateReply.result().getUpdated() == 0) {
+            asyncResultHandler.handle(Future.succeededFuture(
+                    PutServicePointsByServicepointIdResponse
+                    .withPlainNotFound("Not found")));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+                    PutServicePointsByServicepointIdResponse
+                    .withNoContent()));
+          }
+        });
+      } catch(Exception e) {
+        String message = logAndSaveError(e);
+        asyncResultHandler.handle(Future.succeededFuture(
+                PutServicePointsByServicepointIdResponse
+                .withPlainInternalServerError(getErrorResponse(message))));
+      }
+    });
+  }
+
+  private Future<Boolean> checkServicepointInUse() {
+    return Future.succeededFuture(false);
   }
   
 }
