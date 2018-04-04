@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Location API
-version: v1.1
+version: v2.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://github.com/org/folio/mod-inventory-storage
 
@@ -61,14 +61,5 @@ resourceTypes:
         exampleItem: !include examples/location.json
         schema: location.json
     get:
-      responses:
-        501:
-          description: "Not implemented yet"
     put:
-      responses:
-        501:
-          description: "Not implemented yet"
     delete:
-      responses:
-        501:
-          description: "Not implemented yet"

@@ -1,3 +1,9 @@
+
+## 10.0.0 Unreleased
+
+* Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
+* Bump the version of the 'locations' interface to 2.0
+
 ## 9.0.1 2018-04-04
 
 * GET requests to `/shelf-locations` proxy records from new location model (MODINVSTOR-85)

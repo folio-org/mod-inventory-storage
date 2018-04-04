@@ -23,7 +23,7 @@
     "libraryId": {
       "type": "string"
     },
-    "parking": {
+    "details": {
       "type": "object"
     }
   },
