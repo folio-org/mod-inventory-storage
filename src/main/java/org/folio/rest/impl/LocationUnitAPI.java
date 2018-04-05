@@ -104,10 +104,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
-    try {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-      postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+    PostgresClient.getInstance(vertxContext.owner(),
+      TenantTool.calculateTenantId(tenantId))
+      .mutate(String.format("DELETE FROM %s_%s.%s",
         tenantId, MOD_NAME, INSTITUTION_TABLE),
         reply -> {
           if (reply.succeeded()) {
@@ -120,11 +119,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 .withPlainInternalServerError(reply.cause().getMessage())));
           }
         });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.DeleteLocationUnitsInstitutionsResponse
-          .withPlainInternalServerError(e.getMessage())));
-    }
   }
 
   @Override
@@ -145,22 +139,22 @@ public class LocationUnitAPI implements LocationUnitsResource {
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .get(          INSTITUTION_TABLE, Locinst.class, new String[]{"*"},
-          cql, true, true, reply -> {
-            if (reply.failed()) {
-              String message = logAndSaveError(reply.cause());
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsInstitutionsResponse
-                  .withPlainBadRequest(message)));
-            } else {
-              Locinsts insts = new Locinsts();
-              List<Locinst> items = (List<Locinst>) reply.result().getResults();
-              insts.setLocinsts(items);
-              insts.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsInstitutionsResponse.withJsonOK(insts)));
-            }
-            });
+      .get(INSTITUTION_TABLE, Locinst.class, new String[]{"*"},
+        cql, true, true, reply -> {
+          if (reply.failed()) {
+            String message = logAndSaveError(reply.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.GetLocationUnitsInstitutionsResponse
+                .withPlainBadRequest(message)));
+          } else {
+            Locinsts insts = new Locinsts();
+            List<Locinst> items = (List<Locinst>) reply.result().getResults();
+            insts.setLocinsts(items);
+            insts.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.GetLocationUnitsInstitutionsResponse.withJsonOK(insts)));
+          }
+        });
   }
 
   @Override
@@ -256,7 +250,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (isInUse(deleteReply.cause().getMessage())) {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                .withPlainBadRequest("Institution is in use, can not delete")));
+                .withPlainBadRequest("Institution is in use, can not be deleted")));
           } else {
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
@@ -278,7 +272,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) {
 
     if (!id.equals(entity.getId())) {
-      String message = "Illegal operation: id cannot be changed";
+      String message = "Illegal operation: Institution id cannot be changed";
       asyncResultHandler.handle(Future.succeededFuture(
         LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
           .withPlainBadRequest(message)));
@@ -438,12 +432,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
                   .withPlainNotFound(
                     messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else if (items.size() > 1) {
-              String message = "Multiple campuses found with the same id";
-              logger.error(message);
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
-                  .withPlainInternalServerError(message)));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
@@ -470,7 +458,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (isInUse(deleteReply.cause().getMessage())) {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                .withPlainBadRequest("Campus is in use, can not delete")));
+                .withPlainBadRequest("Campus is in use, can not be deleted")));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
@@ -491,7 +479,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
     if (!id.equals(entity.getId())) {
-        String message = "Illegal operation: id cannot be changed";
+      String message = "Illegal operation:Campus  id cannot be changed";
         asyncResultHandler.handle(Future.succeededFuture(
           LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
             .withPlainBadRequest(message)));
@@ -652,12 +640,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
                   .withPlainNotFound(
                     messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else if (items.size() > 1) {
-              String message = "Multiple locations found with the same id";
-              logger.error(message);
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
-                  .withPlainInternalServerError(message)));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
@@ -699,7 +681,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     if (!id.equals(entity.getId())) {
-      String message = "Illegal operation: id cannot be changed";
+      String message = "Illegal operation: Library id cannot be changed";
       asyncResultHandler.handle(Future.succeededFuture(
         LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
           .withPlainBadRequest(message)));

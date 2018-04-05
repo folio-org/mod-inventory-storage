@@ -7,6 +7,8 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -39,6 +41,7 @@ import static org.junit.Assert.assertThat;
 public class LocationUnitTest {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
+  private static final Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
 
   @Before
   public void beforeEach()
@@ -201,6 +204,41 @@ public class LocationUnitTest {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
     assertThat(item.getInteger("totalRecords"), is(2));
+  }
+
+  @Test
+  public void canQueryInsts()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    createInst(null, "Institute of MetaPhysics", "MPI");
+    createInst(null, "The Other Institute", "OI");
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/?query=name=Other"), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getInteger("totalRecords"), is(1));
+  }
+
+  @Test
+  public void badQueryInsts()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    createInst(null, "Institute of MetaPhysics", "MPI");
+    createInst(null, "The Other Institute", "OI");
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/?query=invalidCQL"), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
+    Response getResponse;
+    getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -381,9 +419,10 @@ public class LocationUnitTest {
     createInst(instId, "Institute of MetaPhysics", "MPI");
     createCamp(null, "Riverside Campus", "RSC", instId);
     createCamp(null, "Other Side Campus", "OSC", instId);
+    createCamp(null, "Underwater Location", "OSC", instId);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    send(locCampusStorageUrl("/"), HttpMethod.GET,
+    send(locCampusStorageUrl("/?query=name=Campus"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
@@ -591,9 +630,10 @@ public class LocationUnitTest {
     createCamp(campId, "Riverside Campus", "RS", instId);
     createLib(null, "Main Library", "ML", campId);
     createLib(null, "Side Library", "SL", campId);
+    createLib(null, "The Book Store", "BS", campId);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    send(locLibraryStorageUrl("/"), HttpMethod.GET,
+    send(locLibraryStorageUrl("/?query=name=LiBRaRy"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
