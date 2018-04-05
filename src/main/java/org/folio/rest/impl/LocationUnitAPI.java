@@ -63,6 +63,11 @@ public class LocationUnitAPI implements LocationUnitsResource {
       && message.contains("duplicate key value violates unique constraint");
   }
 
+  private boolean isInUse(String message) {
+    return message != null
+      && message.contains("is still referenced");
+  }
+
   private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
@@ -249,9 +254,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
         if (deleteReply.failed()) {
           logAndSaveError(deleteReply.cause());
+          if (isInUse(deleteReply.cause().getMessage())) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
+                .withPlainBadRequest("Institution is in use, can not delete")));
+          } else {
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-              .withPlainNotFound("Institution not found")));
+                .withPlainNotFound("Institution not found")));
+          }
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
@@ -489,9 +500,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .delete(CAMPUS_TABLE, criterion, deleteReply -> {
         if (deleteReply.failed()) {
           logAndSaveError(deleteReply.cause());
-          asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-              .withPlainNotFound("Campus not found")));
+          if (isInUse(deleteReply.cause().getMessage())) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
+                .withPlainBadRequest("Campus is in use, can not delete")));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
+                .withPlainNotFound("Campus not found")));
+          }
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
