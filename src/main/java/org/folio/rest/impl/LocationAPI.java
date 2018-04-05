@@ -230,29 +230,17 @@ public class LocationAPI implements LocationsResource {
         GetLocationsByIdResponse.withPlainInternalServerError(message)));
       return;
     }
-
-    locationInUse(id, tenantId, vertxContext).setHandler(res -> {
-      if (res.failed()) {
-        String message = logAndSaveError(res.cause());
-        DeleteLocationsByIdResponse.withPlainInternalServerError(message);
-      } else {
-        if (res.result()) {
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .delete(LOCATION_TABLE, criterion, deleteReply -> {
+        if (deleteReply.failed()) {
+          logAndSaveError(deleteReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationsByIdResponse.withPlainBadRequest("Cannot delete location, as it is in use")));
+            DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
         } else {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(LOCATION_TABLE, criterion, deleteReply -> {
-            if (deleteReply.failed()) {
-              logAndSaveError(deleteReply.cause());
-              asyncResultHandler.handle(Future.succeededFuture(
-                DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                DeleteLocationsByIdResponse.withNoContent()));
-            }
-          });
+          asyncResultHandler.handle(Future.succeededFuture(
+            DeleteLocationsByIdResponse.withNoContent()));
         }
-      }
-    });
+      });
   }
 
   @Override
@@ -306,30 +294,4 @@ public class LocationAPI implements LocationsResource {
       });
   }
 
-  Future<Boolean> locationInUse(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    //Get all items where the temporary future or permanent future is this location id
-    String query = "permanentLocation == " + locationId + " OR temporarylocation == " + locationId;
-    try {
-      CQLWrapper cql = getCQL(query, 10, 0, ItemStorageAPI.ITEM_TABLE);
-      String[] fieldList = {"*"};
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-        ItemStorageAPI.ITEM_TABLE, Item.class, fieldList, cql, true, false,
-        getReply -> {
-          if (getReply.failed()) {
-            future.fail(getReply.cause());
-          } else {
-            List<Item> itemList = (List<Item>) getReply.result().getResults();
-            if (itemList.isEmpty()) {
-              future.complete(false);
-            } else {
-              future.complete(true);
-            }
-          }
-        });
-    } catch (Exception e) {
-      future.fail(e);
-    }
-    return future;
-  }
 }

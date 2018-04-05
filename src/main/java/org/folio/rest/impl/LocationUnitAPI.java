@@ -245,40 +245,19 @@ public class LocationUnitAPI implements LocationUnitsResource {
             message)));
       return;
     }
-    instInUse(id, tenantId, vertxContext).setHandler(res -> {
-      if (res.failed()) {
-        String message = logAndSaveError(res.cause());
-        LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(message);
-      } else {
-        if (res.result()) {
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
+        if (deleteReply.failed()) {
+          logAndSaveError(deleteReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-              .withPlainBadRequest("Cannot delete institution, as it is in use")));
+              .withPlainNotFound("Institution not found")));
         } else {
-          try {
-            PostgresClient.getInstance(vertxContext.owner(), tenantId)
-              .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
-                if (deleteReply.failed()) {
-                  logAndSaveError(deleteReply.cause());
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                      .withPlainNotFound("Institution not found")));
-                } else {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                      .withNoContent()));
-                }
-              });
-          } catch (Exception e) {
-            String message = logAndSaveError(e);
-            asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                .withPlainInternalServerError(message)));
-          }
+          asyncResultHandler.handle(Future.succeededFuture(
+            LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
+              .withNoContent()));
         }
-      }
-    });
+      });
   }
 
   @Override
@@ -330,14 +309,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
             }
           }
         });
-  }
-
-  // TODO - Check that the institution is not used by any location object
-  // or by any campus item points here.
-  Future<Boolean> instInUse(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    future.complete(false);
-    return future;
   }
 
   ////////////////////////////////////////////
@@ -514,33 +485,19 @@ public class LocationUnitAPI implements LocationUnitsResource {
             message)));
       return;
     }
-    campInUse(id, tenantId, vertxContext).setHandler(res -> {
-      if (res.failed()) {
-        String message = logAndSaveError(res.cause());
-        LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-          .withPlainInternalServerError(message);
-      } else {
-        if (res.result()) {
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .delete(CAMPUS_TABLE, criterion, deleteReply -> {
+        if (deleteReply.failed()) {
+          logAndSaveError(deleteReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-              .withPlainBadRequest("Cannot delete campus, as it is in use")));
+              .withPlainNotFound("Campus not found")));
         } else {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId)
-            .delete(CAMPUS_TABLE, criterion, deleteReply -> {
-              if (deleteReply.failed()) {
-                logAndSaveError(deleteReply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
-                  LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-                    .withPlainNotFound("Campus not found")));
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-                    .withNoContent()));
-              }
-            });
+          asyncResultHandler.handle(Future.succeededFuture(
+            LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
+              .withNoContent()));
         }
-      }
-    });
+      });
   }
 
   @Override
@@ -591,13 +548,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
             }
           }
         });
-  }
-
-  // TODO - Check that no institution refers to the campus
-  Future<Boolean> campInUse(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    future.complete(false);
-    return future;
   }
 
   ////////////////////////////////////////////
@@ -775,33 +725,19 @@ public class LocationUnitAPI implements LocationUnitsResource {
             message)));
       return;
     }
-    libInUse(id, tenantId, vertxContext).setHandler(res -> {
-      if (res.failed()) {
-        String message = logAndSaveError(res.cause());
-        LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-          .withPlainInternalServerError(message);
-      } else {
-        if (res.result()) {
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .delete(LIBRARY_TABLE, criterion, deleteReply -> {
+        if (deleteReply.failed()) {
+          logAndSaveError(deleteReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-              .withPlainBadRequest("Cannot delete library, as it is in use")));
+              .withPlainNotFound("Library not found")));
         } else {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId)
-            .delete(LIBRARY_TABLE, criterion, deleteReply -> {
-              if (deleteReply.failed()) {
-                logAndSaveError(deleteReply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
-                  LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-                    .withPlainNotFound("Library not found")));
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-                    .withNoContent()));
-              }
-            });
+          asyncResultHandler.handle(Future.succeededFuture(
+            LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+              .withNoContent()));
         }
-      }
-    });
+      });
   }
 
   @Override
@@ -854,41 +790,4 @@ public class LocationUnitAPI implements LocationUnitsResource {
         });
   }
 
-  // TODO - Fix this to check something real
-  Future<Boolean> libInUse(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    future.complete(false);
-    return future;
-  }
-
-  /*
-  Future<Boolean> instInUseOLDXXXX(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    //Get all items where the temporary future or permanent future is this location id
-    String query = "permanentLocation == " + locationId + " OR temporarylocation == " + locationId;
-    vertxContext.runOnContext(v -> {
-      try {
-        CQLWrapper cql = getCQL(query, 10, 0, ItemStorageAPI.ITEM_TABLE);
-        String[] fieldList = {"*"};
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-          ItemStorageAPI.ITEM_TABLE, Item.class, fieldList, cql, true, false,
-          getReply -> {
-            if (getReply.failed()) {
-              future.fail(getReply.cause());
-            } else {
-              List<Item> itemList = (List<Item>) getReply.result().getResults();
-              if (itemList.isEmpty()) {
-                future.complete(false);
-              } else {
-                future.complete(true);
-              }
-            }
-          });
-      } catch (Exception e) {
-        future.fail(e);
-      }
-    });
-    return future;
-  }
-*/
 }
