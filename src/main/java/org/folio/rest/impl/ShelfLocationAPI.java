@@ -5,23 +5,15 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Shelflocation;
 import org.folio.rest.jaxrs.model.Shelflocations;
 import org.folio.rest.jaxrs.resource.ShelfLocationsResource;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -49,26 +41,6 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
   public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/shelflocation.json";
   public static final String ID_FIELD_NAME = "'id'";
 
-  private String getErrorResponse(String response) {
-    //Check to see if we're suppressing messages or not
-    return response;
-  }
-
-  private String logAndSaveError(Throwable err) {
-    String message = err.getLocalizedMessage();
-    logger.error(message, err);
-    return message;
-  }
-
-  private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-  }
-
-  private String getTenant(Map<String, String> headers)  {
-    return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
-  }
-
   /**
    * Get a list of the new locations, and fake old kind of shelf-locations out
    * of them.
@@ -84,15 +56,15 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         Context vertxContext)
         throws Exception {
     try {
-      String tenantId = getTenant(okapiHeaders);
-      CQLWrapper cql = getCQL(query, limit, offset, LocationAPI.LOCATION_TABLE);
+      String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
+      CQLWrapper cql = LocationUnitAPI.getCQL(query, limit, offset, LocationAPI.LOCATION_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(
           LocationAPI.LOCATION_TABLE, Location.class, new String[]{"*"},
           cql, true, true, reply -> {
             try {
               if (reply.failed()) {
-                String message = logAndSaveError(reply.cause());
+                String message = LocationUnitAPI.logAndSaveError(reply.cause());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetShelfLocationsResponse.withPlainBadRequest(message)));
               } else {
@@ -110,13 +82,13 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
                 asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelfLocations)));
               }
             } catch (Exception e) {
-              String message = logAndSaveError(e);
+              String message = LocationUnitAPI.logAndSaveError(e);
               asyncResultHandler.handle(Future.succeededFuture(
                 GetShelfLocationsResponse.withPlainInternalServerError(message)));
             }
           });
     } catch (Exception e) {
-      String message = logAndSaveError(e);
+      String message = LocationUnitAPI.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         GetShelfLocationsResponse.withPlainInternalServerError(message)));
     }
@@ -135,7 +107,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
     Context vertxContext)
     throws Exception {
     try {
-      String tenantId = getTenant(okapiHeaders);
+      String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
       Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
@@ -145,7 +117,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         LOCATION_TABLE, Location.class, criterion, true,
         false, getReply -> {
           if (getReply.failed()) {
-            String message = logAndSaveError(getReply.cause());
+            String message = LocationUnitAPI.logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               GetShelfLocationsByIdResponse.withPlainInternalServerError(
                 message)));
@@ -172,7 +144,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           }
         });
     } catch (Exception e) {
-      String message = logAndSaveError(e);
+      String message = LocationUnitAPI.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         GetShelfLocationsByIdResponse.withPlainInternalServerError(message)));
     }

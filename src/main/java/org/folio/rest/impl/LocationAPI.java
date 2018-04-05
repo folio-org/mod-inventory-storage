@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import static org.folio.rest.impl.LocationUnitAPI.idCriterion;
 
 /**
  *
@@ -41,21 +42,6 @@ public class LocationAPI implements LocationsResource {
   public static final String URL_PREFIX = "/locations";
   public static final String LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
-
-  private String logAndSaveError(Throwable err) {
-    String message = err.getLocalizedMessage();
-    logger.error(message, err);
-    return message;
-  }
-
-  private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-  }
-
-  private String getTenant(Map<String, String> headers)  {
-    return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
-  }
 
   @Override
   public void deleteLocations(          String lang,
@@ -92,12 +78,12 @@ public class LocationAPI implements LocationsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
     CQLWrapper cql;
     try {
-      cql = getCQL(query, limit, offset, LOCATION_TABLE);
+      cql = LocationUnitAPI.getCQL(query, limit, offset, LOCATION_TABLE);
     } catch (FieldException e) {
-      String message = logAndSaveError(e);
+      String message = LocationUnitAPI.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         GetLocationsResponse.withPlainBadRequest(message)));
       return;
@@ -107,7 +93,7 @@ public class LocationAPI implements LocationsResource {
         new String[]{"*"}, cql, true, true, reply -> {
           // netbeans, please indent here!
           if (reply.failed()) {
-            String message = logAndSaveError(reply.cause());
+            String message = LocationUnitAPI.logAndSaveError(reply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               GetLocationsResponse.withPlainBadRequest(message)));
           } else {
@@ -129,7 +115,7 @@ public class LocationAPI implements LocationsResource {
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
     String id = entity.getId();
     if (id == null) {
       id = UUID.randomUUID().toString();
@@ -138,7 +124,7 @@ public class LocationAPI implements LocationsResource {
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .save(LOCATION_TABLE, id, entity, reply -> {
         if (reply.failed()) {
-          String message = logAndSaveError(reply.cause());
+          String message = LocationUnitAPI.logAndSaveError(reply.cause());
           if (message != null
             && message.contains("duplicate key value violates unique constraint")) {
             asyncResultHandler.handle(Future.succeededFuture(
@@ -169,25 +155,15 @@ public class LocationAPI implements LocationsResource {
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        GetLocationsByIdResponse.withPlainInternalServerError(message)));
-      return;
+    String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
+    Criterion criterion = LocationUnitAPI.idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
-
     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
       LOCATION_TABLE, Location.class, criterion, true, false, getReply -> {
         if (getReply.failed()) {
-          String message = logAndSaveError(getReply.cause());
+          String message = LocationUnitAPI.logAndSaveError(getReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
             GetLocationsByIdResponse.withPlainInternalServerError(message)));
         } else {
@@ -216,24 +192,15 @@ public class LocationAPI implements LocationsResource {
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        GetLocationsByIdResponse.withPlainInternalServerError(message)));
-      return;
+    String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
+    Criterion criterion = LocationUnitAPI.idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .delete(LOCATION_TABLE, criterion, deleteReply -> {
         if (deleteReply.failed()) {
-          logAndSaveError(deleteReply.cause());
+          LocationUnitAPI.logAndSaveError(deleteReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
             DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
         } else {
@@ -258,27 +225,15 @@ public class LocationAPI implements LocationsResource {
         PutLocationsByIdResponse.withPlainBadRequest(message)));
       return;
     }
-
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-
-    try {
-      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        PutLocationsByIdResponse.withPlainInternalServerError(message)));
-      return;
+    String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
+    Criterion criterion = LocationUnitAPI.idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
-
     PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
       LOCATION_TABLE, entity, criterion, false, updateReply -> {
         if (updateReply.failed()) {
-          String message = logAndSaveError(updateReply.cause());
+          String message = LocationUnitAPI.logAndSaveError(updateReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
             PutLocationsByIdResponse.withPlainInternalServerError(message)));
         } else {

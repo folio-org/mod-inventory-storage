@@ -38,7 +38,7 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 public class LocationUnitAPI implements LocationUnitsResource {
   private final Messages messages = Messages.getInstance();
-  private final Logger logger = LoggerFactory.getLogger(LocationUnitAPI.class);
+  private static final Logger logger = LoggerFactory.getLogger(LocationUnitAPI.class);
   public static final String URL_PREFIX = "/location-units";
   public static final String ID_FIELD_NAME = "'id'"; // same for all of them
   public static final String INSTITUTION_TABLE = "locinstitution";
@@ -52,7 +52,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
   public static final String LIB_SCHEMA_PATH = "apidocs/raml/loclib.json";
   private static final String MOD_NAME = "mod_inventory_storage";
 
-  private String logAndSaveError(Throwable err) {
+  // Some simple helpers. May also be used from Locations and ShelfLocations
+  protected static String logAndSaveError(Throwable err) {
     String message = err.getLocalizedMessage();
     logger.error(message, err);
     return message;
@@ -68,13 +69,33 @@ public class LocationUnitAPI implements LocationUnitsResource {
       && message.contains("is still referenced");
   }
 
-  private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
+  protected static CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private String getTenant(Map<String, String> headers) {
+  protected static String getTenant(Map<String, String> headers) {
     return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
+  }
+
+  protected static Criterion idCriterion(String id, String schemaPath,
+    Handler<AsyncResult<Response>> asyncResultHandler) {
+    try {
+      Criteria criteria = new Criteria(schemaPath);
+      criteria.addField(ID_FIELD_NAME);
+      criteria.setOperation("=");
+      criteria.setValue(id);
+      Criterion criterion = new Criterion(criteria);
+      return criterion;
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
+          .withPlainInternalServerError(message)));
+      // This is a bit dirty, but all those wrappers return the same kind of
+      // response for InternalServerError, so we can use this from anywhere
+      return null;
+    }
   }
 
   @Override
@@ -187,21 +208,11 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    Criterion criterion;
+
     String tenantId = getTenant(okapiHeaders);
-    try {
-      Criteria criteria = new Criteria(INST_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .get(INSTITUTION_TABLE, Locinst.class, criterion, true, false, getReply -> {
@@ -233,22 +244,10 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
-    Criterion criterion;
     String tenantId = getTenant(okapiHeaders);
-    try {
-      Criteria criteria = new Criteria(INST_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
@@ -286,19 +285,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
       return;
     }
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(INST_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(message)));
-      return;
+    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .update(INSTITUTION_TABLE, entity, criterion,
@@ -430,20 +419,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .get(CAMPUS_TABLE, Loccamp.class, criterion,
@@ -481,20 +459,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .delete(CAMPUS_TABLE, criterion, deleteReply -> {
@@ -531,19 +498,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
         return;
       }
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
-          .withPlainInternalServerError(message)));
-      return;
+    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .update(CAMPUS_TABLE, entity, criterion,
@@ -676,20 +633,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .get(LIBRARY_TABLE, Loclib.class, criterion,
@@ -727,20 +673,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .delete(LIBRARY_TABLE, criterion, deleteReply -> {
@@ -771,19 +706,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
       return;
     }
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
-          .withPlainInternalServerError(message)));
-      return;
+    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .update(LIBRARY_TABLE, entity, criterion,
