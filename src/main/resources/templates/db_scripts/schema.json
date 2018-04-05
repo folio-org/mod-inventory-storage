@@ -56,6 +56,13 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "institutionId",
+          "targetTable": "locinstitution",
+          "tOps": "ADD"
+        }
       ]
     },
     {
@@ -67,6 +74,13 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "campusId",
+          "targetTable": "loccampus",
           "tOps": "ADD"
         }
       ]

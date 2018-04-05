@@ -46,9 +46,9 @@ public class LocationUnitTest {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
   }
