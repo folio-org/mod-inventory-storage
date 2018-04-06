@@ -1,7 +1,15 @@
-## 9.0.0 Unreleased
+
+## 10.0.0 Unreleased
+
+* Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
+* Bump the version of the 'locations' interface to 2.0
+
+## 9.0.1 2018-04-04
 
 * GET requests to `/shelf-locations` proxy records from new location model (MODINVSTOR-85)
 * POST/PUT/DELETE requests to `/shelf-locations` are rejected (MODINVSTOR-85)
+* Adds a gin index on `holdingsRecordId` for items (MODINVSTOR-63)
+* Adds a gin index on `id` for material types (MODINVSTOR-63)
 
 ## 8.5.0 2018-03-27
 
@@ -10,7 +18,7 @@
 * Removing SQ warnings and improving test coverage in the new locations and location-units (MODINVSTOR-89)
 * Stops hiding database related errors when creating instances or holdings (MODINVSTOR-72)
 * Introduces multi-level (institution, campus, library and location) location model (MODINVSTOR-70, MODINVSTOR-91)
-* Extend the `offset` and `limit` paging query parameters to allow maximum integer values (MODINVSTOR-62) 
+* Extend the `offset` and `limit` paging query parameters to allow maximum integer values (MODINVSTOR-62)
 * Provides `instance-storage` 4.3 interface (MODINVSTOR-93, MODINVSTOR-62)
 * Provides `item-storage` 5.2 interface (MODINVSTOR-71, MODINVSTOR-62)
 * Provides `holdings-storage` 1.2 interface (MODINVSTOR-71, MODINVSTOR-62)
