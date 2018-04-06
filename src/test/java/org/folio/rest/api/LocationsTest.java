@@ -219,6 +219,30 @@ public class LocationsTest {
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Annex Library"));
   }
+  @Test
+  public void cannotUpdateId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+    createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X");
+    JsonObject updateRequest = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("name", "Annex Library")
+      .put("institutionId", instID.toString())
+      .put("campusId", campID.toString())
+      .put("libraryId", libID.toString())
+      .put("isActive", true)
+      .put("code", "AA/BB");
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
 
   @Test
   public void canDeleteALocation()
