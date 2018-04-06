@@ -38,7 +38,7 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 public class LocationUnitAPI implements LocationUnitsResource {
   private final Messages messages = Messages.getInstance();
-  private final Logger logger = LoggerFactory.getLogger(LocationUnitAPI.class);
+  private static final Logger logger = LoggerFactory.getLogger(LocationUnitAPI.class);
   public static final String URL_PREFIX = "/location-units";
   public static final String ID_FIELD_NAME = "'id'"; // same for all of them
   public static final String INSTITUTION_TABLE = "locinstitution";
@@ -52,7 +52,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
   public static final String LIB_SCHEMA_PATH = "apidocs/raml/loclib.json";
   private static final String MOD_NAME = "mod_inventory_storage";
 
-  private String logAndSaveError(Throwable err) {
+  // Some simple helpers. May also be used from Locations and ShelfLocations
+  protected static String logAndSaveError(Throwable err) {
     String message = err.getLocalizedMessage();
     logger.error(message, err);
     return message;
@@ -63,13 +64,38 @@ public class LocationUnitAPI implements LocationUnitsResource {
       && message.contains("duplicate key value violates unique constraint");
   }
 
-  private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
+  private boolean isInUse(String message) {
+    return message != null
+      && message.contains("is still referenced");
+  }
+
+  protected static CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private String getTenant(Map<String, String> headers) {
+  protected static String getTenant(Map<String, String> headers) {
     return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
+  }
+
+  protected static Criterion idCriterion(String id, String schemaPath,
+    Handler<AsyncResult<Response>> asyncResultHandler) {
+    try {
+      Criteria criteria = new Criteria(schemaPath);
+      criteria.addField(ID_FIELD_NAME);
+      criteria.setOperation("=");
+      criteria.setValue(id);
+      Criterion criterion = new Criterion(criteria);
+      return criterion;
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
+          .withPlainInternalServerError(message)));
+      // This is a bit dirty, but all those wrappers return the same kind of
+      // response for InternalServerError, so we can use this from anywhere
+      return null;
+    }
   }
 
   @Override
@@ -78,10 +104,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
-    try {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-      postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+    PostgresClient.getInstance(vertxContext.owner(),
+      TenantTool.calculateTenantId(tenantId))
+      .mutate(String.format("DELETE FROM %s_%s.%s",
         tenantId, MOD_NAME, INSTITUTION_TABLE),
         reply -> {
           if (reply.succeeded()) {
@@ -94,11 +119,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 .withPlainInternalServerError(reply.cause().getMessage())));
           }
         });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.DeleteLocationUnitsInstitutionsResponse
-          .withPlainInternalServerError(e.getMessage())));
-    }
   }
 
   @Override
@@ -119,22 +139,22 @@ public class LocationUnitAPI implements LocationUnitsResource {
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .get(          INSTITUTION_TABLE, Locinst.class, new String[]{"*"},
-          cql, true, true, reply -> {
-            if (reply.failed()) {
-              String message = logAndSaveError(reply.cause());
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsInstitutionsResponse
-                  .withPlainBadRequest(message)));
-            } else {
-              Locinsts insts = new Locinsts();
-              List<Locinst> items = (List<Locinst>) reply.result().getResults();
-              insts.setLocinsts(items);
-              insts.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsInstitutionsResponse.withJsonOK(insts)));
-            }
-            });
+      .get(INSTITUTION_TABLE, Locinst.class, new String[]{"*"},
+        cql, true, true, reply -> {
+          if (reply.failed()) {
+            String message = logAndSaveError(reply.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.GetLocationUnitsInstitutionsResponse
+                .withPlainBadRequest(message)));
+          } else {
+            Locinsts insts = new Locinsts();
+            List<Locinst> items = (List<Locinst>) reply.result().getResults();
+            insts.setLocinsts(items);
+            insts.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.GetLocationUnitsInstitutionsResponse.withJsonOK(insts)));
+          }
+        });
   }
 
   @Override
@@ -182,21 +202,11 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    Criterion criterion;
+
     String tenantId = getTenant(okapiHeaders);
-    try {
-      Criteria criteria = new Criteria(INST_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .get(INSTITUTION_TABLE, Locinst.class, criterion, true, false, getReply -> {
@@ -228,57 +238,30 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
-    Criterion criterion;
     String tenantId = getTenant(okapiHeaders);
-    try {
-      Criteria criteria = new Criteria(INST_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
-    instInUse(id, tenantId, vertxContext).setHandler(res -> {
-      if (res.failed()) {
-        String message = logAndSaveError(res.cause());
-        LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(message);
-      } else {
-        if (res.result()) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-              .withPlainBadRequest("Cannot delete institution, as it is in use")));
-        } else {
-          try {
-            PostgresClient.getInstance(vertxContext.owner(), tenantId)
-              .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
-                if (deleteReply.failed()) {
-                  logAndSaveError(deleteReply.cause());
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                      .withPlainNotFound("Institution not found")));
-                } else {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                      .withNoContent()));
-                }
-              });
-          } catch (Exception e) {
-            String message = logAndSaveError(e);
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
+        if (deleteReply.failed()) {
+          logAndSaveError(deleteReply.cause());
+          if (isInUse(deleteReply.cause().getMessage())) {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                .withPlainInternalServerError(message)));
+                .withPlainBadRequest("Institution is in use, can not be deleted")));
+          } else {
+          asyncResultHandler.handle(Future.succeededFuture(
+            LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
+                .withPlainNotFound("Institution not found")));
           }
+        } else {
+          asyncResultHandler.handle(Future.succeededFuture(
+            LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
+              .withNoContent()));
         }
-      }
-    });
+      });
   }
 
   @Override
@@ -289,26 +272,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) {
 
     if (!id.equals(entity.getId())) {
-      String message = "Illegal operation: id cannot be changed";
+      String message = "Illegal operation: Institution id cannot be changed";
       asyncResultHandler.handle(Future.succeededFuture(
         LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
           .withPlainBadRequest(message)));
       return;
     }
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(INST_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(message)));
-      return;
+    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .update(INSTITUTION_TABLE, entity, criterion,
@@ -330,14 +303,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
             }
           }
         });
-  }
-
-  // TODO - Check that the institution is not used by any location object
-  // or by any campus item points here.
-  Future<Boolean> instInUse(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    future.complete(false);
-    return future;
   }
 
   ////////////////////////////////////////////
@@ -448,20 +413,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .get(CAMPUS_TABLE, Loccamp.class, criterion,
@@ -478,12 +432,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
                   .withPlainNotFound(
                     messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else if (items.size() > 1) {
-              String message = "Multiple campuses found with the same id";
-              logger.error(message);
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
-                  .withPlainInternalServerError(message)));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
@@ -499,48 +447,29 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
-    campInUse(id, tenantId, vertxContext).setHandler(res -> {
-      if (res.failed()) {
-        String message = logAndSaveError(res.cause());
-        LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-          .withPlainInternalServerError(message);
-      } else {
-        if (res.result()) {
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .delete(CAMPUS_TABLE, criterion, deleteReply -> {
+        if (deleteReply.failed()) {
+          logAndSaveError(deleteReply.cause());
+          if (isInUse(deleteReply.cause().getMessage())) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
+                .withPlainBadRequest("Campus is in use, can not be deleted")));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
+                .withPlainNotFound("Campus not found")));
+          }
+        } else {
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-              .withPlainBadRequest("Cannot delete campus, as it is in use")));
-        } else {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId)
-            .delete(CAMPUS_TABLE, criterion, deleteReply -> {
-              if (deleteReply.failed()) {
-                logAndSaveError(deleteReply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
-                  LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-                    .withPlainNotFound("Campus not found")));
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-                    .withNoContent()));
-              }
-            });
+              .withNoContent()));
         }
-      }
-    });
+      });
   }
 
   @Override
@@ -550,26 +479,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
     if (!id.equals(entity.getId())) {
-        String message = "Illegal operation: id cannot be changed";
+      String message = "Illegal operation:Campus  id cannot be changed";
         asyncResultHandler.handle(Future.succeededFuture(
           LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
             .withPlainBadRequest(message)));
         return;
       }
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(CAMP_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
-          .withPlainInternalServerError(message)));
-      return;
+    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .update(CAMPUS_TABLE, entity, criterion,
@@ -591,13 +510,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
             }
           }
         });
-  }
-
-  // TODO - Check that no institution refers to the campus
-  Future<Boolean> campInUse(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    future.complete(false);
-    return future;
   }
 
   ////////////////////////////////////////////
@@ -709,20 +621,9 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .get(LIBRARY_TABLE, Loclib.class, criterion,
@@ -739,12 +640,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
                 LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
                   .withPlainNotFound(
                     messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else if (items.size() > 1) {
-              String message = "Multiple locations found with the same id";
-              logger.error(message);
-              asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
-                  .withPlainInternalServerError(message)));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
@@ -760,48 +655,23 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-          .withPlainInternalServerError(
-            message)));
-      return;
+    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
-    libInUse(id, tenantId, vertxContext).setHandler(res -> {
-      if (res.failed()) {
-        String message = logAndSaveError(res.cause());
-        LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-          .withPlainInternalServerError(message);
-      } else {
-        if (res.result()) {
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .delete(LIBRARY_TABLE, criterion, deleteReply -> {
+        if (deleteReply.failed()) {
+          logAndSaveError(deleteReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-              .withPlainBadRequest("Cannot delete library, as it is in use")));
+              .withPlainNotFound("Library not found")));
         } else {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId)
-            .delete(LIBRARY_TABLE, criterion, deleteReply -> {
-              if (deleteReply.failed()) {
-                logAndSaveError(deleteReply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
-                  LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-                    .withPlainNotFound("Library not found")));
-              } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-                    .withNoContent()));
-              }
-            });
+          asyncResultHandler.handle(Future.succeededFuture(
+            LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+              .withNoContent()));
         }
-      }
-    });
+      });
   }
 
   @Override
@@ -811,26 +681,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     if (!id.equals(entity.getId())) {
-      String message = "Illegal operation: id cannot be changed";
+      String message = "Illegal operation: Library id cannot be changed";
       asyncResultHandler.handle(Future.succeededFuture(
         LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
           .withPlainBadRequest(message)));
       return;
     }
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion;
-    try {
-      Criteria criteria = new Criteria(LIB_SCHEMA_PATH);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      criterion = new Criterion(criteria);
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
-          .withPlainInternalServerError(message)));
-      return;
+    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    if (id == null) {
+      return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .update(LIBRARY_TABLE, entity, criterion,
@@ -854,41 +714,4 @@ public class LocationUnitAPI implements LocationUnitsResource {
         });
   }
 
-  // TODO - Fix this to check something real
-  Future<Boolean> libInUse(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    future.complete(false);
-    return future;
-  }
-
-  /*
-  Future<Boolean> instInUseOLDXXXX(String locationId, String tenantId, Context vertxContext) {
-    Future<Boolean> future = Future.future();
-    //Get all items where the temporary future or permanent future is this location id
-    String query = "permanentLocation == " + locationId + " OR temporarylocation == " + locationId;
-    vertxContext.runOnContext(v -> {
-      try {
-        CQLWrapper cql = getCQL(query, 10, 0, ItemStorageAPI.ITEM_TABLE);
-        String[] fieldList = {"*"};
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-          ItemStorageAPI.ITEM_TABLE, Item.class, fieldList, cql, true, false,
-          getReply -> {
-            if (getReply.failed()) {
-              future.fail(getReply.cause());
-            } else {
-              List<Item> itemList = (List<Item>) getReply.result().getResults();
-              if (itemList.isEmpty()) {
-                future.complete(false);
-              } else {
-                future.complete(true);
-              }
-            }
-          });
-      } catch (Exception e) {
-        future.fail(e);
-      }
-    });
-    return future;
-  }
-*/
 }
