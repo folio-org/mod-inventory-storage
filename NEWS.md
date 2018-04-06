@@ -3,6 +3,7 @@
 
 * Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
 * Bump the version of the 'locations' interface to 2.0
+* Use proper foreign keys in LocationUnits (MODINVSTOR-92)
 
 ## 9.0.1 2018-04-04
 
