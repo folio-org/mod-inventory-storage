@@ -7,13 +7,13 @@
       "contributors": [
         {
           "name": "Sigal, Ari",
-          "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+          "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
           "primary": true
         }
       ],
       "identifiers": [
         {
-          "identifierTypeId": "2e48e713-17f3-7c13-09f8-23845bb210af",
+          "identifierTypeId": "2e48e713-17f3-4c13-a9f8-23845bb210af",
           "value": "9781466636897"
         },
         {
@@ -21,7 +21,7 @@
           "value": "1"
         }
       ],
-      "instanceTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2c"
+      "instanceTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2c"
     },
     {
       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
@@ -30,13 +30,13 @@
       "contributors": [
         {
           "name": "Sappleton, Natalie",
-          "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+          "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
           "primary": true
         }
       ],
       "identifiers": [
         {
-          "identifierTypeId": "2e48e713-17f3-7c13-09f8-23845bb210af",
+          "identifierTypeId": "2e48e713-17f3-4c13-a9f8-23845bb210af",
           "value": "9781466639195"
         },
         {
@@ -44,7 +44,7 @@
           "value": "2"
         }
       ],
-      "instanceTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2c"
+      "instanceTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2c"
     }
   ],
   "totalRecords": 2
