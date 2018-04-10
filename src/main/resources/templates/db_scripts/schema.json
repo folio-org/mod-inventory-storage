@@ -289,6 +289,11 @@
           "fieldName": "materialTypeId",
           "targetTable": "material_type",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
         }
       ],
       "index": [
@@ -440,6 +445,11 @@
       "foreignKeys": [
         {
           "fieldName": "permanentLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLocationId",
           "targetTable": "location",
           "tOps": "ADD"
         }

@@ -275,7 +275,7 @@ public class LocationsTest {
     Response createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
     assertThat(createItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    send(locationsStorageUrl(id.toString()),
+    send(locationsStorageUrl("/" + id.toString()),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(deleteCompleted));
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);

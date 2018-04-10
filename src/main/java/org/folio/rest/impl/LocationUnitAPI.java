@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Loccamp;
 import org.folio.rest.jaxrs.model.Loccamps;
 import org.folio.rest.jaxrs.model.Locinst;
@@ -18,10 +17,7 @@ import org.folio.rest.jaxrs.model.Locinsts;
 import org.folio.rest.jaxrs.model.Loclib;
 import org.folio.rest.jaxrs.model.Loclibs;
 import org.folio.rest.jaxrs.resource.LocationUnitsResource;
-import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
@@ -29,8 +25,6 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 // Note - After upgrading to a newer RMB, it should be possible to remove many
 // try-catch blocks from the code, which will also improve test coverage, since
@@ -51,52 +45,6 @@ public class LocationUnitAPI implements LocationUnitsResource {
   public static final String URL_PREFIX_LIB = URL_PREFIX + "/libraries";
   public static final String LIB_SCHEMA_PATH = "apidocs/raml/loclib.json";
   private static final String MOD_NAME = "mod_inventory_storage";
-
-  // Some simple helpers. May also be used from Locations and ShelfLocations
-  protected static String logAndSaveError(Throwable err) {
-    String message = err.getLocalizedMessage();
-    logger.error(message, err);
-    return message;
-  }
-
-  private boolean isDuplicate(String message) {
-    return message != null
-      && message.contains("duplicate key value violates unique constraint");
-  }
-
-  private boolean isInUse(String message) {
-    return message != null
-      && message.contains("is still referenced");
-  }
-
-  protected static CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-  }
-
-  protected static String getTenant(Map<String, String> headers) {
-    return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
-  }
-
-  protected static Criterion idCriterion(String id, String schemaPath,
-    Handler<AsyncResult<Response>> asyncResultHandler) {
-    try {
-      Criteria criteria = new Criteria(schemaPath);
-      criteria.addField(ID_FIELD_NAME);
-      criteria.setOperation("=");
-      criteria.setValue(id);
-      Criterion criterion = new Criterion(criteria);
-      return criterion;
-    } catch (Exception e) {
-      String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-          .withPlainInternalServerError(message)));
-      // This is a bit dirty, but all those wrappers return the same kind of
-      // response for InternalServerError, so we can use this from anywhere
-      return null;
-    }
-  }
 
   @Override
   public void deleteLocationUnitsInstitutions(String lang,
@@ -127,12 +75,12 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
     CQLWrapper cql;
     try {
-      cql = getCQL(query, limit, offset, INSTITUTION_TABLE);
+      cql = StorageHelper.getCQL(query, limit, offset, INSTITUTION_TABLE);
     } catch (Exception e) {
-      String message = logAndSaveError(e);
+      String message = StorageHelper.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         LocationUnitsResource.GetLocationUnitsInstitutionsResponse
           .withPlainInternalServerError(message)));
@@ -142,7 +90,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .get(INSTITUTION_TABLE, Locinst.class, new String[]{"*"},
         cql, true, true, reply -> {
           if (reply.failed()) {
-            String message = logAndSaveError(reply.cause());
+            String message = StorageHelper.logAndSaveError(reply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.GetLocationUnitsInstitutionsResponse
                 .withPlainBadRequest(message)));
@@ -163,7 +111,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
     String id = entity.getId();
     if (id == null) {
       id = UUID.randomUUID().toString();
@@ -172,8 +120,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .save(INSTITUTION_TABLE, id, entity, reply -> {
       if (reply.failed()) {
-          String message = logAndSaveError(reply.cause());
-          if (isDuplicate(message)) {
+        String message = StorageHelper.logAndSaveError(reply.cause());
+        if (StorageHelper.isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.PostLocationUnitsInstitutionsResponse
                 .withJsonUnprocessableEntity(
@@ -203,15 +151,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .get(INSTITUTION_TABLE, Locinst.class, criterion, true, false, getReply -> {
           if (getReply.failed()) {
-            String message = logAndSaveError(getReply.cause());
+            String message = StorageHelper.logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
                 .withPlainInternalServerError(message)));
@@ -238,16 +186,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
         if (deleteReply.failed()) {
-          logAndSaveError(deleteReply.cause());
-          if (isInUse(deleteReply.cause().getMessage())) {
+          StorageHelper.logAndSaveError(deleteReply.cause());
+          if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
                 .withPlainBadRequest("Institution is in use, can not be deleted")));
@@ -278,8 +226,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
           .withPlainBadRequest(message)));
       return;
     }
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
@@ -287,7 +235,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .update(INSTITUTION_TABLE, entity, criterion,
         false, updateReply -> {
           if (updateReply.failed()) {
-            String message = logAndSaveError(updateReply.cause());
+            String message = StorageHelper.logAndSaveError(updateReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
                 .withPlainInternalServerError(message)));
@@ -336,12 +284,12 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
     CQLWrapper cql;
     try {
-      cql = getCQL(query, limit, offset, CAMPUS_TABLE);
+      cql = StorageHelper.getCQL(query, limit, offset, CAMPUS_TABLE);
     } catch (Exception e) {
-      String message = logAndSaveError(e);
+      String message = StorageHelper.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         LocationUnitsResource.GetLocationUnitsCampusesResponse
           .withPlainInternalServerError(message)));
@@ -351,7 +299,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .get(CAMPUS_TABLE, Loccamp.class, new String[]{"*"},
         cql, true, true, reply -> {
             if (reply.failed()) {
-              String message = logAndSaveError(reply.cause());
+              String message = StorageHelper.logAndSaveError(reply.cause());
               asyncResultHandler.handle(Future.succeededFuture(
                 LocationUnitsResource.GetLocationUnitsCampusesResponse
                   .withPlainBadRequest(message)));
@@ -372,7 +320,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
     String id = entity.getId();
     if (id == null) {
       id = UUID.randomUUID().toString();
@@ -381,8 +329,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .save(CAMPUS_TABLE, id, entity, reply -> {
         if (reply.failed()) {
-          String message = logAndSaveError(reply.cause());
-          if (isDuplicate(message)) {
+          String message = StorageHelper.logAndSaveError(reply.cause());
+          if (StorageHelper.isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.PostLocationUnitsCampusesResponse
                 .withJsonUnprocessableEntity(
@@ -412,8 +360,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
@@ -421,7 +369,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .get(CAMPUS_TABLE, Loccamp.class, criterion,
         true, false, getReply -> {
           if (getReply.failed()) {
-            String message = logAndSaveError(getReply.cause());
+            String message = StorageHelper.logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
                 .withPlainInternalServerError(message)));
@@ -446,16 +394,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .delete(CAMPUS_TABLE, criterion, deleteReply -> {
         if (deleteReply.failed()) {
-          logAndSaveError(deleteReply.cause());
-          if (isInUse(deleteReply.cause().getMessage())) {
+          StorageHelper.logAndSaveError(deleteReply.cause());
+          if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
                 .withPlainBadRequest("Campus is in use, can not be deleted")));
@@ -485,8 +433,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
             .withPlainBadRequest(message)));
         return;
       }
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
@@ -494,7 +442,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .update(CAMPUS_TABLE, entity, criterion,
         false, updateReply -> {
           if (updateReply.failed()) {
-            String message = logAndSaveError(updateReply.cause());
+            String message = StorageHelper.logAndSaveError(updateReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
                 .withPlainInternalServerError(message)));
@@ -543,23 +491,22 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
     CQLWrapper cql;
     try {
-      cql = getCQL(query, limit, offset, LIBRARY_TABLE);
+      cql = StorageHelper.getCQL(query, limit, offset, LIBRARY_TABLE);
     } catch (Exception e) {
-      String message = logAndSaveError(e);
+      String message = StorageHelper.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         LocationUnitsResource.GetLocationUnitsLibrariesResponse
           .withPlainInternalServerError(message)));
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .get(
-        LIBRARY_TABLE, Loclib.class, new String[]{"*"},
+      .get(LIBRARY_TABLE, Loclib.class, new String[]{"*"},
         cql, true, true, reply -> {
           if (reply.failed()) {
-            String message = logAndSaveError(reply.cause());
+            String message = StorageHelper.logAndSaveError(reply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.GetLocationUnitsLibrariesResponse
                 .withPlainBadRequest(message)));
@@ -580,7 +527,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
       String id = entity.getId();
       if (id == null) {
         id = UUID.randomUUID().toString();
@@ -589,8 +536,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .save(LIBRARY_TABLE, id, entity, reply -> {
         if (reply.failed()) {
-          String message = logAndSaveError(reply.cause());
-          if (isDuplicate(message)) {
+          String message = StorageHelper.logAndSaveError(reply.cause());
+          if (StorageHelper.isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.PostLocationUnitsLibrariesResponse
                 .withJsonUnprocessableEntity(
@@ -620,8 +567,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
@@ -629,7 +576,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .get(LIBRARY_TABLE, Loclib.class, criterion,
         true, false, getReply -> {
           if (getReply.failed()) {
-            String message = logAndSaveError(getReply.cause());
+            String message = StorageHelper.logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
                 .withPlainInternalServerError(message)));
@@ -654,15 +601,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .delete(LIBRARY_TABLE, criterion, deleteReply -> {
         if (deleteReply.failed()) {
-          logAndSaveError(deleteReply.cause());
+          StorageHelper.logAndSaveError(deleteReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
               .withPlainNotFound("Library not found")));
@@ -687,8 +634,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
           .withPlainBadRequest(message)));
       return;
     }
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
     if (id == null) {
       return; // error already handled
     }
@@ -696,7 +643,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .update(LIBRARY_TABLE, entity, criterion,
         false, updateReply -> {
           if (updateReply.failed()) {
-            String message = logAndSaveError(updateReply.cause());
+            String message = StorageHelper.logAndSaveError(updateReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
                 .withPlainInternalServerError(message)));

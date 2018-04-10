@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import org.apache.commons.lang.NotImplementedException;
 import static org.folio.rest.impl.LocationAPI.LOCATION_SCHEMA_PATH;
 import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
+import static org.folio.rest.impl.StorageHelper.*;
 import org.folio.rest.jaxrs.model.Location;
 
 /**
@@ -56,15 +57,15 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         Context vertxContext)
         throws Exception {
     try {
-      String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
-      CQLWrapper cql = LocationUnitAPI.getCQL(query, limit, offset, LocationAPI.LOCATION_TABLE);
+      String tenantId = getTenant(okapiHeaders);
+      CQLWrapper cql = getCQL(query, limit, offset, LocationAPI.LOCATION_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(
           LocationAPI.LOCATION_TABLE, Location.class, new String[]{"*"},
           cql, true, true, reply -> {
             try {
               if (reply.failed()) {
-                String message = LocationUnitAPI.logAndSaveError(reply.cause());
+                String message = logAndSaveError(reply.cause());
                 asyncResultHandler.handle(Future.succeededFuture(
                   GetShelfLocationsResponse.withPlainBadRequest(message)));
               } else {
@@ -82,13 +83,13 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
                 asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelfLocations)));
               }
             } catch (Exception e) {
-              String message = LocationUnitAPI.logAndSaveError(e);
+              String message = logAndSaveError(e);
               asyncResultHandler.handle(Future.succeededFuture(
                 GetShelfLocationsResponse.withPlainInternalServerError(message)));
             }
           });
     } catch (Exception e) {
-      String message = LocationUnitAPI.logAndSaveError(e);
+      String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         GetShelfLocationsResponse.withPlainInternalServerError(message)));
     }
@@ -107,7 +108,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
     Context vertxContext)
     throws Exception {
     try {
-      String tenantId = LocationUnitAPI.getTenant(okapiHeaders);
+      String tenantId = getTenant(okapiHeaders);
       Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
@@ -117,7 +118,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         LOCATION_TABLE, Location.class, criterion, true,
         false, getReply -> {
           if (getReply.failed()) {
-            String message = LocationUnitAPI.logAndSaveError(getReply.cause());
+            String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               GetShelfLocationsByIdResponse.withPlainInternalServerError(
                 message)));
@@ -144,7 +145,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           }
         });
     } catch (Exception e) {
-      String message = LocationUnitAPI.logAndSaveError(e);
+      String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
         GetShelfLocationsByIdResponse.withPlainInternalServerError(message)));
     }
