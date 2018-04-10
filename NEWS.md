@@ -3,6 +3,7 @@
 * Rename `parking` property to `details` in locations (compatibility breaking change, MODINVSTOR-96)
 * Provides `locations` interface to 2.0 (MODINVSTOR-96)
 * Provides `service-points` interface 1.0 (MODINVSTOR-95)
+* Foreign keys in items and holdings for locations
 
 ## 10.0.0 Unreleased
 * Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
