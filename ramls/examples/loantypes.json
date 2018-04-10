@@ -1,15 +1,15 @@
 {
   "loantypes": [
     {
-      "id": "2b94c631-fca9-a892-c730-03ee529ffe27",
+      "id": "2b94c631-fca9-4892-c730-03ee529ffe27",
       "name": "Can circulate"
     },
     {
-      "id": "2e48e713-17f3-7c13-09f8-23845bb210a4",
+      "id": "d6e170d8-99d8-49c9-ae22-90cab9f3d30a",
       "name": "Reading room"
     },
     {
-      "id": "e8b311a6-3b21-03f2-2269-dd9310cb2d0e",
+      "id": "ca69a863-bfc7-437a-893f-90b70f9ee911",
       "name": "Course reserves"
     }
   ],
