@@ -56,11 +56,13 @@ public class StorageHelper {
       criteria.addField(LocationUnitAPI.ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
-      Criterion criterion = new Criterion(criteria);
-      return criterion;
+      return new Criterion(criteria);
     } catch (Exception e) {
       String message = logAndSaveError(e);
-      asyncResultHandler.handle(Future.succeededFuture(LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse.withPlainInternalServerError(message)));
+      asyncResultHandler.handle(
+        Future.succeededFuture(
+          LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
+            .withPlainInternalServerError(message)));
       // This is a bit dirty, but all those wrappers return the same kind of
       // response for InternalServerError, so we can use this from anywhere
       return null;

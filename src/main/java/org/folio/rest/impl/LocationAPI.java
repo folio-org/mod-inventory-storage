@@ -151,7 +151,7 @@ public class LocationAPI implements LocationsResource {
 
     String tenantId = getTenant(okapiHeaders);
     Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
@@ -188,7 +188,7 @@ public class LocationAPI implements LocationsResource {
 
     String tenantId = getTenant(okapiHeaders);
     Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -227,7 +227,7 @@ public class LocationAPI implements LocationsResource {
     }
     String tenantId = getTenant(okapiHeaders);
     Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
