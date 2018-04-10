@@ -54,6 +54,11 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/locations" + subPath);
   }
 
+  public static URL servicePointsUrl(String subPath)
+    throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/service-points" + subPath);
+  }
+
   public static URL locInstitutionStorageUrl(String subPath)
     throws MalformedURLException {
     return StorageTestSuite.storageUrl("/location-units/institutions" + subPath);

@@ -1,6 +1,10 @@
+## 10.1.0 Unreleased
+* Add /service-points API (MODINVSTOR-95)
+* Rename `parking` property to `details` in locations (compatibility breaking change, MODINVSTOR-96)
+* Provides `locations` interface to 2.0 (MODINVSTOR-96)
+* Provides `service-points` interface 1.0 (MODINVSTOR-95)
 
 ## 10.0.0 Unreleased
-
 * Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
 * Bump the version of the 'locations' interface to 2.0
 * Use proper foreign keys in LocationUnits (MODINVSTOR-92)
