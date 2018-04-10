@@ -819,7 +819,7 @@
       "displayName": "inventory storage - delete individual contributor-type",
       "description": "delete individual contributor-type from storage"
     },
-   	{
+    {
       "permissionName": "inventory-storage.service-points.collection.get",
       "displayName": "inventory storage - get service-point collection",
       "description": "get service-point collection from storage"

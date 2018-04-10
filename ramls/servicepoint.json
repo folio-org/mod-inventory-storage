@@ -1,41 +1,41 @@
 {
-	"$schema": "http://json-schema.org/draft-04/schema#",
-	"type" : "object",
-	"properties" : {
-		"id" : {
-			"type" : "string"
-		},
-		"name" : {
-			"type" : "string"
-		},
-		"code" : {
-			"type" : "string"
-		},
-		"discoveryDisplayName" : {
-			"type" : "string"
-		},
-		"description" : {
-			"type" : "string"
-		},
-		"shelvingLagTime" : {
-			"type" : "integer"
-		},
-		"pickupLocation" : {
-			"type" : "boolean"
-		},
-		"feeFineOwner" : {
-			"type" : "boolean"
-		},
-		"metadata" : {
-			"type" : "object",
-			"$ref" : "raml-util/schemas/metadata.schema",
-			"readonly" : true
-		}
-	},
-	"additionalProperties" : false,
-	"required" : [
-		"name",
-		"code",
-		"discoveryDisplayName"
-	]
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "discoveryDisplayName": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "shelvingLagTime": {
+      "type": "integer"
+    },
+    "pickupLocation": {
+      "type": "boolean"
+    },
+    "feeFineOwner": {
+      "type": "boolean"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "code",
+    "discoveryDisplayName"
+  ]
 }
