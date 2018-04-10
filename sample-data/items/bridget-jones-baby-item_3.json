@@ -2,9 +2,9 @@
   "id": "d6f7c1ba-a237-465e-94ed-f37e91bc64bd",
   "holdingsRecordId": "fb7b70f1-b898-4924-a991-0e4b6312bb5f",
   "barcode": "4539876054383",
-  "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
-  "permanentLoanTypeId": "2b94c631-fca9-a892-c730-03ee529ffe27",
-  "temporaryLoanTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0e",
+  "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c94892",
+  "permanentLoanTypeId": "2b94c631-fca9-4892-c730-03ee529ffe27",
+  "temporaryLoanTypeId": "ca69a863-bfc7-437a-893f-90b70f9ee911",
   "status": {
     "name": "Available"
   },

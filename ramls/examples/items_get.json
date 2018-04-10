@@ -8,18 +8,18 @@
         "name": "Available"
       },
       "materialTypeId": "240886da-17d9-435f-985e-21111e586fc8",
-      "permanentLoanTypeId": "2e48e713-17f3-7c13-09f8-23845bb210a4"
+      "permanentLoanTypeId": "d6e170d8-99d8-49c9-ae22-90cab9f3d30a"
     },
     {
-      "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+      "id": "0b96a642-5e7f-452d-9cae-9cee66c94892",
       "holdingsRecordId": "65cb2bf0-d4c2-4886-8ad0-b76f1ba75d61",
       "barcode": "645398607547",
       "status": {
         "name": "Available"
       },
-      "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c9a892",
-      "permanentLoanTypeId": "2b94c631-fca9-a892-c730-03ee529ffe27",
-      "temporaryLoanTypeId": "e8b311a6-3b21-03f2-2269-dd9310cb2d0e",
+      "materialTypeId": "1a54b431-2e4f-452d-9cae-9cee66c94892",
+      "permanentLoanTypeId": "2b94c631-fca9-4892-c730-03ee529ffe27",
+      "temporaryLoanTypeId": "ca69a863-bfc7-437a-893f-90b70f9ee911",
       "temporaryLocationId": "0df935eb-f3f4-4741-9ac6-33c500174b96"
     }
   ],
