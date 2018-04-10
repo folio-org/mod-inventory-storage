@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.folio.rest.api;
 
 import io.vertx.core.Handler;
@@ -40,7 +35,7 @@ import org.junit.Before;
 public class ServicePointTest {
   private static Logger logger = LoggerFactory.getLogger(ServicePointTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-  
+
   @Before
   public void beforeEach()
           throws InterruptedException,
@@ -49,9 +44,9 @@ public class ServicePointTest {
           MalformedURLException {
     StorageTestSuite.deleteAll(servicePointsUrl(""));
   }
-  
+
   // --- BEGIN TESTS --- //
-  
+
   @Test
   public void canCreateServicePoint()
           throws InterruptedException,
@@ -63,9 +58,9 @@ public class ServicePointTest {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("code"), is("cd1"));
-    assertThat(response.getJson().getString("name"), is("Circ Desk 1"));    
+    assertThat(response.getJson().getString("name"), is("Circ Desk 1"));
   }
-  
+
   @Test
   public void cannotCreateServicePointWithoutName()
           throws InterruptedException,
@@ -76,7 +71,7 @@ public class ServicePointTest {
             "Circulation Desk -- Hallway", null, 20, true, true);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
-  
+
   @Test
   public void cannotCreateServicePointWithoutCode()
           throws InterruptedException,
@@ -87,7 +82,7 @@ public class ServicePointTest {
             "Circulation Desk -- Hallway", null, 20, true, true);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
-  
+
   @Test
   public void cannotCreateServicePointWithoutDDName()
           throws InterruptedException,
@@ -98,7 +93,7 @@ public class ServicePointTest {
             null, null, 20, true, true);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
-  
+
   @Test
   public void cannotCreateServicePointWithDuplicateName()
           throws InterruptedException,
@@ -111,7 +106,7 @@ public class ServicePointTest {
             "Circulation Desk -- Bathroom", null, 20, true, true);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
-  
+
   @Test
   public void canGetAServicePointById()
           throws InterruptedException,
@@ -125,9 +120,9 @@ public class ServicePointTest {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(response.getJson().getString("id"), is(id.toString()));
     assertThat(response.getJson().getString("code"), is("cd1"));
-    assertThat(response.getJson().getString("name"), is("Circ Desk 1"));    
+    assertThat(response.getJson().getString("name"), is("Circ Desk 1"));
   }
-  
+
   @Test
   public void canGetMultipleServicePoints()
     throws InterruptedException,
@@ -147,7 +142,7 @@ public class ServicePointTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getInteger("totalRecords"), is(2));
   }
-  
+
   @Test
   public void canQueryServicePoints()
     throws InterruptedException,
@@ -167,7 +162,7 @@ public class ServicePointTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getInteger("totalRecords"), is(1));
   }
-  
+
   @Test
   public void canUpdateAServicePoint()
           throws InterruptedException,
@@ -192,9 +187,9 @@ public class ServicePointTest {
     assertThat(getResponse.getJson().getString("id"), is(id.toString()));
     assertThat(getResponse.getJson().getString("code"), is("cd2"));
     assertThat(getResponse.getJson().getString("name"), is("Circ Desk 2")); //should fail
-    assertThat(getResponse.getJson().getBoolean("pickupLocation"), is(false));    
+    assertThat(getResponse.getJson().getBoolean("pickupLocation"), is(false));
   }
-  
+
   @Test
   public void canDeleteAServicePointById()
           throws InterruptedException,
@@ -210,18 +205,18 @@ public class ServicePointTest {
     Response deleteResponse = deleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     CompletableFuture<Response> gotten = new CompletableFuture<>();
-    send(servicePointsUrl("/" + id.toString()), HttpMethod.GET, null, 
+    send(servicePointsUrl("/" + id.toString()), HttpMethod.GET, null,
             SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(gotten));
     Response getResponse = gotten.get(5, TimeUnit.SECONDS);
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));       
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
   // --- END TESTS --- //
-  
+
   public static Response createServicePoint(UUID id, String name, String code,
           String discoveryDisplayName, String description, Integer shelvingLagTime,
           Boolean pickupLocation, Boolean feeFineOwner) throws MalformedURLException,
           InterruptedException, ExecutionException, TimeoutException {
-    
+
     CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
     JsonObject request = new JsonObject();
     request
@@ -237,9 +232,9 @@ public class ServicePointTest {
             SUPPORTED_CONTENT_TYPE_JSON_DEF,
             ResponseHandler.json(createServicePoint));
     return createServicePoint.get(5, TimeUnit.SECONDS);
-    
+
   }
-  
+
   private Response getById(UUID id)
     throws InterruptedException,
     ExecutionException,
@@ -253,7 +248,7 @@ public class ServicePointTest {
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
-  
+
   private static void send(URL url, HttpMethod method, String content,
                     String contentType, Handler<HttpClientResponse> handler) {
 

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.folio.rest.impl;
 
 import io.vertx.core.AsyncResult;
@@ -41,11 +36,11 @@ public class ServicePointAPI implements ServicePointsResource {
   public static final String SERVICE_POINT_TABLE = "service_point";
   public static final String LOCATION_PREFIX = "/service-points/";
   public static final String ID_FIELD = "'id'";
-  
+
   PostgresClient getPGClient(Context vertxContext, String tenantId) {
     return PostgresClient.getInstance(vertxContext.owner(), tenantId);
   }
-  
+
   private String getErrorResponse(String response) {
     //Check to see if we're suppressing messages or not
     return response;
@@ -56,19 +51,19 @@ public class ServicePointAPI implements ServicePointsResource {
     logger.error(message, err);
     return message;
   }
-  
+
   private String getTenant(Map<String, String> headers)  {
     return TenantTool.calculateTenantId(headers.get(
             RestVerticle.OKAPI_HEADER_TENANT));
   }
-  
+
   private CQLWrapper getCQL(String query, int limit, int offset,
           String tableName) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
   }
-  
+
   private boolean isDuplicate(String errorMessage){
     if(errorMessage != null && errorMessage.contains(
             "duplicate key value violates unique constraint")){
@@ -76,7 +71,7 @@ public class ServicePointAPI implements ServicePointsResource {
     }
     return false;
   }
-  
+
   private boolean isCQLError(Throwable err) {
     if(err.getCause() != null && err.getCause().getClass().getSimpleName()
             .endsWith("CQLParseException")) {
@@ -94,7 +89,7 @@ public class ServicePointAPI implements ServicePointsResource {
         String tenantId = getTenant(okapiHeaders);
         PostgresClient pgClient = getPGClient(vertxContext, tenantId);
         final String DELETE_ALL_QUERY = String.format("DELETE FROM %s_%s.%s",
-                tenantId, "mod_inventory_storage", SERVICE_POINT_TABLE);   
+                tenantId, "mod_inventory_storage", SERVICE_POINT_TABLE);
         logger.info(String.format("Deleting all service points with query %s",
                 DELETE_ALL_QUERY));
         pgClient.mutate(DELETE_ALL_QUERY, mutateReply -> {
@@ -144,7 +139,7 @@ public class ServicePointAPI implements ServicePointsResource {
             asyncResultHandler.handle(Future.succeededFuture(
                     GetServicePointsResponse.withJsonOK(servicepoints)));
           }
-        });        
+        });
       } catch(Exception e) {
         String message = logAndSaveError(e);
         if(isCQLError(e)) {
@@ -190,7 +185,7 @@ public class ServicePointAPI implements ServicePointsResource {
             OutStream stream = new OutStream();
             stream.setData(entity);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostServicePointsResponse.withJsonCreated(LOCATION_PREFIX 
+                    PostServicePointsResponse.withJsonCreated(LOCATION_PREFIX
                     + ret, stream)));
           }
         });
@@ -238,7 +233,7 @@ public class ServicePointAPI implements ServicePointsResource {
                       servicepoint)));
             }
           }
-        });        
+        });
       } catch(Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
@@ -285,9 +280,9 @@ public class ServicePointAPI implements ServicePointsResource {
                           .withNoContent()));
                 }
               }
-            });            
+            });
           }
-        });        
+        });
       } catch(Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
@@ -339,5 +334,5 @@ public class ServicePointAPI implements ServicePointsResource {
   private Future<Boolean> checkServicepointInUse() {
     return Future.succeededFuture(false);
   }
-  
+
 }
