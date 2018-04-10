@@ -4,7 +4,7 @@
   "title": "Temeraire",
   "contributors": [
     {
-      "contributorNameTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2a",
+      "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
       "name": "Novik, Naomi",
       "primary": true
     }
@@ -19,5 +19,5 @@
       "value": "9781447294130"
     }
   ],
-  "instanceTypeId": "2b94c631-fca9-a892-c730-03ee529ffe2c"
+  "instanceTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2c"
 }
