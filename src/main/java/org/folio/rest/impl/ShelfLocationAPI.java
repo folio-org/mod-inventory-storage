@@ -5,23 +5,15 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Shelflocation;
 import org.folio.rest.jaxrs.model.Shelflocations;
 import org.folio.rest.jaxrs.resource.ShelfLocationsResource;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -32,6 +24,7 @@ import java.util.ArrayList;
 import org.apache.commons.lang.NotImplementedException;
 import static org.folio.rest.impl.LocationAPI.LOCATION_SCHEMA_PATH;
 import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
+import static org.folio.rest.impl.StorageHelper.*;
 import org.folio.rest.jaxrs.model.Location;
 
 /**
@@ -48,26 +41,6 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
   public static final String URL_PREFIX = "/shelflocations";
   public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/shelflocation.json";
   public static final String ID_FIELD_NAME = "'id'";
-
-  private String getErrorResponse(String response) {
-    //Check to see if we're suppressing messages or not
-    return response;
-  }
-
-  private String logAndSaveError(Throwable err) {
-    String message = err.getLocalizedMessage();
-    logger.error(message, err);
-    return message;
-  }
-
-  private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-  }
-
-  private String getTenant(Map<String, String> headers)  {
-    return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
-  }
 
   /**
    * Get a list of the new locations, and fake old kind of shelf-locations out

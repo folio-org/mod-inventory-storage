@@ -56,6 +56,13 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "institutionId",
+          "targetTable": "locinstitution",
+          "tOps": "ADD"
+        }
       ]
     },
     {
@@ -67,6 +74,13 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "campusId",
+          "targetTable": "loccampus",
           "tOps": "ADD"
         }
       ]
@@ -275,6 +289,11 @@
           "fieldName": "materialTypeId",
           "targetTable": "material_type",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
         }
       ],
       "index": [
@@ -426,6 +445,11 @@
       "foreignKeys": [
         {
           "fieldName": "permanentLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLocationId",
           "targetTable": "location",
           "tOps": "ADD"
         }

@@ -72,9 +72,9 @@ public class LocationsTest {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
@@ -219,6 +219,30 @@ public class LocationsTest {
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Annex Library"));
   }
+  @Test
+  public void cannotUpdateId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+    createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X");
+    JsonObject updateRequest = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("name", "Annex Library")
+      .put("institutionId", instID.toString())
+      .put("campusId", campID.toString())
+      .put("libraryId", libID.toString())
+      .put("isActive", true)
+      .put("code", "AA/BB");
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
 
   @Test
   public void canDeleteALocation()
@@ -251,7 +275,7 @@ public class LocationsTest {
     Response createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
     assertThat(createItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    send(locationsStorageUrl(id.toString()),
+    send(locationsStorageUrl("/" + id.toString()),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(deleteCompleted));
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
