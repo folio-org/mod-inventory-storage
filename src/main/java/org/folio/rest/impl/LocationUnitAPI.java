@@ -26,13 +26,8 @@ import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 
-// Note - After upgrading to a newer RMB, it should be possible to remove many
-// try-catch blocks from the code, which will also improve test coverage, since
-// we can not provoke those exceptions...
-
 public class LocationUnitAPI implements LocationUnitsResource {
   private final Messages messages = Messages.getInstance();
-  private static final Logger logger = LoggerFactory.getLogger(LocationUnitAPI.class);
   public static final String URL_PREFIX = "/location-units";
   public static final String ID_FIELD_NAME = "'id'"; // same for all of them
   public static final String INSTITUTION_TABLE = "locinstitution";
@@ -153,7 +148,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -188,7 +183,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     Context vertxContext) {
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -228,7 +223,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -362,7 +357,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -396,7 +391,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -435,7 +430,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
       }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -569,7 +564,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -603,7 +598,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -636,7 +631,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
     Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
-    if (id == null) {
+    if (criterion == null) {
       return; // error already handled
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)

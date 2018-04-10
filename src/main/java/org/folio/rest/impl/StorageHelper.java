@@ -22,7 +22,11 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
  * Small helpers for mod-inventory-storage
  */
 public class StorageHelper {
+
   private static Logger logger = LoggerFactory.getLogger(LocationUnitAPI.class);
+
+  private StorageHelper() {
+  }
 
   protected static String logAndSaveError(Throwable err) {
     String message = err.getLocalizedMessage();
