@@ -603,9 +603,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
       .delete(LIBRARY_TABLE, criterion, deleteReply -> {
         if (deleteReply.failed()) {
           StorageHelper.logAndSaveError(deleteReply.cause());
+          if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
+            asyncResultHandler.handle(Future.succeededFuture(
+              LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
+                .withPlainBadRequest("Library is in use, can not be deleted")));
+          } else {
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-              .withPlainNotFound("Library not found")));
+                .withPlainNotFound("Library not found")));
+          }
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
             LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
