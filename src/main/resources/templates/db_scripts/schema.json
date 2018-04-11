@@ -34,7 +34,7 @@
     },
     {
       "tableName": "locinstitution",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -47,7 +47,7 @@
     },
     {
       "tableName": "loccampus",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -67,7 +67,7 @@
     },
     {
       "tableName": "loclibrary",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -87,7 +87,7 @@
     },
     {
       "tableName": "location",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
