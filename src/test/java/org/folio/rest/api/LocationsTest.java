@@ -170,6 +170,8 @@ public class LocationsTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Main Library"));
+    assertThat(item.getJsonObject("metadata").getString("createdByUserId"),
+      is("test_user"));  // The userId header triggers creation of metadata
   }
 
   @Test
@@ -311,8 +313,8 @@ public class LocationsTest {
     })
     .handler(handler);
 
-    request.putHeader("Authorization", "test_tenant");
-    request.putHeader("x-okapi-tenant", "test_tenant");
+    request.putHeader("X-Okapi-Tenant", "test_tenant");
+    request.putHeader("X-Okapi-User-Id", "test_user");
     request.putHeader("Accept", "application/json,text/plain");
     request.putHeader("Content-type", contentType);
     request.end(buffer);

@@ -25,6 +25,11 @@
     },
     "details": {
       "type": "object"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
     }
   },
   "additionalProperties": false,
