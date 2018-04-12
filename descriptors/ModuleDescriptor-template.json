@@ -268,7 +268,7 @@
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/locations/{id}",
-          "permissionsRequired": ["inventory-storage.locatios.item.delete"]
+          "permissionsRequired": ["inventory-storage.locations.item.delete"]
         }
       ]
     },
