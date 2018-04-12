@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+help_msg="Some assistance is at https://dev.folio.org/guides/raml-cop"
+
 # The directory to start searching for RAML files.
 # Relative to the root of the repository.
 ramls_dir="ramls"
@@ -7,8 +9,14 @@ ramls_dir="ramls"
 # Space-separated list of sub-directory paths that need to be avoided.
 prune_dirs="raml-util"
 
+if [[ ${BASH_VERSION%%.*} -lt 4 ]]; then
+  echo "Requires bash 4+"
+  exit 1
+fi
+
 if ! cmd=$(command -v raml-cop); then
   echo "raml-cop is not available. Do 'npm install -g raml-cop'"
+  echo "${help_msg}"
   exit 1
 fi
 
@@ -47,7 +55,7 @@ for f in "${raml_files[@]}"; do
 done
 
 if [[ "${result}" -eq 1 ]]; then
-  echo "Some assistance is at https://dev.folio.org/guides/raml-cop"
+  echo "${help_msg}"
 fi
 
 exit ${result}
