@@ -78,6 +78,7 @@ public class LocationAPI implements LocationsResource {
       cql = getCQL(query, limit, offset, LOCATION_TABLE);
     } catch (FieldException e) {
       String message = logAndSaveError(e);
+      logger.warn("XXX - Query exception ", e);
       asyncResultHandler.handle(Future.succeededFuture(
         GetLocationsResponse.withPlainBadRequest(message)));
       return;

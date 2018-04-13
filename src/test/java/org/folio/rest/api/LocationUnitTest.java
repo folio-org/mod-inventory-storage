@@ -187,6 +187,22 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotGetAnInstByWrongId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+    createInst(null, "Institute of MetaPhysics", "MPI");
+    UUID id = UUID.randomUUID();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
+    Response getResponse;
+    getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
   public void canListInsts()
     throws InterruptedException,
     ExecutionException,
@@ -272,6 +288,26 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Institute"));
+  }
+
+  @Test
+  public void cannotUpdateAnInstId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+    createInst(id, "Institute of MetaPhysics", "MPI");
+    JsonObject updateRequest = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("name", "The Other Institute");
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -413,6 +449,26 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotGetACampWrongId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+
+    createCamp(null, "Riverside Campus", "RS", instId);
+
+    UUID id = UUID.randomUUID();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
+    Response getResponse;
+    getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
   public void canListCamps()
     throws InterruptedException,
     ExecutionException,
@@ -467,6 +523,31 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Campus"));
+  }
+
+  @Test
+  public void cannotUpdateACampId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+
+    UUID id = UUID.randomUUID();
+    createCamp(id, "Riverside Campus", "MPI", instId);
+    JsonObject updateRequest = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("name", "The Other Campus")
+      .put("institutionId", instId.toString());
+
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -623,6 +704,26 @@ public class LocationUnitTest {
       is("test_user"));  // The userId header triggers creation of metadata
   }
 
+  public void cannotGetALibWrongId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+    createLib(null, "Main Library", "ML", campId);
+    UUID id = UUID.randomUUID();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
+    Response getResponse;
+    getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
   @Test
   public void canListLibs()
     throws InterruptedException,
@@ -659,7 +760,6 @@ public class LocationUnitTest {
     createInst(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
     createCamp(campId, "Riverside Campus", "RS", instId);
-
     UUID id = UUID.randomUUID();
     createLib(id, "Main Library", "MPI", campId);
 
@@ -682,6 +782,29 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Library"));
+  }
+
+  public void cannotUpdateALibId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+    UUID id = UUID.randomUUID();
+    createLib(id, "Main Library", "MPI", campId);
+
+    JsonObject updateRequest = new JsonObject()
+      .put("id", UUID.randomUUID().toString());
+
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
