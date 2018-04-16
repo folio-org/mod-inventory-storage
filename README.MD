@@ -30,7 +30,7 @@ To initialise these please run `git submodule init && git submodule update` in t
 
 If these are not initialised, the module will fail to build correctly, and other operations may also fail.
 
-More information is available on the [developer site](http://dev.folio.org/doc/setup#update-git-submodules).
+More information is available on the [developer site](https://dev.folio.org/guides/developer-setup/#update-git-submodules).
 
 ## Postgres
 
@@ -90,12 +90,12 @@ Most of the development for these modules, thus far, has been performed on OS X,
 
 The guide and other [documentation](doc) for this module.
 
-Other [modules](http://dev.folio.org/source-code/#server-side).
+Other [modules](https://dev.folio.org/source-code/#server-side).
 
 See project [MODINVSTOR](https://issues.folio.org/browse/MODINVSTOR)
-at the [FOLIO issue tracker](http://dev.folio.org/community/guide-issues).
+at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker/).
 
-Other FOLIO Developer documentation is at [dev.folio.org](http://dev.folio.org/)
+Other FOLIO Developer documentation is at [dev.folio.org](https://dev.folio.org/)
 
 # Appendix 1 - Docker Information
 
