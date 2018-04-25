@@ -1,3 +1,6 @@
+## 10.2.0 Unreleased
+* Add 'description' and 'discoveryDisplayName' to location
+
 ## 10.1.0 Unreleased
 * Add /service-points API (MODINVSTOR-95)
 * Rename `parking` property to `details` in locations (compatibility breaking change, MODINVSTOR-96)
