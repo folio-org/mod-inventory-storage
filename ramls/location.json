@@ -11,6 +11,12 @@
     "code": {
       "type": "string"
     },
+    "description": {
+      "type": "string"
+    },
+    "discoveryDisplayName": {
+      "type": "string"
+    },
     "isActive": {
       "type": "boolean"
     },

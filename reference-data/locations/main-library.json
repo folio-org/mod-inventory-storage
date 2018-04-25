@@ -2,6 +2,8 @@
   "id": "a42b8db6-c260-4e12-addf-17eadf47bffb",
   "name": "Main Library",
   "code": "UU/OC/SL/ML",
+  "discoveryDisplayName": "MainLib",
+  "description": "The Main Library itself",
   "isActive": true,
   "institutionId": "6e068e4c-46e1-4cc5-8fcc-b9785dffb421",
   "campusId": "d9c58c68-da66-481d-9d90-78441970c8b6",
