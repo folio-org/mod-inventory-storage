@@ -1,5 +1,5 @@
 
-## 10.2.0 Unreleased
+## 10.2.0 2018-04-25
 
 * Add 'description' and 'discoveryDisplayName' to locations (MODINVSTOR-113)
 * Provides `locations` interface to 2.1 (MODINVSTOR-113)
