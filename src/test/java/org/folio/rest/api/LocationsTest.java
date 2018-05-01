@@ -351,7 +351,9 @@ public class LocationsTest {
 
     CompletableFuture<Response> createLocation = new CompletableFuture<>();
     JsonObject request = new JsonObject()
-      .put("name", name);
+      .put("name", name)
+      .put("discoveryDisplayName", "d:" + name)
+      .put("description", "something like " + name);
     putIfNotNull(request, "id", id);
     putIfNotNull(request, "institutionId", inst);
     putIfNotNull(request, "campusId", camp);

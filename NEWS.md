@@ -1,13 +1,19 @@
-## 10.1.0 Unreleased
+## 10.2.0 2018-04-25
+
+* Add 'description' and 'discoveryDisplayName' to locations (MODINVSTOR-113)
+* Provides `locations` interface to 2.1 (MODINVSTOR-113)
+
+## 10.1.0 2018-04-25
+
 * Add /service-points API (MODINVSTOR-95)
-* Rename `parking` property to `details` in locations (compatibility breaking change, MODINVSTOR-96)
-* Provides `locations` interface to 2.0 (MODINVSTOR-96)
+* Rename `parking` property to `details` in locations (MODINVSTOR-96)
+* Foreign keys in items and holdings for locations (MODINVSTOR-107, MODINVSTOR-92)
+* Rename 'parking' to 'details' in locations (MODINVSTOR-96)
+* Use proper foreign keys in location units (MODINVSTOR-92)
+* Add metadata to locations and location units (MODINVSTOR-101, MODINVSTOR-102, MODINVSTOR-103, MODINVSTOR-104)
+* Provides `locations` interface to 2.0 (MODINVSTOR-96, MODINVSTOR-104)
+* Provides `location-units` interface to 1.1 (MODINVSTOR-101, MODINVSTOR-102, MODINVSTOR-103)
 * Provides `service-points` interface 1.0 (MODINVSTOR-95)
-* Foreign keys in items and holdings for locations
-* Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
-* Bump the version of the 'locations' interface to 2.0
-* Use proper foreign keys in LocationUnits (MODINVSTOR-92)
-* Add metadata to locations and location units (MODINVSTOR-104 etc)
 
 ## 9.0.1 2018-04-04
 
