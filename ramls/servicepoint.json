@@ -23,9 +23,6 @@
     "pickupLocation": {
       "type": "boolean"
     },
-    "feeFineOwner": {
-      "type": "boolean"
-    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

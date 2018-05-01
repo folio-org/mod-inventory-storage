@@ -436,7 +436,7 @@
     },
     {
       "id": "service-points",
-      "version": "1.0",
+      "version": "2.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -444,7 +444,7 @@
           "permissionsRequired": ["inventory-storage.service-points.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/service-types/{id}",
+          "pathPattern": "/service-points/{id}",
           "permissionsRequired": ["inventory-storage.service-points.item.get"]
         }, {
           "methods": ["POST"],
