@@ -1,7 +1,6 @@
 *.class
 *.log
 metrics/
-src/main/**/client/
 #mvn build
 target/
 #vert.x
