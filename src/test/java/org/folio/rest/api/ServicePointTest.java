@@ -227,7 +227,7 @@ public class ServicePointTest {
     if(description != null) { request.put("description", description); }
     if(shelvingLagTime != null) { request.put("shelvingLagTime", shelvingLagTime); }
     if(pickupLocation != null) { request.put("pickupLocation", pickupLocation); }
-    
+
     send(servicePointsUrl(""), HttpMethod.POST, request.toString(),
             SUPPORTED_CONTENT_TYPE_JSON_DEF,
             ResponseHandler.json(createServicePoint));
