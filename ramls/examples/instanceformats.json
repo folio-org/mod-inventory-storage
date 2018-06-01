@@ -2,15 +2,21 @@
   "instanceFormats": [
     {
       "id": "2b94c631-fca9-4892-a730-03ee529ffe27",
-      "name": "Sound recording"
+      "name": "audio -- audio disc",
+      "code": "sd",
+      "source": "rdacarrier"
     },
     {
       "id": "2e48e713-17f3-4c13-a9f8-23845bb210a4",
-      "name": "Videorecording"
+      "name": "audio -- audiocassette",
+      "code": "ss",
+      "source": "rdacarrier"
     },
     {
       "id": "e8b311a6-3b21-43f2-a269-dd9310cb2d0e",
-      "name": "Unspecified"
+      "name": "computer -- online resource",
+      "code": "cr",
+      "source": "rdacarrier"
     }
   ],
   "totalRecords": 3
