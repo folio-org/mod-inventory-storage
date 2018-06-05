@@ -1,5 +1,9 @@
 ## 11.0.0 Unreleased
 
+* Provides v2.0 of instance-types, instance-formats, contributor-types (MODINVSTOR-115,-116,-123)
+* Add `source`, `code`, `metadata` to instance type (MODINVSTOR-115)
+* Add `source`, `code`, `metadata` to instance format (MODINVSTOR-116)
+* Add `source`, `code`, `metadata` to contributor type (MODINVSTOR-123)
 * Removes `feeFineOwner` property from `service-points` record (MODINVSTOR-114)
 * Fix proxy registration for GET individual `service-point` in module descriptor (MODINVSTOR-110)
 * Provides `service-points` interface 2.0 (MODINVSTOR-114)
