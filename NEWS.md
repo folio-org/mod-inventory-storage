@@ -1,4 +1,4 @@
-## 11.0.0 Unreleased
+## 11.1.0 Unreleased
 
 * Provides v2.0 of instance-types, instance-formats, contributor-types (MODINVSTOR-115,-116,-123)
 * Add `source`, `code`, `metadata` to instance type (MODINVSTOR-115)
