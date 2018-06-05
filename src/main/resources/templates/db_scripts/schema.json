@@ -222,6 +222,10 @@
         {
           "fieldName": "name",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
         }
       ],
       "index": [
