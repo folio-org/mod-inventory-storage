@@ -7,9 +7,21 @@
     },
     "name": {
       "type": "string"
-    }
+    },
+    "code": {
+      "type": "string"
+    },
+    "source": {
+      "source": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+     }
   },
   "required": [
-    "name"
+    "name",
+    "source"
   ]
 }
