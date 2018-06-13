@@ -3,7 +3,7 @@
 * Removes `feeFineOwner` property from `service-points` record (MODINVSTOR-114)
 * Fix proxy registration for GET individual `service-point` in module descriptor (MODINVSTOR-110)
 * Provides `service-points` interface 2.0 (MODINVSTOR-114)
-* Change item `id` index to be case insensitive and to remove accents to improve CQL searh performance (MODINVSTOR-121) 
+* Change item `id` index to be case insensitive and to remove accents to improve CQL search performance (MODINVSTOR-121)
 
 ## 10.2.0 2018-04-25
 
