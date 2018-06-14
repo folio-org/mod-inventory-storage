@@ -336,8 +336,8 @@
         {
           "fieldName": "id",
           "tOps": "ADD",
-          "caseSensitive": true,
-          "removeAccents": false
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "ginIndex": [
