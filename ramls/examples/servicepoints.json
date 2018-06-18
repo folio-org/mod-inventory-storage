@@ -1,0 +1,10 @@
+{
+  "servicepoints": [
+    {
+      "name": "Circ Desk 1",
+      "code": "cd1",
+      "discoveryDisplayName": "Circulation Desk -- Hallway"
+    }
+  ],
+  "totalRecords": 1
+}

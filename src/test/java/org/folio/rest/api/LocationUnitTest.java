@@ -7,6 +7,8 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -39,6 +41,7 @@ import static org.junit.Assert.assertThat;
 public class LocationUnitTest {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
+  private static final Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
 
   @Before
   public void beforeEach()
@@ -46,28 +49,14 @@ public class LocationUnitTest {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
   }
 
   ////////////////// General helpers
-  /*
-  private JsonObject createItemRequest(String temporaryLocationId) {
-
-    JsonObject item = new JsonObject();
-
-    item.put("holdingsRecordId", UUID.randomUUID().toString());
-    item.put("barcode", "12345");
-    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    item.put("materialTypeId", journalMaterialTypeID);
-    item.put("temporaryLocationId", temporaryLocationId);
-
-    return item;
-  }
-   */
   private static void send(URL url, HttpMethod method, String content,
     String contentType, Handler<HttpClientResponse> handler) {
 
@@ -93,8 +82,8 @@ public class LocationUnitTest {
     })
       .handler(handler);
 
-    request.putHeader("Authorization", "test_tenant");
-    request.putHeader("x-okapi-tenant", "test_tenant");
+    request.putHeader("X-Okapi-User-Id", "test_user");
+    request.putHeader("X-Okapi-Tenant", "test_tenant");
     request.putHeader("Accept", "application/json,text/plain");
     request.putHeader("Content-type", contentType);
     request.end(buffer);
@@ -102,24 +91,6 @@ public class LocationUnitTest {
 
   ///////////////////////////////////////////////////////  Inst test helpers
   // May also be used from other tests
-  public static Response createInst(String name, String code)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
-
-    JsonObject request = new JsonObject()
-      .put("name", name)
-      .put("code", code);
-
-    send(locInstitutionStorageUrl(""), HttpMethod.POST, request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
-
-    return createLocationUnit.get(5, TimeUnit.SECONDS);
-  }
-
   public static Response createInst(UUID id, String name, String code)
     throws MalformedURLException,
     InterruptedException,
@@ -129,9 +100,11 @@ public class LocationUnitTest {
     CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
 
     JsonObject request = new JsonObject()
-      .put("id", id.toString())
       .put("name", name)
       .put("code", code);
+    if (id != null) {
+      request.put("id", id.toString());
+    }
 
     send(locInstitutionStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
@@ -161,7 +134,7 @@ public class LocationUnitTest {
     TimeoutException,
     MalformedURLException {
 
-    Response response = createInst("Institute of MetaPhysics", "MPI");
+    Response response = createInst(null, "Institute of MetaPhysics", "MPI");
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -176,8 +149,8 @@ public class LocationUnitTest {
     TimeoutException,
     MalformedURLException {
 
-    createInst("Institute of MetaPhysics", "MPI");
-    Response response = createInst("Institute of MetaPhysics", "MPI");
+    createInst(null, "Institute of MetaPhysics", "MPI");
+    Response response = createInst(null, "Institute of MetaPhysics", "MPI");
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -209,6 +182,24 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Institute of MetaPhysics"));
+    assertThat(item.getJsonObject("metadata").getString("createdByUserId"),
+      is("test_user"));  // The userId header triggers creation of metadata
+  }
+
+  @Test
+  public void cannotGetAnInstByWrongId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+    createInst(null, "Institute of MetaPhysics", "MPI");
+    UUID id = UUID.randomUUID();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
+    Response getResponse;
+    getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   @Test
@@ -218,8 +209,8 @@ public class LocationUnitTest {
     TimeoutException,
     MalformedURLException {
 
-    createInst("Institute of MetaPhysics", "MPI");
-    createInst("The Other Institute", "OI");
+    createInst(null, "Institute of MetaPhysics", "MPI");
+    createInst(null, "The Other Institute", "OI");
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -231,6 +222,41 @@ public class LocationUnitTest {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
     assertThat(item.getInteger("totalRecords"), is(2));
+  }
+
+  @Test
+  public void canQueryInsts()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    createInst(null, "Institute of MetaPhysics", "MPI");
+    createInst(null, "The Other Institute", "OI");
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/?query=name=Other"), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getInteger("totalRecords"), is(1));
+  }
+
+  @Test
+  public void badQueryInsts()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    createInst(null, "Institute of MetaPhysics", "MPI");
+    createInst(null, "The Other Institute", "OI");
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/?query=invalidCQL"), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
+    Response getResponse;
+    getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -265,6 +291,26 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotUpdateAnInstId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+    createInst(id, "Institute of MetaPhysics", "MPI");
+    JsonObject updateRequest = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("name", "The Other Institute");
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
+  @Test
   public void canDeleteAnInst()
     throws InterruptedException,
     ExecutionException,
@@ -280,39 +326,6 @@ public class LocationUnitTest {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
-  /*
-  TODO - A test that checks thatn institution can not be deleted if used by
-  a location.
-  @Test
-  public void cannotDeleteAnInstAssociatedWithAnItem()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
-    UUID locationId = UUID.randomUUID();
-
-    createInst(locationId, "Institute of MetaPhysics", "MPI");
-
-    JsonObject item = createItemRequest(locationId.toString());
-    CompletableFuture<Response> createItemCompleted = new CompletableFuture<>();
-
-    send(itemsStorageUrl(""), HttpMethod.POST, item.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
-
-    Response createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(createItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-
-    send(locInstitutionStorageUrl(locationId.toString()),
-      HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
-      ResponseHandler.any(deleteCompleted));
-
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-  }
-*/
 ////////////////////////////////////// Campus test helpers
   public static Response createCamp(UUID id, String name, String code, UUID instId)
     throws MalformedURLException,
@@ -324,8 +337,10 @@ public class LocationUnitTest {
 
     JsonObject request = new JsonObject()
       .put("name", name)
-      .put("code", code)
-      .put("institutionId", instId.toString());
+      .put("code", code);
+    if (instId != null) { // should not be, except when testing it
+      request.put("institutionId", instId.toString());
+    }
     if (id != null) {
       request.put("id", id.toString());
     }
@@ -401,6 +416,17 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotCreateCampWithoutInst()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    Response response = createCamp(null, "Campus on the other Side of the River", "OS", null);
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
   public void canGetACampById()
     throws InterruptedException,
     ExecutionException,
@@ -418,6 +444,28 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Riverside Campus"));
+    assertThat(item.getJsonObject("metadata").getString("createdByUserId"),
+      is("test_user"));  // The userId header triggers creation of metadata
+  }
+
+  @Test
+  public void cannotGetACampWrongId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+
+    createCamp(null, "Riverside Campus", "RS", instId);
+
+    UUID id = UUID.randomUUID();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
+    Response getResponse;
+    getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   @Test
@@ -431,9 +479,10 @@ public class LocationUnitTest {
     createInst(instId, "Institute of MetaPhysics", "MPI");
     createCamp(null, "Riverside Campus", "RSC", instId);
     createCamp(null, "Other Side Campus", "OSC", instId);
+    createCamp(null, "Underwater Location", "OSC", instId);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    send(locCampusStorageUrl("/"), HttpMethod.GET,
+    send(locCampusStorageUrl("/?query=name=Campus"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
@@ -477,7 +526,7 @@ public class LocationUnitTest {
   }
 
   @Test
-  public void canDeleteACamp()
+  public void cannotUpdateACampId()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -487,17 +536,55 @@ public class LocationUnitTest {
     createInst(instId, "Institute of MetaPhysics", "MPI");
 
     UUID id = UUID.randomUUID();
+    createCamp(id, "Riverside Campus", "MPI", instId);
+    JsonObject updateRequest = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("name", "The Other Campus")
+      .put("institutionId", instId.toString());
 
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void canDeleteACamp()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID id = UUID.randomUUID();
     createCamp(id, "Riverside Campus", "RS", instId);
-
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-
     send(locCampusStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
-
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
+
+  @Test
+  public void cannotDeleteInstUsedByCamp()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createCamp(null, "Riverside Campus", "RS", instId);
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/" + instId.toString()), HttpMethod.DELETE, null,
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
 ////////////////////////////////////// Library test helpers
 
   public static Response createLib(UUID id, String name, String code, UUID campId)
@@ -613,6 +700,28 @@ public class LocationUnitTest {
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Main Library"));
     assertThat(item.getString("campusId"), is(campId.toString()));
+    assertThat(item.getJsonObject("metadata").getString("createdByUserId"),
+      is("test_user"));  // The userId header triggers creation of metadata
+  }
+
+  public void cannotGetALibWrongId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+    createLib(null, "Main Library", "ML", campId);
+    UUID id = UUID.randomUUID();
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
+    Response getResponse;
+    getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   @Test
@@ -628,9 +737,10 @@ public class LocationUnitTest {
     createCamp(campId, "Riverside Campus", "RS", instId);
     createLib(null, "Main Library", "ML", campId);
     createLib(null, "Side Library", "SL", campId);
+    createLib(null, "The Book Store", "BS", campId);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    send(locLibraryStorageUrl("/"), HttpMethod.GET,
+    send(locLibraryStorageUrl("/?query=name=LiBRaRy"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
@@ -650,7 +760,6 @@ public class LocationUnitTest {
     createInst(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
     createCamp(campId, "Riverside Campus", "RS", instId);
-
     UUID id = UUID.randomUUID();
     createLib(id, "Main Library", "MPI", campId);
 
@@ -673,6 +782,29 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Library"));
+  }
+
+  public void cannotUpdateALibId()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+    UUID id = UUID.randomUUID();
+    createLib(id, "Main Library", "MPI", campId);
+
+    JsonObject updateRequest = new JsonObject()
+      .put("id", UUID.randomUUID().toString());
+
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
+      updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -699,4 +831,24 @@ public class LocationUnitTest {
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
+
+  @Test
+  public void cannotDeleteCampUsedByLib()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+    createLib(null, "Main Library", "RS", campId);
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    send(locCampusStorageUrl("/" + campId.toString()), HttpMethod.DELETE, null,
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
 }

@@ -1,8 +1,26 @@
+## 11.0.0 Unreleased
 
-## 10.0.0 Unreleased
+* Removes `feeFineOwner` property from `service-points` record (MODINVSTOR-114)
+* Fix proxy registration for GET individual `service-point` in module descriptor (MODINVSTOR-110)
+* Provides `service-points` interface 2.0 (MODINVSTOR-114)
+* Change item `id` index to be case insensitive and to remove accents to improve CQL search performance (MODINVSTOR-121)
 
-* Rename 'parking' to 'details' in locations (MODINVSTOR-96). BREAKING CHANGE!
-* Bump the version of the 'locations' interface to 2.0
+## 10.2.0 2018-04-25
+
+* Add 'description' and 'discoveryDisplayName' to locations (MODINVSTOR-113)
+* Provides `locations` interface to 2.1 (MODINVSTOR-113)
+
+## 10.1.0 2018-04-25
+
+* Add /service-points API (MODINVSTOR-95)
+* Rename `parking` property to `details` in locations (MODINVSTOR-96)
+* Foreign keys in items and holdings for locations (MODINVSTOR-107, MODINVSTOR-92)
+* Rename 'parking' to 'details' in locations (MODINVSTOR-96)
+* Use proper foreign keys in location units (MODINVSTOR-92)
+* Add metadata to locations and location units (MODINVSTOR-101, MODINVSTOR-102, MODINVSTOR-103, MODINVSTOR-104)
+* Provides `locations` interface to 2.0 (MODINVSTOR-96, MODINVSTOR-104)
+* Provides `location-units` interface to 1.1 (MODINVSTOR-101, MODINVSTOR-102, MODINVSTOR-103)
+* Provides `service-points` interface 1.0 (MODINVSTOR-95)
 
 ## 9.0.1 2018-04-04
 

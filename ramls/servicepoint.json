@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
-  "description": "second-level location unit",
   "properties": {
     "id": {
       "type": "string"
@@ -12,8 +11,17 @@
     "code": {
       "type": "string"
     },
-    "institutionId": {
+    "discoveryDisplayName": {
       "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "shelvingLagTime": {
+      "type": "integer"
+    },
+    "pickupLocation": {
+      "type": "boolean"
     },
     "metadata": {
       "type": "object",
@@ -23,6 +31,8 @@
   },
   "additionalProperties": false,
   "required": [
-    "name", "institutionId"
+    "name",
+    "code",
+    "discoveryDisplayName"
   ]
 }

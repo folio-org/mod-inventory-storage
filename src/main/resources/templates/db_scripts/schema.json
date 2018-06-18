@@ -34,7 +34,7 @@
     },
     {
       "tableName": "locinstitution",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -47,20 +47,27 @@
     },
     {
       "tableName": "loccampus",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
       "uniqueIndex": [
         {
           "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "institutionId",
+          "targetTable": "locinstitution",
           "tOps": "ADD"
         }
       ]
     },
     {
       "tableName": "loclibrary",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -69,11 +76,18 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "campusId",
+          "targetTable": "loccampus",
+          "tOps": "ADD"
+        }
       ]
     },
     {
       "tableName": "location",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -101,6 +115,23 @@
         {
           "fieldName": "libraryId",
           "targetTable": "loclibrary",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "service_point",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
           "tOps": "ADD"
         }
       ]
@@ -299,8 +330,8 @@
         {
           "fieldName": "id",
           "tOps": "ADD",
-          "caseSensitive": true,
-          "removeAccents": false
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "ginIndex": [
@@ -423,7 +454,8 @@
           "targetTable": "location",
           "tOps": "ADD"
         },
-        { "fieldName": "temporaryLocationId",
+        {
+          "fieldName": "temporaryLocationId",
           "targetTable": "location",
           "tOps": "ADD"
         }
