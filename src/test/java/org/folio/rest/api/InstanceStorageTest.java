@@ -612,7 +612,7 @@ public class InstanceStorageTest extends TestBase {
   }
 
   // This is intended to demonstrate usage of the two different views
-  //@Test
+  @Test
   public void canSearchByBarcodeAndPermanentLocation()
     throws InterruptedException,
     MalformedURLException,
