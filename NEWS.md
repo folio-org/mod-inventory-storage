@@ -2,6 +2,9 @@
 
 * Provides `item-storage` interface 5.3 (MODINVSTOR-97)
 * Provides `holdings-storage` interface 1.3 (MODINVSTOR-97)
+
+## 11.0.0 2018-06-21
+
 * Removes `feeFineOwner` property from `service-points` record (MODINVSTOR-114)
 * Fix proxy registration for GET individual `service-point` in module descriptor (MODINVSTOR-110)
 * Provides `service-points` interface 2.0 (MODINVSTOR-114)
