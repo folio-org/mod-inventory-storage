@@ -1,4 +1,4 @@
-## 11.0.0 Unreleased
+## 11.0.0 2018-06-21
 
 * Removes `feeFineOwner` property from `service-points` record (MODINVSTOR-114)
 * Fix proxy registration for GET individual `service-point` in module descriptor (MODINVSTOR-110)
