@@ -1,3 +1,8 @@
+## 11.1.0 Unreleased
+
+* Provides `item-storage` interface 5.3 (MODINVSTOR-97)
+* Provides `holdings-storage` interface 1.3 (MODINVSTOR-97)
+
 ## 11.0.0 2018-06-21
 
 * Removes `feeFineOwner` property from `service-points` record (MODINVSTOR-114)

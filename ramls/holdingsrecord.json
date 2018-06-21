@@ -11,6 +11,9 @@
     "permanentLocationId": {
       "type": "string"
     },
+    "temporaryLocationId": {
+      "type": "string"
+    },
     "electronicLocation": {
       "type": "object",
       "properties": {

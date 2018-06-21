@@ -291,10 +291,16 @@
           "tOps": "ADD"
         },
         {
+          "fieldName": "permanentLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
           "fieldName": "temporaryLocationId",
           "targetTable": "location",
           "tOps": "ADD"
         }
+
       ],
       "index": [
         {
