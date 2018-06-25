@@ -1,3 +1,7 @@
+## 11.2.0 Unreleased
+
+* Upgrade RAML Module Builder to 19.1.3 (MODINVSTOR-126)
+
 ## 11.1.0 2018-06-25
 
 * Adds `temporaryLocationId` property to holdings records (MODINVSTOR-97)
