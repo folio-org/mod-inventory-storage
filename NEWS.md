@@ -1,5 +1,7 @@
-## 11.1.0 Unreleased
+## 11.1.0 2018-06-25
 
+* Adds `temporaryLocationId` property to holdings records (MODINVSTOR-97)
+* Adds `permanentLocationId` property to item records (MODINVSTOR-97)
 * Provides `item-storage` interface 5.3 (MODINVSTOR-97)
 * Provides `holdings-storage` interface 1.3 (MODINVSTOR-97)
 
