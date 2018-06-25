@@ -1,21 +1,21 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
+import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.util.StringUtil.urlEncode;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.support.*;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.folio.rest.support.client.MaterialTypesClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -23,12 +23,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
+import org.folio.rest.support.*;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.folio.rest.support.client.MaterialTypesClient;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class ItemStorageTest extends TestBase {
   private static Logger logger = LoggerFactory.getLogger(ItemStorageTest.class);
@@ -597,6 +599,29 @@ public class ItemStorageTest extends TestBase {
       is("673274826203"));
   }
 
+  @Ignore("Fails")
+  @Test
+  public void canSearchForManyItemsByBarcode() throws Exception {
+    createItem(smallAngryPlanet().put("barcode", "673274826203"));
+
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
+
+    // StackOverflowError in java.util.regex.Pattern https://issues.folio.org/browse/CIRC-119
+    String url = itemsStorageUrl("") + "?query=" + urlEncode("barcode==("
+        + "a or b or c or d or e or f or g or h or j or k or l or m or n or o or p or q or s or t or u or v or w or x or y or z or "
+        + "673274826203)");
+
+    client.get(url,
+        StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+
+    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+    JsonObject searchBody = searchResponse.getJson();
+    JsonArray foundItems = searchBody.getJsonArray("items");
+    assertThat(foundItems.size(), is(1));
+    assertThat(searchBody.getInteger("totalRecords"), is(1));
+    assertThat(foundItems.getJsonObject(0).getString("barcode"), is("673274826203"));
+  }
+
   @Test
   public void cannotSearchForItemsUsingADefaultField()
     throws MalformedURLException,
@@ -724,25 +749,25 @@ public class ItemStorageTest extends TestBase {
       "036000291415", videoMaterialTypeID));
 
     //query on item and sort by material type
-    String url1 = url+URLEncoder.encode("barcode=03600* sortBy materialType.name/sort.descending", "UTF-8");
-    String url2 = url+URLEncoder.encode("barcode=03600* sortBy materialType.name/sort.ascending", "UTF-8");
+    String url1 = url + urlEncode("barcode=03600* sortBy materialType.name/sort.descending");
+    String url2 = url + urlEncode("barcode=03600* sortBy materialType.name/sort.ascending");
 
     //query and sort on material type via items end point
-    String url3 = url+URLEncoder.encode("materialType.name=Journal* sortBy materialType.name/sort.descending", "UTF-8");
+    String url3 = url + urlEncode("materialType.name=Journal* sortBy materialType.name/sort.descending");
 
     //query on item sort on item and material type
-    String url4 = url+URLEncoder.encode("barcode=036000* sortby materialType.name title", "UTF-8");
+    String url4 = url + urlEncode("barcode=036000* sortby materialType.name title");
 
     //query on item and material type sort by material type
-    String url5 = url+URLEncoder.encode("barcode=036000* and materialType.name=Journal* sortby materialType.name", "UTF-8");
+    String url5 = url + urlEncode("barcode=036000* and materialType.name=Journal* sortby materialType.name");
 
     //query on item and sort by item
-    String url6 = url+URLEncoder.encode("barcode=abc sortBy materialType.name", "UTF-8");
+    String url6 = url + urlEncode("barcode=abc sortBy materialType.name");
 
     //non existant material type - 0 results
-    String url7 = url+URLEncoder.encode("barcode=036000* and materialType.name=abc* sortby materialType.name", "UTF-8");
+    String url7 = url + urlEncode("barcode=036000* and materialType.name=abc* sortby materialType.name");
 
-    String url8 = url+URLEncoder.encode("materialType="+ videoMaterialTypeID, "UTF-8");
+    String url8 = url + urlEncode("materialType="+ videoMaterialTypeID);
 
     CompletableFuture<Response> cqlCF1 = new CompletableFuture<>();
     CompletableFuture<Response> cqlCF2 = new CompletableFuture<>();
