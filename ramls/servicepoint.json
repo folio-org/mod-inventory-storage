@@ -23,6 +23,12 @@
     "pickupLocation": {
       "type": "boolean"
     },
+    "locationIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
