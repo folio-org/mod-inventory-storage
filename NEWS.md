@@ -1,9 +1,20 @@
-## 11.1.0 Unreleased
+## 11.2.0 Unreleased
 
+* Upgrade RAML Module Builder to 19.1.3 (MODINVSTOR-126)
 * Provides v2.0 of instance-types, instance-formats, contributor-types (MODINVSTOR-115,-116,-123)
 * Add `source`, `code`, `metadata` to instance type (MODINVSTOR-115)
 * Add `source`, `code`, `metadata` to instance format (MODINVSTOR-116)
 * Add `source`, `code`, `metadata` to contributor type (MODINVSTOR-123)
+
+## 11.1.0 2018-06-25
+
+* Adds `temporaryLocationId` property to holdings records (MODINVSTOR-97)
+* Adds `permanentLocationId` property to item records (MODINVSTOR-97)
+* Provides `item-storage` interface 5.3 (MODINVSTOR-97)
+* Provides `holdings-storage` interface 1.3 (MODINVSTOR-97)
+
+## 11.0.0 2018-06-21
+
 * Removes `feeFineOwner` property from `service-points` record (MODINVSTOR-114)
 * Fix proxy registration for GET individual `service-point` in module descriptor (MODINVSTOR-110)
 * Provides `service-points` interface 2.0 (MODINVSTOR-114)

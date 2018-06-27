@@ -52,6 +52,9 @@
     "temporaryLoanTypeId": {
       "type": "string"
     },
+    "permanentLocationId": {
+      "type": "string"
+    },
     "temporaryLocationId": {
       "type": "string"
     },
