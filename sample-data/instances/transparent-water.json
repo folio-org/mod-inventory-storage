@@ -28,14 +28,12 @@
     {
       "name": "Sosa, Omar",
       "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
-      "contributorTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2b",
-      "primary": true
+      "contributorTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2b"
     },
     {
       "name": "Keita, Seckou, 1977-",
       "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
-      "contributorTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2b",
-      "primary": false
+      "contributorTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2b"
     }
   ],
   "subjects": [
