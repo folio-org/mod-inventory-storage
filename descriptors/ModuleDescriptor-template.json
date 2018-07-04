@@ -301,7 +301,7 @@
     },
     {
       "id": "contributor-types",
-      "version": "1.1",
+      "version": "2.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -355,7 +355,7 @@
     },
     {
       "id": "instance-formats",
-      "version": "1.1",
+      "version": "2.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -382,7 +382,7 @@
     },
     {
       "id": "instance-types",
-      "version": "1.1",
+      "version": "2.0",
       "handlers": [
         {
           "methods": ["GET"],

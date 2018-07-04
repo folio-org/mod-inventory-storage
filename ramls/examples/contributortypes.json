@@ -1,13 +1,23 @@
 {
   "contributorTypes": [
     {
-      "id": "2b94c631-fca9-4892-a730-03ee529ffe2b",
-      "name": "Composer"
+      "id": "06b2cbd8-66bf-4956-9d90-97c9776365a4",
+      "name": "Annotator",
+      "code": "ann",
+      "source": "marcrelator"
     },
     {
-      "id": "2e48e713-17f3-4c13-a9f8-23845bb210ab",
-      "name": "Performer"
+      "id": "f9e5b41b-8d5b-47d3-91d0-ca9004796337",
+      "name": "Artist",
+      "code": "art",
+      "source": "marcrelator"
+    },
+    {
+      "id": "6e09d47d-95e2-4d8a-831b-f777b8ef6d81",
+      "name": "Author",
+      "code": "aut",
+      "source": "marcrelator"
     }
   ],
-  "totalRecords": 2
+  "totalRecords": 3
 }

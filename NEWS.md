@@ -1,6 +1,10 @@
-## 11.2.0 Unreleased
+## 12.0.0 Unreleased
 
 * Upgrade RAML Module Builder to 19.1.3 (MODINVSTOR-126)
+* Provides v2.0 of instance-types, instance-formats, contributor-types (MODINVSTOR-115,-116,-123)
+* Add `source`, `code`, `metadata` to instance type (MODINVSTOR-115)
+* Add `source`, `code`, `metadata` to instance format (MODINVSTOR-116)
+* Add `source`, `code`, `metadata` to contributor type (MODINVSTOR-123)
 
 ## 11.1.0 2018-06-25
 
