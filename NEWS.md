@@ -1,4 +1,4 @@
-## 12.1.0 2018-07-13
+## 12.2.0 Unreleased
 
 * Added locationIds array to servicepoint (MODINVSTOR-127)
 
