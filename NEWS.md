@@ -1,3 +1,7 @@
+## 12.2.0 Unreleased
+
+* Added locationIds array to servicepoint (MODINVSTOR-127)
+
 ## 12.1.0 2018-07-10
 
 * Upgrade RAML Module Builder to 19.1.5 (MODINVSTOR-128)
