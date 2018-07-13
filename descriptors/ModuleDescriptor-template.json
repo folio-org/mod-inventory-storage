@@ -273,6 +273,33 @@
       ]
     },
     {
+      "id": "instance-relationship-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-relationship-types",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-relationship-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-relationship-types",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-relationship-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-relationship-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "identifier-types",
       "version": "1.1",
       "handlers": [
@@ -770,6 +797,31 @@
       "description": "delete individual location"
     },
     {
+      "permissionName": "inventory-storage.instance-relationship-types.collection.get",
+      "displayName": "inventory storage - get instance-relationship-type collection",
+      "description": "get instance-relationship-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationship-types.item.get",
+      "displayName": "inventory storage - get individual instance-relationship-type",
+      "description": "get individual instance-relationship-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationship-types.item.post",
+      "displayName": "inventory storage - create individual instance-relationship-type",
+      "description": "create individual instance-relationship-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationship-types.item.put",
+      "displayName": "inventory storage - modify instance-relationship-type",
+      "description": "modify instance-relationship-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationship-types.item.delete",
+      "displayName": "inventory storage - delete individual instance-relationship-type",
+      "description": "delete individual instance-relationship-type from storage"
+    },
+    {
       "permissionName": "inventory-storage.identifier-types.collection.get",
       "displayName": "inventory storage - get identifier-type collection",
       "description": "get identifier-type collection from storage"
@@ -1027,6 +1079,11 @@
         "inventory-storage.locations.item.post",
         "inventory-storage.locations.item.put",
         "inventory-storage.locations.item.delete",
+        "inventory-storage.instance-relationship-types.collection.get",
+        "inventory-storage.instance-relationship-types.item.get",
+        "inventory-storage.instance-relationship-types.item.post",
+        "inventory-storage.instance-relationship-types.item.put",
+        "inventory-storage.instance-relationship-types.item.delete",
         "inventory-storage.identifier-types.collection.get",
         "inventory-storage.identifier-types.item.get",
         "inventory-storage.identifier-types.item.post",
