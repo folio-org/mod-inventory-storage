@@ -1,16 +1,22 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import static org.folio.rest.impl.StorageHelper.getCQL;
+import static org.folio.rest.impl.StorageHelper.getTenant;
+import static org.folio.rest.impl.StorageHelper.idCriterion;
+import static org.folio.rest.impl.StorageHelper.isInUse;
+import static org.folio.rest.impl.StorageHelper.logAndSaveError;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.core.Response;
+
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Locations;
 import org.folio.rest.jaxrs.resource.LocationsResource;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -19,11 +25,12 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import static org.folio.rest.impl.StorageHelper.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -188,27 +195,42 @@ public class LocationAPI implements LocationsResource {
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
+
+		logger.info("Attempting to deleteLocationsById");
+
     Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .delete(LOCATION_TABLE, criterion, deleteReply -> {
-      if (deleteReply.failed()) {
-        logAndSaveError(deleteReply.cause());
-        if (isInUse(deleteReply.cause().getMessage())) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationsByIdResponse
-              .withPlainBadRequest("Location is in use, can not be deleted")));
-        } else {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
-        }
-      } else {
-        asyncResultHandler.handle(Future.succeededFuture(
-          DeleteLocationsByIdResponse.withNoContent()));
-      }
-      });
+
+		PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+
+		logger.info("Attempting to start transaction");
+		pgClient.startTx(connection -> {
+			
+			logger.info("Transaction started.");
+			pgClient.delete(connection, LOCATION_TABLE, criterion, deleteReply -> {
+				if (deleteReply.failed()) {
+					logger.info("Transaction rolled back.");
+					pgClient.rollbackTx(connection, rollback -> {
+						logAndSaveError(deleteReply.cause());
+						if (isInUse(deleteReply.cause().getMessage())) {
+							asyncResultHandler.handle(Future.succeededFuture(
+									DeleteLocationsByIdResponse.withPlainBadRequest("Location is in use, can not be deleted")));
+						} else {
+							asyncResultHandler
+									.handle(Future.succeededFuture(DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
+						}
+					});
+				} else {
+					pgClient.endTx(connection, done -> {
+						logger.info("Transaction commited.");
+						asyncResultHandler.handle(Future.succeededFuture(DeleteLocationsByIdResponse.withNoContent()));
+					});
+				}
+			});
+		});
+		
   }
 
   @Override
