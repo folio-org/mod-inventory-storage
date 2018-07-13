@@ -28,14 +28,12 @@
     {
       "name": "Sosa, Omar",
       "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
-      "contributorTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2b",
-      "primary": true
+      "contributorTypeId": "9f0a2cf0-7a9b-45a2-a403-f68d2850d07c"
     },
     {
       "name": "Keita, Seckou, 1977-",
       "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
-      "contributorTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2b",
-      "primary": false
+      "contributorTypeId": "9f0a2cf0-7a9b-45a2-a403-f68d2850d07c"
     }
   ],
   "subjects": [
@@ -54,8 +52,8 @@
       "dateOfPublication": "[2017]"
     }
   ],
-  "instanceTypeId": "2e48e713-17f3-4c13-a9f8-23845bb210ac",
-  "instanceFormatId": "309c3a3d-d54c-4519-b978-2c5c2de78d95",
+  "instanceTypeId": "3be24c14-3551-4180-9292-26a786649c8b",
+  "instanceFormatId": "5cb91d15-96b1-4b8a-bf60-ec310538da66",
   "physicalDescriptions": [
     "1 audio disc: digital; 4 3/4 in."
   ],
