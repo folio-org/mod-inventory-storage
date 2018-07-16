@@ -66,7 +66,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "4.3",
+      "version": "4.4",
       "handlers": [
         {
           "methods": ["GET"],
@@ -88,6 +88,22 @@
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instances/{id}/source-record",
+          "permissionsRequired": ["inventory-storage.instances.source-record.delete"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instances/{id}/source-record/marc-json",
+          "permissionsRequired": ["inventory-storage.instances.source-record.marc-json.get"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-storage/instances/{id}/source-record/marc-json",
+          "permissionsRequired": ["inventory-storage.instances.source-record.marc-json.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instances/{id}/source-record/marc-json",
+          "permissionsRequired": ["inventory-storage.instances.source-record.marc-json.delete"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instances",
@@ -595,6 +611,26 @@
       "description": "delete individual instance from storage"
     },
     {
+      "permissionName": "inventory-storage.instances.source-record.delete",
+      "displayName": "inventory storage - delete source record of an individual instance",
+      "description": "delete source record of individual instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.source-record.marc-json.get",
+      "displayName": "inventory storage - get MARC JSON source record of an individual instance",
+      "description": "get MARC JSON source record of individual instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.source-record.marc-json.put",
+      "displayName": "inventory storage - set MARC JSON source record of an individual instance",
+      "description": "set MARC JSON source record of individual instance in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.source-record.marc-json.delete",
+      "displayName": "inventory storage - delete MARC JSON source record of an individual instance",
+      "description": "delete MARC JSON source record of individual instance in storage"
+    },
+    {
       "permissionName": "inventory-storage.loan-types.collection.get",
       "displayName": "inventory storage - get loan-type collection",
       "description": "get loan-type collection from storage"
@@ -991,6 +1027,10 @@
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
         "inventory-storage.instances.item.delete",
+        "inventory-storage.instances.source-record.delete",
+        "inventory-storage.instances.source-record.marc-json.get",
+        "inventory-storage.instances.source-record.marc-json.put",
+        "inventory-storage.instances.source-record.marc-json.delete",
         "inventory-storage.instances.collection.delete",
         "inventory-storage.loan-types.collection.get",
         "inventory-storage.loan-types.item.get",
