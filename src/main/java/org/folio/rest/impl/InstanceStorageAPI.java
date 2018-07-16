@@ -21,8 +21,6 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.resource.InstanceStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -40,6 +38,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
+  public static final String MODULE = "mod_inventory_storage";
   public static final String INSTANCE_HOLDINGS_VIEW = "instance_holding_view";
   public static final String INSTANCE_HOLDINGS_ITEMS_VIEW = "instance_holding_item_view";
   public static final String INSTANCE_TABLE =  "instance";
@@ -253,8 +252,8 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
         postgresClient.mutate(String.format("TRUNCATE TABLE "
-              + tenantId + "_mod_inventory_storage." + INSTANCE_TABLE + ", "
-              + tenantId + "_mod_inventory_storage." + INSTANCE_SOURCE_MARC_TABLE),
+              + tenantId + "_" + MODULE + "." + INSTANCE_TABLE + ", "
+              + tenantId + "_" + MODULE + "." + INSTANCE_SOURCE_MARC_TABLE),
             reply -> {
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   InstanceStorageResource.DeleteInstanceStorageInstancesResponse
@@ -602,7 +601,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-    String sql = "INSERT INTO " + TenantTool.tenantId(okapiHeaders) + "_mod_inventory_storage."
+    String sql = "INSERT INTO " + TenantTool.tenantId(okapiHeaders) + "_" + MODULE + "."
         + INSTANCE_SOURCE_MARC_TABLE
         + " (_id,jsonb)"
         + " VALUES ('" + instanceId + "', '" + PostgresClient.pojo2json(entity) + "'::JSONB)";
