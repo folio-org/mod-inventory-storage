@@ -153,6 +153,12 @@
         "type": "string"
       }
     },
+    "sourceRecordFormat": {
+      "description": "Format of the instance source record, if a source record exists",
+      "type": "string",
+      "enum": ["MARC-JSON"],
+      "readonly": true
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

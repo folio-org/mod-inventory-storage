@@ -18,6 +18,7 @@ import org.junit.runners.Suite;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +58,9 @@ public class StorageTestSuite {
   @BeforeClass
   public static void before()
     throws Exception {
+
+    // tests expect English error messages only, no Danish/German/...
+    Locale.setDefault(Locale.US);
 
     vertx = Vertx.vertx();
 

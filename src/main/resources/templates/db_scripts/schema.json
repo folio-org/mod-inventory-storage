@@ -456,6 +456,13 @@
       ]
     },
     {
+      "tableName": "instance_source_marc",
+      "withMetadata": true,
+      "generateId": false,
+      "pkColumnName": "_id",
+      "customSnippetPath": "instanceSourceMarc.sql"
+    },
+    {
       "tableName": "holdings_record",
       "withMetadata": true,
       "generateId": false,
