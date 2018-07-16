@@ -528,7 +528,7 @@ public class InstanceStorageTest extends TestBase {
     client.get(instancesStorageUrl("/" + instanceId),
         StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(getResponse.getStatusCode(), is(HttpStatus.HTTP_ACCEPTED.toInt()));
+    assertThat(getResponse.getStatusCode(), is(200));
     return getResponse.getJson().getString("sourceRecordFormat");
   }
 
@@ -553,7 +553,7 @@ public class InstanceStorageTest extends TestBase {
     client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
         StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(getResponse.getStatusCode(), is(HttpStatus.HTTP_ACCEPTED.toInt()));
+    assertThat(getResponse.getStatusCode(), is(200));
     assertThat(getResponse.getJson().getString("leader"), is("xxxxxnam a22yyyyy c 4500"));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("029857716"));
