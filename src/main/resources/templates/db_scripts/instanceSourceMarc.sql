@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.set_instance_sourceRecord
       -- a newly inserted instance cannot have a source record because of foreign key relationship
       NEW.jsonb := NEW.jsonb - 'sourceRecordFormat';
     ELSE
-      NEW.jsonb := CASE (SELECT count(*) FROM instance_source_marc WHERE _id=NEW._id)
+      NEW.jsonb := CASE (SELECT count(*) FROM ${myuniversity}_${mymodule}.instance_source_marc WHERE _id=NEW._id)
                    WHEN 0 THEN NEW.jsonb - 'sourceRecordFormat'
                    ELSE jsonb_set(NEW.jsonb, '{sourceRecordFormat}', '"MARC-JSON"')
                    END;
