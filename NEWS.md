@@ -1,6 +1,7 @@
-## 12.2.0 Unreleased
+## 12.2.0 2018-07-16
 
-* Added locationIds array to servicepoint (MODINVSTOR-127)
+* Added locationIds array to service point (MODINVSTOR-127)
+* Provides `service-points` interface 2.1 (MODINVSTOR-127)
 
 ## 12.1.0 2018-07-10
 
