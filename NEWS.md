@@ -1,6 +1,7 @@
-## 12.3.0 2018-07-17
+## 12.3.0 Unreleased
 
-* Add MARC JSON source record endpoint, provides instance-storage interface 4.4 (MODINVSTOR-26)
+* Add MARC JSON source record endpoint (MODINVSTOR-26)
+* Provides `instance-storage` interface 4.4 (MODINVSTOR-26)
 
 ## 12.2.0 2018-07-16
 
