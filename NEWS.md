@@ -1,3 +1,7 @@
+## 12.3.0 2018-07-17
+
+* Add MARC JSON source record endpoint, provides instance-storage interface 4.4 (MODINVSTOR-26)
+
 ## 12.2.0 2018-07-16
 
 * Added locationIds array to service point (MODINVSTOR-127)
