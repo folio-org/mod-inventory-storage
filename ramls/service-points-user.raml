@@ -1,0 +1,70 @@
+#%RAML 0.8
+title: Service Points Users API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Service Points Users API
+    content: This documents the API calls that can be made to query and manage service points users in the system
+
+schemas:
+  - servicepointsuser.json: !include servicepointsuser.json
+  - servicepointsusers: !include servicepointsusers.json
+  - item.json: !include item.json
+  - items: !include items.json
+  - errors: !include raml-util/schemas/errors.schema
+  - error.schema: !include raml-util/schemas/error.schema
+  - parameters.schema: !include raml-util/schemas/parameters.schema
+  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+
+traits:
+  - secured: !include raml-util/traits/auth.raml
+  - pageable: !include raml-util/traits/pageable.raml
+  - searchable: !include raml-util/traits/searchable.raml
+  - language: !include raml-util/traits/language.raml
+  - validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  - collection: !include raml-util/rtypes/collection.raml
+  - collection-item: !include raml-util/rtypes/item-collection.raml
+  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+
+/service-points-users:
+  type:
+    collection:
+      exampleCollection: !include examples/servicepointsusers.json
+      exampleItem: !include examples/servicepointsuser.json
+      schemaCollection: servicepointsusers
+      schemaItem: servicepointsuser.json
+  get:
+    is: [
+      searchable: { description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of service points users
+  post:
+    description: Create a new service points user
+    is: [validate]
+  delete:
+    description: "Delete all service points users"
+    responses:
+      204:
+        description: "All service points users delete"
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+  /{servicepointsuserId}:
+    description: Pass the id for the service points user
+    type:
+      collection-item:
+        exampleItem: !include examples/servicepointsuser.json
+        schema: servicepointsuser.json
+
+
+
+
+
+
