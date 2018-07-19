@@ -10,12 +10,15 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Servicepointsuser;
+import org.folio.rest.jaxrs.resource.ServicePointsResource;
 import org.folio.rest.jaxrs.resource.ServicePointsUsersResource;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
@@ -23,7 +26,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   
   public static final Logger logger = LoggerFactory.getLogger(
           ServicePointsUserAPI.class);
-  public static final String SERVICE_POINT_TABLE = "service_point_user";
+  public static final String SERVICE_POINT_USER_TABLE = "service_point_user";
   public static final String LOCATION_PREFIX = "/service-points-users/";
   public static final String ID_FIELD = "'id'";
 
@@ -98,7 +101,29 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
         entity.setId(id);
       }
       PostgresClient pgClient = getPGClient(vertxContext, tenantId);
-      
+      pgClient.save(SERVICE_POINT_USER_TABLE, id, entity, saveReply -> {
+        if(saveReply.failed()) {
+          String message = logAndSaveError(saveReply.cause());
+          if(isDuplicate(message)) {
+            asyncResultHandler.handle(Future.succeededFuture(
+                PostServicePointsUsersResponse.withJsonUnprocessableEntity(
+                ValidationHelper.createValidationErrorMessage("userId",
+                entity.getUserId(), "Service Point User Exists"))));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+                PostServicePointsUsersResponse.withPlainInternalServerError(
+                getErrorResponse(message))));
+          }
+        } else {
+          String ret = saveReply.result();
+            entity.setId(ret);
+            OutStream stream = new OutStream();
+            stream.setData(entity);
+            asyncResultHandler.handle(Future.succeededFuture(
+                PostServicePointsUsersResponse.withJsonCreated(LOCATION_PREFIX
+                + ret, stream)));
+        }
+      });      
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
