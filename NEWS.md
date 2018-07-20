@@ -1,7 +1,25 @@
-## 11.2.0 Unreleased
+## 12.3.0 Unreleased
+
+* Cascading deletion of locations to references on Servicepoints (MODINVSTOR-133)
+* Add MARC JSON source record endpoint (MODINVSTOR-26)
+* Provides `instance-storage` interface 4.4 (MODINVSTOR-26)
+
+## 12.2.0 2018-07-16
+
+* Added locationIds array to service point (MODINVSTOR-127)
+* Provides `service-points` interface 2.1 (MODINVSTOR-127)
+
+## 12.1.0 2018-07-10
+
+* Upgrade RAML Module Builder to 19.1.5 (MODINVSTOR-128)
+
+## 12.0.0 2018-07-06
 
 * Upgrade RAML Module Builder to 19.1.3 (MODINVSTOR-126)
-* Cascading deletion of locations to references on Servicepoints (MODINVSTOR-133)
+* Provides v2.0 of instance-types, instance-formats, contributor-types (MODINVSTOR-115,-116,-123)
+* Add `source`, `code`, `metadata` to instance type (MODINVSTOR-115)
+* Add `source`, `code`, `metadata` to instance format (MODINVSTOR-116)
+* Add `source`, `code`, `metadata` to contributor type (MODINVSTOR-123)
 
 ## 11.1.0 2018-06-25
 

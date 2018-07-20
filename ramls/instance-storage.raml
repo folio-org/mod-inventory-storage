@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Instance Storage
-version: v4.3
+version: v4.4
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -11,6 +11,7 @@ documentation:
 schemas:
   - instance.json: !include instance.json
   - instances: !include instances.json
+  - marc.json: !include marc.json
   - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
@@ -62,3 +63,43 @@ resourceTypes:
           Instances are stored and accessed by a hash of key properties. The rules which govern
           how instance hashes are computed are business rules and defined in the service layer.
           the storage layer only knows how to insert or retrieve instance records by ID.
+      /source-record:
+        is: [language]
+        delete:
+          responses:
+            204:
+              description: "Source record deleted"
+            404:
+              description: "There is no source record for that instanceId"
+            500:
+              description: "Internal server error, e.g. due to misconfiguration"
+              body:
+                text/plain:
+                  example: "Internal server error, contact administrator"
+          description: |
+            Delete the source record.
+            Note: The source records gets automatically deleted when its instance record is deleted.
+        /marc-json:
+          displayName: MARC source record as JSON
+          is: [language]
+          type:
+            collection-item:
+              exampleItem: !include examples/marc.json
+              schema: marc.json
+        /mods:
+          displayName: MODS source record - not implemented yet
+          is: [language]
+          get:
+            responses:
+              500:
+                description: "Not implemented yet"
+                body:
+                  text/plain:
+                    example: "Not implemented yet"
+          put:
+            responses:
+              500:
+                description: "Not implemented yet"
+                body:
+                  text/plain:
+                    example: "Not implemented yet"
