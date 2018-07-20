@@ -14,8 +14,10 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Locations;
+import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.resource.LocationsResource;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
@@ -23,6 +25,7 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 import io.vertx.core.AsyncResult;
@@ -39,9 +42,11 @@ import io.vertx.core.logging.LoggerFactory;
 public class LocationAPI implements LocationsResource {
   private final Messages messages = Messages.getInstance();
   public static final String LOCATION_TABLE = "location";
+	public static final String SERVICE_POINT_TABLE = "service_point";
   private final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
   public static final String URL_PREFIX = "/locations";
   public static final String LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
+	public static final String SERVICEPOINT_SCHEMA_PATH = "apidocs/raml/servicepoint.json";
   public static final String ID_FIELD_NAME = "'id'";
 
   @Override
@@ -196,8 +201,6 @@ public class LocationAPI implements LocationsResource {
 
     String tenantId = getTenant(okapiHeaders);
 
-		logger.info("Attempting to deleteLocationsById");
-
     Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
@@ -205,33 +208,67 @@ public class LocationAPI implements LocationsResource {
 
 		PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
 
-		logger.info("Attempting to start transaction");
 		pgClient.startTx(connection -> {
-			
-			logger.info("Transaction started.");
-			pgClient.delete(connection, LOCATION_TABLE, criterion, deleteReply -> {
-				if (deleteReply.failed()) {
-					logger.info("Transaction rolled back.");
-					pgClient.rollbackTx(connection, rollback -> {
-						logAndSaveError(deleteReply.cause());
-						if (isInUse(deleteReply.cause().getMessage())) {
-							asyncResultHandler.handle(Future.succeededFuture(
-									DeleteLocationsByIdResponse.withPlainBadRequest("Location is in use, can not be deleted")));
-						} else {
-							asyncResultHandler
-									.handle(Future.succeededFuture(DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
-						}
-					});
-				} else {
-					pgClient.endTx(connection, done -> {
-						logger.info("Transaction commited.");
-						asyncResultHandler.handle(Future.succeededFuture(DeleteLocationsByIdResponse.withNoContent()));
-					});
-				}
-			});
+						
+			if (performCascade(pgClient, connection, id)) {
+				pgClient.delete(connection, LOCATION_TABLE, criterion, deleteReply -> {
+					if (deleteReply.failed()) {
+						pgClient.rollbackTx(connection, rollback -> {
+							logAndSaveError(deleteReply.cause());
+							if (isInUse(deleteReply.cause().getMessage())) {
+								asyncResultHandler.handle(Future.succeededFuture(
+										DeleteLocationsByIdResponse.withPlainBadRequest("Location is in use, can not be deleted")));
+							} else {
+								asyncResultHandler
+										.handle(Future.succeededFuture(DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
+							}
+						});
+					} else {
+						pgClient.endTx(connection, done -> {
+							asyncResultHandler.handle(Future.succeededFuture(DeleteLocationsByIdResponse.withNoContent()));
+						});
+					}
+				});
+			} else {
+				asyncResultHandler.handle(Future.failedFuture("Failed to cascade delete."));
+			}
+
 		});
 		
   }
+
+	private boolean performCascade(PostgresClient pgClient, AsyncResult<Object> connection, String id) {
+
+		boolean succeded = true;
+
+		try {
+			String query = "locationIds=" + id;
+			CQL2PgJSON cql2pgJson = new CQL2PgJSON(SERVICE_POINT_TABLE + ".jsonb");
+			CQLWrapper cql = new CQLWrapper(cql2pgJson, query);
+
+			pgClient.get(SERVICE_POINT_TABLE, Servicepoint.class, new String[] { "*" }, cql, true, false, reply -> {
+
+				@SuppressWarnings("unchecked")
+				List<Servicepoint> sp = (List<Servicepoint>) reply.result().getResults();
+
+				sp.forEach(s -> {
+					Criteria idCrit = new Criteria().addField("'id'").setOperation("=").setValue(s.getId());
+					s.getLocationIds().remove(id);
+					pgClient.update(SERVICE_POINT_TABLE, s, new Criterion(idCrit), false, updateReply -> {
+					});
+				});
+
+			});
+		} catch (Exception e) {
+			pgClient.rollbackTx(connection, rollback -> {
+				logAndSaveError(e.getCause());
+			});
+			succeded = false;
+		}
+
+		return succeded;
+
+	}
 
   @Override
   public void putLocationsById(
