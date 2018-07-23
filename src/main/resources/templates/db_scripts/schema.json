@@ -495,12 +495,6 @@
       ],
       "ginIndex": [
         {
-          "fieldName": "title",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "barcode",
           "tOps": "ADD",
           "caseSensitive": false,
