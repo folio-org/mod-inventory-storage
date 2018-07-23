@@ -1,22 +1,9 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.*;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.*;
-import org.folio.rest.jaxrs.resource.ItemStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PgExceptionUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -24,10 +11,33 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Items;
+import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.Mtype;
+import org.folio.rest.jaxrs.model.Status;
+import org.folio.rest.jaxrs.resource.ItemStorageResource;
+import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.OutStream;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class ItemStorageAPI implements ItemStorageResource {
 
@@ -37,6 +47,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   // Has to be lowercase because raml-module-builder uses case sensitive headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
+	private static final String DEFAULT_STATUS_NAME = "Available";
 
   private String convertQuery(String cql){
     if(cql != null){
@@ -183,6 +194,10 @@ public class ItemStorageAPI implements ItemStorageResource {
       if(entity.getId() == null) {
         entity.setId(UUID.randomUUID().toString());
       }
+
+			if (entity.getStatus() == null) {
+				entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
+			}
 
       vertxContext.runOnContext(v -> {
         try {
