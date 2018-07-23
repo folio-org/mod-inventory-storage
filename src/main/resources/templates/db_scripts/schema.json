@@ -393,6 +393,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "temporaryLocationId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "index": [
@@ -410,6 +416,12 @@
         },
         {
           "fieldName": "permanentLocationId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "temporaryLocationId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
