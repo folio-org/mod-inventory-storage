@@ -277,31 +277,51 @@ public class LocationsTest {
 		UUID locId = UUID.randomUUID();
 		createLocation(locId, "Main Library", instID, campID, libID, "PI/CC/ML/X");
 
-		UUID servicePointId = UUID.randomUUID();
-		CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
+		UUID servicePointOneId = UUID.randomUUID();
+		UUID servicePointTwoId = UUID.randomUUID();
+
+		CompletableFuture<Response> createServiceOnePoint = new CompletableFuture<>();
+		CompletableFuture<Response> createServiceTwoPoint = new CompletableFuture<>();
 
 		List<String> locationIds = new ArrayList<String>();
 		locationIds.add(locId.toString());
 
-		JsonObject request = new JsonObject();
-		request.put("name", "Test Servicepoint").put("code", "TSP").put("discoveryDisplayName", "Test Servicepoint")
-				.put("id", servicePointId.toString()).put("locationIds", new JsonArray(locationIds));
+		JsonObject requestOne = new JsonObject();
+		requestOne.put("name", "Test Servicepoint One").put("code", "TSP1")
+				.put("discoveryDisplayName", "Test Servicepoint One")
+				.put("id", servicePointOneId.toString()).put("locationIds", new JsonArray(locationIds));
 
-		send(servicePointsUrl(""), HttpMethod.POST, request.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
-				ResponseHandler.json(createServicePoint));
-		createServicePoint.get(5, TimeUnit.SECONDS);
+		JsonObject requestTwo = new JsonObject();
+		requestTwo.put("name", "Test Servicepoint Two").put("code", "TSP2")
+				.put("discoveryDisplayName", "Test Servicepoint Two").put("id", servicePointTwoId.toString())
+				.put("locationIds", new JsonArray(locationIds));
+
+		send(servicePointsUrl(""), HttpMethod.POST, requestOne.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(createServiceOnePoint));
+		createServiceOnePoint.get(5, TimeUnit.SECONDS);
+
+		send(servicePointsUrl(""), HttpMethod.POST, requestTwo.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(createServiceOnePoint));
+		createServiceOnePoint.get(5, TimeUnit.SECONDS);
 
 		CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 		send(locationsStorageUrl("/" + locId.toString()), HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
 				ResponseHandler.any(deleteCompleted));
 		deleteCompleted.get(5, TimeUnit.SECONDS);
 
-		CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-		send(servicePointsUrl("/" + servicePointId.toString()), HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
-				ResponseHandler.json(getCompleted));
-		Response servicePointResponse = getCompleted.get(5, TimeUnit.SECONDS);
+		CompletableFuture<Response> getOneCompleted = new CompletableFuture<>();
+		send(servicePointsUrl("/" + servicePointOneId.toString()), HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(getOneCompleted));
+		Response servicePointOneResponse = getOneCompleted.get(5, TimeUnit.SECONDS);
 
-		assertThat(servicePointResponse.getJson().getJsonArray("locationIds").contains(servicePointId.toString()),
+		CompletableFuture<Response> getTwoCompleted = new CompletableFuture<>();
+		send(servicePointsUrl("/" + servicePointTwoId.toString()), HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(getOneCompleted));
+		Response servicePointTwoResponse = getTwoCompleted.get(5, TimeUnit.SECONDS);
+
+		assertThat(servicePointOneResponse.getJson().getJsonArray("locationIds").contains(servicePointOneId.toString()),
+				is(false));
+		assertThat(servicePointTwoResponse.getJson().getJsonArray("locationIds").contains(servicePointOneId.toString()),
 				is(false));
 	}
 
