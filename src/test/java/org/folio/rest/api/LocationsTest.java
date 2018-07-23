@@ -301,8 +301,8 @@ public class LocationsTest {
 		createServiceOnePoint.get(5, TimeUnit.SECONDS);
 
 		send(servicePointsUrl(""), HttpMethod.POST, requestTwo.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
-				ResponseHandler.json(createServiceOnePoint));
-		createServiceOnePoint.get(5, TimeUnit.SECONDS);
+				ResponseHandler.json(createServiceTwoPoint));
+		createServiceTwoPoint.get(5, TimeUnit.SECONDS);
 
 		CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 		send(locationsStorageUrl("/" + locId.toString()), HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
