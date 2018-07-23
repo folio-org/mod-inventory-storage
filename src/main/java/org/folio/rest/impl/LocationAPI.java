@@ -252,9 +252,9 @@ public class LocationAPI implements LocationsResource {
 				List<Servicepoint> sp = (List<Servicepoint>) reply.result().getResults();
 
 				sp.forEach(s -> {
-					Criteria idCrit = new Criteria().addField("'id'").setOperation("=").setValue(s.getId());
+					Criteria where = new Criteria().addField("'id'").setOperation("=").setValue(s.getId());
 					s.getLocationIds().remove(id);
-					pgClient.update(SERVICE_POINT_TABLE, s, new Criterion(idCrit), false, updateReply -> {
+					pgClient.update(connection, SERVICE_POINT_TABLE, s, "jsonb", where.toString(), false, updateReply -> {
 					});
 				});
 
