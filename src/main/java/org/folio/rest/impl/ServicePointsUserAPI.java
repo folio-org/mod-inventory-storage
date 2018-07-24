@@ -11,6 +11,7 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Servicepointsuser;
+import org.folio.rest.jaxrs.model.Servicepointsusers;
 import org.folio.rest.jaxrs.resource.ServicePointsResource;
 import org.folio.rest.jaxrs.resource.ServicePointsUsersResource;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -67,6 +68,14 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
     }
     return false;
   }
+  
+  private boolean isNotPresent(String errorMessage) {
+    if(errorMessage != null && errorMessage.contains(
+       "is not present in table")) {
+      return true;
+    }
+    return false;
+  }
 
   private boolean isCQLError(Throwable err) {
     if(err.getCause() != null && err.getCause().getClass().getSimpleName()
@@ -85,7 +94,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
       PostgresClient pgClient = getPGClient(vertxContext, tenantId);
       final String DELETE_ALL_QUERY = String.format("DELETE FROM %s_%s.%s",
           tenantId, "mod_inventory_storage", SERVICE_POINT_USER_TABLE);
-      logger.info(String.format("Deleting all service points with query %s",
+      logger.info(String.format("Deleting all service points users with query %s",
           DELETE_ALL_QUERY));
       pgClient.mutate(DELETE_ALL_QUERY, mutateReply -> {
         if(mutateReply.failed()) {
@@ -111,7 +120,35 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
       String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
       throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      PostgresClient pgClient = getPGClient(vertxContext, tenantId);
+      CQLWrapper cql = getCQL(query, limit, offset, SERVICE_POINT_USER_TABLE);
+      pgClient.get(SERVICE_POINT_USER_TABLE, Servicepointsuser.class,
+          new String[]{"*"}, cql, true, true, getReply -> {
+        if(getReply.failed()) {
+          String message = logAndSaveError(getReply.cause());
+          asyncResultHandler.handle(Future.succeededFuture(
+              GetServicePointsUsersResponse.withPlainInternalServerError(
+              getErrorResponse(message))));
+        } else {
+          List<Servicepointsuser> spuList = (List<Servicepointsuser>)getReply.result().getResults();
+          Servicepointsusers spus = new Servicepointsusers();
+          spus.setServicepointsusers(spuList);
+          spus.setTotalRecords(getReply.result().getResultInfo().getTotalRecords());
+          asyncResultHandler.handle(Future.succeededFuture(
+              GetServicePointsUsersResponse.withJsonOK(spus)));
+        }
+      });
+    } catch(Exception e) {
+      String message = logAndSaveError(e);
+      if(isCQLError(e)) {
+        message = String.format("CQL Error: %s", message);
+      } 
+      asyncResultHandler.handle(Future.succeededFuture(
+          GetServicePointsUsersResponse.withPlainInternalServerError(
+          getErrorResponse(message))));
+    }
   }
 
   @Override
@@ -135,6 +172,11 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
                 PostServicePointsUsersResponse.withJsonUnprocessableEntity(
                 ValidationHelper.createValidationErrorMessage("userId",
                 entity.getUserId(), "Service Point User Exists"))));
+          } else if(isNotPresent(message)) {
+            asyncResultHandler.handle(Future.succeededFuture(
+                PostServicePointsUsersResponse.withJsonUnprocessableEntity(
+                ValidationHelper.createValidationErrorMessage("userId",
+                entity.getUserId(), "Referenced Service Point does not exist"))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
                 PostServicePointsUsersResponse.withPlainInternalServerError(
