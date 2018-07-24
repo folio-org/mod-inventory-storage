@@ -1,3 +1,9 @@
+## 13.0.0
+* Add foreign keys item->holdings_record, holdings_record->instance (MODINVSTOR-135)
+* Provides `instance-storage` interface 5.0 (MODINVSTOR-135)
+* Provides `holdings-storage` interface 2.0 (MODINVSTOR-135)
+* Provides `item-storage` interface 6.0 (MODINVSTOR-135)
+
 ## 12.3.0 Unreleased
 
 * Add MARC JSON source record endpoint (MODINVSTOR-26)
