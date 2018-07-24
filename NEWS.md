@@ -1,3 +1,7 @@
+## 12.4.0 Unreleased
+
+* Item `status` now defaults to 'Available' (MODINVSTOR-137)
+
 ## 12.3.0 2018-07-24
 
 * Add MARC JSON source record endpoint (MODINVSTOR-26)

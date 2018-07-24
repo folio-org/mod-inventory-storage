@@ -15,6 +15,7 @@ if [ $test_results != 0 ]; then
   exit 1;
 else
   ./destroy-test-db.sh
+  ./setup-test-db.sh
 
   echo '--------------------------------------'
   echo 'BUILD SUCCEEDED'
