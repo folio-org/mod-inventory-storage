@@ -5,6 +5,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
@@ -12,6 +13,8 @@ import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Servicepointsuser;
 import org.folio.rest.jaxrs.resource.ServicePointsResource;
 import org.folio.rest.jaxrs.resource.ServicePointsUsersResource;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
@@ -77,7 +80,30 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   public void deleteServicePointsUsers(String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
       throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      PostgresClient pgClient = getPGClient(vertxContext, tenantId);
+      final String DELETE_ALL_QUERY = String.format("DELETE FROM %s_%s.%s",
+          tenantId, "mod_inventory_storage", SERVICE_POINT_USER_TABLE);
+      logger.info(String.format("Deleting all service points with query %s",
+          DELETE_ALL_QUERY));
+      pgClient.mutate(DELETE_ALL_QUERY, mutateReply -> {
+        if(mutateReply.failed()) {
+          String message = logAndSaveError(mutateReply.cause());
+          asyncResultHandler.handle(Future.succeededFuture(
+              DeleteServicePointsUsersResponse.withPlainInternalServerError(
+              getErrorResponse(message))));
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+                DeleteServicePointsUsersResponse.noContent().build()));
+          }
+        });
+    } catch(Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+          DeleteServicePointsUsersResponse.withPlainInternalServerError(
+          getErrorResponse(message))));
+    }  
   }
 
   @Override
@@ -137,7 +163,42 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
       String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      PostgresClient pgClient = getPGClient(vertxContext, tenantId);
+      Criteria idCrit = new Criteria()
+          .addField(ID_FIELD)
+          .setOperation("=")
+          .setValue(servicepointsuserId);
+      pgClient.get(SERVICE_POINT_USER_TABLE, Servicepointsuser.class,
+          new Criterion(idCrit), true, false, getReply -> {
+        if(getReply.failed()) {
+          String message = logAndSaveError(getReply.cause());
+          asyncResultHandler.handle(Future.succeededFuture(
+              GetServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
+              getErrorResponse(message))));
+        } else {
+          List<Servicepointsuser> spuList = (List<Servicepointsuser>)
+              getReply.result().getResults();
+          if(spuList.isEmpty()) { //404
+            asyncResultHandler.handle(Future.succeededFuture(
+                GetServicePointsUsersByServicepointsuserIdResponse
+                .withPlainNotFound(String.format(
+                "No service point exists with id '%s'", servicepointsuserId))));
+          } else {
+            Servicepointsuser spu = spuList.get(0);
+            asyncResultHandler.handle(Future.succeededFuture(
+                GetServicePointsUsersByServicepointsuserIdResponse.withJsonOK(
+                spu)));
+          }
+        }
+      });
+    } catch(Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+          GetServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
+          getErrorResponse(message))));
+    }
   }
 
   @Override
@@ -145,7 +206,18 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
       String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
       throws Exception {
+    /*
+    try {
+       
+    } catch(Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+          DeleteServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
+          getErrorResponse(message))));
+    }
+    */
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+
   }
 
   @Override
