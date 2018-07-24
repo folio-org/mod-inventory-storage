@@ -7,6 +7,7 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -26,20 +27,23 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import static org.folio.rest.api.TestBase.client;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import org.folio.rest.support.builders.HoldingRequestBuilder;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import org.junit.BeforeClass;
 
 /* TODO: Missing tests
    - Bad inst/camp/lib in PUT
  */
 
 
-public class LocationsTest {
+public class LocationsTest extends TestBase {
   private static Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private String canCirculateLoanTypeID;
@@ -62,6 +66,17 @@ public class LocationsTest {
       throw new AssertionError("CreateLocUnits failed:", e);
     }
   }
+  @BeforeClass
+  public static void beforeAny()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+  }
 
   @Before
   public void beforeEach()
@@ -71,6 +86,8 @@ public class LocationsTest {
     MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
@@ -270,7 +287,8 @@ public class LocationsTest {
 
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X");
-    JsonObject item = createItemRequest(id.toString());
+    UUID holdingsRecordId = createInstanceAndHolding(id);
+    JsonObject item = createItemRequest(holdingsRecordId.toString(), id.toString());
     CompletableFuture<Response> createItemCompleted = new CompletableFuture<>();
     send(itemsStorageUrl(""), HttpMethod.POST, item.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
@@ -320,9 +338,9 @@ public class LocationsTest {
     request.end(buffer);
   }
 
-  private JsonObject createItemRequest(String temporaryLocationId) {
+  private JsonObject createItemRequest(String holdingsRecordId, String temporaryLocationId) {
     JsonObject item = new JsonObject();
-    item.put("holdingsRecordId", UUID.randomUUID().toString());
+    item.put("holdingsRecordId", holdingsRecordId);
     item.put("barcode", "12345");
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);
     item.put("materialTypeId", journalMaterialTypeID);
@@ -398,6 +416,65 @@ public class LocationsTest {
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+ private JsonObject identifier(String identifierTypeId, String value) {
+    return new JsonObject()
+      .put("identifierTypeId", identifierTypeId)
+      .put("value", value);
+  }
+
+  private JsonObject contributor(String contributorNameTypeId, String name) {
+    return new JsonObject()
+      .put("contributorNameTypeId", contributorNameTypeId)
+      .put("name", name);
+  }
+
+  private JsonObject createInstanceRequest(
+    UUID id,
+    String source,
+    String title,
+    JsonArray identifiers,
+    JsonArray contributors,
+    String instanceTypeId) {
+
+    JsonObject instanceToCreate = new JsonObject();
+
+    if(id != null) {
+      instanceToCreate.put("id",id.toString());
+    }
+
+    instanceToCreate.put("title", title);
+    instanceToCreate.put("source", source);
+    instanceToCreate.put("identifiers", identifiers);
+    instanceToCreate.put("contributors", contributors);
+    instanceToCreate.put("instanceTypeId", instanceTypeId);
+
+    return instanceToCreate;
+  }
+
+  private UUID createInstanceAndHolding(UUID locationId) throws ExecutionException, InterruptedException, MalformedURLException, TimeoutException{
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallInstance(instanceId));
+
+    UUID holdingsRecordId = UUID.randomUUID();
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingsRecordId)
+      .forInstance(instanceId)
+      .withPermanentLocation(locationId)).getJson();
+
+    return holdingsRecordId;
+  }
+
+  private JsonObject smallInstance(UUID id) {
+    JsonArray identifiers = new JsonArray();
+    identifiers.add(identifier("isbn", "9781473619777"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor("personal name", "Chambers, Becky"));
+
+    return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
+      identifiers, contributors, UUID.randomUUID().toString());
   }
 
 }

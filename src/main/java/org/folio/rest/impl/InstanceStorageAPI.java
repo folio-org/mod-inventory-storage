@@ -251,13 +251,28 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("TRUNCATE TABLE "
-              + tenantId + "_" + MODULE + "." + INSTANCE_TABLE + ", "
-              + tenantId + "_" + MODULE + "." + INSTANCE_SOURCE_MARC_TABLE),
-            reply -> {
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  InstanceStorageResource.DeleteInstanceStorageInstancesResponse
-                  .noContent().build()));
+        postgresClient.mutate(String.format("DELETE FROM "
+              + tenantId + "_" + MODULE + "." + INSTANCE_SOURCE_MARC_TABLE ),
+            reply1 -> {
+              if (! reply1.succeeded()) {
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    InstanceStorageResource.DeleteInstanceStorageInstancesResponse
+                    .withPlainInternalServerError(reply1.cause().getMessage())));
+                return;
+              }
+              postgresClient.mutate("DELETE FROM "
+                + tenantId + "_" + MODULE + "." + INSTANCE_TABLE, reply2 -> {
+                if (! reply2.succeeded()) {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse
+                    .withPlainInternalServerError(reply2.cause().getMessage())));
+                  return;
+                }
+
+                asyncResultHandler.handle(Future.succeededFuture(
+                  DeleteInstanceStorageInstancesByInstanceIdResponse.withNoContent()
+                ));
+              });
             });
       }
       catch(Exception e) {
