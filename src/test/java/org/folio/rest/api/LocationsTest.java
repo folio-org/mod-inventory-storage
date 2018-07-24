@@ -6,8 +6,6 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -27,11 +25,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import static org.folio.rest.api.TestBase.client;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import org.folio.rest.support.builders.HoldingRequestBuilder;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -43,7 +39,7 @@ import org.junit.BeforeClass;
  */
 
 
-public class LocationsTest extends TestBase {
+public class LocationsTest extends TestBaseWithInventoryUtil {
   private static Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private String canCirculateLoanTypeID;
@@ -416,65 +412,6 @@ public class LocationsTest extends TestBase {
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
-  }
- private JsonObject identifier(String identifierTypeId, String value) {
-    return new JsonObject()
-      .put("identifierTypeId", identifierTypeId)
-      .put("value", value);
-  }
-
-  private JsonObject contributor(String contributorNameTypeId, String name) {
-    return new JsonObject()
-      .put("contributorNameTypeId", contributorNameTypeId)
-      .put("name", name);
-  }
-
-  private JsonObject createInstanceRequest(
-    UUID id,
-    String source,
-    String title,
-    JsonArray identifiers,
-    JsonArray contributors,
-    String instanceTypeId) {
-
-    JsonObject instanceToCreate = new JsonObject();
-
-    if(id != null) {
-      instanceToCreate.put("id",id.toString());
-    }
-
-    instanceToCreate.put("title", title);
-    instanceToCreate.put("source", source);
-    instanceToCreate.put("identifiers", identifiers);
-    instanceToCreate.put("contributors", contributors);
-    instanceToCreate.put("instanceTypeId", instanceTypeId);
-
-    return instanceToCreate;
-  }
-
-  private UUID createInstanceAndHolding(UUID locationId) throws ExecutionException, InterruptedException, MalformedURLException, TimeoutException{
-    UUID instanceId = UUID.randomUUID();
-
-    instancesClient.create(smallInstance(instanceId));
-
-    UUID holdingsRecordId = UUID.randomUUID();
-
-    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
-      .withId(holdingsRecordId)
-      .forInstance(instanceId)
-      .withPermanentLocation(locationId)).getJson();
-
-    return holdingsRecordId;
-  }
-
-  private JsonObject smallInstance(UUID id) {
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "9781473619777"));
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Chambers, Becky"));
-
-    return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID().toString());
   }
 
 }

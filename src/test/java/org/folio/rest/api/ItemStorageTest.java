@@ -22,19 +22,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import static org.folio.rest.api.TestBase.instancesClient;
 
 import org.folio.rest.support.*;
-import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-public class ItemStorageTest extends TestBase {
+public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static Logger logger = LoggerFactory.getLogger(ItemStorageTest.class);
 
   private static String journalMaterialTypeID;
@@ -86,27 +83,12 @@ public class ItemStorageTest extends TestBase {
     StorageTestSuite.checkForMismatchedIDs("item");
   }
 
-  private UUID createInstanceAndHolding() throws ExecutionException, InterruptedException, MalformedURLException, TimeoutException{
-    UUID instanceId = UUID.randomUUID();
-
-    instancesClient.create(smallAngryPlanetInstance(instanceId));
-
-    UUID holdingsRecordId = UUID.randomUUID();
-
-    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
-      .withId(holdingsRecordId)
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)).getJson();
-
-    return holdingsRecordId;
-  }
-
   @Test
   public void canCreateAnItemViaCollectionResource()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
 
@@ -159,7 +141,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
 
@@ -197,7 +179,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     JsonObject itemToCreate = nod(null, holdingsRecordId);
 
@@ -240,7 +222,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     String badLocation = UUID.randomUUID().toString();
     String id = UUID.randomUUID().toString();
@@ -270,7 +252,7 @@ public class ItemStorageTest extends TestBase {
     ExecutionException, TimeoutException {
 
     String id = "1234";
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     JsonObject itemToCreate = new JsonObject();
 
@@ -302,7 +284,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     JsonObject itemToCreate = new JsonObject();
 
@@ -333,7 +315,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = nod(id, holdingsRecordId);
@@ -373,7 +355,7 @@ public class ItemStorageTest extends TestBase {
     TimeoutException,
     ExecutionException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID(),holdingsRecordId);
 
@@ -397,7 +379,7 @@ public class ItemStorageTest extends TestBase {
     TimeoutException,
     ExecutionException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID(),holdingsRecordId);
 
@@ -446,7 +428,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
@@ -488,7 +470,7 @@ public class ItemStorageTest extends TestBase {
   public void canDeleteAnItem() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
@@ -521,7 +503,7 @@ public class ItemStorageTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     createItem(smallAngryPlanet(UUID.randomUUID(), holdingsRecordId));
     createItem(nod(UUID.randomUUID(), holdingsRecordId));
@@ -564,7 +546,7 @@ public class ItemStorageTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     createItem(nod(holdingsRecordId));
     createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
@@ -601,7 +583,7 @@ public class ItemStorageTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     createItem(nod(holdingsRecordId));
     createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
@@ -634,7 +616,7 @@ public class ItemStorageTest extends TestBase {
   @Test
   public void canSearchForManyItemsByBarcode() throws Exception {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     createItem(smallAngryPlanet(holdingsRecordId).put("barcode", "673274826203"));
 
@@ -663,7 +645,7 @@ public class ItemStorageTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     createItem(smallAngryPlanet(holdingsRecordId));
     createItem(nod(holdingsRecordId));
@@ -695,7 +677,7 @@ public class ItemStorageTest extends TestBase {
     ExecutionException,
     TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     createItem(smallAngryPlanet(holdingsRecordId));
     createItem(nod(holdingsRecordId));
@@ -732,7 +714,7 @@ public class ItemStorageTest extends TestBase {
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
 
@@ -781,7 +763,7 @@ public class ItemStorageTest extends TestBase {
   public void testCrossTableQueries() throws Exception {
     String url = itemsStorageUrl("") + "?query=";
 
-    UUID holdingsRecordId = createInstanceAndHolding();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     createItem(createItemRequest(UUID.randomUUID(), holdingsRecordId,
       "036000291452", journalMaterialTypeID));
@@ -882,51 +864,6 @@ public class ItemStorageTest extends TestBase {
       System.out.println("WARNING!!!!! Create item preparation failed: "
         + e.getMessage());
     }
-  }
-
-  private JsonObject smallAngryPlanetInstance(UUID id) {
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "9781473619777"));
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Chambers, Becky"));
-
-    return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID().toString());
-  }
-
-  private JsonObject identifier(String identifierTypeId, String value) {
-    return new JsonObject()
-      .put("identifierTypeId", identifierTypeId)
-      .put("value", value);
-  }
-
-  private JsonObject contributor(String contributorNameTypeId, String name) {
-    return new JsonObject()
-      .put("contributorNameTypeId", contributorNameTypeId)
-      .put("name", name);
-  }
-
-  private JsonObject createInstanceRequest(
-    UUID id,
-    String source,
-    String title,
-    JsonArray identifiers,
-    JsonArray contributors,
-    String instanceTypeId) {
-
-    JsonObject instanceToCreate = new JsonObject();
-
-    if(id != null) {
-      instanceToCreate.put("id",id.toString());
-    }
-
-    instanceToCreate.put("title", title);
-    instanceToCreate.put("source", source);
-    instanceToCreate.put("identifiers", identifiers);
-    instanceToCreate.put("contributors", contributors);
-    instanceToCreate.put("instanceTypeId", instanceTypeId);
-
-    return instanceToCreate;
   }
 
   private JsonObject createItemRequest(
