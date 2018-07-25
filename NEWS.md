@@ -4,7 +4,11 @@
 * Provides `holdings-storage` interface 2.0 (MODINVSTOR-135)
 * Provides `item-storage` interface 6.0 (MODINVSTOR-135)
 
-## 12.3.0 Unreleased
+## 12.4.0 Unreleased
+
+* Item `status` now defaults to 'Available' (MODINVSTOR-137)
+
+## 12.3.0 2018-07-24
 
 * Add MARC JSON source record endpoint (MODINVSTOR-26)
 * Provides `instance-storage` interface 4.4 (MODINVSTOR-26)
