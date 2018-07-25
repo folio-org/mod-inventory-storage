@@ -494,10 +494,6 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         .withPlainBadRequest(message)));
   }
 
-  private boolean blankTenantId(String tenantId) {
-    return tenantId == null || tenantId == "" || tenantId == "folio_shared";
-  }
-
   private boolean isUUID(String id) {
     try {
       UUID.fromString(id);
