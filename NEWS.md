@@ -1,3 +1,7 @@
+## 12.5.0 Unreleased
+
+* Add /service-points-users endpoint (MODINVSTOR-132)
+
 ## 12.4.0 Unreleased
 
 * Item `status` now defaults to 'Available' (MODINVSTOR-137)
