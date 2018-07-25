@@ -247,19 +247,38 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   public void deleteServicePointsUsersByServicepointsuserId(String servicepointsuserId,
       String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
-    /*
+      throws Exception {    
     try {
-       
+       String tenantId = getTenant(okapiHeaders);
+       PostgresClient pgClient = getPGClient(vertxContext, tenantId);
+       Criteria idCrit = new Criteria()
+           .addField(ID_FIELD)
+           .setOperation("=")
+           .setValue(servicepointsuserId);
+       pgClient.delete(SERVICE_POINT_USER_TABLE, new Criterion(idCrit),
+           deleteReply -> {
+         if(deleteReply.failed()) {
+           String message = logAndSaveError(deleteReply.cause());
+           asyncResultHandler.handle(Future.succeededFuture(
+               DeleteServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
+               getErrorResponse(message))));
+         } else {
+           if(deleteReply.result().getUpdated() == 0) {
+             asyncResultHandler.handle(Future.succeededFuture(
+               DeleteServicePointsUsersByServicepointsuserIdResponse
+               .withPlainNotFound("Not found")));
+           } else {
+             asyncResultHandler.handle(Future.succeededFuture(
+               DeleteServicePointsUsersByServicepointsuserIdResponse.withNoContent()));
+           }
+         }
+       });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           DeleteServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
           getErrorResponse(message))));
     }
-    */
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-
   }
 
   @Override
@@ -267,6 +286,35 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
       String lang, Servicepointsuser entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
       throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    try {
+      String tenantId = getTenant(okapiHeaders);
+      Criteria idCrit = new Criteria()
+          .addField(ID_FIELD)
+          .setOperation("=")
+          .setValue(servicepointsuserId);
+      PostgresClient pgClient = getPGClient(vertxContext, tenantId);
+      pgClient.update(SERVICE_POINT_USER_TABLE, entity, new Criterion(idCrit),
+          false, updateReply -> {
+        if(updateReply.failed()) {
+          String message = logAndSaveError(updateReply.cause());
+          asyncResultHandler.handle(Future.succeededFuture(
+             PutServicePointsUsersByServicepointsuserIdResponse
+             .withPlainInternalServerError(getErrorResponse(message))));
+        } else if(updateReply.result().getUpdated() == 0) {
+          asyncResultHandler.handle(Future.succeededFuture(
+             PutServicePointsUsersByServicepointsuserIdResponse
+             .withPlainNotFound("Not found")));
+        } else {
+          asyncResultHandler.handle(Future.succeededFuture(
+             PutServicePointsUsersByServicepointsuserIdResponse
+             .withNoContent()));
+        }
+      });
+    } catch(Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+          PutServicePointsUsersByServicepointsuserIdResponse
+          .withPlainInternalServerError(getErrorResponse(message))));
+    }
   }
 }
