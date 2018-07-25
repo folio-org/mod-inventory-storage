@@ -171,7 +171,7 @@ public class ServicePointsUserTest {
   public void canDeleteServicePointUser() throws MalformedURLException, 
       InterruptedException, ExecutionException, TimeoutException {
     UUID spuId = UUID.randomUUID();
-    createServicePointUser(spuId, null, null, null);
+    createServicePointUser(spuId, UUID.randomUUID(), null, null);
     Response getResponse = getServicePointUserById(spuId);
     assertThat(getResponse.getStatusCode(), is(200));
     deleteServicePointUserById(spuId);
@@ -249,7 +249,7 @@ public class ServicePointsUserTest {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     send(servicePointsUsersUrl("/" + id.toString()), HttpMethod.GET,
-      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
     

@@ -226,7 +226,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
             asyncResultHandler.handle(Future.succeededFuture(
                 GetServicePointsUsersByServicepointsuserIdResponse
                 .withPlainNotFound(String.format(
-                "No service point exists with id '%s'", servicepointsuserId))));
+                "No service point user exists with id '%s'", servicepointsuserId))));
           } else {
             Servicepointsuser spu = spuList.get(0);
             asyncResultHandler.handle(Future.succeededFuture(
