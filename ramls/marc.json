@@ -27,11 +27,11 @@
             "properties": {
               "ind1": {
                 "type": "string",
-                "pattern": "^[a-z0-9 #\\\\]$"
+                "pattern": "^[a-z0-9 \\\\]$"
               },
               "ind2": {
                 "type": "string",
-                "pattern": "^[a-z0-9 #\\\\]$"
+                "pattern": "^[a-z0-9 \\\\]$"
               },
               "subfields": {
                 "type": "array",
