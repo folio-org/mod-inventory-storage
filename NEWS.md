@@ -1,4 +1,4 @@
-## 12.4.0 Unreleased
+## 12.4.0 2018-07-26
 
 * Item `status` now defaults to 'Available' (MODINVSTOR-137)
 
