@@ -146,7 +146,7 @@ public class ServicePointsUserTest {
     Response response = getServicePointUsers(String.format("servicePointsIds=%s",spId3.toString()));
     System.out.println(response.toString());
     assertThat(response.getJson().getInteger("totalRecords"), is(1));
-    assertThat(response.getJson().getJsonArray("servicepointsusers")
+    assertThat(response.getJson().getJsonArray("servicePointsUsers")
         .getJsonObject(0).getString("id"), is(spuId.toString()));
   }
   

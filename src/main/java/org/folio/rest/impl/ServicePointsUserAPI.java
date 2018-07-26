@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.Servicepointsuser;
+import org.folio.rest.jaxrs.model.ServicePointsUser;
 import org.folio.rest.jaxrs.model.Servicepointsusers;
 import org.folio.rest.jaxrs.resource.ServicePointsResource;
 import org.folio.rest.jaxrs.resource.ServicePointsUsersResource;
@@ -124,7 +124,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
       String tenantId = getTenant(okapiHeaders);
       PostgresClient pgClient = getPGClient(vertxContext, tenantId);
       CQLWrapper cql = getCQL(query, limit, offset, SERVICE_POINT_USER_TABLE);
-      pgClient.get(SERVICE_POINT_USER_TABLE, Servicepointsuser.class,
+      pgClient.get(SERVICE_POINT_USER_TABLE, ServicePointsUser.class,
           new String[]{"*"}, cql, true, true, getReply -> {
         if(getReply.failed()) {
           String message = logAndSaveError(getReply.cause());
@@ -132,9 +132,9 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
               GetServicePointsUsersResponse.withPlainInternalServerError(
               getErrorResponse(message))));
         } else {
-          List<Servicepointsuser> spuList = (List<Servicepointsuser>)getReply.result().getResults();
+          List<ServicePointsUser> spuList = (List<ServicePointsUser>)getReply.result().getResults();
           Servicepointsusers spus = new Servicepointsusers();
-          spus.setServicepointsusers(spuList);
+          spus.setServicePointsUsers(spuList);
           spus.setTotalRecords(getReply.result().getResultInfo().getTotalRecords());
           asyncResultHandler.handle(Future.succeededFuture(
               GetServicePointsUsersResponse.withJsonOK(spus)));
@@ -152,7 +152,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   }
 
   @Override
-  public void postServicePointsUsers(String lang, Servicepointsuser entity,
+  public void postServicePointsUsers(String lang, ServicePointsUser entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
       throws Exception {
@@ -212,7 +212,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
           .addField(ID_FIELD)
           .setOperation("=")
           .setValue(servicepointsuserId);
-      pgClient.get(SERVICE_POINT_USER_TABLE, Servicepointsuser.class,
+      pgClient.get(SERVICE_POINT_USER_TABLE, ServicePointsUser.class,
           new Criterion(idCrit), true, false, getReply -> {
         if(getReply.failed()) {
           String message = logAndSaveError(getReply.cause());
@@ -220,7 +220,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
               GetServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
               getErrorResponse(message))));
         } else {
-          List<Servicepointsuser> spuList = (List<Servicepointsuser>)
+          List<ServicePointsUser> spuList = (List<ServicePointsUser>)
               getReply.result().getResults();
           if(spuList.isEmpty()) { //404
             asyncResultHandler.handle(Future.succeededFuture(
@@ -228,7 +228,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
                 .withPlainNotFound(String.format(
                 "No service point user exists with id '%s'", servicepointsuserId))));
           } else {
-            Servicepointsuser spu = spuList.get(0);
+            ServicePointsUser spu = spuList.get(0);
             asyncResultHandler.handle(Future.succeededFuture(
                 GetServicePointsUsersByServicepointsuserIdResponse.withJsonOK(
                 spu)));
@@ -283,7 +283,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
 
   @Override
   public void putServicePointsUsersByServicepointsuserId(String servicepointsuserId,
-      String lang, Servicepointsuser entity, Map<String, String> okapiHeaders,
+      String lang, ServicePointsUser entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
       throws Exception {
     try {

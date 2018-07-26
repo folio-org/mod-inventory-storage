@@ -1154,6 +1154,7 @@
         "inventory-storage.service-points.item.post",
         "inventory-storage.service-points.item.put",
         "inventory-storage.service-points.item.delete",
+        "inventory-storage.service-points-users.collection.get",
         "inventory-storage.service-points-users.item.get",
         "inventory-storage.service-points-users.item.post",
         "inventory-storage.service-points-users.item.put",

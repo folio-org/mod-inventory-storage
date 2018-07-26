@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "servicepointsusers": {
+    "servicePointsUsers": {
       "type": "array",
       "items": {
         "type": "object",
@@ -14,7 +14,7 @@
     }
   },
   "required": [
-    "servicepointsusers",
+    "servicePointsUsers",
     "totalRecords"
   ]
 }
