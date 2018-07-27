@@ -13,6 +13,13 @@ for f in ./instances/*.json; do
          "${instance_storage_address}"
 done
 
+# Manually import a source record to try it out
+curl -w '\n' -X PUT -D - \
+     -H "Content-type: application/json" \
+     -H "X-Okapi-Tenant: ${tenant}" \
+     -d @./instance-source-records/neurotic-heroine-source-record.json \
+     "${instance_storage_address}/62ca5b43-0f11-40af-a6b4-1a9ee2db33cb/source-record/marc-json"
+
 for f in ./holdingsrecords/*.json; do
     curl -w '\n' -X POST -D - \
          -H "Content-type: application/json" \
