@@ -1,15 +1,30 @@
 package org.folio.rest.api;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.LoanTypesClient;
@@ -18,21 +33,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
-
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /* TODO: Missing tests
    - Bad inst/camp/lib in PUT
@@ -260,6 +270,60 @@ public class LocationsTest {
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
+
+	@Test
+	public void canCascadeOnDelete()
+			throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+		UUID locId = UUID.randomUUID();
+		createLocation(locId, "Main Library", instID, campID, libID, "PI/CC/ML/X");
+
+		UUID servicePointOneId = UUID.randomUUID();
+		UUID servicePointTwoId = UUID.randomUUID();
+
+		CompletableFuture<Response> createServiceOnePoint = new CompletableFuture<>();
+		CompletableFuture<Response> createServiceTwoPoint = new CompletableFuture<>();
+
+		List<String> locationIds = new ArrayList<String>();
+		locationIds.add(locId.toString());
+
+		JsonObject requestOne = new JsonObject();
+		requestOne.put("name", "Test Servicepoint One").put("code", "TSP1")
+				.put("discoveryDisplayName", "Test Servicepoint One")
+				.put("id", servicePointOneId.toString()).put("locationIds", new JsonArray(locationIds));
+
+		JsonObject requestTwo = new JsonObject();
+		requestTwo.put("name", "Test Servicepoint Two").put("code", "TSP2")
+				.put("discoveryDisplayName", "Test Servicepoint Two").put("id", servicePointTwoId.toString())
+				.put("locationIds", new JsonArray(locationIds));
+
+		send(servicePointsUrl(""), HttpMethod.POST, requestOne.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(createServiceOnePoint));
+		createServiceOnePoint.get(5, TimeUnit.SECONDS);
+
+		send(servicePointsUrl(""), HttpMethod.POST, requestTwo.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(createServiceTwoPoint));
+		createServiceTwoPoint.get(5, TimeUnit.SECONDS);
+
+		CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+		send(locationsStorageUrl("/" + locId.toString()), HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.any(deleteCompleted));
+		deleteCompleted.get(5, TimeUnit.SECONDS);
+
+		CompletableFuture<Response> getOneCompleted = new CompletableFuture<>();
+		send(servicePointsUrl("/" + servicePointOneId.toString()), HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(getOneCompleted));
+		Response servicePointOneResponse = getOneCompleted.get(5, TimeUnit.SECONDS);
+
+		CompletableFuture<Response> getTwoCompleted = new CompletableFuture<>();
+		send(servicePointsUrl("/" + servicePointTwoId.toString()), HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(getOneCompleted));
+		Response servicePointTwoResponse = getTwoCompleted.get(5, TimeUnit.SECONDS);
+
+		assertThat(servicePointOneResponse.getJson().getJsonArray("locationIds").contains(servicePointOneId.toString()),
+				is(false));
+		assertThat(servicePointTwoResponse.getJson().getJsonArray("locationIds").contains(servicePointOneId.toString()),
+				is(false));
+	}
 
   @Test
   public void cannotDeleteALocationAssociatedWithAnItem()
