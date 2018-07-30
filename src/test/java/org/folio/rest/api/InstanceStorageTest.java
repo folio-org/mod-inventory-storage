@@ -500,6 +500,7 @@ public class InstanceStorageTest extends TestBase {
 
   /** MARC record representation in JSON, compatible with MarcEdit's JSON export and import. */
   private MarcJson marcJson = new MarcJson();
+  private MarcJson marcJson2 = new MarcJson();
   private class MarcField extends Field {
     JsonObject jsonObject = new JsonObject();
     public MarcField(String key, String value) {
@@ -522,6 +523,14 @@ public class InstanceStorageTest extends TestBase {
     fields.add(new MarcField("001", "029857716"));
     fields.add(new MarcField("245", "0", "4", "a", "The Yearbook of Okapiology"));
     marcJson.setFields(fields);
+  }
+
+  {
+    marcJson2.setLeader("*****cmm  22*****#a 4500");
+    List<Field> fields = new ArrayList<>();
+    fields.add(new MarcField("001", "082643269"));
+    fields.add(new MarcField("245", "1", "0", "a", "Bookends extended"));
+    marcJson2.setFields(fields);
   }
 
   private Response put(UUID id, MarcJson marcJson, HttpStatus expectedStatus) throws Exception {
@@ -572,7 +581,29 @@ public class InstanceStorageTest extends TestBase {
     assertThat(getResponse.getJson().getString("leader"), is("xxxxxnam a22yyyyy c 4500"));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.size(), is(2));
-    // RAML 2 Java conversion does not work for Field.java.
+    // RAML to Java conversion does not work for Field.java.
+  }
+
+  @Test
+  public void canUpdateInstanceSourceRecord() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, marcJson);  // create
+    put(id, marcJson2); // update
+
+    // get MARC source record
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
+        StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(200));
+    assertThat(getResponse.getJson().size(), is(2));  // leader and fields
+    assertThat(getResponse.getJson().getString("leader"), is("*****cmm  22*****#a 4500"));
+    JsonArray fields = getResponse.getJson().getJsonArray("fields");
+    assertThat(fields.size(), is(2));
+    // RAML to Java conversion does not work for Field.java.
   }
 
   @Test

@@ -601,18 +601,15 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-    String sql = "INSERT INTO " + TenantTool.tenantId(okapiHeaders) + "_" + MODULE + "."
-        + INSTANCE_SOURCE_MARC_TABLE
-        + " (_id,jsonb)"
-        + " VALUES ('" + instanceId + "', '" + PostgresClient.pojo2json(entity) + "'::JSONB)";
-    postgresClient.mutate(sql, reply -> {
+    postgresClient.upsert(INSTANCE_SOURCE_MARC_TABLE, instanceId, entity, reply -> {
       if (reply.succeeded()) {
         asyncResultHandler.handle(Future.succeededFuture(
             PutInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse.withNoContent()));
         return;
       }
       Map<Object, String> fields = PgExceptionUtil.getBadRequestFields(reply.cause());
-      if (fields != null && "23503".equals(fields.get('C'))) {  // foreign key constraint violation
+      if (fields != null && "23503".equals(fields.get('C'))  // foreign key constraint violation
+          && INSTANCE_SOURCE_MARC_TABLE.equals(fields.get('t'))) {
         asyncResultHandler.handle(Future.succeededFuture(
             PutInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
             .withPlainNotFound(reply.cause().getMessage())));
