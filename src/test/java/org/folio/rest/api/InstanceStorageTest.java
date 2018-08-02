@@ -1,7 +1,32 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
+import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
@@ -12,42 +37,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
-import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
-
 public class InstanceStorageTest extends TestBase {
   private static UUID mainLibraryLocationId;
   private static UUID annexLocationId;
   private static UUID bookMaterialTypeId;
   private static UUID canCirculateLoanTypeId;
-  private static UUID instID;
-  private static UUID campID;
-  private static UUID libID;
 
   @BeforeClass
-  public static void beforeAny()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public static void beforeAny() throws Exception {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
@@ -72,7 +69,7 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Before
-  public void beforeEach() throws MalformedURLException {
+  public void beforeEach() throws Exception {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -498,6 +495,120 @@ public class InstanceStorageTest extends TestBase {
     assertThat(instances.size(), is(0));
     // Reports 0, not sure if this is to due with record count approximation
     //assertThat(page.getInteger("totalRecords"), is(5));
+  }
+
+  /** MARC record representation in JSON, compatible with MarcEdit's JSON export and import. */
+  private MarcJson marcJson = new MarcJson();
+
+  {
+    marcJson.setLeader("xxxxxnam a22yyyyy c 4500");
+    List<Object> fields = new ArrayList<>();
+    fields.add(new JsonObject().put("001", "029857716"));
+    fields.add(new JsonObject().put("245",
+        new JsonObject().put("ind1", "0").put("ind2", "4").put("subfields",
+            new JsonArray().add(new JsonObject().put("a", "The Yearbook of Okapiology")))));
+    marcJson.setFields(fields);
+  }
+
+  private Response put(UUID id, MarcJson marcJson, HttpStatus expectedStatus) throws Exception {
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+    client.put(instancesStorageUrl("/" + id + "/source-record/marc-json"), marcJson,
+        StorageTestSuite.TENANT_ID, ResponseHandler.empty(putCompleted));
+    Response response = putCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(expectedStatus.toInt()));
+    return response;
+  }
+
+  private Response put(UUID id, MarcJson marcJson) throws Exception {
+    return put(id, marcJson, HttpStatus.HTTP_NO_CONTENT);
+  }
+
+  private String getSourceRecordFormat(UUID instanceId) throws Exception {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(instancesStorageUrl("/" + instanceId),
+        StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(200));
+    return getResponse.getJson().getString("sourceRecordFormat");
+  }
+
+  private void getSourceNotFound(UUID id) throws Exception {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
+        StorageTestSuite.TENANT_ID, ResponseHandler.text(getCompleted));
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
+  }
+
+  @Test
+  public void canCreateInstanceSourceRecord() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, marcJson);
+
+    // get MARC source record
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
+        StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(200));
+    assertThat(getResponse.getJson().getString("leader"), is("xxxxxnam a22yyyyy c 4500"));
+    JsonArray fields = getResponse.getJson().getJsonArray("fields");
+    assertThat(fields.getJsonObject(0).getString("001"), is("029857716"));
+    assertThat(fields.getJsonObject(1).getJsonObject("245")
+        .getJsonArray("subfields").getJsonObject(0).getString("a"), is("The Yearbook of Okapiology"));
+    assertThat(getResponse.getJson().size(), is(2));  // leader and fields
+  }
+
+  @Test
+  public void cannotGetNonExistingSourceRecord() throws Exception {
+    getSourceNotFound(UUID.randomUUID());
+  }
+
+  @Test
+  public void canDeleteInstanceSourceRecord() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+    assertThat(getSourceRecordFormat(id), is(nullValue()));
+
+    Response putResponse = put(id, marcJson);
+    assertThat(getSourceRecordFormat(id), is("MARC-JSON"));
+
+    // delete MARC source record
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    client.delete(instancesStorageUrl("/" + id + "/source-record/marc-json"),
+        StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+    assertThat(getSourceRecordFormat(id), is(nullValue()));
+
+    getSourceNotFound(id);
+  }
+
+  @Test
+  public void canDeleteSourceRecordWhenDeletingInstance() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, marcJson);
+
+    // delete instance
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    client.delete(instancesStorageUrl("/" + id),
+        StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+
+    getSourceNotFound(id);
+  }
+
+  @Test
+  public void cannotCreateSourceRecordWithoutInstance() throws Exception {
+    put(UUID.randomUUID(), marcJson, HttpStatus.HTTP_NOT_FOUND);
   }
 
   /**

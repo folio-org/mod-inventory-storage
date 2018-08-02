@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "MARC record representation, compatible with MarcEdit's JSON export and import",
+  "type": "object",
+  "properties": {
+    "leader": {
+      "type": "string",
+      "minLength": 24,
+      "maxLength": 24
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 2
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "leader",
+    "fields"
+  ]
+}
+

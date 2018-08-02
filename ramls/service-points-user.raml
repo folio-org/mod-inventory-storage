@@ -1,16 +1,16 @@
 #%RAML 0.8
-title: Service Points API
-version: v2.1
+title: Service Points Users API
+version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
 documentation:
-  - title: Service Points API
-    content: This documents the API calls that can be made to query and manage service points in the system
+  - title: Service Points Users API
+    content: This documents the API calls that can be made to query and manage service points users in the system
 
 schemas:
-  - servicepoint.json: !include servicepoint.json
-  - servicepoints: !include servicepoints.json
+  - servicepointsuser.json: !include servicepointsuser.json
+  - servicepointsusers: !include servicepointsusers.json
   - item.json: !include item.json
   - items: !include items.json
   - errors: !include raml-util/schemas/errors.schema
@@ -30,36 +30,41 @@ resourceTypes:
   - collection-item: !include raml-util/rtypes/item-collection.raml
   - get-delete-only: !include raml-util/rtypes/get-delete.raml
 
-/service-points:
+/service-points-users:
   type:
     collection:
-      exampleCollection: !include examples/servicepoints.json
-      exampleItem: !include examples/servicepoint.json
-      schemaCollection: servicepoints
-      schemaItem: servicepoint.json
+      exampleCollection: !include examples/servicepointsusers.json
+      exampleItem: !include examples/servicepointsuser.json
+      schemaCollection: servicepointsusers
+      schemaItem: servicepointsuser.json
   get:
     is: [
       searchable: { description: "with valid searchable fields", example: "name=aaa"},
       pageable
     ]
-    description: Return a list of service points
+    description: Return a list of service points users
   post:
-    description: Create a new service point
+    description: Create a new service points user
     is: [validate]
   delete:
-    description: "Delete all service points"
+    description: "Delete all service points users"
     responses:
       204:
-        description: "All service points delete"
+        description: "All service points users delete"
       500:
         description: "Internal server error"
         body:
           text/plain:
             example: "Internal server error"
-  /{servicepointId}:
-    description: Pass the id for the service point
+  /{servicepointsuserId}:
+    description: Pass the id for the service points user
     type:
       collection-item:
-        exampleItem: !include examples/servicepoint.json
-        schema: servicepoint.json
+        exampleItem: !include examples/servicepointsuser.json
+        schema: servicepointsuser.json
+
+
+
+
+
 

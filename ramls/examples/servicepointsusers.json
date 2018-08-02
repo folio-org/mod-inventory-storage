@@ -1,0 +1,14 @@
+{
+  "servicePointsUsers": [
+    {
+      "id": "4d204b26-c0d9-42fa-81ca-cbb3825cbeee",
+      "userId": "aa4454a8-7a85-4624-83ba-399b8bc3a42d",
+      "servicePointsIds": [
+        "82cb6fa0-f70b-4676-8b8f-95ef9d0d28e3",
+        "eba14df5-0a84-4348-89dd-a370c2611289"
+      ],
+      "defaultServicePointId" : "82cb6fa0-f70b-4676-8b8f-95ef9d0d28e3"
+    }
+  ],
+  "totalRecords":1
+}

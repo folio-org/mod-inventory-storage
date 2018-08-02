@@ -6,31 +6,30 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.Instances;
-import org.folio.rest.jaxrs.resource.InstanceStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
+import java.lang.invoke.MethodHandles;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-import java.lang.invoke.MethodHandles;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Instances;
+import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.jaxrs.resource.InstanceStorageResource;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.OutStream;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 public class InstanceStorageAPI implements InstanceStorageResource {
 
@@ -39,10 +38,12 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
+  public static final String MODULE = "mod_inventory_storage";
   public static final String INSTANCE_HOLDINGS_VIEW = "instance_holding_view";
   public static final String INSTANCE_HOLDINGS_ITEMS_VIEW = "instance_holding_item_view";
   public static final String INSTANCE_TABLE =  "instance";
   private String tableName =  "instance";
+  private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
 
   private CQLWrapper handleCQL(String query, int limit, int offset) throws FieldException {
     boolean containsHoldingsRecordProperties = query != null && query.contains("holdingsRecords.");
@@ -250,13 +251,14 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.instance",
-          tenantId, "mod_inventory_storage"),
-          reply -> {
-            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              InstanceStorageResource.DeleteInstanceStorageInstancesResponse
-                .noContent().build()));
-          });
+        postgresClient.mutate(String.format("TRUNCATE TABLE "
+              + tenantId + "_" + MODULE + "." + INSTANCE_TABLE + ", "
+              + tenantId + "_" + MODULE + "." + INSTANCE_SOURCE_MARC_TABLE),
+            reply -> {
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  InstanceStorageResource.DeleteInstanceStorageInstancesResponse
+                  .noContent().build()));
+            });
       }
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -344,48 +346,31 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
+    // before deleting the instance record delete its source marc record (foreign key!)
 
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+    PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(instanceId);
-
-      Criterion criterion = new Criterion(a);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.delete("instance", criterion,
-            reply -> {
-              if(reply.succeeded()) {
-                asyncResultHandler.handle(
-                  Future.succeededFuture(
-                    DeleteInstanceStorageInstancesByInstanceIdResponse
-                      .withNoContent()));
-              }
-              else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteInstanceStorageInstancesByInstanceIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
+    postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply1 -> {
+      if (! reply1.succeeded()) {
+        asyncResultHandler.handle(Future.succeededFuture(
             DeleteInstanceStorageInstancesByInstanceIdResponse
-              .withPlainInternalServerError(e.getMessage())));
+            .withPlainInternalServerError(reply1.cause().getMessage())));
+        return;
+      }
+
+      postgresClient.delete(INSTANCE_TABLE, instanceId, reply2 -> {
+        if (! reply2.succeeded()) {
+          asyncResultHandler.handle(Future.succeededFuture(
+              DeleteInstanceStorageInstancesByInstanceIdResponse
+              .withPlainInternalServerError(reply2.cause().getMessage())));
+          return;
         }
+
+        asyncResultHandler.handle(Future.succeededFuture(
+            DeleteInstanceStorageInstancesByInstanceIdResponse.withNoContent()));
       });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        DeleteInstanceStorageInstancesByInstanceIdResponse
-          .withPlainInternalServerError(e.getMessage())));
-    }
+    });
   }
 
   @Override
@@ -509,10 +494,6 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         .withPlainBadRequest(message)));
   }
 
-  private boolean blankTenantId(String tenantId) {
-    return tenantId == null || tenantId == "" || tenantId == "folio_shared";
-  }
-
   private boolean isUUID(String id) {
     try {
       UUID.fromString(id);
@@ -521,5 +502,145 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     catch(IllegalArgumentException e) {
       return false;
     }
+  }
+
+  @Override
+  public void deleteInstanceStorageInstancesByInstanceIdSourceRecord(
+      @NotNull String instanceId,
+      @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) throws Exception {
+
+    PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+    postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply -> {
+      if (! reply.succeeded()) {
+        asyncResultHandler.handle(Future.succeededFuture(
+            DeleteInstanceStorageInstancesByInstanceIdSourceRecordResponse
+            .withPlainInternalServerError(reply.cause().getMessage())));
+        return;
+      }
+
+      asyncResultHandler.handle(Future.succeededFuture(
+          DeleteInstanceStorageInstancesByInstanceIdSourceRecordResponse.withNoContent()));
+    });
+  }
+
+  @Override
+  public void getInstanceStorageInstancesByInstanceIdSourceRecordMarcJson(
+      String instanceId, String lang, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+
+    PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+
+    String where = "WHERE _id='" + instanceId + "'";
+    postgresClient.get(INSTANCE_SOURCE_MARC_TABLE, MarcJson.class, where, false, false, reply -> {
+      if (! reply.succeeded()) {
+        asyncResultHandler.handle(Future.succeededFuture(
+            GetInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
+            .withPlainInternalServerError(reply.cause().getMessage())));
+        return;
+      }
+      List<MarcJson> results = (List<MarcJson>) reply.result().getResults();
+      if (results.isEmpty()) {
+        asyncResultHandler.handle(Future.succeededFuture(
+            GetInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
+            .withPlainNotFound("No source record for instance " + instanceId)));
+        return;
+      }
+      MarcJson marcJson = results.get(0);
+      if (marcJson == null) {
+        asyncResultHandler.handle(Future.succeededFuture(
+            GetInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
+            .withPlainNotFound("No MARC source record for instance " + instanceId)));
+        return;
+      }
+      asyncResultHandler.handle(Future.succeededFuture(
+          GetInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse.withJsonOK(
+              marcJson)));
+    });
+  }
+
+  @Override
+  public void deleteInstanceStorageInstancesByInstanceIdSourceRecordMarcJson(
+      @NotNull String instanceId,
+      @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) throws Exception {
+
+    PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+
+    postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply -> {
+      if (! reply.succeeded()) {
+        asyncResultHandler.handle(Future.succeededFuture(
+            DeleteInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
+            .withPlainInternalServerError(reply.cause().getMessage())));
+        return;
+      }
+      asyncResultHandler.handle(Future.succeededFuture(
+          DeleteInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse.withNoContent()));
+    });
+  }
+
+  @Override
+  public void putInstanceStorageInstancesByInstanceIdSourceRecordMarcJson(
+      @NotNull String instanceId,
+      @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+      MarcJson entity,
+      Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) throws Exception {
+
+    PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+    String sql = "INSERT INTO " + TenantTool.tenantId(okapiHeaders) + "_" + MODULE + "."
+        + INSTANCE_SOURCE_MARC_TABLE
+        + " (_id,jsonb)"
+        + " VALUES ('" + instanceId + "', '" + PostgresClient.pojo2json(entity) + "'::JSONB)";
+    postgresClient.mutate(sql, reply -> {
+      if (reply.succeeded()) {
+        asyncResultHandler.handle(Future.succeededFuture(
+            PutInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse.withNoContent()));
+        return;
+      }
+      Map<Object, String> fields = PgExceptionUtil.getBadRequestFields(reply.cause());
+      if (fields != null && "23503".equals(fields.get('C'))) {  // foreign key constraint violation
+        asyncResultHandler.handle(Future.succeededFuture(
+            PutInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
+            .withPlainNotFound(reply.cause().getMessage())));
+        return;
+      }
+      asyncResultHandler.handle(Future.succeededFuture(
+          PutInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
+          .withPlainInternalServerError(reply.cause().getMessage())));
+    });
+  }
+
+  /**
+   * Example stub showing how other formats might get implemented.
+   */
+  @Override
+  public void getInstanceStorageInstancesByInstanceIdSourceRecordMods(
+      String instanceId, String lang, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    asyncResultHandler.handle(Future.succeededFuture(
+        GetInstanceStorageInstancesByInstanceIdSourceRecordModsResponse
+        .withPlainInternalServerError("Not implemented yet.")));
+  }
+
+  /**
+   * Example stub showing how other formats might get implemented.
+   */
+  @Override
+  public void putInstanceStorageInstancesByInstanceIdSourceRecordMods(
+      String instanceId, String lang, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    asyncResultHandler.handle(Future.succeededFuture(
+        PutInstanceStorageInstancesByInstanceIdSourceRecordModsResponse
+        .withPlainInternalServerError("Not implemented yet.")));
   }
 }

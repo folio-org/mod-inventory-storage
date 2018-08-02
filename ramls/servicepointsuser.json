@@ -5,30 +5,19 @@
     "id": {
       "type": "string"
     },
-    "name": {
+    "userId": {
       "type": "string"
     },
-    "code": {
-      "type": "string"
-    },
-    "discoveryDisplayName": {
-      "type": "string"
-    },
-    "description": {
-      "type": "string"
-    },
-    "shelvingLagTime": {
-      "type": "integer"
-    },
-    "pickupLocation": {
-      "type": "boolean"
-    },
-    "locationIds": {
+    "servicePointsIds": {
       "type": "array",
       "items": {
         "type": "string",
         "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
       }
+    },
+    "defaultServicePointId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
     "metadata": {
       "type": "object",
@@ -38,8 +27,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "name",
-    "code",
-    "discoveryDisplayName"
+    "userId"
   ]
 }

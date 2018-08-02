@@ -2,16 +2,21 @@ package org.folio.rest.api;
 
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
-import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.util.StringUtil.urlEncode;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -23,7 +28,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.*;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.After;
@@ -31,6 +40,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class ItemStorageTest extends TestBase {
   private static Logger logger = LoggerFactory.getLogger(ItemStorageTest.class);
@@ -170,6 +184,8 @@ public class ItemStorageTest extends TestBase {
     JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
+		assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
+
   }
 
   @Test

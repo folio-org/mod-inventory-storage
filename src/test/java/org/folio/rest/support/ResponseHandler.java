@@ -77,7 +77,7 @@ public class ResponseHandler {
       responseToCheck ->
         responseToCheck.getContentType().contains(expectedContentType),
       failingResponse -> new Exception(
-        String.format("Expected Content Type: %s Actual: %s (Body: %s)",
+        String.format("Expected Content Type: '%s' Actual Content Type: '%s' (Body: %s)",
           expectedContentType, failingResponse.getContentType(),
           failingResponse.getBody())));
   }

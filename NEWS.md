@@ -1,3 +1,22 @@
+## 12.5.0 Unreleased
+
+* Add `service-points-users` endpoint (MODINVSTOR-132)
+* Provides `service-points-users` interface 1.0 (MODINVSTOR-132)
+
+## 12.4.0 2018-07-26
+
+* Item `status` now defaults to 'Available' (MODINVSTOR-137)
+
+## 12.3.0 2018-07-24
+
+* Add MARC JSON source record endpoint (MODINVSTOR-26)
+* Provides `instance-storage` interface 4.4 (MODINVSTOR-26)
+
+## 12.2.0 2018-07-16
+
+* Added locationIds array to service point (MODINVSTOR-127)
+* Provides `service-points` interface 2.1 (MODINVSTOR-127)
+
 ## 12.1.0 2018-07-10
 
 * Upgrade RAML Module Builder to 19.1.5 (MODINVSTOR-128)
