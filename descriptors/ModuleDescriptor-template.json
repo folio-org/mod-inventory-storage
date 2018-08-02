@@ -478,6 +478,33 @@
       ]
     },
     {
+      "id": "service-points-users",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/service-points-users",
+          "permissionsRequired": ["inventory-storage.service-points-users.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/service-points-users/{id}",
+          "permissionsRequired": ["inventory-storage.service-points-users.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/service-points-users",
+          "permissionsRequired": ["inventory-storage.service-points-users.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/service-points-users/{id}",
+          "permissionsRequired": ["inventory-storage.service-points-users.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/service-points-users/{id}",
+          "permissionsRequired": ["inventory-storage.service-points-users.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "platforms",
       "version": "1.1",
       "handlers": [
@@ -881,6 +908,31 @@
       "description": "delete individual service-point from storage"
     },
     {
+      "permissionName": "inventory-storage.service-points-users.collection.get",
+      "displayName": "inventory storage - get service-point-users collection",
+      "description": "get service-point-users collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.service-points-users.item.get",
+      "displayName": "inventory storage - get individual service-points-user",
+      "description": "get individual service-points-user from storage"
+    },
+    {
+      "permissionName": "inventory-storage.service-points-users.item.post",
+      "displayName": "inventory storage - create individual service-points-user",
+      "description": "create individual service-points-user in storage"
+    },
+    {
+      "permissionName": "inventory-storage.service-points-users.item.put",
+      "displayName": "inventory storage - modify service-points-user",
+      "description": "modify service-points-user in storage"
+    },
+    {
+      "permissionName": "inventory-storage.service-points-users.item.delete",
+      "displayName": "inventory storage - delete individual service-points-user",
+      "description": "delete individual service-points-user from storage"
+    },
+    {
       "permissionName": "inventory-storage.contributor-name-types.collection.get",
       "displayName": "inventory storage - get contributor-name-type collection",
       "description": "get contributor-name-type collection from storage"
@@ -1102,6 +1154,11 @@
         "inventory-storage.service-points.item.post",
         "inventory-storage.service-points.item.put",
         "inventory-storage.service-points.item.delete",
+        "inventory-storage.service-points-users.collection.get",
+        "inventory-storage.service-points-users.item.get",
+        "inventory-storage.service-points-users.item.post",
+        "inventory-storage.service-points-users.item.put",
+        "inventory-storage.service-points-users.item.delete",
         "inventory-storage.platforms.collection.get",
         "inventory-storage.platforms.item.get",
         "inventory-storage.platforms.item.post",
