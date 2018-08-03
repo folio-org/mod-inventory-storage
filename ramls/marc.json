@@ -10,7 +10,52 @@
     },
     "fields": {
       "type": "array",
-      "minItems": 2
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "minProperties": 1,
+        "maxProperties": 1,
+        "additionalProperties": false,
+        "patternProperties": {
+          "^00[1-9]$": {
+            "description": "Variable Control Field (001-009)",
+            "type": "string"
+          },
+          "^([0-9][1-9][0-9]|[1-9][0-9][0-9])$": {
+            "description": "Variable Field (010-999)",
+            "type": "object",
+            "properties": {
+              "ind1": {
+                "type": "string",
+                "pattern": "^[a-z0-9 \\\\]$"
+              },
+              "ind2": {
+                "type": "string",
+                "pattern": "^[a-z0-9 \\\\]$"
+              },
+              "subfields": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[a-z0-9!\"#$%&'()*+'./:;<=>?-]$": {
+                      "description": "Subfield",
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "ind1",
+              "ind2",
+              "subfields"
+            ]
+          }
+        }
+      }
     }
   },
   "additionalProperties": false,
