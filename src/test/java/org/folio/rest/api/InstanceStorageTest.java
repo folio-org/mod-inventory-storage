@@ -10,6 +10,7 @@ import static org.junit.Assert.assertThat;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -25,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.io.IOUtils;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.support.*;
@@ -35,6 +37,7 @@ import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class InstanceStorageTest extends TestBase {
@@ -510,6 +513,15 @@ public class InstanceStorageTest extends TestBase {
     marcJson.setFields(fields);
   }
 
+  private MarcJson toMarcJson(String resourcePath) throws IOException {
+    String mrcjson = IOUtils.toString(this.getClass().getResourceAsStream("/101073931X.mrcjson"), "UTF-8");
+    JsonObject json = new JsonObject(mrcjson);
+    MarcJson newMarcJson = new MarcJson();
+    newMarcJson.setLeader(json.getString("leader"));
+    newMarcJson.setFields(json.getJsonArray("fields").getList());
+    return newMarcJson;
+  }
+
   private Response put(UUID id, MarcJson marcJson, HttpStatus expectedStatus) throws Exception {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(instancesStorageUrl("/" + id + "/source-record/marc-json"), marcJson,
@@ -532,12 +544,19 @@ public class InstanceStorageTest extends TestBase {
     return getResponse.getJson().getString("sourceRecordFormat");
   }
 
-  private void getSourceNotFound(UUID id) throws Exception {
+  private Response getMarcJson(UUID id) throws Exception {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
+        StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+    return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private void getMarcJsonNotFound(UUID id) throws Exception {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
         StorageTestSuite.TENANT_ID, ResponseHandler.text(getCompleted));
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(getResponse.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
   }
 
   @Test
@@ -548,11 +567,7 @@ public class InstanceStorageTest extends TestBase {
 
     put(id, marcJson);
 
-    // get MARC source record
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
-        StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    Response getResponse = getMarcJson(id);
     assertThat(getResponse.getStatusCode(), is(200));
     assertThat(getResponse.getJson().getString("leader"), is("xxxxxnam a22yyyyy c 4500"));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
@@ -562,9 +577,53 @@ public class InstanceStorageTest extends TestBase {
     assertThat(getResponse.getJson().size(), is(2));  // leader and fields
   }
 
+  @Test  // https://issues.folio.org/browse/MODINVSTOR-142?focusedCommentId=33665#comment-33665
+  public void canCreateInstanceSourceRecord101073931X() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, toMarcJson("/101073931X.mrcjson"));
+
+    Response getResponse = getMarcJson(id);
+    assertThat(getResponse.getStatusCode(), is(200));
+    JsonArray fields = getResponse.getJson().getJsonArray("fields");
+    assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
+  }
+
+  @Ignore("need to fix RMB")
+  @Test  // https://issues.folio.org/browse/MODINVSTOR-143?focusedCommentId=33618#comment-33618
+  public void canCreateInstanceSourceRecord1011273942() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, toMarcJson("/1011273942.mrcjson"));
+
+    Response getResponse = getMarcJson(id);
+    assertThat(getResponse.getStatusCode(), is(200));
+    JsonArray fields = getResponse.getJson().getJsonArray("fields");
+    assertThat(fields.getJsonObject(0).getString("001"), is("1011273942"));
+  }
+
+  @Test
+  public void canUpdateInstanceSourceRecord() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, marcJson);                          // create
+    put(id, toMarcJson("/101073931X.mrcjson")); // update
+
+    Response getResponse = getMarcJson(id);
+    assertThat(getResponse.getStatusCode(), is(200));
+    JsonArray fields = getResponse.getJson().getJsonArray("fields");
+    assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
+  }
+
   @Test
   public void cannotGetNonExistingSourceRecord() throws Exception {
-    getSourceNotFound(UUID.randomUUID());
+    getMarcJsonNotFound(UUID.randomUUID());
   }
 
   @Test
@@ -585,7 +644,7 @@ public class InstanceStorageTest extends TestBase {
     assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
     assertThat(getSourceRecordFormat(id), is(nullValue()));
 
-    getSourceNotFound(id);
+    getMarcJsonNotFound(id);
   }
 
   @Test
@@ -603,7 +662,7 @@ public class InstanceStorageTest extends TestBase {
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
 
-    getSourceNotFound(id);
+    getMarcJsonNotFound(id);
   }
 
   @Test
