@@ -514,7 +514,7 @@ public class InstanceStorageTest extends TestBase {
   }
 
   private MarcJson toMarcJson(String resourcePath) throws IOException {
-    String mrcjson = IOUtils.toString(this.getClass().getResourceAsStream("/101073931X.mrcjson"), "UTF-8");
+    String mrcjson = IOUtils.toString(this.getClass().getResourceAsStream(resourcePath), "UTF-8");
     JsonObject json = new JsonObject(mrcjson);
     MarcJson newMarcJson = new MarcJson();
     newMarcJson.setLeader(json.getString("leader"));
@@ -591,7 +591,6 @@ public class InstanceStorageTest extends TestBase {
     assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
   }
 
-  @Ignore("need to fix RMB")
   @Test  // https://issues.folio.org/browse/MODINVSTOR-143?focusedCommentId=33618#comment-33618
   public void canCreateInstanceSourceRecord1011273942() throws Exception {
     UUID id = UUID.randomUUID();
