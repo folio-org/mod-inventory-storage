@@ -1,4 +1,4 @@
-## 12.5.0 Unreleased
+## 12.5.0 2018-08-02
 
 * Add `service-points-users` endpoint (MODINVSTOR-132)
 * Provides `service-points-users` interface 1.0 (MODINVSTOR-132)

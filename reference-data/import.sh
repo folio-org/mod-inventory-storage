@@ -70,6 +70,7 @@ do
       do
         if [ "$auth_required" = true ]; then
           curl -s -S -w '\n' --connect-timeout 10 \
+             -H 'Authtoken-Refresh-Cache: true' \
              -H 'Content-type: application/json' \
              -H 'Accept: application/json, text/plain' \
              -H "X-Okapi-Tenant: $tenant" \
