@@ -5,20 +5,6 @@
     "id": {
       "type": "string"
     },
-    "containingInstances": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "instanceId": {
-            "type": "string"
-          },
-          "relationTypeId": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "source": {
       "type": "string"
     },
