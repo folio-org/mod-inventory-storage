@@ -1,3 +1,7 @@
+## 12.5.1 2018-08-15
+
+* Fixes updating of existing MARC JSON source record (MODINVSTOR-144)
+
 ## 12.5.0 2018-08-02
 
 * Add `service-points-users` endpoint (MODINVSTOR-132)
