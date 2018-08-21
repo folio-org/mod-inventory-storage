@@ -41,3 +41,16 @@ for f in ./items/*.json; do
          -d @$f \
          "${item_storage_address}"
 done
+
+for f in ./instance-relationships/*.json; do
+    # extract instance ID from path, with a little help from
+    # instance-source-records example above
+    filename=$(basename -- "$f")
+    instance_id="${filename%.*}"
+
+    curl -v -w '\n' -X POST -D - \
+         -H "Content-type: application/json" \
+         -H "X-Okapi-Tenant: ${tenant}" \
+         -d @$f \
+         "${instance_storage_address}/${instance_id}/sub-instance-ids"
+done

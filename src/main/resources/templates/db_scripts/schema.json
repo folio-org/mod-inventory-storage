@@ -495,6 +495,32 @@
       ]
     },
     {
+      "tableName": "instance_relationship",
+      "withMetadata": true,
+      "generateId": true,
+      "pkColumnName": "_id",
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "superInstanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "subInstanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ]
+    },
+    {
       "tableName": "instance_source_marc",
       "withMetadata": true,
       "generateId": false,

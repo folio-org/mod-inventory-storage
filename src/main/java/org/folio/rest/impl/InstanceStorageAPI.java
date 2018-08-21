@@ -1,23 +1,22 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
+
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstanceRelationship;
+import org.folio.rest.jaxrs.model.InstanceRelationships;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.resource.InstanceStorageResource;
@@ -30,6 +29,13 @@ import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class InstanceStorageAPI implements InstanceStorageResource {
 
@@ -44,6 +50,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   public static final String INSTANCE_TABLE =  "instance";
   private String tableName =  "instance";
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
+  private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
 
   private CQLWrapper handleCQL(String query, int limit, int offset) throws FieldException {
     boolean containsHoldingsRecordProperties = query != null && query.contains("holdingsRecords.");
@@ -643,4 +650,150 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         PutInstanceStorageInstancesByInstanceIdSourceRecordModsResponse
         .withPlainInternalServerError("Not implemented yet.")));
   }
+
+  @Override
+  public void deleteInstanceStorageInstancesByInstanceIdSubInstanceIds(String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void getInstanceStorageInstancesByInstanceIdSubInstanceIds(String instanceId, int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+
+    PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      vertxContext.runOnContext(v -> {
+        try {
+
+          String[] fieldList = {"*"};
+          String where = "WHERE jsonb->>'superInstanceId'='" + instanceId + "'";
+
+          postgresClient.get(INSTANCE_RELATIONSHIP_TABLE, InstanceRelationship.class, fieldList, where,
+            true, false, reply -> {
+              try {
+                if(reply.succeeded()) {
+                  List<InstanceRelationship> instanceRelationships = (List<InstanceRelationship>) reply.result().getResults();
+
+                  InstanceRelationships instanceList = new InstanceRelationships();
+                  instanceList.setInstanceRelationships(instanceRelationships);
+                  instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                          GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.withJsonOK(instanceList)));
+                }
+                else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.
+                      withPlainInternalServerError(reply.cause().getMessage())));
+                }
+              } catch (Exception e) {
+                e.printStackTrace();
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.
+                    withPlainInternalServerError(e.getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          e.printStackTrace();
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.
+              withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
+  }
+
+  @Override
+  public void postInstanceStorageInstancesByInstanceIdSubInstanceIds(String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+
+    PostgresClient postgresClient =
+      PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+
+      if(entity.getId() == null) {
+        entity.setId(UUID.randomUUID().toString());
+      }
+      else {
+        if(isUUID(entity.getId())) {
+          io.vertx.core.Future.succeededFuture(
+            InstanceStorageResource.PostInstanceStorageInstancesResponse
+              .withPlainBadRequest("ID must be a UUID"));
+        }
+      }
+
+    String sql = "INSERT INTO " + TenantTool.tenantId(okapiHeaders) + "_" + MODULE + "."
+        + INSTANCE_RELATIONSHIP_TABLE
+        + " (_id,jsonb)"
+        + " VALUES ('" + entity.getId() + "', '" + PostgresClient.pojo2json(entity) + "'::JSONB)";
+    postgresClient.mutate(sql, reply -> {
+      if (reply.succeeded()) {
+        asyncResultHandler.handle(Future.succeededFuture(
+            PutInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceIdResponse.withNoContent()));
+        return;
+      }
+      Map<Object, String> fields = PgExceptionUtil.getBadRequestFields(reply.cause());
+      if (fields != null && "23503".equals(fields.get('C'))) {  // foreign key constraint violation
+        asyncResultHandler.handle(Future.succeededFuture(
+            PutInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceIdResponse
+            .withPlainNotFound(reply.cause().getMessage())));
+        return;
+      }
+      asyncResultHandler.handle(Future.succeededFuture(
+              PutInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceIdResponse
+          .withPlainInternalServerError(reply.cause().getMessage())));
+    });
+  }
+
+  @Override
+  public void getInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceId(String subInstanceId, String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void deleteInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceId(String subInstanceId, String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void putInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceId(String subInstanceId, String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void deleteInstanceStorageInstancesByInstanceIdSuperInstanceIds(String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void getInstanceStorageInstancesByInstanceIdSuperInstanceIds(String instanceId, int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void postInstanceStorageInstancesByInstanceIdSuperInstanceIds(String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void getInstanceStorageInstancesByInstanceIdSuperInstanceIdsBySuperInstanceId(String superInstanceId, String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void deleteInstanceStorageInstancesByInstanceIdSuperInstanceIdsBySuperInstanceId(String superInstanceId, String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  public void putInstanceStorageInstancesByInstanceIdSuperInstanceIdsBySuperInstanceId(String superInstanceId, String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
 }

@@ -12,6 +12,8 @@ schemas:
   - instance.json: !include instance.json
   - instances: !include instances.json
   - marc.json: !include marc.json
+  - instancerelationship.json: !include instancerelationship.json
+  - instanceRelationships: !include instancerelationships.json
   - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
@@ -103,3 +105,99 @@ resourceTypes:
                 body:
                   text/plain:
                     example: "Not implemented yet"
+      /sub-instance-ids:
+        displayName: This Instance's Relations With Child Instances
+        type:
+          collection:
+            exampleCollection: !include  examples/instancerelationships_get.json
+            schemaCollection: instanceRelationships
+            schemaItem: instancerelationship.json
+            exampleItem: !include  examples/instancerelationship_get.json
+        get:
+          is: [pageable,
+              searchable: {description: "by parent ID (using CQL)",
+                            example: "superInstanceId=\"uuid\""},
+              ]
+        post:
+        delete:
+          responses:
+            204:
+              description: "All child instance relations deleted"
+            500:
+              description: "Internal server error, e.g. due to misconfiguration"
+              body:
+                text/plain:
+                  example: "Internal server error, contact administrator"
+        /{subInstanceId}:
+          type:
+            collection-item:
+              exampleItem: !include examples/instancerelationship_get.json
+              schema: instancerelationship.json
+          get:
+            responses:
+              200:
+                body:
+      #              type: instancerelationship
+            description: |
+              Get Instance Relationship by Sub InstanceId
+          delete:
+            responses:
+              204:
+                description: "Relation with child instance deleted"
+              404:
+                description: "There is no child instance relationship for that instanceId"
+              500:
+                description: "Internal server error, e.g. due to misconfiguration"
+                body:
+                  text/plain:
+                    example: "Internal server error, contact administrator"
+            description: |
+              Delete relation with child instance.
+      /super-instance-ids:
+        displayName: This Instance's Relations With Parent Instances
+        type:
+          collection:
+            exampleCollection: !include  examples/instancerelationships_get.json
+            schemaCollection: instanceRelationships
+            schemaItem: instancerelationship.json
+            exampleItem: !include  examples/instancerelationship_get.json
+        get:
+          is: [pageable,
+              searchable: {description: "by child ID (using CQL)",
+                            example: "subInstanceId=\"uuid\""},
+              ]
+        post:
+        delete:
+          responses:
+            204:
+              description: "All parent instance relations deleted"
+            500:
+              description: "Internal server error, e.g. due to misconfiguration"
+              body:
+                text/plain:
+                  example: "Internal server error, contact administrator"
+        /{superInstanceId}:
+          type:
+            collection-item:
+              exampleItem: !include examples/instancerelationship_get.json
+              schema: instancerelationship.json
+          get:
+            responses:
+              200:
+                body:
+      #              type: instancerelationship
+            description: |
+              Get Instance Relationship by Super InstanceId
+          delete:
+            responses:
+              204:
+                description: "Relation with parent instance deleted"
+              404:
+                description: "There is no parent instance relationship for that instanceId"
+              500:
+                description: "Internal server error, e.g. due to misconfiguration"
+                body:
+                  text/plain:
+                    example: "Internal server error, contact administrator"
+            description: |
+              Delete relation with parent instance.
