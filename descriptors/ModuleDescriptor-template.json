@@ -124,6 +124,10 @@
           "methods": ["PUT"],
           "pathPattern": "/instance-storage/instance-relationships/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instance-relationships/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.delete"]
         }
       ]
     },

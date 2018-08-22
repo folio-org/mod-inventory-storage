@@ -769,7 +769,20 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
   @Override
   public void deleteInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+
+    postgresClient.delete(INSTANCE_RELATIONSHIP_TABLE, relationshipId, reply -> {
+      if (! reply.succeeded()) {
+        asyncResultHandler.handle(Future.succeededFuture(
+            DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+            .withPlainInternalServerError(reply.cause().getMessage())));
+        return;
+      }
+      asyncResultHandler.handle(Future.succeededFuture(
+          InstanceStorageResource.DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                  .withNoContent()));
+    });
   }
 
   @Override
