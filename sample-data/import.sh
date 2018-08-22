@@ -3,6 +3,7 @@
 tenant=${1:-demo_tenant}
 item_storage_address=http://localhost:9130/item-storage/items
 instance_storage_address=http://localhost:9130/instance-storage/instances
+instance_relationship_storage_address=http://localhost:9130/instance-storage/instance-relationships
 holdings_storage_address=http://localhost:9130/holdings-storage/holdings
 
 for f in ./instances/*.json; do
@@ -52,5 +53,5 @@ for f in ./instance-relationships/*.json; do
          -H "Content-type: application/json" \
          -H "X-Okapi-Tenant: ${tenant}" \
          -d @$f \
-         "${instance_storage_address}/${instance_id}/sub-instance-ids"
+         "${instance_relationship_storage_address}"
 done

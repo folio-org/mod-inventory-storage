@@ -652,13 +652,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   }
 
   @Override
-  public void deleteInstanceStorageInstancesByInstanceIdSubInstanceIds(String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void getInstanceStorageInstancesByInstanceIdSubInstanceIds(String instanceId, int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-
+  public void getInstanceStorageInstanceRelationships(int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
@@ -669,9 +663,12 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         try {
 
           String[] fieldList = {"*"};
-          String where = "WHERE jsonb->>'superInstanceId'='" + instanceId + "'";
 
-          postgresClient.get(INSTANCE_RELATIONSHIP_TABLE, InstanceRelationship.class, fieldList, where,
+          CQLWrapper cql = createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_RELATIONSHIP_TABLE+".jsonb"));
+
+          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
+
+          postgresClient.get(INSTANCE_RELATIONSHIP_TABLE, InstanceRelationship.class, fieldList, cql,
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
@@ -682,60 +679,43 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                   instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                          GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.withJsonOK(instanceList)));
+                          GetInstanceStorageInstanceRelationshipsResponse.withJsonOK(instanceList)));
                 }
                 else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.
+                    InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
                       withPlainInternalServerError(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.
+                  InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.
+            InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse.
+        InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
           withPlainInternalServerError(e.getMessage())));
     }
   }
 
   @Override
-  public void postInstanceStorageInstancesByInstanceIdSubInstanceIds(String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-
+  public void postInstanceStorageInstanceRelationships(String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
     try {
       PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
       vertxContext.runOnContext(v -> {
         try {
-
-          if(entity.getId() == null) {
-            entity.setId(UUID.randomUUID().toString());
-          }
-          else {
-            if(!isUUID(entity.getId())) {
-System.out.println("Not a UUID: " + entity.getId());              
-               asyncResultHandler.handle(Future.succeededFuture(
-                InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
-                  .withPlainBadRequest("ID must be a UUID")));
-               return;
-            } else {
-System.out.println("A UUID alright: " + entity.getId());              
-              
-            }
-          }
 
           postgresClient.save(INSTANCE_RELATIONSHIP_TABLE, entity.getId(), entity,
             reply -> {
@@ -746,129 +726,50 @@ System.out.println("A UUID alright: " + entity.getId());
 
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+                      InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
                         .withJsonCreated(reply.result(), stream)));
                 }
                 else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+                      InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
                         .withPlainBadRequest(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 e.printStackTrace();
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+                    InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
                       .withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
           e.printStackTrace();
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+            InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
       e.printStackTrace();
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+        InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
           .withPlainInternalServerError(e.getMessage())));
     }    
   }
 
   @Override
-  public void getInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceId(String subInstanceId, String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   @Override
-  public void deleteInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceId(String subInstanceId, String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void deleteInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   @Override
-  public void putInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceId(String subInstanceId, String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void deleteInstanceStorageInstancesByInstanceIdSuperInstanceIds(String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void getInstanceStorageInstancesByInstanceIdSuperInstanceIds(String instanceId, int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    PostgresClient postgresClient =
-        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      vertxContext.runOnContext(v -> {
-        try {
-
-          String[] fieldList = {"*"};
-          String where = "WHERE jsonb->>'subInstanceId'='" + instanceId + "'";
-
-          postgresClient.get(INSTANCE_RELATIONSHIP_TABLE, InstanceRelationship.class, fieldList, where,
-            true, false, reply -> {
-              try {
-                if(reply.succeeded()) {
-                  List<InstanceRelationship> instanceRelationships = (List<InstanceRelationship>) reply.result().getResults();
-
-                  InstanceRelationships instanceList = new InstanceRelationships();
-                  instanceList.setInstanceRelationships(instanceRelationships);
-                  instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                          GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.withJsonOK(instanceList)));
-                }
-                else {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                e.printStackTrace();
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.
-                    withPlainInternalServerError(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          e.printStackTrace();
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.
-              withPlainInternalServerError(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      e.printStackTrace();
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.
-          withPlainInternalServerError(e.getMessage())));
-    }
-  }
-
-  @Override
-  public void postInstanceStorageInstancesByInstanceIdSuperInstanceIds(String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void getInstanceStorageInstancesByInstanceIdSuperInstanceIdsBySuperInstanceId(String superInstanceId, String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void deleteInstanceStorageInstancesByInstanceIdSuperInstanceIdsBySuperInstanceId(String superInstanceId, String instanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
-
-  @Override
-  public void putInstanceStorageInstancesByInstanceIdSuperInstanceIdsBySuperInstanceId(String superInstanceId, String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void putInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 

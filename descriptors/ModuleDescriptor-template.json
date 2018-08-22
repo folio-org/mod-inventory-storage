@@ -110,20 +110,20 @@
           "permissionsRequired": ["inventory-storage.instances.collection.delete"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/instance-storage/instances/{id}/sub-instance-ids",
+          "pathPattern": "/instance-storage/instance-relationships",
           "permissionsRequired": ["inventory-storage.instances.item.get"]
         }, {
           "methods": ["POST"],
-          "pathPattern": "/instance-storage/instances/{id}/sub-instance-ids",
+          "pathPattern": "/instance-storage/instance-relationships",
           "permissionsRequired": ["inventory-storage.instances.item.post"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/instance-storage/instances/{id}/super-instance-ids",
+          "pathPattern": "/instance-storage/instance-relationships/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.get"]
         }, {
-          "methods": ["POST"],
-          "pathPattern": "/instance-storage/instances/{id}/super-instance-ids",
-          "permissionsRequired": ["inventory-storage.instances.item.post"]
+          "methods": ["PUT"],
+          "pathPattern": "/instance-storage/instance-relationships/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.put"]
         }
       ]
     },
