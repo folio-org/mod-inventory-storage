@@ -36,6 +36,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -779,38 +780,88 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         if (entity.getId() == null) {
           entity.setId(relationshipId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-        INSTANCE_RELATIONSHIP_TABLE, entity, relationshipId,
-        reply -> {
-          try {
-            if (reply.succeeded()) {
-              if (reply.result().getUpdated() == 0) {
+        try {
+          getInstanceRelationship(vertxContext.owner(), tenantId, relationshipId, replyHandler -> {
+            log.info("in getInstanceRelationship handler");
+            if (replyHandler.succeeded()) {
+              InstanceRelationship relationshipToUpdate = ((InstanceRelationship)replyHandler.result());
+              if (relationshipToUpdate.getInstanceRelationshipTypeId().equals(entity.getInstanceRelationshipTypeId())
+                  && relationshipToUpdate.getSuperInstanceId().equals(entity.getSuperInstanceId())
+                  && relationshipToUpdate.getSubInstanceId().equals(entity.getSubInstanceId())) {
+                log.info("Skipping update of relationship with no modified properties.");
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                    .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
-              } else{
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                    .withNoContent()));
+                   .withNoContent()));
+              } else {
+                PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+                INSTANCE_RELATIONSHIP_TABLE, entity, relationshipId,
+                reply -> {
+                  try {
+                    if (reply.succeeded()) {
+                      if (reply.result().getUpdated() == 0) {
+                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                            .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                      } else{
+                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                            .withNoContent()));
+                      }
+                    } else {
+                      String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                      if (msg == null) {
+                        asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                           .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                      }
+                      log.info(msg);
+                      asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                          .withPlainBadRequest(msg)));
+                    }
+                  } catch (Exception e) {
+                    asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                       .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  }
+
+                });
               }
             } else {
-              String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-              if (msg == null) {
-                asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                   .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                return;
-              }
-              log.info(msg);
-              asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                  .withPlainBadRequest(msg)));
+              log.info("The instance relationship to update was not found");
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                  .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
             }
-          } catch (Exception e) {
-            asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-               .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-          }
-        });
+          });
+        } catch (Exception e) {
+          log.info(e);
+        }
       } catch (Exception e) {
         asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
+  }
+
+  private void getInstanceRelationship  (
+    Vertx vertx,
+    String tenantId,
+    String instanceRelationshipId,
+    Handler<AsyncResult> handler) throws Exception {
+      try {
+        String[] fieldList = {"*"};
+        String query = String.format("id==%s",instanceRelationshipId);
+        CQLWrapper cql = createCQLWrapper(query, 1, 0, Arrays.asList(INSTANCE_RELATIONSHIP_TABLE+".jsonb"));
+        PostgresClient.getInstance(vertx, tenantId).get(INSTANCE_RELATIONSHIP_TABLE,
+          InstanceRelationship.class, fieldList, cql, true, false, getReply -> {
+            if(getReply.failed()) {
+              handler.handle(Future.failedFuture(getReply.cause()));
+            } else {
+              List<InstanceRelationship> instanceRelationshipList = (List<InstanceRelationship>) getReply.result().getResults();
+              if(instanceRelationshipList.size() < 1) {
+                log.info("No relationship found: "+ instanceRelationshipList.size());
+                handler.handle(Future.failedFuture("No relationship found"));
+              } else {
+                handler.handle(Future.succeededFuture(instanceRelationshipList.get(0)));
+              }
+            }
+          });
+      } catch (FieldException fe) {
+        handler.handle(Future.failedFuture(fe.getCause()));
+      }
   }
 }
