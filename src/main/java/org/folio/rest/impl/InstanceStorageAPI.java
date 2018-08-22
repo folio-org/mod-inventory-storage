@@ -714,41 +714,68 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   @Override
   public void postInstanceStorageInstancesByInstanceIdSubInstanceIds(String instanceId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
 
-    PostgresClient postgresClient =
-      PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+    try {
+      PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
-      if(entity.getId() == null) {
-        entity.setId(UUID.randomUUID().toString());
-      }
-      else {
-        if(isUUID(entity.getId())) {
-          io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.PostInstanceStorageInstancesResponse
-              .withPlainBadRequest("ID must be a UUID"));
+      vertxContext.runOnContext(v -> {
+        try {
+
+          if(entity.getId() == null) {
+            entity.setId(UUID.randomUUID().toString());
+          }
+          else {
+            if(!isUUID(entity.getId())) {
+System.out.println("Not a UUID: " + entity.getId());              
+               asyncResultHandler.handle(Future.succeededFuture(
+                InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+                  .withPlainBadRequest("ID must be a UUID")));
+               return;
+            } else {
+System.out.println("A UUID alright: " + entity.getId());              
+              
+            }
+          }
+
+          postgresClient.save(INSTANCE_RELATIONSHIP_TABLE, entity.getId(), entity,
+            reply -> {
+              try {
+                if(reply.succeeded()) {
+                  OutStream stream = new OutStream();
+                  stream.setData(entity);
+
+                  asyncResultHandler.handle(
+                    io.vertx.core.Future.succeededFuture(
+                      InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+                        .withJsonCreated(reply.result(), stream)));
+                }
+                else {
+                  asyncResultHandler.handle(
+                    io.vertx.core.Future.succeededFuture(
+                      InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+                        .withPlainBadRequest(reply.cause().getMessage())));
+                }
+              } catch (Exception e) {
+                e.printStackTrace();
+                asyncResultHandler.handle(
+                  io.vertx.core.Future.succeededFuture(
+                    InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+                      .withPlainInternalServerError(e.getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          e.printStackTrace();
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+              .withPlainInternalServerError(e.getMessage())));
         }
-      }
-
-    String sql = "INSERT INTO " + TenantTool.tenantId(okapiHeaders) + "_" + MODULE + "."
-        + INSTANCE_RELATIONSHIP_TABLE
-        + " (_id,jsonb)"
-        + " VALUES ('" + entity.getId() + "', '" + PostgresClient.pojo2json(entity) + "'::JSONB)";
-    postgresClient.mutate(sql, reply -> {
-      if (reply.succeeded()) {
-        asyncResultHandler.handle(Future.succeededFuture(
-            PutInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceIdResponse.withNoContent()));
-        return;
-      }
-      Map<Object, String> fields = PgExceptionUtil.getBadRequestFields(reply.cause());
-      if (fields != null && "23503".equals(fields.get('C'))) {  // foreign key constraint violation
-        asyncResultHandler.handle(Future.succeededFuture(
-            PutInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceIdResponse
-            .withPlainNotFound(reply.cause().getMessage())));
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(
-              PutInstanceStorageInstancesByInstanceIdSubInstanceIdsBySubInstanceIdResponse
-          .withPlainInternalServerError(reply.cause().getMessage())));
-    });
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        InstanceStorageResource.PostInstanceStorageInstancesByInstanceIdSubInstanceIdsResponse
+          .withPlainInternalServerError(e.getMessage())));
+    }    
   }
 
   @Override
@@ -773,7 +800,56 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
   @Override
   public void getInstanceStorageInstancesByInstanceIdSuperInstanceIds(String instanceId, int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    PostgresClient postgresClient =
+        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+
+    String tenantId = okapiHeaders.get(TENANT_HEADER);
+
+    try {
+      vertxContext.runOnContext(v -> {
+        try {
+
+          String[] fieldList = {"*"};
+          String where = "WHERE jsonb->>'subInstanceId'='" + instanceId + "'";
+
+          postgresClient.get(INSTANCE_RELATIONSHIP_TABLE, InstanceRelationship.class, fieldList, where,
+            true, false, reply -> {
+              try {
+                if(reply.succeeded()) {
+                  List<InstanceRelationship> instanceRelationships = (List<InstanceRelationship>) reply.result().getResults();
+
+                  InstanceRelationships instanceList = new InstanceRelationships();
+                  instanceList.setInstanceRelationships(instanceRelationships);
+                  instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                          GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.withJsonOK(instanceList)));
+                }
+                else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.
+                      withPlainInternalServerError(reply.cause().getMessage())));
+                }
+              } catch (Exception e) {
+                e.printStackTrace();
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.
+                    withPlainInternalServerError(e.getMessage())));
+              }
+            });
+        } catch (Exception e) {
+          e.printStackTrace();
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.
+              withPlainInternalServerError(e.getMessage())));
+        }
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+        InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdSuperInstanceIdsResponse.
+          withPlainInternalServerError(e.getMessage())));
+    }
   }
 
   @Override
