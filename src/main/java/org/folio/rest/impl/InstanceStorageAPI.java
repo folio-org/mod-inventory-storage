@@ -25,6 +25,8 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.messages.MessageConsts;
+import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -51,6 +53,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   private String tableName =  "instance";
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
+  private final Messages messages = Messages.getInstance();
 
   private CQLWrapper handleCQL(String query, int limit, int offset) throws FieldException {
     boolean containsHoldingsRecordProperties = query != null && query.contains("holdingsRecords.");
@@ -755,7 +758,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
           .withPlainInternalServerError(e.getMessage())));
-    }    
+    }
   }
 
   @Override
@@ -770,7 +773,44 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
   @Override
   public void putInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    vertxContext.runOnContext(v -> {
+      String tenantId = TenantTool.tenantId(okapiHeaders);
+      try {
+        if (entity.getId() == null) {
+          entity.setId(relationshipId);
+        }
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+        INSTANCE_RELATIONSHIP_TABLE, entity, relationshipId,
+        reply -> {
+          try {
+            if (reply.succeeded()) {
+              if (reply.result().getUpdated() == 0) {
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                    .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+              } else{
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                    .withNoContent()));
+              }
+            } else {
+              String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+              if (msg == null) {
+                asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                   .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                return;
+              }
+              log.info(msg);
+              asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+                  .withPlainBadRequest(msg)));
+            }
+          } catch (Exception e) {
+            asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+               .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+          }
+        });
+      } catch (Exception e) {
+        asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+           .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      }
+    });
   }
-
 }
