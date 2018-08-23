@@ -1,22 +1,18 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
+
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
@@ -30,6 +26,13 @@ import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class InstanceStorageAPI implements InstanceStorageResource {
 
@@ -264,13 +267,13 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                 + tenantId + "_" + MODULE + "." + INSTANCE_TABLE, reply2 -> {
                 if (! reply2.succeeded()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.DeleteInstanceStorageInstancesByInstanceIdResponse
+                    InstanceStorageResource.DeleteInstanceStorageInstancesResponse
                     .withPlainInternalServerError(reply2.cause().getMessage())));
                   return;
                 }
 
                 asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteInstanceStorageInstancesByInstanceIdResponse.withNoContent()
+                  DeleteInstanceStorageInstancesResponse.withNoContent()
                 ));
               });
             });
