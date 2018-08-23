@@ -271,18 +271,28 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                     .withPlainInternalServerError(reply1.cause().getMessage())));
                 return;
               }
-              postgresClient.mutate("DELETE FROM "
-                + tenantId + "_" + MODULE + "." + INSTANCE_TABLE, reply2 -> {
+              postgresClient.mutate(String.format("DELETE FROM "
+               + tenantId + "_" + MODULE + "." + INSTANCE_RELATIONSHIP_TABLE),
+              reply2 -> {
                 if (! reply2.succeeded()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.DeleteInstanceStorageInstancesResponse
-                    .withPlainInternalServerError(reply2.cause().getMessage())));
+                      InstanceStorageResource.DeleteInstanceStorageInstancesResponse
+                      .withPlainInternalServerError(reply1.cause().getMessage())));
                   return;
                 }
+                postgresClient.mutate("DELETE FROM "
+                  + tenantId + "_" + MODULE + "." + INSTANCE_TABLE, reply3 -> {
+                  if (! reply3.succeeded()) {
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                      InstanceStorageResource.DeleteInstanceStorageInstancesResponse
+                      .withPlainInternalServerError(reply3.cause().getMessage())));
+                    return;
+                  }
 
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteInstanceStorageInstancesResponse.withNoContent()
-                ));
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    DeleteInstanceStorageInstancesResponse.withNoContent()
+                  ));
+                });
               });
             });
       }
