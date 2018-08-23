@@ -518,7 +518,25 @@
           "caseSensitive": false,
           "removeAccents": true
         }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "superInstanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "subInstanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "instanceRelationshipTypeId",
+          "targetTable": "instance_relationship_type",
+          "tOps": "ADD"
+        }
       ]
+
     },
     {
       "tableName": "instance_source_marc",
