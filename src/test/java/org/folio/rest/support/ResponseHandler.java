@@ -1,16 +1,17 @@
 package org.folio.rest.support;
 
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpClientResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.vertx.core.Handler;
+import io.vertx.core.http.HttpClientResponse;
 
 public class ResponseHandler {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -77,9 +78,10 @@ public class ResponseHandler {
       responseToCheck ->
         responseToCheck.getContentType().contains(expectedContentType),
       failingResponse -> new Exception(
-        String.format("Expected Content Type: '%s' Actual Content Type: '%s' (Body: %s)",
+        String.format("Expected Content Type: '%s' Actual Content Type: '%s' " +
+            "(Status Code: '%s', Body: '%s')",
           expectedContentType, failingResponse.getContentType(),
-          failingResponse.getBody())));
+          failingResponse.getStatusCode(), failingResponse.getBody())));
   }
 
   private static Handler<HttpClientResponse> responseHandler(
