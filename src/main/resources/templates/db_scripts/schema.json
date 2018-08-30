@@ -470,10 +470,7 @@
       ],
       "fullTextIndex": [
         {
-          "fieldName": "title",
-          "tOps": "ADD",
-          "caseSensitive": true,
-          "removeAccents": false
+          "fieldName": "title"
         }
       ]
     },
