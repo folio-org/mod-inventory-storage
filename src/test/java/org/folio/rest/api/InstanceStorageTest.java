@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import io.vertx.core.json.Json;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.http.InterfaceUrls.*;
@@ -720,17 +721,25 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canSearchForInstancesByTitle() {
-    canSort("title=\"*Up*\"", "Uprooted");
+    canSort("title=\"Upr*\"", "Uprooted");
+    // Note that 'Up' is a stop word, and will be removed from the query!
+    // We have an issue for dropping stop words: RMB-228
+    // Until then, search for "upr*" instead of "up*"
+  }
+
+  @Test
+  public void canSearchForInstancesByTitleWord() {
+    canSort("title=\"Times\"", "Interesting Times");
   }
 
   @Test
   public void canSearchForInstancesByTitleAdj() {
-    canSort("title adj \"*Up*\"", "Uprooted");
+    canSort("title adj \"Upro*\"", "Uprooted");
   }
 
   @Test
   public void canSearchForInstancesUsingSimilarQueryToUILookAheadSearch() {
-    canSort("title=\"up*\" or contributors=\"name\": \"up*\" or identifiers=\"value\": \"up*\"", "Uprooted");
+    canSort("title=\"upr*\" or contributors=\"name\": \"upr*\" or identifiers=\"value\": \"upr*\"", "Uprooted");
   }
 
   @Test

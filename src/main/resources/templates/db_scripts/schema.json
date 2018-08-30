@@ -450,12 +450,6 @@
       ],
       "index": [
         {
-          "fieldName": "title",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "id",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -472,6 +466,14 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        }
+      ],
+      "fullTextIndex": [
+        {
+          "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": true,
+          "removeAccents": false
         }
       ]
     },
