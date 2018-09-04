@@ -27,7 +27,7 @@ import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 public class ServicePointsUserAPI implements ServicePointsUsersResource {
-  
+
   public static final Logger logger = LoggerFactory.getLogger(
           ServicePointsUserAPI.class);
   public static final String SERVICE_POINT_USER_TABLE = "service_point_user";
@@ -68,7 +68,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
     }
     return false;
   }
-  
+
   private boolean isNotPresent(String errorMessage) {
     if(errorMessage != null && errorMessage.contains(
        "is not present in table")) {
@@ -112,7 +112,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
       asyncResultHandler.handle(Future.succeededFuture(
           DeleteServicePointsUsersResponse.withPlainInternalServerError(
           getErrorResponse(message))));
-    }  
+    }
   }
 
   @Override
@@ -144,7 +144,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
       String message = logAndSaveError(e);
       if(isCQLError(e)) {
         message = String.format("CQL Error: %s", message);
-      } 
+      }
       asyncResultHandler.handle(Future.succeededFuture(
           GetServicePointsUsersResponse.withPlainInternalServerError(
           getErrorResponse(message))));
@@ -191,7 +191,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
                 PostServicePointsUsersResponse.withJsonCreated(LOCATION_PREFIX
                 + ret, stream)));
         }
-      });      
+      });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
@@ -247,7 +247,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   public void deleteServicePointsUsersByServicepointsuserId(String servicepointsuserId,
       String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {    
+      throws Exception {
     try {
        String tenantId = getTenant(okapiHeaders);
        PostgresClient pgClient = getPGClient(vertxContext, tenantId);

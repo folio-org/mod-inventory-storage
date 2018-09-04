@@ -58,7 +58,7 @@ public class InterfaceUrls {
     throws MalformedURLException {
     return StorageTestSuite.storageUrl("/service-points" + subPath);
   }
-  
+
   public static URL servicePointsUsersUrl(String subPath)
       throws MalformedURLException {
     return StorageTestSuite.storageUrl("/service-points-users" + subPath);
