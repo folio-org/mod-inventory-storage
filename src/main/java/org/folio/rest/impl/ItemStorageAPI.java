@@ -47,7 +47,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   // Has to be lowercase because raml-module-builder uses case sensitive headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
-	private static final String DEFAULT_STATUS_NAME = "Available";
+  private static final String DEFAULT_STATUS_NAME = "Available";
 
   private String convertQuery(String cql){
     if(cql != null){
@@ -195,9 +195,9 @@ public class ItemStorageAPI implements ItemStorageResource {
         entity.setId(UUID.randomUUID().toString());
       }
 
-			if (entity.getStatus() == null) {
-				entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
-			}
+      if (entity.getStatus() == null) {
+        entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
+      }
 
       vertxContext.runOnContext(v -> {
         try {
