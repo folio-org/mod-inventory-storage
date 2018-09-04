@@ -93,7 +93,7 @@ public class ServicePointsUserTest {
       TimeoutException {
     UUID spID = UUID.randomUUID();
     createServicePoint(spID, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     Response response = createServicePointUser(UUID.randomUUID(),
         UUID.randomUUID(), null, spID);
     assertThat(response.getStatusCode(), is(201));
@@ -128,11 +128,11 @@ public class ServicePointsUserTest {
     UUID spId2 = UUID.randomUUID();
     UUID spId3 = UUID.randomUUID();
     createServicePoint(spId1, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     createServicePoint(spId2, "Circ Desk 2", "cd2",
-				"Circulation Desk -- Stairs", null, 20, true, null);
+      "Circulation Desk -- Stairs", null, 20, true, null);
     createServicePoint(spId3, "Circ Desk 3", "cd3",
-				"Circulation Desk -- Basement", null, 20, true, null);
+      "Circulation Desk -- Basement", null, 20, true, null);
     List<UUID> spList1 = new ArrayList<>();
     spList1.add(spId1);
     spList1.add(spId2);

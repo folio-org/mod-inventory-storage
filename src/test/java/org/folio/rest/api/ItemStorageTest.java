@@ -184,7 +184,7 @@ public class ItemStorageTest extends TestBase {
     JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
-		assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
 
   }
 
