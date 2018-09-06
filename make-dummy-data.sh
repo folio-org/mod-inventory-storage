@@ -43,6 +43,10 @@
 # and analyze queries
 #  \timing on
 # explain analyze select * from instance where to_tsvector('english', instance.jsonb->>'title') @@ to_tsquery('english','gen:*') LIMIT 10
+#
+# When done
+#  ./stop-managed-demo.sh
+#  Ctrl-C in the Okapi window
 
 
 LIM=${1:-100}
