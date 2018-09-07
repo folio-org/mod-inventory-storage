@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "instanceRelationships": {
+      "id": "instanceRelationships",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "instancerelationship.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "instanceRelationships",
+    "totalRecords"
+  ]
+}
+
