@@ -58,15 +58,15 @@ public class ServicePointTest {
           TimeoutException,
           MalformedURLException {
 
-		UUID locationId = UUID.randomUUID();
+    UUID locationId = UUID.randomUUID();
 
     Response response = createServicePoint(null, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, locationId);
+      "Circulation Desk -- Hallway", null, 20, true, locationId);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("code"), is("cd1"));
     assertThat(response.getJson().getString("name"), is("Circ Desk 1"));
-		assertThat(response.getJson().getJsonArray("locationIds").getString(0), is(locationId.toString()));
+    assertThat(response.getJson().getJsonArray("locationIds").getString(0), is(locationId.toString()));
   }
 
   @Test
@@ -76,7 +76,7 @@ public class ServicePointTest {
           TimeoutException,
           MalformedURLException {
     Response response = createServicePoint(null, null, "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -87,7 +87,7 @@ public class ServicePointTest {
           TimeoutException,
           MalformedURLException {
     Response response = createServicePoint(null, "Circ Desk 1", null,
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -98,7 +98,7 @@ public class ServicePointTest {
           TimeoutException,
           MalformedURLException {
     Response response = createServicePoint(null, "Circ Desk 1", "cd1",
-				null, null, 20, true, null);
+      null, null, 20, true, null);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -109,9 +109,9 @@ public class ServicePointTest {
           TimeoutException,
           MalformedURLException {
     createServicePoint(null, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     Response response = createServicePoint(null, "Circ Desk 1", "cd2",
-				"Circulation Desk -- Bathroom", null, 20, true, null);
+      "Circulation Desk -- Bathroom", null, 20, true, null);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -123,7 +123,7 @@ public class ServicePointTest {
           MalformedURLException {
     UUID id = UUID.randomUUID();
     createServicePoint(id, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     Response response = getById(id);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(response.getJson().getString("id"), is(id.toString()));
@@ -139,9 +139,9 @@ public class ServicePointTest {
     MalformedURLException {
 
     createServicePoint(null, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     createServicePoint(null, "Circ Desk 2", "cd2",
-				"Circulation Desk -- Basement", null, 20, true, null);
+      "Circulation Desk -- Basement", null, 20, true, null);
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(servicePointsUrl("/"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
@@ -159,9 +159,9 @@ public class ServicePointTest {
     MalformedURLException {
 
     createServicePoint(null, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     createServicePoint(null, "Circ Desk 2", "cd2",
-				"Circulation Desk -- Basement", null, 20, true, null);
+      "Circulation Desk -- Basement", null, 20, true, null);
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(servicePointsUrl("/?query=code==cd1"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
@@ -179,7 +179,7 @@ public class ServicePointTest {
           MalformedURLException {
     UUID id = UUID.randomUUID();
     createServicePoint(id, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     JsonObject request = new JsonObject()
             .put("id", id.toString())
             .put("name", "Circ Desk 2")
@@ -206,7 +206,7 @@ public class ServicePointTest {
           MalformedURLException {
     UUID id = UUID.randomUUID();
     createServicePoint(id, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     CompletableFuture<Response> deleted = new CompletableFuture<>();
     send(servicePointsUrl("/" + id.toString()), HttpMethod.DELETE, null,
             SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleted));
@@ -222,9 +222,8 @@ public class ServicePointTest {
 
   public static Response createServicePoint(UUID id, String name, String code,
           String discoveryDisplayName, String description, Integer shelvingLagTime,
-			Boolean pickupLocation, UUID locationId)
-			throws MalformedURLException,
-          InterruptedException, ExecutionException, TimeoutException {
+          Boolean pickupLocation, UUID locationId)
+          throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
     JsonObject request = new JsonObject();
@@ -236,13 +235,11 @@ public class ServicePointTest {
     if(description != null) { request.put("description", description); }
     if(shelvingLagTime != null) { request.put("shelvingLagTime", shelvingLagTime); }
     if(pickupLocation != null) { request.put("pickupLocation", pickupLocation); }
-		if (locationId != null) {
-
-			JsonArray locationIds = new JsonArray();
-			locationIds.add(locationId.toString());
-			request.put("locationIds", locationIds);
-
-		}
+    if (locationId != null) {
+      JsonArray locationIds = new JsonArray();
+      locationIds.add(locationId.toString());
+      request.put("locationIds", locationIds);
+    }
 
     send(servicePointsUrl(""), HttpMethod.POST, request.toString(),
             SUPPORTED_CONTENT_TYPE_JSON_DEF,
