@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Instance Storage
-version: v4.4
+version: v4.5
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -12,6 +12,8 @@ schemas:
   - instance.json: !include instance.json
   - instances: !include instances.json
   - marc.json: !include marc.json
+  - instancerelationship.json: !include instancerelationship.json
+  - instanceRelationships: !include instancerelationships.json
   - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
 
 traits:
@@ -25,6 +27,34 @@ resourceTypes:
   - collection-item: !include raml-util/rtypes/item-collection.raml
 
 /instance-storage:
+  /instance-relationships:
+    displayName: Hierarchical relations between Instances
+    type:
+      collection:
+        exampleCollection: !include  examples/instancerelationships_get.json
+        schemaCollection: instanceRelationships
+        schemaItem: instancerelationship.json
+        exampleItem: !include  examples/instancerelationship_get.json
+    get:
+      is: [pageable,
+          searchable: {description: "by parent ID or by child ID (using CQL)",
+                       example: "subInstanceId==83a50dc6-b887-43d9-93ee-28b2c4cd11f8
+                                 superInstanceId==30fcc8e7-a019-43f4-b642-2edc389f4501
+                                 instanceRelationshipTypeId==758f13db-ffb4-440e-bb10-8a364aa6cb4a AND superInstanceId=30fcc8e7-a019-43f4-b642-2edc389f4501"},
+          ]
+    post:
+    /{relationshipId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/instancerelationship_get.json
+          schema: instancerelationship.json
+      get:
+        responses:
+          200:
+            body:
+  #              type: instancerelationship
+        description: |
+          Get Instance Relationship
   /instances:
     displayName: Instances
     type:

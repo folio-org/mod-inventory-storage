@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "superInstanceId": {
+      "type": "string"
+    },
+    "subInstanceId": {
+      "type": "string"
+    },
+    "instanceRelationshipTypeId": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "superInstanceId",
+    "subInstanceId",
+    "instanceRelationshipTypeId"
+  ]
+}
+

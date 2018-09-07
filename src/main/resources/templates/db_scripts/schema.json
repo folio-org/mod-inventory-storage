@@ -176,6 +176,25 @@
       ]
     },
     {
+      "tableName": "instance_relationship_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "contributor_type",
       "withMetadata": false,
       "pkColumnName": "_id",
@@ -583,6 +602,50 @@
           "removeAccents": true
         }
       ]
+    },
+    {
+      "tableName": "instance_relationship",
+      "withMetadata": true,
+      "generateId": true,
+      "pkColumnName": "_id",
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "superInstanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "subInstanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "superInstanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "subInstanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "instanceRelationshipTypeId",
+          "targetTable": "instance_relationship_type",
+          "tOps": "ADD"
+        }
+      ]
+
     },
     {
       "tableName": "instance_source_marc",
