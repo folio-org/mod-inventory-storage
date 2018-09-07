@@ -36,7 +36,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -157,21 +156,21 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                       withPlainInternalServerError(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getStackTrace());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   InstanceStorageResource.GetInstanceStorageInstancesResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.GetInstanceStorageInstancesResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.GetInstanceStorageInstancesResponse.
           withPlainInternalServerError(e.getMessage())));
@@ -226,7 +225,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                         .withPlainBadRequest(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getStackTrace());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     InstanceStorageResource.PostInstanceStorageInstancesResponse
@@ -234,14 +233,14 @@ public class InstanceStorageAPI implements InstanceStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.PostInstanceStorageInstancesResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.PostInstanceStorageInstancesResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -353,21 +352,21 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getStackTrace());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
           withPlainInternalServerError(e.getMessage())));
@@ -713,21 +712,21 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                       withPlainInternalServerError(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getStackTrace());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
           withPlainInternalServerError(e.getMessage())));
@@ -762,7 +761,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                         .withPlainBadRequest(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getStackTrace());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
@@ -770,14 +769,14 @@ public class InstanceStorageAPI implements InstanceStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -848,33 +847,5 @@ public class InstanceStorageAPI implements InstanceStorageResource {
            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
-  }
-
-  private void getInstanceRelationship  (
-    Vertx vertx,
-    String tenantId,
-    String instanceRelationshipId,
-    Handler<AsyncResult> handler) throws Exception {
-      try {
-        String[] fieldList = {"*"};
-        String query = String.format("id==%s",instanceRelationshipId);
-        CQLWrapper cql = createCQLWrapper(query, 1, 0, Arrays.asList(INSTANCE_RELATIONSHIP_TABLE+".jsonb"));
-        PostgresClient.getInstance(vertx, tenantId).get(INSTANCE_RELATIONSHIP_TABLE,
-          InstanceRelationship.class, fieldList, cql, true, false, getReply -> {
-            if(getReply.failed()) {
-              handler.handle(Future.failedFuture(getReply.cause()));
-            } else {
-              List<InstanceRelationship> instanceRelationshipList = (List<InstanceRelationship>) getReply.result().getResults();
-              if(instanceRelationshipList.size() < 1) {
-                log.info("No relationship found: "+ instanceRelationshipList.size());
-                handler.handle(Future.failedFuture("No relationship found"));
-              } else {
-                handler.handle(Future.succeededFuture(instanceRelationshipList.get(0)));
-              }
-            }
-          });
-      } catch (FieldException fe) {
-        handler.handle(Future.failedFuture(fe.getCause()));
-      }
   }
 }
