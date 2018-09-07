@@ -1,3 +1,10 @@
+
+## 12.6.0 Unreleased
+
+* Adds instance relationship storage (MODINVSTOR-147)
+* Provides `instance-storage` interface 4.5 (MODINVSTOR-147)
+* Provides `instance-relationship-types` interface 1.0 (MODINVSTOR-147)
+
 ## 12.5.1 2018-08-15
 
 * Fixes updating of existing MARC JSON source record (MODINVSTOR-144)
