@@ -1,0 +1,12 @@
+{
+  "instanceStatuses": [
+    {
+      "id": "9634a5ab-9228-4703-baf2-4d12ebc77d56",
+      "name": "An Instance status"
+    },
+    {
+      "id": "9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
+      "name": "Another Instance status"
+    }
+  ]
+}
