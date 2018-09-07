@@ -681,8 +681,6 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
     try {
       vertxContext.runOnContext(v -> {
         try {
