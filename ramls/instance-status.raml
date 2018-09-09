@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Instance status reference API
-version: v2.2
+version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -28,7 +28,7 @@ resourceTypes:
   - collection-item: !include raml-util/rtypes/item-collection.raml
   - get-delete-only: !include raml-util/rtypes/get-delete.raml
 
-/instance_states:
+/instance-statuses:
   type:
     collection:
       exampleCollection: !include examples/instancestatuses.json

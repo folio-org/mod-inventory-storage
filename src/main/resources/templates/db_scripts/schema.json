@@ -645,7 +645,6 @@
           "tOps": "ADD"
         }
       ]
-
     },
     {
       "tableName": "instance_source_marc",

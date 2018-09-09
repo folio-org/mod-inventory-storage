@@ -1,16 +1,16 @@
 #%RAML 0.8
-title: Mode of issuance reference API
-version: v2.2
+title: Statisticalx code reference API
+version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
 documentation:
-  - title: Mode of issuance reference API
+  - title: Statistical code reference API
     content: This documents the API calls that can be made to query and manage issuance modes of the system
 
 schemas:
   - modeofissuance.json: !include modeofissuance.json
-  - modesOfIssuance: !include modesofissuance.json
+  - issuanceModes: !include issuancemodes.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
@@ -31,9 +31,9 @@ resourceTypes:
 /modes-of-issuance:
   type:
     collection:
-      exampleCollection: !include examples/modesofissuance.json
+      exampleCollection: !include examples/issuancemodes.json
       exampleItem: !include examples/modeofissuance.json
-      schemaCollection: modesOfIssuance
+      schemaCollection: issuanceModes
       schemaItem: modeofissuance.json
   get:
     is: [
@@ -45,10 +45,10 @@ resourceTypes:
     description: Create a new mode of issuance
     is: [validate]
   delete:
-    description: "Delete all issuance modes"
+    description: "Delete all modes of issuance"
     responses:
       204:
-        description: "All issuance modes deleted"
+        description: "All modes of issuance deleted"
       500:
         description: "Internal server error, e.g. due to misconfiguration"
         body:
@@ -60,4 +60,3 @@ resourceTypes:
       collection-item:
         exampleItem: !include examples/modeofissuance.json
         schema: modeofissuance.json
-
