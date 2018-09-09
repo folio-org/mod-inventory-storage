@@ -15,7 +15,6 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.IssuanceMode;
 import org.folio.rest.jaxrs.model.IssuanceModes;
 import org.folio.rest.jaxrs.resource.ModesOfIssuanceResource;
@@ -222,65 +221,29 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
-        Instance instance = new Instance();
-        instance.setModeOfIssuanceId(modeOfIssuanceId);
-        /**
-         * check if any item is using this material type *
-         */
-        try {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId).get(InstanceStorageAPI.INSTANCE_TABLE, instance, new String[]{idFieldName}, true, false, 0, 1, replyHandler -> {
-            if (replyHandler.succeeded()) {
-              List<Instance> instanceList = (List<Instance>) replyHandler.result().getResults();
-              if (!instanceList.isEmpty()) {
-                String message = "Can not delete cataloging level, " + modeOfIssuanceId + ". "
-                        + instanceList.size() + " instances associated with it";
-                log.error(message);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                        .withPlainBadRequest(message)));
-                return;
-              } else {
-                log.info("Attemping delete of unused cataloging level, " + modeOfIssuanceId);
-              }
-              try {
-                PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(RESOURCE_TABLE, modeOfIssuanceId,
-                        reply -> {
-                          try {
-                            if (reply.succeeded()) {
-                              if (reply.result().getUpdated() == 1) {
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                                        .withNoContent()));
-                              } else {
-                                log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
-                              }
-                            } else {
-                              log.error(reply.cause().getMessage(), reply.cause());
-                              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                                      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                            }
-                          } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                                    .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                          }
-                        });
-              } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-              }
-            } else {
-              log.error(replyHandler.cause().getMessage(), replyHandler.cause());
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-            }
-          });
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                  .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-        }
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(RESOURCE_TABLE, modeOfIssuanceId,
+                reply -> {
+                  try {
+                    if (reply.succeeded()) {
+                      if (reply.result().getUpdated() == 1) {
+                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
+                                .withNoContent()));
+                      } else {
+                        log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
+                                .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                      }
+                    } else {
+                      log.error(reply.cause().getMessage(), reply.cause());
+                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
+                              .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    }
+                  } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
+                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  }
+                });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
