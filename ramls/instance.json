@@ -130,6 +130,20 @@
         }
       }
     },
+    "publicationFrequency": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "publicationRange": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
     "urls": {
       "type": "array",
       "items": {
@@ -220,6 +234,9 @@
       "readonly": true
     },
     "statusId": {
+      "type": "string"
+    },
+    "statusUpdatedDate": {
       "type": "string"
     },
     "metadata": {
