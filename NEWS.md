@@ -1,5 +1,4 @@
-
-## 12.6.0 Unreleased
+## 12.6.0 2018-09-10
 
 * Adds instance relationship storage (MODINVSTOR-147)
 * Provides `instance-storage` interface 4.5 (MODINVSTOR-147)
