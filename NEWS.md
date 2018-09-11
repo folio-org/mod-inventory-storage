@@ -1,3 +1,9 @@
+## 12.7.0 Unreleased
+
+* Uses full text indexing for instance `title` searching (MODINVSTOR-159)
+* Upgrades to RAML Module Builder 19.4.2 (MODINVSTOR-159)
+* Fixes inability to specify page `limit` higher than 100 (MODINVSTOR-164)
+
 ## 12.6.0 2018-09-10
 
 * Adds instance relationship storage (MODINVSTOR-147)
