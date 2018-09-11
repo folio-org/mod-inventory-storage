@@ -221,10 +221,18 @@
     "discoverySuppress": {
       "type": "boolean"
     },
-    "statisticalCodeIds": {
+    "statisticalCodes": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "statisticalCodeTypeId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        }
       }
     },
     "sourceRecordFormat": {

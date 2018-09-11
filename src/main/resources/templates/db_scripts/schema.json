@@ -321,7 +321,7 @@
       ]
     },
     {
-      "tableName": "statistical_code",
+      "tableName": "statistical_code_type",
       "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,

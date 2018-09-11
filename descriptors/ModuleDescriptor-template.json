@@ -581,29 +581,29 @@
     },
 
     {
-      "id": "statistical-codes",
+      "id": "statistical-code-types",
       "version": "1.0",
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/statistical-codes",
-          "permissionsRequired": ["inventory-storage.statistical-codes.collection.get"]
+          "pathPattern": "/statistical-code-types",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/statistical-codes/{id}",
-          "permissionsRequired": ["inventory-storage.statistical-codes.item.get"]
+          "pathPattern": "/statistical-code-types/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.item.get"]
         }, {
           "methods": ["POST"],
-          "pathPattern": "/statistical-codes",
-          "permissionsRequired": ["inventory-storage.statistical-codes.item.post"]
+          "pathPattern": "/statistical-code-types",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.item.post"]
         }, {
           "methods": ["PUT"],
-          "pathPattern": "/statistical-codes/{id}",
-          "permissionsRequired": ["inventory-storage.statistical-codes.item.put"]
+          "pathPattern": "/statistical-code-types/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.item.put"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/statistical-codes/{id}",
-          "permissionsRequired": ["inventory-storage.statistical-codes.item.delete"]
+          "pathPattern": "/statistical-code-types/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.item.delete"]
         }
       ]
     },
@@ -1291,27 +1291,27 @@
       "description": "delete individual instance status from storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-codes.collection.get",
+      "permissionName": "inventory-storage.statistical-code-types.collection.get",
       "displayName": "inventory storage - get statistical codes collection",
       "description": "get statistical codes collection from storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-codes.item.get",
+      "permissionName": "inventory-storage.statistical-code-types.item.get",
       "displayName": "inventory storage - get individual statistical code",
       "description": "get individual statistical code from storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-codes.item.post",
+      "permissionName": "inventory-storage.statistical-code-types.item.post",
       "displayName": "inventory storage - create individual statistical code",
       "description": "create individual statistical code in storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-codes.item.put",
+      "permissionName": "inventory-storage.statistical-code-types.item.put",
       "displayName": "inventory storage - modify statistical code",
       "description": "modify statistical code in storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-codes.item.delete",
+      "permissionName": "inventory-storage.statistical-code-types.item.delete",
       "displayName": "inventory storage - delete individual statistical code",
       "description": "delete individual statistical code from storage"
     },
@@ -1452,11 +1452,11 @@
         "inventory-storage.instance-statuses.item.post",
         "inventory-storage.instance-statuses.item.put",
         "inventory-storage.instance-statuses.item.delete",
-        "inventory-storage.statistical-codes.collection.get",
-        "inventory-storage.statistical-codes.item.get",
-        "inventory-storage.statistical-codes.item.post",
-        "inventory-storage.statistical-codes.item.put",
-        "inventory-storage.statistical-codes.item.delete",
+        "inventory-storage.statistical-code-types.collection.get",
+        "inventory-storage.statistical-code-types.item.get",
+        "inventory-storage.statistical-code-types.item.post",
+        "inventory-storage.statistical-code-types.item.put",
+        "inventory-storage.statistical-code-types.item.delete",
         "inventory-storage.service-points.collection.get",
         "inventory-storage.service-points.item.get",
         "inventory-storage.service-points.item.post",

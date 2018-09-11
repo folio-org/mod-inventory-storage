@@ -9,8 +9,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage statistical codes of the system
 
 schemas:
-  - statisticalcode.json: !include statisticalcode.json
-  - statisticalCodes: !include statisticalcodes.json
+  - statisticalcodetype.json: !include statisticalcodetype.json
+  - statisticalCodeTypes: !include statisticalcodetypes.json
   - errors: !include raml-util/schemas/errors.schema
   - error.schema: !include raml-util/schemas/error.schema
   - parameters.schema: !include raml-util/schemas/parameters.schema
@@ -28,36 +28,36 @@ resourceTypes:
   - collection-item: !include raml-util/rtypes/item-collection.raml
   - get-delete-only: !include raml-util/rtypes/get-delete.raml
 
-/statistical-codes:
+/statistical-code-types:
   type:
     collection:
-      exampleCollection: !include examples/statisticalcodes.json
-      exampleItem: !include examples/statisticalcode.json
-      schemaCollection: statisticalCodes
-      schemaItem: statisticalcode.json
+      exampleCollection: !include examples/statisticalcodetypes.json
+      exampleItem: !include examples/statisticalcodetype.json
+      schemaCollection: statisticalCodeTypes
+      schemaItem: statisticalcodetype.json
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
       pageable
     ]
-    description: Return a list of statistical codes
+    description: Return a list of statistical code types
   post:
-    description: Create a new statistical code
+    description: Create a new statistical code type
     is: [validate]
   delete:
-    description: "Delete all statistical codes"
+    description: "Delete all statistical code types"
     responses:
       204:
-        description: "All statistical codes deleted"
+        description: "All statistical code types deleted"
       500:
         description: "Internal server error, e.g. due to misconfiguration"
         body:
           text/plain:
             example: "Internal server error, contact administrator"
-  /{statisticalCodeId}:
-    description: Pass in statistical code ID
+  /{statisticalCodeTypeId}:
+    description: Pass in statistical code type ID
     type:
       collection-item:
-        exampleItem: !include examples/statisticalcode.json
-        schema: statisticalcode.json
+        exampleItem: !include examples/statisticalcodetype.json
+        schema: statisticalcodetype.json
 

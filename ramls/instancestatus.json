@@ -5,11 +5,19 @@
     "id": {
       "type": "string"
     },
+    "code": {
+      "type": "string"
+    },
     "name": {
+      "type": "string"
+    },
+    "source": {
       "type": "string"
     }
   },
   "required": [
-    "name"
+    "code",
+    "name",
+    "source"
   ]
 }

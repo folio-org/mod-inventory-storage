@@ -2,12 +2,12 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "statisticalCodes": {
-      "id": "statisticalCode",
+    "statisticalCodeTypes": {
+      "id": "statisticalCodeType",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "statisticalcode.json"
+        "$ref": "statisticalcodetype.json"
       }
     },
     "totalRecords": {
@@ -15,7 +15,7 @@
     }
   },
   "required": [
-    "statisticalCodes",
+    "statisticalCodeTypes",
     "totalRecords"
   ]
 }
