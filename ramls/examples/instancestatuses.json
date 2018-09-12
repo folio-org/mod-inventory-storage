@@ -2,11 +2,16 @@
   "instanceStatuses": [
     {
       "id": "9634a5ab-9228-4703-baf2-4d12ebc77d56",
-      "name": "An Instance status"
+      "code": "cat",
+      "name": "Cataloged",
+      "source": "folio"
     },
     {
-      "id": "9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
-      "name": "Another Instance status"
+      "id": "26f5208e-110a-4394-be29-1569a8c84a65",
+      "code": "uncat",
+      "name": "Uncataloged",
+      "source": "folio"
     }
-  ]
+  ],
+  "totalRecords": 2
 }
