@@ -1,4 +1,4 @@
-## 12.7.0 Unreleased
+## 12.7.0 2018-09-12
 
 * Uses full text indexing for instance `title` searching (MODINVSTOR-159)
 * Upgrades to RAML Module Builder 19.4.2 (MODINVSTOR-159)
