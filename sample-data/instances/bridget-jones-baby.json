@@ -62,16 +62,7 @@
   "notes": [
     "Bridget Jones finds herself unexpectedly pregnant at the eleventh hour. However, her joyful pregnancy is dominated by one crucial but awkward question --who is the father? Could it be honorable, decent, notable human rights lawyer, Mark Darcy? Or, is it charming, witty, and totally despicable, Daniel Cleaver?"
   ],
-  "modeOfIssuanceId": "9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
-  "catalogingLevelId": "ed6b045b-1136-4018-b38f-17b7acb51286",
   "previouslyHeld": true,
   "staffSuppress": true,
-  "discoverySuppress": true,
-  "statisticalCodes": [
-    {
-      "statisticalCodeTypeId": "3abd6fc2-b3e4-4879-b1e1-78be41769fe3",
-      "code": "9.2"
-    }
-  ],
-  "statusId": "9634a5ab-9228-4703-baf2-4d12ebc77d56"
+  "discoverySuppress": true
 }
