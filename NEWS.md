@@ -1,4 +1,4 @@
-## 12.7.0 Unreleased
+## 12.8.0 Unreleased
 
 * Adds more properties to instance (MODINVSTOR-152)
 * Provides `instance-storage` interface 4.6 (MODINVSTOR-152)
@@ -6,6 +6,12 @@
 * Provides `cataloging-levels` interface 1.0 (MODINVSTOR-152)
 * Provides `instance-statuses` interface 1.0 (MODINVSTOR-152)
 * Provides `modes-of-issuance` interface 1.0 (MODINVSTOR-152)
+
+## 12.7.0 Unreleased
+
+* Uses full text indexing for instance `title` searching (MODINVSTOR-159)
+* Upgrades to RAML Module Builder 19.4.2 (MODINVSTOR-159)
+* Fixes inability to specify page `limit` higher than 100 (MODINVSTOR-164)
 
 ## 12.6.0 2018-09-10
 
