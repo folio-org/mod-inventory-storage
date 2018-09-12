@@ -50,8 +50,8 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
 
   private static final String LOCATION_PREFIX = "/cataloging-levels/";
   private static final Logger log = LoggerFactory.getLogger(CatalogingLevelAPI.class);
-  private final Messages messages = Messages.getInstance();
-  private final String idFieldName = "_id";
+  private static final Messages messages = Messages.getInstance();
+  private static final String idFieldName = "_id";
 
   public CatalogingLevelAPI(Vertx vertx, String tenantId) {
     PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);

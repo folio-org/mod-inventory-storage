@@ -47,8 +47,8 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
 
   private static final String LOCATION_PREFIX = "/modes-of-issuance/";
   private static final Logger log = LoggerFactory.getLogger(ModeOfIssuanceAPI.class);
-  private final Messages messages = Messages.getInstance();
-  private final String idFieldName = "_id";
+  private static final Messages messages = Messages.getInstance();
+  private static final String idFieldName = "_id";
 
 
   @Override

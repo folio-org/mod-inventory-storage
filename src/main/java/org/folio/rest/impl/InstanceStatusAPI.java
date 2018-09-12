@@ -15,7 +15,6 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceStatus;
 import org.folio.rest.jaxrs.model.InstanceStatuses;
 import org.folio.rest.jaxrs.resource.InstanceStatusesResource;
@@ -49,8 +48,8 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
 
   private static final String LOCATION_PREFIX = "/instance-statuses/";
   private static final Logger log = LoggerFactory.getLogger(InstanceStatusAPI.class);
-  private final Messages messages = Messages.getInstance();
-  private final String idFieldName = "_id";
+  private static final Messages messages = Messages.getInstance();
+  private static final String idFieldName = "_id";
 
   @Override
   public void deleteInstanceStatuses(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
@@ -223,65 +222,29 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
-        Instance instance = new Instance();
-        instance.setStatusId(instanceStatusId);
-        /**
-         * check if any item is using this material type *
-         */
-        try {
-          PostgresClient.getInstance(vertxContext.owner(), tenantId).get(InstanceStorageAPI.INSTANCE_TABLE, instance, new String[]{idFieldName}, true, false, 0, 1, replyHandler -> {
-            if (replyHandler.succeeded()) {
-              List<Instance> instanceList = (List<Instance>) replyHandler.result().getResults();
-              if (!instanceList.isEmpty()) {
-                String message = "Can not delete cataloging level, " + instanceStatusId + ". "
-                        + instanceList.size() + " instances associated with it";
-                log.error(message);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                        .withPlainBadRequest(message)));
-                return;
-              } else {
-                log.info("Attemping delete of unused cataloging level, " + instanceStatusId);
-              }
-              try {
-                PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(RESOURCE_TABLE, instanceStatusId,
-                        reply -> {
-                          try {
-                            if (reply.succeeded()) {
-                              if (reply.result().getUpdated() == 1) {
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                                        .withNoContent()));
-                              } else {
-                                log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
-                                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
-                              }
-                            } else {
-                              log.error(reply.cause().getMessage(), reply.cause());
-                              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                                      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                            }
-                          } catch (Exception e) {
-                            log.error(e.getMessage(), e);
-                            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                                    .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-                          }
-                        });
-              } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-              }
-            } else {
-              log.error(replyHandler.cause().getMessage(), replyHandler.cause());
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-            }
-          });
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                  .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
-        }
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(RESOURCE_TABLE, instanceStatusId,
+                reply -> {
+                  try {
+                    if (reply.succeeded()) {
+                      if (reply.result().getUpdated() == 1) {
+                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
+                                .withNoContent()));
+                      } else {
+                        log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
+                                .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                      }
+                    } else {
+                      log.error(reply.cause().getMessage(), reply.cause());
+                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
+                              .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                    }
+                  } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
+                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  }
+                });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse

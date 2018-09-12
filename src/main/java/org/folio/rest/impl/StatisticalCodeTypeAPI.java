@@ -53,8 +53,8 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
 
   private static final String LOCATION_PREFIX = "/statistical-code_types/";
   private static final Logger log = LoggerFactory.getLogger(StatisticalCodeTypeAPI.class);
-  private final Messages messages = Messages.getInstance();
-  private final String idFieldName = "_id";
+  private static final Messages messages = Messages.getInstance();
+  private static final String idFieldName = "_id";
 
   @Override
   public void deleteStatisticalCodeTypes(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
