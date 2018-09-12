@@ -46,9 +46,9 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
   public static final String RESOURCE_TABLE = "mode_of_issuance";
 
   private static final String LOCATION_PREFIX = "/modes-of-issuance/";
-  private static final Logger log = LoggerFactory.getLogger(ModeOfIssuanceAPI.class);
-  private static final Messages messages = Messages.getInstance();
-  private static final String idFieldName = "_id";
+  private static final Logger LOG = LoggerFactory.getLogger(ModeOfIssuanceAPI.class);
+  private static final Messages MESSAGES = Messages.getInstance();
+  private static final String IDFIELDNAME = "_id";
 
 
   @Override
@@ -99,20 +99,20 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceResponse.withJsonOK(
                               issuanceModes)));
                     } else {
-                      log.error(reply.cause().getMessage(), reply.cause());
+                      LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceResponse
                               .withPlainBadRequest(reply.cause().getMessage())));
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceResponse
-                            .withPlainInternalServerError(messages.getMessage(
+                            .withPlainInternalServerError(MESSAGES.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        LOG.error(e.getMessage(), e);
+        String message = MESSAGES.getMessage(lang, MessageConsts.InternalServerError);
         if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -145,7 +145,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse.withJsonCreated(
                               LOCATION_PREFIX + ret, stream)));
                     } else {
-                      log.error(reply.cause().getMessage(), reply.cause());
+                      LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isDuplicate(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
                                 .withJsonUnprocessableEntity(
@@ -153,19 +153,19 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
                                                 "name", entity.getName(), "Mode of issuance exists"))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
+        LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -177,7 +177,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
 
         Criterion c = new Criterion(
-                new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'" + modeOfIssuanceId + "'"));
+                new Criteria().addField(IDFIELDNAME).setJSONB(false).setOperation("=").setValue("'" + modeOfIssuanceId + "'"));
 
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(RESOURCE_TABLE, IssuanceModes.class, c, true,
                 reply -> {
@@ -193,25 +193,25 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
                                 .withJsonOK(userGroup.get(0))));
                       }
                     } else {
-                      log.error(reply.cause().getMessage(), reply.cause());
+                      LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isInvalidUUID(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
                                 .withPlainNotFound(modeOfIssuanceId)));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
+        LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -229,25 +229,25 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
                                 .withNoContent()));
                       } else {
-                        log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                        LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                                .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
                       }
                     } else {
-                      log.error(reply.cause().getMessage(), reply.cause());
+                      LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                              .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
+        LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -266,26 +266,26 @@ public class ModeOfIssuanceAPI implements ModesOfIssuanceResource {
                     if (reply.succeeded()) {
                       if (reply.result().getUpdated() == 0) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                                .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
                                 .withNoContent()));
                       }
                     } else {
-                      log.error(reply.cause().getMessage());
+                      LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                              .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
+        LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }

@@ -49,12 +49,12 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
   public static final String RESOURCE_TABLE = "cataloging_level";
 
   private static final String LOCATION_PREFIX = "/cataloging-levels/";
-  private static final Logger log = LoggerFactory.getLogger(CatalogingLevelAPI.class);
-  private static final Messages messages = Messages.getInstance();
-  private static final String idFieldName = "_id";
+  private static final Logger LOG = LoggerFactory.getLogger(CatalogingLevelAPI.class);
+  private static final Messages MESSAGES = Messages.getInstance();
+  private static final String IDFIELDNAME = "_id";
 
   public CatalogingLevelAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
+    PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
   }
 
   @Override
@@ -106,20 +106,20 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsResponse.withJsonOK(
                               catalogingLevels)));
                     } else {
-                      log.error(reply.cause().getMessage(), reply.cause());
+                      LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsResponse
                               .withPlainBadRequest(reply.cause().getMessage())));
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsResponse
-                            .withPlainInternalServerError(messages.getMessage(
+                            .withPlainInternalServerError(MESSAGES.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        LOG.error(e.getMessage(), e);
+        String message = MESSAGES.getMessage(lang, MessageConsts.InternalServerError);
         if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -153,7 +153,7 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse.withJsonCreated(
                               LOCATION_PREFIX + ret, stream)));
                     } else {
-                      log.error(reply.cause().getMessage(), reply.cause());
+                      LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isDuplicate(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
                                 .withJsonUnprocessableEntity(
@@ -161,19 +161,19 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                                                 "name", entity.getName(), "Material Type exists"))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
-                                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
-                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
+        LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
-                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -185,7 +185,7 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
 
         Criterion c = new Criterion(
-                new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'" + catalogingLevelId + "'"));
+                new Criteria().addField(IDFIELDNAME).setJSONB(false).setOperation("=").setValue("'" + catalogingLevelId + "'"));
 
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(RESOURCE_TABLE, CatalogingLevel.class, c, true,
                 reply -> {
@@ -201,25 +201,25 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                                 .withJsonOK(userGroup.get(0))));
                       }
                     } else {
-                      log.error(reply.cause().getMessage(), reply.cause());
+                      LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isInvalidUUID(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
                                 .withPlainNotFound(catalogingLevelId)));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
+        LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -237,25 +237,25 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
                                 .withNoContent()));
                       } else {
-                        log.error(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                        LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                                .withPlainNotFound(messages.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
                       }
                     } else {
-                      log.error(reply.cause().getMessage(), reply.cause());
+                      LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                              .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
+        LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -274,26 +274,26 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                     if (reply.succeeded()) {
                       if (reply.result().getUpdated() == 0) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                                .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
                                 .withNoContent()));
                       }
                     } else {
-                      log.error(reply.cause().getMessage());
+                      LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                              .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
-                    log.error(e.getMessage(), e);
+                    LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                            .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
-        log.error(e.getMessage(), e);
+        LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
