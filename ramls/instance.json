@@ -5,10 +5,16 @@
     "id": {
       "type": "string"
     },
+    "hrid": {
+      "type": "string"
+    },
     "source": {
       "type": "string"
     },
     "title": {
+      "type": "string"
+    },
+    "indexTitle": {
       "type": "string"
     },
     "alternativeTitles": {
@@ -117,9 +123,26 @@
           },
           "dateOfPublication": {
             "type": "string"
+          },
+          "role": {
+            "type": "string"
           }
         }
       }
+    },
+    "publicationFrequency": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "publicationRange": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "urls": {
       "type": "array",
@@ -127,6 +150,33 @@
         "type": "string"
       },
       "uniqueItems": true
+    },
+    "electronicAccess": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string"
+          },
+          "linkText": {
+            "type": "string"
+          },
+          "materialsSpecification": {
+            "type": "string"
+          },
+          "publicNote": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "uri"
+        ]
+      }
     },
     "instanceTypeId": {
       "type": "string"
@@ -153,11 +203,49 @@
         "type": "string"
       }
     },
+    "modeOfIssuanceId": {
+      "type": "string"
+    },
+    "catalogingLevelId": {
+      "type": "string"
+    },
+    "catalogedDate": {
+      "type": "string"
+    },
+    "previouslyHeld": {
+      "type": "boolean"
+    },
+    "staffSuppress": {
+      "type": "boolean"
+    },
+    "discoverySuppress": {
+      "type": "boolean"
+    },
+    "statisticalCodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "statisticalCodeTypeId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "sourceRecordFormat": {
       "description": "Format of the instance source record, if a source record exists",
       "type": "string",
       "enum": ["MARC-JSON"],
       "readonly": true
+    },
+    "statusId": {
+      "type": "string"
+    },
+    "statusUpdatedDate": {
+      "type": "string"
     },
     "metadata": {
       "type": "object",

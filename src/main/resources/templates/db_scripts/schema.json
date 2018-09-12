@@ -321,6 +321,62 @@
       ]
     },
     {
+      "tableName": "statistical_code_type",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_status",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        { 
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "mode_of_issuance",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "cataloging_level",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "item",
       "withMetadata": true,
       "generateId": false,
@@ -423,9 +479,38 @@
       "withMetadata": true,
       "generateId": false,
       "pkColumnName": "_id",
+      "foreignKeys": [
+        {
+          "fieldName": "instanceStatusId",
+          "targetTable": "instance_status",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "modeOfIssuanceId",
+          "targetTable": "mode_of_issuance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "catalogingLevelId",
+          "targetTable": "cataloging_level",
+          "tOps": "ADD"
+        }
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "hrid",
+          "tOps": "ADD"
+        }
+      ],
       "ginIndex": [
         {
           "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "indexTitle",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
@@ -447,6 +532,24 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "instanceStatusId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "modeOfIssuanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "catalogingLevelId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         },
         {
           "fieldName": "languages",
@@ -475,10 +578,22 @@
           "removeAccents": true
         },
         {
+          "fieldName": "indexTitle",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "title",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "statisticalCodeIds",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         },
         {
           "fieldName": "contributors",
@@ -541,7 +656,6 @@
           "tOps": "ADD"
         }
       ]
-
     },
     {
       "tableName": "instance_source_marc",

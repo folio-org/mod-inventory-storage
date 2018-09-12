@@ -1,3 +1,12 @@
+## 12.8.0 Unreleased
+
+* Adds more properties to instance (MODINVSTOR-152)
+* Provides `instance-storage` interface 4.6 (MODINVSTOR-152)
+* Provides `statistical-codes` interface 1.0 (MODINVSTOR-152)
+* Provides `cataloging-levels` interface 1.0 (MODINVSTOR-152)
+* Provides `instance-statuses` interface 1.0 (MODINVSTOR-152)
+* Provides `modes-of-issuance` interface 1.0 (MODINVSTOR-152)
+
 ## 12.7.0 2018-09-12
 
 * Uses full text indexing for instance `title` searching (MODINVSTOR-159)

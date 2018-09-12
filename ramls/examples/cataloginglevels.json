@@ -1,0 +1,13 @@
+{
+  "catalogingLevels": [
+    {
+      "id": "ed6b045b-1136-4018-b38f-17b7acb51286",
+      "name": "A cataloging level"
+    },
+    {
+      "id": "aeb639ba-a6e9-401e-b3e8-ed2fc603abe6",
+      "name": "Another cataloging level"
+    }
+  ],
+  "totalRecords": 2
+}

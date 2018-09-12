@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "statisticalCodeTypes": {
+      "id": "statisticalCodeType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "statisticalcodetype.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "statisticalCodeTypes",
+    "totalRecords"
+  ]
+}
+
