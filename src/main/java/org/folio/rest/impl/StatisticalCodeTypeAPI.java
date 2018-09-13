@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.folio.rest.impl;
 
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
@@ -299,5 +294,5 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(RESOURCE_TABLE + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
-  
+
 }

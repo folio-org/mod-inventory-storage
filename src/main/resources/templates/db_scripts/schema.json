@@ -340,7 +340,7 @@
       "generateId": false,
       "withAuditing": false,
       "uniqueIndex": [
-        { 
+        {
           "fieldName": "name",
           "tOps": "ADD"
         },
