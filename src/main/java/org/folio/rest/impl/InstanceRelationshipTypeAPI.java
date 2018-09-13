@@ -39,7 +39,7 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
  * @author ne
  */
 public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesResource {
-  
+
   public static final String INSTANCE_RELATIONSHIP_TYPE_TABLE   = "instance_relationship_type";
 
   private static final String LOCATION_PREFIX       = "/instance-relationship-types/";
@@ -306,7 +306,7 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
         internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
     });
   }
-  
-  
-  
+
+
+
 }

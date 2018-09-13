@@ -299,5 +299,5 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(RESOURCE_TABLE + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
-  
+
 }
