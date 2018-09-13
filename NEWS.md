@@ -6,6 +6,8 @@
 * Provides `cataloging-levels` interface 1.0 (MODINVSTOR-152)
 * Provides `instance-statuses` interface 1.0 (MODINVSTOR-152)
 * Provides `modes-of-issuance` interface 1.0 (MODINVSTOR-152)
+* Uses RMB 19.4.3, which uses the 'simple' dictionary for fulltext,
+  getting around the stopword problem. (MODINVSTOR-168)
 
 ## 12.7.0 2018-09-12
 
