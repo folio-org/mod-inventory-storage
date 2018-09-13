@@ -1,4 +1,4 @@
-## 12.8.0 Unreleased
+## 12.8.0 2018-09-13
 
 * Adds more properties to instance (MODINVSTOR-152)
 * Provides `instance-storage` interface 4.6 (MODINVSTOR-152)
