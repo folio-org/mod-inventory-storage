@@ -1,4 +1,4 @@
-## 12.8.1 Unreleased
+## 12.8.1 2018-09-13
 
 * Uses RMB 19.4.3, which uses the 'simple' dictionary for fulltext,
   getting around the stopword problem. (MODINVSTOR-168)
