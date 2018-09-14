@@ -1,3 +1,5 @@
+* Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)
+
 ## 12.8.1 2018-09-13
 
 * Uses RMB 19.4.3, which uses the 'simple' dictionary for fulltext,

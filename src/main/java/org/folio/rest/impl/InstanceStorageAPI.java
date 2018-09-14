@@ -199,10 +199,11 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             entity.setId(UUID.randomUUID().toString());
           }
           else {
-            if(isUUID(entity.getId())) {
-              io.vertx.core.Future.succeededFuture(
+            if (! isUUID(entity.getId())) {
+              asyncResultHandler.handle(Future.succeededFuture(
                 InstanceStorageResource.PostInstanceStorageInstancesResponse
-                  .withPlainBadRequest("ID must be a UUID"));
+                  .withPlainBadRequest("ID must be a UUID")));
+              return;
             }
           }
 
