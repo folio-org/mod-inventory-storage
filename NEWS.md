@@ -1,3 +1,5 @@
+## 12.8.2 Unreleased
+
 * Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)
 
 ## 12.8.1 2018-09-13
