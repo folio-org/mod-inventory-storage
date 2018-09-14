@@ -162,10 +162,11 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
             entity.setId(UUID.randomUUID().toString());
           }
           else {
-            if(isUUID(entity.getId())) {
-              io.vertx.core.Future.succeededFuture(
+            if (! isUUID(entity.getId())) {
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                 HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
-                  .withPlainBadRequest("ID must be a UUID"));
+                  .withPlainBadRequest("ID must be a UUID")));
+              return;
             }
           }
 
