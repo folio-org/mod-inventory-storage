@@ -1,0 +1,14 @@
+{
+  "issuanceModes": [
+    {
+      "id": "9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
+      "name": "A mode of issuance"
+    },
+    {
+      "id": "2463bd81-a745-4c70-bfe6-3ec168ae8bd1",
+      "name": "Another mode of issuance"
+    }
+  ],
+  "totalRecords": 2
+}
+

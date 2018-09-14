@@ -162,7 +162,7 @@ public class HoldingsStorageTest extends TestBase {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(response.getBody(), containsString("invalid input syntax for type uuid"));
+    assertThat(response.getBody(), containsString("ID must be a UUID"));
   }
 
   @Test

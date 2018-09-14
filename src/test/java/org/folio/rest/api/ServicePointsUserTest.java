@@ -43,7 +43,7 @@ import static org.junit.Assert.assertThat;
 public class ServicePointsUserTest {
   private static Logger logger = LoggerFactory.getLogger(ServicePointsUserTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-  
+
   @Before
   public void beforeEach()
       throws InterruptedException, ExecutionException, TimeoutException,
@@ -51,24 +51,24 @@ public class ServicePointsUserTest {
     StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
     StorageTestSuite.deleteAll(servicePointsUrl(""));
   }
-  
+
   //BEGIN TESTS
   @Test
   public void emptyTest() {
     assertThat(true, is(true));
   }
-  
+
   @Test
-  public void canCreateServicePointUser() throws MalformedURLException, 
+  public void canCreateServicePointUser() throws MalformedURLException,
       InterruptedException, ExecutionException, TimeoutException {
     Response response = createServicePointUser(UUID.randomUUID(), UUID.randomUUID(),
         null, null);
     assertThat(response.getStatusCode(), is(201));
-    
+
   }
-  
+
   @Test
-  public void canRetrieveCreatedSPU() throws MalformedURLException, 
+  public void canRetrieveCreatedSPU() throws MalformedURLException,
       InterruptedException, ExecutionException, TimeoutException {
     Response postResponse = createServicePointUser(UUID.randomUUID(),
         UUID.randomUUID(), null, null);
@@ -77,28 +77,28 @@ public class ServicePointsUserTest {
     assertThat(getResponse.getStatusCode(), is(200));
     assertThat(getResponse.getJson().getString("id"), is(id));
   }
-  
-  @Test 
-  public void cannotCreateSPUWithNonExistantDefaultSP() 
+
+  @Test
+  public void cannotCreateSPUWithNonExistantDefaultSP()
       throws MalformedURLException, InterruptedException, ExecutionException,
       TimeoutException {
     Response response = createServicePointUser(UUID.randomUUID(),
         UUID.randomUUID(), null, UUID.randomUUID());
     assertThat(response.getStatusCode(), is(422));
   }
-  
+
   @Test
   public void canCreateSPUWithExistingDefaultSP()
       throws MalformedURLException, InterruptedException, ExecutionException,
       TimeoutException {
     UUID spID = UUID.randomUUID();
     createServicePoint(spID, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     Response response = createServicePointUser(UUID.randomUUID(),
         UUID.randomUUID(), null, spID);
     assertThat(response.getStatusCode(), is(201));
   }
-  
+
   @Test
   public void canGetSPUS() throws MalformedURLException, InterruptedException,
       ExecutionException, TimeoutException {
@@ -106,9 +106,9 @@ public class ServicePointsUserTest {
     createServicePointUser(null, UUID.randomUUID(), null, null);
     Response response = getServicePointUsers(null);
     assertThat(response.getJson().getInteger("totalRecords"), is(2));
-    
+
   }
-  
+
    @Test
   public void canDeleteAllSPUS() throws MalformedURLException, InterruptedException,
       ExecutionException, TimeoutException {
@@ -117,10 +117,10 @@ public class ServicePointsUserTest {
     StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
     Response response = getServicePointUsers(null);
     assertThat(response.getJson().getInteger("totalRecords"), is(0));
-    
+
   }
- 
-  
+
+
   @Test
   public void canQuerySPUS() throws MalformedURLException, InterruptedException, ExecutionException,
       TimeoutException {
@@ -128,11 +128,11 @@ public class ServicePointsUserTest {
     UUID spId2 = UUID.randomUUID();
     UUID spId3 = UUID.randomUUID();
     createServicePoint(spId1, "Circ Desk 1", "cd1",
-				"Circulation Desk -- Hallway", null, 20, true, null);
+      "Circulation Desk -- Hallway", null, 20, true, null);
     createServicePoint(spId2, "Circ Desk 2", "cd2",
-				"Circulation Desk -- Stairs", null, 20, true, null);
+      "Circulation Desk -- Stairs", null, 20, true, null);
     createServicePoint(spId3, "Circ Desk 3", "cd3",
-				"Circulation Desk -- Basement", null, 20, true, null);
+      "Circulation Desk -- Basement", null, 20, true, null);
     List<UUID> spList1 = new ArrayList<>();
     spList1.add(spId1);
     spList1.add(spId2);
@@ -149,9 +149,9 @@ public class ServicePointsUserTest {
     assertThat(response.getJson().getJsonArray("servicePointsUsers")
         .getJsonObject(0).getString("id"), is(spuId.toString()));
   }
-  
+
   @Test
-  public void canUpdateServicePointUser() throws MalformedURLException, 
+  public void canUpdateServicePointUser() throws MalformedURLException,
       InterruptedException, ExecutionException, TimeoutException {
     UUID userId1 = UUID.randomUUID();
     UUID userId2 = UUID.randomUUID();
@@ -164,11 +164,11 @@ public class ServicePointsUserTest {
     assertThat(response.getStatusCode(), is(204));
     Response getResponse = getServicePointUserById(spuId);
     assertThat(getResponse.getJson().getString("userId"), is(userId2.toString()));
-    
+
   }
-  
+
   @Test
-  public void canDeleteServicePointUser() throws MalformedURLException, 
+  public void canDeleteServicePointUser() throws MalformedURLException,
       InterruptedException, ExecutionException, TimeoutException {
     UUID spuId = UUID.randomUUID();
     createServicePointUser(spuId, UUID.randomUUID(), null, null);
@@ -177,11 +177,11 @@ public class ServicePointsUserTest {
     deleteServicePointUserById(spuId);
     Response getResponseAgain = getServicePointUserById(spuId);
     assertThat(getResponseAgain.getStatusCode(), is(404));
-    
+
   }
-  
+
   //END TESTS
-  
+
   private static void send(URL url, HttpMethod method, String content,
       String contentType, Handler<HttpClientResponse> handler) {
 
@@ -216,16 +216,16 @@ public class ServicePointsUserTest {
     request.putHeader("Content-type", contentType);
     request.end(buffer);
   }
-  
+
   public static Response createServicePointUser(UUID id,
-      UUID userId, List<UUID> servicePointsIds, UUID defaultServicePointId) 
+      UUID userId, List<UUID> servicePointsIds, UUID defaultServicePointId)
       throws MalformedURLException, InterruptedException, ExecutionException,
       TimeoutException {
     JsonObject request = new JsonObject();
     if(id != null) { request.put("id", id.toString()); }
     request.put("userId", userId.toString());
     if(defaultServicePointId != null) {
-      request.put("defaultServicePointId", defaultServicePointId.toString()); 
+      request.put("defaultServicePointId", defaultServicePointId.toString());
     }
     if(servicePointsIds != null && !servicePointsIds.isEmpty()) {
       JsonArray spIds = new JsonArray();
@@ -239,7 +239,7 @@ public class ServicePointsUserTest {
         SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(createServicePointUser));
     return createServicePointUser.get(5, TimeUnit.SECONDS);
   }
-  
+
   public static Response getServicePointUserById(UUID id)
     throws InterruptedException,
     ExecutionException,
@@ -252,9 +252,9 @@ public class ServicePointsUserTest {
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
-    
+
   }
-  
+
   public static Response updateServicePointUserById(UUID id, JsonObject entity)
       throws InterruptedException,
     ExecutionException,
@@ -265,7 +265,7 @@ public class ServicePointsUserTest {
         SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(putCompleted));
     return putCompleted.get(5, TimeUnit.SECONDS);
   }
-  
+
    public static Response deleteServicePointUserById(UUID id)
       throws InterruptedException,
     ExecutionException,
@@ -276,7 +276,7 @@ public class ServicePointsUserTest {
         SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
     return deleteCompleted.get(5, TimeUnit.SECONDS);
   }
-  
+
   public static Response getServicePointUsers(String query)
       throws InterruptedException,
       ExecutionException,
@@ -293,5 +293,5 @@ public class ServicePointsUserTest {
         SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
-  
+
 }

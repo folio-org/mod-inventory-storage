@@ -1,8 +1,44 @@
-## 13.0.0
+## 13.0.0 Unreleased
+
 * Add foreign keys item->holdings_record, holdings_record->instance (MODINVSTOR-135)
+* Removes index on `item.title` (MODINVSTOR-135)
 * Provides `instance-storage` interface 5.0 (MODINVSTOR-135)
 * Provides `holdings-storage` interface 2.0 (MODINVSTOR-135)
 * Provides `item-storage` interface 6.0 (MODINVSTOR-135)
+
+## 12.8.2 Unreleased
+
+* Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)
+
+## 12.8.1 2018-09-13
+
+* Uses RMB 19.4.3, which uses the 'simple' dictionary for fulltext,
+  getting around the stopword problem. (MODINVSTOR-168)
+
+## 12.8.0 2018-09-13
+
+* Adds more properties to instance (MODINVSTOR-152)
+* Provides `instance-storage` interface 4.6 (MODINVSTOR-152)
+* Provides `statistical-codes` interface 1.0 (MODINVSTOR-152)
+* Provides `cataloging-levels` interface 1.0 (MODINVSTOR-152)
+* Provides `instance-statuses` interface 1.0 (MODINVSTOR-152)
+* Provides `modes-of-issuance` interface 1.0 (MODINVSTOR-152)
+
+## 12.7.0 2018-09-12
+
+* Uses full text indexing for instance `title` searching (MODINVSTOR-159)
+* Upgrades to RAML Module Builder 19.4.2 (MODINVSTOR-159)
+* Fixes inability to specify page `limit` higher than 100 (MODINVSTOR-164)
+
+## 12.6.0 2018-09-10
+
+* Adds instance relationship storage (MODINVSTOR-147)
+* Provides `instance-storage` interface 4.5 (MODINVSTOR-147)
+* Provides `instance-relationship-types` interface 1.0 (MODINVSTOR-147)
+
+## 12.5.1 2018-08-15
+
+* Fixes updating of existing MARC JSON source record (MODINVSTOR-144)
 
 ## 12.5.0 2018-08-02
 

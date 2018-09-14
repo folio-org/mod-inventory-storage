@@ -108,6 +108,26 @@
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instances",
           "permissionsRequired": ["inventory-storage.instances.collection.delete"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instance-relationships",
+          "permissionsRequired": ["inventory-storage.instances.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instance-relationships",
+          "permissionsRequired": ["inventory-storage.instances.item.post"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instance-relationships/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.get"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-storage/instance-relationships/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instance-relationships/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.delete"]
         }
       ]
     },
@@ -289,6 +309,33 @@
       ]
     },
     {
+      "id": "instance-relationship-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-relationship-types",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-relationship-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-relationship-types",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-relationship-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-relationship-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-relationship-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "identifier-types",
       "version": "1.1",
       "handlers": [
@@ -450,6 +497,117 @@
         }
       ]
     },
+    {
+      "id": "cataloging-levels",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/cataloging-levels",
+          "permissionsRequired": ["inventory-storage.cataloging-levels.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/cataloging-levels/{id}",
+          "permissionsRequired": ["inventory-storage.cataloging-levels.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/cataloging-levels",
+          "permissionsRequired": ["inventory-storage.cataloging-levels.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/cataloging-levels/{id}",
+          "permissionsRequired": ["inventory-storage.cataloging-levels.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/cataloging-levels/{id}",
+          "permissionsRequired": ["inventory-storage.cataloging-levels.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "modes-of-issuance",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/modes-of-issuance",
+          "permissionsRequired": ["inventory-storage.modes-of-issuance.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/modes-of-issuance/{id}",
+          "permissionsRequired": ["inventory-storage.modes-of-issuance.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/modes-of-issuance",
+          "permissionsRequired": ["inventory-storage.modes-of-issuance.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/modes-of-issuance/{id}",
+          "permissionsRequired": ["inventory-storage.modes-of-issuance.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/modes-of-issuance/{id}",
+          "permissionsRequired": ["inventory-storage.modes-of-issuance.item.delete"]
+        }
+      ]
+    },
+
+    {
+      "id": "instance-statuses",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-statuses",
+          "permissionsRequired": ["inventory-storage.instance-statuses.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-statuses/{id}",
+          "permissionsRequired": ["inventory-storage.instance-statuses.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-statuses",
+          "permissionsRequired": ["inventory-storage.instance-statuses.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-statuses/{id}",
+          "permissionsRequired": ["inventory-storage.instance-statuses.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-statuses/{id}",
+          "permissionsRequired": ["inventory-storage.instance-statuses.item.delete"]
+        }
+      ]
+    },
+
+    {
+      "id": "statistical-code-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/statistical-code-types",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/statistical-code-types/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/statistical-code-types",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/statistical-code-types/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/statistical-code-types/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-code-types.item.delete"]
+        }
+      ]
+    },
+
     {
       "id": "service-points",
       "version": "2.1",
@@ -833,6 +991,31 @@
       "description": "delete individual location"
     },
     {
+      "permissionName": "inventory-storage.instance-relationship-types.collection.get",
+      "displayName": "inventory storage - get instance-relationship-type collection",
+      "description": "get instance-relationship-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationship-types.item.get",
+      "displayName": "inventory storage - get individual instance-relationship-type",
+      "description": "get individual instance-relationship-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationship-types.item.post",
+      "displayName": "inventory storage - create individual instance-relationship-type",
+      "description": "create individual instance-relationship-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationship-types.item.put",
+      "displayName": "inventory storage - modify instance-relationship-type",
+      "description": "modify instance-relationship-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationship-types.item.delete",
+      "displayName": "inventory storage - delete individual instance-relationship-type",
+      "description": "delete individual instance-relationship-type from storage"
+    },
+    {
       "permissionName": "inventory-storage.identifier-types.collection.get",
       "displayName": "inventory storage - get identifier-type collection",
       "description": "get identifier-type collection from storage"
@@ -1033,6 +1216,106 @@
       "description": "delete individual classification qualifier from storage"
     },
     {
+      "permissionName": "inventory-storage.cataloging-levels.collection.get",
+      "displayName": "inventory storage - get cataloging levels collection",
+      "description": "get cataloging levels collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.cataloging-levels.item.get",
+      "displayName": "inventory storage - get individual cataloging level",
+      "description": "get individual cataloging level from storage"
+    },
+    {
+      "permissionName": "inventory-storage.cataloging-levels.item.post",
+      "displayName": "inventory storage - create individual cataloging level",
+      "description": "create individual cataloging level in storage"
+    },
+    {
+      "permissionName": "inventory-storage.cataloging-levels.item.put",
+      "displayName": "inventory storage - modify cataloging level",
+      "description": "modify cataloging level in storage"
+    },
+    {
+      "permissionName": "inventory-storage.cataloging-levels.item.delete",
+      "displayName": "inventory storage - delete individual cataloging level",
+      "description": "delete individual cataloging level from storage"
+    },
+    {
+      "permissionName": "inventory-storage.modes-of-issuance.collection.get",
+      "displayName": "inventory storage - get modes of issuance collection",
+      "description": "get modes of issuance collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.modes-of-issuance.item.get",
+      "displayName": "inventory storage - get individual mode of issuance",
+      "description": "get individual mode of issuance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.modes-of-issuance.item.post",
+      "displayName": "inventory storage - create individual mode of issuance",
+      "description": "create individual mode of issuance in storage"
+    },
+    {
+      "permissionName": "inventory-storage.modes-of-issuance.item.put",
+      "displayName": "inventory storage - modify mode of issuance",
+      "description": "modify mode of issuance in storage"
+    },
+    {
+      "permissionName": "inventory-storage.modes-of-issuance.item.delete",
+      "displayName": "inventory storage - delete individual mode of issuance",
+      "description": "delete individual mode of issuance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-statuses.collection.get",
+      "displayName": "inventory storage - get instance status collection",
+      "description": "get instance status collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-statuses.item.get",
+      "displayName": "inventory storage - get individual instance status",
+      "description": "get individual instance status from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-statuses.item.post",
+      "displayName": "inventory storage - create individual instance status",
+      "description": "create individual instance status in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-statuses.item.put",
+      "displayName": "inventory storage - modify instance status",
+      "description": "modify instance status in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-statuses.item.delete",
+      "displayName": "inventory storage - delete individual instance status",
+      "description": "delete individual instance status from storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.collection.get",
+      "displayName": "inventory storage - get statistical codes collection",
+      "description": "get statistical codes collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.item.get",
+      "displayName": "inventory storage - get individual statistical code",
+      "description": "get individual statistical code from storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.item.post",
+      "displayName": "inventory storage - create individual statistical code",
+      "description": "create individual statistical code in storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.item.put",
+      "displayName": "inventory storage - modify statistical code",
+      "description": "modify statistical code in storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.item.delete",
+      "displayName": "inventory storage - delete individual statistical code",
+      "description": "delete individual statistical code from storage"
+    },
+    {
       "permissionName": "inventory-storage.platforms.collection.get",
       "displayName": "inventory storage - get platforms collection",
       "description": "get platforms collection from storage"
@@ -1119,6 +1402,11 @@
         "inventory-storage.locations.item.post",
         "inventory-storage.locations.item.put",
         "inventory-storage.locations.item.delete",
+        "inventory-storage.instance-relationship-types.collection.get",
+        "inventory-storage.instance-relationship-types.item.get",
+        "inventory-storage.instance-relationship-types.item.post",
+        "inventory-storage.instance-relationship-types.item.put",
+        "inventory-storage.instance-relationship-types.item.delete",
         "inventory-storage.identifier-types.collection.get",
         "inventory-storage.identifier-types.item.get",
         "inventory-storage.identifier-types.item.post",
@@ -1149,6 +1437,26 @@
         "inventory-storage.classification-types.item.post",
         "inventory-storage.classification-types.item.put",
         "inventory-storage.classification-types.item.delete",
+        "inventory-storage.cataloging-levels.collection.get",
+        "inventory-storage.cataloging-levels.item.get",
+        "inventory-storage.cataloging-levels.item.post",
+        "inventory-storage.cataloging-levels.item.put",
+        "inventory-storage.cataloging-levels.item.delete",
+        "inventory-storage.modes-of-issuance.collection.get",
+        "inventory-storage.modes-of-issuance.item.get",
+        "inventory-storage.modes-of-issuance.item.post",
+        "inventory-storage.modes-of-issuance.item.put",
+        "inventory-storage.modes-of-issuance.item.delete",
+        "inventory-storage.instance-statuses.collection.get",
+        "inventory-storage.instance-statuses.item.get",
+        "inventory-storage.instance-statuses.item.post",
+        "inventory-storage.instance-statuses.item.put",
+        "inventory-storage.instance-statuses.item.delete",
+        "inventory-storage.statistical-code-types.collection.get",
+        "inventory-storage.statistical-code-types.item.get",
+        "inventory-storage.statistical-code-types.item.post",
+        "inventory-storage.statistical-code-types.item.put",
+        "inventory-storage.statistical-code-types.item.delete",
         "inventory-storage.service-points.collection.get",
         "inventory-storage.service-points.item.get",
         "inventory-storage.service-points.item.post",

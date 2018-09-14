@@ -186,7 +186,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
-		assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
 
   }
 
@@ -862,30 +862,27 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
-  private void createItem(JsonObject itemToCreate) {
+  private void createItem(JsonObject itemToCreate)
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    try {
-      client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
-        ResponseHandler.text(createCompleted));
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
 
-      Response response = createCompleted.get(2, TimeUnit.SECONDS);
+    Response response = createCompleted.get(2, TimeUnit.SECONDS);
 
-      if (response.getStatusCode() != 201) {
-        System.out.println("WARNING!!!!! Create item preparation failed: "
-          + response.getBody());
-      }
-    }
-    catch(Exception e) {
-      System.out.println("WARNING!!!!! Create item preparation failed: "
-        + e.getMessage());
-    }
+    assertThat(response.getStatusCode(), is(201));
   }
 
   private JsonObject createItemRequest(
       UUID id,
       UUID holdingsRecordId,
       String barcode) {
+
     return createItemRequest(id, holdingsRecordId, barcode, journalMaterialTypeID);
   }
 

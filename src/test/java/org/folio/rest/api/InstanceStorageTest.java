@@ -2,14 +2,23 @@ package org.folio.rest.api;
 
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -25,9 +34,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.io.IOUtils;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.MarcJson;
-import org.folio.rest.support.*;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
@@ -36,6 +50,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class InstanceStorageTest extends TestBase {
   private static UUID mainLibraryLocationId;
@@ -194,7 +211,7 @@ public class InstanceStorageTest extends TestBase {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(response.getBody(), containsString("invalid input syntax for type uuid"));
+    assertThat(response.getBody(), containsString("ID must be a UUID"));
   }
 
   @Test
@@ -510,6 +527,15 @@ public class InstanceStorageTest extends TestBase {
     marcJson.setFields(fields);
   }
 
+  private MarcJson toMarcJson(String resourcePath) throws IOException {
+    String mrcjson = IOUtils.toString(this.getClass().getResourceAsStream(resourcePath), "UTF-8");
+    JsonObject json = new JsonObject(mrcjson);
+    MarcJson newMarcJson = new MarcJson();
+    newMarcJson.setLeader(json.getString("leader"));
+    newMarcJson.setFields(json.getJsonArray("fields").getList());
+    return newMarcJson;
+  }
+
   private Response put(UUID id, MarcJson marcJson, HttpStatus expectedStatus) throws Exception {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(instancesStorageUrl("/" + id + "/source-record/marc-json"), marcJson,
@@ -532,12 +558,19 @@ public class InstanceStorageTest extends TestBase {
     return getResponse.getJson().getString("sourceRecordFormat");
   }
 
-  private void getSourceNotFound(UUID id) throws Exception {
+  private Response getMarcJson(UUID id) throws Exception {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
+        StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+    return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private void getMarcJsonNotFound(UUID id) throws Exception {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
         StorageTestSuite.TENANT_ID, ResponseHandler.text(getCompleted));
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(getResponse.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
   }
 
   @Test
@@ -548,11 +581,7 @@ public class InstanceStorageTest extends TestBase {
 
     put(id, marcJson);
 
-    // get MARC source record
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
-        StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    Response getResponse = getMarcJson(id);
     assertThat(getResponse.getStatusCode(), is(200));
     assertThat(getResponse.getJson().getString("leader"), is("xxxxxnam a22yyyyy c 4500"));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
@@ -562,9 +591,52 @@ public class InstanceStorageTest extends TestBase {
     assertThat(getResponse.getJson().size(), is(2));  // leader and fields
   }
 
+  @Test  // https://issues.folio.org/browse/MODINVSTOR-142?focusedCommentId=33665#comment-33665
+  public void canCreateInstanceSourceRecord101073931X() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, toMarcJson("/101073931X.mrcjson"));
+
+    Response getResponse = getMarcJson(id);
+    assertThat(getResponse.getStatusCode(), is(200));
+    JsonArray fields = getResponse.getJson().getJsonArray("fields");
+    assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
+  }
+
+  @Test  // https://issues.folio.org/browse/MODINVSTOR-143?focusedCommentId=33618#comment-33618
+  public void canCreateInstanceSourceRecord1011273942() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, toMarcJson("/1011273942.mrcjson"));
+
+    Response getResponse = getMarcJson(id);
+    assertThat(getResponse.getStatusCode(), is(200));
+    JsonArray fields = getResponse.getJson().getJsonArray("fields");
+    assertThat(fields.getJsonObject(0).getString("001"), is("1011273942"));
+  }
+
+  @Test
+  public void canUpdateInstanceSourceRecord() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+
+    put(id, marcJson);                          // create
+    put(id, toMarcJson("/101073931X.mrcjson")); // update
+
+    Response getResponse = getMarcJson(id);
+    assertThat(getResponse.getStatusCode(), is(200));
+    JsonArray fields = getResponse.getJson().getJsonArray("fields");
+    assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
+  }
+
   @Test
   public void cannotGetNonExistingSourceRecord() throws Exception {
-    getSourceNotFound(UUID.randomUUID());
+    getMarcJsonNotFound(UUID.randomUUID());
   }
 
   @Test
@@ -585,7 +657,7 @@ public class InstanceStorageTest extends TestBase {
     assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
     assertThat(getSourceRecordFormat(id), is(nullValue()));
 
-    getSourceNotFound(id);
+    getMarcJsonNotFound(id);
   }
 
   @Test
@@ -603,7 +675,7 @@ public class InstanceStorageTest extends TestBase {
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
 
-    getSourceNotFound(id);
+    getMarcJsonNotFound(id);
   }
 
   @Test
@@ -662,17 +734,25 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canSearchForInstancesByTitle() {
-    canSort("title=\"*Up*\"", "Uprooted");
+    canSort("title=\"Upr*\"", "Uprooted");
+    // Note that 'Up' is a stop word, and will be removed from the query!
+    // We have an issue for dropping stop words: RMB-228
+    // Until then, search for "upr*" instead of "up*"
+  }
+
+  @Test
+  public void canSearchForInstancesByTitleWord() {
+    canSort("title=\"Times\"", "Interesting Times");
   }
 
   @Test
   public void canSearchForInstancesByTitleAdj() {
-    canSort("title adj \"*Up*\"", "Uprooted");
+    canSort("title adj \"Upro*\"", "Uprooted");
   }
 
   @Test
   public void canSearchForInstancesUsingSimilarQueryToUILookAheadSearch() {
-    canSort("title=\"up*\" or contributors=\"name\": \"up*\" or identifiers=\"value\": \"up*\"", "Uprooted");
+    canSort("title=\"upr*\" or contributors=\"name\": \"upr*\" or identifiers=\"value\": \"upr*\"", "Uprooted");
   }
 
   @Test

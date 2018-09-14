@@ -1,9 +1,9 @@
 package org.folio.rest.support.http;
 
-import org.folio.rest.api.StorageTestSuite;
-
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import org.folio.rest.api.StorageTestSuite;
 
 public class InterfaceUrls {
   public static URL materialTypesStorageUrl(String subPath)
@@ -48,6 +48,12 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/instance-storage/instances" + subPath);
   }
 
+  public static URL contributorTypesUrl(String subPath)
+    throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl("/contributor-types" + subPath);
+  }
+
   public static URL locationsStorageUrl(String subPath)
     throws MalformedURLException {
 
@@ -58,7 +64,7 @@ public class InterfaceUrls {
     throws MalformedURLException {
     return StorageTestSuite.storageUrl("/service-points" + subPath);
   }
-  
+
   public static URL servicePointsUsersUrl(String subPath)
       throws MalformedURLException {
     return StorageTestSuite.storageUrl("/service-points-users" + subPath);

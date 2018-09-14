@@ -176,6 +176,25 @@
       ]
     },
     {
+      "tableName": "instance_relationship_type",
+      "withMetadata": false,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "contributor_type",
       "withMetadata": false,
       "pkColumnName": "_id",
@@ -302,13 +321,98 @@
       ]
     },
     {
+      "tableName": "statistical_code_type",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_status",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "mode_of_issuance",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "cataloging_level",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "instance",
       "withMetadata": true,
       "generateId": false,
       "pkColumnName": "_id",
+      "foreignKeys": [
+        {
+          "fieldName": "instanceStatusId",
+          "targetTable": "instance_status",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "modeOfIssuanceId",
+          "targetTable": "mode_of_issuance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "catalogingLevelId",
+          "targetTable": "cataloging_level",
+          "tOps": "ADD"
+        }
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "hrid",
+          "tOps": "ADD"
+        }
+      ],
       "ginIndex": [
         {
           "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "indexTitle",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
@@ -332,6 +436,24 @@
           "removeAccents": true
         },
         {
+          "fieldName": "instanceStatusId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "modeOfIssuanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "catalogingLevelId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
           "fieldName": "languages",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -352,16 +474,28 @@
       ],
       "index": [
         {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "indexTitle",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "title",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
         },
         {
-          "fieldName": "id",
+          "fieldName": "statisticalCodeIds",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         },
         {
           "fieldName": "contributors",
@@ -374,6 +508,54 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        }
+      ],
+      "fullTextIndex": [
+        {
+          "fieldName": "title"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_relationship",
+      "withMetadata": true,
+      "generateId": true,
+      "pkColumnName": "_id",
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "superInstanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "subInstanceId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "superInstanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "subInstanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "instanceRelationshipTypeId",
+          "targetTable": "instance_relationship_type",
+          "tOps": "ADD"
         }
       ]
     },

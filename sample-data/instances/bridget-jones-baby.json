@@ -1,6 +1,7 @@
 {
   "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
-  "source": "Sample",
+  "hrid": "in000005",
+  "source": "MARC",
   "title": "Bridget Jones's Baby: the diaries",
   "edition": "First American Edition",
   "identifiers": [
@@ -35,6 +36,21 @@
       "dateOfPublication": "2016"
     }
   ],
+  "publicationFrequency": [
+    "A frequency description"
+  ],
+  "publicationRange": [
+    "A publication range"
+  ],
+  "electronicAccess": [
+    {
+      "uri": "http://www.folio.org/",
+      "linkText": "Bridget Jones URI",
+      "materialsSpecification": "Novel",
+      "publicNote": "A note",
+      "relationship": "Relationship"
+    }
+  ],
   "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
   "physicalDescriptions": [
     "219 pages ; 20 cm."
@@ -44,5 +60,8 @@
   ],
   "notes": [
     "Bridget Jones finds herself unexpectedly pregnant at the eleventh hour. However, her joyful pregnancy is dominated by one crucial but awkward question --who is the father? Could it be honorable, decent, notable human rights lawyer, Mark Darcy? Or, is it charming, witty, and totally despicable, Daniel Cleaver?"
-  ]
+  ],
+  "previouslyHeld": true,
+  "staffSuppress": true,
+  "discoverySuppress": true
 }
