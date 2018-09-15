@@ -50,12 +50,12 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   public static final String INSTANCE_HOLDINGS_VIEW = "instance_holding_view";
   public static final String INSTANCE_HOLDINGS_ITEMS_VIEW = "instance_holding_item_view";
   public static final String INSTANCE_TABLE =  "instance";
-  private String tableName =  "instance";
+  String tableName = "instance";
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
   private final Messages messages = Messages.getInstance();
 
-  private CQLWrapper handleCQL(String query, int limit, int offset) throws FieldException {
+  CQLWrapper handleCQL(String query, int limit, int offset) throws FieldException {
     boolean containsHoldingsRecordProperties = query != null && query.contains("holdingsRecords.");
     boolean containsItemsRecordProperties = query != null && query.contains("item.");
 
