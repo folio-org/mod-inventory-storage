@@ -96,6 +96,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         INSTANCE_HOLDINGS_VIEW+".ho_jsonb"));
     }
 
+    tableName = INSTANCE_TABLE;
     return createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_TABLE+".jsonb"));
   }
 
