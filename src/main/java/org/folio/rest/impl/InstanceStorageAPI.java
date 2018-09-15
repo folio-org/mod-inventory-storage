@@ -1,5 +1,11 @@
 package org.folio.rest.impl;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
@@ -32,13 +38,6 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 public class InstanceStorageAPI implements InstanceStorageResource {
 
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -50,7 +49,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
   public static final String INSTANCE_HOLDINGS_VIEW = "instance_holding_view";
   public static final String INSTANCE_HOLDINGS_ITEMS_VIEW = "instance_holding_item_view";
   public static final String INSTANCE_TABLE =  "instance";
-  String tableName = "instance";
+  String tableName = INSTANCE_TABLE;
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
   private final Messages messages = Messages.getInstance();
@@ -63,10 +62,10 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       tableName = INSTANCE_HOLDINGS_ITEMS_VIEW;
 
       //it_jsonb is the alias given items in the view in the DB
-      query = query.replaceAll("(?i)item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
+      query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
 
       //ho_jsonb is the alias given holdings in the view in the DB
-      query = query.replaceAll("(?i)holdingsRecords\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".ho_jsonb.");
+      query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".ho_jsonb.");
 
       return createCQLWrapper(query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
@@ -78,7 +77,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       tableName = INSTANCE_HOLDINGS_ITEMS_VIEW;
 
       //it_jsonb is the alias given items in the view in the DB
-      query = query.replaceAll("(?i)item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
+      query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
 
       return createCQLWrapper(query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
@@ -89,7 +88,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       tableName = INSTANCE_HOLDINGS_VIEW;
 
       //ho_jsonb is the alias given holdings in the view in the DB
-      query = query.replaceAll("(?i)holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
+      query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
 
       return createCQLWrapper(query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_VIEW+".jsonb",
