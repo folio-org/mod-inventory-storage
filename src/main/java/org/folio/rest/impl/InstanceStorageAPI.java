@@ -207,7 +207,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             }
           }
 
-          postgresClient.save("instance", entity.getId(), entity,
+          postgresClient.save(INSTANCE_TABLE, entity.getId(), entity,
             reply -> {
               try {
                 if(reply.succeeded()) {
