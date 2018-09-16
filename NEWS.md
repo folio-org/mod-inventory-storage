@@ -1,6 +1,7 @@
-## 12.8.2 Unreleased
+## 12.8.2 2018-09-16
 
 * Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)
+* Uses RMB 19.4.4, fixing fulltext bug with trailing spaces and * (MODINVSTOR-175)
 
 ## 12.8.1 2018-09-13
 
