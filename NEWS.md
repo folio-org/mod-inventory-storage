@@ -1,3 +1,7 @@
+## 13.0.0 Unreleased
+
+* Change Instance.edition to repeatable Instance.editions (MODINVSTOR-171)
+
 ## 12.8.2 Unreleased
 
 * Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)

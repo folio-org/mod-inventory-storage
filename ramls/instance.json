@@ -24,8 +24,12 @@
       },
       "uniqueItems": true
     },
-    "edition": {
-      "type": "string"
+    "editions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "series": {
       "type": "array",
