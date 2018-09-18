@@ -313,6 +313,7 @@
         <configuration>
           <excludes>
             <exclude>org/folio/rest/api/*Test.java</exclude>
+            <exclude>org/folio/rest/impl/*Test.java</exclude>
           </excludes>
           <includes>
             <include>org/folio/rest/api/StorageTestSuite.java</include>
