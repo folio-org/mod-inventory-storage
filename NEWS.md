@@ -1,4 +1,8 @@
-## 12.8.2 Unreleased
+## 12.8.3 unreleased
+
+* Performance improvements for single item operations (MODINVSTOR-146)
+
+## 12.8.2 2018-09-16
 
 * Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)
 

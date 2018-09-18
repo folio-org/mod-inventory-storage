@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.RestVerticle;
+import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
@@ -41,7 +42,8 @@ import io.vertx.ext.sql.ResultSet;
   LocationUnitTest.class,
   LocationsTest.class,
   ServicePointTest.class,
-  ServicePointsUserTest.class
+  ServicePointsUserTest.class,
+  StorageHelperTest.class,
 })
 @SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
