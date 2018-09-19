@@ -1,23 +1,8 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.model.HoldingsRecords;
-import org.folio.rest.jaxrs.resource.HoldingsStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -25,9 +10,26 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.HoldingsRecords;
+import org.folio.rest.jaxrs.resource.HoldingsStorageResource;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.OutStream;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -118,21 +120,21 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
                       withPlainInternalServerError(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+									log.error(e.getMessage());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   HoldingsStorageResource.GetHoldingsStorageHoldingsResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+					log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             HoldingsStorageResource.GetHoldingsStorageHoldingsResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+			log.error(e.getMessage());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         HoldingsStorageResource.GetHoldingsStorageHoldingsResponse.
           withPlainInternalServerError(e.getMessage())));
@@ -189,7 +191,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
                         .withPlainBadRequest(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+									log.error(e.getMessage());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
@@ -197,14 +199,14 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+					log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
               .withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+			log.error(e.getMessage());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
           .withPlainInternalServerError(e.getMessage())));
@@ -263,21 +265,21 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
 
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+									log.error(e.getMessage());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
                     withPlainInternalServerError(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+					log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
               withPlainInternalServerError(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+			log.error(e.getMessage());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
           withPlainInternalServerError(e.getMessage())));
