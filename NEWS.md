@@ -5,6 +5,7 @@
 * Provides `instance-storage` interface 5.0 (MODINVSTOR-135)
 * Provides `holdings-storage` interface 2.0 (MODINVSTOR-135)
 * Provides `item-storage` interface 6.0 (MODINVSTOR-135)
+* Change Instance.edition to repeatable Instance.editions (MODINVSTOR-171)
 
 ## 12.8.2 2018-09-16
 
