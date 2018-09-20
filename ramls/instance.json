@@ -206,9 +206,6 @@
     "modeOfIssuanceId": {
       "type": "string"
     },
-    "catalogingLevelId": {
-      "type": "string"
-    },
     "catalogedDate": {
       "type": "string"
     },

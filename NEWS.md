@@ -1,3 +1,9 @@
+## 13.0.0 Unreleased
+
+* Removes cataloging level (duplicate of instance status) (MODINVSTOR-186)
+* Removes property `instance.catalogingLevelId` (MODINVSTOR-186)
+* Removes end-point `cataloging-levels`, reference table `cataloging_level` (MODINVSTOR-186)
+
 ## 12.8.2 2018-09-16
 
 * Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)
