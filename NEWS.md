@@ -6,6 +6,7 @@
 * Provides `holdings-storage` interface 2.0 (MODINVSTOR-135)
 * Provides `item-storage` interface 6.0 (MODINVSTOR-135)
 * Change Instance.edition to repeatable Instance.editions (MODINVSTOR-171)
+* Removes property `instance.urls` (MODINVSTOR-180)
 
 ## 12.8.2 2018-09-16
 
