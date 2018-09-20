@@ -377,104 +377,6 @@
       ]
     },
     {
-      "tableName": "item",
-      "withMetadata": true,
-      "generateId": false,
-      "pkColumnName": "_id",
-      "foreignKeys": [
-        {
-          "fieldName": "permanentLoanTypeId",
-          "targetTable": "loan_type",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "temporaryLoanTypeId",
-          "targetTable": "loan_type",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "materialTypeId",
-          "targetTable": "material_type",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "permanentLocationId",
-          "targetTable": "location",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "temporaryLocationId",
-          "targetTable": "location",
-          "tOps": "ADD"
-        }
-
-      ],
-      "index": [
-        {
-          "fieldName": "holdingsRecordId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "materialTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "barcode",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "status.name",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "id",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
-      "ginIndex": [
-        {
-          "fieldName": "title",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "barcode",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "status.name",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "materialTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "holdingsRecordId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ]
-    },
-    {
       "tableName": "instance",
       "withMetadata": true,
       "generateId": false,
@@ -671,6 +573,11 @@
       "pkColumnName": "_id",
       "foreignKeys": [
         {
+          "fieldName": "instanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
           "fieldName": "permanentLocationId",
           "targetTable": "location",
           "tOps": "ADD"
@@ -693,6 +600,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "temporaryLocationId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         }
       ],
       "index": [
@@ -710,6 +623,109 @@
         },
         {
           "fieldName": "permanentLocationId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "temporaryLocationId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ]
+    },
+    {
+      "tableName": "item",
+      "withMetadata": true,
+      "generateId": false,
+      "pkColumnName": "_id",
+      "foreignKeys": [
+        {
+          "fieldName": "holdingsRecordId",
+          "targetTable": "holdings_record",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "permanentLoanTypeId",
+          "targetTable": "loan_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLoanTypeId",
+          "targetTable": "loan_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "materialTypeId",
+          "targetTable": "material_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "permanentLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        }
+
+      ],
+      "index": [
+        {
+          "fieldName": "holdingsRecordId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "materialTypeId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "id",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
+      "ginIndex": [
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "materialTypeId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "holdingsRecordId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
