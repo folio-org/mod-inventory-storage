@@ -1,6 +1,7 @@
 {
-  "srvcId" : "${artifactId}-${version}",
-  "descriptor" : {
-    "exec" : "java -jar ../mod-inventory-storage/target/mod-inventory-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
+  "srvcId": "${artifactId}-${version}",
+  "nodeId": "localhost",
+  "descriptor": {
+    "exec": "java -jar ../mod-inventory-storage/target/mod-inventory-storage-fat.jar -Dhttp.port=%p embed_postgres=true"
   }
 }
