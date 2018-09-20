@@ -1,3 +1,7 @@
+## 13.0.0 Unreleased
+
+* Removes property `instance.urls` (MODINVSTOR-180)
+
 ## 12.8.2 2018-09-16
 
 * Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)

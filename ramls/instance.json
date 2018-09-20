@@ -144,13 +144,6 @@
       },
       "uniqueItems": true
     },
-    "urls": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
-    },
     "electronicAccess": {
       "type": "array",
       "items": {
