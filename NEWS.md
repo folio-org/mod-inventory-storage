@@ -2,11 +2,14 @@
 
 * Add foreign keys item->holdings_record, holdings_record->instance (MODINVSTOR-135)
 * Removes index on `item.title` (MODINVSTOR-135)
-* Provides `instance-storage` interface 5.0 (MODINVSTOR-135)
-* Provides `holdings-storage` interface 2.0 (MODINVSTOR-135)
-* Provides `item-storage` interface 6.0 (MODINVSTOR-135)
+* Provides `instance-storage` interface 5.0 (MODINVSTOR-187)
+* Provides `holdings-storage` interface 2.0 (MODINVSTOR-187)
+* Provides `item-storage` interface 6.0 (MODINVSTOR-187)
 * Change Instance.edition to repeatable Instance.editions (MODINVSTOR-171)
 * Removes property `instance.urls` (MODINVSTOR-180)
+* Removes cataloging level (duplicate of instance status) (MODINVSTOR-186)
+* Removes property `instance.catalogingLevelId` (MODINVSTOR-186)
+* Removes end-point `cataloging-levels`, reference table `cataloging_level` (MODINVSTOR-186)
 
 ## 12.8.2 2018-09-16
 

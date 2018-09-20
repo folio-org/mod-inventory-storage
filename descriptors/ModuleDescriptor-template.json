@@ -498,33 +498,6 @@
       ]
     },
     {
-      "id": "cataloging-levels",
-      "version": "1.0",
-      "handlers": [
-        {
-          "methods": ["GET"],
-          "pathPattern": "/cataloging-levels",
-          "permissionsRequired": ["inventory-storage.cataloging-levels.collection.get"]
-        }, {
-          "methods": ["GET"],
-          "pathPattern": "/cataloging-levels/{id}",
-          "permissionsRequired": ["inventory-storage.cataloging-levels.item.get"]
-        }, {
-          "methods": ["POST"],
-          "pathPattern": "/cataloging-levels",
-          "permissionsRequired": ["inventory-storage.cataloging-levels.item.post"]
-        }, {
-          "methods": ["PUT"],
-          "pathPattern": "/cataloging-levels/{id}",
-          "permissionsRequired": ["inventory-storage.cataloging-levels.item.put"]
-        }, {
-          "methods": ["DELETE"],
-          "pathPattern": "/cataloging-levels/{id}",
-          "permissionsRequired": ["inventory-storage.cataloging-levels.item.delete"]
-        }
-      ]
-    },
-    {
       "id": "modes-of-issuance",
       "version": "1.0",
       "handlers": [
@@ -1216,31 +1189,6 @@
       "description": "delete individual classification qualifier from storage"
     },
     {
-      "permissionName": "inventory-storage.cataloging-levels.collection.get",
-      "displayName": "inventory storage - get cataloging levels collection",
-      "description": "get cataloging levels collection from storage"
-    },
-    {
-      "permissionName": "inventory-storage.cataloging-levels.item.get",
-      "displayName": "inventory storage - get individual cataloging level",
-      "description": "get individual cataloging level from storage"
-    },
-    {
-      "permissionName": "inventory-storage.cataloging-levels.item.post",
-      "displayName": "inventory storage - create individual cataloging level",
-      "description": "create individual cataloging level in storage"
-    },
-    {
-      "permissionName": "inventory-storage.cataloging-levels.item.put",
-      "displayName": "inventory storage - modify cataloging level",
-      "description": "modify cataloging level in storage"
-    },
-    {
-      "permissionName": "inventory-storage.cataloging-levels.item.delete",
-      "displayName": "inventory storage - delete individual cataloging level",
-      "description": "delete individual cataloging level from storage"
-    },
-    {
       "permissionName": "inventory-storage.modes-of-issuance.collection.get",
       "displayName": "inventory storage - get modes of issuance collection",
       "description": "get modes of issuance collection from storage"
@@ -1437,11 +1385,6 @@
         "inventory-storage.classification-types.item.post",
         "inventory-storage.classification-types.item.put",
         "inventory-storage.classification-types.item.delete",
-        "inventory-storage.cataloging-levels.collection.get",
-        "inventory-storage.cataloging-levels.item.get",
-        "inventory-storage.cataloging-levels.item.post",
-        "inventory-storage.cataloging-levels.item.put",
-        "inventory-storage.cataloging-levels.item.delete",
         "inventory-storage.modes-of-issuance.collection.get",
         "inventory-storage.modes-of-issuance.item.get",
         "inventory-storage.modes-of-issuance.item.post",

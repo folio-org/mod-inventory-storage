@@ -364,19 +364,6 @@
       ]
     },
     {
-      "tableName": "cataloging_level",
-      "withMetadata": true,
-      "pkColumnName": "_id",
-      "generateId": false,
-      "withAuditing": false,
-      "uniqueIndex": [
-        {
-          "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ]
-    },
-    {
       "tableName": "instance",
       "withMetadata": true,
       "generateId": false,
@@ -390,11 +377,6 @@
         {
           "fieldName": "modeOfIssuanceId",
           "targetTable": "mode_of_issuance",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "catalogingLevelId",
-          "targetTable": "cataloging_level",
           "tOps": "ADD"
         }
       ],
@@ -443,12 +425,6 @@
         },
         {
           "fieldName": "modeOfIssuanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
-          "fieldName": "catalogingLevelId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
