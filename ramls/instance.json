@@ -8,18 +8,19 @@
     },
     "hrid": {
       "type": "string",
-      "description": "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+      "description": "the human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
     },
     "source": {
       "type": "string",
-      "description": "The metadata source and it's format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)"
+      "description": "the metadata source and it's format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)"
     },
     "title": {
       "type": "string",
       "description": "the primary title (or label) associated with the resource"
     },
     "indexTitle": {
-      "type": "string"
+      "type": "string",
+      "description": "title normalized for browsing and searching; based on the title with articles removed"
     },
     "alternativeTitles": {
       "type": "array",
@@ -35,21 +36,21 @@
     },
     "series": {
       "type": "array",
-      "description": "a series title associated with the resource (e.g. Harry Potter)",
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "a series title associated with the resource (e.g. Harry Potter)"
       },
       "uniqueItems": true
     },
     "identifiers": {
       "type": "array",
-      "description": "an extensible set of name-value pairs of identifiers associated with the resource",
       "minItems": 0,
       "items": {
         "type": "object",
         "properties": {
           "value": {
-            "type": "string"
+            "type": "string",
+            "description": "an extensible set of name-value pairs of identifiers associated with the resource"
           },
           "identifierTypeId": {
             "type": "string",
@@ -65,13 +66,13 @@
     },
     "contributors": {
       "type": "array",
-      "description": "personal name, corporate name, meeting name",
       "minItems": 0,
       "items": {
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "personal name, corporate name, meeting name"
           },
           "contributorTypeId": {
             "type": "string",
@@ -109,10 +110,10 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "description": "classification (e.g. classification scheme, classification schedule)",
         "properties": {
           "classificationNumber": {
-            "type": "string"
+            "type": "string",
+            "description": "classification (e.g. classification scheme, classification schedule)",
           },
           "classificationTypeId": {
             "type": "string",
@@ -208,10 +209,11 @@
     },
     "instanceTypeId": {
       "type": "string",
-      "description": ""
+      "description": "the unique term for the resource type wether it's from the RDA content term list of locally defined"
     },
     "instanceFormatId": {
-      "type": "string"
+      "type": "string",
+      "description": "the unique term for the format wether it's from the RDA carrier term list of locally defined"
     },
     "physicalDescriptions": {
       "type": "array",
@@ -222,10 +224,10 @@
     },
     "languages": {
       "type": "array",
-      "description": "the set of languages used by the resource",
       "minItems": 0,
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "the set of languages used by the resource"
       }
     },
     "notes": {
@@ -248,8 +250,8 @@
       "description": "date or timestamp on an instance for when is was considered cataloged"
     },
     "previouslyHeld": {
-      "type": "boolean"
-      "description"
+      "type": "boolean",
+      "description": "records the fact that the resource was previously held by the library for things like Hathi access, etc."
     },
     "staffSuppress": {
       "type": "boolean",
@@ -282,7 +284,8 @@
       "readonly": true
     },
     "statusId": {
-      "type": "string"
+      "type": "string",
+      "description": "instance status term (e.g. cataloged, uncatalogued, batch loaded, temporary, other, not yet assigned)"
     },
     "statusUpdatedDate": {
       "type": "string",
