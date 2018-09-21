@@ -101,7 +101,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "description": "subject headings",
+        "description": "subject headings"
       },
       "uniqueItems": true
     },
@@ -113,12 +113,11 @@
         "properties": {
           "classificationNumber": {
             "type": "string",
-            "description": "classification (e.g. classification scheme, classification schedule)",
+            "description": "classification (e.g. classification scheme, classification schedule)"
           },
           "classificationTypeId": {
             "type": "string",
-            "description": "list of classification schemas (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)",
-
+            "description": "list of classification schemas (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)"
           }
         },
         "additionalProperties": false,
@@ -135,19 +134,19 @@
         "properties": {
           "publisher": {
             "type": "string",
-            "description": "name of publisher, distributor, etc.",
+            "description": "name of publisher, distributor, etc."
           },
           "place": {
             "type": "string",
-            "description": "place of publication, distribution, etc.",
+            "description": "place of publication, distribution, etc."
           },
           "dateOfPublication": {
             "type": "string",
-            "description": "date (year YYYY) of publication, distribution, etc.",
+            "description": "date (year YYYY) of publication, distribution, etc."
           },
           "role": {
             "type": "string",
-            "description": "the role of the publisher, distributor, etc.",
+            "description": "the role of the publisher, distributor, etc."
           }
         }
       }
@@ -156,7 +155,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "description": "the interval at which a serial appears, e.g., daily, weekly, monthly, quarterly, etc. ",
+        "description": "the interval at which a serial appears, e.g., daily, weekly, monthly, quarterly, etc. "
       },
       "uniqueItems": true
     },
@@ -182,7 +181,7 @@
         "properties": {
           "uri": {
             "type": "string",
-            "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources",
+            "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources"
           },
           "linkText": {
             "type": "string",
