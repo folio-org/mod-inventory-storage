@@ -45,10 +45,10 @@
   "electronicAccess": [
     {
       "uri": "http://www.folio.org/",
-      "linkText": "Bridget Jones URI",
+      "linkText": "Electronic resource (audio streaming)",
       "materialsSpecification": "Novel",
-      "publicNote": "A note",
-      "relationship": "Relationship"
+      "publicNote": "Access to audio file",
+      "relationship": "resource"
     }
   ],
   "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
