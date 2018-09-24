@@ -1,6 +1,5 @@
 package org.folio.rest.impl;
 
-
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.List;

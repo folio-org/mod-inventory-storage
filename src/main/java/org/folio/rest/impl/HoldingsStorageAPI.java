@@ -58,7 +58,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s."+HOLDINGS_RECORD_TABLE,
+        postgresClient.mutate(String.format("DELETE FROM %s_%s."+HOLDINGS_RECORD_TABLE,
           tenantId, "mod_inventory_storage"),
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
