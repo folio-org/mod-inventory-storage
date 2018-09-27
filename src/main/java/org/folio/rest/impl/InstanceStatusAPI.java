@@ -12,7 +12,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.InstanceStatus;
 import org.folio.rest.jaxrs.model.InstanceStatuses;
-import org.folio.rest.jaxrs.resource.InstanceStatusesResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -37,7 +36,7 @@ import io.vertx.core.logging.LoggerFactory;
  *
  * @author ne
  */
-public class InstanceStatusAPI implements InstanceStatusesResource {
+public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.InstanceStatuses {
 
   public static final String RESOURCE_TABLE = "instance_status";
 
@@ -47,7 +46,7 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
   private static final String IDFIELDNAME = "_id";
 
   @Override
-  public void deleteInstanceStatuses(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void deleteInstanceStatuses(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
 
     try {
@@ -65,19 +64,19 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
                   } else {
                     asyncResultHandler.handle(Future.succeededFuture(
                             DeleteInstanceStatusesResponse.
-                                    withPlainInternalServerError(reply.cause().getMessage())));
+                                    respond500WithTextPlain(reply.cause().getMessage())));
                   }
                 });
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
               DeleteInstanceStatusesResponse.
-                      withPlainInternalServerError(e.getMessage())));
+                      respond500WithTextPlain(e.getMessage())));
     }
   }
 
   @Override
-  public void getInstanceStatuses(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getInstanceStatuses(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
@@ -92,17 +91,17 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
                       List<InstanceStatus> levels = (List<InstanceStatus>) reply.result().getResults();
                       instanceStatuses.setInstanceStatuses(levels);
                       instanceStatuses.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesResponse.withJsonOK(
+                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesResponse.respond200WithApplicationJson(
                               instanceStatuses)));
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesResponse
-                              .withPlainBadRequest(reply.cause().getMessage())));
+                              .respond400WithTextPlain(reply.cause().getMessage())));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(
+                            .respond500WithTextPlain(MESSAGES.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                   }
                 });
@@ -113,13 +112,13 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesResponse
-                .withPlainInternalServerError(message)));
+                .respond500WithTextPlain(message)));
       }
     });
   }
 
   @Override
-  public void postInstanceStatuses(String lang, InstanceStatus entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void postInstanceStatuses(String lang, InstanceStatus entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String id = UUID.randomUUID().toString();
@@ -134,40 +133,38 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
                 reply -> {
                   try {
                     if (reply.succeeded()) {
-                      Object ret = reply.result();
-                      entity.setId((String) ret);
-                      OutStream stream = new OutStream();
-                      stream.setData(entity);
-                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse.withJsonCreated(
-                              LOCATION_PREFIX + ret, stream)));
+                      String ret = reply.result();
+                      entity.setId(ret);
+                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
+                        .respond201WithApplicationJson(entity, PostInstanceStatusesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isDuplicate(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
-                                .withJsonUnprocessableEntity(
+                                .respond422WithApplicationJson(
                                         org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
                                                 "name", entity.getName(), "Material Type exists"))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
-                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void getInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
@@ -183,37 +180,37 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
                       List<InstanceStatus> userGroup = (List<InstanceStatus>) reply.result().getResults();
                       if (userGroup.isEmpty()) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesByInstanceStatusIdResponse
-                                .withPlainNotFound(instanceStatusId)));
+                                .respond404WithTextPlain(instanceStatusId)));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesByInstanceStatusIdResponse
-                                .withJsonOK(userGroup.get(0))));
+                                .respond200WithApplicationJson(userGroup.get(0))));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isInvalidUUID(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesByInstanceStatusIdResponse
-                                .withPlainNotFound(instanceStatusId)));
+                                .respond404WithTextPlain(instanceStatusId)));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesByInstanceStatusIdResponse
-                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesByInstanceStatusIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesByInstanceStatusIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void deleteInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void deleteInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
@@ -223,33 +220,33 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
                     if (reply.succeeded()) {
                       if (reply.result().getUpdated() == 1) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                                .withNoContent()));
+                                .respond204()));
                       } else {
                         LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                                .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void putInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, InstanceStatus entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void putInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, InstanceStatus entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
@@ -262,26 +259,26 @@ public class InstanceStatusAPI implements InstanceStatusesResource {
                     if (reply.succeeded()) {
                       if (reply.result().getUpdated() == 0) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                                .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                                .withNoContent()));
+                                .respond204()));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }

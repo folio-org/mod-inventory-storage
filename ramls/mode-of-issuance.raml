@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Statisticalx code reference API
 version: v1.0
 protocols: [ HTTP, HTTPS ]
@@ -8,25 +8,20 @@ documentation:
   - title: Statistical code reference API
     content: This documents the API calls that can be made to query and manage issuance modes of the system
 
-schemas:
-  - modeofissuance.json: !include modeofissuance.json
-  - issuanceModes: !include issuancemodes.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  issuanceMode: !include modeofissuance.json
+  issuanceModes: !include issuancemodes.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - language: !include raml-util/traits/language.raml
-  - validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /modes-of-issuance:
   type:
@@ -34,7 +29,7 @@ resourceTypes:
       exampleCollection: !include examples/issuancemodes.json
       exampleItem: !include examples/modeofissuance.json
       schemaCollection: issuanceModes
-      schemaItem: modeofissuance.json
+      schemaItem: issuanceMode
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -45,6 +40,7 @@ resourceTypes:
     description: Create a new mode of issuance
     is: [validate]
   delete:
+    is: [language]
     description: "Delete all modes of issuance"
     responses:
       204:
@@ -59,4 +55,4 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/modeofissuance.json
-        schema: modeofissuance.json
+        schema: issuanceMode

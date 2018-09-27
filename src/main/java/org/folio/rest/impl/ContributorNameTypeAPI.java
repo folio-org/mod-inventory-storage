@@ -6,7 +6,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ContributorNameType;
 import org.folio.rest.jaxrs.model.ContributorNameTypes;
-import org.folio.rest.jaxrs.resource.ContributorNameTypesResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -30,7 +29,7 @@ import java.util.UUID;
 /**
  * Implements the instance contributor name type persistency using postgres jsonb.
  */
-public class ContributorNameTypeAPI implements ContributorNameTypesResource {
+public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.ContributorNameTypes {
 
   public static final String CONTRIBUTOR_NAME_TYPE_TABLE   = "contributor_name_type";
 
@@ -53,7 +52,7 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
   @Override
   public void getContributorNameTypes(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     /**
      * http://host:port/contributor-name-types
      */
@@ -71,18 +70,18 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
                   List<ContributorNameType> ContributorNameType = (List<ContributorNameType>) reply.result().getResults();
                   ContributorNameTypes.setContributorNameTypes(ContributorNameType);
                   ContributorNameTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse.withJsonOK(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse.respond200WithApplicationJson(
                       ContributorNameTypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
-                      .withPlainBadRequest(reply.cause().getMessage())));
+                      .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
-                    .withPlainInternalServerError(messages.getMessage(
+                    .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
             });
@@ -93,7 +92,7 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
-            .withPlainInternalServerError(message)));
+            .respond500WithTextPlain(message)));
       }
     });
   }
@@ -101,13 +100,13 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostContributorNameTypesResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void postContributorNameTypes(String lang, ContributorNameType entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -123,12 +122,9 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  Object ret = reply.result();
-                  entity.setId((String) ret);
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostContributorNameTypesResponse.withJsonCreated(
-                      LOCATION_PREFIX + ret, stream)));
+                  String ret = reply.result();
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostContributorNameTypesResponse
+                    .respond201WithApplicationJson(entity, PostContributorNameTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -137,7 +133,7 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PostContributorNameTypesResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPost(e, lang, asyncResultHandler);
@@ -152,14 +148,14 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void getContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -179,18 +175,18 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse.
-                      withPlainNotFound(msg)));
+                      respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
                 List<ContributorNameType> ContributorNameType = (List<ContributorNameType>) reply.result().getResults();
                 if (ContributorNameType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
-                      .withPlainNotFound(ContributorNameTypeId)));
+                      .respond404WithTextPlain(ContributorNameTypeId)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
-                      .withJsonOK(ContributorNameType.get(0))));
+                      .respond200WithApplicationJson(ContributorNameType.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -205,14 +201,14 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void deleteContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -229,7 +225,7 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                   return;
                 }
                 int updated = reply.result().getUpdated();
@@ -237,11 +233,11 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
-                      .withPlainNotFound(msg)));
+                      .respond404WithTextPlain(msg)));
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
               }
@@ -255,14 +251,14 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void putContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang, ContributorNameType entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -277,10 +273,10 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
-                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
                   }
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
@@ -290,7 +286,7 @@ public class ContributorNameTypeAPI implements ContributorNameTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPut(e, lang, asyncResultHandler);

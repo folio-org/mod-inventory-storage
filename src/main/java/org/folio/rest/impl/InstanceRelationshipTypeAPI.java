@@ -14,7 +14,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstanceRelationshipType;
 import org.folio.rest.jaxrs.model.InstanceRelationshipTypes;
 import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.jaxrs.resource.InstanceRelationshipTypesResource;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -33,7 +32,7 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
  *
  * @author ne
  */
-public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesResource {
+public class InstanceRelationshipTypeAPI implements org.folio.rest.jaxrs.resource.InstanceRelationshipTypes {
 
   public static final String INSTANCE_RELATIONSHIP_TYPE_TABLE   = "instance_relationship_type";
 
@@ -56,7 +55,7 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
   @Override
   public void getInstanceRelationshipTypes(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     /**
      * http://host:port/instance-relationship-types
      */
@@ -74,18 +73,18 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
                   List<InstanceRelationshipType> instanceRelationshipType = (List<InstanceRelationshipType>) reply.result().getResults();
                   instanceRelationshipTypes.setInstanceRelationshipTypes(instanceRelationshipType);
                   instanceRelationshipTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesResponse.withJsonOK(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesResponse.respond200WithApplicationJson(
                       instanceRelationshipTypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesResponse
-                      .withPlainBadRequest(reply.cause().getMessage())));
+                      .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesResponse
-                    .withPlainInternalServerError(messages.getMessage(
+                    .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
             });
@@ -96,7 +95,7 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesResponse
-            .withPlainInternalServerError(message)));
+            .respond500WithTextPlain(message)));
       }
     });
   }
@@ -104,13 +103,13 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostInstanceRelationshipTypesResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void postInstanceRelationshipTypes(String lang, InstanceRelationshipType entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -125,12 +124,11 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  Object ret = reply.result();
-                  entity.setId((String) ret);
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceRelationshipTypesResponse.withJsonCreated(
-                      LOCATION_PREFIX + ret, stream)));
+                  String ret = reply.result();
+                  entity.setId(ret);
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceRelationshipTypesResponse
+                    .respond201WithApplicationJson(entity,
+                      PostInstanceRelationshipTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -139,7 +137,7 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PostInstanceRelationshipTypesResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPost(e, lang, asyncResultHandler);
@@ -154,14 +152,14 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(GetInstanceRelationshipTypesByRelationshipTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void getInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -181,18 +179,18 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(GetInstanceRelationshipTypesByRelationshipTypeIdResponse.
-                      withPlainNotFound(msg)));
+                      respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
                 List<InstanceRelationshipType> instanceRelationshipType = (List<InstanceRelationshipType>) reply.result().getResults();
                 if (instanceRelationshipType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesByRelationshipTypeIdResponse
-                      .withPlainNotFound(relationshipTypeId)));
+                      .respond404WithTextPlain(relationshipTypeId)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesByRelationshipTypeIdResponse
-                      .withJsonOK(instanceRelationshipType.get(0))));
+                      .respond200WithApplicationJson(instanceRelationshipType.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -207,14 +205,14 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteInstanceRelationshipTypesByRelationshipTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void deleteInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -231,7 +229,7 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceRelationshipTypesByRelationshipTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                   return;
                 }
                 int updated = reply.result().getUpdated();
@@ -239,11 +237,11 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceRelationshipTypesByRelationshipTypeIdResponse
-                      .withPlainNotFound(msg)));
+                      .respond404WithTextPlain(msg)));
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceRelationshipTypesByRelationshipTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
               }
@@ -257,14 +255,14 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void putInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId, String lang, InstanceRelationshipType entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -278,10 +276,10 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
-                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
                   }
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
@@ -291,7 +289,7 @@ public class InstanceRelationshipTypeAPI implements InstanceRelationshipTypesRes
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPut(e, lang, asyncResultHandler);
