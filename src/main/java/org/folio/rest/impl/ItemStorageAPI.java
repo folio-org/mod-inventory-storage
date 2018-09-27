@@ -18,7 +18,7 @@ import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.model.Status;
-import org.folio.rest.jaxrs.resource.ItemStorageResource;
+import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -39,7 +39,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-public class ItemStorageAPI implements ItemStorageResource {
+public class ItemStorageAPI implements ItemStorage {
 
   static final String ITEM_TABLE = "item";
   private static final String ITEM_MATERIALTYPE_VIEW = "items_mt_view";
@@ -93,8 +93,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -122,54 +121,52 @@ public class ItemStorageAPI implements ItemStorageResource {
                   itemList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(Future.succeededFuture(
-                    ItemStorageResource.GetItemStorageItemsResponse.
-                      withJsonOK(itemList)));
+                    GetItemStorageItemsResponse.
+                      respond200WithApplicationJson(itemList)));
                 }
                 else {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    ItemStorageResource.GetItemStorageItemsResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
+                    GetItemStorageItemsResponse.
+                      respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    GetItemStorageItemsResponse.withPlainBadRequest(
+                    GetItemStorageItemsResponse.respond400WithTextPlain(
                       "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                 }
                 else {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    ItemStorageResource.GetItemStorageItemsResponse.
-                      withPlainInternalServerError("Error")));
+                    GetItemStorageItemsResponse.
+                      respond500WithTextPlain("Error")));
                 }
               }
             });
         }
         catch (IllegalStateException e) {
           asyncResultHandler.handle(Future.succeededFuture(
-            GetItemStorageItemsResponse.withPlainInternalServerError(
+            GetItemStorageItemsResponse.respond500WithTextPlain(
               "CQL State Error for '" + query + "': " + e.getLocalizedMessage())));
         }
         catch (Exception e) {
           if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
             asyncResultHandler.handle(Future.succeededFuture(
-              GetItemStorageItemsResponse.withPlainBadRequest(
+              GetItemStorageItemsResponse.respond400WithTextPlain(
               "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              ItemStorageResource.GetItemStorageItemsResponse.
-                withPlainInternalServerError("Error")));
+              GetItemStorageItemsResponse.respond500WithTextPlain("Error")));
           }
         }
       });
     } catch (Exception e) {
       if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
         asyncResultHandler.handle(Future.succeededFuture(
-          GetItemStorageItemsResponse.withPlainBadRequest(
+          GetItemStorageItemsResponse.respond400WithTextPlain(
             "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
       } else {
         asyncResultHandler.handle(Future.succeededFuture(
-          ItemStorageResource.GetItemStorageItemsResponse.
-            withPlainInternalServerError("Error")));
+          GetItemStorageItemsResponse.respond500WithTextPlain("Error")));
       }
     }
   }
@@ -181,8 +178,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     Item entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -208,14 +204,13 @@ public class ItemStorageAPI implements ItemStorageResource {
               if(res == 0){
                 String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
                 log.error(message);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.PostItemStorageItemsResponse
-                  .withPlainBadRequest(message)));
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostItemStorageItemsResponse
+                  .respond400WithTextPlain(message)));
                 return;
               }
               else if(res == -1){
                 asyncResultHandler.handle(Future.succeededFuture(
-                  ItemStorageResource.PostItemStorageItemsResponse
-                    .withPlainInternalServerError("")));
+                  PostItemStorageItemsResponse.respond500WithTextPlain("")));
                 return;
               }
               else{
@@ -232,48 +227,45 @@ public class ItemStorageAPI implements ItemStorageResource {
                   if(compRes.failed()) {
                     String message = "Attempting to specify non-existent location";
                     log.error(message);
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(ItemStorageResource.PostItemStorageItemsResponse
-                  .withPlainBadRequest(message)));
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostItemStorageItemsResponse
+                  .respond400WithTextPlain(message)));
                   } else {
                     try {
                       postgresClient.save("item", entity.getId(), entity,
                         reply -> {
                           try {
                             if(reply.succeeded()) {
-                              OutStream stream = new OutStream();
-                              stream.setData(entity);
-
                               asyncResultHandler.handle(
                                 Future.succeededFuture(
-                                  ItemStorageResource.PostItemStorageItemsResponse
-                                    .withJsonCreated(reply.result(), stream)));
+                                  PostItemStorageItemsResponse
+                                    .respond201WithApplicationJson(entity, PostItemStorageItemsResponse.headersFor201().withLocation(reply.result()))));
                             }
                             else {
                               String message = PgExceptionUtil.badRequestMessage(reply.cause());
                               if (message != null) {
                                 asyncResultHandler.handle(
                                     Future.succeededFuture(
-                                      ItemStorageResource.PostItemStorageItemsResponse
-                                        .withPlainBadRequest(message)));
+                                      PostItemStorageItemsResponse
+                                        .respond400WithTextPlain(message)));
                               } else {
                                 asyncResultHandler.handle(
                                   Future.succeededFuture(
-                                    ItemStorageResource.PostItemStorageItemsResponse
-                                      .withPlainInternalServerError(
+                                    PostItemStorageItemsResponse
+                                      .respond500WithTextPlain(
                                         reply.cause().getMessage())));
                               }
                             }
                           } catch (Exception e) {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
-                                ItemStorageResource.PostItemStorageItemsResponse
-                                  .withPlainInternalServerError(e.getMessage())));
+                                PostItemStorageItemsResponse
+                                  .respond500WithTextPlain(e.getMessage())));
                           }
                         });
                     } catch (Exception e) {
                       asyncResultHandler.handle(Future.succeededFuture(
-                        ItemStorageResource.PostItemStorageItemsResponse
-                          .withPlainInternalServerError(e.getMessage())));
+                        PostItemStorageItemsResponse
+                          .respond500WithTextPlain(e.getMessage())));
                     }
                   }
                 });
@@ -281,15 +273,13 @@ public class ItemStorageAPI implements ItemStorageResource {
           });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
-            ItemStorageResource.PostItemStorageItemsResponse
-              .withPlainInternalServerError(e.getMessage())));
+            PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
         }
       });
       }
       catch (Exception e) {
         asyncResultHandler.handle(Future.succeededFuture(
-          ItemStorageResource.PostItemStorageItemsResponse
-            .withPlainInternalServerError(e.getMessage())));
+          PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
       }
   }
   @Validate
@@ -299,8 +289,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     java.util.Map<String, String> okapiHeaders,
     io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -328,37 +317,37 @@ public class ItemStorageAPI implements ItemStorageResource {
 
                     asyncResultHandler.handle(
                       Future.succeededFuture(
-                        ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-                          withJsonOK(item)));
+                        GetItemStorageItemsByItemIdResponse.
+                          respond200WithApplicationJson(item)));
                   } else {
                     asyncResultHandler.handle(
                       Future.succeededFuture(
-                        ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-                          withPlainNotFound("Not Found")));
+                        GetItemStorageItemsByItemIdResponse.
+                          respond404WithTextPlain("Not Found")));
                   }
                 }
                 else {
                   Future.succeededFuture(
-                    ItemStorageResource.GetItemStorageItemsByItemIdResponse
-                      .withPlainInternalServerError(
+                    GetItemStorageItemsByItemIdResponse
+                      .respond500WithTextPlain(
                         reply.cause().getMessage()));
                 }
               } catch (Exception e) {
                 asyncResultHandler.handle(Future.succeededFuture(
-                  ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                  GetItemStorageItemsByItemIdResponse.
+                    respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
-            ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-              withPlainInternalServerError(e.getMessage())));
+            GetItemStorageItemsByItemIdResponse.
+              respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-        ItemStorageResource.GetItemStorageItemsByItemIdResponse.
-          withPlainInternalServerError(e.getMessage())));
+        GetItemStorageItemsByItemIdResponse.
+          respond500WithTextPlain(e.getMessage())));
     }
   }
   @Validate
@@ -366,8 +355,7 @@ public class ItemStorageAPI implements ItemStorageResource {
   public void deleteItemStorageItems(
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-    throws Exception {
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -381,20 +369,19 @@ public class ItemStorageAPI implements ItemStorageResource {
           reply -> {
             if (reply.succeeded()) {
               asyncResultHandler.handle(Future.succeededFuture(
-                ItemStorageResource.DeleteItemStorageItemsResponse.noContent()
+                DeleteItemStorageItemsResponse.noContent()
                   .build()));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                ItemStorageResource.DeleteItemStorageItemsResponse.
-                  withPlainInternalServerError(reply.cause().getMessage())));
+                DeleteItemStorageItemsResponse.
+                  respond500WithTextPlain(reply.cause().getMessage())));
             }
           });
       });
     }
     catch(Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-        ItemStorageResource.DeleteItemStorageItemsResponse.
-          withPlainInternalServerError(e.getMessage())));
+        DeleteItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -406,8 +393,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     Item entity,
     java.util.Map<String, String> okapiHeaders,
     io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -424,12 +410,11 @@ public class ItemStorageAPI implements ItemStorageResource {
                 String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
                 log.error(message);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutItemStorageItemsByItemIdResponse
-                  .withPlainBadRequest(message)));
+                  .respond400WithTextPlain(message)));
               }
               else if(res == -1){
                 asyncResultHandler.handle(Future.succeededFuture(
-                  ItemStorageResource.PostItemStorageItemsResponse
-                    .withPlainInternalServerError("")));
+                  PostItemStorageItemsResponse.respond500WithTextPlain("")));
               }
               else {
                 try {
@@ -457,19 +442,19 @@ public class ItemStorageAPI implements ItemStorageResource {
                                     asyncResultHandler.handle(
                                       Future.succeededFuture(
                                         PutItemStorageItemsByItemIdResponse
-                                          .withNoContent()));
+                                          .respond204()));
                                   } else {
                                     String message = PgExceptionUtil.badRequestMessage(update.cause());
                                     if (message != null) {
                                       asyncResultHandler.handle(
                                           Future.succeededFuture(
                                             PutItemStorageItemsByItemIdResponse
-                                              .withPlainBadRequest(message)));
+                                              .respond400WithTextPlain(message)));
                                     } else {
                                       asyncResultHandler.handle(
                                         Future.succeededFuture(
                                           PutItemStorageItemsByItemIdResponse
-                                            .withPlainInternalServerError(
+                                            .respond500WithTextPlain(
                                               update.cause().getMessage())));
                                     }
                                   }
@@ -477,13 +462,13 @@ public class ItemStorageAPI implements ItemStorageResource {
                                   asyncResultHandler.handle(
                                     Future.succeededFuture(
                                       PostItemStorageItemsResponse
-                                        .withPlainInternalServerError(e.getMessage())));
+                                        .respond500WithTextPlain(e.getMessage())));
                                 }
                               });
                           } catch (Exception e) {
                             asyncResultHandler.handle(Future.succeededFuture(
                               PutItemStorageItemsByItemIdResponse
-                                .withPlainInternalServerError(e.getMessage())));
+                                .respond500WithTextPlain(e.getMessage())));
                           }
                         } else {
                           try {
@@ -497,12 +482,12 @@ public class ItemStorageAPI implements ItemStorageResource {
                                     asyncResultHandler.handle(
                                       Future.succeededFuture(
                                         PutItemStorageItemsByItemIdResponse
-                                          .withNoContent()));
+                                          .respond204()));
                                   } else {
                                     asyncResultHandler.handle(
                                       Future.succeededFuture(
                                         PutItemStorageItemsByItemIdResponse
-                                          .withPlainInternalServerError(
+                                          .respond500WithTextPlain(
                                             save.cause().getMessage())));
                                   }
 
@@ -510,38 +495,35 @@ public class ItemStorageAPI implements ItemStorageResource {
                                   asyncResultHandler.handle(
                                     Future.succeededFuture(
                                       PostItemStorageItemsResponse
-                                        .withPlainInternalServerError(e.getMessage())));
+                                        .respond500WithTextPlain(e.getMessage())));
                                 }
                               });
                           } catch (Exception e) {
                             asyncResultHandler.handle(Future.succeededFuture(
                               PutItemStorageItemsByItemIdResponse
-                                .withPlainInternalServerError(e.getMessage())));
+                                .respond500WithTextPlain(e.getMessage())));
                           }
                         }
                       } else {
                         asyncResultHandler.handle(Future.succeededFuture(
                           PutItemStorageItemsByItemIdResponse
-                            .withPlainInternalServerError(reply.cause().getMessage())));
+                            .respond500WithTextPlain(reply.cause().getMessage())));
                       }
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    ItemStorageResource.PostItemStorageItemsResponse
-                      .withPlainInternalServerError(e.getMessage())));
+                    PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
                 }
               }
           });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
-            ItemStorageResource.PostItemStorageItemsResponse
-              .withPlainInternalServerError(e.getMessage())));
+            PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-        ItemStorageResource.PostItemStorageItemsResponse
-          .withPlainInternalServerError(e.getMessage())));
+        PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -552,8 +534,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     java.util.Map<String, String> okapiHeaders,
     io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -578,24 +559,23 @@ public class ItemStorageAPI implements ItemStorageResource {
                 asyncResultHandler.handle(
                   Future.succeededFuture(
                     DeleteItemStorageItemsByItemIdResponse
-                      .withNoContent()));
+                      .respond204()));
               }
               else {
                 asyncResultHandler.handle(Future.succeededFuture(
-                  ItemStorageResource.DeleteItemStorageItemsByItemIdResponse
-                    .withPlainInternalServerError("Error")));
+                  DeleteItemStorageItemsByItemIdResponse
+                    .respond500WithTextPlain("Error")));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
-            ItemStorageResource.DeleteItemStorageItemsByItemIdResponse
-              .withPlainInternalServerError("Error")));
+            DeleteItemStorageItemsByItemIdResponse
+              .respond500WithTextPlain("Error")));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-        ItemStorageResource.DeleteItemStorageItemsByItemIdResponse
-          .withPlainInternalServerError("Error")));
+        DeleteItemStorageItemsByItemIdResponse.respond500WithTextPlain("Error")));
     }
   }
 

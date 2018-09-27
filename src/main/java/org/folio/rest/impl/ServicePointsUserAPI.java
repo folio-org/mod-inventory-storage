@@ -12,8 +12,8 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.ServicePointsUser;
 import org.folio.rest.jaxrs.model.Servicepointsusers;
-import org.folio.rest.jaxrs.resource.ServicePointsResource;
-import org.folio.rest.jaxrs.resource.ServicePointsUsersResource;
+import org.folio.rest.jaxrs.resource.ServicePoints;
+import org.folio.rest.jaxrs.resource.ServicePointsUsers;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -26,7 +26,7 @@ import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-public class ServicePointsUserAPI implements ServicePointsUsersResource {
+public class ServicePointsUserAPI implements ServicePointsUsers {
 
   public static final Logger logger = LoggerFactory.getLogger(
           ServicePointsUserAPI.class);
@@ -87,8 +87,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
 
   @Override
   public void deleteServicePointsUsers(String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
       PostgresClient pgClient = getPGClient(vertxContext, tenantId);
@@ -100,7 +99,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
         if(mutateReply.failed()) {
           String message = logAndSaveError(mutateReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
-              DeleteServicePointsUsersResponse.withPlainInternalServerError(
+              DeleteServicePointsUsersResponse.respond500WithTextPlain(
               getErrorResponse(message))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
@@ -110,7 +109,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-          DeleteServicePointsUsersResponse.withPlainInternalServerError(
+          DeleteServicePointsUsersResponse.respond500WithTextPlain(
           getErrorResponse(message))));
     }
   }
@@ -118,8 +117,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   @Override
   public void getServicePointsUsers(String query, int offset, int limit,
       String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
       PostgresClient pgClient = getPGClient(vertxContext, tenantId);
@@ -129,7 +127,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
         if(getReply.failed()) {
           String message = logAndSaveError(getReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
-              GetServicePointsUsersResponse.withPlainInternalServerError(
+              GetServicePointsUsersResponse.respond500WithTextPlain(
               getErrorResponse(message))));
         } else {
           List<ServicePointsUser> spuList = (List<ServicePointsUser>)getReply.result().getResults();
@@ -137,7 +135,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
           spus.setServicePointsUsers(spuList);
           spus.setTotalRecords(getReply.result().getResultInfo().getTotalRecords());
           asyncResultHandler.handle(Future.succeededFuture(
-              GetServicePointsUsersResponse.withJsonOK(spus)));
+              GetServicePointsUsersResponse.respond200WithApplicationJson(spus)));
         }
       });
     } catch(Exception e) {
@@ -146,7 +144,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
         message = String.format("CQL Error: %s", message);
       }
       asyncResultHandler.handle(Future.succeededFuture(
-          GetServicePointsUsersResponse.withPlainInternalServerError(
+          GetServicePointsUsersResponse.respond500WithTextPlain(
           getErrorResponse(message))));
     }
   }
@@ -154,8 +152,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   @Override
   public void postServicePointsUsers(String lang, ServicePointsUser entity,
       Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
       String id = entity.getId();
@@ -169,33 +166,32 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
           String message = logAndSaveError(saveReply.cause());
           if(isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
-                PostServicePointsUsersResponse.withJsonUnprocessableEntity(
+                PostServicePointsUsersResponse.respond422WithApplicationJson(
                 ValidationHelper.createValidationErrorMessage("userId",
                 entity.getUserId(), "Service Point User Exists"))));
           } else if(isNotPresent(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
-                PostServicePointsUsersResponse.withJsonUnprocessableEntity(
+                PostServicePointsUsersResponse.respond422WithApplicationJson(
                 ValidationHelper.createValidationErrorMessage("userId",
                 entity.getUserId(), "Referenced Service Point does not exist"))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-                PostServicePointsUsersResponse.withPlainInternalServerError(
+                PostServicePointsUsersResponse.respond500WithTextPlain(
                 getErrorResponse(message))));
           }
         } else {
           String ret = saveReply.result();
             entity.setId(ret);
-            OutStream stream = new OutStream();
-            stream.setData(entity);
             asyncResultHandler.handle(Future.succeededFuture(
-                PostServicePointsUsersResponse.withJsonCreated(LOCATION_PREFIX
-                + ret, stream)));
+                PostServicePointsUsersResponse
+                  .respond201WithApplicationJson(entity,
+                    PostServicePointsUsersResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
         }
       });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-          PostServicePointsUsersResponse.withPlainInternalServerError(
+          PostServicePointsUsersResponse.respond500WithTextPlain(
           getErrorResponse(message))));
     }
   }
@@ -204,7 +200,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   public void getServicePointsUsersByServicepointsuserId(String servicepointsuserId,
       String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
       PostgresClient pgClient = getPGClient(vertxContext, tenantId);
@@ -217,7 +213,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
         if(getReply.failed()) {
           String message = logAndSaveError(getReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
-              GetServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
+              GetServicePointsUsersByServicepointsuserIdResponse.respond500WithTextPlain(
               getErrorResponse(message))));
         } else {
           List<ServicePointsUser> spuList = (List<ServicePointsUser>)
@@ -225,20 +221,19 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
           if(spuList.isEmpty()) { //404
             asyncResultHandler.handle(Future.succeededFuture(
                 GetServicePointsUsersByServicepointsuserIdResponse
-                .withPlainNotFound(String.format(
+                .respond404WithTextPlain(String.format(
                 "No service point user exists with id '%s'", servicepointsuserId))));
           } else {
             ServicePointsUser spu = spuList.get(0);
             asyncResultHandler.handle(Future.succeededFuture(
-                GetServicePointsUsersByServicepointsuserIdResponse.withJsonOK(
-                spu)));
+                GetServicePointsUsersByServicepointsuserIdResponse.respond200WithApplicationJson(spu)));
           }
         }
       });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-          GetServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
+          GetServicePointsUsersByServicepointsuserIdResponse.respond500WithTextPlain(
           getErrorResponse(message))));
     }
   }
@@ -246,8 +241,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   @Override
   public void deleteServicePointsUsersByServicepointsuserId(String servicepointsuserId,
       String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
        String tenantId = getTenant(okapiHeaders);
        PostgresClient pgClient = getPGClient(vertxContext, tenantId);
@@ -260,23 +254,23 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
          if(deleteReply.failed()) {
            String message = logAndSaveError(deleteReply.cause());
            asyncResultHandler.handle(Future.succeededFuture(
-               DeleteServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
+               DeleteServicePointsUsersByServicepointsuserIdResponse.respond500WithTextPlain(
                getErrorResponse(message))));
          } else {
            if(deleteReply.result().getUpdated() == 0) {
              asyncResultHandler.handle(Future.succeededFuture(
                DeleteServicePointsUsersByServicepointsuserIdResponse
-               .withPlainNotFound("Not found")));
+               .respond404WithTextPlain("Not found")));
            } else {
              asyncResultHandler.handle(Future.succeededFuture(
-               DeleteServicePointsUsersByServicepointsuserIdResponse.withNoContent()));
+               DeleteServicePointsUsersByServicepointsuserIdResponse.respond204()));
            }
          }
        });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-          DeleteServicePointsUsersByServicepointsuserIdResponse.withPlainInternalServerError(
+          DeleteServicePointsUsersByServicepointsuserIdResponse.respond500WithTextPlain(
           getErrorResponse(message))));
     }
   }
@@ -284,8 +278,7 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
   @Override
   public void putServicePointsUsersByServicepointsuserId(String servicepointsuserId,
       String lang, ServicePointsUser entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-      throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
       Criteria idCrit = new Criteria()
@@ -299,22 +292,22 @@ public class ServicePointsUserAPI implements ServicePointsUsersResource {
           String message = logAndSaveError(updateReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
              PutServicePointsUsersByServicepointsuserIdResponse
-             .withPlainInternalServerError(getErrorResponse(message))));
+             .respond500WithTextPlain(getErrorResponse(message))));
         } else if(updateReply.result().getUpdated() == 0) {
           asyncResultHandler.handle(Future.succeededFuture(
              PutServicePointsUsersByServicepointsuserIdResponse
-             .withPlainNotFound("Not found")));
+             .respond404WithTextPlain("Not found")));
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
              PutServicePointsUsersByServicepointsuserIdResponse
-             .withNoContent()));
+             .respond204()));
         }
       });
     } catch(Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
           PutServicePointsUsersByServicepointsuserIdResponse
-          .withPlainInternalServerError(getErrorResponse(message))));
+          .respond500WithTextPlain(getErrorResponse(message))));
     }
   }
 }

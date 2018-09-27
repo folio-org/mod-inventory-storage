@@ -12,8 +12,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.CatalogingLevel;
 import org.folio.rest.jaxrs.model.CatalogingLevels;
-import org.folio.rest.jaxrs.resource.CatalogingLevelsResource;
-import org.folio.rest.jaxrs.resource.CatalogingLevelsResource.DeleteCatalogingLevelsResponse;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -22,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
@@ -39,7 +36,7 @@ import io.vertx.core.logging.LoggerFactory;
  *
  * @author ne
  */
-public class CatalogingLevelAPI implements CatalogingLevelsResource {
+public class CatalogingLevelAPI implements org.folio.rest.jaxrs.resource.CatalogingLevels {
 
   public static final String RESOURCE_TABLE = "cataloging_level";
 
@@ -53,7 +50,7 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
   }
 
   @Override
-  public void deleteCatalogingLevels(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void deleteCatalogingLevels(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = TenantTool.tenantId(okapiHeaders);
     try {
@@ -70,20 +67,20 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                                     .build()));
                   } else {
                     asyncResultHandler.handle(Future.succeededFuture(
-                            DeleteCatalogingLevelsResponse.
-                                    withPlainInternalServerError(reply.cause().getMessage())));
+                            DeleteCatalogingLevelsResponse
+                                   .respond500WithTextPlain(reply.cause().getMessage())));
                   }
                 });
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-              DeleteCatalogingLevelsResponse.
-                      withPlainInternalServerError(e.getMessage())));
+              DeleteCatalogingLevelsResponse
+                     .respond500WithTextPlain(e.getMessage())));
     }
   }
 
   @Override
-  public void getCatalogingLevels(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getCatalogingLevels(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
@@ -98,17 +95,17 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                       List<CatalogingLevel> levels = (List<CatalogingLevel>) reply.result().getResults();
                       catalogingLevels.setCatalogingLevels(levels);
                       catalogingLevels.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsResponse.withJsonOK(
+                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsResponse.respond200WithApplicationJson(
                               catalogingLevels)));
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsResponse
-                              .withPlainBadRequest(reply.cause().getMessage())));
+                              .respond400WithTextPlain(reply.cause().getMessage())));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(
+                            .respond500WithTextPlain(MESSAGES.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                   }
                 });
@@ -119,14 +116,14 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsResponse
-                .withPlainInternalServerError(message)));
+                .respond500WithTextPlain(message)));
       }
     });
 
   }
 
   @Override
-  public void postCatalogingLevels(String lang, CatalogingLevel entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void postCatalogingLevels(String lang, CatalogingLevel entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String id = UUID.randomUUID().toString();
@@ -141,40 +138,38 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                 reply -> {
                   try {
                     if (reply.succeeded()) {
-                      Object ret = reply.result();
-                      entity.setId((String) ret);
-                      OutStream stream = new OutStream();
-                      stream.setData(entity);
-                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse.withJsonCreated(
-                              LOCATION_PREFIX + ret, stream)));
+                      String ret = reply.result();
+                      entity.setId(ret);
+                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
+                        .respond201WithApplicationJson(entity, PostCatalogingLevelsResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isDuplicate(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
-                                .withJsonUnprocessableEntity(
+                          .respond422WithApplicationJson(
                                         org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
                                                 "name", entity.getName(), "Material Type exists"))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
-                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCatalogingLevelsResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void getCatalogingLevelsByCatalogingLevelId(String catalogingLevelId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getCatalogingLevelsByCatalogingLevelId(String catalogingLevelId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
@@ -190,37 +185,37 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                       List<CatalogingLevel> userGroup = (List<CatalogingLevel>) reply.result().getResults();
                       if (userGroup.isEmpty()) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                                .withPlainNotFound(catalogingLevelId)));
+                                .respond404WithTextPlain(catalogingLevelId)));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                                .withJsonOK(userGroup.get(0))));
+                                .respond200WithApplicationJson(userGroup.get(0))));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isInvalidUUID(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                                .withPlainNotFound(catalogingLevelId)));
+                                .respond404WithTextPlain(catalogingLevelId)));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCatalogingLevelsByCatalogingLevelIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void deleteCatalogingLevelsByCatalogingLevelId(String catalogingLevelId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void deleteCatalogingLevelsByCatalogingLevelId(String catalogingLevelId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)  {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
@@ -230,33 +225,33 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                     if (reply.succeeded()) {
                       if (reply.result().getUpdated() == 1) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                                .withNoContent()));
+                                .respond204()));
                       } else {
                         LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                                .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteCatalogingLevelsByCatalogingLevelIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void putCatalogingLevelsByCatalogingLevelId(String catalogingLevelId, String lang, CatalogingLevel entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void putCatalogingLevelsByCatalogingLevelId(String catalogingLevelId, String lang, CatalogingLevel entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
@@ -269,26 +264,26 @@ public class CatalogingLevelAPI implements CatalogingLevelsResource {
                     if (reply.succeeded()) {
                       if (reply.result().getUpdated() == 0) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                                .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                                .withNoContent()));
+                                .respond204()));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCatalogingLevelsByCatalogingLevelIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }

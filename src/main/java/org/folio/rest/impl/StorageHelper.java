@@ -8,7 +8,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.resource.LocationUnitsResource;
+import org.folio.rest.jaxrs.resource.LocationUnits;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -65,8 +65,8 @@ public class StorageHelper {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(
         Future.succeededFuture(
-          LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-            .withPlainInternalServerError(message)));
+          LocationUnits.GetLocationUnitsInstitutionsByIdResponse
+            .respond500WithTextPlain(message)));
       // This is a bit dirty, but all those wrappers return the same kind of
       // response for InternalServerError, so we can use this from anywhere
       return null;
