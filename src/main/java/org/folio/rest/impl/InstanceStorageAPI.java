@@ -140,7 +140,7 @@ public class InstanceStorageAPI implements InstanceStorage {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Instance> instances = (List<Instance>) reply.result().getResults();
+                  List<Instance> instances = reply.result().getResults();
 
                   Instances instanceList = new Instances();
                   instanceList.setInstances(instances);
@@ -327,7 +327,7 @@ public class InstanceStorageAPI implements InstanceStorage {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<Instance> instanceList = (List<Instance>) reply.result().getResults();
+                  List<Instance> instanceList = reply.result().getResults();
                   if (instanceList.size() == 1) {
                     Instance instance = instanceList.get(0);
 
@@ -431,7 +431,7 @@ public class InstanceStorageAPI implements InstanceStorage {
           postgresClient.get(tableName, Instance.class, fieldList, cql, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<Instance> instancesList = (List<Instance>) reply.result().getResults();
+                List<Instance> instancesList = reply.result().getResults();
 
                 if (instancesList.size() == 1) {
                   try {
@@ -695,7 +695,7 @@ public class InstanceStorageAPI implements InstanceStorage {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<InstanceRelationship> instanceRelationships = (List<InstanceRelationship>) reply.result().getResults();
+                  List<InstanceRelationship> instanceRelationships = reply.result().getResults();
 
                   InstanceRelationships instanceList = new InstanceRelationships();
                   instanceList.setInstanceRelationships(instanceRelationships);

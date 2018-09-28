@@ -103,7 +103,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<HoldingsRecord> holdingsRecords = (List<HoldingsRecord>) reply.result().getResults();
+                  List<HoldingsRecord> holdingsRecords = reply.result().getResults();
 
                   HoldingsRecords holdingsList = new HoldingsRecords();
                   holdingsList.setHoldingsRecords(holdingsRecords);
@@ -237,7 +237,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<HoldingsRecord> holdingsList = (List<HoldingsRecord>) reply.result().getResults();
+                  List<HoldingsRecord> holdingsList = reply.result().getResults();
                   if (holdingsList.size() == 1) {
                     HoldingsRecord holdingsRecord = holdingsList.get(0);
 
@@ -364,7 +364,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
           postgresClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cql, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<HoldingsRecord> itemList = (List<HoldingsRecord>) reply.result().getResults();
+                List<HoldingsRecord> itemList = reply.result().getResults();
 
                 if (itemList.size() == 1) {
                   try {
