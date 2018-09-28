@@ -225,7 +225,7 @@ public class MaterialTypeAPI implements MaterialTypes {
           PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
             ItemStorageAPI.ITEM_TABLE, item, new String[]{idFieldName}, true, false, 0, 1, replyHandler -> {
             if(replyHandler.succeeded()){
-              List<Item> mtypeList = (List<Item>) replyHandler.result().getResults();
+              List<Item> mtypeList = replyHandler.result().getResults();
               if(mtypeList.size() > 0){
                 String message = "Can not delete material type, "+ materialtypeId + ". " +
                     mtypeList.size()  + " items associated with it";

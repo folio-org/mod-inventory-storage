@@ -416,7 +416,7 @@ public class ItemStorageAPI implements ItemStorage {
                   postgresClient.get(getTableName(query), Item.class, fieldList, cql, true, false,
                     reply -> {
                       if(reply.succeeded()) {
-                        List<Item> itemList = (List<Item>) reply.result().getResults();
+                        List<Item> itemList = reply.result().getResults();
                         if (itemList.size() == 1) {
                           try {
                             postgresClient.update("item", entity, entity.getId(),
@@ -591,8 +591,8 @@ public class ItemStorageAPI implements ItemStorage {
       PostgresClient.getInstance(vertx, tenantId).get(
         MaterialTypeAPI.MATERIAL_TYPE_TABLE, mtype, new String[]{"_id"}, true, false, 0, 1, check -> {
           if(check.succeeded()) {
-            List<Mtype> mtypeList0 = (List<Mtype>) check.result().getResults();
-            if(mtypeList0.size() == 0){
+            List<Mtype> mtypeList0 = check.result().getResults();
+            if (mtypeList0.size() == 0){
               handler.handle(io.vertx.core.Future.succeededFuture(0));
             }
             else {
@@ -623,7 +623,7 @@ public class ItemStorageAPI implements ItemStorage {
         if(getReply.failed()) {
           future.fail(getReply.cause());
         } else {
-          List<Location> locationList = (List<Location>) getReply.result().getResults();
+          List<Location> locationList = getReply.result().getResults();
           if(locationList.size() < 1) {
             future.fail("No location found");
           } else {

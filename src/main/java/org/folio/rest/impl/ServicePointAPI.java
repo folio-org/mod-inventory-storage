@@ -129,8 +129,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
                     getErrorResponse(message))));
           } else {
             Servicepoints servicepoints = new Servicepoints();
-            List<Servicepoint> servicepointList = (List<Servicepoint>) getReply
-                    .result().getResults();
+            List<Servicepoint> servicepointList = getReply.result().getResults();
             servicepoints.setServicepoints(servicepointList);
             servicepoints.setTotalRecords(getReply.result().getResultInfo()
                     .getTotalRecords());
