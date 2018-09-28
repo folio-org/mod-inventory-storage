@@ -23,7 +23,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -182,8 +181,7 @@ public class PlatformAPI implements org.folio.rest.jaxrs.resource.Platforms {
                       respond404WithTextPlain(msg)));
                   return;
                 }
-                @SuppressWarnings("unchecked")
-                List<Platform> instanceType = (List<Platform>) reply.result().getResults();
+                List<Platform> instanceType = reply.result().getResults();
                 if (instanceType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPlatformsByPlatformIdResponse
                       .respond404WithTextPlain(instanceTypeId)));

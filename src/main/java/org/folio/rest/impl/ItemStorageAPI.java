@@ -302,7 +302,7 @@ public class ItemStorageAPI implements ItemStorage {
             reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Item> itemList = (List<Item>) reply.result().getResults();
+                  List<Item> itemList = reply.result().getResults();
                   if (itemList.size() == 1) {
                     Item item = itemList.get(0);
 
