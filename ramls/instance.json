@@ -178,8 +178,11 @@
     "instanceTypeId": {
       "type": "string"
     },
-    "instanceFormatId": {
-      "type": "string"
+    "instanceFormatIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "physicalDescriptions": {
       "type": "array",
