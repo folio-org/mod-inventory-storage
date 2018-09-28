@@ -15,7 +15,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -66,8 +65,7 @@ public class InstanceTypeAPI implements org.folio.rest.jaxrs.resource.InstanceTy
               try {
                 if (reply.succeeded()) {
                   InstanceTypes instanceTypes = new InstanceTypes();
-                  @SuppressWarnings("unchecked")
-                  List<InstanceType> instanceType = (List<InstanceType>) reply.result().getResults();
+                  List<InstanceType> instanceType = reply.result().getResults();
                   instanceTypes.setInstanceTypes(instanceType);
                   instanceTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesResponse.respond200WithApplicationJson(
@@ -180,7 +178,7 @@ public class InstanceTypeAPI implements org.folio.rest.jaxrs.resource.InstanceTy
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<InstanceType> instanceType = (List<InstanceType>) reply.result().getResults();
+                List<InstanceType> instanceType = reply.result().getResults();
                 if (instanceType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesByInstanceTypeIdResponse
                       .respond404WithTextPlain(instanceTypeId)));

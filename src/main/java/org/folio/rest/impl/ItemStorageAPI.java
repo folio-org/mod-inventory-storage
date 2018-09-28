@@ -5,11 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
@@ -114,7 +109,7 @@ public class ItemStorageAPI implements ItemStorage {
               try {
 
                 if(reply.succeeded()) {
-                  List<Item> items = (List<Item>) reply.result().getResults();
+                  List<Item> items = reply.result().getResults();
 
                   Items itemList = new Items();
                   itemList.setItems(items);

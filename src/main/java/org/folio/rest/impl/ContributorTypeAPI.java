@@ -15,7 +15,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -66,8 +65,7 @@ public class ContributorTypeAPI implements org.folio.rest.jaxrs.resource.Contrib
               try {
                 if (reply.succeeded()) {
                   ContributorTypes contributorTypes = new ContributorTypes();
-                  @SuppressWarnings("unchecked")
-                  List<ContributorType> contributorType = (List<ContributorType>) reply.result().getResults();
+                  List<ContributorType> contributorType = reply.result().getResults();
                   contributorTypes.setContributorTypes(contributorType);
                   contributorTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorTypesResponse.respond200WithApplicationJson(

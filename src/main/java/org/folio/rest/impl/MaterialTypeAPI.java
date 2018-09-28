@@ -20,7 +20,6 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
@@ -74,8 +73,7 @@ public class MaterialTypeAPI implements MaterialTypes {
               try {
                 if(reply.succeeded()){
                   Mtypes mtypes = new Mtypes();
-                  @SuppressWarnings("unchecked")
-                  List<Mtype> mtype = (List<Mtype>) reply.result().getResults();
+                  List<Mtype> mtype = reply.result().getResults();
                   mtypes.setMtypes(mtype);
                   mtypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypesResponse.respond200WithApplicationJson(
@@ -176,8 +174,7 @@ public class MaterialTypeAPI implements MaterialTypes {
             reply -> {
               try {
                 if(reply.succeeded()){
-                  @SuppressWarnings("unchecked")
-                  List<Mtype> userGroup = (List<Mtype>) reply.result().getResults();
+                  List<Mtype> userGroup = reply.result().getResults();
                   if(userGroup.isEmpty()){
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetMaterialTypesByMaterialtypeIdResponse
                       .respond404WithTextPlain(materialtypeId)));

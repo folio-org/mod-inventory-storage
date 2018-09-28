@@ -20,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
@@ -86,7 +85,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
                     if (reply.succeeded()) {
                       StatisticalCodeTypes statisticalCodeTypes = new StatisticalCodeTypes();
                       @SuppressWarnings("unchecked")
-                      List<StatisticalCodeType> codes = (List<StatisticalCodeType>) reply.result().getResults();
+                      List<StatisticalCodeType> codes = reply.result().getResults();
                       statisticalCodeTypes.setStatisticalCodeTypes(codes);
                       statisticalCodeTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesResponse.respond200WithApplicationJson(
@@ -176,7 +175,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
                   try {
                     if (reply.succeeded()) {
                       @SuppressWarnings("unchecked")
-                      List<StatisticalCodeType> userGroup = (List<StatisticalCodeType>) reply.result().getResults();
+                      List<StatisticalCodeType> userGroup = reply.result().getResults();
                       if (userGroup.isEmpty()) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse
                                 .respond404WithTextPlain(statisticalCodeTypeId)));

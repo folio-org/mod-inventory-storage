@@ -20,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
@@ -87,8 +86,7 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
                   try {
                     if (reply.succeeded()) {
                       InstanceStatuses instanceStatuses = new InstanceStatuses();
-                      @SuppressWarnings("unchecked")
-                      List<InstanceStatus> levels = (List<InstanceStatus>) reply.result().getResults();
+                      List<InstanceStatus> levels = reply.result().getResults();
                       instanceStatuses.setInstanceStatuses(levels);
                       instanceStatuses.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesResponse.respond200WithApplicationJson(

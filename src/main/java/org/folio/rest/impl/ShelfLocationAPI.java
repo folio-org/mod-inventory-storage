@@ -69,7 +69,7 @@ public class ShelfLocationAPI implements ShelfLocations {
                   GetShelfLocationsResponse.respond400WithTextPlain(message)));
               } else {
                 Shelflocations shelfLocations = new Shelflocations();
-                List<Location> locationsList = (List<Location>) reply.result().getResults();
+                List<Location> locationsList = reply.result().getResults();
                 List<Shelflocation> shelfLocationsList = new ArrayList<>(locationsList.size());
                 for (Location loc : locationsList) {
                   Shelflocation sl = new Shelflocation();

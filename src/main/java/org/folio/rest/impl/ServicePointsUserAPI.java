@@ -12,7 +12,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.ServicePointsUser;
 import org.folio.rest.jaxrs.model.Servicepointsusers;
-import org.folio.rest.jaxrs.resource.ServicePoints;
 import org.folio.rest.jaxrs.resource.ServicePointsUsers;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -20,7 +19,6 @@ import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -210,15 +208,14 @@ public class ServicePointsUserAPI implements ServicePointsUsers {
           .setValue(servicepointsuserId);
       pgClient.get(SERVICE_POINT_USER_TABLE, ServicePointsUser.class,
           new Criterion(idCrit), true, false, getReply -> {
-        if(getReply.failed()) {
+        if (getReply.failed()) {
           String message = logAndSaveError(getReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
               GetServicePointsUsersByServicepointsuserIdResponse.respond500WithTextPlain(
               getErrorResponse(message))));
         } else {
-          List<ServicePointsUser> spuList = (List<ServicePointsUser>)
-              getReply.result().getResults();
-          if(spuList.isEmpty()) { //404
+          List<ServicePointsUser> spuList = getReply.result().getResults();
+          if (spuList.isEmpty()) {
             asyncResultHandler.handle(Future.succeededFuture(
                 GetServicePointsUsersByServicepointsuserIdResponse
                 .respond404WithTextPlain(String.format(

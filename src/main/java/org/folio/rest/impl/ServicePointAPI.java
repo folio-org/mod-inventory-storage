@@ -19,7 +19,6 @@ import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -217,8 +216,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
                     GetServicePointsByServicepointIdResponse
                     .respond500WithTextPlain(getErrorResponse(message))));
           } else {
-            List<Servicepoint> servicepointList = (List<Servicepoint>) getReply
-                    .result().getResults();
+            List<Servicepoint> servicepointList = getReply.result().getResults();
             if(servicepointList.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
                       GetServicePointsByServicepointIdResponse

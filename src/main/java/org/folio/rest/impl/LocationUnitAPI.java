@@ -20,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 
@@ -88,7 +87,7 @@ public class LocationUnitAPI implements LocationUnits {
                 .respond400WithTextPlain(message)));
           } else {
             Locinsts insts = new Locinsts();
-            List<Locinst> items = (List<Locinst>) reply.result().getResults();
+            List<Locinst> items = reply.result().getResults();
             insts.setLocinsts(items);
             insts.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
             asyncResultHandler.handle(Future.succeededFuture(
@@ -155,7 +154,7 @@ public class LocationUnitAPI implements LocationUnits {
               GetLocationUnitsInstitutionsByIdResponse
                 .respond500WithTextPlain(message)));
           } else {
-            List<Locinst> instlist = (List<Locinst>) getReply.result().getResults();
+            List<Locinst> instlist = getReply.result().getResults();
             if (instlist.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
                 GetLocationUnitsInstitutionsByIdResponse
@@ -293,7 +292,7 @@ public class LocationUnitAPI implements LocationUnits {
                   .respond400WithTextPlain(message)));
             } else {
               Loccamps camps = new Loccamps();
-              List<Loccamp> items = (List<Loccamp>) reply.result().getResults();
+              List<Loccamp> items = reply.result().getResults();
               camps.setLoccamps(items);
               camps.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
               asyncResultHandler.handle(Future.succeededFuture(
@@ -359,7 +358,7 @@ public class LocationUnitAPI implements LocationUnits {
               GetLocationUnitsCampusesByIdResponse
                 .respond500WithTextPlain(message)));
           } else {
-            List<Loccamp> items = (List<Loccamp>) getReply.result().getResults();
+            List<Loccamp> items = getReply.result().getResults();
             if (items.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
                 GetLocationUnitsCampusesByIdResponse

@@ -13,7 +13,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
@@ -91,7 +90,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
               GetLocationsResponse.respond400WithTextPlain(message)));
           } else {
             Locations shelfLocations = new Locations();
-            List<Location> shelfLocationsList = (List<Location>) reply.result().getResults();
+            List<Location> shelfLocationsList = reply.result().getResults();
             shelfLocations.setLocations(shelfLocationsList);
             shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
             asyncResultHandler.handle(Future.succeededFuture(

@@ -179,8 +179,7 @@ public class InstanceFormatAPI implements org.folio.rest.jaxrs.resource.Instance
                      .respond404WithTextPlain(msg)));
                   return;
                 }
-                @SuppressWarnings("unchecked")
-                List<InstanceFormat> instanceFormat = (List<InstanceFormat>) reply.result().getResults();
+                List<InstanceFormat> instanceFormat = reply.result().getResults();
                 if (instanceFormat.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceFormatsByInstanceFormatIdResponse
                       .respond404WithTextPlain(instanceFormatId)));

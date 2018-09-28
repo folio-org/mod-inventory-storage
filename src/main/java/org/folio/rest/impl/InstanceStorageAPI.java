@@ -576,7 +576,7 @@ public class InstanceStorageAPI implements InstanceStorage {
             .respond500WithTextPlain(reply.cause().getMessage())));
         return;
       }
-      List<MarcJson> results = (List<MarcJson>) reply.result().getResults();
+      List<MarcJson> results = reply.result().getResults();
       if (results.isEmpty()) {
         asyncResultHandler.handle(Future.succeededFuture(
           GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse

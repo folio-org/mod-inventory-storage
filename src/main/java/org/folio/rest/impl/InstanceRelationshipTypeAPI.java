@@ -22,7 +22,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -69,8 +68,7 @@ public class InstanceRelationshipTypeAPI implements org.folio.rest.jaxrs.resourc
               try {
                 if (reply.succeeded()) {
                   InstanceRelationshipTypes instanceRelationshipTypes = new InstanceRelationshipTypes();
-                  @SuppressWarnings("unchecked")
-                  List<InstanceRelationshipType> instanceRelationshipType = (List<InstanceRelationshipType>) reply.result().getResults();
+                  List<InstanceRelationshipType> instanceRelationshipType = reply.result().getResults();
                   instanceRelationshipTypes.setInstanceRelationshipTypes(instanceRelationshipType);
                   instanceRelationshipTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesResponse.respond200WithApplicationJson(

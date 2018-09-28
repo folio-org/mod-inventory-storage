@@ -71,8 +71,7 @@ public class LoanTypeAPI implements org.folio.rest.jaxrs.resource.LoanTypes {
               try {
                 if (reply.succeeded()) {
                   Loantypes loantypes = new Loantypes();
-                  @SuppressWarnings("unchecked")
-                  List<Loantype> loantype = (List<Loantype>) reply.result().getResults();
+                  List<Loantype> loantype = reply.result().getResults();
                   loantypes.setLoantypes(loantype);
                   loantypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesResponse.respond200WithApplicationJson(

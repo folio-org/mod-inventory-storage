@@ -20,7 +20,6 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
@@ -372,10 +371,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                     postgresClient.update(HOLDINGS_RECORD_TABLE, entity, entity.getId(),
                       update -> {
                         try {
-                          if(update.succeeded()) {
-                            OutStream stream = new OutStream();
-                            stream.setData(entity);
-
+                          if (update.succeeded()) {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
@@ -407,9 +403,6 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                     save -> {
                       try {
                         if(save.succeeded()) {
-                          OutStream stream = new OutStream();
-                          stream.setData(entity);
-
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutHoldingsStorageHoldingsByHoldingsRecordIdResponse

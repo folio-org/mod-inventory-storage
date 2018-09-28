@@ -71,8 +71,7 @@ public class ClassificationTypeAPI implements org.folio.rest.jaxrs.resource.Clas
               try {
                 if (reply.succeeded()) {
                   ClassificationTypes instanceTypes = new ClassificationTypes();
-                  @SuppressWarnings("unchecked")
-                  List<ClassificationType> instanceType = (List<ClassificationType>) reply.result().getResults();
+                  List<ClassificationType> instanceType = reply.result().getResults();
                   instanceTypes.setClassificationTypes(instanceType);
                   instanceTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesResponse.respond200WithApplicationJson(
