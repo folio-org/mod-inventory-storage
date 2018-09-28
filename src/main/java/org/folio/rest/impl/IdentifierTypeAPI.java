@@ -6,7 +6,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.IdentifierType;
 import org.folio.rest.jaxrs.model.IdentifierTypes;
-import org.folio.rest.jaxrs.resource.IdentifierTypesResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -30,7 +29,7 @@ import java.util.UUID;
 /**
  * Implements the instance identifier type persistency using postgres jsonb.
  */
-public class IdentifierTypeAPI implements IdentifierTypesResource {
+public class IdentifierTypeAPI implements org.folio.rest.jaxrs.resource.IdentifierTypes {
 
   public static final String IDENTIFIER_TYPE_TABLE   = "identifier_type";
 
@@ -53,7 +52,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
   @Override
   public void getIdentifierTypes(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     /**
      * http://host:port/identifier-types
      */
@@ -71,18 +70,18 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                   List<IdentifierType> identifierType = (List<IdentifierType>) reply.result().getResults();
                   identifierTypes.setIdentifierTypes(identifierType);
                   identifierTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesResponse.withJsonOK(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesResponse.respond200WithApplicationJson(
                       identifierTypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesResponse
-                      .withPlainBadRequest(reply.cause().getMessage())));
+                      .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesResponse
-                    .withPlainInternalServerError(messages.getMessage(
+                    .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
             });
@@ -93,7 +92,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesResponse
-            .withPlainInternalServerError(message)));
+            .respond500WithTextPlain(message)));
       }
     });
   }
@@ -101,13 +100,13 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostIdentifierTypesResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void postIdentifierTypes(String lang, IdentifierType entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -123,12 +122,10 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  Object ret = reply.result();
-                  entity.setId((String) ret);
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostIdentifierTypesResponse.withJsonCreated(
-                      LOCATION_PREFIX + ret, stream)));
+                  String ret = reply.result();
+                  entity.setId(ret);
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostIdentifierTypesResponse
+                    .respond201WithApplicationJson(entity, PostIdentifierTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -137,7 +134,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PostIdentifierTypesResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPost(e, lang, asyncResultHandler);
@@ -152,14 +149,14 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void getIdentifierTypesByIdentifierTypeId(String identifierTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -179,18 +176,18 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse.
-                      withPlainNotFound(msg)));
+                      respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
                 List<IdentifierType> identifierType = (List<IdentifierType>) reply.result().getResults();
                 if (identifierType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse
-                      .withPlainNotFound(identifierTypeId)));
+                      .respond404WithTextPlain(identifierTypeId)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse
-                      .withJsonOK(identifierType.get(0))));
+                      .respond200WithApplicationJson(identifierType.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -205,14 +202,14 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteIdentifierTypesByIdentifierTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void deleteIdentifierTypesByIdentifierTypeId(String identifierTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -229,7 +226,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteIdentifierTypesByIdentifierTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                   return;
                 }
                 int updated = reply.result().getUpdated();
@@ -237,11 +234,11 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteIdentifierTypesByIdentifierTypeIdResponse
-                      .withPlainNotFound(msg)));
+                      .respond404WithTextPlain(msg)));
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteIdentifierTypesByIdentifierTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
               }
@@ -255,14 +252,14 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutIdentifierTypesByIdentifierTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void putIdentifierTypesByIdentifierTypeId(String identifierTypeId, String lang, IdentifierType entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -277,10 +274,10 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutIdentifierTypesByIdentifierTypeIdResponse
-                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutIdentifierTypesByIdentifierTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
                   }
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
@@ -290,7 +287,7 @@ public class IdentifierTypeAPI implements IdentifierTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PutIdentifierTypesByIdentifierTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPut(e, lang, asyncResultHandler);

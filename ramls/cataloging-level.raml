@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Cataloging level reference API
 version: v1.0
 protocols: [ HTTP, HTTPS ]
@@ -8,25 +8,20 @@ documentation:
   - title: Cataloging level reference API
     content: This documents the API calls that can be made to query and manage cataloging levels of the system
 
-schemas:
-  - cataloginglevel.json: !include cataloginglevel.json
-  - catalogingLevels: !include cataloginglevels.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  catalogingLevel: !include cataloginglevel.json
+  catalogingLevels: !include cataloginglevels.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - language: !include raml-util/traits/language.raml
-  - validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /cataloging-levels:
   type:
@@ -34,7 +29,7 @@ resourceTypes:
       exampleCollection: !include examples/cataloginglevels.json
       exampleItem: !include examples/cataloginglevel.json
       schemaCollection: catalogingLevels
-      schemaItem: cataloginglevel.json
+      schemaItem: catalogingLevel
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -46,6 +41,7 @@ resourceTypes:
     is: [validate]
   delete:
     description: "Delete all cataloging levels"
+    is: [language]
     responses:
       204:
         description: "All cataloging levels deleted"
@@ -59,5 +55,5 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/cataloginglevel.json
-        schema: cataloginglevel.json
+        schema: catalogingLevel
 

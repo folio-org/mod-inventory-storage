@@ -9,7 +9,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ClassificationType;
 import org.folio.rest.jaxrs.model.ClassificationTypes;
-import org.folio.rest.jaxrs.resource.ClassificationTypesResource;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -19,7 +18,6 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -36,7 +34,7 @@ import io.vertx.core.logging.LoggerFactory;
 /**
  * Implements the instance classification type persistency using postgres jsonb.
  */
-public class ClassificationTypeAPI implements ClassificationTypesResource {
+public class ClassificationTypeAPI implements org.folio.rest.jaxrs.resource.ClassificationTypes {
 
   public static final String CLASSIFICATION_TYPE_TABLE   = "classification_type";
 
@@ -59,7 +57,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
   @Override
   public void getClassificationTypes(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     /**
      * http://host:port/classification-types
      */
@@ -77,18 +75,18 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                   List<ClassificationType> instanceType = (List<ClassificationType>) reply.result().getResults();
                   instanceTypes.setClassificationTypes(instanceType);
                   instanceTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesResponse.withJsonOK(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesResponse.respond200WithApplicationJson(
                       instanceTypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesResponse
-                      .withPlainBadRequest(reply.cause().getMessage())));
+                      .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesResponse
-                    .withPlainInternalServerError(messages.getMessage(
+                    .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
             });
@@ -99,7 +97,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesResponse
-            .withPlainInternalServerError(message)));
+            .respond500WithTextPlain(message)));
       }
     });
   }
@@ -107,13 +105,13 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostClassificationTypesResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void postClassificationTypes(String lang, ClassificationType entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -129,12 +127,10 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  Object ret = reply.result();
-                  entity.setId((String) ret);
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostClassificationTypesResponse.withJsonCreated(
-                      LOCATION_PREFIX + ret, stream)));
+                  String ret = reply.result();
+                  entity.setId(ret);
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostClassificationTypesResponse
+                    .respond201WithApplicationJson(entity, PostClassificationTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -143,7 +139,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PostClassificationTypesResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPost(e, lang, asyncResultHandler);
@@ -158,14 +154,14 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(GetClassificationTypesByClassificationTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void getClassificationTypesByClassificationTypeId(String instanceTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -185,18 +181,18 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(GetClassificationTypesByClassificationTypeIdResponse.
-                      withPlainNotFound(msg)));
+                      respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
                 List<ClassificationType> instanceType = (List<ClassificationType>) reply.result().getResults();
                 if (instanceType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesByClassificationTypeIdResponse
-                      .withPlainNotFound(instanceTypeId)));
+                      .respond404WithTextPlain(instanceTypeId)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesByClassificationTypeIdResponse
-                      .withJsonOK(instanceType.get(0))));
+                      .respond200WithApplicationJson(instanceType.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -211,14 +207,14 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteClassificationTypesByClassificationTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void deleteClassificationTypesByClassificationTypeId(String instanceTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -235,7 +231,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteClassificationTypesByClassificationTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                   return;
                 }
                 int updated = reply.result().getUpdated();
@@ -243,11 +239,11 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteClassificationTypesByClassificationTypeIdResponse
-                      .withPlainNotFound(msg)));
+                      .respond404WithTextPlain(msg)));
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteClassificationTypesByClassificationTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
               }
@@ -261,14 +257,14 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutClassificationTypesByClassificationTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void putClassificationTypesByClassificationTypeId(String instanceTypeId, String lang, ClassificationType entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -283,10 +279,10 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutClassificationTypesByClassificationTypeIdResponse
-                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutClassificationTypesByClassificationTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
                   }
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
@@ -296,7 +292,7 @@ public class ClassificationTypeAPI implements ClassificationTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PutClassificationTypesByClassificationTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPut(e, lang, asyncResultHandler);

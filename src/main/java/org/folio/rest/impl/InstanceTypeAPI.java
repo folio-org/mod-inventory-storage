@@ -6,7 +6,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.InstanceTypes;
-import org.folio.rest.jaxrs.resource.InstanceTypesResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -30,7 +29,7 @@ import java.util.UUID;
 /**
  * Implements the instance type persistency using postgres jsonb.
  */
-public class InstanceTypeAPI implements InstanceTypesResource {
+public class InstanceTypeAPI implements org.folio.rest.jaxrs.resource.InstanceTypes {
 
   public static final String INSTANCE_TYPE_TABLE   = "instance_type";
 
@@ -53,7 +52,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
   @Override
   public void getInstanceTypes(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext)  {
     /**
      * http://host:port/instance-types
      */
@@ -71,18 +70,18 @@ public class InstanceTypeAPI implements InstanceTypesResource {
                   List<InstanceType> instanceType = (List<InstanceType>) reply.result().getResults();
                   instanceTypes.setInstanceTypes(instanceType);
                   instanceTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesResponse.withJsonOK(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesResponse.respond200WithApplicationJson(
                       instanceTypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesResponse
-                      .withPlainBadRequest(reply.cause().getMessage())));
+                      .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesResponse
-                    .withPlainInternalServerError(messages.getMessage(
+                    .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
             });
@@ -93,7 +92,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesResponse
-            .withPlainInternalServerError(message)));
+            .respond500WithTextPlain(message)));
       }
     });
   }
@@ -101,13 +100,13 @@ public class InstanceTypeAPI implements InstanceTypesResource {
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostInstanceTypesResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void postInstanceTypes(String lang, InstanceType entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -123,12 +122,10 @@ public class InstanceTypeAPI implements InstanceTypesResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  Object ret = reply.result();
-                  entity.setId((String) ret);
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceTypesResponse.withJsonCreated(
-                      LOCATION_PREFIX + ret, stream)));
+                  String ret = reply.result();
+                  entity.setId(ret);
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceTypesResponse
+                    .respond201WithApplicationJson(entity, PostInstanceTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -137,7 +134,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PostInstanceTypesResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPost(e, lang, asyncResultHandler);
@@ -152,14 +149,14 @@ public class InstanceTypeAPI implements InstanceTypesResource {
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(GetInstanceTypesByInstanceTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void getInstanceTypesByInstanceTypeId(String instanceTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -179,18 +176,18 @@ public class InstanceTypeAPI implements InstanceTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(GetInstanceTypesByInstanceTypeIdResponse.
-                      withPlainNotFound(msg)));
+                      respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
                 List<InstanceType> instanceType = (List<InstanceType>) reply.result().getResults();
                 if (instanceType.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesByInstanceTypeIdResponse
-                      .withPlainNotFound(instanceTypeId)));
+                      .respond404WithTextPlain(instanceTypeId)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceTypesByInstanceTypeIdResponse
-                      .withJsonOK(instanceType.get(0))));
+                      .respond200WithApplicationJson(instanceType.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -205,14 +202,14 @@ public class InstanceTypeAPI implements InstanceTypesResource {
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void deleteInstanceTypesByInstanceTypeId(String instanceTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -229,7 +226,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                   return;
                 }
                 int updated = reply.result().getUpdated();
@@ -237,11 +234,11 @@ public class InstanceTypeAPI implements InstanceTypesResource {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
-                      .withPlainNotFound(msg)));
+                      .respond404WithTextPlain(msg)));
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
               }
@@ -255,14 +252,14 @@ public class InstanceTypeAPI implements InstanceTypesResource {
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutInstanceTypesByInstanceTypeIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void putInstanceTypesByInstanceTypeId(String instanceTypeId, String lang, InstanceType entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -277,10 +274,10 @@ public class InstanceTypeAPI implements InstanceTypesResource {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceTypesByInstanceTypeIdResponse
-                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceTypesByInstanceTypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
                   }
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
@@ -290,7 +287,7 @@ public class InstanceTypeAPI implements InstanceTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PutInstanceTypesByInstanceTypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPut(e, lang, asyncResultHandler);

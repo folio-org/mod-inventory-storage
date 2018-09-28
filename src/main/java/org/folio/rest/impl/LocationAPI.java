@@ -8,7 +8,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Locations;
-import org.folio.rest.jaxrs.resource.LocationsResource;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -29,7 +28,7 @@ import static org.folio.rest.impl.StorageHelper.*;
  *
  * @author kurt
  */
-public class LocationAPI implements LocationsResource {
+public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   private final Messages messages = Messages.getInstance();
   public static final String LOCATION_TABLE = "location";
   private final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
@@ -38,7 +37,7 @@ public class LocationAPI implements LocationsResource {
   public static final String ID_FIELD_NAME = "'id'";
 
   @Override
-  public void deleteLocations(          String lang,
+  public void deleteLocations(String lang,
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext)
@@ -50,12 +49,11 @@ public class LocationAPI implements LocationsResource {
       reply -> {
         if (reply.succeeded()) {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationsResource.DeleteLocationsResponse.noContent()
-              .build()));
+            DeleteLocationsResponse.noContent().build()));
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationsResource.DeleteLocationsResponse.
-              withPlainInternalServerError(reply.cause().getMessage())));
+            DeleteLocationsResponse.
+              respond500WithTextPlain(reply.cause().getMessage())));
         }
       });
   }
@@ -80,7 +78,7 @@ public class LocationAPI implements LocationsResource {
       String message = logAndSaveError(e);
       logger.warn("XXX - Query exception ", e);
       asyncResultHandler.handle(Future.succeededFuture(
-        GetLocationsResponse.withPlainBadRequest(message)));
+        GetLocationsResponse.respond400WithTextPlain(message)));
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -90,14 +88,14 @@ public class LocationAPI implements LocationsResource {
           if (reply.failed()) {
             String message = logAndSaveError(reply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationsResponse.withPlainBadRequest(message)));
+              GetLocationsResponse.respond400WithTextPlain(message)));
           } else {
             Locations shelfLocations = new Locations();
             List<Location> shelfLocationsList = (List<Location>) reply.result().getResults();
             shelfLocations.setLocations(shelfLocationsList);
             shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
             asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationsResponse.withJsonOK(shelfLocations)));
+              GetLocationsResponse.respond200WithApplicationJson(shelfLocations)));
           }
         });
   }
@@ -123,21 +121,20 @@ public class LocationAPI implements LocationsResource {
           if (message != null
             && message.contains("duplicate key value violates unique constraint")) {
             asyncResultHandler.handle(Future.succeededFuture(
-              PostLocationsResponse.withJsonUnprocessableEntity(
+              PostLocationsResponse.respond422WithApplicationJson(
                 ValidationHelper.createValidationErrorMessage(
                   "shelflocation", entity.getId(),
                   "Location already exists"))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              PostLocationsResponse.withPlainInternalServerError(message)));
+              PostLocationsResponse.respond500WithTextPlain(message)));
           }
         } else {
-          Object responseObject = reply.result();
-          entity.setId((String) responseObject);
-          OutStream stream = new OutStream();
-          stream.setData(entity);
+          String responseObject = reply.result();
+          entity.setId(responseObject);
           asyncResultHandler.handle(Future.succeededFuture(
-            PostLocationsResponse.withJsonCreated(URL_PREFIX + responseObject, stream)));
+            PostLocationsResponse.respond201WithApplicationJson(entity, PostLocationsResponse.
+              headersFor201().withLocation(URL_PREFIX + responseObject))));
         }
       });
   }
@@ -160,20 +157,20 @@ public class LocationAPI implements LocationsResource {
         if (getReply.failed()) {
           String message = logAndSaveError(getReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
-            GetLocationsByIdResponse.withPlainInternalServerError(message)));
+            GetLocationsByIdResponse.respond500WithTextPlain(message)));
         } else {
           List<Location> locationList = (List<Location>) getReply.result().getResults();
           if (locationList.isEmpty()) {
             asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationsByIdResponse.withPlainNotFound(
+              GetLocationsByIdResponse.respond404WithTextPlain(
                 messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
           } else if (locationList.size() > 1) {
             String message = "Multiple locations found with the same id";
             logger.error(message);
             asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationsByIdResponse.withPlainInternalServerError(message)));
+              GetLocationsByIdResponse.respond500WithTextPlain(message)));
           } else {
-            asyncResultHandler.handle(Future.succeededFuture(GetLocationsByIdResponse.withJsonOK(locationList.get(0))));
+            asyncResultHandler.handle(Future.succeededFuture(GetLocationsByIdResponse.respond200WithApplicationJson(locationList.get(0))));
           }
         }
       });
@@ -199,14 +196,14 @@ public class LocationAPI implements LocationsResource {
         if (isInUse(deleteReply.cause().getMessage())) {
           asyncResultHandler.handle(Future.succeededFuture(
             DeleteLocationsByIdResponse
-              .withPlainBadRequest("Location is in use, can not be deleted")));
+              .respond400WithTextPlain("Location is in use, can not be deleted")));
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationsByIdResponse.withPlainNotFound("Not found")));
+            DeleteLocationsByIdResponse.respond404WithTextPlain("Not found")));
         }
       } else {
         asyncResultHandler.handle(Future.succeededFuture(
-          DeleteLocationsByIdResponse.withNoContent()));
+          DeleteLocationsByIdResponse.respond204()));
       }
       });
   }
@@ -223,7 +220,7 @@ public class LocationAPI implements LocationsResource {
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation: id cannot be changed";
       asyncResultHandler.handle(Future.succeededFuture(
-        PutLocationsByIdResponse.withPlainBadRequest(message)));
+        PutLocationsByIdResponse.respond400WithTextPlain(message)));
       return;
     }
     String tenantId = getTenant(okapiHeaders);
@@ -236,15 +233,15 @@ public class LocationAPI implements LocationsResource {
         if (updateReply.failed()) {
           String message = logAndSaveError(updateReply.cause());
           asyncResultHandler.handle(Future.succeededFuture(
-            PutLocationsByIdResponse.withPlainInternalServerError(message)));
+            PutLocationsByIdResponse.respond500WithTextPlain(message)));
         } else {
           if (updateReply.result().getUpdated() == 0) {
             asyncResultHandler.handle(Future.succeededFuture(
-              PutLocationsByIdResponse.withPlainNotFound("Not found")));
+              PutLocationsByIdResponse.respond404WithTextPlain("Not found")));
             //Not found
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              PutLocationsByIdResponse.withNoContent()));
+              PutLocationsByIdResponse.respond204()));
           }
         }
       });

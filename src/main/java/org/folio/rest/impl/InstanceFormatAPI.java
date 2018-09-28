@@ -6,7 +6,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstanceFormat;
 import org.folio.rest.jaxrs.model.InstanceFormats;
-import org.folio.rest.jaxrs.resource.InstanceFormatsResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -16,7 +15,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -30,7 +28,7 @@ import java.util.UUID;
 /**
  * Implements the instance format persistency using postgres jsonb.
  */
-public class InstanceFormatAPI implements InstanceFormatsResource {
+public class InstanceFormatAPI implements org.folio.rest.jaxrs.resource.InstanceFormats {
 
   public static final String INSTANCE_FORMAT_TABLE   = "instance_format";
 
@@ -53,7 +51,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
   @Override
   public void getInstanceFormats(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     /**
      * http://host:port/instance-formats
      */
@@ -71,18 +69,18 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
                   List<InstanceFormat> instanceFormat = (List<InstanceFormat>) reply.result().getResults();
                   instanceFormats.setInstanceFormats(instanceFormat);
                   instanceFormats.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceFormatsResponse.withJsonOK(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceFormatsResponse.respond200WithApplicationJson(
                       instanceFormats)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceFormatsResponse
-                      .withPlainBadRequest(reply.cause().getMessage())));
+                      .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceFormatsResponse
-                    .withPlainInternalServerError(messages.getMessage(
+                    .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
             });
@@ -93,7 +91,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceFormatsResponse
-            .withPlainInternalServerError(message)));
+            .respond500WithTextPlain(message)));
       }
     });
   }
@@ -101,13 +99,13 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostInstanceFormatsResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void postInstanceFormats(String lang, InstanceFormat entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -123,12 +121,11 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  Object ret = reply.result();
-                  entity.setId((String) ret);
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceFormatsResponse.withJsonCreated(
-                      LOCATION_PREFIX + ret, stream)));
+                  String ret = reply.result();
+                  entity.setId(ret);
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    PostInstanceFormatsResponse.respond201WithApplicationJson(entity,
+                    PostInstanceFormatsResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -137,7 +134,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PostInstanceFormatsResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPost(e, lang, asyncResultHandler);
@@ -152,14 +149,14 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(GetInstanceFormatsByInstanceFormatIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void getInstanceFormatsByInstanceFormatId(String instanceFormatId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -178,19 +175,19 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetInstanceFormatsByInstanceFormatIdResponse.
-                      withPlainNotFound(msg)));
+                  asyncResultHandler.handle(Future.succeededFuture(GetInstanceFormatsByInstanceFormatIdResponse
+                     .respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
                 List<InstanceFormat> instanceFormat = (List<InstanceFormat>) reply.result().getResults();
                 if (instanceFormat.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceFormatsByInstanceFormatIdResponse
-                      .withPlainNotFound(instanceFormatId)));
+                      .respond404WithTextPlain(instanceFormatId)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceFormatsByInstanceFormatIdResponse
-                      .withJsonOK(instanceFormat.get(0))));
+                      .respond200WithApplicationJson(instanceFormat.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -205,14 +202,14 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteInstanceFormatsByInstanceFormatIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void deleteInstanceFormatsByInstanceFormatId(String instanceFormatId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -229,7 +226,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceFormatsByInstanceFormatIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                   return;
                 }
                 int updated = reply.result().getUpdated();
@@ -237,11 +234,11 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceFormatsByInstanceFormatIdResponse
-                      .withPlainNotFound(msg)));
+                      .respond404WithTextPlain(msg)));
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceFormatsByInstanceFormatIdResponse
-                        .withNoContent()));
+                        .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
               }
@@ -255,14 +252,14 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutInstanceFormatsByInstanceFormatIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void putInstanceFormatsByInstanceFormatId(String instanceFormatId, String lang, InstanceFormat entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -277,10 +274,10 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceFormatsByInstanceFormatIdResponse
-                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceFormatsByInstanceFormatIdResponse
-                        .withNoContent()));
+                        .respond204()));
                   }
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
@@ -290,7 +287,7 @@ public class InstanceFormatAPI implements InstanceFormatsResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PutInstanceFormatsByInstanceFormatIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPut(e, lang, asyncResultHandler);

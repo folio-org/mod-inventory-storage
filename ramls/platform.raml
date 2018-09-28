@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Platforms API
 version: v1.1
 protocols: [ HTTP, HTTPS ]
@@ -8,24 +8,21 @@ documentation:
   - title: Platforms API
     content: This documents the API calls that can be made to query and manage platforms for electronic resources
 
-schemas:
-  - platform.json: !include platform.json
-  - platforms: !include platforms.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
+types:
+  platform: !include platform.json
+  platforms: !include platforms.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - language: !include raml-util/traits/language.raml
-  - validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
 
 /platforms:
   type:
@@ -33,7 +30,7 @@ resourceTypes:
       exampleCollection: !include examples/platforms.json
       exampleItem: !include examples/platform.json
       schemaCollection: platforms
-      schemaItem: platform.json
+      schemaItem: platform
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -48,5 +45,5 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/platform.json
-        schema: platform.json
+        schema: platform
 
