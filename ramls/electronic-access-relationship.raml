@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Electronic access relationship terms reference API
 version: v1.0
 protocols: [ HTTP, HTTPS ]
@@ -8,25 +8,21 @@ documentation:
   - title: Electronic access relationship terms reference API
     content: This documents the API calls that can be made to query and manage electronic access relationship types of the system
 
-schemas:
-  - electronicaccessrelationship.json: !include electronicaccessrelationship.json
-  - electronicAccessRelationships: !include electronicaccessrelationships.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  electronicAccessRelationship: !include electronicaccessrelationship.json
+  electronicAccessRelationships: !include electronicaccessrelationships.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - language: !include raml-util/traits/language.raml
-  - validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
 
 /electronic-access-relationships:
   type:
@@ -34,7 +30,7 @@ resourceTypes:
       exampleCollection: !include examples/electronicaccessrelationships.json
       exampleItem: !include examples/electronicaccessrelationship.json
       schemaCollection: electronicAccessRelationships
-      schemaItem: electronicaccessrelationship.json
+      schemaItem: electronicAccessRelationship
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -44,20 +40,10 @@ resourceTypes:
   post:
     description: Create a new electronic access relationship term
     is: [validate]
-  delete:
-    description: "Delete all electronic access relationship terms"
-    responses:
-      204:
-        description: "All electronic access relationship terms deleted"
-      500:
-        description: "Internal server error, e.g. due to misconfiguration"
-        body:
-          text/plain:
-            example: "Internal server error, contact administrator"
   /{electronicAccessRelationshipId}:
     description: Pass in electronic access relationship ID
     type:
       collection-item:
         exampleItem: !include examples/electronicaccessrelationship.json
-        schema: electronicaccessrelationship.json
+        schema: electronicAccessRelationship
 
