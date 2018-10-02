@@ -19,7 +19,7 @@ import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
-import org.folio.rest.jaxrs.resource.InstanceStorageResource;
+import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -39,7 +39,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-public class InstanceStorageAPI implements InstanceStorageResource {
+public class InstanceStorageAPI implements InstanceStorage {
 
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -120,7 +120,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -140,40 +140,40 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<Instance> instances = (List<Instance>) reply.result().getResults();
+                  List<Instance> instances = reply.result().getResults();
 
                   Instances instanceList = new Instances();
                   instanceList.setInstances(instances);
                   instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.GetInstanceStorageInstancesResponse.
-                      withJsonOK(instanceList)));
+                    GetInstanceStorageInstancesResponse.
+                      respond200WithApplicationJson(instanceList)));
                 }
                 else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.GetInstanceStorageInstancesResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
+                    GetInstanceStorageInstancesResponse.
+                      respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getStackTrace());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  InstanceStorageResource.GetInstanceStorageInstancesResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                  GetInstanceStorageInstancesResponse.
+                    respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.GetInstanceStorageInstancesResponse.
-              withPlainInternalServerError(e.getMessage())));
+            GetInstanceStorageInstancesResponse.
+              respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        InstanceStorageResource.GetInstanceStorageInstancesResponse.
-          withPlainInternalServerError(e.getMessage())));
+        GetInstanceStorageInstancesResponse.
+          respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -183,7 +183,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     Instance entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -201,8 +201,8 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           else {
             if (! isUUID(entity.getId())) {
               asyncResultHandler.handle(Future.succeededFuture(
-                InstanceStorageResource.PostInstanceStorageInstancesResponse
-                  .withPlainBadRequest("ID must be a UUID")));
+                PostInstanceStorageInstancesResponse
+                  .respond400WithTextPlain("ID must be a UUID")));
               return;
             }
           }
@@ -211,40 +211,37 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             reply -> {
               try {
                 if(reply.succeeded()) {
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.PostInstanceStorageInstancesResponse
-                        .withJsonCreated(reply.result(), stream)));
+                      PostInstanceStorageInstancesResponse
+                        .respond201WithApplicationJson(entity,PostInstanceStorageInstancesResponse.headersFor201().withLocation(reply.result()))));
                 }
                 else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.PostInstanceStorageInstancesResponse
-                        .withPlainBadRequest(reply.cause().getMessage())));
+                      PostInstanceStorageInstancesResponse
+                        .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getStackTrace());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.PostInstanceStorageInstancesResponse
-                      .withPlainInternalServerError(e.getMessage())));
+                    PostInstanceStorageInstancesResponse
+                      .respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.PostInstanceStorageInstancesResponse
-              .withPlainInternalServerError(e.getMessage())));
+            PostInstanceStorageInstancesResponse
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        InstanceStorageResource.PostInstanceStorageInstancesResponse
-          .withPlainInternalServerError(e.getMessage())));
+        PostInstanceStorageInstancesResponse
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -253,7 +250,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -267,8 +264,8 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             reply1 -> {
               if (! reply1.succeeded()) {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.DeleteInstanceStorageInstancesResponse
-                    .withPlainInternalServerError(reply1.cause().getMessage())));
+                    DeleteInstanceStorageInstancesResponse
+                    .respond500WithTextPlain(reply1.cause().getMessage())));
                 return;
               }
               postgresClient.mutate(String.format("DELETE FROM "
@@ -276,21 +273,21 @@ public class InstanceStorageAPI implements InstanceStorageResource {
               reply2 -> {
                 if (! reply2.succeeded()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.DeleteInstanceStorageInstancesResponse
-                      .withPlainInternalServerError(reply1.cause().getMessage())));
+                      DeleteInstanceStorageInstancesResponse
+                      .respond500WithTextPlain(reply1.cause().getMessage())));
                   return;
                 }
                 postgresClient.mutate("DELETE FROM "
                   + tenantId + "_" + MODULE + "." + INSTANCE_TABLE, reply3 -> {
                   if (! reply3.succeeded()) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.DeleteInstanceStorageInstancesResponse
-                      .withPlainInternalServerError(reply3.cause().getMessage())));
+                      DeleteInstanceStorageInstancesResponse
+                      .respond500WithTextPlain(reply3.cause().getMessage())));
                     return;
                   }
 
                   asyncResultHandler.handle(Future.succeededFuture(
-                    DeleteInstanceStorageInstancesResponse.withNoContent()
+                    DeleteInstanceStorageInstancesResponse.respond204()
                   ));
                 });
               });
@@ -298,8 +295,8 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       }
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          InstanceStorageResource.DeleteInstanceStorageInstancesResponse
-            .withPlainInternalServerError(e.getMessage())));
+          DeleteInstanceStorageInstancesResponse
+            .respond500WithTextPlain(e.getMessage())));
       }
     });
   }
@@ -310,7 +307,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -330,47 +327,47 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<Instance> instanceList = (List<Instance>) reply.result().getResults();
+                  List<Instance> instanceList = reply.result().getResults();
                   if (instanceList.size() == 1) {
                     Instance instance = instanceList.get(0);
 
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(
-                        InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-                          withJsonOK(instance)));
+                        GetInstanceStorageInstancesByInstanceIdResponse.
+                          respond200WithApplicationJson(instance)));
                   }
                   else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(
-                      InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-                        withPlainNotFound("Not Found")));
+                      GetInstanceStorageInstancesByInstanceIdResponse.
+                        respond404WithTextPlain("Not Found")));
                   }
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(
-                      InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-                        withPlainInternalServerError(reply.cause().getMessage())));
+                      GetInstanceStorageInstancesByInstanceIdResponse.
+                        respond500WithTextPlain(reply.cause().getMessage())));
 
                 }
               } catch (Exception e) {
                 log.error(e.getStackTrace());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                  GetInstanceStorageInstancesByInstanceIdResponse.
+                    respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-              withPlainInternalServerError(e.getMessage())));
+            GetInstanceStorageInstancesByInstanceIdResponse.
+              respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        InstanceStorageResource.GetInstanceStorageInstancesByInstanceIdResponse.
-          withPlainInternalServerError(e.getMessage())));
+        GetInstanceStorageInstancesByInstanceIdResponse.
+          respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -380,7 +377,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     // before deleting the instance record delete its source marc record (foreign key!)
 
@@ -391,7 +388,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       if (! reply1.succeeded()) {
         asyncResultHandler.handle(Future.succeededFuture(
             DeleteInstanceStorageInstancesByInstanceIdResponse
-            .withPlainInternalServerError(reply1.cause().getMessage())));
+            .respond500WithTextPlain(reply1.cause().getMessage())));
         return;
       }
 
@@ -399,12 +396,12 @@ public class InstanceStorageAPI implements InstanceStorageResource {
         if (! reply2.succeeded()) {
           asyncResultHandler.handle(Future.succeededFuture(
               DeleteInstanceStorageInstancesByInstanceIdResponse
-              .withPlainInternalServerError(reply2.cause().getMessage())));
+              .respond500WithTextPlain(reply2.cause().getMessage())));
           return;
         }
 
         asyncResultHandler.handle(Future.succeededFuture(
-            DeleteInstanceStorageInstancesByInstanceIdResponse.withNoContent()));
+            DeleteInstanceStorageInstancesByInstanceIdResponse.respond204()));
       });
     });
   }
@@ -416,7 +413,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     Instance entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -434,7 +431,7 @@ public class InstanceStorageAPI implements InstanceStorageResource {
           postgresClient.get(tableName, Instance.class, fieldList, cql, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<Instance> instancesList = (List<Instance>) reply.result().getResults();
+                List<Instance> instancesList = reply.result().getResults();
 
                 if (instancesList.size() == 1) {
                   try {
@@ -448,26 +445,26 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutInstanceStorageInstancesByInstanceIdResponse
-                                  .withNoContent()));
+                                  .respond204()));
                           }
                           else {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutInstanceStorageInstancesByInstanceIdResponse
-                                  .withPlainInternalServerError(
+                                  .respond500WithTextPlain(
                                     update.cause().getMessage())));
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutInstanceStorageInstancesByInstanceIdResponse
-                                .withPlainInternalServerError(e.getMessage())));
+                                .respond500WithTextPlain(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PutInstanceStorageInstancesByInstanceIdResponse
-                        .withPlainInternalServerError(e.getMessage())));
+                        .respond500WithTextPlain(e.getMessage())));
                   }
               }
               else {
@@ -482,52 +479,51 @@ public class InstanceStorageAPI implements InstanceStorageResource {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutInstanceStorageInstancesByInstanceIdResponse
-                                .withNoContent()));
+                                .respond204()));
                         }
                         else {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutInstanceStorageInstancesByInstanceIdResponse
-                                .withPlainInternalServerError(
+                                .respond500WithTextPlain(
                                   save.cause().getMessage())));
                         }
                       } catch (Exception e) {
                         asyncResultHandler.handle(
                           Future.succeededFuture(
                             PutInstanceStorageInstancesByInstanceIdResponse
-                              .withPlainInternalServerError(e.getMessage())));
+                              .respond500WithTextPlain(e.getMessage())));
                       }
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     PutInstanceStorageInstancesByInstanceIdResponse
-                      .withPlainInternalServerError(e.getMessage())));
+                      .respond500WithTextPlain(e.getMessage())));
                 }
               }
             } else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutInstanceStorageInstancesByInstanceIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+                    .respond500WithTextPlain(reply.cause().getMessage())));
             }
           });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             PutInstanceStorageInstancesByInstanceIdResponse
-              .withPlainInternalServerError(e.getMessage())));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PutInstanceStorageInstancesByInstanceIdResponse
-          .withPlainInternalServerError(e.getMessage())));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
   private void badRequestResult(
     Handler<AsyncResult<Response>> asyncResultHandler, String message) {
     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      InstanceStorageResource.GetInstanceStorageInstancesResponse
-        .withPlainBadRequest(message)));
+      GetInstanceStorageInstancesResponse.respond400WithTextPlain(message)));
   }
 
   private boolean isUUID(String id) {
@@ -540,33 +536,34 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     }
   }
 
-  @Override
-  public void deleteInstanceStorageInstancesByInstanceIdSourceRecord(
+
+  @Override   
+  public void deleteInstanceStorageInstancesSourceRecordByInstanceId(
       @NotNull String instanceId,
       @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
     postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply -> {
       if (! reply.succeeded()) {
         asyncResultHandler.handle(Future.succeededFuture(
-            DeleteInstanceStorageInstancesByInstanceIdSourceRecordResponse
-            .withPlainInternalServerError(reply.cause().getMessage())));
+          DeleteInstanceStorageInstancesSourceRecordByInstanceIdResponse
+            .respond500WithTextPlain(reply.cause().getMessage())));
         return;
       }
 
       asyncResultHandler.handle(Future.succeededFuture(
-          DeleteInstanceStorageInstancesByInstanceIdSourceRecordResponse.withNoContent()));
+          DeleteInstanceStorageInstancesSourceRecordByInstanceIdResponse.respond204()));
     });
   }
-
+  
   @Override
-  public void getInstanceStorageInstancesByInstanceIdSourceRecordMarcJson(
+  public void getInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
       String instanceId, String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
@@ -575,37 +572,37 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     postgresClient.get(INSTANCE_SOURCE_MARC_TABLE, MarcJson.class, where, false, false, reply -> {
       if (! reply.succeeded()) {
         asyncResultHandler.handle(Future.succeededFuture(
-            GetInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
-            .withPlainInternalServerError(reply.cause().getMessage())));
+          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
+            .respond500WithTextPlain(reply.cause().getMessage())));
         return;
       }
-      List<MarcJson> results = (List<MarcJson>) reply.result().getResults();
+      List<MarcJson> results = reply.result().getResults();
       if (results.isEmpty()) {
         asyncResultHandler.handle(Future.succeededFuture(
-            GetInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
-            .withPlainNotFound("No source record for instance " + instanceId)));
+          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
+            .respond404WithTextPlain("No source record for instance " + instanceId)));
         return;
       }
       MarcJson marcJson = results.get(0);
       if (marcJson == null) {
         asyncResultHandler.handle(Future.succeededFuture(
-            GetInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
-            .withPlainNotFound("No MARC source record for instance " + instanceId)));
+          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
+            .respond404WithTextPlain("No MARC source record for instance " + instanceId)));
         return;
       }
       asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse.withJsonOK(
+          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond200WithApplicationJson(
               marcJson)));
     });
   }
 
   @Override
-  public void deleteInstanceStorageInstancesByInstanceIdSourceRecordMarcJson(
+  public void deleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
       @NotNull String instanceId,
       @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
@@ -613,43 +610,43 @@ public class InstanceStorageAPI implements InstanceStorageResource {
     postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply -> {
       if (! reply.succeeded()) {
         asyncResultHandler.handle(Future.succeededFuture(
-            DeleteInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
-            .withPlainInternalServerError(reply.cause().getMessage())));
+          DeleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
+            .respond500WithTextPlain(reply.cause().getMessage())));
         return;
       }
       asyncResultHandler.handle(Future.succeededFuture(
-          DeleteInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse.withNoContent()));
+          DeleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond204()));
     });
   }
 
   @Override
-  public void putInstanceStorageInstancesByInstanceIdSourceRecordMarcJson(
+  public void putInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
       @NotNull String instanceId,
       @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
       MarcJson entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext)  {
 
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
     postgresClient.upsert(INSTANCE_SOURCE_MARC_TABLE, instanceId, entity, reply -> {
       if (reply.succeeded()) {
         asyncResultHandler.handle(Future.succeededFuture(
-            PutInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse.withNoContent()));
+          PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond204()));
         return;
       }
       Map<Object, String> fields = PgExceptionUtil.getBadRequestFields(reply.cause());
       if (fields != null && "23503".equals(fields.get('C'))  // foreign key constraint violation
           && INSTANCE_SOURCE_MARC_TABLE.equals(fields.get('t'))) {
         asyncResultHandler.handle(Future.succeededFuture(
-            PutInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
-            .withPlainNotFound(reply.cause().getMessage())));
+            PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
+            .respond404WithTextPlain(reply.cause().getMessage())));
         return;
       }
       asyncResultHandler.handle(Future.succeededFuture(
-          PutInstanceStorageInstancesByInstanceIdSourceRecordMarcJsonResponse
-          .withPlainInternalServerError(reply.cause().getMessage())));
+        PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
+          .respond500WithTextPlain(reply.cause().getMessage())));
     });
   }
 
@@ -657,28 +654,30 @@ public class InstanceStorageAPI implements InstanceStorageResource {
    * Example stub showing how other formats might get implemented.
    */
   @Override
-  public void getInstanceStorageInstancesByInstanceIdSourceRecordMods(
+  public void getInstanceStorageInstancesSourceRecordModsByInstanceId(
       String instanceId, String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     asyncResultHandler.handle(Future.succeededFuture(
-        GetInstanceStorageInstancesByInstanceIdSourceRecordModsResponse
-        .withPlainInternalServerError("Not implemented yet.")));
+      GetInstanceStorageInstancesSourceRecordModsByInstanceIdResponse
+        .respond500WithTextPlain("Not implemented yet.")));
   }
 
   /**
    * Example stub showing how other formats might get implemented.
    */
   @Override
-  public void putInstanceStorageInstancesByInstanceIdSourceRecordMods(
+  public void putInstanceStorageInstancesSourceRecordModsByInstanceId(
       String instanceId, String lang, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     asyncResultHandler.handle(Future.succeededFuture(
-        PutInstanceStorageInstancesByInstanceIdSourceRecordModsResponse
-        .withPlainInternalServerError("Not implemented yet.")));
+      PutInstanceStorageInstancesSourceRecordModsByInstanceIdResponse
+        .respond500WithTextPlain("Not implemented yet.")));
   }
 
   @Override
-  public void getInstanceStorageInstanceRelationships(int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getInstanceStorageInstanceRelationships(int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
@@ -696,44 +695,44 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<InstanceRelationship> instanceRelationships = (List<InstanceRelationship>) reply.result().getResults();
+                  List<InstanceRelationship> instanceRelationships = reply.result().getResults();
 
                   InstanceRelationships instanceList = new InstanceRelationships();
                   instanceList.setInstanceRelationships(instanceRelationships);
                   instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                          GetInstanceStorageInstanceRelationshipsResponse.withJsonOK(instanceList)));
+                          GetInstanceStorageInstanceRelationshipsResponse.respond200WithApplicationJson(instanceList)));
                 }
                 else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
+                    GetInstanceStorageInstanceRelationshipsResponse.
+                      respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getStackTrace());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                  GetInstanceStorageInstanceRelationshipsResponse.
+                    respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
-              withPlainInternalServerError(e.getMessage())));
+            GetInstanceStorageInstanceRelationshipsResponse.
+              respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        InstanceStorageResource.GetInstanceStorageInstanceRelationshipsResponse.
-          withPlainInternalServerError(e.getMessage())));
+        GetInstanceStorageInstanceRelationshipsResponse.
+          respond500WithTextPlain(e.getMessage())));
     }
   }
 
   @Override
-  public void postInstanceStorageInstanceRelationships(String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void postInstanceStorageInstanceRelationships(String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
@@ -750,45 +749,46 @@ public class InstanceStorageAPI implements InstanceStorageResource {
 
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
-                        .withJsonCreated(reply.result(), stream)));
+                      PostInstanceStorageInstanceRelationshipsResponse
+                        .respond201WithApplicationJson(entity, 
+                          PostInstanceStorageInstanceRelationshipsResponse.headersFor201().withLocation(reply.result()))));
                 }
                 else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
-                        .withPlainBadRequest(reply.cause().getMessage())));
+                      PostInstanceStorageInstanceRelationshipsResponse
+                        .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getStackTrace());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
-                    InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
-                      .withPlainInternalServerError(e.getMessage())));
+                    PostInstanceStorageInstanceRelationshipsResponse
+                      .respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
           log.error(e.getStackTrace());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
-              .withPlainInternalServerError(e.getMessage())));
+            PostInstanceStorageInstanceRelationshipsResponse
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        InstanceStorageResource.PostInstanceStorageInstanceRelationshipsResponse
-          .withPlainInternalServerError(e.getMessage())));
+        PostInstanceStorageInstanceRelationshipsResponse
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
   @Override
-  public void getInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
   @Override
-  public void deleteInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void deleteInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
@@ -796,17 +796,16 @@ public class InstanceStorageAPI implements InstanceStorageResource {
       if (! reply.succeeded()) {
         asyncResultHandler.handle(Future.succeededFuture(
             DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-            .withPlainInternalServerError(reply.cause().getMessage())));
+            .respond500WithTextPlain(reply.cause().getMessage())));
         return;
       }
       asyncResultHandler.handle(Future.succeededFuture(
-          InstanceStorageResource.DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                  .withNoContent()));
+          DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse.respond204()));
     });
   }
 
   @Override
-  public void putInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void putInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
@@ -820,30 +819,30 @@ public class InstanceStorageAPI implements InstanceStorageResource {
             if (reply.succeeded()) {
               if (reply.result().getUpdated() == 0) {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                    .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                    .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
               } else{
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                    .withNoContent()));
+                    .respond204()));
               }
             } else {
               String msg = PgExceptionUtil.badRequestMessage(reply.cause());
               if (msg == null) {
                 asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                   .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                   .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
               }
               log.info(msg);
               asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                  .withPlainBadRequest(msg)));
+                  .respond400WithTextPlain(msg)));
             }
           } catch (Exception e) {
             asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-               .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+               .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
           }
 
         });
       } catch (Exception e) {
         asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-           .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+           .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }

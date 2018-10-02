@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.resource.PlatformsResource;
 import org.folio.rest.jaxrs.model.Platform;
 import org.folio.rest.jaxrs.model.Platforms;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -24,7 +23,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -34,7 +32,7 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
  *
  * @author ne
  */
-public class PlatformAPI implements PlatformsResource {
+public class PlatformAPI implements org.folio.rest.jaxrs.resource.Platforms {
   public static final String PLATFORM_TABLE   = "platform";
 
   private static final String LOCATION_PREFIX       = "/platforms/";
@@ -56,7 +54,7 @@ public class PlatformAPI implements PlatformsResource {
   @Override
   public void getPlatforms(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     /**
      * http://host:port/platforms
      */
@@ -74,18 +72,18 @@ public class PlatformAPI implements PlatformsResource {
                   List<Platform> instanceType = (List<Platform>) reply.result().getResults();
                   instanceTypes.setPlatforms(instanceType);
                   instanceTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.GetPlatformsResponse.withJsonOK(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPlatformsResponse.respond200WithApplicationJson(
                       instanceTypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.GetPlatformsResponse
-                      .withPlainBadRequest(reply.cause().getMessage())));
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPlatformsResponse
+                      .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.GetPlatformsResponse
-                    .withPlainInternalServerError(messages.getMessage(
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPlatformsResponse
+                    .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
             });
@@ -95,22 +93,22 @@ public class PlatformAPI implements PlatformsResource {
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.GetPlatformsResponse
-            .withPlainInternalServerError(message)));
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPlatformsResponse
+            .respond500WithTextPlain(message)));
       }
     });
   }
 
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PlatformsResource.PostPlatformsResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+    handler.handle(Future.succeededFuture(PostPlatformsResponse
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void postPlatforms(String lang, Platform entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -126,12 +124,10 @@ public class PlatformAPI implements PlatformsResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  Object ret = reply.result();
-                  entity.setId((String) ret);
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.PostPlatformsResponse.withJsonCreated(
-                      LOCATION_PREFIX + ret, stream)));
+                  String ret = reply.result();
+                  entity.setId(ret);
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostPlatformsResponse
+                    .respond201WithApplicationJson(entity, PostPlatformsResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -139,8 +135,8 @@ public class PlatformAPI implements PlatformsResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PlatformsResource.PostPlatformsResponse
-                      .withPlainBadRequest(msg)));
+                  asyncResultHandler.handle(Future.succeededFuture(PostPlatformsResponse
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPost(e, lang, asyncResultHandler);
@@ -154,15 +150,15 @@ public class PlatformAPI implements PlatformsResource {
 
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PlatformsResource.GetPlatformsByPlatformIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+    handler.handle(Future.succeededFuture(GetPlatformsByPlatformIdResponse
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void getPlatformsByPlatformId(String instanceTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -181,19 +177,18 @@ public class PlatformAPI implements PlatformsResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PlatformsResource.GetPlatformsByPlatformIdResponse.
-                      withPlainNotFound(msg)));
+                  asyncResultHandler.handle(Future.succeededFuture(GetPlatformsByPlatformIdResponse.
+                      respond404WithTextPlain(msg)));
                   return;
                 }
-                @SuppressWarnings("unchecked")
-                List<Platform> instanceType = (List<Platform>) reply.result().getResults();
+                List<Platform> instanceType = reply.result().getResults();
                 if (instanceType.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.GetPlatformsByPlatformIdResponse
-                      .withPlainNotFound(instanceTypeId)));
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPlatformsByPlatformIdResponse
+                      .respond404WithTextPlain(instanceTypeId)));
                 }
                 else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.GetPlatformsByPlatformIdResponse
-                      .withJsonOK(instanceType.get(0))));
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetPlatformsByPlatformIdResponse
+                      .respond200WithApplicationJson(instanceType.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -207,15 +202,15 @@ public class PlatformAPI implements PlatformsResource {
 
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PlatformsResource.DeletePlatformsByPlatformIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+    handler.handle(Future.succeededFuture(DeletePlatformsByPlatformIdResponse
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void deletePlatformsByPlatformId(String instanceTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -231,20 +226,20 @@ public class PlatformAPI implements PlatformsResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PlatformsResource.DeletePlatformsByPlatformIdResponse
-                      .withPlainBadRequest(msg)));
+                  asyncResultHandler.handle(Future.succeededFuture(DeletePlatformsByPlatformIdResponse
+                      .respond400WithTextPlain(msg)));
                   return;
                 }
                 int updated = reply.result().getUpdated();
                 if (updated != 1) {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PlatformsResource.DeletePlatformsByPlatformIdResponse
-                      .withPlainNotFound(msg)));
+                  asyncResultHandler.handle(Future.succeededFuture(DeletePlatformsByPlatformIdResponse
+                      .respond404WithTextPlain(msg)));
                   return;
                 }
-                asyncResultHandler.handle(Future.succeededFuture(PlatformsResource.DeletePlatformsByPlatformIdResponse
-                        .withNoContent()));
+                asyncResultHandler.handle(Future.succeededFuture(DeletePlatformsByPlatformIdResponse
+                        .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
               }
@@ -257,15 +252,15 @@ public class PlatformAPI implements PlatformsResource {
 
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PlatformsResource.PutPlatformsByPlatformIdResponse
-        .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+    handler.handle(Future.succeededFuture(PutPlatformsByPlatformIdResponse
+        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   @Validate
   @Override
   public void putPlatformsByPlatformId(String instanceTypeId, String lang, Platform entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -279,11 +274,11 @@ public class PlatformAPI implements PlatformsResource {
               try {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.PutPlatformsByPlatformIdResponse
-                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutPlatformsByPlatformIdResponse
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PlatformsResource.PutPlatformsByPlatformIdResponse
-                        .withNoContent()));
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutPlatformsByPlatformIdResponse
+                        .respond204()));
                   }
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
@@ -292,15 +287,16 @@ public class PlatformAPI implements PlatformsResource {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PlatformsResource.PutPlatformsByPlatformIdResponse
-                      .withPlainBadRequest(msg)));
+                  asyncResultHandler.handle(Future.succeededFuture(PutPlatformsByPlatformIdResponse
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPut(e, lang, asyncResultHandler);
               }
             });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
+        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+      }
     });
   }
 
