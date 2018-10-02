@@ -14,17 +14,16 @@ import org.folio.rest.jaxrs.model.Locinst;
 import org.folio.rest.jaxrs.model.Locinsts;
 import org.folio.rest.jaxrs.model.Loclib;
 import org.folio.rest.jaxrs.model.Loclibs;
-import org.folio.rest.jaxrs.resource.LocationUnitsResource;
+import org.folio.rest.jaxrs.resource.LocationUnits;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 
-public class LocationUnitAPI implements LocationUnitsResource {
+public class LocationUnitAPI implements LocationUnits {
   private final Messages messages = Messages.getInstance();
   public static final String URL_PREFIX = "/location-units";
   public static final String ID_FIELD_NAME = "'id'"; // same for all of them
@@ -52,12 +51,11 @@ public class LocationUnitAPI implements LocationUnitsResource {
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsInstitutionsResponse.noContent()
-                .build()));
+              DeleteLocationUnitsInstitutionsResponse.noContent().build()));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsInstitutionsResponse
-                .withPlainInternalServerError(reply.cause().getMessage())));
+              DeleteLocationUnitsInstitutionsResponse
+                .respond500WithTextPlain(reply.cause().getMessage())));
           }
         });
   }
@@ -75,8 +73,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
     } catch (Exception e) {
       String message = StorageHelper.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsInstitutionsResponse
-          .withPlainInternalServerError(message)));
+        GetLocationUnitsInstitutionsResponse
+          .respond500WithTextPlain(message)));
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -85,15 +83,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (reply.failed()) {
             String message = StorageHelper.logAndSaveError(reply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.GetLocationUnitsInstitutionsResponse
-                .withPlainBadRequest(message)));
+              GetLocationUnitsInstitutionsResponse
+                .respond400WithTextPlain(message)));
           } else {
             Locinsts insts = new Locinsts();
-            List<Locinst> items = (List<Locinst>) reply.result().getResults();
+            List<Locinst> items = reply.result().getResults();
             insts.setLocinsts(items);
             insts.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.GetLocationUnitsInstitutionsResponse.withJsonOK(insts)));
+              GetLocationUnitsInstitutionsResponse.respond200WithApplicationJson(insts)));
           }
         });
   }
@@ -116,24 +114,23 @@ public class LocationUnitAPI implements LocationUnitsResource {
         String message = StorageHelper.logAndSaveError(reply.cause());
         if (StorageHelper.isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PostLocationUnitsInstitutionsResponse
-                .withJsonUnprocessableEntity(
+              PostLocationUnitsInstitutionsResponse
+                .respond422WithApplicationJson(
                   ValidationHelper.createValidationErrorMessage(
                     "locinst", entity.getId(),
                     "Institution already exists"))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PostLocationUnitsInstitutionsResponse
-                .withPlainInternalServerError(message)));
+              PostLocationUnitsInstitutionsResponse
+                .respond500WithTextPlain(message)));
           }
         } else {
-          Object responseObject = reply.result();
-          entity.setId((String) responseObject);
-          OutStream stream = new OutStream();
-          stream.setData(entity);
+          String responseObject = reply.result();
+          entity.setId(responseObject);
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.PostLocationUnitsInstitutionsResponse
-              .withJsonCreated(URL_PREFIX + responseObject, stream)));
+            PostLocationUnitsInstitutionsResponse
+              .respond201WithApplicationJson(entity,
+                PostLocationUnitsInstitutionsResponse.headersFor201().withLocation(URL_PREFIX + responseObject))));
         }
       });
   }
@@ -154,21 +151,21 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (getReply.failed()) {
             String message = StorageHelper.logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-                .withPlainInternalServerError(message)));
+              GetLocationUnitsInstitutionsByIdResponse
+                .respond500WithTextPlain(message)));
           } else {
-            List<Locinst> instlist = (List<Locinst>) getReply.result().getResults();
+            List<Locinst> instlist = getReply.result().getResults();
             if (instlist.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-                  .withPlainNotFound(
+                GetLocationUnitsInstitutionsByIdResponse
+                  .respond404WithTextPlain(
                     messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
               // We can safely ignore the case that we have more than one with
               // the same id, RMB has a primary key on ID, will not allow it
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-                  .withJsonOK(instlist.get(0))));
+                GetLocationUnitsInstitutionsByIdResponse
+                  .respond200WithApplicationJson(instlist.get(0))));
             }
           }
         });
@@ -190,17 +187,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
           StorageHelper.logAndSaveError(deleteReply.cause());
           if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                .withPlainBadRequest("Institution is in use, can not be deleted")));
+              DeleteLocationUnitsInstitutionsByIdResponse
+                .respond400WithTextPlain("Institution is in use, can not be deleted")));
           } else {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                .withPlainNotFound("Institution not found")));
+            DeleteLocationUnitsInstitutionsByIdResponse
+                .respond404WithTextPlain("Institution not found")));
           }
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-              .withNoContent()));
+            DeleteLocationUnitsInstitutionsByIdResponse.respond204()));
         }
       });
   }
@@ -215,8 +211,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation: Institution id cannot be changed";
       asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
-          .withPlainBadRequest(message)));
+        PutLocationUnitsInstitutionsByIdResponse
+          .respond400WithTextPlain(message)));
       return;
     }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
@@ -230,17 +226,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (updateReply.failed()) {
             String message = StorageHelper.logAndSaveError(updateReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
-                .withPlainInternalServerError(message)));
+              PutLocationUnitsInstitutionsByIdResponse.respond500WithTextPlain(message)));
           } else {
             if (updateReply.result().getUpdated() == 0) {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
-                  .withPlainNotFound("Institution not found")));
+                PutLocationUnitsInstitutionsByIdResponse
+                  .respond404WithTextPlain("Institution not found")));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.PutLocationUnitsInstitutionsByIdResponse
-                  .withNoContent()));
+                PutLocationUnitsInstitutionsByIdResponse.respond204()));
             }
           }
         });
@@ -260,12 +254,12 @@ public class LocationUnitAPI implements LocationUnitsResource {
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsCampusesResponse.noContent()
+              DeleteLocationUnitsCampusesResponse.noContent()
                 .build()));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsCampusesResponse
-                .withPlainInternalServerError(reply.cause().getMessage())));
+              DeleteLocationUnitsCampusesResponse
+                .respond500WithTextPlain(reply.cause().getMessage())));
           }
         });
   }
@@ -284,8 +278,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
     } catch (Exception e) {
       String message = StorageHelper.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsCampusesResponse
-          .withPlainInternalServerError(message)));
+        GetLocationUnitsCampusesResponse
+          .respond500WithTextPlain(message)));
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -294,15 +288,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
             if (reply.failed()) {
               String message = StorageHelper.logAndSaveError(reply.cause());
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsCampusesResponse
-                  .withPlainBadRequest(message)));
+                GetLocationUnitsCampusesResponse
+                  .respond400WithTextPlain(message)));
             } else {
               Loccamps camps = new Loccamps();
-              List<Loccamp> items = (List<Loccamp>) reply.result().getResults();
+              List<Loccamp> items = reply.result().getResults();
               camps.setLoccamps(items);
               camps.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsCampusesResponse.withJsonOK(camps)));
+                GetLocationUnitsCampusesResponse.respond200WithApplicationJson(camps)));
             }
           });
   }
@@ -325,24 +319,21 @@ public class LocationUnitAPI implements LocationUnitsResource {
           String message = StorageHelper.logAndSaveError(reply.cause());
           if (StorageHelper.isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PostLocationUnitsCampusesResponse
-                .withJsonUnprocessableEntity(
+              PostLocationUnitsCampusesResponse
+                .respond422WithApplicationJson(
                   ValidationHelper.createValidationErrorMessage(
                     "loccamp", entity.getId(),
                     "Campus already exists"))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PostLocationUnitsCampusesResponse
-                .withPlainInternalServerError(message)));
+              PostLocationUnitsCampusesResponse.respond500WithTextPlain(message)));
           }
         } else {
-          Object responseObject = reply.result();
-          entity.setId((String) responseObject);
-          OutStream stream = new OutStream();
-          stream.setData(entity);
+          String responseObject = reply.result();
+          entity.setId(responseObject);
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.PostLocationUnitsCampusesResponse
-              .withJsonCreated(URL_PREFIX + responseObject, stream)));
+            PostLocationUnitsCampusesResponse
+              .respond201WithApplicationJson(entity, PostLocationUnitsCampusesResponse.headersFor201().withLocation(URL_PREFIX + responseObject))));
         }
       });
   }
@@ -364,19 +355,19 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (getReply.failed()) {
             String message = StorageHelper.logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
-                .withPlainInternalServerError(message)));
+              GetLocationUnitsCampusesByIdResponse
+                .respond500WithTextPlain(message)));
           } else {
-            List<Loccamp> items = (List<Loccamp>) getReply.result().getResults();
+            List<Loccamp> items = getReply.result().getResults();
             if (items.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
-                  .withPlainNotFound(
+                GetLocationUnitsCampusesByIdResponse
+                  .respond404WithTextPlain(
                     messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsCampusesByIdResponse
-                  .withJsonOK(items.get(0))));
+                GetLocationUnitsCampusesByIdResponse
+                  .respond200WithApplicationJson(items.get(0))));
             }
           }
         });
@@ -398,17 +389,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
           StorageHelper.logAndSaveError(deleteReply.cause());
           if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsInstitutionsByIdResponse
-                .withPlainBadRequest("Campus is in use, can not be deleted")));
+              DeleteLocationUnitsInstitutionsByIdResponse
+                .respond400WithTextPlain("Campus is in use, can not be deleted")));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-                .withPlainNotFound("Campus not found")));
+              DeleteLocationUnitsCampusesByIdResponse
+                .respond404WithTextPlain("Campus not found")));
           }
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsCampusesByIdResponse
-              .withNoContent()));
+            DeleteLocationUnitsCampusesByIdResponse.respond204()));
         }
       });
   }
@@ -418,12 +408,11 @@ public class LocationUnitAPI implements LocationUnitsResource {
     String id,
     String lang, Loccamp entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation:Campus  id cannot be changed";
         asyncResultHandler.handle(Future.succeededFuture(
-          LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
-            .withPlainBadRequest(message)));
+          PutLocationUnitsCampusesByIdResponse.respond400WithTextPlain(message)));
         return;
       }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
@@ -437,17 +426,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (updateReply.failed()) {
             String message = StorageHelper.logAndSaveError(updateReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
-                .withPlainInternalServerError(message)));
+              PutLocationUnitsCampusesByIdResponse
+                .respond500WithTextPlain(message)));
           } else {
             if (updateReply.result().getUpdated() == 0) {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
-                  .withPlainNotFound("Campus not found")));
+                PutLocationUnitsCampusesByIdResponse
+                  .respond404WithTextPlain("Campus not found")));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.PutLocationUnitsCampusesByIdResponse
-                  .withNoContent()));
+                PutLocationUnitsCampusesByIdResponse.respond204()));
             }
           }
         });
@@ -467,12 +455,12 @@ public class LocationUnitAPI implements LocationUnitsResource {
       reply -> {
         if (reply.succeeded()) {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsLibrariesResponse.noContent()
+            DeleteLocationUnitsLibrariesResponse.noContent()
               .build()));
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsLibrariesResponse
-              .withPlainInternalServerError(reply.cause().getMessage())));
+            DeleteLocationUnitsLibrariesResponse
+              .respond500WithTextPlain(reply.cause().getMessage())));
         }
       });
   }
@@ -491,8 +479,8 @@ public class LocationUnitAPI implements LocationUnitsResource {
     } catch (Exception e) {
       String message = StorageHelper.logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.GetLocationUnitsLibrariesResponse
-          .withPlainInternalServerError(message)));
+        GetLocationUnitsLibrariesResponse
+          .respond500WithTextPlain(message)));
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
@@ -501,15 +489,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (reply.failed()) {
             String message = StorageHelper.logAndSaveError(reply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.GetLocationUnitsLibrariesResponse
-                .withPlainBadRequest(message)));
+              GetLocationUnitsLibrariesResponse
+                .respond400WithTextPlain(message)));
           } else {
             Loclibs lib = new Loclibs();
             List<Loclib> items = (List<Loclib>) reply.result().getResults();
             lib.setLoclibs(items);
             lib.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.GetLocationUnitsLibrariesResponse.withJsonOK(lib)));
+              GetLocationUnitsLibrariesResponse.respond200WithApplicationJson(lib)));
           }
         });
   }
@@ -532,24 +520,22 @@ public class LocationUnitAPI implements LocationUnitsResource {
           String message = StorageHelper.logAndSaveError(reply.cause());
           if (StorageHelper.isDuplicate(message)) {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PostLocationUnitsLibrariesResponse
-                .withJsonUnprocessableEntity(
+              PostLocationUnitsLibrariesResponse
+                .respond422WithApplicationJson(
                   ValidationHelper.createValidationErrorMessage(
                     "loclib", entity.getId(),
                     "Library already exists"))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PostLocationUnitsLibrariesResponse
-                .withPlainInternalServerError(message)));
+              PostLocationUnitsLibrariesResponse.respond500WithTextPlain(message)));
           }
         } else {
-          Object responseObject = reply.result();
-          entity.setId((String) responseObject);
-          OutStream stream = new OutStream();
-          stream.setData(entity);
+          String responseObject = reply.result();
+          entity.setId(responseObject);
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.PostLocationUnitsLibrariesResponse
-              .withJsonCreated(URL_PREFIX + responseObject, stream)));
+            PostLocationUnitsLibrariesResponse
+              .respond201WithApplicationJson(entity,
+                PostLocationUnitsLibrariesResponse.headersFor201().withLocation(URL_PREFIX + responseObject))));
         }
       });
   }
@@ -571,19 +557,19 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (getReply.failed()) {
             String message = StorageHelper.logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
-                .withPlainInternalServerError(message)));
+              GetLocationUnitsLibrariesByIdResponse
+                .respond500WithTextPlain(message)));
           } else {
             List<Loclib> items = (List<Loclib>) getReply.result().getResults();
             if (items.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
-                  .withPlainNotFound(
+                GetLocationUnitsLibrariesByIdResponse
+                  .respond404WithTextPlain(
                     messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.GetLocationUnitsLibrariesByIdResponse
-                  .withJsonOK(items.get(0))));
+                GetLocationUnitsLibrariesByIdResponse
+                  .respond200WithApplicationJson(items.get(0))));
             }
           }
         });
@@ -605,17 +591,15 @@ public class LocationUnitAPI implements LocationUnitsResource {
           StorageHelper.logAndSaveError(deleteReply.cause());
           if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-                .withPlainBadRequest("Library is in use, can not be deleted")));
+              DeleteLocationUnitsLibrariesByIdResponse
+                .respond400WithTextPlain("Library is in use, can not be deleted")));
           } else {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-                .withPlainNotFound("Library not found")));
+            DeleteLocationUnitsLibrariesByIdResponse.respond404WithTextPlain("Library not found")));
           }
         } else {
           asyncResultHandler.handle(Future.succeededFuture(
-            LocationUnitsResource.DeleteLocationUnitsLibrariesByIdResponse
-              .withNoContent()));
+            DeleteLocationUnitsLibrariesByIdResponse.respond204()));
         }
       });
   }
@@ -629,8 +613,7 @@ public class LocationUnitAPI implements LocationUnitsResource {
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation: Library id cannot be changed";
       asyncResultHandler.handle(Future.succeededFuture(
-        LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
-          .withPlainBadRequest(message)));
+        PutLocationUnitsLibrariesByIdResponse.respond400WithTextPlain(message)));
       return;
     }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
@@ -644,17 +627,16 @@ public class LocationUnitAPI implements LocationUnitsResource {
           if (updateReply.failed()) {
             String message = StorageHelper.logAndSaveError(updateReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
-                .withPlainInternalServerError(message)));
+              PutLocationUnitsLibrariesByIdResponse
+                .respond500WithTextPlain(message)));
           } else {
             if (updateReply.result().getUpdated() == 0) {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
-                  .withPlainNotFound("Library not found")));
+                PutLocationUnitsLibrariesByIdResponse
+                  .respond404WithTextPlain("Library not found")));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                LocationUnitsResource.PutLocationUnitsLibrariesByIdResponse
-                  .withNoContent()));
+                PutLocationUnitsLibrariesByIdResponse.respond204()));
             }
           }
         });
