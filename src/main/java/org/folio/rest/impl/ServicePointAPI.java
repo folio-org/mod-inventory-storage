@@ -13,14 +13,12 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.model.Servicepoints;
-import org.folio.rest.jaxrs.resource.ServicePointsResource;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -30,7 +28,7 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
  *
  * @author kurt
  */
-public class ServicePointAPI implements ServicePointsResource {
+public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoints {
   public static final Logger logger = LoggerFactory.getLogger(
           ServicePointAPI.class);
   public static final String SERVICE_POINT_TABLE = "service_point";
@@ -83,7 +81,7 @@ public class ServicePointAPI implements ServicePointsResource {
   @Override
   public void deleteServicePoints(String lang, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
-          Context vertxContext) throws Exception {
+          Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = getTenant(okapiHeaders);
@@ -96,7 +94,7 @@ public class ServicePointAPI implements ServicePointsResource {
           if(mutateReply.failed()) {
             String message = logAndSaveError(mutateReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-                    DeleteServicePointsResponse.withPlainInternalServerError(
+                    DeleteServicePointsResponse.respond500WithTextPlain(
                     getErrorResponse(message))));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
@@ -106,7 +104,7 @@ public class ServicePointAPI implements ServicePointsResource {
       } catch(Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
-                DeleteServicePointsResponse.withPlainInternalServerError(
+                DeleteServicePointsResponse.respond500WithTextPlain(
                 getErrorResponse(message))));
       }
     });
@@ -116,7 +114,7 @@ public class ServicePointAPI implements ServicePointsResource {
   public void getServicePoints(String query, int offset, int limit, String lang,
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
-          Context vertxContext) throws Exception {
+          Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = getTenant(okapiHeaders);
@@ -127,17 +125,16 @@ public class ServicePointAPI implements ServicePointsResource {
           if(getReply.failed()) {
             String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetServicePointsResponse.withPlainInternalServerError(
+                    GetServicePointsResponse.respond500WithTextPlain(
                     getErrorResponse(message))));
           } else {
             Servicepoints servicepoints = new Servicepoints();
-            List<Servicepoint> servicepointList = (List<Servicepoint>) getReply
-                    .result().getResults();
+            List<Servicepoint> servicepointList = getReply.result().getResults();
             servicepoints.setServicepoints(servicepointList);
             servicepoints.setTotalRecords(getReply.result().getResultInfo()
                     .getTotalRecords());
             asyncResultHandler.handle(Future.succeededFuture(
-                    GetServicePointsResponse.withJsonOK(servicepoints)));
+                    GetServicePointsResponse.respond200WithApplicationJson(servicepoints)));
           }
         });
       } catch(Exception e) {
@@ -146,7 +143,7 @@ public class ServicePointAPI implements ServicePointsResource {
           message = String.format("CQL Error: %s", message);
         }
         asyncResultHandler.handle(Future.succeededFuture(
-                GetServicePointsResponse.withPlainInternalServerError(
+                GetServicePointsResponse.respond500WithTextPlain(
                 getErrorResponse(message))));
       }
     });
@@ -156,7 +153,7 @@ public class ServicePointAPI implements ServicePointsResource {
   public void postServicePoints(String lang, Servicepoint entity,
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
-          Context vertxContext) throws Exception {
+          Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String id = entity.getId();
@@ -171,28 +168,27 @@ public class ServicePointAPI implements ServicePointsResource {
             String message = logAndSaveError(saveReply.cause());
             if(isDuplicate(message)) {
               asyncResultHandler.handle(Future.succeededFuture(
-                      PostServicePointsResponse.withJsonUnprocessableEntity(
+                      PostServicePointsResponse.respond422WithApplicationJson(
                       ValidationHelper.createValidationErrorMessage("name",
                       entity.getName(), "Service Point Exists"))));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                      PostServicePointsResponse.withPlainInternalServerError(
+                      PostServicePointsResponse.respond500WithTextPlain(
                       getErrorResponse(message))));
             }
           } else {
             String ret = saveReply.result();
             entity.setId(ret);
-            OutStream stream = new OutStream();
-            stream.setData(entity);
             asyncResultHandler.handle(Future.succeededFuture(
-                    PostServicePointsResponse.withJsonCreated(LOCATION_PREFIX
-                    + ret, stream)));
+                    PostServicePointsResponse
+                      .respond201WithApplicationJson(entity, 
+                        PostServicePointsResponse.headersFor201().withLocation((LOCATION_PREFIX + ret)))));
           }
         });
       } catch(Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
-                PostServicePointsResponse.withPlainInternalServerError(
+                PostServicePointsResponse.respond500WithTextPlain(
                 getErrorResponse(message))));
       }
     });
@@ -202,7 +198,7 @@ public class ServicePointAPI implements ServicePointsResource {
   public void getServicePointsByServicepointId(String servicepointId,
           String lang, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
-          Context vertxContext) throws Exception {
+          Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = getTenant(okapiHeaders);
@@ -217,19 +213,18 @@ public class ServicePointAPI implements ServicePointsResource {
             String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
                     GetServicePointsByServicepointIdResponse
-                    .withPlainInternalServerError(getErrorResponse(message))));
+                    .respond500WithTextPlain(getErrorResponse(message))));
           } else {
-            List<Servicepoint> servicepointList = (List<Servicepoint>) getReply
-                    .result().getResults();
+            List<Servicepoint> servicepointList = getReply.result().getResults();
             if(servicepointList.isEmpty()) {
               asyncResultHandler.handle(Future.succeededFuture(
                       GetServicePointsByServicepointIdResponse
-                      .withPlainNotFound(String.format(
+                      .respond404WithTextPlain(String.format(
                       "No service point exists with id '%s'", servicepointId))));
             } else {
               Servicepoint servicepoint = servicepointList.get(0);
               asyncResultHandler.handle(Future.succeededFuture(
-                      GetServicePointsByServicepointIdResponse.withJsonOK(
+                      GetServicePointsByServicepointIdResponse.respond200WithApplicationJson(
                       servicepoint)));
             }
           }
@@ -238,7 +233,7 @@ public class ServicePointAPI implements ServicePointsResource {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
                 GetServicePointsByServicepointIdResponse
-                .withPlainInternalServerError(getErrorResponse(message))));
+                .respond500WithTextPlain(getErrorResponse(message))));
       }
     });
   }
@@ -247,7 +242,7 @@ public class ServicePointAPI implements ServicePointsResource {
   public void deleteServicePointsByServicepointId(String servicepointId,
           String lang, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
-          Context vertxContext) throws Exception {
+          Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = getTenant(okapiHeaders);
@@ -257,27 +252,27 @@ public class ServicePointAPI implements ServicePointsResource {
             String message = logAndSaveError(inUseRes.cause());
             asyncResultHandler.handle(Future.succeededFuture(
                     DeleteServicePointsByServicepointIdResponse
-                    .withPlainInternalServerError(getErrorResponse(message))));
+                    .respond500WithTextPlain(getErrorResponse(message))));
           } else if(inUseRes.result()) {
             asyncResultHandler.handle(Future.succeededFuture(
                     DeleteServicePointsByServicepointIdResponse
-                    .withPlainBadRequest("Cannot delete service point, as it is in use")));
+                    .respond400WithTextPlain("Cannot delete service point, as it is in use")));
           } else {
             pgClient.delete(SERVICE_POINT_TABLE, servicepointId, deleteReply -> {
               if(deleteReply.failed()) {
                 String message = logAndSaveError(deleteReply.cause());
                 asyncResultHandler.handle(Future.succeededFuture(
                         DeleteServicePointsByServicepointIdResponse
-                        .withPlainInternalServerError(getErrorResponse(message))));
+                        .respond500WithTextPlain(getErrorResponse(message))));
               } else {
                 if(deleteReply.result().getUpdated() == 0) {
                   asyncResultHandler.handle(Future.succeededFuture(
                           DeleteServicePointsByServicepointIdResponse
-                          .withPlainNotFound("Not found")));
+                          .respond404WithTextPlain("Not found")));
                 } else {
                   asyncResultHandler.handle(Future.succeededFuture(
                           DeleteServicePointsByServicepointIdResponse
-                          .withNoContent()));
+                          .respond204()));
                 }
               }
             });
@@ -287,7 +282,7 @@ public class ServicePointAPI implements ServicePointsResource {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
                 DeleteServicePointsByServicepointIdResponse
-                .withPlainInternalServerError(getErrorResponse(message))));
+                .respond500WithTextPlain(getErrorResponse(message))));
       }
     });
   }
@@ -296,7 +291,7 @@ public class ServicePointAPI implements ServicePointsResource {
   public void putServicePointsByServicepointId(String servicepointId,
           String lang, Servicepoint entity, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
-          Context vertxContext) throws Exception {
+          Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = getTenant(okapiHeaders);
@@ -311,22 +306,22 @@ public class ServicePointAPI implements ServicePointsResource {
             String message = logAndSaveError(updateReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
                     PutServicePointsByServicepointIdResponse
-                    .withPlainInternalServerError(getErrorResponse(message))));
+                    .respond500WithTextPlain(getErrorResponse(message))));
           } else if(updateReply.result().getUpdated() == 0) {
             asyncResultHandler.handle(Future.succeededFuture(
                     PutServicePointsByServicepointIdResponse
-                    .withPlainNotFound("Not found")));
+                    .respond404WithTextPlain("Not found")));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
                     PutServicePointsByServicepointIdResponse
-                    .withNoContent()));
+                    .respond204()));
           }
         });
       } catch(Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
                 PutServicePointsByServicepointIdResponse
-                .withPlainInternalServerError(getErrorResponse(message))));
+                .respond500WithTextPlain(getErrorResponse(message))));
       }
     });
   }

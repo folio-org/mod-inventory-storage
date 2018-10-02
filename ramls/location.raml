@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Location API
 version: v2.0
 protocols: [ HTTP, HTTPS ]
@@ -9,25 +9,21 @@ documentation:
     content: This documents the API calls that can be made to query and manage
       (shelf) locations of the system
 
-schemas:
-  - location.json: !include location.json
-  - locations: !include locations.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  location: !include location.json
+  locations: !include locations.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - language: !include raml-util/traits/language.raml
-  - validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
 
 /locations:
   type:
@@ -35,7 +31,7 @@ resourceTypes:
       exampleCollection: !include examples/locations.json
       exampleItem: !include examples/location.json
       schemaCollection: locations
-      schemaItem: location.json
+      schemaItem: location
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -46,6 +42,7 @@ resourceTypes:
     description: Create a new location
     is: [validate]
   delete:
+    is: [language]
     description: "Delete all locations"
     responses:
       204:
@@ -60,7 +57,7 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/location.json
-        schema: location.json
+        schema: location
     get:
     put:
     delete:

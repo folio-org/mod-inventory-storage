@@ -9,7 +9,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loantype;
 import org.folio.rest.jaxrs.model.Loantypes;
-import org.folio.rest.jaxrs.resource.LoanTypesResource;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -19,7 +18,6 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -35,7 +33,7 @@ import io.vertx.core.logging.LoggerFactory;
 /**
  * Implements the loan type persistency using postgres jsonb.
  */
-public class LoanTypeAPI implements LoanTypesResource {
+public class LoanTypeAPI implements org.folio.rest.jaxrs.resource.LoanTypes {
 
   /** postgresql table name of the loan type */
   public static final String LOAN_TYPE_TABLE   = "loan_type";
@@ -60,7 +58,7 @@ public class LoanTypeAPI implements LoanTypesResource {
   @Override
   public void getLoanTypes(String query, int offset, int limit, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
     /**
      * http://host:port/loan-types
      */
@@ -73,22 +71,21 @@ public class LoanTypeAPI implements LoanTypesResource {
               try {
                 if (reply.succeeded()) {
                   Loantypes loantypes = new Loantypes();
-                  @SuppressWarnings("unchecked")
-                  List<Loantype> loantype = (List<Loantype>) reply.result().getResults();
+                  List<Loantype> loantype = reply.result().getResults();
                   loantypes.setLoantypes(loantype);
                   loantypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesResponse.withJsonOK(
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesResponse.respond200WithApplicationJson(
                       loantypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesResponse
-                      .withPlainBadRequest(reply.cause().getMessage())));
+                      .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesResponse
-                    .withPlainInternalServerError(messages.getMessage(
+                    .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
             });
@@ -99,7 +96,7 @@ public class LoanTypeAPI implements LoanTypesResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesResponse
-            .withPlainInternalServerError(message)));
+            .respond500WithTextPlain(message)));
       }
     });
   }
@@ -107,7 +104,7 @@ public class LoanTypeAPI implements LoanTypesResource {
   @Validate
   @Override
   public void postLoanTypes(String lang, Loantype entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -122,12 +119,10 @@ public class LoanTypeAPI implements LoanTypesResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  Object ret = reply.result();
-                  entity.setId((String) ret);
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostLoanTypesResponse.withJsonCreated(
-                      LOCATION_PREFIX + ret, stream)));
+                  String ret = reply.result();
+                  entity.setId(ret);
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostLoanTypesResponse
+                    .respond201WithApplicationJson(entity, PostLoanTypesResponse.headersFor201().withLocation( LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -136,7 +131,7 @@ public class LoanTypeAPI implements LoanTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PostLoanTypesResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPost(e, lang, asyncResultHandler);
@@ -152,7 +147,7 @@ public class LoanTypeAPI implements LoanTypesResource {
   @Override
   public void getLoanTypesByLoantypeId(String loantypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -170,18 +165,18 @@ public class LoanTypeAPI implements LoanTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(GetLoanTypesByLoantypeIdResponse.
-                      withPlainNotFound(msg)));
+                      respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
                 List<Loantype> userGroup = (List<Loantype>) reply.result().getResults();
                 if (userGroup.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                      .withPlainNotFound(loantypeId)));
+                      .respond404WithTextPlain(loantypeId)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                      .withJsonOK(userGroup.get(0))));
+                      .respond200WithApplicationJson(userGroup.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);
@@ -197,7 +192,7 @@ public class LoanTypeAPI implements LoanTypesResource {
   @Override
   public void deleteLoanTypesByLoantypeId(String loantypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -213,7 +208,7 @@ public class LoanTypeAPI implements LoanTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                   return;
                 }
                 int updated = reply.result().getUpdated();
@@ -221,11 +216,11 @@ public class LoanTypeAPI implements LoanTypesResource {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
                   asyncResultHandler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                      .withPlainNotFound(msg)));
+                      .respond404WithTextPlain(msg)));
                   return;
                 }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
               }
@@ -240,7 +235,7 @@ public class LoanTypeAPI implements LoanTypesResource {
   @Override
   public void putLoanTypesByLoantypeId(String loantypeId, String lang, Loantype entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) throws Exception {
+      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -254,10 +249,10 @@ public class LoanTypeAPI implements LoanTypesResource {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-                        .withPlainNotFound(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-                        .withNoContent()));
+                        .respond204()));
                   }
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
@@ -267,7 +262,7 @@ public class LoanTypeAPI implements LoanTypesResource {
                   }
                   log.info(msg);
                   asyncResultHandler.handle(Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-                      .withPlainBadRequest(msg)));
+                      .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringPut(e, lang, asyncResultHandler);
@@ -280,8 +275,7 @@ public class LoanTypeAPI implements LoanTypesResource {
 
   @Override
   public void deleteLoanTypes(String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-    throws Exception {
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     try {
       vertxContext.runOnContext(v -> {
@@ -291,20 +285,17 @@ public class LoanTypeAPI implements LoanTypesResource {
           reply -> {
             if (reply.succeeded()) {
               asyncResultHandler.handle(Future.succeededFuture(
-                LoanTypesResource.DeleteLoanTypesResponse.noContent()
-                  .build()));
+                DeleteLoanTypesResponse.noContent().build()));
             } else {
               asyncResultHandler.handle(Future.succeededFuture(
-                LoanTypesResource.DeleteLoanTypesResponse.
-                  withPlainInternalServerError(reply.cause().getMessage())));
+                DeleteLoanTypesResponse.respond500WithTextPlain(reply.cause().getMessage())));
             }
           });
       });
     }
     catch(Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
-        LoanTypesResource.DeleteLoanTypesResponse.
-          withPlainInternalServerError(e.getMessage())));
+        DeleteLoanTypesResponse.respond500WithTextPlain(e.getMessage())));
     }
 
   }
@@ -312,25 +303,25 @@ public class LoanTypeAPI implements LoanTypesResource {
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostLoanTypesResponse
-      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-      .withPlainInternalServerError(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {

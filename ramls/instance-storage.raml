@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Instance Storage
 version: v5.0
 protocols: [ HTTP, HTTPS ]
@@ -8,23 +8,21 @@ documentation:
   - title: Instance Storage API
     content: <b>Storage for instances in the inventory</b>
 
-schemas:
-  - instance.json: !include instance.json
-  - instances: !include instances.json
-  - marc.json: !include marc.json
-  - instancerelationship.json: !include instancerelationship.json
-  - instanceRelationships: !include instancerelationships.json
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  instance: !include instance.json
+  instances: !include instances.json
+  marcJson: !include marc.json
+  instanceRelationship: !include instancerelationship.json
+  instanceRelationships: !include instancerelationships.json
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - language: !include raml-util/traits/language.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /instance-storage:
   /instance-relationships:
@@ -33,7 +31,7 @@ resourceTypes:
       collection:
         exampleCollection: !include  examples/instancerelationships_get.json
         schemaCollection: instanceRelationships
-        schemaItem: instancerelationship.json
+        schemaItem: instanceRelationship
         exampleItem: !include  examples/instancerelationship_get.json
     get:
       is: [pageable,
@@ -47,12 +45,12 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/instancerelationship_get.json
-          schema: instancerelationship.json
+          schema: instanceRelationship
       get:
         responses:
           200:
             body:
-  #              type: instancerelationship
+  #              type: instanceRelationship
         description: |
           Get Instance Relationship
   /instances:
@@ -61,7 +59,7 @@ resourceTypes:
       collection:
         exampleCollection: !include  examples/instances_get.json
         schemaCollection: instances
-        schemaItem: instance.json
+        schemaItem: instance
         exampleItem: !include  examples/instance_get.json
     get:
       is: [pageable,
@@ -70,6 +68,7 @@ resourceTypes:
           ]
     post:
     delete:
+      is: [language]
       responses:
         204:
           description: "All instances deleted"
@@ -82,7 +81,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/instance_get.json
-          schema: instance.json
+          schema: instance
       get:
         responses:
           200:
@@ -94,8 +93,8 @@ resourceTypes:
           how instance hashes are computed are business rules and defined in the service layer.
           the storage layer only knows how to insert or retrieve instance records by ID.
       /source-record:
-        is: [language]
         delete:
+          is: [language]
           responses:
             204:
               description: "Source record deleted"
@@ -115,7 +114,7 @@ resourceTypes:
           type:
             collection-item:
               exampleItem: !include examples/marc.json
-              schema: marc.json
+              schema: marcJson
         /mods:
           displayName: MODS source record - not implemented yet
           is: [language]
