@@ -63,6 +63,13 @@
       "dateOfPublication": "2018"
     }
   ],
+  "electronicAccess": [
+    {
+      "uri": "http://www.gbv.de/dms/zbw/880159367.pdf",
+      "linkText": "Electronic resource (PDF)",
+      "publicNote": "Address for accessing the table of content. PDF file"
+    } 
+  ],
   "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
   "physicalDescriptions": [
     "xiv, 300 Seiten"
