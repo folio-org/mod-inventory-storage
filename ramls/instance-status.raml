@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Instance status reference API
 version: v1.0
 protocols: [ HTTP, HTTPS ]
@@ -8,25 +8,21 @@ documentation:
   - title: Instance status reference API
     content: This documents the API calls that can be made to query and manage instance statuses of the system
 
-schemas:
-  - instancestatus.json: !include instancestatus.json
-  - instanceStatuses: !include instancestatuses.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  instanceStatus: !include instancestatus.json
+  instanceStatuses: !include instancestatuses.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - language: !include raml-util/traits/language.raml
-  - validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
 
 /instance-statuses:
   type:
@@ -34,7 +30,7 @@ resourceTypes:
       exampleCollection: !include examples/instancestatuses.json
       exampleItem: !include examples/instancestatus.json
       schemaCollection: instanceStatuses
-      schemaItem: instancestatus.json
+      schemaItem: instanceStatus
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -45,6 +41,7 @@ resourceTypes:
     description: Create a new instance status
     is: [validate]
   delete:
+    is: [language]
     description: "Delete all instance statuses"
     responses:
       204:
@@ -59,5 +56,5 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/instancestatus.json
-        schema: instancestatus.json
+        schema: instanceStatus
 

@@ -1,3 +1,18 @@
+## 13.0.0 Unreleased
+
+* Converts to RAML 1.0 (MODINVSTOR-193)
+* Add foreign keys item->holdings_record, holdings_record->instance (MODINVSTOR-135)
+* Removes index on `item.title` (MODINVSTOR-135)
+* Provides `instance-storage` interface 5.0 (MODINVSTOR-187)
+* Provides `holdings-storage` interface 2.0 (MODINVSTOR-187)
+* Provides `item-storage` interface 6.0 (MODINVSTOR-187)
+* Change `instance.edition` to repeatable `editions` (MODINVSTOR-171)
+* Change `instance.formatId` to repeatable `formatIds` (MODINVSTOR-195)
+* Removes property `instance.urls` (MODINVSTOR-180)
+* Removes property `instance.catalogingLevelId` (MODINVSTOR-186)
+* Removes end-point `cataloging-levels`, reference table `cataloging_level` (MODINVSTOR-186)
+* Renames `instance.electronicAccess.relationship` to `relationshipId` (MODINVSTOR-191)
+
 ## 12.8.2 2018-09-16
 
 * Enable UUID syntax check for POST instance and POST holding (MODINVSTOR-172)

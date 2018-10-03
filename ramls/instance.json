@@ -30,9 +30,13 @@
       },
       "uniqueItems": true
     },
-    "edition": {
-      "type": "string",
+    "editions": {
+      "type": "array",
       "description": "the edition statement, imprint and other publication source information"
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "series": {
       "type": "array",
@@ -167,13 +171,6 @@
       },
       "uniqueItems": true
     },
-    "urls": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
-    },
     "electronicAccess": {
       "type": "array",
       "items": {
@@ -195,7 +192,7 @@
             "type": "string",
             "description": "URL public note to be displayed in the discovery"
           },
-          "relationship": {
+          "relationshipId": {
             "type": "string",
             "description": "relationship between the electronic resource at the location identified and the item described in the record as a whole"
           }
@@ -210,9 +207,12 @@
       "type": "string",
       "description": "the unique term for the resource type wether it's from the RDA content term list of locally defined"
     },
-    "instanceFormatId": {
-      "type": "string",
-      "description": "the unique term for the format wether it's from the RDA carrier term list of locally defined"
+    "instanceFormatIds": {
+      "type": "array",
+      "description": "the unique term for the format wether it's from the RDA carrier term list of locally defined",
+      "items": {
+        "type": "string"
+      }
     },
     "physicalDescriptions": {
       "type": "array",
@@ -239,10 +239,6 @@
     "modeOfIssuanceId": {
       "type": "string", 
       "description": "RDA mode of issuance is a categorization reflecting whether a resource is issued in one or more parts, the way it is updated, and whether its termination is predetermined or not (e.g. monograph,  sequential monograph, serial; integrating Resource, other)" 
-          },
-    "catalogingLevelId": {
-      "type": "string",
-      "description": "administrative categorization of the instance status to indicate where a record is in the workflow or the type of record)"
     },
     "catalogedDate": {
       "type": "string",
