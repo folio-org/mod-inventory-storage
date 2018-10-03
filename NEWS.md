@@ -1,6 +1,6 @@
 ## 13.0.0 Unreleased
 
-* Adds end-point `electronic-access-relationships` 1.0 (MODINVSTOR-190)
+* Provides `electronic-access-relationships` interface 1.0 (MODINVSTOR-190)
 * Documents `instance` properties (MODINVSTOR-179)
 * Converts to RAML 1.0 (MODINVSTOR-193)
 * Add foreign keys item->holdings_record, holdings_record->instance (MODINVSTOR-135)

@@ -47,35 +47,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
   private static final Logger LOG = LoggerFactory.getLogger(ElectronicAccessRelationshipAPI.class);
   private static final Messages MESSAGES = Messages.getInstance();
   private static final String IDFIELDNAME = "_id";
-/*
-  public void deleteElectronicAccessRelationships(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    try {
-      vertxContext.runOnContext(v -> {
-        PostgresClient postgresClient = PostgresClient.getInstance(
-                vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
-                tenantId, "mod_inventory_storage", RESOURCE_TABLE),
-                reply -> {
-                  if (reply.succeeded()) {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                            DeleteElectronicaccessRelationshipsResponse.noContent()
-                                    .build()));
-                  } else {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                            DeleteElectronicAccessRelationshipsResponse.
-                                    respond500WithTextPlain(reply.cause().getMessage())));
-                  }
-                });
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-              DeleteElectronicAccessRelationshipsResponse.
-                      respond500WithTextPlain(e.getMessage())));
-    }
-  }
-*/
   @Override
   public void getElectronicAccessRelationships(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -89,8 +61,8 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
                     if (reply.succeeded()) {
                       ElectronicAccessRelationships electronicAccessRelationships = new ElectronicAccessRelationships();
                       @SuppressWarnings("unchecked")
-                      List<ElectronicAccessRelationship> levels = (List<ElectronicAccessRelationship>) reply.result().getResults();
-                      electronicAccessRelationships.setElectronicAccessRelationships(levels);
+                      List<ElectronicAccessRelationship> relationships = reply.result().getResults();
+                      electronicAccessRelationships.setElectronicAccessRelationships(relationships);
                       electronicAccessRelationships.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsResponse.respond200WithApplicationJson(
                               electronicAccessRelationships)));
@@ -178,7 +150,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
                   try {
                     if (reply.succeeded()) {
                       @SuppressWarnings("unchecked")
-                      List<ElectronicAccessRelationship> electronicAccessRelationships = (List<ElectronicAccessRelationship>) reply.result().getResults();
+                      List<ElectronicAccessRelationship> electronicAccessRelationships = reply.result().getResults();
                       if (electronicAccessRelationships.isEmpty()) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
                                 .respond404WithTextPlain(electronicAccessRelationshipId)));
