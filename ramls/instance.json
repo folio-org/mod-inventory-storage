@@ -32,7 +32,7 @@
     },
     "editions": {
       "type": "array",
-      "description": "the edition statement, imprint and other publication source information"
+      "description": "the edition statement, imprint and other publication source information",
       "items": {
         "type": "string"
       },
