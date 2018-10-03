@@ -3,7 +3,9 @@
   "hrid": "in000005",
   "source": "MARC",
   "title": "Bridget Jones's Baby: the diaries",
-  "edition": "First American Edition",
+  "editions": [
+    "First American Edition"
+  ],
   "identifiers": [
     {
       "identifierTypeId": "5d164f4b-0b15-4e42-ae75-cfcf85318ad9",

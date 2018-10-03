@@ -25,14 +25,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static java.net.HttpURLConnection.*;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import org.junit.BeforeClass;
 
-public class LoanTypeTest extends TestBase {
+public class LoanTypeTest extends TestBaseWithInventoryUtil {
 
   private static final String       SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
@@ -41,6 +48,26 @@ public class LoanTypeTest extends TestBase {
   private static String postRequestCirculate = "{\"name\": \"Can circulate\"}";
   private static String postRequestCourse    = "{\"name\": \"Course reserve\"}";
   private static String putRequest  = "{\"name\": \"Reading room\"}";
+  private static UUID mainLibraryLocationId;
+
+  @BeforeClass
+  public static void beforeAny()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+
+    LocationsTest.createLocUnits(true);
+    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Loan)", "Lo/M");
+  }
 
   @Before
   public void beforeEach()
@@ -154,21 +181,23 @@ public class LoanTypeTest extends TestBase {
 
   @Test
   public void cannotDeleteALoanTypePermanentlyAssociatedToAnItem()
-    throws MalformedURLException {
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     JsonObject createResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
 
     String loanTypeID = createResponse.getString("id");
 
-    send(itemsStorageUrl(""), HttpMethod.POST, createItem(loanTypeID, null), HTTP_CREATED);
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    send(itemsStorageUrl(""), HttpMethod.POST, createItem(holdingsRecordId, loanTypeID, null), HTTP_CREATED);
 
     send(loanTypesStorageUrl("/" + loanTypeID), HttpMethod.DELETE, null, HTTP_BAD_REQUEST);
   }
 
   @Test
   public void cannotDeleteALoanTypeTemporarilyAssociatedToAnItem()
-    throws MalformedURLException {
+    throws MalformedURLException, ExecutionException, InterruptedException,  TimeoutException {
 
     JsonObject circulateCreateResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
@@ -180,8 +209,10 @@ public class LoanTypeTest extends TestBase {
 
     String reserveLoanTypeId = reserveCreateResponse.getString("id");
 
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
     send(itemsStorageUrl(""), HttpMethod.POST,
-      createItem(circulateLoanTypeId, reserveLoanTypeId), HTTP_CREATED);
+      createItem(holdingsRecordId, circulateLoanTypeId, reserveLoanTypeId), HTTP_CREATED);
 
     send(loanTypesStorageUrl("/" + reserveLoanTypeId), HttpMethod.DELETE, null,
       HTTP_BAD_REQUEST);
@@ -217,17 +248,19 @@ public class LoanTypeTest extends TestBase {
 
   @Test
   public void cannotCreateItemWithPermanentLoanTypeThatDoesNotExist()
-    throws MalformedURLException {
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     String nonexistentLoanId = UUID.randomUUID().toString();
 
-    send(itemsStorageUrl(""), HttpMethod.POST, createItem(nonexistentLoanId, null),
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    send(itemsStorageUrl(""), HttpMethod.POST, createItem(holdingsRecordId, nonexistentLoanId, null),
       HTTP_BAD_REQUEST);
   }
 
   @Test
   public void cannotCreateItemWithTemporaryLoanTypeThatDoesNotExist()
-    throws MalformedURLException {
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     JsonObject circulateCreateResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       postRequestCirculate, HTTP_CREATED);
@@ -235,21 +268,21 @@ public class LoanTypeTest extends TestBase {
     String circulateLoanTypeId = circulateCreateResponse.getString("id");
 
     String nonexistentLoanId = UUID.randomUUID().toString();
-
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     send(itemsStorageUrl(""), HttpMethod.POST,
-      createItem(circulateLoanTypeId, nonexistentLoanId), HTTP_BAD_REQUEST);
+      createItem(holdingsRecordId, circulateLoanTypeId, nonexistentLoanId), HTTP_BAD_REQUEST);
   }
 
   @Test
   public void updateItemWithNonexistingPermanentLoanTypeId()
-    throws MalformedURLException {
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     updateItemWithNonexistingId("permanentLoanTypeId");
   }
 
   @Test
   public void updateItemWithNonexistingTemporaryLoanTypeId()
-    throws MalformedURLException {
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
 
     updateItemWithNonexistingId("temporaryLoanTypeId");
   }
@@ -315,10 +348,10 @@ public class LoanTypeTest extends TestBase {
 
   /** Create a JSON String of an item; set permanentLoanTypeId and temporaryLoanTypeId
    * if the passed variable is not null */
-  private static String createItem(String permanentLoanTypeId, String temporaryLoanTypeId) {
+  private static String createItem(UUID holdingsRecordId, String permanentLoanTypeId, String temporaryLoanTypeId) {
     JsonObject item = new JsonObject();
 
-    item.put("holdingsRecordId", UUID.randomUUID().toString());
+    item.put("holdingsRecordId", holdingsRecordId.toString());
     item.put("barcode", "12345");
     item.put("materialTypeId", materialTypeID);
 
@@ -350,10 +383,12 @@ public class LoanTypeTest extends TestBase {
    * @param field - the field to change
    */
   private void updateItemWithNonexistingId(String field)
-    throws MalformedURLException {
+    throws MalformedURLException, ExecutionException, InterruptedException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     JsonObject response = send(itemsStorageUrl(""), HttpMethod.POST,
-      createItem(newLoanType(), newLoanType()), HTTP_CREATED);
+      createItem(holdingsRecordId, newLoanType(), newLoanType()), HTTP_CREATED);
 
     String itemId = response.getString("id");
 
