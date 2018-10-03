@@ -552,7 +552,33 @@
         }
       ]
     },
-
+    {
+      "id": "electronic-access-relationships",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/electronic-access-relationships",
+          "permissionsRequired": ["inventory-storage.electronic-access-relationships.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/electronic-access-relationships/{id}",
+          "permissionsRequired": ["inventory-storage.electronic-access-relationships.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/electronic-access-relationships",
+          "permissionsRequired": ["inventory-storage.electronic-access-relationships.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/electronic-access-relationships/{id}",
+          "permissionsRequired": ["inventory-storage.electronic-access-relationships.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/electronic-access-relationships/{id}",
+          "permissionsRequired": ["inventory-storage.electronic-access-relationships.item.delete"]
+        }
+      ]
+    },
     {
       "id": "statistical-code-types",
       "version": "1.0",
@@ -1239,6 +1265,32 @@
       "description": "delete individual instance status from storage"
     },
     {
+      "permissionName": "inventory-storage.electronic-access-relationships.collection.get",
+      "displayName": "inventory storage - get statistical codes collection",
+      "description": "get statistical codes collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.electronic-access-relationships.item.get",
+      "displayName": "inventory storage - get individual statistical code",
+      "description": "get individual statistical code from storage"
+    },
+    {
+      "permissionName": "inventory-storage.electronic-access-relationships.item.post",
+      "displayName": "inventory storage - create individual statistical code",
+      "description": "create individual statistical code in storage"
+    },
+    {
+      "permissionName": "inventory-storage.electronic-access-relationships.item.put",
+      "displayName": "inventory storage - modify statistical code",
+      "description": "modify statistical code in storage"
+    },
+    {
+      "permissionName": "inventory-storage.electronic-access-relationships.item.delete",
+      "displayName": "inventory storage - delete individual statistical code",
+      "description": "delete individual statistical code from storage"
+    },
+
+    {
       "permissionName": "inventory-storage.statistical-code-types.collection.get",
       "displayName": "inventory storage - get statistical codes collection",
       "description": "get statistical codes collection from storage"
@@ -1395,6 +1447,11 @@
         "inventory-storage.instance-statuses.item.post",
         "inventory-storage.instance-statuses.item.put",
         "inventory-storage.instance-statuses.item.delete",
+        "inventory-storage.electronic-access-relationships.collection.get",
+        "inventory-storage.electronic-access-relationships.item.get",
+        "inventory-storage.electronic-access-relationships.item.post",
+        "inventory-storage.electronic-access-relationships.item.put",
+        "inventory-storage.electronic-access-relationships.item.delete",
         "inventory-storage.statistical-code-types.collection.get",
         "inventory-storage.statistical-code-types.item.get",
         "inventory-storage.statistical-code-types.item.post",

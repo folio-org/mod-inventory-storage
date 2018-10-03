@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "electronicAccessRelationships": {
+      "id": "electronicAccessRelationship",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "electronicaccessrelationship.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "electronicAccessRelationships",
+    "totalRecords"
+  ]
+}
+

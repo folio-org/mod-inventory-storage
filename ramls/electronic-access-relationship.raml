@@ -1,0 +1,49 @@
+#%RAML 1.0
+title: Electronic access relationship terms reference API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Electronic access relationship terms reference API
+    content: This documents the API calls that can be made to query and manage electronic access relationship types of the system
+
+types:
+  electronicAccessRelationship: !include electronicaccessrelationship.json
+  electronicAccessRelationships: !include electronicaccessrelationships.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
+
+/electronic-access-relationships:
+  type:
+    collection:
+      exampleCollection: !include examples/electronicaccessrelationships.json
+      exampleItem: !include examples/electronicaccessrelationship.json
+      schemaCollection: electronicAccessRelationships
+      schemaItem: electronicAccessRelationship
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of electronic access relationship terms
+  post:
+    description: Create a new electronic access relationship term
+    is: [validate]
+  /{electronicAccessRelationshipId}:
+    description: Pass in electronic access relationship ID
+    type:
+      collection-item:
+        exampleItem: !include examples/electronicaccessrelationship.json
+        schema: electronicAccessRelationship
+
