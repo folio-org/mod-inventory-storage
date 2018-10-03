@@ -354,7 +354,7 @@ public class ItemStorageAPI implements ItemStorage {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.item",
+        postgresClient.mutate(String.format("DELETE FROM %s_%s.item",
           tenantId, "mod_inventory_storage"),
           reply -> {
             if (reply.succeeded()) {

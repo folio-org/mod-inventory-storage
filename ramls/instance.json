@@ -24,8 +24,12 @@
       },
       "uniqueItems": true
     },
-    "edition": {
-      "type": "string"
+    "editions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "series": {
       "type": "array",
@@ -144,13 +148,6 @@
       },
       "uniqueItems": true
     },
-    "urls": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
-    },
     "electronicAccess": {
       "type": "array",
       "items": {
@@ -168,7 +165,7 @@
           "publicNote": {
             "type": "string"
           },
-          "relationship": {
+          "relationshipId": {
             "type": "string"
           }
         },
@@ -181,8 +178,11 @@
     "instanceTypeId": {
       "type": "string"
     },
-    "instanceFormatId": {
-      "type": "string"
+    "instanceFormatIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "physicalDescriptions": {
       "type": "array",
@@ -204,9 +204,6 @@
       }
     },
     "modeOfIssuanceId": {
-      "type": "string"
-    },
-    "catalogingLevelId": {
       "type": "string"
     },
     "catalogedDate": {
