@@ -62,6 +62,16 @@
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
+    },
+    "holdingsRecord": {
+      "type": "object",
+      "$ref": "holdingsrecord.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "holdings-storage/holdings",
+      "folio:linkFromField": "holdingsRecordId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "holdingsRecords.0"
     }
   },
   "additionalProperties": false,
