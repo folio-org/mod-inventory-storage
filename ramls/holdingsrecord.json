@@ -51,7 +51,7 @@
     },
     "holdingsInstance": {
       "type": "object",
-      "$ref": "instance.json",
+      "folio:$ref": "instance.json",
       "readonly": true,
       "folio:isVirtual": true,
       "folio:linkBase": "inventory/instances",

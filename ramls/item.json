@@ -65,7 +65,7 @@
     },
     "holdingsRecord": {
       "type": "object",
-      "$ref": "holdingsrecord.json",
+      "folio:$ref": "holdingsrecord.json",
       "readonly": true,
       "folio:isVirtual": true,
       "folio:linkBase": "holdings-storage/holdings",
