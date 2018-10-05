@@ -63,7 +63,7 @@
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
     },
-    "holdingsRecord": {
+    "holdingsRecord2": {
       "type": "object",
       "folio:$ref": "holdingsrecord.json",
       "readonly": true,
