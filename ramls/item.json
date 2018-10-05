@@ -64,6 +64,7 @@
       "readonly": true
     },
     "holdingsRecord": {
+      "id": "holdingsRecordForItem",
       "type": "object",
       "folio:$ref": "holdingsrecord.json",
       "readonly": true,
