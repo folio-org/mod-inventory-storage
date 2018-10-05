@@ -291,8 +291,7 @@
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
     },
-    "holdingsRecords": {
-      "id": "holdingsRecords2",
+    "holdingsRecords2": {
       "type": "array",
       "items": {
         "type": "object",
