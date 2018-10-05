@@ -57,6 +57,7 @@
     "code",
     "institutionId",
     "campusId",
-    "libraryId"
+    "libraryId",
+    "primaryServicePoint"
   ]
 }

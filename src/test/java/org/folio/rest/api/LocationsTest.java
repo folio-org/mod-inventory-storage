@@ -271,7 +271,8 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
       .put("campusId", campID.toString())
       .put("libraryId", libID.toString())
       .put("isActive", true)
-      .put("code", "AA/BB");
+				.put("code", "AA/BB").put("primaryServicePoint", servicePointIDs.get(0).toString())
+				.put("servicePointIds", new JsonArray(servicePointIDs));
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
