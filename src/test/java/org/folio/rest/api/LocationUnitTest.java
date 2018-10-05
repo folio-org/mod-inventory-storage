@@ -1,20 +1,19 @@
 package org.folio.rest.api;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -25,11 +24,22 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 // Missing tests:
 // - Add/update a campus that points to a non-existing inst
@@ -610,6 +620,31 @@ public class LocationUnitTest {
 
     return createLocationUnit.get(5, TimeUnit.SECONDS);
   }
+
+	public static Response createServicePoint(UUID id, String name, String code, String discoveryDisplayName,
+			String description, Integer shelvingLagTime, Boolean pickupLocation)
+			throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+		CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
+		JsonObject request = new JsonObject();
+		request.put("name", name).put("code", code).put("discoveryDisplayName", discoveryDisplayName);
+		if (id != null) {
+			request.put("id", id.toString());
+		}
+		if (description != null) {
+			request.put("description", description);
+		}
+		if (shelvingLagTime != null) {
+			request.put("shelvingLagTime", shelvingLagTime);
+		}
+		if (pickupLocation != null) {
+			request.put("pickupLocation", pickupLocation);
+		}
+
+		send(servicePointsUrl(""), HttpMethod.POST, request.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
+				ResponseHandler.json(createServicePoint));
+		return createServicePoint.get(5, TimeUnit.SECONDS);
+	}
 
   private Response getLibById(UUID id)
     throws InterruptedException,

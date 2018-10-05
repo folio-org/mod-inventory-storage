@@ -1,15 +1,23 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import static org.folio.rest.impl.StorageHelper.getCQL;
+import static org.folio.rest.impl.StorageHelper.getTenant;
+import static org.folio.rest.impl.StorageHelper.idCriterion;
+import static org.folio.rest.impl.StorageHelper.isInUse;
+import static org.folio.rest.impl.StorageHelper.logAndSaveError;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.ws.rs.core.Response;
+
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Locations;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
@@ -17,11 +25,13 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import static org.folio.rest.impl.StorageHelper.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -34,6 +44,11 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   public static final String URL_PREFIX = "/locations";
   public static final String LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
+
+	private String getErrorResponse(String response) {
+		// Check to see if we're suppressing messages or not
+		return response;
+	}
 
   @Override
   public void deleteLocations(String lang,
@@ -108,34 +123,42 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    String id = entity.getId();
-    if (id == null) {
-      id = UUID.randomUUID().toString();
-      entity.setId(id);
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .save(LOCATION_TABLE, id, entity, reply -> {
-        if (reply.failed()) {
-          String message = logAndSaveError(reply.cause());
-          if (message != null
-            && message.contains("duplicate key value violates unique constraint")) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              PostLocationsResponse.respond422WithApplicationJson(
-                ValidationHelper.createValidationErrorMessage(
-                  "shelflocation", entity.getId(),
-                  "Location already exists"))));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-              PostLocationsResponse.respond500WithTextPlain(message)));
-          }
-        } else {
-          String responseObject = reply.result();
-          entity.setId(responseObject);
-          asyncResultHandler.handle(Future.succeededFuture(
-            PostLocationsResponse.respond201WithApplicationJson(entity, PostLocationsResponse.
-              headersFor201().withLocation(URL_PREFIX + responseObject))));
-        }
-      });
+
+		runLocationChecks(checkIdProvided(entity), checkAtLeastOneServicePoint(entity),
+				checkPrimaryServicePointRelationship(entity)).setHandler(checksResult -> {
+
+			if (checksResult.succeeded()) {
+
+				PostgresClient.getInstance(vertxContext.owner(), tenantId).save(LOCATION_TABLE, entity.getId(), entity,
+						reply -> {
+							if (reply.failed()) {
+								String message = logAndSaveError(reply.cause());
+								if (message != null && message.contains("duplicate key value violates unique constraint")) {
+									asyncResultHandler.handle(
+											Future.succeededFuture(PostLocationsResponse.respond422WithApplicationJson(ValidationHelper
+													.createValidationErrorMessage("shelflocation", entity.getId(), "Location already exists"))));
+								} else {
+									asyncResultHandler
+											.handle(Future.succeededFuture(PostLocationsResponse.respond500WithTextPlain(message)));
+								}
+							} else {
+								String responseObject = reply.result();
+								entity.setId(responseObject);
+								asyncResultHandler
+										.handle(Future.succeededFuture(PostLocationsResponse.respond201WithApplicationJson(entity,
+												PostLocationsResponse.headersFor201().withLocation(URL_PREFIX + responseObject))));
+							}
+						});
+
+			} else {
+				String message = logAndSaveError(checksResult.cause());
+				asyncResultHandler.handle(
+						Future.succeededFuture(PostLocationsResponse.respond400WithTextPlain(getErrorResponse(message))));
+			}
+
+		});
+
+
   }
 
   @Override
@@ -215,35 +238,97 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
+		runLocationChecks(checkIdChange(id, entity), checkAtLeastOneServicePoint(entity),
+				checkPrimaryServicePointRelationship(entity)).setHandler(checksResult -> {
+			if (checksResult.succeeded()) {
+				String tenantId = getTenant(okapiHeaders);
+				Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
+				if (criterion == null) {
+					return; // error already handled
+				}
+				PostgresClient.getInstance(vertxContext.owner(), tenantId).update(LOCATION_TABLE, entity, criterion, false,
+						updateReply -> {
+							if (updateReply.failed()) {
+								String message = logAndSaveError(updateReply.cause());
+								asyncResultHandler
+												.handle(Future.succeededFuture(
+														PutLocationsByIdResponse.respond500WithTextPlain(getErrorResponse(message))));
+							} else {
+								if (updateReply.result().getUpdated() == 0) {
+									asyncResultHandler
+											.handle(Future.succeededFuture(PutLocationsByIdResponse.respond404WithTextPlain("Not found")));
+									// Not found
+								} else {
+											asyncResultHandler.handle(Future.succeededFuture(PutLocationsByIdResponse.respond204()));
+								}
+							}
+						});
+			} else {
+				String message = logAndSaveError(checksResult.cause());
+				asyncResultHandler
+								.handle(Future
+										.succeededFuture(PutLocationsByIdResponse.respond400WithTextPlain("Test Message")));
+			}
 
-    if (!id.equals(entity.getId())) {
-      String message = "Illegal operation: id cannot be changed";
-      asyncResultHandler.handle(Future.succeededFuture(
-        PutLocationsByIdResponse.respond400WithTextPlain(message)));
-      return;
-    }
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-      LOCATION_TABLE, entity, criterion, false, updateReply -> {
-        if (updateReply.failed()) {
-          String message = logAndSaveError(updateReply.cause());
-          asyncResultHandler.handle(Future.succeededFuture(
-            PutLocationsByIdResponse.respond500WithTextPlain(message)));
-        } else {
-          if (updateReply.result().getUpdated() == 0) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              PutLocationsByIdResponse.respond404WithTextPlain("Not found")));
-            //Not found
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-              PutLocationsByIdResponse.respond204()));
-          }
-        }
-      });
+		});
+
   }
+
+	@SafeVarargs
+	private final CompositeFuture runLocationChecks(Future<String>... futures) {
+		List<Future> allFutures = new ArrayList<Future>(Arrays.asList(futures));
+		return CompositeFuture.all(allFutures);
+	}
+
+	private Future<String> checkIdProvided(Location entity) {
+
+		Future<String> future = Future.succeededFuture();
+
+		String id = entity.getId();
+		if (id == null) {
+			id = UUID.randomUUID().toString();
+			entity.setId(id);
+		}
+
+		return future;
+
+	}
+
+	private Future<String> checkIdChange(String id, Location entity) {
+
+		Future<String> future = Future.succeededFuture();
+
+		if (!id.equals(entity.getId())) {
+			future = Future.failedFuture("Illegal operation: id cannot be changed");
+		}
+
+		return future;
+
+	}
+
+	private Future<String> checkAtLeastOneServicePoint(Location entity) {
+
+		Future<String> future = Future.succeededFuture();
+
+		if (entity.getServicePointIds().size() < 1) {
+			future = Future.failedFuture("Bad Request: A location must have at least one Service Point assigned.");
+		}
+
+		return future;
+
+	}
+
+	private Future<String> checkPrimaryServicePointRelationship(Location entity) {
+
+		Future<String> future = Future.succeededFuture();
+
+		if (!entity.getServicePointIds().contains(entity.getPrimaryServicePoint())) {
+			future = Future
+					.failedFuture("Bad Request: A Location's Primary Service point must be included as a Service Point.");
+		}
+
+		return future;
+
+	}
 
 }
