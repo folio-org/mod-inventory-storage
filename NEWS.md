@@ -14,6 +14,8 @@
 * Removes property `instance.catalogingLevelId` (MODINVSTOR-186)
 * Removes end-point `cataloging-levels`, reference table `cataloging_level` (MODINVSTOR-186)
 * Renames `instance.electronicAccess.relationship` to `relationshipId` (MODINVSTOR-191)
+* Add primary service point for location property (MODINVSTOR-177)
+* Reversed the relationship of ServicePoint to Location (MODINVSTOR-177)
 
 ## 12.8.2 2018-09-16
 
