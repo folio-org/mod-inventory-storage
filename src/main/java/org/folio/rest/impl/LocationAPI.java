@@ -286,7 +286,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 
 	@SafeVarargs
 	private final CompositeFuture runLocationChecks(Future<LocationCheckError>... futures) {
-		List<Future> allFutures = new ArrayList<Future>(Arrays.asList(futures));
+		List<Future> allFutures = new ArrayList<>(Arrays.asList(futures));
 		return CompositeFuture.all(allFutures);
 	}
 
