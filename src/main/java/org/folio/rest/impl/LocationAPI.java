@@ -367,19 +367,15 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 
 	private class LocationCheckError extends Exception {
 
-		private String field;
+		private final String field;
 
 		public LocationCheckError(String field, String message) {
 			super(message);
-			setField(field);
+			this.field = field;
 		}
 
 		public String getField() {
 			return field;
-		}
-
-		public void setField(String field) {
-			this.field = field;
 		}
 
 	}
