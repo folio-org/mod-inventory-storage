@@ -320,7 +320,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 
 		Future<LocationCheckError> future = Future.succeededFuture();
 
-		if (entity.getServicePointIds().size() < 1) {
+		if (entity.getServicePointIds().isEmpty()) {
 			future = Future.failedFuture(
 					new LocationCheckError(SERVICEPOINT_IDS, "A location must have at least one Service Point assigned."));
 		}
@@ -356,7 +356,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 			}
 		}
 
-		if (duplicateElements.size() > 0) {
+		if (!duplicateElements.isEmpty()) {
 			future = Future.failedFuture(
 					new LocationCheckError(SERVICEPOINT_IDS, "A Service Point can only appear once on a Location."));
 		}
@@ -379,7 +379,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 		}
 
 		public void setField(String field) {
-			field = field;
+			this.field = field;
 		}
 
 	}
