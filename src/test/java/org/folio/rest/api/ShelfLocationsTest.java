@@ -88,7 +88,7 @@ public class ShelfLocationsTest {
     LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
 		UUID spID = UUID.randomUUID();
 		servicePointIDs.add(spID);
-		LocationUnitTest.createServicePoint(spID, "Service Point", "SP", "Service Point", "SP Description", 0, false);
+		ServicePointTest.createServicePoint(spID, "Service Point", "SP", "Service Point", "SP Description", 0, false);
   }
 
   @Test
