@@ -8,8 +8,10 @@ import static org.folio.rest.impl.StorageHelper.logAndSaveError;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
@@ -44,6 +46,9 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   public static final String URL_PREFIX = "/locations";
   public static final String LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
+
+	public static final String SERVICEPOINT_IDS = "servicePointIds";
+	public static final String PRIMARY_SERVICEPOINT = "primaryServicePoint";
 
 	private String getErrorResponse(String response) {
 		// Check to see if we're suppressing messages or not
@@ -153,7 +158,9 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 			} else {
 				String message = logAndSaveError(checksResult.cause());
 				asyncResultHandler.handle(
-						Future.succeededFuture(PostLocationsResponse.respond400WithTextPlain(getErrorResponse(message))));
+								Future.succeededFuture(PostLocationsResponse.respond422WithApplicationJson(ValidationHelper
+										.createValidationErrorMessage(((LocationCheckError) checksResult.cause()).getField(),
+												entity.getId(), message))));
 			}
 
 		});
@@ -239,7 +246,8 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 		runLocationChecks(checkIdChange(id, entity), checkAtLeastOneServicePoint(entity),
-				checkPrimaryServicePointRelationship(entity)).setHandler(checksResult -> {
+				checkPrimaryServicePointRelationship(entity), checkForDuplicateServicePoints(entity))
+						.setHandler(checksResult -> {
 			if (checksResult.succeeded()) {
 				String tenantId = getTenant(okapiHeaders);
 				Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
@@ -264,10 +272,12 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 							}
 						});
 			} else {
+
 				String message = logAndSaveError(checksResult.cause());
 				asyncResultHandler
-								.handle(Future
-										.succeededFuture(PutLocationsByIdResponse.respond400WithTextPlain("Test Message")));
+										.handle(Future.succeededFuture(PutLocationsByIdResponse.respond422WithApplicationJson(
+												ValidationHelper.createValidationErrorMessage(
+														((LocationCheckError) checksResult.cause()).getField(), entity.getId(), message))));
 			}
 
 		});
@@ -275,14 +285,14 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   }
 
 	@SafeVarargs
-	private final CompositeFuture runLocationChecks(Future<String>... futures) {
+	private final CompositeFuture runLocationChecks(Future<LocationCheckError>... futures) {
 		List<Future> allFutures = new ArrayList<Future>(Arrays.asList(futures));
 		return CompositeFuture.all(allFutures);
 	}
 
-	private Future<String> checkIdProvided(Location entity) {
+	private Future<LocationCheckError> checkIdProvided(Location entity) {
 
-		Future<String> future = Future.succeededFuture();
+		Future<LocationCheckError> future = Future.succeededFuture();
 
 		String id = entity.getId();
 		if (id == null) {
@@ -294,40 +304,83 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 
 	}
 
-	private Future<String> checkIdChange(String id, Location entity) {
+	private Future<LocationCheckError> checkIdChange(String id, Location entity) {
 
-		Future<String> future = Future.succeededFuture();
+		Future<LocationCheckError> future = Future.succeededFuture();
 
 		if (!id.equals(entity.getId())) {
-			future = Future.failedFuture("Illegal operation: id cannot be changed");
+			future = Future.failedFuture(new LocationCheckError("id", "Illegal operation: id cannot be changed"));
 		}
 
 		return future;
 
 	}
 
-	private Future<String> checkAtLeastOneServicePoint(Location entity) {
+	private Future<LocationCheckError> checkAtLeastOneServicePoint(Location entity) {
 
-		Future<String> future = Future.succeededFuture();
+		Future<LocationCheckError> future = Future.succeededFuture();
 
 		if (entity.getServicePointIds().size() < 1) {
-			future = Future.failedFuture("Bad Request: A location must have at least one Service Point assigned.");
+			future = Future.failedFuture(
+					new LocationCheckError(SERVICEPOINT_IDS, "A location must have at least one Service Point assigned."));
 		}
 
 		return future;
 
 	}
 
-	private Future<String> checkPrimaryServicePointRelationship(Location entity) {
+	private Future<LocationCheckError> checkPrimaryServicePointRelationship(Location entity) {
 
-		Future<String> future = Future.succeededFuture();
+		Future<LocationCheckError> future = Future.succeededFuture();
 
 		if (!entity.getServicePointIds().contains(entity.getPrimaryServicePoint())) {
 			future = Future
-					.failedFuture("Bad Request: A Location's Primary Service point must be included as a Service Point.");
+					.failedFuture(new LocationCheckError(PRIMARY_SERVICEPOINT,
+							"A Location's Primary Service point must be included as a Service Point."));
 		}
 
 		return future;
+
+	}
+
+	private Future<LocationCheckError> checkForDuplicateServicePoints(Location entity) {
+
+		Future<LocationCheckError> future = Future.succeededFuture();
+
+		Set<String> set = new HashSet<>();
+		Set<String> duplicateElements = new HashSet<>();
+
+		for (String element : entity.getServicePointIds()) {
+			if (!set.add(element)) {
+				duplicateElements.add(element);
+			}
+		}
+
+		if (duplicateElements.size() > 0) {
+			future = Future.failedFuture(
+					new LocationCheckError(SERVICEPOINT_IDS, "A Service Point can only appear once on a Location."));
+		}
+
+		return future;
+
+	}
+
+	private class LocationCheckError extends Exception {
+
+		private String field;
+
+		public LocationCheckError(String field, String message) {
+			super(message);
+			setField(field);
+		}
+
+		public String getField() {
+			return field;
+		}
+
+		public void setField(String field) {
+			field = field;
+		}
 
 	}
 
