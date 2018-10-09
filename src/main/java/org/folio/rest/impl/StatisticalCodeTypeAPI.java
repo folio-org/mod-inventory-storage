@@ -12,13 +12,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.StatisticalCodeType;
 import org.folio.rest.jaxrs.model.StatisticalCodeTypes;
-import org.folio.rest.jaxrs.resource.StatisticalCodeTypesResource;
-import org.folio.rest.jaxrs.resource.StatisticalCodeTypesResource.DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse;
-import org.folio.rest.jaxrs.resource.StatisticalCodeTypesResource.DeleteStatisticalCodeTypesResponse;
-import org.folio.rest.jaxrs.resource.StatisticalCodeTypesResource.GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse;
-import org.folio.rest.jaxrs.resource.StatisticalCodeTypesResource.GetStatisticalCodeTypesResponse;
-import org.folio.rest.jaxrs.resource.StatisticalCodeTypesResource.PostStatisticalCodeTypesResponse;
-import org.folio.rest.jaxrs.resource.StatisticalCodeTypesResource.PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -27,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
@@ -43,7 +35,7 @@ import io.vertx.core.logging.LoggerFactory;
  *
  * @author ne
  */
-public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
+public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.StatisticalCodeTypes {
   public static final String RESOURCE_TABLE = "statistical_code_type";
 
   private static final String LOCATION_PREFIX = "/statistical-code_types/";
@@ -52,7 +44,7 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
   private static final String IDFIELDNAME = "_id";
 
   @Override
-  public void deleteStatisticalCodeTypes(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void deleteStatisticalCodeTypes(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
     try {
       vertxContext.runOnContext(v -> {
@@ -69,19 +61,19 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
                   } else {
                     asyncResultHandler.handle(Future.succeededFuture(
                             DeleteStatisticalCodeTypesResponse.
-                                    withPlainInternalServerError(reply.cause().getMessage())));
+                                    respond500WithTextPlain(reply.cause().getMessage())));
                   }
                 });
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
               DeleteStatisticalCodeTypesResponse.
-                      withPlainInternalServerError(e.getMessage())));
+                      respond500WithTextPlain(e.getMessage())));
     }
   }
 
   @Override
-  public void getStatisticalCodeTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getStatisticalCodeTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
@@ -93,20 +85,20 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
                     if (reply.succeeded()) {
                       StatisticalCodeTypes statisticalCodeTypes = new StatisticalCodeTypes();
                       @SuppressWarnings("unchecked")
-                      List<StatisticalCodeType> codes = (List<StatisticalCodeType>) reply.result().getResults();
+                      List<StatisticalCodeType> codes = reply.result().getResults();
                       statisticalCodeTypes.setStatisticalCodeTypes(codes);
                       statisticalCodeTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesResponse.withJsonOK(
+                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesResponse.respond200WithApplicationJson(
                               statisticalCodeTypes)));
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesResponse
-                              .withPlainBadRequest(reply.cause().getMessage())));
+                              .respond400WithTextPlain(reply.cause().getMessage())));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(
+                            .respond500WithTextPlain(MESSAGES.getMessage(
                                     lang, MessageConsts.InternalServerError))));
                   }
                 });
@@ -117,13 +109,13 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesResponse
-                .withPlainInternalServerError(message)));
+                .respond500WithTextPlain(message)));
       }
     });
   }
 
   @Override
-  public void postStatisticalCodeTypes(String lang, StatisticalCodeType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void postStatisticalCodeTypes(String lang, StatisticalCodeType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String id = UUID.randomUUID().toString();
@@ -135,43 +127,42 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
 
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
         PostgresClient.getInstance(vertxContext.owner(), tenantId).save(RESOURCE_TABLE, id, entity,
-                reply -> {
-                  try {
-                    if (reply.succeeded()) {
-                      Object ret = reply.result();
-                      entity.setId((String) ret);
-                      OutStream stream = new OutStream();
-                      stream.setData(entity);
-                      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse.withJsonCreated(
-                              LOCATION_PREFIX + ret, stream)));
-                    } else {
-                      LOG.error(reply.cause().getMessage(), reply.cause());
-                      if (isDuplicate(reply.cause().getMessage())) {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-                                .withJsonUnprocessableEntity(
-                                        org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
-                                                "name", entity.getName(), "Material Type exists"))));
-                      } else {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-                      }
-                    }
-                  } catch (Exception e) {
-                    LOG.error(e.getMessage(), e);
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-                  }
-                });
+          reply -> {
+            try {
+              if (reply.succeeded()) {
+                String ret = reply.result();
+                entity.setId(ret);
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                  PostStatisticalCodeTypesResponse.respond201WithApplicationJson(entity,
+                    PostStatisticalCodeTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
+              } else {
+                LOG.error(reply.cause().getMessage(), reply.cause());
+                if (isDuplicate(reply.cause().getMessage())) {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
+                    .respond422WithApplicationJson(
+                      org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
+                        "name", entity.getName(), "Material Type exists"))));
+                } else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
+                    .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                }
+              }
+            } catch (Exception e) {
+              LOG.error(e.getMessage(), e);
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+            }
+          });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void getStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void getStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
@@ -184,40 +175,40 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
                   try {
                     if (reply.succeeded()) {
                       @SuppressWarnings("unchecked")
-                      List<StatisticalCodeType> userGroup = (List<StatisticalCodeType>) reply.result().getResults();
+                      List<StatisticalCodeType> userGroup = reply.result().getResults();
                       if (userGroup.isEmpty()) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                                .withPlainNotFound(statisticalCodeTypeId)));
+                                .respond404WithTextPlain(statisticalCodeTypeId)));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                                .withJsonOK(userGroup.get(0))));
+                                .respond200WithApplicationJson(userGroup.get(0))));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       if (isInvalidUUID(reply.cause().getMessage())) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                                .withPlainNotFound(statisticalCodeTypeId)));
+                                .respond404WithTextPlain(statisticalCodeTypeId)));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void deleteStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void deleteStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
@@ -227,33 +218,33 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
                     if (reply.succeeded()) {
                       if (reply.result().getUpdated() == 1) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                                .withNoContent()));
+                                .respond204()));
                       } else {
                         LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                                .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Override
-  public void putStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, StatisticalCodeType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
+  public void putStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, StatisticalCodeType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
@@ -266,26 +257,26 @@ public class StatisticalCodeTypeAPI implements StatisticalCodeTypesResource {
                     if (reply.succeeded()) {
                       if (reply.result().getUpdated() == 0) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                                .withPlainNotFound(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                                .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                                .withNoContent()));
+                                .respond204()));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                              .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                            .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                   }
                 });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                .withPlainInternalServerError(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }

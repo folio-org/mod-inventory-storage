@@ -1,23 +1,8 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.model.HoldingsRecords;
-import org.folio.rest.jaxrs.resource.HoldingsStorageResource;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -25,15 +10,31 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.HoldingsRecords;
+import org.folio.rest.jaxrs.resource.HoldingsStorage;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
  * @author ne
  */
-public class HoldingsStorageAPI implements HoldingsStorageResource {
+public class HoldingsStorageAPI implements HoldingsStorage {
 
   private static final Logger log = LoggerFactory.getLogger(HoldingsStorageAPI.class);
 
@@ -47,7 +48,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -56,18 +57,18 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s."+HOLDINGS_RECORD_TABLE,
+        postgresClient.mutate(String.format("DELETE FROM %s_%s."+HOLDINGS_RECORD_TABLE,
           tenantId, "mod_inventory_storage"),
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              HoldingsStorageResource.DeleteHoldingsStorageHoldingsResponse
+              DeleteHoldingsStorageHoldingsResponse
                 .noContent().build()));
           });
       }
       catch(Exception e) {
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          HoldingsStorageResource.DeleteHoldingsStorageHoldingsResponse
-            .withPlainInternalServerError(e.getMessage())));
+          DeleteHoldingsStorageHoldingsResponse
+            .respond500WithTextPlain(e.getMessage())));
       }
     });
 
@@ -81,7 +82,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -102,40 +103,40 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
-                  List<HoldingsRecord> holdingsRecords = (List<HoldingsRecord>) reply.result().getResults();
+                  List<HoldingsRecord> holdingsRecords = reply.result().getResults();
 
                   HoldingsRecords holdingsList = new HoldingsRecords();
                   holdingsList.setHoldingsRecords(holdingsRecords);
                   holdingsList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    HoldingsStorageResource.GetHoldingsStorageHoldingsResponse.
-                      withJsonOK(holdingsList)));
+                    GetHoldingsStorageHoldingsResponse.
+                      respond200WithApplicationJson(holdingsList)));
                 }
                 else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    HoldingsStorageResource.GetHoldingsStorageHoldingsResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
+                    GetHoldingsStorageHoldingsResponse.
+                      respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+									log.error(e.getMessage());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  HoldingsStorageResource.GetHoldingsStorageHoldingsResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                  GetHoldingsStorageHoldingsResponse.
+                    respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+					log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            HoldingsStorageResource.GetHoldingsStorageHoldingsResponse.
-              withPlainInternalServerError(e.getMessage())));
+            GetHoldingsStorageHoldingsResponse.
+              respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+			log.error(e.getMessage());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        HoldingsStorageResource.GetHoldingsStorageHoldingsResponse.
-          withPlainInternalServerError(e.getMessage())));
+        GetHoldingsStorageHoldingsResponse.
+          respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -146,7 +147,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
     HoldingsRecord entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
         String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -164,8 +165,8 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
           else {
             if (! isUUID(entity.getId())) {
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
-                  .withPlainBadRequest("ID must be a UUID")));
+                PostHoldingsStorageHoldingsResponse
+                  .respond400WithTextPlain("ID must be a UUID")));
               return;
             }
           }
@@ -174,40 +175,36 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
             reply -> {
               try {
                 if(reply.succeeded()) {
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-
+                  String ret = reply.result();
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
-                        .withJsonCreated(reply.result(), stream)));
+                      PostHoldingsStorageHoldingsResponse
+                        .respond201WithApplicationJson(entity, PostHoldingsStorageHoldingsResponse.headersFor201().withLocation(ret))));
                 }
                 else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
-                      HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
-                        .withPlainBadRequest(reply.cause().getMessage())));
+                      PostHoldingsStorageHoldingsResponse
+                        .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
-                    HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
-                      .withPlainInternalServerError(e.getMessage())));
+                    PostHoldingsStorageHoldingsResponse
+                      .respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+          log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
-              .withPlainInternalServerError(e.getMessage())));
+            PostHoldingsStorageHoldingsResponse.respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getMessage());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        HoldingsStorageResource.PostHoldingsStorageHoldingsResponse
-          .withPlainInternalServerError(e.getMessage())));
+        PostHoldingsStorageHoldingsResponse.respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -217,7 +214,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -240,47 +237,47 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<HoldingsRecord> holdingsList = (List<HoldingsRecord>) reply.result().getResults();
+                  List<HoldingsRecord> holdingsList = reply.result().getResults();
                   if (holdingsList.size() == 1) {
                     HoldingsRecord holdingsRecord = holdingsList.get(0);
 
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(
-                        HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-                          withJsonOK(holdingsRecord)));
+                        GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
+                          respond200WithApplicationJson(holdingsRecord)));
                   }
                   else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(
-                      HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-                        withPlainNotFound("Not Found")));
+                      GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
+                        respond404WithTextPlain("Not Found")));
                   }
                 } else {
                   asyncResultHandler.handle(
                     Future.succeededFuture(
-                      HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-                        withPlainInternalServerError(reply.cause().getMessage())));
+                      GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
+                        respond500WithTextPlain(reply.cause().getMessage())));
 
                 }
               } catch (Exception e) {
-                e.printStackTrace();
+									log.error(e.getMessage());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-                    withPlainInternalServerError(e.getMessage())));
+                  GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
+                    respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          e.printStackTrace();
+					log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-              withPlainInternalServerError(e.getMessage())));
+            GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
+              respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      e.printStackTrace();
+			log.error(e.getMessage());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        HoldingsStorageResource.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-          withPlainInternalServerError(e.getMessage())));
+        GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
+          respond500WithTextPlain(e.getMessage())));
     }
 
   }
@@ -291,7 +288,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -316,24 +313,24 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
                 asyncResultHandler.handle(
                   Future.succeededFuture(
                     DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                      .withNoContent()));
+                      .respond204()));
               }
               else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+                    .respond500WithTextPlain(reply.cause().getMessage())));
               }
             });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse
-              .withPlainInternalServerError(e.getMessage())));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse
-          .withPlainInternalServerError(e.getMessage())));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 
@@ -344,7 +341,7 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
     HoldingsRecord entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
+    Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
 
@@ -367,40 +364,37 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
           postgresClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cql, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<HoldingsRecord> itemList = (List<HoldingsRecord>) reply.result().getResults();
+                List<HoldingsRecord> itemList = reply.result().getResults();
 
                 if (itemList.size() == 1) {
                   try {
                     postgresClient.update(HOLDINGS_RECORD_TABLE, entity, entity.getId(),
                       update -> {
                         try {
-                          if(update.succeeded()) {
-                            OutStream stream = new OutStream();
-                            stream.setData(entity);
-
+                          if (update.succeeded()) {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                  .withNoContent()));
+                                  .respond204()));
                           }
                           else {
                             asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                  .withPlainInternalServerError(
+                                  .respond500WithTextPlain(
                                     update.cause().getMessage())));
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                .withPlainInternalServerError(e.getMessage())));
+                                .respond500WithTextPlain(e.getMessage())));
                         }
                       });
                   } catch (Exception e) {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                        .withPlainInternalServerError(e.getMessage())));
+                        .respond500WithTextPlain(e.getMessage())));
                   }
               }
               else {
@@ -409,50 +403,47 @@ public class HoldingsStorageAPI implements HoldingsStorageResource {
                     save -> {
                       try {
                         if(save.succeeded()) {
-                          OutStream stream = new OutStream();
-                          stream.setData(entity);
-
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                .withNoContent()));
+                                .respond204()));
                         }
                         else {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                .withPlainInternalServerError(
+                                .respond500WithTextPlain(
                                   save.cause().getMessage())));
                         }
                       } catch (Exception e) {
                         asyncResultHandler.handle(
                           Future.succeededFuture(
                             PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                              .withPlainInternalServerError(e.getMessage())));
+                              .respond500WithTextPlain(e.getMessage())));
                       }
                     });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                      .withPlainInternalServerError(e.getMessage())));
+                      .respond500WithTextPlain(e.getMessage())));
                 }
               }
             } else {
                 asyncResultHandler.handle(Future.succeededFuture(
                   PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                    .withPlainInternalServerError(reply.cause().getMessage())));
+                    .respond500WithTextPlain(reply.cause().getMessage())));
             }
           });
         } catch (Exception e) {
           asyncResultHandler.handle(Future.succeededFuture(
             PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-              .withPlainInternalServerError(e.getMessage())));
+              .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-          .withPlainInternalServerError(e.getMessage())));
+          .respond500WithTextPlain(e.getMessage())));
     }
   }
 

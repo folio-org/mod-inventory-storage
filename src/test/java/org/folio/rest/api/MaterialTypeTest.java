@@ -28,12 +28,33 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import org.junit.BeforeClass;
 
-public class MaterialTypeTest extends TestBase {
+public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
+  private static UUID mainLibraryLocationId;
 
   private String canCirculateLoanTypeID;
+  
+  @BeforeClass
+  public static void beforeAny()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+
+    LocationsTest.createLocUnits(true);
+    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Loan)", "Lo/M");
+  }
 
   @Before
   public void beforeEach()
@@ -275,7 +296,9 @@ public class MaterialTypeTest extends TestBase {
 
     createMaterialType(materialTypeId, "Book");
 
-    JsonObject item = createItemRequest(materialTypeId.toString());
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    JsonObject item = createItemRequest(holdingsRecordId.toString(), materialTypeId.toString());
 
     CompletableFuture<Response> createItemCompleted = new CompletableFuture<>();
 
@@ -350,12 +373,12 @@ public class MaterialTypeTest extends TestBase {
     request.end(buffer);
   }
 
-  private JsonObject createItemRequest(String materialTypeId) {
+  private JsonObject createItemRequest(String holdingsRecordId, String materialTypeId) {
 
     JsonObject item = new JsonObject();
 
     item.put("barcode", "12345");
-    item.put("holdingsRecordId", UUID.randomUUID().toString());
+    item.put("holdingsRecordId", holdingsRecordId);
     item.put("materialTypeId", materialTypeId);
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
