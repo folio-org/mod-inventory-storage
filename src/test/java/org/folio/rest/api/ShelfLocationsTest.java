@@ -1,12 +1,30 @@
 package org.folio.rest.api;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
+import static org.folio.rest.support.http.InterfaceUrls.ShelfLocationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.LoanTypesClient;
@@ -15,19 +33,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 
 
 
@@ -39,6 +51,7 @@ public class ShelfLocationsTest {
   private UUID instID;
   private UUID campID;
   private UUID libID;
+	private List<UUID> servicePointIDs = new ArrayList<UUID>();
 
   @Before
   public void beforeEach()
@@ -73,6 +86,9 @@ public class ShelfLocationsTest {
     LocationUnitTest.createCamp(campID, "Central Campus", "CC", instID);
     libID = UUID.randomUUID();
     LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
+		UUID spID = UUID.randomUUID();
+		servicePointIDs.add(spID);
+		ServicePointTest.createServicePoint(spID, "Service Point", "SP", "Service Point", "SP Description", 0, false);
   }
 
   @Test
@@ -82,8 +98,8 @@ public class ShelfLocationsTest {
     TimeoutException,
     MalformedURLException {
 
-    Response response = LocationsTest.createLocation(null, "Main Library",
-      instID, campID, libID, "PI/CC/ML/X");
+		Response response = LocationsTest.createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X",
+				servicePointIDs);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -98,7 +114,7 @@ public class ShelfLocationsTest {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    LocationsTest.createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X");
+		LocationsTest.createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
     Response getResponse = getById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
