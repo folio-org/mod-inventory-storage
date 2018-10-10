@@ -1,4 +1,4 @@
-## 13.0.0 Unreleased
+## 13.0.0 2018-10-10
 
 * Provides `electronic-access-relationships` interface 1.0 (MODINVSTOR-190)
 * Documents `instance` properties (MODINVSTOR-179)
