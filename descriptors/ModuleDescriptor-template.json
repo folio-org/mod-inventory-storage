@@ -283,7 +283,7 @@
     },
     {
       "id": "locations",
-      "version": "2.2",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
