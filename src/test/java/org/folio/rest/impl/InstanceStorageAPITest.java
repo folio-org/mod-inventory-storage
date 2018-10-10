@@ -3,7 +3,7 @@ package org.folio.rest.impl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import org.junit.Before;
+import org.folio.rest.impl.InstanceStorageAPI.PreparedCQL;
 import org.junit.Test;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
@@ -12,20 +12,16 @@ public class InstanceStorageAPITest {
 
   private void handleCQL(String cql, String sql, String table) {
     try {
-      String actualSql = instanceStorageApi.handleCQL(cql, 1, 0).toString();
+    	PreparedCQL preparedCql = instanceStorageApi.handleCQL(cql, 1, 0);
+			String actualSql = preparedCql.getCqlWrapper().toString();
       actualSql = actualSql
           .substring(" WHERE ".length(), actualSql.length() - " LIMIT 1 OFFSET 0".length())
           .replace("(", "").replace(")", "");
       assertThat(actualSql, is(sql));
-      assertThat(instanceStorageApi.tableName, is(table));
+			assertThat(preparedCql.getTableName(), is(table));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-  }
-
-  @Before
-  public void resetTableName() {
-    instanceStorageApi.tableName = "instance";
   }
 
   @Test
