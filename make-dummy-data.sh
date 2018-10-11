@@ -60,11 +60,12 @@ do
     echo $N: $R
     cat $R |
       grep -v '"id"' |
-      sed "/title/s/\",/ $N\",/" > $T
+      sed "/title/s/\",/ $N\",/" |
+      sed "/hrid/s/\",/-$N\",/"  > $T
     curl -s \
       -d@/tmp/instance.json \
       -H'X-Okapi-Tenant:demo_tenant' -HContent-Type:application/json \
-      http://localhost:9130/instance-storage/instances >/dev/null
+      http://localhost:9130/instance-storage/instances >/tmp/instance.curl.out
     echo
     N=`expr $N + 1`
     if [ $N -ge $LIM ]
