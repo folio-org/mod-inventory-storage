@@ -1,3 +1,7 @@
+## 13.0.1 Unreleased
+
+* Extends locations reference data with new required properties (MODINVSTOR-177)
+
 ## 13.0.0 2018-10-10
 
 * Provides `electronic-access-relationships` interface 1.0 (MODINVSTOR-190)
