@@ -1,4 +1,4 @@
-## 13.0.1 Unreleased
+## 13.0.1 2018-10-12
 
 * Extends locations reference data with new required properties (MODINVSTOR-177)
 
