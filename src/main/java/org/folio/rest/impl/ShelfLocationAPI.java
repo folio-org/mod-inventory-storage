@@ -7,7 +7,7 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.Shelflocation;
 import org.folio.rest.jaxrs.model.Shelflocations;
-import org.folio.rest.jaxrs.resource.ShelfLocationsResource;
+import org.folio.rest.jaxrs.resource.ShelfLocations;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -34,7 +34,7 @@ import org.folio.rest.jaxrs.model.Location;
  *
  * @author kurt
  */
-public class ShelfLocationAPI implements ShelfLocationsResource {
+public class ShelfLocationAPI implements ShelfLocations {
   private final Messages messages = Messages.getInstance();
   public static final String SHELF_LOCATION_TABLE = "shelflocation";
   public static final Logger logger = LoggerFactory.getLogger(ShelfLocationAPI.class);
@@ -54,8 +54,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
         String lang,
         Map<String, String>okapiHeaders,
         Handler<AsyncResult<Response>>asyncResultHandler,
-        Context vertxContext)
-        throws Exception {
+        Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
       CQLWrapper cql = getCQL(query, limit, offset, LocationAPI.LOCATION_TABLE);
@@ -67,10 +66,10 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
               if (reply.failed()) {
                 String message = logAndSaveError(reply.cause());
                 asyncResultHandler.handle(Future.succeededFuture(
-                  GetShelfLocationsResponse.withPlainBadRequest(message)));
+                  GetShelfLocationsResponse.respond400WithTextPlain(message)));
               } else {
                 Shelflocations shelfLocations = new Shelflocations();
-                List<Location> locationsList = (List<Location>) reply.result().getResults();
+                List<Location> locationsList = reply.result().getResults();
                 List<Shelflocation> shelfLocationsList = new ArrayList<>(locationsList.size());
                 for (Location loc : locationsList) {
                   Shelflocation sl = new Shelflocation();
@@ -80,18 +79,18 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
                 }
                 shelfLocations.setShelflocations(shelfLocationsList);
                 shelfLocations.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.withJsonOK(shelfLocations)));
+                asyncResultHandler.handle(Future.succeededFuture(GetShelfLocationsResponse.respond200WithApplicationJson(shelfLocations)));
               }
             } catch (Exception e) {
               String message = logAndSaveError(e);
               asyncResultHandler.handle(Future.succeededFuture(
-                GetShelfLocationsResponse.withPlainInternalServerError(message)));
+                GetShelfLocationsResponse.respond500WithTextPlain(message)));
             }
           });
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        GetShelfLocationsResponse.withPlainInternalServerError(message)));
+        GetShelfLocationsResponse.respond500WithTextPlain(message)));
     }
   }
 
@@ -105,8 +104,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
+    Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
       Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
@@ -120,34 +118,34 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           if (getReply.failed()) {
             String message = logAndSaveError(getReply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-              GetShelfLocationsByIdResponse.withPlainInternalServerError(
+              GetShelfLocationsByIdResponse.respond500WithTextPlain(
                 message)));
           } else {
             List<Location> locationList = (List<Location>) getReply.result().getResults();
             if (locationList.size() < 1) {
               asyncResultHandler.handle(Future.succeededFuture(
-                GetShelfLocationsByIdResponse.withPlainNotFound(
+                GetShelfLocationsByIdResponse.respond404WithTextPlain(
                   messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
             } else if (locationList.size() > 1) {
               String message = "Multiple locations found with the same id";
               logger.error(message);
               asyncResultHandler.handle(Future.succeededFuture(
                 GetShelfLocationsByIdResponse
-                  .withPlainInternalServerError(message)));
+                  .respond500WithTextPlain(message)));
             } else {
               Location loc = locationList.get(0);
               Shelflocation sl = new Shelflocation();
               sl.setId(loc.getId());
               sl.setName(loc.getName());
               asyncResultHandler.handle(Future.succeededFuture(
-                GetShelfLocationsByIdResponse.withJsonOK(sl)));
+                GetShelfLocationsByIdResponse.respond200WithApplicationJson(sl)));
             }
           }
         });
     } catch (Exception e) {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(Future.succeededFuture(
-        GetShelfLocationsByIdResponse.withPlainInternalServerError(message)));
+        GetShelfLocationsByIdResponse.respond500WithTextPlain(message)));
     }
   }
 
@@ -157,8 +155,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           Shelflocation entity,
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-    throws Exception {
+          Context vertxContext) {
     throw new NotImplementedException("Creating shelf-locations is DEPRECATED. "
       + "Use the new locations insterface instead");
   }
@@ -168,8 +165,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
+    Context vertxContext) {
     throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. "
       + "Use the new locations insterface instead");
   }
@@ -179,8 +175,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           String id,
           String lang, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-          throws Exception {
+          Context vertxContext) {
     throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. "
       + "Use the new locations insterface instead");
   }
@@ -192,8 +187,7 @@ public class ShelfLocationAPI implements ShelfLocationsResource {
           Shelflocation entity,
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
-          Context vertxContext)
-          throws Exception {
+          Context vertxContext) {
     throw new NotImplementedException("Creating shelf-locations is DEPRECATED. "
       + "Use the new locations insterface instead");
   }

@@ -57,8 +57,9 @@ modEndpoints_a='material-types loan-types'
 modEndpoints_b='location-units/institutions location-units/campuses location-units/libraries'
 modEndpoints_c='locations identifier-types contributor-types service-points instance-relationship-types'
 modEndpoints_d='contributor-name-types instance-types instance-formats classification-types platforms'
-modEndpoints_e='cataloging-levels instance-statuses statistical-code-types modes-of-issuance'
-modEndpoints="$modEndpoints_a $modEndpoints_b $modEndpoints_c $modEndpoints_d $modEndpoints_e"
+modEndpoints_e='instance-statuses statistical-code-types modes-of-issuance'
+modEndpoints_f='electronic-access-relationships'
+modEndpoints="$modEndpoints_a $modEndpoints_b $modEndpoints_c $modEndpoints_d $modEndpoints_e $modEndpoints_f"
 method=POST
 
 for dir in "${dataDirs[@]}";

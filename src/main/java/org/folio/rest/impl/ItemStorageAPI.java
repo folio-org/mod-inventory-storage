@@ -11,27 +11,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Status;
-import org.folio.rest.jaxrs.resource.ItemStorageResource;
+import org.folio.rest.jaxrs.resource.ItemStorage;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-public class ItemStorageAPI implements ItemStorageResource {
+/**
+ * CRUD for Item.
+ */
+public class ItemStorageAPI implements ItemStorage {
 
   static final String ITEM_TABLE = "item";
   private static final String ITEM_MATERIALTYPE_VIEW = "items_mt_view";
@@ -83,8 +81,7 @@ public class ItemStorageAPI implements ItemStorageResource {
     String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext)
-    throws Exception {
+    Context vertxContext) {
 
     try {
       vertxContext.runOnContext(v -> {
@@ -102,61 +99,59 @@ public class ItemStorageAPI implements ItemStorageResource {
               try {
 
                 if(reply.succeeded()) {
-                  List<Item> items = (List<Item>) reply.result().getResults();
+                  List<Item> items = reply.result().getResults();
 
                   Items itemList = new Items();
                   itemList.setItems(items);
                   itemList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
                   asyncResultHandler.handle(Future.succeededFuture(
-                    ItemStorageResource.GetItemStorageItemsResponse.
-                      withJsonOK(itemList)));
+                    GetItemStorageItemsResponse.
+                      respond200WithApplicationJson(itemList)));
                 }
                 else {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    ItemStorageResource.GetItemStorageItemsResponse.
-                      withPlainInternalServerError(reply.cause().getMessage())));
+                    GetItemStorageItemsResponse.
+                      respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    GetItemStorageItemsResponse.withPlainBadRequest(
+                    GetItemStorageItemsResponse.respond400WithTextPlain(
                       "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
                 }
                 else {
                   asyncResultHandler.handle(Future.succeededFuture(
-                    ItemStorageResource.GetItemStorageItemsResponse.
-                      withPlainInternalServerError("Error")));
+                    GetItemStorageItemsResponse.
+                      respond500WithTextPlain("Error")));
                 }
               }
             });
         }
         catch (IllegalStateException e) {
           asyncResultHandler.handle(Future.succeededFuture(
-            GetItemStorageItemsResponse.withPlainInternalServerError(
+            GetItemStorageItemsResponse.respond500WithTextPlain(
               "CQL State Error for '" + query + "': " + e.getLocalizedMessage())));
         }
         catch (Exception e) {
           if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
             asyncResultHandler.handle(Future.succeededFuture(
-              GetItemStorageItemsResponse.withPlainBadRequest(
+              GetItemStorageItemsResponse.respond400WithTextPlain(
               "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
           } else {
             asyncResultHandler.handle(Future.succeededFuture(
-              ItemStorageResource.GetItemStorageItemsResponse.
-                withPlainInternalServerError("Error")));
+              GetItemStorageItemsResponse.respond500WithTextPlain("Error")));
           }
         }
       });
     } catch (Exception e) {
       if(e.getCause() != null && e.getCause().getClass().getSimpleName().contains("CQLParseException")) {
         asyncResultHandler.handle(Future.succeededFuture(
-          GetItemStorageItemsResponse.withPlainBadRequest(
+          GetItemStorageItemsResponse.respond400WithTextPlain(
             "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
       } else {
         asyncResultHandler.handle(Future.succeededFuture(
-          ItemStorageResource.GetItemStorageItemsResponse.
-            withPlainInternalServerError("Error")));
+          GetItemStorageItemsResponse.respond500WithTextPlain("Error")));
       }
     }
   }
@@ -164,43 +159,33 @@ public class ItemStorageAPI implements ItemStorageResource {
   @Validate
   @Override
   public void postItemStorageItems(
-      @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-      Item entity,
-      Map<String, String> okapiHeaders,
+      String lang, Item entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
     if (entity.getStatus() == null) {
       entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
     }
-    StorageHelper.post(ITEM_TABLE, entity, okapiHeaders, vertxContext, asyncResultHandler,
-        PostItemStorageItemsResponse::withJsonCreated,
-        PostItemStorageItemsResponse::withPlainBadRequest,
-        PostItemStorageItemsResponse::withPlainInternalServerError);
+    StorageHelper.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
+        PostItemStorageItemsResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getItemStorageItemsByItemId(
-      @PathParam("itemId") @NotNull String itemId,
-      @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-      java.util.Map<String, String> okapiHeaders,
+      String itemId, String lang, java.util.Map<String, String> okapiHeaders,
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    StorageHelper.getById(ITEM_TABLE, Item.class, itemId, okapiHeaders, vertxContext, asyncResultHandler,
-        GetItemStorageItemsByItemIdResponse::withJsonOK,
-        GetItemStorageItemsByItemIdResponse::withPlainNotFound,
-        GetItemStorageItemsByItemIdResponse::withPlainInternalServerError);
+    StorageHelper.getById(ITEM_TABLE, Item.class, itemId, okapiHeaders, vertxContext,
+        GetItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteItemStorageItems(
-      @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-      Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-          throws Exception {
+    String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
@@ -209,12 +194,13 @@ public class ItemStorageAPI implements ItemStorageResource {
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
-                ItemStorageResource.DeleteItemStorageItemsResponse.noContent()
+                DeleteItemStorageItemsResponse.noContent()
                 .build()));
           } else {
+            log.error(reply.cause().getMessage(), reply.cause());
             asyncResultHandler.handle(Future.succeededFuture(
-                ItemStorageResource.DeleteItemStorageItemsResponse.
-                withPlainInternalServerError(reply.cause().getMessage())));
+                DeleteItemStorageItemsResponse.
+                respond500WithTextPlain(reply.cause().getMessage())));
           }
         });
   }
@@ -222,30 +208,22 @@ public class ItemStorageAPI implements ItemStorageResource {
   @Validate
   @Override
   public void putItemStorageItemsByItemId(
-      @PathParam("itemId") @NotNull String itemId,
-      @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-      Item entity,
-      java.util.Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler,
+      String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
+      io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    StorageHelper.put(ITEM_TABLE, entity, itemId, okapiHeaders, vertxContext, asyncResultHandler,
-        PutItemStorageItemsByItemIdResponse::withNoContent,
-        PutItemStorageItemsByItemIdResponse::withPlainBadRequest,
-        PutItemStorageItemsByItemIdResponse::withPlainInternalServerError);
+    StorageHelper.put(ITEM_TABLE, entity, itemId, okapiHeaders, vertxContext,
+        PutItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteItemStorageItemsByItemId(
-      @PathParam("itemId") @NotNull String itemId,
-      @QueryParam("lang") @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-      java.util.Map<String, String> okapiHeaders,
+      String itemId, String lang, java.util.Map<String, String> okapiHeaders,
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    StorageHelper.deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext, asyncResultHandler,
-        DeleteItemStorageItemsByItemIdResponse::withNoContent,
-        DeleteItemStorageItemsByItemIdResponse::withPlainInternalServerError);
+    StorageHelper.deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
+        DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 }

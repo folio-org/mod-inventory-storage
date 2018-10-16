@@ -2,12 +2,12 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-    "catalogingLevels": {
-      "id": "catalogingLevel",
+    "electronicAccessRelationships": {
+      "id": "electronicAccessRelationship",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "cataloginglevel.json"
+        "$ref": "electronicaccessrelationship.json"
       }
     },
     "totalRecords": {
@@ -15,7 +15,7 @@
     }
   },
   "required": [
-    "catalogingLevels",
+    "electronicAccessRelationships",
     "totalRecords"
   ]
 }

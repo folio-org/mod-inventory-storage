@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 title: Institution level location unit
 version: v1.1
 protocols: [ HTTP, HTTPS ]
@@ -9,29 +9,25 @@ documentation:
     content: This documents the API calls that can be made to query and manage
       location units like institutions, campuses, and libraries
 
-schemas:
-  - locinst.json: !include locinst.json
-  - locinsts: !include locinsts.json
-  - loccamp.json: !include loccamp.json
-  - loccamps: !include loccamps.json
-  - loclib.json: !include loclib.json
-  - loclibs: !include loclibs.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  locinst: !include locinst.json
+  locinsts: !include locinsts.json
+  loccamp: !include loccamp.json
+  loccamps: !include loccamps.json
+  loclib: !include loclib.json
+  loclibs: !include loclibs.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - secured: !include raml-util/traits/auth.raml
-  - pageable: !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
-  - language: !include raml-util/traits/language.raml
-  - validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
-  - get-delete-only: !include raml-util/rtypes/get-delete.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
 
 /location-units:
   /institutions:
@@ -40,7 +36,7 @@ resourceTypes:
         exampleCollection: !include examples/locinsts.json
         exampleItem: !include examples/locinst.json
         schemaCollection: locinsts
-        schemaItem: locinst.json
+        schemaItem: locinst
     get:
       is: [
         searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -52,6 +48,7 @@ resourceTypes:
       is: [validate]
     delete:
       description: "Delete all institutions"
+      is: [language]
       responses:
         204:
           description: "All institutions deleted"
@@ -65,7 +62,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/locinst.json
-          schema: locinst.json
+          schema: locinst
       get:
       put:
       delete:
@@ -75,7 +72,7 @@ resourceTypes:
         exampleCollection: !include examples/loccamps.json
         exampleItem: !include examples/loccamp.json
         schemaCollection: loccamps
-        schemaItem: loccamp.json
+        schemaItem: loccamp
     get:
       is: [
         searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -87,6 +84,7 @@ resourceTypes:
       is: [validate]
     delete:
       description: "Delete all campuses"
+      is: [language]
       responses:
         204:
           description: "All campuses deleted"
@@ -100,7 +98,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/loccamp.json
-          schema: loccamp.json
+          schema: loccamp
       get:
       put:
       delete:
@@ -110,7 +108,7 @@ resourceTypes:
         exampleCollection: !include examples/loclibs.json
         exampleItem: !include examples/loclib.json
         schemaCollection: loclibs
-        schemaItem: loclib.json
+        schemaItem: loclib
     get:
       is: [
         searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -122,6 +120,7 @@ resourceTypes:
       is: [validate]
     delete:
       description: "Delete all libraries"
+      is: [language]
       responses:
         204:
           description: "All libraries deleted"
@@ -135,7 +134,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/loclib.json
-          schema: loclib.json
+          schema: loclib
       get:
       put:
       delete:

@@ -7,19 +7,14 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.util.List;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.resource.LocationUnitsResource;
-import org.folio.rest.jaxrs.resource.support.ResponseWrapper;
+import org.folio.rest.jaxrs.resource.LocationUnits;
+import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -39,6 +34,8 @@ public final class StorageHelper {
 
   private static Logger logger = LoggerFactory.getLogger(StorageHelper.class);
 
+  private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
+
   private StorageHelper() {
     throw new UnsupportedOperationException("Cannot instantiate utility class");
   }
@@ -57,49 +54,195 @@ public final class StorageHelper {
     return message != null && message.contains("is still referenced");
   }
 
-  protected static void deleteById(String table, String id,
-      Map<String, String> okapiHeaders, Context vertxContext, Handler<AsyncResult<Response>> asyncResultHandler,
-      Supplier<ResponseWrapper> deleted,
-      Function<String,ResponseWrapper> internalError) {
-    PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
-    postgresClient.delete(table, id, reply -> {
-      if (reply.succeeded()) {
-        asyncResultHandler.handle(Future.succeededFuture(deleted.get()));
-      } else {
-        asyncResultHandler.handle(Future.succeededFuture(internalError.apply(
-            "Error while deleting " + id + " from " + table)));
+  /**
+   * Create a Response using okMethod(entity, headersMethod().withLocationMethod(location)).
+   * On exception create a Response using failResponseMethod.
+   *
+   * <p>All exceptions are catched and reported via the returned Future.
+   */
+  static <T> Future<Response> response(T entity, String location,
+      Method headersMethod, Method withLocationMethod,
+      Method okResponseMethod, Method failResponseMethod) {
+    try {
+      OutStream stream = new OutStream();
+      stream.setData(entity);
+      Object headers = headersMethod.invoke(null);
+      withLocationMethod.invoke(headers, location);
+      Response response = (Response) okResponseMethod.invoke(null, entity, headers);
+      return Future.succeededFuture(response);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      try {
+        Response response = (Response) failResponseMethod.invoke(null, e.getMessage());
+        return Future.succeededFuture(response);
+      } catch (Exception innerException) {
+        logger.error(innerException.getMessage(), innerException);
+        return Future.failedFuture(innerException);
       }
-    });
+    }
   }
 
-  protected static <T> void getById(String table, Class<T> clazz, String id,
-      Map<String, String> okapiHeaders, Context vertxContext,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Function<T,ResponseWrapper> found,
-      Function<String,ResponseWrapper> notFound,
-      Function<String,ResponseWrapper> error) {
-    PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
+  /**
+   * Create a Response using valueMethod(T).
+   * On exception create a Response using failResponseMethod(String exceptionMessage).
+   * If that also throws an exception create a failed future.
+   *
+   * <p>All exceptions are catched and reported via the returned Future.
+   */
+  static <T> Future<Response> response(T value, Method valueMethod, Method failResponseMethod) {
     try {
-      UUID.fromString(id);   // syntax check to prevent sql injection
+      // the null check is redundant but avoids several sonarlint warnings
+      if (valueMethod == null) {
+        throw new NullPointerException("messageMethod must not be null (" + value + ")");
+      }
+      if (failResponseMethod == null) {
+        throw new NullPointerException("failResponseMethod must not be null (" + value + ")");
+      }
+      Response response = (Response) valueMethod.invoke(null, value);
+      return Future.succeededFuture(response);
     } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(error.apply(e.getMessage())));
+      logger.error(e.getMessage(), e);
+      try {
+        if (failResponseMethod == null) {
+          return Future.failedFuture(e);
+        }
+        Response response = (Response) failResponseMethod.invoke(null, e.getMessage());
+        return Future.succeededFuture(response);
+      } catch (Exception innerException) {
+        logger.error(innerException.getMessage(), innerException);
+        return Future.failedFuture(innerException);
+      }
+    }
+  }
+
+  /**
+   * Return a Response using responseMethod() wrapped in a succeeded future.
+   * On exception create a Response using failResponseMethod(String exceptionMessage)
+   * wrapped in a succeeded future.
+   * If that also throws an exception create a failed future.
+   *
+   * <p>All exceptions are catched and reported via the returned Future.
+   */
+  static Future<Response> response(Method responseMethod, Method failResponseMethod) {
+    try {
+      // the null check is redundant but avoids several sonarlint warnings
+      if (responseMethod == null) {
+        throw new NullPointerException("responseMethod must not be null");
+      }
+      if (failResponseMethod == null) {
+        throw new NullPointerException("failResponseMethod must not be null");
+      }
+      Response response = (Response) responseMethod.invoke(null);
+      return Future.succeededFuture(response);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      try {
+        if (failResponseMethod == null) {
+          return Future.failedFuture(e);
+        }
+        Response response = (Response) failResponseMethod.invoke(null, e.getMessage());
+        return Future.succeededFuture(response);
+      } catch (Exception innerException) {
+        logger.error(innerException.getMessage(), innerException);
+        return Future.failedFuture(innerException);
+      }
+    }
+  }
+
+  /**
+   * Delete a record from a table.
+   *
+   * <p>All exceptions are catched and reported via the asyncResultHandler.
+   *
+   * @param table  where to delete
+   * @param id  the primary key of the record to delete
+   * @param okapiHeaders  http headers provided by okapi
+   * @param vertxContext  the current context
+   * @param clazz  the ResponseDelegate class created from the RAML file with these methods:
+   *               respond204(), respond500WithTextPlain(Object).
+   * @param asyncResultHandler  where to return the result created using clazz
+   * @param deleted
+   * @param internalError
+   */
+  protected static void deleteById(String table, String id,
+      Map<String, String> okapiHeaders, Context vertxContext,
+      Class<? extends ResponseDelegate> clazz,
+      Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    final Method respond500;
+    try {
+      respond500 = clazz.getMethod(RESPOND_500_WITH_TEXT_PLAIN, Object.class);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(response(e.getMessage(), null, null));
       return;
     }
-    String where = "WHERE _id='" + id + "'";
-    // TODO: switch to RMB 21.0.0 and use postgresClient.getById and drop above uuid check
-    // because getById prevents sql injection by using a prepared/parameterized statement
-    postgresClient.get(table, clazz, where, false, false, reply -> {
-      if (reply.failed()) {
-        asyncResultHandler.handle(Future.succeededFuture(error.apply(reply.cause().getMessage())));
-        return;
-      }
-      List<T> results = (List<T>) reply.result().getResults();
-      if (results.isEmpty()) {
-        asyncResultHandler.handle(Future.succeededFuture(notFound.apply("Not found")));
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(found.apply(results.get(0))));
-    });
+
+    try {
+      Method respond204 = clazz.getMethod("respond204");
+      PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
+      postgresClient.delete(table, id, reply -> {
+        if (reply.succeeded()) {
+          asyncResultHandler.handle(response(respond204, respond500));
+          return;
+        }
+        String message = PgExceptionUtil.badRequestMessage(reply.cause());
+        if (message == null) {
+          message = reply.cause().getMessage();
+        }
+        asyncResultHandler.handle(response(message, respond500, respond500));
+      });
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(response(e.getMessage(), respond500, respond500));
+    }
+  }
+
+  /**
+   * Get a record by id.
+   *
+   * <p>All exceptions are catched and reported via the asyncResultHandler.
+   *
+   * @param table  the table that contains the record
+   * @param id  the primary key of the record to get
+   * @param okapiHeaders  http headers provided by okapi
+   * @param vertxContext  the current context
+   * @param clazz  the ResponseDelegate class created from the RAML file with these methods:
+   *               respond200(T), respond500WithTextPlain(Object).
+   * @param asyncResultHandler  where to return the result created using clazz
+   */
+  protected static <T> void getById(String table, Class<T> clazz, String id,
+      Map<String, String> okapiHeaders, Context vertxContext,
+      Class<? extends ResponseDelegate> responseDelegateClass,
+      Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    final Method respond500;
+    try {
+      respond500 = responseDelegateClass.getMethod(RESPOND_500_WITH_TEXT_PLAIN, Object.class);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(response(e.getMessage(), null, null));
+      return;
+    }
+    try {
+      Method respond200 = responseDelegateClass.getMethod("respond200WithApplicationJson", clazz);
+      Method respond404 = responseDelegateClass.getMethod("respond404WithTextPlain", Object.class);
+      PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
+      postgresClient.getById(table, id, clazz, reply -> {
+        if (reply.failed()) {
+          asyncResultHandler.handle(response(reply.cause().getMessage(), respond500, respond500));
+          return;
+        }
+        if (reply.result() == null) {
+          asyncResultHandler.handle(response("Not found", respond404, respond500));
+          return;
+        }
+        asyncResultHandler.handle(response(reply.result(), respond200, respond500));
+      });
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(response(e.getMessage(), respond500, respond500));
+    }
   }
 
   /**
@@ -144,76 +287,115 @@ public final class StorageHelper {
 
   /**
    * Post entity to table.
+   *
+   * <p>All exceptions are catched and reported via the asyncResultHandler.
+   *
    * @param table  table name
    * @param entity  the entity to post. If the id field is missing or null it is set to a random UUID.
-   * @param created  how to create a ResponseWrapper from a location URI and a StreamingOutput
-   * @param error  how to create a ResponseWrapper from an error message
-   * @param internalError  how to create a ResponseWrapper from an internal error message
+   * @param clazz  the ResponseDelegate class created from the RAML file with these methods: headersFor201(),
+   *               respond201WithApplicationJson(Object, HeadersFor201), respond400WithTextPlain(Object),
+   *               respond500WithTextPlain(Object).
+   * @param asyncResultHandler  where to return the result created using clazz
    */
   protected static <T> void post(String table, T entity,
       Map<String, String> okapiHeaders, Context vertxContext,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      BiFunction<String,StreamingOutput,ResponseWrapper> created,
-      Function<String,ResponseWrapper> error,
-      Function<String,ResponseWrapper> internalError) {
+      Class<? extends ResponseDelegate> clazz,
+      Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    final Method respond500;
+
     try {
+      respond500 = clazz.getMethod(RESPOND_500_WITH_TEXT_PLAIN, Object.class);
+    } catch (Exception e) {
+      asyncResultHandler.handle(response(e.getMessage(), null, null));
+      return;
+    }
+
+    try {
+      Method headersFor201Method = clazz.getMethod("headersFor201");
+      String headersFor201ClassName = clazz.getName() + "$HeadersFor201";
+      Class<?> headersFor201Class = null;
+      for (Class<?> declaredClass : clazz.getDeclaredClasses()) {
+        if (declaredClass.getName().equals(headersFor201ClassName)) {
+          headersFor201Class = declaredClass;
+          break;
+        }
+      }
+      if (headersFor201Class == null) {
+        throw new ClassNotFoundException(headersFor201ClassName + " not found in " + clazz.getCanonicalName());
+      }
+      Method withLocation = headersFor201Class.getMethod("withLocation", String.class);
+      Method respond201 = clazz.getMethod("respond201WithApplicationJson", Object.class, headersFor201Class);
+      Method respond400 = clazz.getMethod("respond400WithTextPlain", Object.class);
+
       String id = initId(entity);
       PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
       postgresClient.save(table, id, entity, reply -> {
         if (reply.succeeded()) {
-          OutStream stream = new OutStream();
-          stream.setData(entity);
-          asyncResultHandler.handle(Future.succeededFuture(created.apply(reply.result(), stream)));
+          asyncResultHandler.handle(response(entity, reply.result(), headersFor201Method, withLocation,
+              respond201, respond500));
           return;
         }
         String message = PgExceptionUtil.badRequestMessage(reply.cause());
         if (message != null) {
-          asyncResultHandler.handle(Future.succeededFuture(error.apply(message)));
+          asyncResultHandler.handle(response(message,                    respond400, respond500));
         } else {
-          asyncResultHandler.handle(Future.succeededFuture(internalError.apply(reply.cause().getMessage())));
+          asyncResultHandler.handle(response(reply.cause().getMessage(), respond500, respond500));
         }
       });
     } catch (Exception e) {
-      logger.error(e.getMessage(), e.getCause());
-      asyncResultHandler.handle(Future.succeededFuture(internalError.apply(
-          e.getClass().getName() + ": " + e.getMessage())));
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(response(e.getMessage(), respond500, respond500));
     }
   }
 
   /**
    * Put entity to table.
+   *
+   * <p>All exceptions are catched and reported via the asyncResultHandler.
+   *
    * @param table  table name
    * @param entity  the new entity to store. The id field is set to the id value.
    * @param id  the id value to use for entity
-   * @param updated  how to create a ResponseWrapper about a successful update
-   * @param error  how to create a ResponseWrapper from an error message
-   * @param internalError  how to create a ResponseWrapper from an internal error message
+   * @param clazz  the ResponseDelegate class created from the RAML file with these methods:
+   *               respond204(), respond400WithTextPlain(Object), respond500WithTextPlain(Object).
+   * @param asyncResultHandler  where to return the result created using clazz
    */
   protected static <T> void put(String table, T entity, String id,
       Map<String, String> okapiHeaders, Context vertxContext,
-      Handler<AsyncResult<Response>> asyncResultHandler,
-      Supplier<ResponseWrapper> updated,
-      Function<String,ResponseWrapper> error,
-      Function<String,ResponseWrapper> internalError) {
+      Class<? extends ResponseDelegate> clazz,
+      Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    final Method respond500;
+
     try {
+      respond500 = clazz.getMethod(RESPOND_500_WITH_TEXT_PLAIN, Object.class);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(response(e.getMessage(), null, null));
+      return;
+    }
+
+    try {
+      Method respond204 = clazz.getMethod("respond204");
+      Method respond400 = clazz.getMethod("respond400WithTextPlain", Object.class);
       setId(entity, id);
       PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
       postgresClient.upsert(table, id, entity, reply -> {
         if (reply.succeeded()) {
-          asyncResultHandler.handle(Future.succeededFuture(updated.get()));
+          asyncResultHandler.handle(response(respond204, respond500));
           return;
         }
         String message = PgExceptionUtil.badRequestMessage(reply.cause());
         if (message != null) {
-          asyncResultHandler.handle(Future.succeededFuture(error.apply(message)));
+          asyncResultHandler.handle(response(message,                    respond400, respond500));
         } else {
-          asyncResultHandler.handle(Future.succeededFuture(internalError.apply(reply.cause().getMessage())));
+          asyncResultHandler.handle(response(reply.cause().getMessage(), respond500, respond500));
         }
       });
     } catch (Exception e) {
-      logger.error(e.getMessage(), e.getCause());
-      asyncResultHandler.handle(Future.succeededFuture(internalError.apply(
-          e.getClass().getName() + ": " + e.getMessage())));
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(response(e.getMessage(), respond500, respond500));
     }
   }
 
@@ -240,8 +422,8 @@ public final class StorageHelper {
       String message = logAndSaveError(e);
       asyncResultHandler.handle(
         Future.succeededFuture(
-          LocationUnitsResource.GetLocationUnitsInstitutionsByIdResponse
-            .withPlainInternalServerError(message)));
+          LocationUnits.GetLocationUnitsInstitutionsByIdResponse
+            .respond500WithTextPlain(message)));
       // This is a bit dirty, but all those wrappers return the same kind of
       // response for InternalServerError, so we can use this from anywhere
       return null;
