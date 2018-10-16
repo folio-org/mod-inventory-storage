@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Location API
-version: v2.0
+version: v3.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://github.com/org/folio/mod-inventory-storage
 
@@ -60,4 +60,6 @@ resourceTypes:
         schema: location
     get:
     put:
+      description: Update a location by id
+      is: [validate]
     delete:

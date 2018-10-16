@@ -283,7 +283,7 @@
     },
     {
       "id": "locations",
-      "version": "2.1",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -609,7 +609,7 @@
 
     {
       "id": "service-points",
-      "version": "2.1",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
