@@ -11,7 +11,11 @@
       "details": {
         "a": "b",
         "foo": "bar"
-      }
+      },
+      "primaryServicePoint": "79faacf1-4ba4-42c7-8b2a-566b259e4641",
+      "servicePointIds": [
+        "79faacf1-4ba4-42c7-8b2a-566b259e4641"
+      ]
     },
     {
       "id": "97ee6cd9-17ef-47f8-acbb-ec16fb2cb98d",
@@ -23,7 +27,11 @@
       "libraryId": "a23d1dbc-e7ba-4c00-baf4-9770bdfb87c6",
       "details": {
         "foo": "gryf"
-      }
+      },
+      "primaryServicePoint": "79faacf1-4ba4-42c7-8b2a-566b259e4641",
+      "servicePointIds": [
+        "79faacf1-4ba4-42c7-8b2a-566b259e4641"
+      ]
     }
   ],
   "totalRecords": 2

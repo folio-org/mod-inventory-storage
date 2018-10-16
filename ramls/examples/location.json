@@ -11,6 +11,10 @@
   "details": {
     "a": "b",
     "foo": "bar"
-  }
+  },
+  "primaryServicePoint": "79faacf1-4ba4-42c7-8b2a-566b259e4641",
+  "servicePointIds": [
+    "79faacf1-4ba4-42c7-8b2a-566b259e4641"
+  ]
 
 }
