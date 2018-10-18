@@ -1,4 +1,8 @@
 {
+  "fullText": {
+    "defaultDictionary": "simple"
+  },
+
   "tables": [
     {
       "tableName": "loan_type",
@@ -443,12 +447,6 @@
           "removeAccents": false
         },
         {
-          "fieldName": "languages",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "classifications",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -500,6 +498,9 @@
         }
       ],
       "fullTextIndex": [
+        {
+          "fieldName": "languages"
+        },
         {
           "fieldName": "title"
         }
