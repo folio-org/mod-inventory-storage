@@ -499,10 +499,13 @@
       ],
       "fullTextIndex": [
         {
+          "fieldName": "title"
+        },
+        {
           "fieldName": "languages"
         },
         {
-          "fieldName": "title"
+          "fieldName": "instanceTypeId"
         }
       ]
     },
