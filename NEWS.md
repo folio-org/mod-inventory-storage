@@ -1,3 +1,8 @@
+## 13.1.0 Unreleased
+
+* Extends holdingsRecord with 20+ new optional properties (MODINVSTOR-153)
+* Uses full-text indexes for `instanceType` and `language` (MODINVSTOR-184, MODINVSTOR-188)
+
 ## 13.0.1 2018-10-12
 
 * Extends locations reference data with new required properties (MODINVSTOR-177)

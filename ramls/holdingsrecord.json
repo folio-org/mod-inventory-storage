@@ -3,7 +3,20 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "description": "the system assigned unique ID of the holdings record; UUID"
+    },
+    "hrid": {
+      "type": "string",
+      "description": "the human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+    },
+    "formerIds": {
+      "type": "array",
+      "description": "Previous ID(s) assigned to the holdings record",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "instanceId": {
       "type": "string"
@@ -26,8 +39,103 @@
       },
       "additionalProperties": false
     },
+    "electronicAccess": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources"
+          },
+          "linkText": {
+            "type": "string",
+            "description": "the value of the MARC tag field 856 2nd indicator, where the values are: no information provided, resource, version of resource, related resource, no display constant generated"
+          },
+          "materialsSpecification": {
+            "type": "string",
+            "description": "materials specified is used to specify to what portion or aspect of the resource the electronic location and access information applies (e.g. a portion or subset of the item is electronic, or a related electronic resource is being linked to the record)"
+          },
+          "publicNote": {
+            "type": "string",
+            "description": "URL public note to be displayed in the discovery"
+          },
+          "relationshipId": {
+            "type": "string",
+            "description": "relationship between the electronic resource at the location identified and the item described in the record as a whole"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "uri"
+        ]
+      }
+    },
+    "callNumberPrefix": {
+      "type": "string"
+    },
     "callNumber": {
       "type": "string"
+    },
+    "callNumberSuffix": {
+      "type": "string"
+    },
+    "shelvingTitle": {
+      "type": "string"
+    },
+    "acquisitionFormats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "actionNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bindingNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "copyNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }, 
+    "provenanceNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "publicNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reproductionNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "electronicBookplateNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nonPublicNotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "holdingsStatements": {
       "type": "array",
@@ -35,6 +143,48 @@
         "type": "string"
       },
       "uniqueItems": true
+    },
+    "holdingsStatementsForIndexes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string",
+            "description": "Textual description of the holdings of indexes"
+          },
+          "note": {
+            "type": "string",
+            "description": "Note attached to a holdings statement"
+          }
+        }
+      }
+    },
+    "holdingsStatementsForSupplements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string",
+            "description": "textual description of the holdings of supplementary material"
+          },
+          "note": {
+            "type": "string",
+            "description": "note attached to a holdings statement"
+          }
+        }
+      }
+    },
+    "copyNumber": {
+      "type": "string"
+    },
+    "numberOfItems": {
+      "type": "string"
+    },
+    "discoverySuppress": {
+      "type": "boolean",
+      "description": "records the fact that the record should not be displayed in a discovery system"
     },
     "holdingsItems": {
       "type": "array",
