@@ -83,8 +83,11 @@
     "shelvingTitle": {
       "type": "string"
     },
-    "acquisitionFormat": {
-      "type": "string"
+    "acquisitionFormats": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "actionNotes": {
       "type": "array",
