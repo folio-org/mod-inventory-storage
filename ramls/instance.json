@@ -40,21 +40,22 @@
     },
     "series": {
       "type": "array",
+      "description": "List of series titles associated with the resource (e.g. Harry Potter)",
       "items": {
-        "type": "string",
-        "description": "a series title associated with the resource (e.g. Harry Potter)"
+        "type": "string"
       },
       "uniqueItems": true
     },
     "identifiers": {
       "type": "array",
+      "description": "an extensible set of name-value pairs of identifiers associated with the resource",
       "minItems": 0,
       "items": {
         "type": "object",
         "properties": {
           "value": {
             "type": "string",
-            "description": "an extensible set of name-value pairs of identifiers associated with the resource"
+            "description": "resource identifier value"
           },
           "identifierTypeId": {
             "type": "string",
@@ -103,9 +104,9 @@
     },
     "subjects": {
       "type": "array",
+      "description": "List of subject headings",
       "items": {
-        "type": "string",
-        "description": "subject headings"
+        "type": "string"
       },
       "uniqueItems": true
     },
@@ -157,17 +158,17 @@
     },
     "publicationFrequency": {
       "type": "array",
+      "description": "the interval at which a serial appears, e.g. daily, weekly, monthly, quarterly, etc.",
       "items": {
-        "type": "string",
-        "description": "the interval at which a serial appears, e.g., daily, weekly, monthly, quarterly, etc. "
+        "type": "string"
       },
       "uniqueItems": true
     },
     "publicationRange": {
       "type": "array",
+      "description": "the range of sequential designation/chronology of publication, or date range",
       "items": {
-        "type": "string",
-        "description": "the range of sequential designation/chronology of publication, or date range"
+        "type": "string"
       },
       "uniqueItems": true
     },
@@ -216,24 +217,24 @@
     },
     "physicalDescriptions": {
       "type": "array",
+      "description": "physical description of the described resource, including its extent, dimensions, and such other physical details as a description of any accompanying materials and unit type and size",
       "items": {
-        "type": "string",
-        "description": "physical description of the described resource, including its extent, dimensions, and such other physical details as a description of any accompanying materials and unit type and size"
+        "type": "string"
       }
     },
     "languages": {
       "type": "array",
+      "description": "the set of languages used by the resource",
       "minItems": 0,
       "items": {
-        "type": "string",
-        "description": "the set of languages used by the resource"
+        "type": "string"
       }
     },
     "notes": {
       "type": "array",
+      "description": "bibliographic notes (e.g. general notes, specialized notes), and administrative notes",
       "items": {
-        "type": "string",
-        "description": "bibliographic notes (e.g. general notes, specialized notes), and administrative notes"
+        "type": "string"
       }
     },
     "modeOfIssuanceId": {
