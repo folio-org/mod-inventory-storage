@@ -182,6 +182,32 @@
     "numberOfItems": {
       "type": "string"
     },
+    "receivingHistory": {
+      "type": "object",
+      "properties": {
+        "displayType": {
+          "type": "string",
+          "description": "Display hint. 1: Display fields separately. 2: Display fields concatenated"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "publicDisplay": {
+                "type": "boolean"
+              },
+              "enumeration": {
+                "type": "string"
+              },
+              "chronology": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
     "discoverySuppress": {
       "type": "boolean",
       "description": "records the fact that the record should not be displayed in a discovery system"
