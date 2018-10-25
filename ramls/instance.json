@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An instance record",
   "type": "object",
   "properties": {
     "id": {
@@ -71,6 +72,7 @@
     },
     "contributors": {
       "type": "array",
+      "description": "List of contributors",
       "minItems": 0,
       "items": {
         "type": "object",
@@ -92,7 +94,8 @@
             "description": "contributor type terms defined by the MARC code list for relators"
           },
           "primary": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether this is the primary contributor"
           }
         },
         "additionalProperties": false,
@@ -112,6 +115,7 @@
     },
     "classifications": {
       "type": "array",
+      "description": "List of classifications",
       "minItems": 0,
       "items": {
         "type": "object",
@@ -134,6 +138,7 @@
     },
     "publication": {
       "type": "array",
+      "description": "List of publication items",
       "items": {
         "type": "object",
         "properties": {
@@ -158,7 +163,7 @@
     },
     "publicationFrequency": {
       "type": "array",
-      "description": "the interval at which a serial appears, e.g. daily, weekly, monthly, quarterly, etc.",
+      "description": "List of intervals at which a serial appears, e.g. daily, weekly, monthly, quarterly, etc.",
       "items": {
         "type": "string"
       },
@@ -174,6 +179,7 @@
     },
     "electronicAccess": {
       "type": "array",
+      "description": "List of electronic access items",
       "items": {
         "type": "object",
         "properties": {
@@ -259,6 +265,7 @@
     },
     "statisticalCodes": {
       "type": "array",
+      "description": "List of statistical code items",
       "items": {
         "type": "object",
         "properties": {
@@ -294,6 +301,7 @@
     },
     "holdingsRecords2": {
       "type": "array",
+      "description": "List of holdings records",
       "items": {
         "type": "object",
         "$ref": "holdingsrecord.json"
