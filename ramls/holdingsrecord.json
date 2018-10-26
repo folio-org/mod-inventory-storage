@@ -83,58 +83,40 @@
     "shelvingTitle": {
       "type": "string"
     },
-    "acquisitionFormats": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "acquisitionFormat": {
+      "type": "string"
     },
-    "actionNotes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "acquisitionMethod": {
+      "type": "string"
     },
-    "bindingNotes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "receiptStatus": {
+      "type": "string"
     },
-    "copyNotes": {
+    "notes": {
       "type": "array",
       "items": {
-        "type": "string"
-      }
-    }, 
-    "provenanceNotes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "publicNotes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "reproductionNotes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "electronicBookplateNotes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "nonPublicNotes": {
-      "type": "array",
-      "items": {
-        "type": "string"
+        "type": "objects",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+                      "action note",
+                      "binding",
+                      "copy note",
+                      "electronic bookplate",
+                      "note",
+                      "provenance",
+                      "reproduction"
+                    ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "staffOnly": {
+            "type": "boolean",
+            "default": false
+          }
+        }
       }
     },
     "holdingsStatements": {
