@@ -1,46 +1,39 @@
 package org.folio.rest.impl;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.model.Location;
-import org.folio.rest.jaxrs.model.Mtype;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.ItemStorage;
-import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
+/**
+ * CRUD for Item.
+ */
 public class ItemStorageAPI implements ItemStorage {
 
   static final String ITEM_TABLE = "item";
   private static final String ITEM_MATERIALTYPE_VIEW = "items_mt_view";
 
-  // Has to be lowercase because raml-module-builder uses case sensitive headers
-  private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
   private static final String DEFAULT_STATUS_NAME = "Available";
 
@@ -90,13 +83,10 @@ public class ItemStorageAPI implements ItemStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
     try {
       vertxContext.runOnContext(v -> {
         try {
-          PostgresClient postgresClient = PostgresClient.getInstance(
-            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+          PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
 
           String[] fieldList = {"*"};
 
@@ -169,471 +159,71 @@ public class ItemStorageAPI implements ItemStorage {
   @Validate
   @Override
   public void postItemStorageItems(
-    String lang, Item entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+      String lang, Item entity, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      if(entity.getId() == null) {
-        entity.setId(UUID.randomUUID().toString());
-      }
-
-      if (entity.getStatus() == null) {
-        entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
-      }
-
-      vertxContext.runOnContext(v -> {
-        try {
-          /**This should be replaced with a foreign key / cache since a lookup into the MT table
-           * every time an item is inserted is wasteful and slows down the insert process */
-          getMaterialType(vertxContext.owner(), tenantId, entity, replyHandler -> {
-              int res = replyHandler.result();
-              if(res == 0){
-                String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
-                log.error(message);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostItemStorageItemsResponse
-                  .respond400WithTextPlain(message)));
-                return;
-              }
-              else if(res == -1){
-                asyncResultHandler.handle(Future.succeededFuture(
-                  PostItemStorageItemsResponse.respond500WithTextPlain("")));
-                return;
-              }
-              else{
-                Future<Location> temporaryLocationFuture;
-
-                if(entity.getTemporaryLocationId() != null) {
-                  temporaryLocationFuture = getShelfLocation(vertxContext.owner(), tenantId,
-                          entity.getTemporaryLocationId());
-                } else {
-                  temporaryLocationFuture = Future.succeededFuture();
-                }
-
-                temporaryLocationFuture.setHandler(compRes -> {
-                  if(compRes.failed()) {
-                    String message = "Attempting to specify non-existent location";
-                    log.error(message);
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostItemStorageItemsResponse
-                  .respond400WithTextPlain(message)));
-                  } else {
-                    try {
-                      postgresClient.save("item", entity.getId(), entity,
-                        reply -> {
-                          try {
-                            if(reply.succeeded()) {
-                              asyncResultHandler.handle(
-                                Future.succeededFuture(
-                                  PostItemStorageItemsResponse
-                                    .respond201WithApplicationJson(entity, PostItemStorageItemsResponse.headersFor201().withLocation(reply.result()))));
-                            }
-                            else {
-                              String message = PgExceptionUtil.badRequestMessage(reply.cause());
-                              if (message != null) {
-                                asyncResultHandler.handle(
-                                    Future.succeededFuture(
-                                      PostItemStorageItemsResponse
-                                        .respond400WithTextPlain(message)));
-                              } else {
-                                asyncResultHandler.handle(
-                                  Future.succeededFuture(
-                                    PostItemStorageItemsResponse
-                                      .respond500WithTextPlain(
-                                        reply.cause().getMessage())));
-                              }
-                            }
-                          } catch (Exception e) {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PostItemStorageItemsResponse
-                                  .respond500WithTextPlain(e.getMessage())));
-                          }
-                        });
-                    } catch (Exception e) {
-                      asyncResultHandler.handle(Future.succeededFuture(
-                        PostItemStorageItemsResponse
-                          .respond500WithTextPlain(e.getMessage())));
-                    }
-                  }
-                });
-              }
-          });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
-        }
-      });
-      }
-      catch (Exception e) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
-      }
+    if (entity.getStatus() == null) {
+      entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
+    }
+    StorageHelper.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
+        PostItemStorageItemsResponse.class, asyncResultHandler);
   }
+
   @Validate
   @Override
   public void getItemStorageItemsByItemId(
-    String itemId, String lang, java.util.Map<String, String> okapiHeaders,
-    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+      String itemId, String lang, java.util.Map<String, String> okapiHeaders,
+      io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      String[] fieldList = {"*"};
-
-      String query = String.format("id==%s", itemId);
-
-      CQLWrapper cql = getCQL(query, 1, 0);
-
-      log.info(String.format("SQL generated from CQL: %s", cql.toString()));
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.get(getTableName(query), Item.class, fieldList, cql, true, false,
-            reply -> {
-              try {
-                if(reply.succeeded()) {
-                  List<Item> itemList = reply.result().getResults();
-                  if (itemList.size() == 1) {
-                    Item item = itemList.get(0);
-
-                    asyncResultHandler.handle(
-                      Future.succeededFuture(
-                        GetItemStorageItemsByItemIdResponse.
-                          respond200WithApplicationJson(item)));
-                  } else {
-                    asyncResultHandler.handle(
-                      Future.succeededFuture(
-                        GetItemStorageItemsByItemIdResponse.
-                          respond404WithTextPlain("Not Found")));
-                  }
-                }
-                else {
-                  Future.succeededFuture(
-                    GetItemStorageItemsByItemIdResponse
-                      .respond500WithTextPlain(
-                        reply.cause().getMessage()));
-                }
-              } catch (Exception e) {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  GetItemStorageItemsByItemIdResponse.
-                    respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            GetItemStorageItemsByItemIdResponse.
-              respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        GetItemStorageItemsByItemIdResponse.
-          respond500WithTextPlain(e.getMessage())));
-    }
+    StorageHelper.getById(ITEM_TABLE, Item.class, itemId, okapiHeaders, vertxContext,
+        GetItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
+
   @Validate
   @Override
   public void deleteItemStorageItems(
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+    PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
 
-    try {
-      vertxContext.runOnContext(v -> {
-        PostgresClient postgresClient = PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-        postgresClient.mutate(String.format("DELETE FROM %s_%s.item",
-          tenantId, "mod_inventory_storage"),
-          reply -> {
-            if (reply.succeeded()) {
-              asyncResultHandler.handle(Future.succeededFuture(
+    postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.item", tenantId, "mod_inventory_storage"),
+        reply -> {
+          if (reply.succeeded()) {
+            asyncResultHandler.handle(Future.succeededFuture(
                 DeleteItemStorageItemsResponse.noContent()
-                  .build()));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
+                .build()));
+          } else {
+            log.error(reply.cause().getMessage(), reply.cause());
+            asyncResultHandler.handle(Future.succeededFuture(
                 DeleteItemStorageItemsResponse.
-                  respond500WithTextPlain(reply.cause().getMessage())));
-            }
-          });
-      });
-    }
-    catch(Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        DeleteItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
-    }
+                respond500WithTextPlain(reply.cause().getMessage())));
+          }
+        });
   }
 
   @Validate
   @Override
   public void putItemStorageItemsByItemId(
-    String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
-    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+      String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
+      io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      vertxContext.runOnContext(v -> {
-        try {
-          getMaterialType(vertxContext.owner(), tenantId, entity, replyHandler -> {
-              int res = replyHandler.result();
-              if(res == 0) {
-                String message = "Can not add " + entity.getMaterialTypeId() + ". Material type not found";
-                log.error(message);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutItemStorageItemsByItemIdResponse
-                  .respond400WithTextPlain(message)));
-              }
-              else if(res == -1){
-                asyncResultHandler.handle(Future.succeededFuture(
-                  PostItemStorageItemsResponse.respond500WithTextPlain("")));
-              }
-              else {
-                try {
-                  String[] fieldList = {"*"};
-
-                  String query = String.format("id==%s", itemId);
-
-                  CQLWrapper cql = getCQL(query, 1, 0);
-
-                  log.info(String.format("SQL generated from CQL: %s", cql.toString()));
-
-                  postgresClient.get(getTableName(query), Item.class, fieldList, cql, true, false,
-                    reply -> {
-                      if(reply.succeeded()) {
-                        List<Item> itemList = reply.result().getResults();
-                        if (itemList.size() == 1) {
-                          try {
-                            postgresClient.update("item", entity, entity.getId(),
-                              update -> {
-                                try {
-                                  if (update.succeeded()) {
-                                    OutStream stream = new OutStream();
-                                    stream.setData(entity);
-
-                                    asyncResultHandler.handle(
-                                      Future.succeededFuture(
-                                        PutItemStorageItemsByItemIdResponse
-                                          .respond204()));
-                                  } else {
-                                    String message = PgExceptionUtil.badRequestMessage(update.cause());
-                                    if (message != null) {
-                                      asyncResultHandler.handle(
-                                          Future.succeededFuture(
-                                            PutItemStorageItemsByItemIdResponse
-                                              .respond400WithTextPlain(message)));
-                                    } else {
-                                      asyncResultHandler.handle(
-                                        Future.succeededFuture(
-                                          PutItemStorageItemsByItemIdResponse
-                                            .respond500WithTextPlain(
-                                              update.cause().getMessage())));
-                                    }
-                                  }
-                                } catch (Exception e) {
-                                  asyncResultHandler.handle(
-                                    Future.succeededFuture(
-                                      PostItemStorageItemsResponse
-                                        .respond500WithTextPlain(e.getMessage())));
-                                }
-                              });
-                          } catch (Exception e) {
-                            asyncResultHandler.handle(Future.succeededFuture(
-                              PutItemStorageItemsByItemIdResponse
-                                .respond500WithTextPlain(e.getMessage())));
-                          }
-                        } else {
-                          try {
-                            postgresClient.save("item", entity.getId(), entity,
-                              save -> {
-                                try {
-                                  if (save.succeeded()) {
-                                    OutStream stream = new OutStream();
-                                    stream.setData(entity);
-
-                                    asyncResultHandler.handle(
-                                      Future.succeededFuture(
-                                        PutItemStorageItemsByItemIdResponse
-                                          .respond204()));
-                                  } else {
-                                    asyncResultHandler.handle(
-                                      Future.succeededFuture(
-                                        PutItemStorageItemsByItemIdResponse
-                                          .respond500WithTextPlain(
-                                            save.cause().getMessage())));
-                                  }
-
-                                } catch (Exception e) {
-                                  asyncResultHandler.handle(
-                                    Future.succeededFuture(
-                                      PostItemStorageItemsResponse
-                                        .respond500WithTextPlain(e.getMessage())));
-                                }
-                              });
-                          } catch (Exception e) {
-                            asyncResultHandler.handle(Future.succeededFuture(
-                              PutItemStorageItemsByItemIdResponse
-                                .respond500WithTextPlain(e.getMessage())));
-                          }
-                        }
-                      } else {
-                        asyncResultHandler.handle(Future.succeededFuture(
-                          PutItemStorageItemsByItemIdResponse
-                            .respond500WithTextPlain(reply.cause().getMessage())));
-                      }
-                    });
-                } catch (Exception e) {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
-                }
-              }
-          });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        PostItemStorageItemsResponse.respond500WithTextPlain(e.getMessage())));
-    }
+    StorageHelper.put(ITEM_TABLE, entity, itemId, okapiHeaders, vertxContext,
+        PutItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteItemStorageItemsByItemId(
-    String itemId, String lang, java.util.Map<String, String> okapiHeaders,
-    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+      String itemId, String lang, java.util.Map<String, String> okapiHeaders,
+      io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(itemId);
-
-      Criterion criterion = new Criterion(a);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.delete("item", criterion,
-            reply -> {
-              if(reply.succeeded()) {
-                asyncResultHandler.handle(
-                  Future.succeededFuture(
-                    DeleteItemStorageItemsByItemIdResponse
-                      .respond204()));
-              }
-              else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteItemStorageItemsByItemIdResponse
-                    .respond500WithTextPlain("Error")));
-              }
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteItemStorageItemsByItemIdResponse
-              .respond500WithTextPlain("Error")));
-        }
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        DeleteItemStorageItemsByItemIdResponse.respond500WithTextPlain("Error")));
-    }
-  }
-
-  /**
-   *
-   * @param vertx
-   * @param tenantId
-   * @param item
-   * @param handler
-   * @throws Exception
-   */
-  private void getMaterialType(
-    Vertx vertx,
-    String tenantId,
-    Item item,
-    Handler<AsyncResult<Integer>> handler) throws Exception{
-
-    Mtype mtype = new Mtype();
-
-    String mtID = item.getMaterialTypeId();
-
-    if(mtID == null) {
-      //allow null material types so that they can be added after a record is created
-      handler.handle(io.vertx.core.Future.succeededFuture(1));
-    } else {
-      mtype.setId(mtID);
-      /** check if the material type exists, if not, can not add the item **/
-      PostgresClient.getInstance(vertx, tenantId).get(
-        MaterialTypeAPI.MATERIAL_TYPE_TABLE, mtype, new String[]{"_id"}, true, false, 0, 1, check -> {
-          if(check.succeeded()) {
-            List<Mtype> mtypeList0 = check.result().getResults();
-            if (mtypeList0.size() == 0){
-              handler.handle(io.vertx.core.Future.succeededFuture(0));
-            }
-            else {
-              handler.handle(io.vertx.core.Future.succeededFuture(1));
-            }
-          }
-          else {
-            log.error(check.cause().getLocalizedMessage(), check.cause());
-            handler.handle(io.vertx.core.Future.succeededFuture(-1));
-          }
-        });
-    }
-  }
-
-  private Future<Location> getShelfLocation(
-    Vertx vertx,
-    String tenantId,
-    String locationId
-  ) {
-    Future<Location> future = Future.future();
-    try {
-      Criteria crit = new Criteria(LocationAPI.LOCATION_SCHEMA_PATH);
-      crit.addField(LocationAPI.ID_FIELD_NAME);
-      crit.setOperation("=");
-      crit.setValue(locationId);
-      PostgresClient.getInstance(vertx, tenantId).get(LocationAPI.LOCATION_TABLE,
-        Location.class, new Criterion(crit), true, false, getReply -> {
-        if(getReply.failed()) {
-          future.fail(getReply.cause());
-        } else {
-          List<Location> locationList = getReply.result().getResults();
-          if(locationList.size() < 1) {
-            future.fail("No location found");
-          } else {
-            future.complete(locationList.get(0));
-          }
-        }
-      });
-    } catch(Exception e) {
-      future.fail(e);
-    }
-    return future;
+    StorageHelper.deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
+        DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 }

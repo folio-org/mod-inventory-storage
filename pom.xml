@@ -22,7 +22,13 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>21.0.2</version>
+      <version>${raml-module-builder-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>testing</artifactId>
+      <version>${raml-module-builder-version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -36,12 +42,19 @@
       <version>2.0.0.0</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-unit</artifactId>
+      <version>3.5.3</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
+    <raml-module-builder-version>21.0.2</raml-module-builder-version>
     <argLine />
   </properties>
 
@@ -300,6 +313,7 @@
         <configuration>
           <excludes>
             <exclude>org/folio/rest/api/*Test.java</exclude>
+            <exclude>org/folio/rest/impl/*Test.java</exclude>
           </excludes>
           <includes>
             <include>org/folio/rest/api/StorageTestSuite.java</include>

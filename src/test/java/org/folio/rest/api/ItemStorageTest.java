@@ -13,6 +13,7 @@ import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -42,12 +43,8 @@ import org.junit.Test;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
-  private static Logger logger = LoggerFactory.getLogger(ItemStorageTest.class);
-
   private static String journalMaterialTypeID;
   private static String bookMaterialTypeID;
   private static String videoMaterialTypeID;
@@ -234,7 +231,36 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotAddANonExistentLocation()
+  public void cannotAddANonExistentPermanentLocation()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    String badLocation = UUID.randomUUID().toString();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    String id = UUID.randomUUID().toString();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id)
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("permanentLocationId", badLocation);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    assertThat(postResponse.getBody(),
+        containsString("violates foreign key constraint \"item_permanentlocationid_fkey\""));
+  }
+
+  @Test
+  public void cannotAddANonExistentTemporaryLocation()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -259,7 +285,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    assertThat(postResponse.getBody(), is("Attempting to specify non-existent location"));
+    assertThat(postResponse.getBody(),
+        containsString("violates foreign key constraint \"item_temporarylocationid_fkey\""));
   }
 
   @Test
@@ -324,6 +351,56 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.size(), is(1));
     assertThat(errors, hasItem(
       validationErrorMatches("may not be null", "materialTypeId")));
+  }
+
+  @Test
+  public void cannotCreateAnItemWithNonexistingMaterialType()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject itemToCreate = new JsonObject();
+    itemToCreate.put("id", UUID.randomUUID().toString());
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("materialTypeId", UUID.randomUUID().toString());
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(postResponse.getBody(),
+        containsString("violates foreign key constraint \"item_materialtypeid_fkey\""));
+  }
+
+  @Test
+  public void cannotUpdateAnItemWithNonexistingMaterialType()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject itemToCreate = new JsonObject();
+    String itemId = UUID.randomUUID().toString();
+    itemToCreate.put("id", itemId);
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    createItem(itemToCreate);
+
+    itemToCreate.put("materialTypeId", UUID.randomUUID().toString());
+
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + itemId), itemToCreate, StorageTestSuite.TENANT_ID,
+        ResponseHandler.text(completed));
+    Response response = completed.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(),
+        containsString("violates foreign key constraint \"item_materialtypeid_fkey\""));
   }
 
   @Test
