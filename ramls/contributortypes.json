@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of contributor types",
   "type": "object",
   "properties": {
     "contributorTypes": {
+      "description": "List of contributor types",
       "id": "contributorType",
       "type": "array",
       "items": {

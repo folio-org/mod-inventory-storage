@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of classification types",
   "type": "object",
   "properties": {
     "classificationTypes": {
+      "description": "List of classification types",
       "id": "classificationType",
       "type": "array",
       "items": {

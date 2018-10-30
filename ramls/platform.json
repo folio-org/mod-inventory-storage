@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A platform for electronic resources",
   "type": "object",
   "properties": {
     "id": {

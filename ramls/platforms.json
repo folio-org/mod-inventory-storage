@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of platforms",
   "type": "object",
   "properties": {
     "platforms": {
+      "description": "List of platforms",
       "id": "platform",
       "type": "array",
       "items": {

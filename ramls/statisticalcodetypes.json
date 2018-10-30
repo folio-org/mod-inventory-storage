@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of statistical code types",
   "type": "object",
   "properties": {
     "statisticalCodeTypes": {
+      "description": "List of statistical code types",
       "id": "statisticalCodeType",
       "type": "array",
       "items": {
