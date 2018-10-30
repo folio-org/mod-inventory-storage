@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of identifier types",
   "type": "object",
   "properties": {
     "identifierTypes": {
+      "description": "List of identifier types",
       "id": "identifierType",
       "type": "array",
       "items": {

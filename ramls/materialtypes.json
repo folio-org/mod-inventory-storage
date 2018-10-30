@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of material types",
   "type": "object",
   "properties": {
     "mtypes": {
+      "description": "List of material types",
       "id": "mtype",
       "type": "array",
       "items": {

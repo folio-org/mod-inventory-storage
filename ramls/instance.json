@@ -13,7 +13,7 @@
     },
     "source": {
       "type": "string",
-      "description": "The metadata source and it's format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)"
+      "description": "The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)"
     },
     "title": {
       "type": "string",
@@ -25,7 +25,7 @@
     },
     "alternativeTitles": {
       "type": "array",
-      "description": "An alternative title for the resource (e.g. original language version title of a movie)",
+      "description": "List of alternative titles for the resource (e.g. original language version title of a movie)",
       "items": {
         "type": "string"
       },
