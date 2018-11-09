@@ -9,6 +9,9 @@
     "name": {
       "type": "string"
     },
+    "source": {
+      "type": "string"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
