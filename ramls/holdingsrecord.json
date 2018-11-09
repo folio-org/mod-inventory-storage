@@ -120,6 +120,12 @@
         }
       }
     },
+    "retentionPolicy": {
+      "type": "string"
+    },
+    "digitizationPolicy": {
+      "type": "string"
+    },
     "holdingsStatements": {
       "type": "array",
       "items": {
