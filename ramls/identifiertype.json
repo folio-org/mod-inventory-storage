@@ -8,7 +8,12 @@
     },
     "name": {
       "type": "string"
-    }
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+     }
   },
   "required": [
     "name"

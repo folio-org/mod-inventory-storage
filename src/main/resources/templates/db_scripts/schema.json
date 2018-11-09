@@ -162,7 +162,7 @@
     },
     {
       "tableName": "identifier_type",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -181,7 +181,7 @@
     },
     {
       "tableName": "instance_relationship_type",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -223,7 +223,7 @@
     },
     {
       "tableName": "contributor_name_type",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
@@ -288,7 +288,7 @@
     },
     {
       "tableName": "classification_type",
-      "withMetadata": false,
+      "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
       "withAuditing": false,
