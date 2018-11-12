@@ -1,0 +1,48 @@
+#%RAML 1.0
+title: Call number types API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Call number types API
+    content: This documents the API calls that can be made to query and manage call number types of the system
+
+types:
+  callNumberType: !include callnumbertype.json
+  callNumberTypes: !include callnumbertypes.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/call-number-types:
+  type:
+    collection:
+      exampleCollection: !include examples/callnumbertypes.json
+      exampleItem: !include examples/callnumbertype.json
+      schemaCollection: callNumberTypes
+      schemaItem: callNumberType
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of call number types
+  post:
+    description: Create a new call number type
+    is: [validate]
+  /{id}:
+    description: "Pass in the call number type id"
+    type:
+      collection-item:
+        exampleItem: !include examples/callnumbertype.json
+        schema: callNumberType
+
