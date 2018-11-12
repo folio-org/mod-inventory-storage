@@ -11,10 +11,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.IllPolicies;
-import org.folio.rest.jaxrs.model.IllPolicy;
-import org.folio.rest.jaxrs.resource.IllPolicies.GetIllPoliciesResponse;
+import org.folio.rest.jaxrs.model.HoldingsType;
+import org.folio.rest.jaxrs.model.HoldingsTypes;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -41,49 +39,47 @@ import io.vertx.core.logging.LoggerFactory;
  *
  * @author ne
  */
-public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
+public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTypes {
 
-  public static final String REFERENCE_TABLE   = "ill_policy";
+  public static final String REFERENCE_TABLE  = "holdings_type";
 
-  private static final String LOCATION_PREFIX  = "/ill-policies/";
-  private static final Logger log              = LoggerFactory.getLogger(IllPolicyAPI.class);
-  private final Messages messages              = Messages.getInstance();
-  private String idFieldName                   = "_id";
+  private static final String LOCATION_PREFIX = "/holdings-types/";
+  private static final Logger log             = LoggerFactory.getLogger(HoldingsTypeAPI.class);
+  private final Messages messages             = Messages.getInstance();
+  private String idFieldName                  = "_id";
 
-  public IllPolicyAPI(Vertx vertx, String tenantId) {
+  public HoldingsTypeAPI(Vertx vertx, String tenantId) {
     PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
   }
-
-  @Validate
+  
   @Override
-  public void getIllPolicies(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getHoldingsTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
-     * http://host:port/ill-policies
+     * http://host:port/holdings-types
      */
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCQL(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, IllPolicy.class,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, HoldingsType.class,
             new String[]{"*"}, cql, true, true,
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  IllPolicies illPolicies = new IllPolicies();
-                  List<IllPolicy> illPolicy = reply.result().getResults();
-                  illPolicies.setIllPolicies(illPolicy);
-                  illPolicies.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIllPoliciesResponse.respond200WithApplicationJson(
-                      illPolicies)));
+                  HoldingsTypes holdingsTypes = new HoldingsTypes();
+                  List<HoldingsType> holdingsType = reply.result().getResults();
+                  holdingsTypes.setHoldingsTypes(holdingsType);
+                  holdingsTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesResponse.respond200WithApplicationJson(holdingsTypes)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIllPoliciesResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesResponse
                       .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIllPoliciesResponse
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesResponse
                     .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
@@ -94,15 +90,14 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIllPoliciesResponse
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesResponse
             .respond500WithTextPlain(message)));
       }
     });
   }
 
-
   @Override
-  public void postIllPolicies(String lang, IllPolicy entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postHoldingsTypes(String lang, HoldingsType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String id = entity.getId();
@@ -118,8 +113,8 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
                 if (reply.succeeded()) {
                   String ret = reply.result();
                   entity.setId(ret);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostIllPoliciesResponse
-                    .respond201WithApplicationJson(entity, PostIllPoliciesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostHoldingsTypesResponse
+                    .respond201WithApplicationJson(entity, PostHoldingsTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -127,7 +122,7 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PostIllPoliciesResponse
+                  asyncResultHandler.handle(Future.succeededFuture(PostHoldingsTypesResponse
                       .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
@@ -141,7 +136,7 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
   }
 
   @Override
-  public void getIllPoliciesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getHoldingsTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -149,7 +144,7 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
         Criterion c = new Criterion(
             new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+id+"'"));
 
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, IllPolicy.class, c, true,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, HoldingsType.class, c, true,
             reply -> {
               try {
                 if (reply.failed()) {
@@ -159,18 +154,18 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetIllPoliciesByIdResponse.
+                  asyncResultHandler.handle(Future.succeededFuture(GetHoldingsTypesByIdResponse.
                       respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<IllPolicy> illPolicy = (List<IllPolicy>) reply.result().getResults();
+                List<HoldingsType> illPolicy = (List<HoldingsType>) reply.result().getResults();
                 if (illPolicy.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIllPoliciesByIdResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesByIdResponse
                       .respond404WithTextPlain(id)));
                 }
                 else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIllPoliciesByIdResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesByIdResponse
                       .respond200WithApplicationJson(illPolicy.get(0))));
                 }
               } catch (Exception e) {
@@ -184,45 +179,7 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
   }
 
   @Override
-  public void putIllPoliciesById(String id, String lang, IllPolicy entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
-      try {
-        if (entity.getId() == null) {
-          entity.setId(id);
-        }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  if (reply.result().getUpdated() == 0) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutIllPoliciesByIdResponse
-                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
-                  } else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutIllPoliciesByIdResponse
-                        .respond204()));
-                  }
-                } else {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PutIllPoliciesByIdResponse
-                      .respond400WithTextPlain(msg)));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringPut(e, lang, asyncResultHandler);
-              }
-            });
-      } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
-    });
-  }
-
-  @Override
-  public void deleteIllPoliciesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteHoldingsTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -237,7 +194,7 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteIllPoliciesByIdResponse
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteHoldingsTypesByIdResponse
                       .respond400WithTextPlain(msg)));
                   return;
                 }
@@ -245,11 +202,11 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
                 if (updated != 1) {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteIllPoliciesByIdResponse
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteHoldingsTypesByIdResponse
                       .respond404WithTextPlain(msg)));
                   return;
                 }
-                asyncResultHandler.handle(Future.succeededFuture(DeleteIllPoliciesByIdResponse
+                asyncResultHandler.handle(Future.succeededFuture(DeleteHoldingsTypesByIdResponse
                         .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
@@ -261,33 +218,72 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
     });
   }
 
+  @Override
+  public void putHoldingsTypesById(String id, String lang, HoldingsType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    vertxContext.runOnContext(v -> {
+      String tenantId = TenantTool.tenantId(okapiHeaders);
+      try {
+        if (entity.getId() == null) {
+          entity.setId(id);
+        }
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
+            reply -> {
+              try {
+                if (reply.succeeded()) {
+                  if (reply.result().getUpdated() == 0) {
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutHoldingsTypesByIdResponse
+                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                  } else{
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutHoldingsTypesByIdResponse
+                        .respond204()));
+                  }
+                } else {
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                  if (msg == null) {
+                    internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                    return;
+                  }
+                  log.info(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(PutHoldingsTypesByIdResponse
+                      .respond400WithTextPlain(msg)));
+                }
+              } catch (Exception e) {
+                internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              }
+            });
+      } catch (Exception e) {
+        internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
+    });
+  }
+  
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(REFERENCE_TABLE+".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
-  
+
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PostIllPoliciesResponse
+    handler.handle(Future.succeededFuture(PostHoldingsTypesResponse
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
   
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(DeleteIllPoliciesByIdResponse
+    handler.handle(Future.succeededFuture(DeleteHoldingsTypesByIdResponse
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetIllPoliciesByIdResponse
+    handler.handle(Future.succeededFuture(GetHoldingsTypesByIdResponse
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PutIllPoliciesByIdResponse
+    handler.handle(Future.succeededFuture(PutHoldingsTypesByIdResponse
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
+  
 }

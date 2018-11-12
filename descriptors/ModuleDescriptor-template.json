@@ -633,6 +633,33 @@
         }
       ]
     },
+    {
+      "id": "holdings-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-types",
+          "permissionsRequired": ["inventory-storage.holdings-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/holdings-types",
+          "permissionsRequired": ["inventory-storage.holdings-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/holdings-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/holdings-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-types.item.delete"]
+        }
+      ]
+    },
 
     {
       "id": "service-points",
@@ -1363,11 +1390,35 @@
       "description": "modify ill-policy in storage"
     },
     {
-      "permissionName": "inventory-storage.ill-policy.item.delete",
+      "permissionName": "inventory-storage.ill-policies.item.delete",
       "displayName": "inventory storage - delete individual ill-policy",
       "description": "delete individual ill-policy from storage"
     },
-
+    {
+      "permissionName": "inventory-storage.holdings-types.collection.get",
+      "displayName": "inventory storage - get holdings-type collection",
+      "description": "get holdings-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.item.get",
+      "displayName": "inventory storage - get individual holdings-type",
+      "description": "get individual holdings-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.item.post",
+      "displayName": "inventory storage - create individual holdings-type",
+      "description": "create individual holdings-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.item.put",
+      "displayName": "inventory storage - modify holdings-type",
+      "description": "modify holdings-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.item.delete",
+      "displayName": "inventory storage - delete individual holdings-type",
+      "description": "delete individual holdings-type from storage"
+    },
     {
       "permissionName": "inventory-storage.platforms.collection.get",
       "displayName": "inventory storage - get platforms collection",
@@ -1515,6 +1566,11 @@
         "inventory-storage.ill-policies.item.post",
         "inventory-storage.ill-policies.item.put",
         "inventory-storage.ill-policies.item.delete",
+        "inventory-storage.holdings-types.collection.get",
+        "inventory-storage.holdings-types.item.get",
+        "inventory-storage.holdings-types.item.post",
+        "inventory-storage.holdings-types.item.put",
+        "inventory-storage.holdings-types.item.delete",
         "inventory-storage.service-points.collection.get",
         "inventory-storage.service-points.item.get",
         "inventory-storage.service-points.item.post",
