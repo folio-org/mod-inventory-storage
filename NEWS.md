@@ -1,5 +1,6 @@
 ## 13.1.0 Unreleased
 
+* Provides `call-number-types` interface 1.0 (MODINVSTOR-210)
 * Provides `holdings-types` interface 1.0 (MODINVSTOR-210)
 * Provides `ill-policies` interface 1.0 (MODINVSTOR-210)
 * Extends holdingsRecord with 20+ new optional properties (MODINVSTOR-153)
