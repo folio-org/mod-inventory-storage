@@ -381,6 +381,19 @@
       ]
     },
     {
+      "tableName": "alternative_title_type",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "instance",
       "withMetadata": true,
       "generateId": false,

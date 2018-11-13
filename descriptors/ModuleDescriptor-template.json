@@ -498,6 +498,34 @@
       ]
     },
     {
+      "id": "alternative-title-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/alternative-title-types",
+          "permissionsRequired": ["inventory-storage.alternative-title-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/alternative-title-types/{id}",
+          "permissionsRequired": ["inventory-storage.alternative-title-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/alternative-title-types",
+          "permissionsRequired": ["inventory-storage.alternative-title-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/alternative-title-types/{id}",
+          "permissionsRequired": ["inventory-storage.alternative-title-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/alternative-title-types/{id}",
+          "permissionsRequired": ["inventory-storage.alternative-title-types.item.delete"]
+        }
+      ]
+    },
+
+    {
       "id": "modes-of-issuance",
       "version": "1.0",
       "handlers": [
@@ -1295,6 +1323,33 @@
       "displayName": "inventory storage - delete individual classification type",
       "description": "delete individual classification qualifier from storage"
     },
+
+    {
+      "permissionName": "inventory-storage.alternative-title-types.collection.get",
+      "displayName": "inventory storage - get alternative-title-type collection",
+      "description": "get alternative-title-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.alternative-title-types.item.get",
+      "displayName": "inventory storage - get individual alternative-title-type",
+      "description": "get individual alternative-title-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.alternative-title-types.item.post",
+      "displayName": "inventory storage - create individual alternative-title-type",
+      "description": "create individual alternative-title-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.alternative-title-types.item.put",
+      "displayName": "inventory storage - modify alternative-title-type",
+      "description": "modify alternative-title-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.alternative-title-types.item.delete",
+      "displayName": "inventory storage - delete individual alternative-title-type",
+      "description": "delete individual alternative-title-type from storage"
+    },
+
     {
       "permissionName": "inventory-storage.modes-of-issuance.collection.get",
       "displayName": "inventory storage - get modes of issuance collection",
@@ -1593,6 +1648,11 @@
         "inventory-storage.classification-types.item.post",
         "inventory-storage.classification-types.item.put",
         "inventory-storage.classification-types.item.delete",
+        "inventory-storage.alternative-title-types.collection.get",
+        "inventory-storage.alternative-title-types.item.get",
+        "inventory-storage.alternative-title-types.item.post",
+        "inventory-storage.alternative-title-types.item.put",
+        "inventory-storage.alternative-title-types.item.delete",
         "inventory-storage.modes-of-issuance.collection.get",
         "inventory-storage.modes-of-issuance.item.get",
         "inventory-storage.modes-of-issuance.item.post",
