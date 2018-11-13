@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of holdings types",
+  "type": "object",
+  "properties": {
+    "holdingsTypes": {
+      "description": "List of holdings types",
+      "id": "holdingsType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "holdingstype.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "holdingsTypes",
+    "totalRecords"
+  ]
+}
+

@@ -11,6 +11,10 @@
       "type": "string",
       "description": "the human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
     },
+    "holdingsTypeId": {
+      "type": "string",
+      "description": "unique ID for the type of this holdings record, a UUID"
+    },
     "formerIds": {
       "type": "array",
       "description": "Previous ID(s) assigned to the holdings record",
@@ -72,6 +76,10 @@
         ]
       }
     },
+    "callNumberTypeId": {
+      "type": "string",
+      "description": "unique ID for the type of call number on a holdings record, a UUID" 
+    },
     "callNumberPrefix": {
       "type": "string"
     },
@@ -119,6 +127,10 @@
           }
         }
       }
+    },
+    "illPolicyId": {
+      "type": "string",
+      "description": "unique ID for an ILL policy, a UUID"
     },
     "retentionPolicy": {
       "type": "string"

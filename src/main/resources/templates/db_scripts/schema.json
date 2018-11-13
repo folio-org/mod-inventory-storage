@@ -560,6 +560,45 @@
       "customSnippetPath": "instanceSourceMarc.sql"
     },
     {
+      "tableName": "ill_policy",
+      "withMetadata": true,
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "call_number_type",
+      "withMetadata": true,
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "holdings_type",
+      "withMetadata": true,
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "holdings_record",
       "withMetadata": true,
       "generateId": false,
@@ -578,6 +617,21 @@
         {
           "fieldName": "temporaryLocationId",
           "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "holdingsTypeId",
+          "targetTable": "holdings_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "callNumberTypeId",
+          "targetTable": "call_number_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "illPolicyId",
+          "targetTable": "ill_policy",
           "tOps": "ADD"
         }
       ],

@@ -606,6 +606,87 @@
         }
       ]
     },
+    {
+      "id": "ill-policies",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/ill-policies",
+          "permissionsRequired": ["inventory-storage.ill-policies.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/ill-policies/{id}",
+          "permissionsRequired": ["inventory-storage.ill-policies.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/ill-policies",
+          "permissionsRequired": ["inventory-storage.ill-policies.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/ill-policies/{id}",
+          "permissionsRequired": ["inventory-storage.ill-policies.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/ill-policies/{id}",
+          "permissionsRequired": ["inventory-storage.ill-policies.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "holdings-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-types",
+          "permissionsRequired": ["inventory-storage.holdings-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/holdings-types",
+          "permissionsRequired": ["inventory-storage.holdings-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/holdings-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/holdings-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-types.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "call-number-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/call-number-types",
+          "permissionsRequired": ["inventory-storage.call-number-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/call-number-types/{id}",
+          "permissionsRequired": ["inventory-storage.call-number-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/call-number-types",
+          "permissionsRequired": ["inventory-storage.call-number-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/call-number-types/{id}",
+          "permissionsRequired": ["inventory-storage.call-number-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/call-number-types/{id}",
+          "permissionsRequired": ["inventory-storage.call-number-types.item.delete"]
+        }
+      ]
+    },
 
     {
       "id": "service-points",
@@ -1316,6 +1397,81 @@
       "description": "delete individual statistical code from storage"
     },
     {
+      "permissionName": "inventory-storage.ill-policies.collection.get",
+      "displayName": "inventory storage - get ill-policy collection",
+      "description": "get ill-policy collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.ill-policies.item.get",
+      "displayName": "inventory storage - get individual ill-policy",
+      "description": "get individual ill-policy from storage"
+    },
+    {
+      "permissionName": "inventory-storage.ill-policies.item.post",
+      "displayName": "inventory storage - create individual ill-policy",
+      "description": "create individual ill-policy in storage"
+    },
+    {
+      "permissionName": "inventory-storage.ill-policies.item.put",
+      "displayName": "inventory storage - modify ill-policy",
+      "description": "modify ill-policy in storage"
+    },
+    {
+      "permissionName": "inventory-storage.ill-policies.item.delete",
+      "displayName": "inventory storage - delete individual ill-policy",
+      "description": "delete individual ill-policy from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.collection.get",
+      "displayName": "inventory storage - get holdings-type collection",
+      "description": "get holdings-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.item.get",
+      "displayName": "inventory storage - get individual holdings-type",
+      "description": "get individual holdings-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.item.post",
+      "displayName": "inventory storage - create individual holdings-type",
+      "description": "create individual holdings-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.item.put",
+      "displayName": "inventory storage - modify holdings-type",
+      "description": "modify holdings-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-types.item.delete",
+      "displayName": "inventory storage - delete individual holdings-type",
+      "description": "delete individual holdings-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.call-number-types.collection.get",
+      "displayName": "inventory storage - get call-number-type collection",
+      "description": "get call-number-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.call-number-types.item.get",
+      "displayName": "inventory storage - get individual call-number-type",
+      "description": "get individual call-number-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.call-number-types.item.post",
+      "displayName": "inventory storage - create individual call-number-type",
+      "description": "create individual call-number-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.call-number-types.item.put",
+      "displayName": "inventory storage - modify call-number-type",
+      "description": "modify call-number-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.call-number-types.item.delete",
+      "displayName": "inventory storage - delete individual call-number-type",
+      "description": "delete individual call-number-type from storage"
+    },
+    {
       "permissionName": "inventory-storage.platforms.collection.get",
       "displayName": "inventory storage - get platforms collection",
       "description": "get platforms collection from storage"
@@ -1457,6 +1613,21 @@
         "inventory-storage.statistical-code-types.item.post",
         "inventory-storage.statistical-code-types.item.put",
         "inventory-storage.statistical-code-types.item.delete",
+        "inventory-storage.ill-policies.collection.get",
+        "inventory-storage.ill-policies.item.get",
+        "inventory-storage.ill-policies.item.post",
+        "inventory-storage.ill-policies.item.put",
+        "inventory-storage.ill-policies.item.delete",
+        "inventory-storage.holdings-types.collection.get",
+        "inventory-storage.holdings-types.item.get",
+        "inventory-storage.holdings-types.item.post",
+        "inventory-storage.holdings-types.item.put",
+        "inventory-storage.holdings-types.item.delete",
+        "inventory-storage.call-number-types.collection.get",
+        "inventory-storage.call-number-types.item.get",
+        "inventory-storage.call-number-types.item.post",
+        "inventory-storage.call-number-types.item.put",
+        "inventory-storage.call-number-types.item.delete",
         "inventory-storage.service-points.collection.get",
         "inventory-storage.service-points.item.get",
         "inventory-storage.service-points.item.post",

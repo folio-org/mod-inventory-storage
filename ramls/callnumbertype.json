@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A call number type",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "unique ID of the call number type; a UUID"
+    },
+    "name": {
+      "type": "string",
+      "description": "name of the call number type"
+    },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the call number type entry originates from, i.e. 'folio' or 'local'"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "source"
+  ]
+}
+
