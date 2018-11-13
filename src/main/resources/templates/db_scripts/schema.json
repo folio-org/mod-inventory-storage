@@ -618,6 +618,21 @@
           "fieldName": "temporaryLocationId",
           "targetTable": "location",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "holdingsTypeId",
+          "targetTable": "holdings_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "callNumberTypeId",
+          "targetTable": "call_number_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "illPolicyId",
+          "targetTable": "ill_policy",
+          "tOps": "ADD"
         }
       ],
       "ginIndex": [
