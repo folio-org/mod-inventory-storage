@@ -76,6 +76,10 @@
         ]
       }
     },
+    "callNumberTypeId": {
+      "type": "string",
+      "description": "unique ID for the type of call number on a holdings record, a UUID" 
+    },
     "callNumberPrefix": {
       "type": "string"
     },
@@ -123,6 +127,10 @@
           }
         }
       }
+    },
+    "illPolicyId": {
+      "type": "string",
+      "description": "unique ID for an ILL policy, a UUID"
     },
     "retentionPolicy": {
       "type": "string"
