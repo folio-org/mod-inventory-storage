@@ -11,8 +11,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.rest.jaxrs.model.CallNumberType;
-import org.folio.rest.jaxrs.model.CallNumberTypes;
+import org.folio.rest.jaxrs.model.AlternativeTitleType;
+import org.folio.rest.jaxrs.model.AlternativeTitleTypes;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -39,46 +39,46 @@ import io.vertx.core.logging.LoggerFactory;
  *
  * @author ne
  */
-public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumberTypes {
-  public static final String REFERENCE_TABLE  = "call_number_type";
+public class AlternativeTitleTypeAPI implements org.folio.rest.jaxrs.resource.AlternativeTitleTypes {
+  public static final String REFERENCE_TABLE  = "alternative_title_type";
 
-  private static final String LOCATION_PREFIX = "/call-number-types/";
-  private static final Logger log             = LoggerFactory.getLogger(CallNumberTypeAPI.class);
+  private static final String LOCATION_PREFIX = "/alternative-title-types/";
+  private static final Logger log             = LoggerFactory.getLogger(AlternativeTitleTypeAPI.class);
   private final Messages messages             = Messages.getInstance();
   private String idFieldName                  = "_id";
 
-  public CallNumberTypeAPI(Vertx vertx, String tenantId) {
+  public AlternativeTitleTypeAPI(Vertx vertx, String tenantId) {
     PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
   }
 
   @Override
-  public void getCallNumberTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getAlternativeTitleTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
-     * http://host:port/call-number-types
+     * http://host:port/alternative-title-types
      */
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCQL(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, CallNumberType.class,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, AlternativeTitleType.class,
             new String[]{"*"}, cql, true, true,
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  CallNumberTypes callNumberTypes = new CallNumberTypes();
-                  List<CallNumberType> callNumberType = reply.result().getResults();
-                  callNumberTypes.setCallNumberTypes(callNumberType);
-                  callNumberTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCallNumberTypesResponse.respond200WithApplicationJson(callNumberTypes)));
+                  AlternativeTitleTypes records = new AlternativeTitleTypes();
+                  List<AlternativeTitleType> record = reply.result().getResults();
+                  records.setAlternativeTitleTypes(record);
+                  records.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetAlternativeTitleTypesResponse.respond200WithApplicationJson(records)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCallNumberTypesResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetAlternativeTitleTypesResponse
                       .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
                 log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCallNumberTypesResponse
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetAlternativeTitleTypesResponse
                     .respond500WithTextPlain(messages.getMessage(
                         lang, MessageConsts.InternalServerError))));
               }
@@ -89,14 +89,14 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCallNumberTypesResponse
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetAlternativeTitleTypesResponse
             .respond500WithTextPlain(message)));
       }
     });
   }
 
   @Override
-  public void postCallNumberTypes(String lang, CallNumberType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postAlternativeTitleTypes(String lang, AlternativeTitleType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String id = entity.getId();
@@ -112,8 +112,8 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
                 if (reply.succeeded()) {
                   String ret = reply.result();
                   entity.setId(ret);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostCallNumberTypesResponse
-                    .respond201WithApplicationJson(entity, PostCallNumberTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostAlternativeTitleTypesResponse
+                    .respond201WithApplicationJson(entity, PostAlternativeTitleTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
@@ -121,7 +121,7 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PostCallNumberTypesResponse
+                  asyncResultHandler.handle(Future.succeededFuture(PostAlternativeTitleTypesResponse
                       .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
@@ -135,7 +135,7 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
   }
 
   @Override
-  public void getCallNumberTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getAlternativeTitleTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -143,7 +143,7 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
         Criterion c = new Criterion(
             new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+id+"'"));
 
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, CallNumberType.class, c, true,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, AlternativeTitleType.class, c, true,
             reply -> {
               try {
                 if (reply.failed()) {
@@ -153,18 +153,18 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetCallNumberTypesByIdResponse.
+                  asyncResultHandler.handle(Future.succeededFuture(GetAlternativeTitleTypesByIdResponse.
                       respond404WithTextPlain(msg)));
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<CallNumberType> reference = (List<CallNumberType>) reply.result().getResults();
+                List<AlternativeTitleType> reference = (List<AlternativeTitleType>) reply.result().getResults();
                 if (reference.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCallNumberTypesByIdResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetAlternativeTitleTypesByIdResponse
                       .respond404WithTextPlain(id)));
                 }
                 else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCallNumberTypesByIdResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetAlternativeTitleTypesByIdResponse
                       .respond200WithApplicationJson(reference.get(0))));
                 }
               } catch (Exception e) {
@@ -178,7 +178,7 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
   }
 
   @Override
-  public void deleteCallNumberTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteAlternativeTitleTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -193,7 +193,7 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteCallNumberTypesByIdResponse
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteAlternativeTitleTypesByIdResponse
                       .respond400WithTextPlain(msg)));
                   return;
                 }
@@ -201,11 +201,11 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
                 if (updated != 1) {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteCallNumberTypesByIdResponse
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteAlternativeTitleTypesByIdResponse
                       .respond404WithTextPlain(msg)));
                   return;
                 }
-                asyncResultHandler.handle(Future.succeededFuture(DeleteCallNumberTypesByIdResponse
+                asyncResultHandler.handle(Future.succeededFuture(DeleteAlternativeTitleTypesByIdResponse
                         .respond204()));
               } catch (Exception e) {
                 internalServerErrorDuringDelete(e, lang, asyncResultHandler);
@@ -218,7 +218,7 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
   }
 
   @Override
-  public void putCallNumberTypesById(String id, String lang, CallNumberType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putAlternativeTitleTypesById(String id, String lang, AlternativeTitleType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
@@ -230,10 +230,10 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
               try {
                 if (reply.succeeded()) {
                   if (reply.result().getUpdated() == 0) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCallNumberTypesByIdResponse
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutAlternativeTitleTypesByIdResponse
                         .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutCallNumberTypesByIdResponse
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutAlternativeTitleTypesByIdResponse
                         .respond204()));
                   }
                 } else {
@@ -243,7 +243,7 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
                     return;
                   }
                   log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PutCallNumberTypesByIdResponse
+                  asyncResultHandler.handle(Future.succeededFuture(PutAlternativeTitleTypesByIdResponse
                       .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
@@ -262,25 +262,26 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
 
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PostCallNumberTypesResponse
+    handler.handle(Future.succeededFuture(PostAlternativeTitleTypesResponse
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
   
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(DeleteCallNumberTypesByIdResponse
+    handler.handle(Future.succeededFuture(DeleteAlternativeTitleTypesByIdResponse
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetCallNumberTypesByIdResponse
+    handler.handle(Future.succeededFuture(GetAlternativeTitleTypesByIdResponse
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PutCallNumberTypesByIdResponse
+    handler.handle(Future.succeededFuture(PutAlternativeTitleTypesByIdResponse
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
+
 }

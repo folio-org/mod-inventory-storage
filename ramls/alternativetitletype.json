@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A call number type",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "unique ID of the alternative title type; a UUID"
+    },
+    "name": {
+      "type": "string",
+      "description": "name of the alternative title type"
+    },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the alternative title type entry originates from, i.e. 'folio' or 'local'"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "source"
+  ]
+}
+

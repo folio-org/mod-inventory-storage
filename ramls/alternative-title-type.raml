@@ -1,0 +1,49 @@
+#%RAML 1.0
+title: Alternative title types API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Alternative title types API
+    content: This documents the API calls that can be made to query and manage alternative title types of the system
+
+types:
+  alternativeTitleType: !include alternativetitletype.json
+  alternativeTitleTypes: !include alternativetitletypes.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/alternative-title-types:
+  type:
+    collection:
+      exampleCollection: !include examples/alternativetitletypes.json
+      exampleItem: !include examples/alternativetitletype.json
+      schemaCollection: alternativeTitleTypes
+      schemaItem: alternativeTitleType
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of alternative title types
+  post:
+    description: Create a new alternative title type
+    is: [validate]
+  /{id}:
+    description: "Pass in the alternative title type id"
+    type:
+      collection-item:
+        exampleItem: !include examples/alternativetitletype.json
+        schema: alternativeTitleType
+
+

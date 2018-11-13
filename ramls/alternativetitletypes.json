@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of alternative title types",
+  "type": "object",
+  "properties": {
+    "alternativeTitleTypes": {
+      "description": "List of alternative title types",
+      "id": "alternativeTitleType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "alternativetitletype.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "alternativeTitleTypes",
+    "totalRecords"
+  ]
+}
+
