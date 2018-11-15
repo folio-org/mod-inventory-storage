@@ -1,0 +1,49 @@
+#%RAML 1.0
+title: Item note types API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Item note types API
+    content: This documents the API calls that can be made to query and manage item note types of the system
+
+types:
+  itemNoteType: !include itemnotetype.json
+  itemNoteTypes: !include itemnotetypes.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/item-note-types:
+  type:
+    collection:
+      exampleCollection: !include examples/itemnotetypes.json
+      exampleItem: !include examples/itemnotetype.json
+      schemaCollection: itemNoteTypes
+      schemaItem: itemNoteType
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of item note types
+  post:
+    description: Create a new item note type
+    is: [validate]
+  /{id}:
+    description: "Pass in the item note type id"
+    type:
+      collection-item:
+        exampleItem: !include examples/itemnotetype.json
+        schema: itemNoteType
+
+

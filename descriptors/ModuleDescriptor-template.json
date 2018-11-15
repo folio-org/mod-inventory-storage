@@ -715,6 +715,60 @@
         }
       ]
     },
+    {
+      "id": "holdings-note-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-note-types",
+          "permissionsRequired": ["inventory-storage.holdings-note-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-note-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/holdings-note-types",
+          "permissionsRequired": ["inventory-storage.holdings-note-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/holdings-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-note-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/holdings-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-note-types.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "item-note-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/item-note-types",
+          "permissionsRequired": ["inventory-storage.item-note-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/item-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.item-note-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/item-note-types",
+          "permissionsRequired": ["inventory-storage.item-note-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/item-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.item-note-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/item-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.item-note-types.item.delete"]
+        }
+      ]
+    },
 
     {
       "id": "service-points",
@@ -1501,6 +1555,59 @@
       "displayName": "inventory storage - delete individual holdings-type",
       "description": "delete individual holdings-type from storage"
     },
+
+    {
+      "permissionName": "inventory-storage.holdings-note-types.collection.get",
+      "displayName": "inventory storage - get holdings-note-type collection",
+      "description": "get holdings-note-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-note-types.item.get",
+      "displayName": "inventory storage - get individual holdings-note-type",
+      "description": "get individual holdings-note-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-note-types.item.post",
+      "displayName": "inventory storage - create individual holdings-note-type",
+      "description": "create individual holdings-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-note-types.item.put",
+      "displayName": "inventory storage - modify holdings-note-type",
+      "description": "modify holdings-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-note-types.item.delete",
+      "displayName": "inventory storage - delete individual holdings-note-type",
+      "description": "delete individual holdings-note-type from storage"
+    },
+
+    {
+      "permissionName": "inventory-storage.item-note-types.collection.get",
+      "displayName": "inventory storage - get item-note-type collection",
+      "description": "get item-note-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.item-note-types.item.get",
+      "displayName": "inventory storage - get individual item-note-type",
+      "description": "get individual item-note-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.item-note-types.item.post",
+      "displayName": "inventory storage - create individual item-note-type",
+      "description": "create individual item-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.item-note-types.item.put",
+      "displayName": "inventory storage - modify item-note-type",
+      "description": "modify item-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.item-note-types.item.delete",
+      "displayName": "inventory storage - delete individual item-note-type",
+      "description": "delete individual item-note-type from storage"
+    },
+
     {
       "permissionName": "inventory-storage.call-number-types.collection.get",
       "displayName": "inventory storage - get call-number-type collection",
@@ -1688,6 +1795,16 @@
         "inventory-storage.call-number-types.item.post",
         "inventory-storage.call-number-types.item.put",
         "inventory-storage.call-number-types.item.delete",
+        "inventory-storage.holdings-note-types.collection.get",
+        "inventory-storage.holdings-note-types.item.get",
+        "inventory-storage.holdings-note-types.item.post",
+        "inventory-storage.holdings-note-types.item.put",
+        "inventory-storage.holdings-note-types.item.delete",
+        "inventory-storage.item-note-types.collection.get",
+        "inventory-storage.item-note-types.item.get",
+        "inventory-storage.item-note-types.item.post",
+        "inventory-storage.item-note-types.item.put",
+        "inventory-storage.item-note-types.item.delete",
         "inventory-storage.service-points.collection.get",
         "inventory-storage.service-points.item.get",
         "inventory-storage.service-points.item.post",

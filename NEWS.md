@@ -1,5 +1,7 @@
 ## 13.1.0 Unreleased
 
+* Provides `holdings-note-types` interface 1.0 (MODINVSTOR-220)
+* Provides `item-note-types` interface 1.0 (MODINVSTOR-220)
 * Provides `alternative-title-types` interface 1.0 (MODINVSTOR-200)
 * Provides `call-number-types` interface 1.0 (MODINVSTOR-210)
 * Provides `holdings-types` interface 1.0 (MODINVSTOR-210)
