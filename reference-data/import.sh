@@ -59,7 +59,8 @@ modEndpoints_c='locations identifier-types contributor-types service-points inst
 modEndpoints_d='contributor-name-types instance-types instance-formats classification-types platforms'
 modEndpoints_e='instance-statuses statistical-code-types modes-of-issuance alternative-title-types'
 modEndpoints_f='electronic-access-relationships ill-policies holdings-types call-number-types'
-modEndpoints="$modEndpoints_a $modEndpoints_b $modEndpoints_c $modEndpoints_d $modEndpoints_e $modEndpoints_f"
+modEndpoints_g='holdings-note-types item-note-types'
+modEndpoints="$modEndpoints_a $modEndpoints_b $modEndpoints_c $modEndpoints_d $modEndpoints_e $modEndpoints_f $modEndpoints_g"
 method=POST
 
 for dir in "${dataDirs[@]}";
