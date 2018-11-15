@@ -159,7 +159,7 @@ public class ItemNoteTypeAPI implements org.folio.rest.jaxrs.resource.ItemNoteTy
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<ItemNoteType> records = (List<ItemNoteType>) reply.result().getResults();
+                List<ItemNoteType> records = reply.result().getResults();
                 if (records.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetItemNoteTypesByIdResponse
                       .respond404WithTextPlain(id)));

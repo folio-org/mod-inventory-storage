@@ -160,7 +160,7 @@ public class HoldingsNoteTypeAPI implements org.folio.rest.jaxrs.resource.Holdin
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<HoldingsNoteType> records = (List<HoldingsNoteType>) reply.result().getResults();
+                List<HoldingsNoteType> records = reply.result().getResults();
                 if (records.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsNoteTypesByIdResponse
                       .respond404WithTextPlain(id)));
