@@ -7,6 +7,7 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.net.MalformedURLException;
 
 import java.net.URL;
 
@@ -21,6 +22,26 @@ public class HttpClient {
     client = vertx.createHttpClient();
   }
 
+  private void stdHeaders(HttpClientRequest request, String url, String tenantId) {
+    URL tmp = null;
+    try {
+      tmp = new URL(url);
+    } catch (MalformedURLException ex) {
+      log.warn("Malformed url:" + url + " message: " + ex.getMessage());
+    }
+    stdHeaders(request, tmp, tenantId);
+  }
+
+  private void stdHeaders(HttpClientRequest request, URL url, String tenantId) {
+    if (tenantId != null) {
+      request.headers().add(TENANT_HEADER, tenantId);
+    }
+    if (url != null) {
+      request.headers().add("X-Okapi-Url", url.getProtocol() + "://" + url.getHost() + ":" + url.getPort());
+    }
+    request.headers().add("Accept","application/json, text/plain");
+  }
+
   public void post(
     URL url,
     Object body,
@@ -28,13 +49,8 @@ public class HttpClient {
     Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
-
-    request.headers().add("Accept","application/json, text/plain");
     request.headers().add("Content-type","application/json");
-
-    if (tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
+    stdHeaders(request, url, tenantId);
 
     if (body == null) {
       request.end();
@@ -54,13 +70,9 @@ public class HttpClient {
 
     HttpClientRequest request = client.putAbs(url.toString(), responseHandler);
 
-    request.headers().add("Accept","application/json, text/plain");
     request.headers().add("Content-type","application/json");
 
-    if(tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
-
+    stdHeaders(request, url, tenantId);
     request.end(Json.encodePrettily(body));
   }
 
@@ -78,13 +90,7 @@ public class HttpClient {
     Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.getAbs(url, responseHandler);
-
-    request.headers().add("Accept","application/json");
-
-    if(tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
-
+    stdHeaders(request, url, tenantId);
     request.end();
   }
 
@@ -102,13 +108,7 @@ public class HttpClient {
     Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.deleteAbs(url, responseHandler);
-
-    request.headers().add("Accept","application/json, text/plain");
-
-    if(tenantId != null) {
-      request.headers().add(TENANT_HEADER, tenantId);
-    }
-
+    stdHeaders(request, url, tenantId);
     request.end();
   }
 }
