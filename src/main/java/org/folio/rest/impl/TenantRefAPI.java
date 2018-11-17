@@ -10,17 +10,23 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.io.File;
 import io.vertx.core.Future;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import javax.ws.rs.core.Response;
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 
@@ -29,6 +35,41 @@ public class TenantRefAPI extends TenantAPI {
   private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
 
   private HttpClient httpClient;
+
+  private static List<String> getFilenamesForDirnameFromCP(String directoryName) throws URISyntaxException, UnsupportedEncodingException, IOException {
+    List<String> filenames = new LinkedList<>();
+
+    URL url = Thread.currentThread().getContextClassLoader().getResource(directoryName);
+    if (url != null) {
+      if (url.getProtocol().equals("file")) {
+        File file = Paths.get(url.toURI()).toFile();
+        if (file != null) {
+          File[] files = file.listFiles();
+          if (files != null) {
+            for (File filename : files) {
+              filenames.add(filename.toString());
+            }
+          }
+        }
+      } else if (url.getProtocol().equals("jar")) {
+        String dirname = directoryName + "/";
+        String path = url.getPath();
+        String jarPath = path.substring(5, path.indexOf("!"));
+        try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, StandardCharsets.UTF_8.name()))) {
+          Enumeration<JarEntry> entries = jar.entries();
+          while (entries.hasMoreElements()) {
+            JarEntry entry = entries.nextElement();
+            String name = entry.getName();
+            if (name.startsWith(dirname) && !dirname.equals(name)) {
+              URL resource = Thread.currentThread().getContextClassLoader().getResource(name);
+              filenames.add(resource.toString());
+            }
+          }
+        }
+      }
+    }
+    return filenames;
+  }
 
   @Override
   public void postTenant(TenantAttributes ta, Map<String, String> headers, Handler<AsyncResult<Response>> hndlr, Context cntxt) {
@@ -87,45 +128,23 @@ public class TenantRefAPI extends TenantAPI {
       res.handle(Future.failedFuture("No X-Okapi-Url header"));
       return;
     }
-    final String endPointUrl = okapiUrl + "/" + endPoint;
-    final ClassLoader classLoader = TenantRefAPI.class.getClassLoader();
     List<String> jsonList = new LinkedList<>();
     try {
-      List<String> files = IOUtils.readLines(classLoader.getResourceAsStream("ref-data/" + endPoint), "UTF-8");
+      List<String> files = getFilenamesForDirnameFromCP("ref-data/" + endPoint);
       log.info("files=" + files);
       for (String f : files) {
-        URL url = classLoader.getResource("ref-data/" + endPoint + "/" + f);
-        jsonList.add(IOUtils.toString(url, "UTF-8"));
+        FileInputStream is = new FileInputStream(new File(f));
+        jsonList.add(IOUtils.toString(is, "UTF-8"));
       }
+    } catch (URISyntaxException ex) {
+      res.handle(Future.failedFuture("URISyntaxException for path " + endPoint + " ex=" + ex.getLocalizedMessage()));
+      return;
+
     } catch (IOException ex) {
-      res.handle(Future.failedFuture("readLines failed for path " + endPoint + " ex=" + ex.getLocalizedMessage()));
+      res.handle(Future.failedFuture("IOException for path " + endPoint + " ex=" + ex.getLocalizedMessage()));
       return;
     }
-    /*    
-    URL url = classLoader.getResource("reference-data/" + endPoint);
-    String path = url.getPath();
-    if (path == null) {
-      res.handle(Future.failedFuture("No path for " + endPoint + " url=" + url));
-      return;
-    }
-    File filePath = new File("reference-data/" + endPoint + "/");
-    File [] files = filePath.listFiles();
-    if (files == null) {
-      res.handle(Future.failedFuture("No files for " + endPoint + " url=" + url));
-      return;      
-    }
-    for (File f : files) {
-      if (f.isFile() && f.getName().endsWith(".json")) {
-        String json = null;
-        try {
-          jsonList.add(FileUtils.readFileToString(f, "UTF-8"));
-        } catch (IOException ex) {
-          res.handle(io.vertx.core.Future.failedFuture(ex.getLocalizedMessage()));
-          return;
-        }
-      }
-    }
-*/
+    final String endPointUrl = okapiUrl + "/" + endPoint;
     List<Future> futures = new LinkedList<>();
     for (String json : jsonList) {
       Future f = Future.future();
