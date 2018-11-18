@@ -39,17 +39,6 @@ resourceTypes:
   post:
     description: Create a new statistical code
     is: [validate]
-  delete:
-    description: "Delete all statistical codes"
-    is: [language]
-    responses:
-      204:
-        description: "All statistical codes deleted"
-      500:
-        description: "Internal server error, e.g. due to misconfiguration"
-        body:
-          text/plain:
-            example: "Internal server error, contact administrator"
   /{statisticalCodeId}:
     description: Pass in statistical code ID
     type:
