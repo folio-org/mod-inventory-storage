@@ -1,5 +1,6 @@
 ## 13.1.0 Unreleased
 
+* Provides `statistical-codes` 1.0 (MODINVSTOR-221)
 * Provides `holdings-note-types` interface 1.0 (MODINVSTOR-220)
 * Provides `item-note-types` interface 1.0 (MODINVSTOR-220)
 * Provides `alternative-title-types` interface 1.0 (MODINVSTOR-200)
@@ -46,7 +47,7 @@
 
 * Adds more properties to instance (MODINVSTOR-152)
 * Provides `instance-storage` interface 4.6 (MODINVSTOR-152)
-* Provides `statistical-codes` interface 1.0 (MODINVSTOR-152)
+* Provides `statistical-code-types` interface 1.0 (MODINVSTOR-152)
 * Provides `cataloging-levels` interface 1.0 (MODINVSTOR-152)
 * Provides `instance-statuses` interface 1.0 (MODINVSTOR-152)
 * Provides `modes-of-issuance` interface 1.0 (MODINVSTOR-152)

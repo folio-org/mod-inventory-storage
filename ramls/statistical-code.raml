@@ -1,16 +1,16 @@
 #%RAML 1.0
-title: Statistical code type reference API
+title: Statistical code reference API
 version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
 documentation:
-  - title: Statistical code type reference API
-    content: This documents the API calls that can be made to query and manage statistical code types of the system
+  - title: Statistical code reference API
+    content: This documents the API calls that can be made to query and manage statistical codes of the system
 
 types:
-  statisticalCodeType: !include statisticalcodetype.json
-  statisticalCodeTypes: !include statisticalcodetypes.json
+  statisticalCode: !include statisticalcode.json
+  statisticalCodes: !include statisticalcodes.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -23,37 +23,38 @@ resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
   collection-item: !include raml-util/rtypes/item-collection.raml
 
-/statistical-code-types:
+/statistical-codes:
   type:
     collection:
-      exampleCollection: !include examples/statisticalcodetypes.json
-      exampleItem: !include examples/statisticalcodetype.json
-      schemaCollection: statisticalCodeTypes
-      schemaItem: statisticalCodeType
+      exampleCollection: !include examples/statisticalcodes.json
+      exampleItem: !include examples/statisticalcode.json
+      schemaCollection: statisticalCodes
+      schemaItem: statisticalCode
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
       pageable
     ]
-    description: Return a list of statistical code types
+    description: Return a list of statistical codes
   post:
-    description: Create a new statistical code type
+    description: Create a new statistical code
     is: [validate]
   delete:
-    description: "Delete all statistical code types"
+    description: "Delete all statistical codes"
     is: [language]
     responses:
       204:
-        description: "All statistical code types deleted"
+        description: "All statistical codes deleted"
       500:
         description: "Internal server error, e.g. due to misconfiguration"
         body:
           text/plain:
             example: "Internal server error, contact administrator"
-  /{statisticalCodeTypeId}:
-    description: Pass in statistical code type ID
+  /{statisticalCodeId}:
+    description: Pass in statistical code ID
     type:
       collection-item:
-        exampleItem: !include examples/statisticalcodetype.json
-        schema: statisticalCodeType
+        exampleItem: !include examples/statisticalcode.json
+        schema: statisticalCode
+
 
