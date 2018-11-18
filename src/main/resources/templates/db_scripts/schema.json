@@ -351,6 +351,26 @@
       ]
     },
     {
+      "tableName": "statistical_code",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "code, statisticalCodeTypeId",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "statisticalCodeTypeId",
+          "targetTable": "statistical_code_type",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "instance_status",
       "withMetadata": true,
       "pkColumnName": "_id",

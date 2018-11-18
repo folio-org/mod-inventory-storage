@@ -635,6 +635,33 @@
       ]
     },
     {
+      "id": "statistical-codes",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/statistical-codes",
+          "permissionsRequired": ["inventory-storage.statistical-codes.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/statistical-codes/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-codes.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/statistical-codes",
+          "permissionsRequired": ["inventory-storage.statistical-codes.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/statistical-codes/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-codes.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/statistical-codes/{id}",
+          "permissionsRequired": ["inventory-storage.statistical-codes.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "ill-policies",
       "version": "1.0",
       "handlers": [
@@ -1456,52 +1483,78 @@
     },
     {
       "permissionName": "inventory-storage.electronic-access-relationships.collection.get",
-      "displayName": "inventory storage - get statistical codes collection",
+      "displayName": "inventory storage - get URL relationship types collection",
       "description": "get statistical codes collection from storage"
     },
     {
       "permissionName": "inventory-storage.electronic-access-relationships.item.get",
-      "displayName": "inventory storage - get individual statistical code",
+      "displayName": "inventory storage - get individual URL relationship type",
       "description": "get individual statistical code from storage"
     },
     {
       "permissionName": "inventory-storage.electronic-access-relationships.item.post",
-      "displayName": "inventory storage - create individual statistical code",
+      "displayName": "inventory storage - create individual URL relationship type",
       "description": "create individual statistical code in storage"
     },
     {
       "permissionName": "inventory-storage.electronic-access-relationships.item.put",
-      "displayName": "inventory storage - modify statistical code",
+      "displayName": "inventory storage - modify URL relationship type",
       "description": "modify statistical code in storage"
     },
     {
       "permissionName": "inventory-storage.electronic-access-relationships.item.delete",
-      "displayName": "inventory storage - delete individual statistical code",
-      "description": "delete individual statistical code from storage"
+      "displayName": "inventory storage - delete individual URL relationship",
+      "description": "delete individual URL relationship type from storage"
     },
 
     {
       "permissionName": "inventory-storage.statistical-code-types.collection.get",
+      "displayName": "inventory storage - get statistical code types collection",
+      "description": "get statistical code types collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.item.get",
+      "displayName": "inventory storage - get individual statistical code type",
+      "description": "get individual statistical code type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.item.post",
+      "displayName": "inventory storage - create individual statistical code type",
+      "description": "create individual statistical code type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.item.put",
+      "displayName": "inventory storage - modify statistical code type",
+      "description": "modify statistical code type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.statistical-code-types.item.delete",
+      "displayName": "inventory storage - delete individual statistical code type",
+      "description": "delete individual statistical code type from storage"
+    },
+
+    {
+      "permissionName": "inventory-storage.statistical-codes.collection.get",
       "displayName": "inventory storage - get statistical codes collection",
       "description": "get statistical codes collection from storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-code-types.item.get",
+      "permissionName": "inventory-storage.statistical-codes.item.get",
       "displayName": "inventory storage - get individual statistical code",
       "description": "get individual statistical code from storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-code-types.item.post",
+      "permissionName": "inventory-storage.statistical-codes.item.post",
       "displayName": "inventory storage - create individual statistical code",
       "description": "create individual statistical code in storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-code-types.item.put",
+      "permissionName": "inventory-storage.statistical-codes.item.put",
       "displayName": "inventory storage - modify statistical code",
       "description": "modify statistical code in storage"
     },
     {
-      "permissionName": "inventory-storage.statistical-code-types.item.delete",
+      "permissionName": "inventory-storage.statistical-codes.item.delete",
       "displayName": "inventory storage - delete individual statistical code",
       "description": "delete individual statistical code from storage"
     },
@@ -1780,6 +1833,11 @@
         "inventory-storage.statistical-code-types.item.post",
         "inventory-storage.statistical-code-types.item.put",
         "inventory-storage.statistical-code-types.item.delete",
+        "inventory-storage.statistical-codes.collection.get",
+        "inventory-storage.statistical-codes.item.get",
+        "inventory-storage.statistical-codes.item.post",
+        "inventory-storage.statistical-codes.item.put",
+        "inventory-storage.statistical-codes.item.delete",
         "inventory-storage.ill-policies.collection.get",
         "inventory-storage.ill-policies.item.get",
         "inventory-storage.ill-policies.item.post",

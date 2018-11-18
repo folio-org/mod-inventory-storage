@@ -4,10 +4,16 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "description": "unique ID of the statistical code type; a UUID"
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "name of a statistical code type"
+    },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the statistical code type entry originates from, i.e. 'folio' or 'local'"
     },
     "metadata": {
       "type": "object",
@@ -16,7 +22,8 @@
     }
   },
   "required": [
-    "name"
+    "name",
+    "source"
   ]
 }
 
