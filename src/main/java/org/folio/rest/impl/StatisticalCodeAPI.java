@@ -161,7 +161,7 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<StatisticalCode> reference = (List<StatisticalCode>) reply.result().getResults();
+                List<StatisticalCode> reference = reply.result().getResults();
                 if (reference.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodesByStatisticalCodeIdResponse
                       .respond404WithTextPlain(id)));
