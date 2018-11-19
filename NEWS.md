@@ -1,4 +1,4 @@
-## 13.1.0 Unreleased
+## 13.1.0 2018-11-19
 
 * Provides `holdings-storage` interface 2.1 (MODINVSTOR-153 etc)
 * Provides `statistical-codes` 1.0 (MODINVSTOR-221)
