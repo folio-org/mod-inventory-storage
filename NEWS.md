@@ -1,5 +1,6 @@
 ## 13.1.0 Unreleased
 
+* Provides `holdings-storage` interface 2.1 (MODINVSTOR-153 etc)
 * Provides `statistical-codes` 1.0 (MODINVSTOR-221)
 * Provides `holdings-note-types` interface 1.0 (MODINVSTOR-220)
 * Provides `item-note-types` interface 1.0 (MODINVSTOR-220)
