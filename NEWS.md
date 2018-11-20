@@ -1,3 +1,7 @@
+## 14.0.0 Unreleased
+
+* Removes property `electronicLocation` from holdingsRecord schema (MODINVSTOR-227)
+
 ## 13.1.0 2018-11-19
 
 * Provides `holdings-storage` interface 2.1 (MODINVSTOR-153 etc)

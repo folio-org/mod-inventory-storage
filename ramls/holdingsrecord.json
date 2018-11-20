@@ -32,18 +32,6 @@
     "temporaryLocationId": {
       "type": "string"
     },
-    "electronicLocation": {
-      "type": "object",
-      "properties": {
-        "platformId": {
-          "type": "string"
-        },
-        "uri": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
     "electronicAccess": {
       "type": "array",
       "items": {
