@@ -119,6 +119,8 @@ public class StorageTestSuite {
     removeTenant(TENANT_ID);
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
+ 
+    PostgresClient.getInstance(vertx).stopEmbeddedPostgres();
 
     vertx.close(res -> {
       if(res.succeeded()) {
