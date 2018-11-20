@@ -852,33 +852,6 @@
       ]
     },
     {
-      "id": "platforms",
-      "version": "1.1",
-      "handlers": [
-        {
-          "methods": ["GET"],
-          "pathPattern": "/platforms",
-          "permissionsRequired": ["inventory-storage.platforms.collection.get"]
-        }, {
-          "methods": ["GET"],
-          "pathPattern": "/platforms/{id}",
-          "permissionsRequired": ["inventory-storage.platforms.item.get"]
-        }, {
-          "methods": ["POST"],
-          "pathPattern": "/platforms",
-          "permissionsRequired": ["inventory-storage.platforms.item.post"]
-        }, {
-          "methods": ["PUT"],
-          "pathPattern": "/platforms/{id}",
-          "permissionsRequired": ["inventory-storage.platforms.item.put"]
-        }, {
-          "methods": ["DELETE"],
-          "pathPattern": "/platforms/{id}",
-          "permissionsRequired": ["inventory-storage.platforms.item.delete"]
-        }
-      ]
-    },
-    {
       "id" : "_tenant",
       "version" : "1.0",
       "interfaceType": "system",
@@ -1687,31 +1660,6 @@
       "description": "delete individual call-number-type from storage"
     },
     {
-      "permissionName": "inventory-storage.platforms.collection.get",
-      "displayName": "inventory storage - get platforms collection",
-      "description": "get platforms collection from storage"
-    },
-    {
-      "permissionName": "inventory-storage.platforms.item.get",
-      "displayName": "inventory storage - get individual platform",
-      "description": "get individual platform from storage"
-    },
-    {
-      "permissionName": "inventory-storage.platforms.item.post",
-      "displayName": "inventory storage - create platform",
-      "description": "create individual platform in storage"
-    },
-    {
-      "permissionName": "inventory-storage.platforms.item.put",
-      "displayName": "inventory storage - modify platform",
-      "description": "modify platform in storage"
-    },
-    {
-      "permissionName": "inventory-storage.platforms.item.delete",
-      "displayName": "inventory storage - delete individual platform",
-      "description": "delete individual platform from storage"
-    },
-    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -1872,12 +1820,7 @@
         "inventory-storage.service-points-users.item.get",
         "inventory-storage.service-points-users.item.post",
         "inventory-storage.service-points-users.item.put",
-        "inventory-storage.service-points-users.item.delete",
-        "inventory-storage.platforms.collection.get",
-        "inventory-storage.platforms.item.get",
-        "inventory-storage.platforms.item.post",
-        "inventory-storage.platforms.item.put",
-        "inventory-storage.platforms.item.delete"
+        "inventory-storage.service-points-users.item.delete"
       ]
     }
   ],
