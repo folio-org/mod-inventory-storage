@@ -5,7 +5,14 @@
       "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
       "permanentLocationId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
       "holdingsStatements": [
-        "Line 1", "Line 2"
+        {
+          "statement": "Line 1",
+          "note": "Note to line 1"
+        },
+        {
+          "statement": "Line 2",
+          "note": "Note to line2"
+        }
       ]
     },
     {
@@ -13,7 +20,14 @@
       "instanceId": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
       "permanentLocationId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
       "holdingsStatements": [
-        "Line 1", "Line 2"
+        {
+          "statement": "Line 1",
+          "note": "Note to line 1"
+        },
+        {
+          "statement": "Line 2",
+          "note": "Note to line2"
+        }
       ]
     }
   ],
