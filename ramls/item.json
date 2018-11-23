@@ -36,9 +36,11 @@
       "uniqueItems": true
     },
     "status": {
+      "description": "The status of the item",
       "type": "object",
       "properties": {
         "name": {
+          "description": "Name of the status e.g. Available, Checked out, In transit",
           "type": "string"
         }
       },
@@ -58,6 +60,11 @@
     },
     "temporaryLocationId": {
       "type": "string"
+    },
+    "inTransitDestinationServicePointId": {
+      "description": "Service point an item is intended to be transited to (should only be present when in transit)",
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
     },
     "metadata": {
       "type": "object",
