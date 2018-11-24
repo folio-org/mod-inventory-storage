@@ -1,3 +1,8 @@
+## 13.2.0 2018-11-24
+
+* Adds an in transit destination to a item (MODINVSTOR-230)
+* Provides `item-storage` interface version 6.1 (MODINVSTOR-230)
+
 ## 13.1.0 2018-11-19
 
 * Provides `holdings-storage` interface 2.1 (MODINVSTOR-153 etc)
