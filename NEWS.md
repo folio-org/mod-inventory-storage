@@ -1,3 +1,7 @@
+## 14.0.0 Unreleased
+ * Renames `item` property `pieceIdentifiers` to `copyNumbers` (MODINVSTOR-205)
+ * Provides `item-storage` interface version 7.0 (MODINVSTOR-205)
+
 ## 13.2.0 2018-11-24
 
 * Adds an in transit destination to a item (MODINVSTOR-230)
