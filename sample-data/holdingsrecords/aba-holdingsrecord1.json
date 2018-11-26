@@ -3,6 +3,8 @@
   "instanceId": "69640328-788e-43fc-9c3c-af39e243f3b7",
   "callNumber": "K1.M385",
   "holdingsStatements": [
-    "Online 1980-"
+    {
+      "statement": "Online 1980-"
+    }
   ]
 }
