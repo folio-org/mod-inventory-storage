@@ -230,6 +230,7 @@
       "readonly": true
     }
   },
+  "additionalProperties": false,
   "required": [
     "instanceId"
   ]
