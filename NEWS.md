@@ -1,3 +1,7 @@
+## 14.0.0 Unreleased
+
+* Provides `holdings-storage` interface version 3.0 (MODINVSTOR-209)
+
 ## 13.2.0 2018-11-24
 
 * Adds an in transit destination to a item (MODINVSTOR-230)
