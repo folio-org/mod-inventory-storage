@@ -1,3 +1,7 @@
+## 14.0.0 Unreleased
+
+* Provides `instance-storage` interface version 6.0 (MODINVNSTOR-232, MODINVSTOR-200)
+
 ## 13.2.0 2018-11-24
 
 * Adds an in transit destination to a item (MODINVSTOR-230)
