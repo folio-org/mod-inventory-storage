@@ -1,6 +1,8 @@
 ## 14.0.0 Unreleased
- * Renames `item` property `pieceIdentifiers` to `copyNumbers` (MODINVSTOR-205)
- * Provides `item-storage` interface version 7.0 (MODINVSTOR-205)
+
+* Renames `item` property `pieceIdentifiers` to `copyNumbers` (MODINVSTOR-205)
+* Provides `item-storage` interface version 7.0 (MODINVSTOR-205)
+* Provides `holdings-storage` interface version 3.0 (MODINVSTOR-209)
 
 ## 13.2.0 2018-11-24
 
