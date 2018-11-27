@@ -4,6 +4,8 @@
 * Provides `item-storage` interface version 7.0 (MODINVSTOR-205)
 * Provides `holdings-storage` interface version 3.0 (MODINVSTOR-209)
 * Removes property `electronicLocation` from holdingsRecord schema (MODINVSTOR-227)
+* Changes structure of property `alternativeTitles` (MODINVSTOR-200)
+* Provides `instance-storage` interface version 6.0 (MODINVNSTOR-232, MODINVSTOR-200)
 
 ## 13.2.0 2018-11-24
 
