@@ -32,18 +32,6 @@
     "temporaryLocationId": {
       "type": "string"
     },
-    "electronicLocation": {
-      "type": "object",
-      "properties": {
-        "platformId": {
-          "type": "string"
-        },
-        "uri": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
     "electronicAccess": {
       "type": "array",
       "items": {
@@ -132,9 +120,18 @@
     "holdingsStatements": {
       "type": "array",
       "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string",
+            "description": "Textual description of the holdings"
+          },
+          "note": {
+            "type": "string",
+            "description": "Note attached to a holdings statement"
+          }
+        }
+      }
     },
     "holdingsStatementsForIndexes": {
       "type": "array",
@@ -233,6 +230,7 @@
       "readonly": true
     }
   },
+  "additionalProperties": false,
   "required": [
     "instanceId"
   ]
