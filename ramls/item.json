@@ -6,16 +6,61 @@
     "id": {
       "type": "string"
     },
+    "hrid": {
+      "type": "string",
+      "description": "The human readable ID, also called eye readable ID. A system-assigned sequential alternate ID"
+    },
     "holdingsRecordId": {
       "type": "string"
     },
+    "formerIds": {
+      "type": "array",
+      "description": "Previous identifiers assigned to the item",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "discoverySuppress": {
+      "type": "boolean",
+      "description": "Records the fact that the record should not be displayed in a discovery system"
+    },
+    "accessionNumber": {
+      "type": "string",
+      "description": "Also called inventar number"
+    },
     "barcode": {
+      "type": "string"
+    },
+    "itemLevelCallNumber": {
+      "type": "string"
+    },
+    "itemLevelCallNumberPrefix": {
+      "type": "string"
+    },
+    "itemLevelCallNumberSuffix": {
+      "type": "string"
+    },
+    "itemLevelCallNumberTypeId": {
+      "type": "string"
+    },
+    "volume": {
       "type": "string"
     },
     "enumeration": {
       "type": "string"
     },
     "chronology": {
+      "type": "string"
+    },
+    "yearCaption": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "itemIdentifier": {
       "type": "string"
     },
     "copyNumbers": {
@@ -28,12 +73,41 @@
     "numberOfPieces": {
       "type": "string"
     },
+    "descriptionOfPieces": {
+      "type": "string"
+    },
+    "numberOfMissingPieces": {
+      "type": "string"
+    },
+    "missingPieces": {
+      "type": "string"
+    },
+    "missingPiecesDate": {
+      "type": "string"
+    },
+    "itemDamagedStatusId": {
+      "type": "string"
+    },
+    "itemDamagedStatusDate": {
+      "type": "string"
+    },
     "notes": {
       "type": "array",
       "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+        "type": "object",
+        "properties": {
+          "itemNoteTypeId": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "staffOnly": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
     },
     "status": {
       "description": "The status of the item",
@@ -61,10 +135,59 @@
     "temporaryLocationId": {
       "type": "string"
     },
+    "electronicAccess": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources"
+          },
+          "linkText": {
+            "type": "string",
+            "description": "the value of the MARC tag field 856 2nd indicator, where the values are: no information provided, resource, version of resource, related resource, no display constant generated"
+          },
+          "materialsSpecification": {
+            "type": "string",
+            "description": "materials specified is used to specify to what portion or aspect of the resource the electronic location and access information applies (e.g. a portion or subset of the item is electronic, or a related electronic resource is being linked to the record)"
+          },
+          "publicNote": {
+            "type": "string",
+            "description": "URL public note to be displayed in the discovery"
+          },
+          "relationshipId": {
+            "type": "string",
+            "description": "relationship between the electronic resource at the location identified and the item described in the record as a whole"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "uri"
+        ]
+      }
+    },
     "inTransitDestinationServicePointId": {
       "description": "Service point an item is intended to be transited to (should only be present when in transit)",
       "type": "string",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "statisticalCodes": {
+      "type": "array",
+      "description": "List of statistical code items",
+      "items": {
+        "type": "object",
+        "properties": {
+          "statisticalCodeTypeId": {
+            "type": "string",
+            "description": "Statistical code type ID, the code type assigned to a statistical code"
+          },
+          "code": {
+            "type": "string",
+            "description": "Statistical codes (e.g. ARL stats, cataloger, collection or Package code)"
+          }
+        }
+      }
     },
     "metadata": {
       "type": "object",
