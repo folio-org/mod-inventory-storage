@@ -10,5 +10,9 @@
   },
   "copyNumbers": ["Copy 1"],
   "numberOfPieces": "1",
-  "notes": [ "Signed by the author" ]
+  "notes": [
+    {
+      "note": "Signed by the author"
+    }
+  ]
 }
