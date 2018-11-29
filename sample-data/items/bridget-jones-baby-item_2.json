@@ -10,5 +10,9 @@
   },
   "copyNumbers": ["Copy 2"],
   "numberOfPieces": "1",
-  "notes": [ "Missing pages; p 10-13" ]
+  "notes": [
+    {
+      "note": "Missing pages; p 10-13"
+    }
+  ]
 }
