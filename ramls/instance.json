@@ -273,22 +273,13 @@
       "type": "boolean",
       "description": "Records the fact that the record should not be displayed in a discovery system"
     },
-    "statisticalCodes": {
+    "statisticalCodeIds": {
       "type": "array",
-      "description": "List of statistical code items",
+      "description": "List of statistical code IDs",
       "items": {
-        "type": "object",
-        "properties": {
-          "statisticalCodeTypeId": {
-            "type": "string",
-            "description": "Statistical code ID"
-          },
-          "code": {
-            "type": "string",
-            "description": "Statistical codes (e.g. ARL stats, cataloger, collection or Package code)"
-          }
-        }
-      }
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "sourceRecordFormat": {
       "type": "string",
