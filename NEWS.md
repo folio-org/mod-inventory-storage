@@ -1,12 +1,17 @@
 ## 14.0.0 Unreleased
 
-* Renames `item` property `pieceIdentifiers` to `copyNumbers` (MODINVSTOR-205)
 * Provides `item-storage` interface version 7.0 (MODINVSTOR-205)
 * Provides `holdings-storage` interface version 3.0 (MODINVSTOR-209)
-* Removes property `electronicLocation` from holdingsRecord schema (MODINVSTOR-227)
-* Changes structure of property `alternativeTitles` (MODINVSTOR-200)
 * Provides `instance-storage` interface version 6.0 (MODINVNSTOR-232, MODINVSTOR-200)
+* Renames `item` property `pieceIdentifiers` to `copyNumbers` (MODINVSTOR-205)
+* Removes property `electronicLocation` from holdingsRecord schema (MODINVSTOR-227)
+* Removes obsolete reference end-point `platforms` (MODINVSTOR-226)
+* Changes structure of property `alternativeTitles` (MODINVSTOR-200)
 * Changes/renames property statisticalCodes in Instance (MODINVSTOR-241)
+* Changes structure of `holdingsStatements` (MODINVSTOR-228)
+* Disallows additional properties in `holdingsRecord` (MODINVSTOR-229)
+* Changes structure of `notes` in `item` (MODINVSTOR-154)
+* Adds 19 new properties to `item` (MODINVSTOR-154)
 
 ## 13.2.0 2018-11-24
 
