@@ -6,6 +6,7 @@
 * Removes property `electronicLocation` from holdingsRecord schema (MODINVSTOR-227)
 * Changes structure of property `alternativeTitles` (MODINVSTOR-200)
 * Provides `instance-storage` interface version 6.0 (MODINVNSTOR-232, MODINVSTOR-200)
+* Changes/renames property statisticalCodes in Instance (MODINVSTOR-241)
 
 ## 13.2.0 2018-11-24
 
