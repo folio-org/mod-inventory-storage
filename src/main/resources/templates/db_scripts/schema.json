@@ -675,6 +675,12 @@
           "tOps": "ADD"
         }
       ],
+      "uniqueIndex": [
+        {
+          "fieldName": "hrid",
+          "tOps": "ADD"
+        }
+      ],
       "ginIndex": [
         {
           "fieldName": "instanceId",
@@ -759,6 +765,12 @@
           "tOps": "ADD"
         }
 
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "hrid",
+          "tOps": "ADD"
+        }
       ],
       "index": [
         {
