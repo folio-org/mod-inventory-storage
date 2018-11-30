@@ -201,6 +201,14 @@
       "type": "boolean",
       "description": "records the fact that the record should not be displayed in a discovery system"
     },
+    "statisticalCodeIds": {
+      "type": "array",
+      "description": "List of statistical code IDs",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
     "holdingsItems": {
       "type": "array",
       "items": {
