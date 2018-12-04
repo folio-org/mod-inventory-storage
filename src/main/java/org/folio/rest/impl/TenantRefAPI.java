@@ -12,6 +12,7 @@ import java.io.File;
 import io.vertx.core.Future;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -36,8 +37,8 @@ public class TenantRefAPI extends TenantAPI {
 
   private HttpClient httpClient;
 
-  private static List<String> getFilenamesForDirnameFromCP(String directoryName) throws URISyntaxException, UnsupportedEncodingException, IOException {
-    List<String> filenames = new LinkedList<>();
+  private static List<InputStream> getStramsfromClassPathDir(String directoryName) throws URISyntaxException, UnsupportedEncodingException, IOException {
+    List<InputStream> streams = new LinkedList<>();
 
     URL url = Thread.currentThread().getContextClassLoader().getResource(directoryName);
     if (url != null) {
@@ -47,7 +48,7 @@ public class TenantRefAPI extends TenantAPI {
           File[] files = file.listFiles();
           if (files != null) {
             for (File filename : files) {
-              filenames.add(filename.toString());
+              streams.add(new FileInputStream(filename));
             }
           }
         }
@@ -61,14 +62,13 @@ public class TenantRefAPI extends TenantAPI {
             JarEntry entry = entries.nextElement();
             String name = entry.getName();
             if (name.startsWith(dirname) && !dirname.equals(name)) {
-              URL resource = Thread.currentThread().getContextClassLoader().getResource(name);
-              filenames.add(resource.toString());
+              streams.add(Thread.currentThread().getContextClassLoader().getResourceAsStream(name));
             }
           }
         }
       }
     }
-    return filenames;
+    return streams;
   }
 
   @Override
@@ -130,11 +130,9 @@ public class TenantRefAPI extends TenantAPI {
     }
     List<String> jsonList = new LinkedList<>();
     try {
-      List<String> files = getFilenamesForDirnameFromCP("ref-data/" + endPoint);
-      log.info("files=" + files);
-      for (String f : files) {
-        FileInputStream is = new FileInputStream(new File(f));
-        jsonList.add(IOUtils.toString(is, "UTF-8"));
+      List<InputStream> streams = getStramsfromClassPathDir("ref-data/" + endPoint);
+      for (InputStream stream : streams) {
+        jsonList.add(IOUtils.toString(stream, "UTF-8"));
       }
     } catch (URISyntaxException ex) {
       res.handle(Future.failedFuture("URISyntaxException for path " + endPoint + " ex=" + ex.getLocalizedMessage()));
