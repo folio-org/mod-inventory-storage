@@ -38,6 +38,7 @@ public class HttpClient {
     }
     if (url != null) {
       request.headers().add("X-Okapi-Url", url.getProtocol() + "://" + url.getHost() + ":" + url.getPort());
+      request.headers().add("X-Okapi-Url-to", url.getProtocol() + "://" + url.getHost() + ":" + url.getPort());
     }
     request.headers().add("Accept","application/json, text/plain");
   }

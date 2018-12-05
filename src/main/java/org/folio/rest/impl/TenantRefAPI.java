@@ -122,12 +122,13 @@ public class TenantRefAPI extends TenantAPI {
 
   private void loadRef(TenantAttributes ta, Map<String, String> headers, String endPoint, Handler<AsyncResult<Void>> res) {
     log.info("loadRef " + endPoint + " begin");
-    String okapiUrl = headers.get("X-Okapi-Url");
+    String okapiUrl = headers.get("X-Okapi-Url-to");
     if (okapiUrl == null) {
-      log.warn("No X-Okapi-Url. Headers: " + headers);
-      res.handle(Future.failedFuture("No X-Okapi-Url header"));
+      log.warn("No X-Okapi-Url-to. Headers: " + headers);
+      res.handle(Future.failedFuture("No X-Okapi-Url-to header"));
       return;
     }
+    log.info("loadRef....................");
     List<String> jsonList = new LinkedList<>();
     try {
       List<InputStream> streams = getStramsfromClassPathDir("ref-data/" + endPoint);
