@@ -4,6 +4,7 @@
   "type": "object",
   "properties": {
     "instanceStatuses": {
+      "description": "List of instance statuses",
       "id": "instanceStatus",
       "type": "array",
       "items": {

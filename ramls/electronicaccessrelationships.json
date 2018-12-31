@@ -4,6 +4,7 @@
   "type": "object",
   "properties": {
     "electronicAccessRelationships": {
+      "description": "List of URL relationship types",
       "id": "electronicAccessRelationship",
       "type": "array",
       "items": {

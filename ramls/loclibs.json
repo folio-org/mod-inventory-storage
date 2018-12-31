@@ -4,6 +4,7 @@
   "type": "object",
   "properties": {
     "loclibs": {
+      "description": "List of third-level location units",
       "id": "loclibs",
       "type": "array",
       "items": {

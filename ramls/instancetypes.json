@@ -4,6 +4,7 @@
   "type": "object",
   "properties": {
     "instanceTypes": {
+      "description": "List of instance types",
       "id": "instanceType",
       "type": "array",
       "items": {

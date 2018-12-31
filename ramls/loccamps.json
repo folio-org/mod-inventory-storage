@@ -4,6 +4,7 @@
   "type": "object",
   "properties": {
     "loccamps": {
+      "description": "List of second-level location units",
       "id": "loccamps",
       "type": "array",
       "items": {

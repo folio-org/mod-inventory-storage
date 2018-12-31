@@ -4,6 +4,7 @@
   "type": "object",
   "properties": {
     "instanceRelationshipTypes": {
+      "description": "List of instance relationship types",
       "id": "instanceRelationshipType",
       "type": "array",
       "items": {
