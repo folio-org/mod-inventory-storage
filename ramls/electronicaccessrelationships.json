@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of URL/Instance relationship type records (controlled vocabulary)",
   "type": "object",
   "properties": {
     "electronicAccessRelationships": {
+      "description": "List of URL relationship types",
       "id": "electronicAccessRelationship",
       "type": "array",
       "items": {

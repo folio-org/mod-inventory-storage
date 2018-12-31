@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of third-level location units",
   "type": "object",
   "properties": {
     "loclibs": {
+      "description": "List of third-level location units",
       "id": "loclibs",
       "type": "array",
       "items": {

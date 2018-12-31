@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of instance statuses (controlled vocabulary)",
   "type": "object",
   "properties": {
     "instanceStatuses": {
+      "description": "List of instance statuses",
       "id": "instanceStatus",
       "type": "array",
       "items": {

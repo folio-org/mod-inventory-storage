@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of Instance resource types (controlled vocabulary)",
   "type": "object",
   "properties": {
     "instanceTypes": {
+      "description": "List of instance types",
       "id": "instanceType",
       "type": "array",
       "items": {
