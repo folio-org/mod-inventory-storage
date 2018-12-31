@@ -7,9 +7,11 @@
       "type": "string"
     },
     "name": {
+      "description": "label for the material type",
       "type": "string"
     },
     "source": {
+      "description": "origin of the material type record",
       "type": "string"
     },
     "metadata": {

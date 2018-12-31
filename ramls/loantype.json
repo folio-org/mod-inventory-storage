@@ -7,6 +7,7 @@
       "type": "string"
     },
     "name": {
+      "description": "label for the loan type",
       "type": "string"
     },
     "metadata": {
