@@ -130,7 +130,7 @@ public class TenantRefAPI extends TenantAPI {
     }
   }
 
-  private void loadRef(TenantAttributes ta, Map<String, String> headers, String endPoint, Handler<AsyncResult<Void>> res) {
+  private void loadRef(Map<String, String> headers, String endPoint, Handler<AsyncResult<Void>> res) {
     log.info("loadRef " + endPoint + " begin");
     String okapiUrl = headers.get("X-Okapi-Url-to");
     if (okapiUrl == null) {
