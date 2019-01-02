@@ -29,6 +29,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
+import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 
 public class TenantRefAPI extends TenantAPI {
@@ -77,7 +78,17 @@ public class TenantRefAPI extends TenantAPI {
 
     httpClient = cntxt.owner().createHttpClient();
     super.postTenant(ta, headers, res -> {
-      if (res.succeeded()) {
+      boolean loadReference = false;
+      List<Parameter> parameters = ta.getParameters();
+      for (Parameter parameter : parameters) {
+        if ("loadReference".equals(parameter.getKey())) {
+          if ("true".equals(parameter.getValue())) {
+            loadReference = true;
+          }
+        }
+      }
+      log.info("postTenant loadReference=" + loadReference);
+      if (res.succeeded() && loadReference) {
         loadReferenceData(ta, headers, hndlr);
       } else {
         hndlr.handle(res);
