@@ -81,22 +81,21 @@ public class TenantRefAPI extends TenantAPI {
       boolean loadReference = false;
       List<Parameter> parameters = ta.getParameters();
       for (Parameter parameter : parameters) {
-        if ("loadReference".equals(parameter.getKey())) {
-          if ("true".equals(parameter.getValue())) {
-            loadReference = true;
-          }
+        if ("loadReference".equals(parameter.getKey())
+          && "true".equals(parameter.getValue())) {
+          loadReference = true;
         }
       }
       log.info("postTenant loadReference=" + loadReference);
       if (res.succeeded() && loadReference) {
-        loadReferenceData(ta, headers, hndlr);
+        loadReferenceData(headers, hndlr);
       } else {
         hndlr.handle(res);
       }
     }, cntxt);
   }
 
-  private void loadReferenceData(TenantAttributes ta, Map<String, String> headers, Handler<AsyncResult<Response>> hndlr) {
+  private void loadReferenceData(Map<String, String> headers, Handler<AsyncResult<Response>> hndlr) {
     String[] endPoints = new String[]{"material-types", "loan-types", "location-units/institutions", "location-units/campuses",
       "location-units/libraries", "locations", "identifier-types", "contributor-types", "service-points", "instance-relationship-types",
       "contributor-name-types", "instance-types", "instance-formats", "classification-types", "platforms",
@@ -105,7 +104,7 @@ public class TenantRefAPI extends TenantAPI {
     };
     List<String> list = Arrays.asList(endPoints);
 
-    loadRef(ta, headers, list.iterator(), res -> {
+    loadRef(headers, list.iterator(), res -> {
       if (res.failed()) {
         hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
           .respond500WithTextPlain(res.cause().getLocalizedMessage())));
@@ -116,16 +115,16 @@ public class TenantRefAPI extends TenantAPI {
     });
   }
 
-  private void loadRef(TenantAttributes ta, Map<String, String> headers, Iterator<String> it, Handler<AsyncResult<Response>> res) {
+  private void loadRef(Map<String, String> headers, Iterator<String> it, Handler<AsyncResult<Response>> res) {
     if (!it.hasNext()) {
       res.handle(Future.succeededFuture());
     } else {
       String endPoint = it.next();
-      loadRef(ta, headers, endPoint, x -> {
+      loadRef(headers, endPoint, x -> {
         if (x.failed()) {
           res.handle(Future.failedFuture(x.cause()));
         } else {
-          loadRef(ta, headers, it, res);
+          loadRef(headers, it, res);
         }
       });
     }
