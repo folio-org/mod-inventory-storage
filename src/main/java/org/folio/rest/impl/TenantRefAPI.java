@@ -38,7 +38,7 @@ public class TenantRefAPI extends TenantAPI {
 
   private HttpClient httpClient;
 
-  private static List<InputStream> getStramsfromClassPathDir(String directoryName) throws URISyntaxException, UnsupportedEncodingException, IOException {
+  private static List<InputStream> getStramsfromClassPathDir(String directoryName) throws URISyntaxException, IOException {
     List<InputStream> streams = new LinkedList<>();
 
     URL url = Thread.currentThread().getContextClassLoader().getResource(directoryName);
@@ -56,7 +56,7 @@ public class TenantRefAPI extends TenantAPI {
       } else if (url.getProtocol().equals("jar")) {
         String dirname = directoryName + "/";
         String path = url.getPath();
-        String jarPath = path.substring(5, path.indexOf("!"));
+        String jarPath = path.substring(5, path.indexOf('!'));
         try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, StandardCharsets.UTF_8.name()))) {
           Enumeration<JarEntry> entries = jar.entries();
           while (entries.hasMoreElements()) {
