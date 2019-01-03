@@ -521,7 +521,8 @@
         {
           "fieldName": "instanceTypeId"
         }
-      ]
+      ],
+      "customSnippetPath": "instanceHrid.sql"
     },
     {
       "tableName": "instance_relationship",
@@ -726,7 +727,8 @@
           "caseSensitive": false,
           "removeAccents": true
         }
-      ]
+      ],
+      "customSnippetPath": "holdingsRecordHrid.sql"
     },
     {
       "tableName": "item",
@@ -829,7 +831,8 @@
           "caseSensitive": false,
           "removeAccents": true
         }
-      ]
+      ],
+      "customSnippetPath": "itemHrid.sql"
     }
   ],
   "views": [

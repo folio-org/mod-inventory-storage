@@ -12,7 +12,24 @@
   "numberOfPieces": "1",
   "notes": [
     {
+      "itemNoteTypeId": "8d0a5eca-25de-4391-81a9-236eeefdd20b",
       "note": "Missing pages; p 10-13"
+    },
+    {
+      "itemNoteTypeId": "0e40884c-3523-4c6d-8187-d578e3d2794e",
+      "note": "My action note"
+    },
+    {
+      "itemNoteTypeId": "1dde7141-ec8a-4dae-9825-49ce14c728e7",
+      "note": "My copy note"
+    },
+    {
+      "itemNoteTypeId": "c3a539b9-9576-4e3a-b6de-d910200b2919",
+      "note": "My provenance"
+    },
+    {
+      "itemNoteTypeId": "acb3a58f-1d72-461d-97c3-0e7119e8d544",
+      "note": "My reproduction"
     }
   ]
 }
