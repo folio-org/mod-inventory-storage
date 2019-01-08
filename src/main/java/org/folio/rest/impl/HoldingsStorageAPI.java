@@ -119,21 +119,21 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                       respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-									log.error(e.getMessage());
+                  log.error(e.getMessage());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   GetHoldingsStorageHoldingsResponse.
                     respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-					log.error(e.getMessage());
+          log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetHoldingsStorageHoldingsResponse.
               respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-			log.error(e.getMessage());
+      log.error(e.getMessage());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetHoldingsStorageHoldingsResponse.
           respond500WithTextPlain(e.getMessage())));
@@ -260,21 +260,21 @@ public class HoldingsStorageAPI implements HoldingsStorage {
 
                 }
               } catch (Exception e) {
-									log.error(e.getMessage());
+                  log.error(e.getMessage());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
                     respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-					log.error(e.getMessage());
+          log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
               respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-			log.error(e.getMessage());
+      log.error(e.getMessage());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
           respond500WithTextPlain(e.getMessage())));

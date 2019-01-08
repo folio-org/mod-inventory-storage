@@ -53,7 +53,7 @@ public class InstanceStorageAPI implements InstanceStorage {
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
   private final Messages messages = Messages.getInstance();
 
-	PreparedCQL handleCQL(String query, int limit, int offset) throws FieldException {
+  PreparedCQL handleCQL(String query, int limit, int offset) throws FieldException {
     boolean containsHoldingsRecordProperties = query != null && query.contains("holdingsRecords.");
     boolean containsItemsRecordProperties = query != null && query.contains("item.");
 
@@ -64,32 +64,32 @@ public class InstanceStorageAPI implements InstanceStorage {
       //ho_jsonb is the alias given holdings in the view in the DB
       query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".ho_jsonb.");
 
-			return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb",
-					INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb")));
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb")));
     }
 
     if(containsItemsRecordProperties) {
       //it_jsonb is the alias given items in the view in the DB
       query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
 
-			return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-					INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb")));
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb")));
     }
 
     if(containsHoldingsRecordProperties) {
       //ho_jsonb is the alias given holdings in the view in the DB
       query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
 
-			return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_VIEW+".jsonb",
-					INSTANCE_HOLDINGS_VIEW + ".ho_jsonb")));
+          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb")));
     }
 
-		return new PreparedCQL(INSTANCE_TABLE,
-				createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb")));
+    return new PreparedCQL(INSTANCE_TABLE,
+        createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb")));
   }
 
   private CQLWrapper createCQLWrapper(
@@ -125,12 +125,12 @@ public class InstanceStorageAPI implements InstanceStorage {
 
           String[] fieldList = {"*"};
 
-					PreparedCQL preparedCql = handleCQL(query, limit, offset);
-					CQLWrapper cql = preparedCql.getCqlWrapper();
+                PreparedCQL preparedCql = handleCQL(query, limit, offset);
+          CQLWrapper cql = preparedCql.getCqlWrapper();
 
           log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
-					postgresClient.get(preparedCql.getTableName(), Instance.class, fieldList, cql,
+          postgresClient.get(preparedCql.getTableName(), Instance.class, fieldList, cql,
             true, false, reply -> {
               try {
                 if(reply.succeeded()) {
@@ -311,7 +311,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
       String[] fieldList = {"*"};
 
-			PreparedCQL preparedCql = handleCQL(String.format("id==%s", instanceId), 1, 0);
+      PreparedCQL preparedCql = handleCQL(String.format("id==%s", instanceId), 1, 0);
       CQLWrapper cql = preparedCql.getCqlWrapper();
 
       log.info(String.format("SQL generated from CQL: %s", cql.toString()));
@@ -421,17 +421,17 @@ public class InstanceStorageAPI implements InstanceStorage {
         try {
           String[] fieldList = {"*"};
 
-					PreparedCQL preparedCql = handleCQL(String.format("id==%s", instanceId), 1, 0);
-					CQLWrapper cql = preparedCql.getCqlWrapper();
+          PreparedCQL preparedCql = handleCQL(String.format("id==%s", instanceId), 1, 0);
+          CQLWrapper cql = preparedCql.getCqlWrapper();
 
-					postgresClient.get(preparedCql.getTableName(), Instance.class, fieldList, cql, true, false,
+          postgresClient.get(preparedCql.getTableName(), Instance.class, fieldList, cql, true, false,
             reply -> {
               if(reply.succeeded()) {
                 List<Instance> instancesList = reply.result().getResults();
 
                 if (instancesList.size() == 1) {
                   try {
-											postgresClient.update(preparedCql.getTableName(), entity, entity.getId(),
+                      postgresClient.update(preparedCql.getTableName(), entity, entity.getId(),
                       update -> {
                         try {
                           if(update.succeeded()) {
@@ -465,7 +465,7 @@ public class InstanceStorageAPI implements InstanceStorage {
               }
               else {
                 try {
-											postgresClient.save(preparedCql.getTableName(), entity.getId(), entity,
+                      postgresClient.save(preparedCql.getTableName(), entity.getId(), entity,
                     save -> {
                       try {
                         if(save.succeeded()) {
@@ -533,7 +533,7 @@ public class InstanceStorageAPI implements InstanceStorage {
   }
 
 
-  @Override   
+  @Override
   public void deleteInstanceStorageInstancesSourceRecordByInstanceId(
       @NotNull String instanceId,
       @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
@@ -555,7 +555,7 @@ public class InstanceStorageAPI implements InstanceStorage {
           DeleteInstanceStorageInstancesSourceRecordByInstanceIdResponse.respond204()));
     });
   }
-  
+
   @Override
   public void getInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
       String instanceId, String lang, Map<String, String> okapiHeaders,
@@ -746,7 +746,7 @@ public class InstanceStorageAPI implements InstanceStorage {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       PostInstanceStorageInstanceRelationshipsResponse
-                        .respond201WithApplicationJson(entity, 
+                        .respond201WithApplicationJson(entity,
                           PostInstanceStorageInstanceRelationshipsResponse.headersFor201().withLocation(reply.result()))));
                 }
                 else {
@@ -843,23 +843,23 @@ public class InstanceStorageAPI implements InstanceStorage {
     });
   }
 
-	class PreparedCQL {
-		private final String tableName;
-		private final CQLWrapper cqlWrapper;
+  class PreparedCQL {
+    private final String tableName;
+    private final CQLWrapper cqlWrapper;
 
-		public PreparedCQL(String tableName, CQLWrapper cqlWrapper) {
-			this.tableName = tableName;
-			this.cqlWrapper = cqlWrapper;
-		}
+    public PreparedCQL(String tableName, CQLWrapper cqlWrapper) {
+      this.tableName = tableName;
+      this.cqlWrapper = cqlWrapper;
+    }
 
-		public String getTableName() {
-			return tableName;
-		}
+    public String getTableName() {
+      return tableName;
+    }
 
-		public CQLWrapper getCqlWrapper() {
-			return cqlWrapper;
-		}
+    public CQLWrapper getCqlWrapper() {
+      return cqlWrapper;
+    }
 
-	}
+  }
 
 }
