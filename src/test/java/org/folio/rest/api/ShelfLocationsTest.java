@@ -51,7 +51,7 @@ public class ShelfLocationsTest {
   private UUID instID;
   private UUID campID;
   private UUID libID;
-	private List<UUID> servicePointIDs = new ArrayList<UUID>();
+  private List<UUID> servicePointIDs = new ArrayList<UUID>();
 
   @Before
   public void beforeEach()
@@ -86,9 +86,9 @@ public class ShelfLocationsTest {
     LocationUnitTest.createCamp(campID, "Central Campus", "CC", instID);
     libID = UUID.randomUUID();
     LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
-		UUID spID = UUID.randomUUID();
-		servicePointIDs.add(spID);
-		ServicePointTest.createServicePoint(spID, "Service Point", "SP", "Service Point", "SP Description", 0, false);
+    UUID spID = UUID.randomUUID();
+    servicePointIDs.add(spID);
+    ServicePointTest.createServicePoint(spID, "Service Point", "SP", "Service Point", "SP Description", 0, false);
   }
 
   @Test
@@ -98,8 +98,8 @@ public class ShelfLocationsTest {
     TimeoutException,
     MalformedURLException {
 
-		Response response = LocationsTest.createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X",
-				servicePointIDs);
+    Response response = LocationsTest.createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X",
+        servicePointIDs);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -114,7 +114,7 @@ public class ShelfLocationsTest {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-		LocationsTest.createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
+    LocationsTest.createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
     Response getResponse = getById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));

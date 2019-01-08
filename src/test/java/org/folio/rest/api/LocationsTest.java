@@ -58,7 +58,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   private static UUID instID;
   private static UUID campID;
   private static UUID libID;
-	private static List<UUID> servicePointIDs = new ArrayList<UUID>();
+  private static List<UUID> servicePointIDs = new ArrayList<UUID>();
 
   protected static void createLocUnits(boolean force) {
     try {
@@ -69,10 +69,10 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
         LocationUnitTest.createCamp(campID, "Central Campus", "CC", instID);
         libID = UUID.randomUUID();
         LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
-				UUID spID = UUID.randomUUID();
-				servicePointIDs.add(spID);
-				ServicePointTest.createServicePoint(spID, "Service Point", "SP", "Service Point",
-						"SP Description", 0, false);
+        UUID spID = UUID.randomUUID();
+        servicePointIDs.add(spID);
+        ServicePointTest.createServicePoint(spID, "Service Point", "SP", "Service Point",
+            "SP Description", 0, false);
       }
     } catch (Exception e) { // should not happen
       throw new AssertionError("CreateLocUnits failed:", e);
@@ -126,7 +126,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     ExecutionException,
     TimeoutException,
     MalformedURLException {
-		Response response = createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
+    Response response = createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("name"), is("Main Library"));
@@ -138,7 +138,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     ExecutionException,
     TimeoutException,
     MalformedURLException {
-		Response response = createLocation(null, "Main Library", null, null, null, "PI/CC/ML/X", servicePointIDs);
+    Response response = createLocation(null, "Main Library", null, null, null, "PI/CC/ML/X", servicePointIDs);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -148,7 +148,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     ExecutionException,
     TimeoutException,
     MalformedURLException {
-		Response response = createLocation(null, "Main Library", instID, campID, libID, null, servicePointIDs);
+    Response response = createLocation(null, "Main Library", instID, campID, libID, null, servicePointIDs);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -158,8 +158,8 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     ExecutionException,
     TimeoutException,
     MalformedURLException {
-		createLocation(null, "Main Library", "PI/CC/ML/X");
-		Response response = createLocation(null, "Main Library", instID, campID, libID, "AA/BB", servicePointIDs);
+    createLocation(null, "Main Library", "PI/CC/ML/X");
+    Response response = createLocation(null, "Main Library", instID, campID, libID, "AA/BB", servicePointIDs);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -169,9 +169,9 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     ExecutionException,
     TimeoutException,
     MalformedURLException {
-		createLocation(null, "Main Library", "PI/CC/ML/X");
-		Response response = createLocation(null, "Some Other Library", instID, campID, libID, "PI/CC/ML/X",
-				servicePointIDs);
+    createLocation(null, "Main Library", "PI/CC/ML/X");
+    Response response = createLocation(null, "Some Other Library", instID, campID, libID, "PI/CC/ML/X",
+        servicePointIDs);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -182,8 +182,8 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     TimeoutException,
     MalformedURLException {
     UUID id = UUID.randomUUID();
-		createLocation(id, "Main Library", "PI/CC/ML/X");
-		Response response = createLocation(id, "Some Other Library", instID, campID, libID, "AA/BB", servicePointIDs);
+    createLocation(id, "Main Library", "PI/CC/ML/X");
+    Response response = createLocation(id, "Some Other Library", instID, campID, libID, "AA/BB", servicePointIDs);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -195,7 +195,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-		createLocation(id, "Main Library", "PI/CC/ML/X");
+    createLocation(id, "Main Library", "PI/CC/ML/X");
     Response getResponse = getById(id);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
@@ -212,8 +212,8 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     TimeoutException,
     MalformedURLException {
 
-		createLocation(null, "Main Library", "PI/CC/ML");
-		createLocation(null, "Annex Library", "PI/CC/AL");
+    createLocation(null, "Main Library", "PI/CC/ML");
+    createLocation(null, "Annex Library", "PI/CC/AL");
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locationsStorageUrl("/"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
@@ -231,23 +231,23 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-		createLocation(id, "Main Library", "PI/CC/ML/X");
+    createLocation(id, "Main Library", "PI/CC/ML/X");
     JsonObject updateRequest = new JsonObject()
-				.put("id", id.toString())
+        .put("id", id.toString())
       .put("name", "Annex Library")
       .put("institutionId", instID.toString())
       .put("campusId", campID.toString())
       .put("libraryId", libID.toString())
       .put("isActive", true)
       .put("code", "AA/BB")
-				.put("primaryServicePoint", servicePointIDs.get(0).toString())
-				.put("servicePointIds", new JsonArray(servicePointIDs));
+        .put("primaryServicePoint", servicePointIDs.get(0).toString())
+        .put("servicePointIds", new JsonArray(servicePointIDs));
     CompletableFuture<Response> updated = new CompletableFuture<>();
-		send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = updated.get(5, TimeUnit.SECONDS);
-		assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
@@ -262,7 +262,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-		createLocation(id, "Main Library", "PI/CC/ML/X");
+    createLocation(id, "Main Library", "PI/CC/ML/X");
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("name", "Annex Library")
@@ -270,14 +270,14 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
       .put("campusId", campID.toString())
       .put("libraryId", libID.toString())
       .put("isActive", true)
-				.put("code", "AA/BB").put("primaryServicePoint", servicePointIDs.get(0).toString())
-				.put("servicePointIds", new JsonArray(servicePointIDs));
+        .put("code", "AA/BB").put("primaryServicePoint", servicePointIDs.get(0).toString())
+        .put("servicePointIds", new JsonArray(servicePointIDs));
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = updated.get(5, TimeUnit.SECONDS);
-		assertThat(updateResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(updateResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
@@ -287,7 +287,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     TimeoutException,
     MalformedURLException {
     UUID id = UUID.randomUUID();
-		createLocation(id, "Main Library", "PI/CC/ML/X");
+    createLocation(id, "Main Library", "PI/CC/ML/X");
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
@@ -303,7 +303,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-		createLocation(id, "Main Library", "PI/CC/ML/X");
+    createLocation(id, "Main Library", "PI/CC/ML/X");
     UUID holdingsRecordId = createInstanceAndHolding(id);
     JsonObject item = createItemRequest(holdingsRecordId.toString(), id.toString());
     CompletableFuture<Response> createItemCompleted = new CompletableFuture<>();
@@ -376,15 +376,15 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
       js.put(key, value.toString());
     }
   }
-  
+
   private static void putIfNotNull(JsonObject js, String key, JsonArray value) {
-  	if (value != null) {
-			js.put(key, value);
+    if (value != null) {
+      js.put(key, value);
     }
-	}
+  }
 
   public static Response createLocation(UUID id, String name,
-			UUID inst, UUID camp, UUID lib, String code, List<UUID> servicePoints)
+      UUID inst, UUID camp, UUID lib, String code, List<UUID> servicePoints)
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -400,40 +400,40 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     putIfNotNull(request, "campusId", camp);
     putIfNotNull(request, "libraryId", lib);
     putIfNotNull(request, "code", code);
-		putIfNotNull(request, "primaryServicePoint", servicePoints.get(0));
-		UUID spID = UUID.randomUUID();
-		servicePointIDs.add(spID);
-		putIfNotNull(request, "servicePointIds", new JsonArray(servicePoints));
+    putIfNotNull(request, "primaryServicePoint", servicePoints.get(0));
+    UUID spID = UUID.randomUUID();
+    servicePointIDs.add(spID);
+    putIfNotNull(request, "servicePointIds", new JsonArray(servicePoints));
     send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
     return createLocation.get(5, TimeUnit.SECONDS);
   }
 
-	/**
-	 * Helper to create a Location record the way old shelfLocations were created.
-	 * Used mostly while migrating to new Locations
-	 *
-	 * @param id
-	 * @param name
-	 * @param servicePoint
-	 * @param libID2
-	 * @param campID2
-	 * @param instID2
-	 * @return
-	 */
-	public static UUID createLocation(UUID id, String name, String code) {
-		try {
-			createLocUnits(false);
-			if (id == null) {
-				id = UUID.randomUUID();
-			}
-			createLocation(id, name, instID, campID, libID, code, servicePointIDs);
-		} catch (Exception e) {
-			throw new AssertionError("CreateLocation failed:", e);
-		}
-		logger.debug("createLocation " + id + " '" + name + "' i=" + instID);
-		return id;
-	}
+  /**
+   * Helper to create a Location record the way old shelfLocations were created.
+   * Used mostly while migrating to new Locations
+   *
+   * @param id
+   * @param name
+   * @param servicePoint
+   * @param libID2
+   * @param campID2
+   * @param instID2
+   * @return
+   */
+  public static UUID createLocation(UUID id, String name, String code) {
+    try {
+      createLocUnits(false);
+      if (id == null) {
+        id = UUID.randomUUID();
+      }
+      createLocation(id, name, instID, campID, libID, code, servicePointIDs);
+    } catch (Exception e) {
+      throw new AssertionError("CreateLocation failed:", e);
+    }
+    logger.debug("createLocation " + id + " '" + name + "' i=" + instID);
+    return id;
+  }
 
   private Response getById(UUID id)
     throws InterruptedException,

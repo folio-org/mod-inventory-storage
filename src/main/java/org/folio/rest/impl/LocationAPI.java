@@ -47,13 +47,13 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   public static final String LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
 
-	public static final String SERVICEPOINT_IDS = "servicePointIds";
-	public static final String PRIMARY_SERVICEPOINT = "primaryServicePoint";
+  public static final String SERVICEPOINT_IDS = "servicePointIds";
+  public static final String PRIMARY_SERVICEPOINT = "primaryServicePoint";
 
-	private String getErrorResponse(String response) {
-		// Check to see if we're suppressing messages or not
-		return response;
-	}
+  private String getErrorResponse(String response) {
+    // Check to see if we're suppressing messages or not
+    return response;
+  }
 
   @Override
   public void deleteLocations(String lang,
@@ -129,41 +129,41 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 
     String tenantId = getTenant(okapiHeaders);
 
-		runLocationChecks(checkIdProvided(entity), checkAtLeastOneServicePoint(entity),
-				checkPrimaryServicePointRelationship(entity)).setHandler(checksResult -> {
+    runLocationChecks(checkIdProvided(entity), checkAtLeastOneServicePoint(entity),
+        checkPrimaryServicePointRelationship(entity)).setHandler(checksResult -> {
 
-			if (checksResult.succeeded()) {
+      if (checksResult.succeeded()) {
 
-				PostgresClient.getInstance(vertxContext.owner(), tenantId).save(LOCATION_TABLE, entity.getId(), entity,
-						reply -> {
-							if (reply.failed()) {
-								String message = logAndSaveError(reply.cause());
-								if (message != null && message.contains("duplicate key value violates unique constraint")) {
-									asyncResultHandler.handle(
-											Future.succeededFuture(PostLocationsResponse.respond422WithApplicationJson(ValidationHelper
-													.createValidationErrorMessage("shelflocation", entity.getId(), "Location already exists"))));
-								} else {
-									asyncResultHandler
-											.handle(Future.succeededFuture(PostLocationsResponse.respond500WithTextPlain(message)));
-								}
-							} else {
-								String responseObject = reply.result();
-								entity.setId(responseObject);
-								asyncResultHandler
-										.handle(Future.succeededFuture(PostLocationsResponse.respond201WithApplicationJson(entity,
-												PostLocationsResponse.headersFor201().withLocation(URL_PREFIX + responseObject))));
-							}
-						});
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(LOCATION_TABLE, entity.getId(), entity,
+            reply -> {
+              if (reply.failed()) {
+                String message = logAndSaveError(reply.cause());
+                if (message != null && message.contains("duplicate key value violates unique constraint")) {
+                  asyncResultHandler.handle(
+                      Future.succeededFuture(PostLocationsResponse.respond422WithApplicationJson(ValidationHelper
+                          .createValidationErrorMessage("shelflocation", entity.getId(), "Location already exists"))));
+                } else {
+                  asyncResultHandler
+                      .handle(Future.succeededFuture(PostLocationsResponse.respond500WithTextPlain(message)));
+                }
+              } else {
+                String responseObject = reply.result();
+                entity.setId(responseObject);
+                asyncResultHandler
+                    .handle(Future.succeededFuture(PostLocationsResponse.respond201WithApplicationJson(entity,
+                        PostLocationsResponse.headersFor201().withLocation(URL_PREFIX + responseObject))));
+              }
+            });
 
-			} else {
-				String message = logAndSaveError(checksResult.cause());
-				asyncResultHandler.handle(
-								Future.succeededFuture(PostLocationsResponse.respond422WithApplicationJson(ValidationHelper
-										.createValidationErrorMessage(((LocationCheckError) checksResult.cause()).getField(),
-												entity.getId(), message))));
-			}
+      } else {
+        String message = logAndSaveError(checksResult.cause());
+        asyncResultHandler.handle(
+                Future.succeededFuture(PostLocationsResponse.respond422WithApplicationJson(ValidationHelper
+                    .createValidationErrorMessage(((LocationCheckError) checksResult.cause()).getField(),
+                        entity.getId(), message))));
+      }
 
-		});
+    });
 
 
   }
@@ -245,139 +245,139 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
-		runLocationChecks(checkIdChange(id, entity), checkAtLeastOneServicePoint(entity),
-				checkPrimaryServicePointRelationship(entity), checkForDuplicateServicePoints(entity))
-						.setHandler(checksResult -> {
-			if (checksResult.succeeded()) {
-				String tenantId = getTenant(okapiHeaders);
-				Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
-				if (criterion == null) {
-					return; // error already handled
-				}
-				PostgresClient.getInstance(vertxContext.owner(), tenantId).update(LOCATION_TABLE, entity, criterion, false,
-						updateReply -> {
-							if (updateReply.failed()) {
-								String message = logAndSaveError(updateReply.cause());
-								asyncResultHandler
-												.handle(Future.succeededFuture(
-														PutLocationsByIdResponse.respond500WithTextPlain(getErrorResponse(message))));
-							} else {
-								if (updateReply.result().getUpdated() == 0) {
-									asyncResultHandler
-											.handle(Future.succeededFuture(PutLocationsByIdResponse.respond404WithTextPlain("Not found")));
-									// Not found
-								} else {
-											asyncResultHandler.handle(Future.succeededFuture(PutLocationsByIdResponse.respond204()));
-								}
-							}
-						});
-			} else {
+    runLocationChecks(checkIdChange(id, entity), checkAtLeastOneServicePoint(entity),
+        checkPrimaryServicePointRelationship(entity), checkForDuplicateServicePoints(entity))
+            .setHandler(checksResult -> {
+      if (checksResult.succeeded()) {
+        String tenantId = getTenant(okapiHeaders);
+        Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
+        if (criterion == null) {
+          return; // error already handled
+        }
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(LOCATION_TABLE, entity, criterion, false,
+            updateReply -> {
+              if (updateReply.failed()) {
+                String message = logAndSaveError(updateReply.cause());
+                asyncResultHandler
+                        .handle(Future.succeededFuture(
+                            PutLocationsByIdResponse.respond500WithTextPlain(getErrorResponse(message))));
+              } else {
+                if (updateReply.result().getUpdated() == 0) {
+                  asyncResultHandler
+                      .handle(Future.succeededFuture(PutLocationsByIdResponse.respond404WithTextPlain("Not found")));
+                  // Not found
+                } else {
+                      asyncResultHandler.handle(Future.succeededFuture(PutLocationsByIdResponse.respond204()));
+                }
+              }
+            });
+      } else {
 
-				String message = logAndSaveError(checksResult.cause());
-				asyncResultHandler
-										.handle(Future.succeededFuture(PutLocationsByIdResponse.respond422WithApplicationJson(
-												ValidationHelper.createValidationErrorMessage(
-														((LocationCheckError) checksResult.cause()).getField(), entity.getId(), message))));
-			}
+        String message = logAndSaveError(checksResult.cause());
+        asyncResultHandler
+                    .handle(Future.succeededFuture(PutLocationsByIdResponse.respond422WithApplicationJson(
+                        ValidationHelper.createValidationErrorMessage(
+                            ((LocationCheckError) checksResult.cause()).getField(), entity.getId(), message))));
+      }
 
-		});
+    });
 
   }
 
-	@SafeVarargs
-	private final CompositeFuture runLocationChecks(Future<LocationCheckError>... futures) {
-		List<Future> allFutures = new ArrayList<>(Arrays.asList(futures));
-		return CompositeFuture.all(allFutures);
-	}
+  @SafeVarargs
+  private final CompositeFuture runLocationChecks(Future<LocationCheckError>... futures) {
+    List<Future> allFutures = new ArrayList<>(Arrays.asList(futures));
+    return CompositeFuture.all(allFutures);
+  }
 
-	private Future<LocationCheckError> checkIdProvided(Location entity) {
+  private Future<LocationCheckError> checkIdProvided(Location entity) {
 
-		Future<LocationCheckError> future = Future.succeededFuture();
+    Future<LocationCheckError> future = Future.succeededFuture();
 
-		String id = entity.getId();
-		if (id == null) {
-			id = UUID.randomUUID().toString();
-			entity.setId(id);
-		}
+    String id = entity.getId();
+    if (id == null) {
+      id = UUID.randomUUID().toString();
+      entity.setId(id);
+    }
 
-		return future;
+    return future;
 
-	}
+  }
 
-	private Future<LocationCheckError> checkIdChange(String id, Location entity) {
+  private Future<LocationCheckError> checkIdChange(String id, Location entity) {
 
-		Future<LocationCheckError> future = Future.succeededFuture();
+    Future<LocationCheckError> future = Future.succeededFuture();
 
-		if (!id.equals(entity.getId())) {
-			future = Future.failedFuture(new LocationCheckError("id", "Illegal operation: id cannot be changed"));
-		}
+    if (!id.equals(entity.getId())) {
+      future = Future.failedFuture(new LocationCheckError("id", "Illegal operation: id cannot be changed"));
+    }
 
-		return future;
+    return future;
 
-	}
+  }
 
-	private Future<LocationCheckError> checkAtLeastOneServicePoint(Location entity) {
+  private Future<LocationCheckError> checkAtLeastOneServicePoint(Location entity) {
 
-		Future<LocationCheckError> future = Future.succeededFuture();
+    Future<LocationCheckError> future = Future.succeededFuture();
 
-		if (entity.getServicePointIds().isEmpty()) {
-			future = Future.failedFuture(
-					new LocationCheckError(SERVICEPOINT_IDS, "A location must have at least one Service Point assigned."));
-		}
+    if (entity.getServicePointIds().isEmpty()) {
+      future = Future.failedFuture(
+          new LocationCheckError(SERVICEPOINT_IDS, "A location must have at least one Service Point assigned."));
+    }
 
-		return future;
+    return future;
 
-	}
+  }
 
-	private Future<LocationCheckError> checkPrimaryServicePointRelationship(Location entity) {
+  private Future<LocationCheckError> checkPrimaryServicePointRelationship(Location entity) {
 
-		Future<LocationCheckError> future = Future.succeededFuture();
+    Future<LocationCheckError> future = Future.succeededFuture();
 
-		if (!entity.getServicePointIds().contains(entity.getPrimaryServicePoint())) {
-			future = Future
-					.failedFuture(new LocationCheckError(PRIMARY_SERVICEPOINT,
-							"A Location's Primary Service point must be included as a Service Point."));
-		}
+    if (!entity.getServicePointIds().contains(entity.getPrimaryServicePoint())) {
+      future = Future
+          .failedFuture(new LocationCheckError(PRIMARY_SERVICEPOINT,
+              "A Location's Primary Service point must be included as a Service Point."));
+    }
 
-		return future;
+    return future;
 
-	}
+  }
 
-	private Future<LocationCheckError> checkForDuplicateServicePoints(Location entity) {
+  private Future<LocationCheckError> checkForDuplicateServicePoints(Location entity) {
 
-		Future<LocationCheckError> future = Future.succeededFuture();
+    Future<LocationCheckError> future = Future.succeededFuture();
 
-		Set<String> set = new HashSet<>();
-		Set<String> duplicateElements = new HashSet<>();
+    Set<String> set = new HashSet<>();
+    Set<String> duplicateElements = new HashSet<>();
 
-		for (String element : entity.getServicePointIds()) {
-			if (!set.add(element)) {
-				duplicateElements.add(element);
-			}
-		}
+    for (String element : entity.getServicePointIds()) {
+      if (!set.add(element)) {
+        duplicateElements.add(element);
+      }
+    }
 
-		if (!duplicateElements.isEmpty()) {
-			future = Future.failedFuture(
-					new LocationCheckError(SERVICEPOINT_IDS, "A Service Point can only appear once on a Location."));
-		}
+    if (!duplicateElements.isEmpty()) {
+      future = Future.failedFuture(
+          new LocationCheckError(SERVICEPOINT_IDS, "A Service Point can only appear once on a Location."));
+    }
 
-		return future;
+    return future;
 
-	}
+  }
 
-	private class LocationCheckError extends Exception {
+  private class LocationCheckError extends Exception {
 
-		private final String field;
+    private final String field;
 
-		public LocationCheckError(String field, String message) {
-			super(message);
-			this.field = field;
-		}
+    public LocationCheckError(String field, String message) {
+      super(message);
+      this.field = field;
+    }
 
-		public String getField() {
-			return field;
-		}
+    public String getField() {
+      return field;
+    }
 
-	}
+  }
 
 }
