@@ -109,6 +109,30 @@
         }
       }
     },
+    "circulationNotes": {
+      "type": "array",
+      "description": "Notes to be displayed in circulation processes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "noteType": {
+            "type": "string",
+            "description": "Type of circulation process that the note applies to",
+            "enum": ["Check in", "Check out"]
+          },
+          "note": {
+            "type": "string",
+            "description": "Text to display"
+          },
+          "staffOnly": {
+            "type": "boolean",
+            "default": "Flag to restrict display of this note",
+            "default": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "status": {
       "description": "The status of the item",
       "type": "object",
