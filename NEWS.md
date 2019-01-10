@@ -1,3 +1,8 @@
+## 14.1.0 Unreleased
+
+* Provides `item-storage` interface version 7.1 (MODINVSTOR-249)
+* Adds `circulationNotes` to `item` schema (MODINVSTOR-249)
+
 ## 14.0.0 2018-11-30
 
 * Provides `item-storage` interface version 7.0 (MODINVSTOR-205)
