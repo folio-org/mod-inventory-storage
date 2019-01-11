@@ -39,7 +39,7 @@ public class ItemStorageAPI implements ItemStorage {
 
   private String convertQuery(String cql){
     if(cql != null){
-      return cql.replaceAll("(?i)materialTypeId\\.|(?i)materialType\\.", ITEM_MATERIALTYPE_VIEW+".mt_jsonb.");
+      return cql.replaceAll("(?i)materialTypeId\\.|(?i)materialType\\.", ITEM_TABLE+".mt_jsonb.");
     }
     return cql;
   }
