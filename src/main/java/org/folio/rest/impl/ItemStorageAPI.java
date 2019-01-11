@@ -66,7 +66,7 @@ public class ItemStorageAPI implements ItemStorage {
    * @throws FieldException
    */
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(ITEM_MATERIALTYPE_VIEW+".jsonb",ITEM_MATERIALTYPE_VIEW+".mt_jsonb"));
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(ITEM_TABLE+".jsonb",ITEM_TABLE+".mt_jsonb"));
     return new CQLWrapper(cql2pgJson, convertQuery(query)).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
