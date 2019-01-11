@@ -38,9 +38,6 @@ public class ItemStorageAPI implements ItemStorage {
   private static final String DEFAULT_STATUS_NAME = "Available";
 
   private String convertQuery(String cql){
-    if(cql != null){
-      return cql.replaceAll("(?i)materialTypeId\\.|(?i)materialType\\.", ITEM_TABLE+".mt_jsonb.");
-    }
     return cql;
   }
 
@@ -66,7 +63,7 @@ public class ItemStorageAPI implements ItemStorage {
    * @throws FieldException
    */
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(ITEM_TABLE+".jsonb",ITEM_TABLE+".mt_jsonb"));
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(ITEM_TABLE+".jsonb"));
     return new CQLWrapper(cql2pgJson, convertQuery(query)).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
