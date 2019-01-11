@@ -52,7 +52,9 @@ public class ItemStorageAPI implements ItemStorage {
    * @return
    */
   private String getTableName(String cql) {
-
+    if(cql != null){
+      return ITEM_MATERIALTYPE_VIEW;
+    }
     return ITEM_TABLE;
   }
 
