@@ -37,36 +37,6 @@ public class ItemStorageAPI implements ItemStorage {
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
   private static final String DEFAULT_STATUS_NAME = "Available";
 
-  private String convertQuery(String cql){
-    return cql;
-  }
-
-  /**
-   * right now, just query the join view if a cql was passed in, otherwise work with the
-   * master items table. This can be optimized in the future to check if there is really a need
-   * to use the join view due to cross table cqling - like returning items sorted by material type
-   * @param cql
-   * @return
-   */
-  private String getTableName(String cql) {
-
-    return ITEM_TABLE;
-  }
-
-  /**
-   * additional querying across tables should add the field to the end of the Arrays.asList
-   * and then add a replace to the convertQuery function
-   * @param query
-   * @param limit
-   * @param offset
-   * @return
-   * @throws FieldException
-   */
-  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(Arrays.asList(ITEM_TABLE+".jsonb"));
-    return new CQLWrapper(cql2pgJson, convertQuery(query)).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-  }
-
   @Validate
   @Override
   public void getItemStorageItems(
