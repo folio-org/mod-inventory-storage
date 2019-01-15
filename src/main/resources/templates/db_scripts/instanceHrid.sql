@@ -3,7 +3,7 @@
 CREATE SEQUENCE IF NOT EXISTS ${myuniversity}_${mymodule}.instance_hrid_seq
   INCREMENT BY 1
   START WITH 1
-  OWNED BY instance.jsonb;
+  OWNED BY ${myuniversity}_${mymodule}.instance.jsonb;
 
 GRANT ALL ON SEQUENCE ${myuniversity}_${mymodule}.instance_hrid_seq TO ${myuniversity}_${mymodule};
 
