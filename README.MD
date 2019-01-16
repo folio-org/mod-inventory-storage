@@ -7,7 +7,7 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
 # Goal
 
-FOLIO compatible inventory storage module.
+FOLIO compatible inventory storage module. 
 
 Provides PostgreSQL based storage to complement the [inventory module](http://github.com/folio-org/mod-inventory). Written in Java, using the raml-module-builder and uses Maven as its build system.
 
