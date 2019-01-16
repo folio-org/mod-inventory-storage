@@ -86,6 +86,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
       try {
         String tenantId = getTenant(okapiHeaders);
         PostgresClient pgClient = getPGClient(vertxContext, tenantId);
+        //todo add validation logic here
         final String DELETE_ALL_QUERY = String.format("DELETE FROM %s_%s.%s",
                 tenantId, "mod_inventory_storage", SERVICE_POINT_TABLE);
         logger.info(String.format("Deleting all service points with query %s",
@@ -181,7 +182,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
             entity.setId(ret);
             asyncResultHandler.handle(Future.succeededFuture(
                     PostServicePointsResponse
-                      .respond201WithApplicationJson(entity, 
+                      .respond201WithApplicationJson(entity,
                         PostServicePointsResponse.headersFor201().withLocation((LOCATION_PREFIX + ret)))));
           }
         });
