@@ -61,6 +61,28 @@ To register the module with deployment instructions and activate it for a demo t
 
 To deactivate and unregister the module, run `./stop-managed-demo.sh` from the root directory.
 
+## Tenant Initialization
+
+The module supports v1.2 of the Okapi `_tenant` interface. This version of the interface allows Okapi to pass tenant initialization parameters using the `tenantParameters` key. Currently, the only parameter supported is the `loadReference` key, which will cause the module to load reference data for the tenant if set to `true`. Here is an example of passing the parameter to the module via Okapi's `/_/proxy/tenants/<tenantId>/install` endpoint:
+
+    curl -w '\n' -X POST -d '[ { "id": "mod-inventory-storage-14.1.0", "action": "enable" } ]' http://localhost:9130/_/proxy/tenants/my-test-tenant/install?tenantParameters=loadReference%3Dtrue
+
+This results in a post to the module's `_tenant` API with the following structure:
+
+```json
+{
+  "module_to": "mod-inventory-storage-14.1.0",
+  "parameters": [
+    {
+      "key": "loadReference",
+      "value": "true"
+    }
+  ]
+}
+```
+
+See the section [Install modules per tenant|https://github.com/folio-org/okapi/blob/master/doc/guide.md#install-modules-per-tenant] in the Okapi guide for more information.
+
 ## Sample Data
 
 Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing.
