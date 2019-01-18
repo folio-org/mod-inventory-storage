@@ -166,7 +166,8 @@ public class InstanceStorageAPI implements InstanceStorage {
     String sortBy = matcher.group(2);
     String desc = sortBy.toLowerCase().contains("descending") ? "DESC" : "";
     preparedCql.getCqlWrapper().setQuery(cql);
-    String schemaName = PostgresClient.convertToPsqlStandard(tenantId);
+    String tableName = PostgresClient.convertToPsqlStandard(tenantId)
+        + "." + preparedCql.getTableName();
     String where = preparedCql.getCqlWrapper().getField().toSql(cql).getWhere();
     final int n = 10000;
     // If there are many matches use a full table scan in title sort order
@@ -181,11 +182,11 @@ public class InstanceStorageAPI implements InstanceStorage {
     String sql =
         " WITH "
       + " headrecords AS ("
-      + "   SELECT jsonb FROM " + schemaName + "." + preparedCql.getTableName()
+      + "   SELECT jsonb FROM " + tableName
       + "   WHERE (" + where + ")"
       + "     AND lower(f_unaccent(jsonb->>'title'))"
       + "           < ( SELECT lower(f_unaccent(jsonb->>'title'))"
-      + "               FROM instance"
+      + "               FROM " + tableName
       + "               ORDER BY lower(f_unaccent(jsonb->>'title'))"
       + "               OFFSET " + n + " LIMIT 1"
       + "             )"
@@ -193,7 +194,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       + "   LIMIT " + limit + " OFFSET " + offset
       + " ), "
       + " allrecords AS ("
-      + "   SELECT jsonb FROM " + schemaName + "." + preparedCql.getTableName()
+      + "   SELECT jsonb FROM " + tableName
       + "   WHERE (" + where + ")"
       + "     AND (SELECT COUNT(*) FROM headrecords) < " + limit
       + " )"
