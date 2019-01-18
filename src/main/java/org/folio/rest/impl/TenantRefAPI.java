@@ -1,15 +1,6 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.io.File;
-import io.vertx.core.Future;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,10 +17,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.io.IOUtils;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -95,11 +98,31 @@ public class TenantRefAPI extends TenantAPI {
   }
 
   private void loadReferenceData(Map<String, String> headers, Handler<AsyncResult<Response>> hndlr) {
-    String[] endPoints = new String[]{"material-types", "loan-types", "location-units/institutions", "location-units/campuses",
-      "location-units/libraries", "locations", "identifier-types", "contributor-types", "service-points", "instance-relationship-types",
-      "contributor-name-types", "instance-types", "instance-formats", "classification-types", "platforms",
-      "instance-statuses", "statistical-code-types", "modes-of-issuance", "electronic-access-relationships", "ill-policies", "holdings-types",
-      "call-number-types"
+    String[] endPoints = new String[]{
+      "material-types",
+      "loan-types",
+      "location-units/institutions",
+      "location-units/campuses",
+      "location-units/libraries",
+      "locations",
+      "identifier-types",
+      "contributor-types",
+      "service-points",
+      "instance-relationship-types",
+      "contributor-name-types",
+      "instance-types",
+      "instance-formats",
+      "classification-types",
+      "instance-statuses",
+      "statistical-code-types", "statistical-codes",
+      "modes-of-issuance",
+      "alternative-title-types",
+      "electronic-access-relationships",
+      "ill-policies",
+      "holdings-types",
+      "call-number-types",
+      "holdings-note-types",
+      "item-note-types"
     };
     List<String> list = Arrays.asList(endPoints);
 
