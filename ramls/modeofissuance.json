@@ -1,11 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A mode of issuance to be assigned to an Instance",
   "type": "object",
   "properties": {
     "id": {
       "type": "string"
     },
     "name": {
+      "description": "label for the mode of issuance",
       "type": "string"
     },
     "metadata": {

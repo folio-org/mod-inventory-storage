@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A statistical code",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "unique ID of the statistical code; a UUID"
+    },
+    "code": {
+      "type": "string",
+      "description": "statistical code; a distinct label"
+    },
+    "name": {
+      "type": "string",
+      "description": "name or description of a statistical code"
+    },
+    "statisticalCodeTypeId": {
+      "type": "string",
+      "description": "a UUID referencing a statistical code type"
+    },
+    "source": {
+      "source": "string",
+      "description": "label indicating where the statistical code originates from, i.e. 'folio' or 'local'"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "code",
+    "name",
+    "statisticalCodeTypeId",
+    "source"
+  ]
+}
+

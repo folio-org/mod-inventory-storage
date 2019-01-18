@@ -96,14 +96,28 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateAnItemViaCollectionResource()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
+    final String inTransitServicePointId = UUID.randomUUID().toString();
 
-    JsonObject itemToCreate = nod(id, holdingsRecordId);
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("barcode", "565578437802");
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+
+    //TODO: Replace with real service point when validated
+    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -127,6 +141,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(canCirculateLoanTypeID));
     assertThat(itemFromPost.getString("temporaryLocationId"),
       is(annexLibraryLocationId.toString()));
+    assertThat(itemFromPost.getString("inTransitDestinationServicePointId"),
+      is(inTransitServicePointId));
 
     Response getResponse = getById(id);
 
@@ -145,6 +161,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(canCirculateLoanTypeID));
     assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLibraryLocationId.toString()));
+    assertThat(itemFromPost.getString("inTransitDestinationServicePointId"),
+      is(inTransitServicePointId));
   }
 
   @Test
@@ -411,7 +429,22 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
-    JsonObject itemToCreate = nod(id, holdingsRecordId);
+
+    final String inTransitServicePointId = UUID.randomUUID().toString();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("barcode", "565578437802");
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+
+    //TODO: Replace with real service point when validated
+    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
+
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.put(itemsStorageUrl(String.format("/%s", id)), itemToCreate,
@@ -439,6 +472,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(canCirculateLoanTypeID));
     assertThat(item.getString("temporaryLocationId"),
       is(annexLibraryLocationId.toString()));
+    assertThat(item.getString("inTransitDestinationServicePointId"),
+      is(inTransitServicePointId));
   }
 
   @Test
@@ -557,6 +592,51 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(journalMaterialTypeID));
     assertThat(item.getString("temporaryLocationId"),
       is(mainLibraryLocationId.toString()));
+  }
+
+  @Test
+  public void canPlaceAnItemInTransit()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+
+    createItem(itemToCreate);
+
+    final String inTransitServicePointId = UUID.randomUUID().toString();
+
+    JsonObject replacement = itemToCreate.copy();
+
+    replacement
+      .put("status", new JsonObject().put("name", "In transit"))
+      .put("inTransitDestinationServicePointId", inTransitServicePointId);
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+
+    //PUT currently cannot return a response
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject item = getResponse.getJson();
+
+    assertThat(item.getString("id"), is(id.toString()));
+
+    assertThat(item.getJsonObject("status").getString("name"),
+      is("In transit"));
+
+    assertThat(item.getString("inTransitDestinationServicePointId"),
+      is(inTransitServicePointId));
   }
 
   @Test

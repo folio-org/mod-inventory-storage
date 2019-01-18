@@ -7,12 +7,15 @@
       "type": "string"
     },
     "name": {
+      "description": "name of the location",
       "type": "string"
     },
     "code": {
+      "description": "distinct code for the location",
       "type": "string"
     },
     "institutionId": {
+      "description": "ID of the first-level location unit that the second-level unit belongs to",
       "type": "string"
     },
     "metadata": {

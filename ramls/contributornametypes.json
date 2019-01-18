@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A collection of contributor name types",
+  "description": "A collection of contributor name types (controlled vocabulary)",
   "type": "object",
   "properties": {
     "contributorNameTypes": {

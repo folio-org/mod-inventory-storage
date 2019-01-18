@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of InstanceRelationship records",
   "type": "object",
   "properties": {
     "instanceRelationships": {
+      "description": "List of instance relationships",
       "id": "instanceRelationships",
       "type": "array",
       "items": {

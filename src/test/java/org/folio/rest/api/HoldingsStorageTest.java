@@ -67,7 +67,7 @@ public class HoldingsStorageTest extends TestBase {
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     LocationsTest.createLocUnits(true);
-		mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (H)", "H/M");
+    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (H)", "H/M");
     annexLibraryLocationId = LocationsTest.createLocation(null, "Annex Library (H)", "H/A");
 
   }

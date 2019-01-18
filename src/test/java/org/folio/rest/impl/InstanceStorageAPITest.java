@@ -12,13 +12,13 @@ public class InstanceStorageAPITest {
 
   private void handleCQL(String cql, String sql, String table) {
     try {
-    	PreparedCQL preparedCql = instanceStorageApi.handleCQL(cql, 1, 0);
-			String actualSql = preparedCql.getCqlWrapper().toString();
+      PreparedCQL preparedCql = instanceStorageApi.handleCQL(cql, 1, 0);
+      String actualSql = preparedCql.getCqlWrapper().toString();
       actualSql = actualSql
           .substring(" WHERE ".length(), actualSql.length() - " LIMIT 1 OFFSET 0".length())
           .replace("(", "").replace(")", "");
       assertThat(actualSql, is(sql));
-			assertThat(preparedCql.getTableName(), is(table));
+      assertThat(preparedCql.getTableName(), is(table));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

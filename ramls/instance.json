@@ -27,7 +27,17 @@
       "type": "array",
       "description": "List of alternative titles for the resource (e.g. original language version title of a movie)",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "alternativeTitleTypeId": {
+            "type": "string",
+            "description": "ID for an alternative title qualifier"
+          },
+          "alternativeTitle": {
+            "type": "string",
+            "description": "An alternative title for the resource"
+          }
+        }
       },
       "uniqueItems": true
     },
@@ -263,22 +273,13 @@
       "type": "boolean",
       "description": "Records the fact that the record should not be displayed in a discovery system"
     },
-    "statisticalCodes": {
+    "statisticalCodeIds": {
       "type": "array",
-      "description": "List of statistical code items",
+      "description": "List of statistical code IDs",
       "items": {
-        "type": "object",
-        "properties": {
-          "statisticalCodeTypeId": {
-            "type": "string",
-            "description": "Statistical code ID"
-          },
-          "code": {
-            "type": "string",
-            "description": "Statistical codes (e.g. ARL stats, cataloger, collection or Package code)"
-          }
-        }
-      }
+        "type": "string"
+      },
+      "uniqueItems": true
     },
     "sourceRecordFormat": {
       "type": "string",

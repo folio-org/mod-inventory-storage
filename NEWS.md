@@ -1,5 +1,35 @@
-## 13.1.0 Unreleased
+## 14.1.0 Unreleased
 
+* Provides `item-storage` interface version 7.1 (MODINVSTOR-249)
+* Adds `circulationNotes` to `item` schema (MODINVSTOR-249)
+
+## 14.0.0 2018-11-30
+
+* Provides `item-storage` interface version 7.0 (MODINVSTOR-205)
+* Provides `holdings-storage` interface version 3.0 (MODINVSTOR-209)
+* Provides `instance-storage` interface version 6.0 (MODINVNSTOR-232, MODINVSTOR-200)
+* Renames `item` property `pieceIdentifiers` to `copyNumbers` (MODINVSTOR-205)
+* Removes property `electronicLocation` from holdingsRecord schema (MODINVSTOR-227)
+* Removes obsolete reference end-point `platforms` (MODINVSTOR-226)
+* Changes structure of property `alternativeTitles` (MODINVSTOR-200)
+* Changes/renames property statisticalCodes in Instance (MODINVSTOR-241)
+* Changes structure of `holdingsStatements` (MODINVSTOR-228)
+* Disallows additional properties in `holdingsRecord` (MODINVSTOR-229)
+* Changes structure of `notes` in `item` (MODINVSTOR-154)
+* Adds 19 new properties to `item` (MODINVSTOR-154)
+
+## 13.2.0 2018-11-24
+
+* Adds an in transit destination to a item (MODINVSTOR-230)
+* Provides `item-storage` interface version 6.1 (MODINVSTOR-230)
+
+## 13.1.0 2018-11-19
+
+* Provides `holdings-storage` interface 2.1 (MODINVSTOR-153 etc)
+* Provides `statistical-codes` 1.0 (MODINVSTOR-221)
+* Provides `holdings-note-types` interface 1.0 (MODINVSTOR-220)
+* Provides `item-note-types` interface 1.0 (MODINVSTOR-220)
+* Provides `alternative-title-types` interface 1.0 (MODINVSTOR-200)
 * Provides `call-number-types` interface 1.0 (MODINVSTOR-210)
 * Provides `holdings-types` interface 1.0 (MODINVSTOR-210)
 * Provides `ill-policies` interface 1.0 (MODINVSTOR-210)
@@ -43,7 +73,7 @@
 
 * Adds more properties to instance (MODINVSTOR-152)
 * Provides `instance-storage` interface 4.6 (MODINVSTOR-152)
-* Provides `statistical-codes` interface 1.0 (MODINVSTOR-152)
+* Provides `statistical-code-types` interface 1.0 (MODINVSTOR-152)
 * Provides `cataloging-levels` interface 1.0 (MODINVSTOR-152)
 * Provides `instance-statuses` interface 1.0 (MODINVSTOR-152)
 * Provides `modes-of-issuance` interface 1.0 (MODINVSTOR-152)

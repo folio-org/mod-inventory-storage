@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A collection of platforms",
+  "description": "A collection of item note types",
   "type": "object",
   "properties": {
-    "platforms": {
-      "description": "List of platforms",
-      "id": "platform",
+    "itemNoteTypes": {
+      "description": "List of item note types",
+      "id": "itemNoteType",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "platform.json"
+        "$ref": "itemnotetype.json"
       }
     },
     "totalRecords": {
@@ -17,7 +17,7 @@
     }
   },
   "required": [
-    "platforms",
+    "itemNoteTypes",
     "totalRecords"
   ]
 }

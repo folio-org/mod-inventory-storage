@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of modes of issuance (controlled vocabulary)",
   "type": "object",
   "properties": {
     "issuanceModes": {
+      "description": "List of modes of issuance",
       "id": "modeOfIssuance",
       "type": "array",
       "items": {

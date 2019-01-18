@@ -7,9 +7,11 @@
       "type": "string"
     },
     "name": {
+      "description": "label for the type of contributor name",
       "type": "string"
     },
     "ordering": {
+      "description": "used for ordering of contributor name types in displays, i.e. in select lists",
       "type": "string"
     },
     "metadata": {

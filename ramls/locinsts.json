@@ -1,8 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of top-level location units",
   "type": "object",
   "properties": {
     "locinsts": {
+      "description": "List of first-level location units",
       "id": "locinsts",
       "type": "array",
       "items": {

@@ -32,18 +32,6 @@
     "temporaryLocationId": {
       "type": "string"
     },
-    "electronicLocation": {
-      "type": "object",
-      "properties": {
-        "platformId": {
-          "type": "string"
-        },
-        "uri": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
     "electronicAccess": {
       "type": "array",
       "items": {
@@ -106,17 +94,8 @@
       "items": {
         "type": "object",
         "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-                      "action note",
-                      "binding",
-                      "copy note",
-                      "electronic bookplate",
-                      "note",
-                      "provenance",
-                      "reproduction"
-                    ]
+          "holdingsNoteTypeId": {
+            "type": "string"
           },
           "note": {
             "type": "string"
@@ -141,9 +120,18 @@
     "holdingsStatements": {
       "type": "array",
       "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string",
+            "description": "Textual description of the holdings"
+          },
+          "note": {
+            "type": "string",
+            "description": "Note attached to a holdings statement"
+          }
+        }
+      }
     },
     "holdingsStatementsForIndexes": {
       "type": "array",
@@ -213,6 +201,14 @@
       "type": "boolean",
       "description": "records the fact that the record should not be displayed in a discovery system"
     },
+    "statisticalCodeIds": {
+      "type": "array",
+      "description": "List of statistical code IDs",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
     "holdingsItems": {
       "type": "array",
       "items": {
@@ -242,6 +238,7 @@
       "readonly": true
     }
   },
+  "additionalProperties": false,
   "required": [
     "instanceId"
   ]

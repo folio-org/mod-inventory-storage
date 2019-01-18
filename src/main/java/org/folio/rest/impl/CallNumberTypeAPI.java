@@ -158,14 +158,14 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<CallNumberType> illPolicy = (List<CallNumberType>) reply.result().getResults();
-                if (illPolicy.isEmpty()) {
+                List<CallNumberType> reference = (List<CallNumberType>) reply.result().getResults();
+                if (reference.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCallNumberTypesByIdResponse
                       .respond404WithTextPlain(id)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetCallNumberTypesByIdResponse
-                      .respond200WithApplicationJson(illPolicy.get(0))));
+                      .respond200WithApplicationJson(reference.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);

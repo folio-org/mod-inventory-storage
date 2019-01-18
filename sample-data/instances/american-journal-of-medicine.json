@@ -1,9 +1,18 @@
 {
   "id" : "30fcc8e7-a019-43f4-b642-2edc389f4501",
-  "hrid": "in000002",
   "source" : "MARC",
   "title" : "The American Journal of Medicine",
-  "alternativeTitles" : [ "The American journal of medicine Ionline)", "Am. J. med", "Green journal" ],
+  "alternativeTitles" : [ 
+    {
+      "alternativeTitle": "The American journal of medicine Ionline)"
+    }, 
+    { 
+      "alternativeTitle": "Am. J. med"
+    }, 
+    {
+      "alternativeTitle": "Green journal" 
+    } 
+  ],
   "series" : [ ],
   "identifiers" : [ {
     "value" : "AJMEAZ",

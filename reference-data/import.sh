@@ -56,10 +56,11 @@ dataDirs=${dataDirs:-'.'}
 modEndpoints_a='material-types loan-types'
 modEndpoints_b='location-units/institutions location-units/campuses location-units/libraries'
 modEndpoints_c='locations identifier-types contributor-types service-points instance-relationship-types'
-modEndpoints_d='contributor-name-types instance-types instance-formats classification-types platforms'
-modEndpoints_e='instance-statuses statistical-code-types modes-of-issuance'
+modEndpoints_d='contributor-name-types instance-types instance-formats classification-types'
+modEndpoints_e='instance-statuses statistical-code-types statistical-codes modes-of-issuance alternative-title-types'
 modEndpoints_f='electronic-access-relationships ill-policies holdings-types call-number-types'
-modEndpoints="$modEndpoints_a $modEndpoints_b $modEndpoints_c $modEndpoints_d $modEndpoints_e $modEndpoints_f"
+modEndpoints_g='holdings-note-types item-note-types'
+modEndpoints="$modEndpoints_a $modEndpoints_b $modEndpoints_c $modEndpoints_d $modEndpoints_e $modEndpoints_f $modEndpoints_g"
 method=POST
 
 for dir in "${dataDirs[@]}";

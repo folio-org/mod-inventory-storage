@@ -306,25 +306,6 @@
       ]
     },
     {
-      "tableName": "platform",
-      "withMetadata": false,
-      "pkColumnName": "_id",
-      "generateId": false,
-      "withAuditing": false,
-      "uniqueIndex": [
-        {
-          "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
-      ]
-    },
-    {
       "tableName": "electronic_access_relationship",
       "withMetadata": true,
       "pkColumnName": "_id",
@@ -351,6 +332,26 @@
       ]
     },
     {
+      "tableName": "statistical_code",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "code, statisticalCodeTypeId",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "statisticalCodeTypeId",
+          "targetTable": "statistical_code_type",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "instance_status",
       "withMetadata": true,
       "pkColumnName": "_id",
@@ -369,6 +370,19 @@
     },
     {
       "tableName": "mode_of_issuance",
+      "withMetadata": true,
+      "pkColumnName": "_id",
+      "generateId": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "alternative_title_type",
       "withMetadata": true,
       "pkColumnName": "_id",
       "generateId": false,
@@ -507,7 +521,8 @@
         {
           "fieldName": "instanceTypeId"
         }
-      ]
+      ],
+      "customSnippetPath": "instanceHrid.sql"
     },
     {
       "tableName": "instance_relationship",
@@ -599,6 +614,32 @@
       ]
     },
     {
+      "tableName": "holdings_note_type",
+      "withMetadata": true,
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "item_note_type",
+      "withMetadata": true,
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "holdings_record",
       "withMetadata": true,
       "generateId": false,
@@ -632,6 +673,12 @@
         {
           "fieldName": "illPolicyId",
           "targetTable": "ill_policy",
+          "tOps": "ADD"
+        }
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "hrid",
           "tOps": "ADD"
         }
       ],
@@ -680,7 +727,8 @@
           "caseSensitive": false,
           "removeAccents": true
         }
-      ]
+      ],
+      "customSnippetPath": "holdingsRecordHrid.sql"
     },
     {
       "tableName": "item",
@@ -720,6 +768,12 @@
         }
 
       ],
+      "uniqueIndex": [
+        {
+          "fieldName": "hrid",
+          "tOps": "ADD"
+        }
+      ],
       "index": [
         {
           "fieldName": "holdingsRecordId",
@@ -777,7 +831,8 @@
           "caseSensitive": false,
           "removeAccents": true
         }
-      ]
+      ],
+      "customSnippetPath": "itemHrid.sql"
     }
   ],
   "views": [

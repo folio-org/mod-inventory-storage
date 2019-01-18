@@ -66,11 +66,11 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  HoldingsTypes holdingsTypes = new HoldingsTypes();
-                  List<HoldingsType> holdingsType = reply.result().getResults();
-                  holdingsTypes.setHoldingsTypes(holdingsType);
-                  holdingsTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesResponse.respond200WithApplicationJson(holdingsTypes)));
+                  HoldingsTypes records = new HoldingsTypes();
+                  List<HoldingsType> record = reply.result().getResults();
+                  records.setHoldingsTypes(record);
+                  records.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesResponse.respond200WithApplicationJson(records)));
                 }
                 else{
                   log.error(reply.cause().getMessage(), reply.cause());
@@ -159,14 +159,14 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
                   return;
                 }
                 @SuppressWarnings("unchecked")
-                List<HoldingsType> illPolicy = (List<HoldingsType>) reply.result().getResults();
-                if (illPolicy.isEmpty()) {
+                List<HoldingsType> records = (List<HoldingsType>) reply.result().getResults();
+                if (records.isEmpty()) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesByIdResponse
                       .respond404WithTextPlain(id)));
                 }
                 else{
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsTypesByIdResponse
-                      .respond200WithApplicationJson(illPolicy.get(0))));
+                      .respond200WithApplicationJson(records.get(0))));
                 }
               } catch (Exception e) {
                 internalServerErrorDuringGetById(e, lang, asyncResultHandler);

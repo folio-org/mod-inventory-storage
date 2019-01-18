@@ -7,9 +7,11 @@
       "type": "string"
     },
     "name": {
+      "description": "name of location",
       "type": "string"
     },
     "code": {
+      "description": "distinct code for location",
       "type": "string"
     },
     "metadata": {
