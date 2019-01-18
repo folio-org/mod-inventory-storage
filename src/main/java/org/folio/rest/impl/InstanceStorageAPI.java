@@ -1,10 +1,13 @@
 package org.folio.rest.impl;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -26,17 +29,23 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
+import org.folio.rest.tools.utils.ObjectMapperTool;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.z3950.zing.cql.cql2pgjson.QueryValidationException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.sql.ResultSet;
 
 public class InstanceStorageAPI implements InstanceStorage {
 
@@ -51,6 +60,10 @@ public class InstanceStorageAPI implements InstanceStorage {
   public static final String INSTANCE_TABLE =  "instance";
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
+  private static final java.util.regex.Pattern sortByTitlePattern =
+      java.util.regex.Pattern.compile("^(.*)\\b(sortBy title(/sort\\.descending|/sort\\.ascending)?) *$",
+          java.util.regex.Pattern.CASE_INSENSITIVE);
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
   private final Messages messages = Messages.getInstance();
 
   PreparedCQL handleCQL(String query, int limit, int offset) throws FieldException {
@@ -105,6 +118,119 @@ public class InstanceStorageAPI implements InstanceStorage {
       .setOffset(new Offset(offset));
   }
 
+  private static Instances instances(ResultSet resultSet, int offset, int limit) throws IOException {
+    List<JsonObject> jsonList = resultSet.getRows();
+    List<Instance> instanceList = new ArrayList<>(jsonList.size());
+    int totalRecords = 0;
+    for (JsonObject object : jsonList) {
+      String jsonb = object.getString("jsonb");
+      instanceList.add(OBJECT_MAPPER.readValue(jsonb, Instance.class));
+      totalRecords = object.getInteger("count");
+    }
+    Instances instances = new Instances();
+    instances.setInstances(instanceList);
+
+    if (totalRecords == 0) {
+      totalRecords = jsonList.size();
+      if (totalRecords == limit) {
+        totalRecords = 999999999;  // unknown total
+      } else if (totalRecords > 0) {
+        totalRecords += offset;
+      }
+    }
+    instances.setTotalRecords(totalRecords);
+    return instances;
+  }
+
+  /**
+   * Execute an optimized query with performance hints for the PostgreSQL optimizer.
+   *
+   * @param preparedCql the query to optimize
+   * @return true if an optimized query gets executed, false otherwise
+   * @throws QueryValidationException on invalid CQL
+   */
+  private static boolean optimizedSql(PreparedCQL preparedCql, String tenantId, PostgresClient postgresClient,
+      int offset, int limit, Handler<AsyncResult<Response>> asyncResultHandler) throws QueryValidationException {
+
+    String cql = preparedCql.getCqlWrapper().getQuery();
+    if (cql == null) {
+      return false;
+    }
+
+    Matcher matcher = sortByTitlePattern.matcher(cql);
+    if (! matcher.find()) {
+      return false;
+    }
+
+    cql = matcher.group(1);
+    String sortBy = matcher.group(2);
+    String desc = sortBy.toLowerCase().contains("descending") ? "DESC" : "";
+    preparedCql.getCqlWrapper().setQuery(cql);
+    String schemaName = PostgresClient.convertToPsqlStandard(tenantId);
+    String where = preparedCql.getCqlWrapper().getField().toSql(cql).getWhere();
+    final int n = 10000;
+    // If there are many matches use a full table scan in title sort order
+    // using the title index. Otherwise use full text matching because there
+    // are only a few matches.
+    //
+    // "headrecords" are the matching records found within the first n records
+    // by stopping at the title from "OFFSET n LIMIT 1".
+    // If "headrecords" are enough to return the requested "LIMIT" number of records we are done.
+    // Otherwise use the full text index to create "allrecords" with all matching
+    // records and sort and LIMIT afterwards.
+    String sql =
+        " WITH "
+      + " headrecords AS ("
+      + "   SELECT jsonb FROM " + schemaName + "." + preparedCql.getTableName()
+      + "   WHERE (" + where + ")"
+      + "     AND lower(f_unaccent(jsonb->>'title'))"
+      + "           < ( SELECT lower(f_unaccent(jsonb->>'title'))"
+      + "               FROM instance"
+      + "               ORDER BY lower(f_unaccent(jsonb->>'title'))"
+      + "               OFFSET " + n + " LIMIT 1"
+      + "             )"
+      + "   ORDER BY lower(f_unaccent(jsonb->>'title')) " + desc
+      + "   LIMIT " + limit + " OFFSET " + offset
+      + " ), "
+      + " allrecords AS ("
+      + "   SELECT jsonb FROM " + schemaName + "." + preparedCql.getTableName()
+      + "   WHERE (" + where + ")"
+      + "     AND (SELECT COUNT(*) FROM headrecords) < " + limit
+      + " )"
+      + " SELECT jsonb, lower(f_unaccent(jsonb->>'title')) AS title, 0                                 AS count"
+      + " FROM headrecords"
+      + " UNION"
+      + " SELECT jsonb, lower(f_unaccent(jsonb->>'title')) AS title, (SELECT COUNT(*) FROM allrecords) AS count"
+      + " FROM allrecords"
+      + " ORDER BY count DESC, title " + desc
+      + " LIMIT " + limit + " OFFSET " + offset;
+
+    log.info("optimized SQL generated from CQL: " + sql);
+
+    postgresClient.select(sql, reply -> {
+      try {
+        log.info("reply.success = " + reply.succeeded());
+        if (reply.failed()) {
+          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+              GetInstanceStorageInstancesResponse.
+              respond500WithTextPlain(reply.cause().getMessage())));
+          return;
+        }
+        Instances instances = instances(reply.result(), offset, limit);
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            GetInstanceStorageInstancesResponse.
+            respond200WithApplicationJson(instances)));
+      } catch (Exception e) {
+        log.error(e.getStackTrace());
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+            GetInstanceStorageInstancesResponse.
+            respond500WithTextPlain(e.getMessage())));
+      }
+    });
+
+    return true;
+  }
+
   @Override
   public void getInstanceStorageInstances(
     @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
@@ -125,7 +251,11 @@ public class InstanceStorageAPI implements InstanceStorage {
 
           String[] fieldList = {"*"};
 
-                PreparedCQL preparedCql = handleCQL(query, limit, offset);
+          PreparedCQL preparedCql = handleCQL(query, limit, offset);
+          if (optimizedSql(preparedCql, tenantId, postgresClient, offset, limit, asyncResultHandler)) {
+            return;
+          }
+
           CQLWrapper cql = preparedCql.getCqlWrapper();
 
           log.info(String.format("SQL generated from CQL: %s", cql.toString()));
@@ -514,12 +644,6 @@ public class InstanceStorageAPI implements InstanceStorage {
         PutInstanceStorageInstancesByInstanceIdResponse
           .respond500WithTextPlain(e.getMessage())));
     }
-  }
-
-  private void badRequestResult(
-    Handler<AsyncResult<Response>> asyncResultHandler, String message) {
-    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-      GetInstanceStorageInstancesResponse.respond400WithTextPlain(message)));
   }
 
   private boolean isUUID(String id) {
