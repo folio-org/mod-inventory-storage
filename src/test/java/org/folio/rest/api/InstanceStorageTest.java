@@ -621,13 +621,13 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
-  public void canDeleteInstanceSourceRecord() throws Exception {
+  public void canDeleteInstanceMarcSourceRecord() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
     assertThat(getSourceRecordFormat(id), is(nullValue()));
 
-    Response putResponse = put(id, marcJson);
+    put(id, marcJson);
     assertThat(getSourceRecordFormat(id), is("MARC-JSON"));
 
     // delete MARC source record
@@ -637,7 +637,26 @@ public class InstanceStorageTest extends TestBase {
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
     assertThat(getSourceRecordFormat(id), is(nullValue()));
+    getMarcJsonNotFound(id);
+  }
 
+  @Test
+  public void canDeleteInstanceSourceRecord() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instance = smallAngryPlanet(id);
+    createInstance(instance);
+    assertThat(getSourceRecordFormat(id), is(nullValue()));
+
+    put(id, marcJson);
+    assertThat(getSourceRecordFormat(id), is("MARC-JSON"));
+
+    // delete source record
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    client.delete(instancesStorageUrl("/" + id + "/source-record"),
+        StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+    assertThat(getSourceRecordFormat(id), is(nullValue()));
     getMarcJsonNotFound(id);
   }
 
