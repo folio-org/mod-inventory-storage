@@ -215,7 +215,7 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
-  public void canCreateAnInstanceAtSpecificLocation()
+  public void cannotPutAnInstanceAtNonexistingLocation()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -227,22 +227,14 @@ public class InstanceStorageTest extends TestBase {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    client.put(instancesStorageUrl(String.format("/%s", id)), instanceToCreate,
+    URL url = instancesStorageUrl(String.format("/%s", id));
+    client.put(url, instanceToCreate,
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(createCompleted));
 
     Response putResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
 
-    //PUT currently cannot return a response
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getResponse = getById(id);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject itemFromGet = getResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(id.toString()));
-    assertThat(itemFromGet.getString("title"), is("Nod"));
+    assertGetNotFound(url);
   }
 
   @Test
@@ -342,21 +334,14 @@ public class InstanceStorageTest extends TestBase {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    client.delete(instancesStorageUrl(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
+    URL url = instancesStorageUrl(String.format("/%s", id));
+    client.delete(url, StorageTestSuite.TENANT_ID, ResponseHandler.empty(deleteCompleted));
 
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(instancesStorageUrl(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID, ResponseHandler.empty(getCompleted));
-
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertGetNotFound(url);
   }
 
   @Test
@@ -566,11 +551,7 @@ public class InstanceStorageTest extends TestBase {
   }
 
   private void getMarcJsonNotFound(UUID id) throws Exception {
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(instancesStorageUrl("/" + id + "/source-record/marc-json"),
-        StorageTestSuite.TENANT_ID, ResponseHandler.text(getCompleted));
-    Response response = getCompleted.get(5, TimeUnit.SECONDS);
-    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
+    assertGetNotFound(instancesStorageUrl("/" + id + "/source-record/marc-json"));
   }
 
   @Test
@@ -1205,6 +1186,23 @@ public class InstanceStorageTest extends TestBase {
       ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  /**
+   * Assert that a GET at the url returns 404 status code (= not found).
+   * @param url  endpoint where to execute a GET request
+   */
+  private void assertGetNotFound(URL url) {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.text(getCompleted));
+    Response response;
+    try {
+      response = getCompleted.get(5, TimeUnit.SECONDS);
+      assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private JsonObject createInstanceRequest(
