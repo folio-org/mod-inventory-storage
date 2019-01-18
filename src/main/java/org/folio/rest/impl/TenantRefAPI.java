@@ -37,7 +37,7 @@ public class TenantRefAPI extends TenantAPI {
 
   private HttpClient httpClient;
 
-  private static List<InputStream> getStramsfromClassPathDir(String directoryName) throws URISyntaxException, IOException {
+  private static List<InputStream> getStreamsfromClassPathDir(String directoryName) throws URISyntaxException, IOException {
     List<InputStream> streams = new LinkedList<>();
 
     URL url = Thread.currentThread().getContextClassLoader().getResource(directoryName);
@@ -140,7 +140,7 @@ public class TenantRefAPI extends TenantAPI {
     log.info("loadRef....................");
     List<String> jsonList = new LinkedList<>();
     try {
-      List<InputStream> streams = getStramsfromClassPathDir("ref-data/" + endPoint);
+      List<InputStream> streams = getStreamsfromClassPathDir("ref-data/" + endPoint);
       for (InputStream stream : streams) {
         jsonList.add(IOUtils.toString(stream, "UTF-8"));
       }
