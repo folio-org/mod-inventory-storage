@@ -227,6 +227,22 @@
             </configuration>
           </execution>
           <execution>
+            <id>copy-reference-data</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/ref-data</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/reference-data</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
             <id>filter-descriptor-inputs</id>
             <phase>generate-resources</phase>
             <goals>
