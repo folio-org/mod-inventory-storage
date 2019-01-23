@@ -24,6 +24,10 @@
     "pickupLocation": {
       "type": "boolean"
     },
+    "holdShelfExpiryPeriod" :{
+      "type": "object",
+      "$ref": "time-period.json"
+    },
     "staffSlips": {
       "type": "array",
       "description": "List of staff slips for this service point",
