@@ -2,6 +2,7 @@
 
 * Provides `item-storage` interface version 7.1 (MODINVSTOR-249)
 * Adds `circulationNotes` to `item` schema (MODINVSTOR-249)
+* Adds holdShelfExpiryPeriod to servicepoint schema (MODINVSTOR-251)
 
 ## 14.0.0 2018-11-30
 

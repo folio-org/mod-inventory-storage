@@ -24,6 +24,10 @@
     "pickupLocation": {
       "type": "boolean"
     },
+    "holdShelfExpiryPeriod" :{
+      "type": "object",
+      "$ref": "time-period.json"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

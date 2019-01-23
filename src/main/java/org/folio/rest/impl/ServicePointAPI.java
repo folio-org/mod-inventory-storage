@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.model.Servicepoints;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -34,6 +35,8 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
   public static final String SERVICE_POINT_TABLE = "service_point";
   public static final String LOCATION_PREFIX = "/service-points/";
   public static final String ID_FIELD = "'id'";
+  public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY = "Hold shelf expiry period must be specified when service point can be used for pickup.";
+  public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC= "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
 
   PostgresClient getPGClient(Context vertxContext, String tenantId) {
     return PostgresClient.getInstance(vertxContext.owner(), tenantId);
@@ -86,7 +89,6 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
       try {
         String tenantId = getTenant(okapiHeaders);
         PostgresClient pgClient = getPGClient(vertxContext, tenantId);
-        //todo add validation logic here
         final String DELETE_ALL_QUERY = String.format("DELETE FROM %s_%s.%s",
                 tenantId, "mod_inventory_storage", SERVICE_POINT_TABLE);
         logger.info(String.format("Deleting all service points with query %s",
@@ -157,6 +159,15 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
           Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
+
+        String validateSvcptResult = validateServicePoint(entity) ;
+        if (validateSvcptResult != null && !validateSvcptResult.isEmpty()){
+          asyncResultHandler.handle(Future.succeededFuture(
+            PostServicePointsResponse.respond422WithApplicationJson(
+              ValidationHelper.createValidationErrorMessage("name",
+                entity.getName(), validateSvcptResult))));
+        }
+
         String id = entity.getId();
         if(id == null) {
           id = UUID.randomUUID().toString();
@@ -295,6 +306,15 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
           Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
+
+        String validateSvcptResult = validateServicePoint(entity) ;
+        if (validateSvcptResult != null && !validateSvcptResult.isEmpty()){
+          asyncResultHandler.handle(Future.succeededFuture(
+            PutServicePointsByServicepointIdResponse
+              .respond422WithApplicationJson(ValidationHelper.createValidationErrorMessage("name",
+                entity.getName(), validateSvcptResult))));
+        }
+
         String tenantId = getTenant(okapiHeaders);
         PostgresClient pgClient = getPGClient(vertxContext, tenantId);
         Criteria idCrit = new Criteria()
@@ -325,6 +345,23 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
                 .respond500WithTextPlain(getErrorResponse(message))));
       }
     });
+  }
+
+  public void putServicePoints(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext){
+    throw new UnsupportedOperationException();
+  }
+
+  private String validateServicePoint(Servicepoint svcpt){
+
+    HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
+    Boolean pickupLocation = svcpt.getPickupLocation() == null ? false: svcpt.getPickupLocation();
+
+    if (!pickupLocation && holdShelfExpiryPeriod != null ) {
+      return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
+    } else if (pickupLocation && holdShelfExpiryPeriod == null) {
+      return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
+    }
+    return null;
   }
 
   private Future<Boolean> checkServicepointInUse() {
