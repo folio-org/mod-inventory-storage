@@ -140,7 +140,7 @@ public class ServicePointTest extends TestBase{
 
     JsonObject holdShelfExpiryPeriod = response.getJson().getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (2));
-    assertThat(holdShelfExpiryPeriod.getString("durationUnit"), is (HoldShelfExpiryPeriod.IntervalId.DAYS.toString()));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.DAYS.toString()));
   }
 
   @Test
@@ -328,7 +328,7 @@ public class ServicePointTest extends TestBase{
 
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (3));
-    assertThat(holdShelfExpiryPeriod.getString("durationUnit"), is (HoldShelfExpiryPeriod.IntervalId.MINUTES.toString()));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.MINUTES.toString()));
   }
 
   @Test
@@ -358,8 +358,8 @@ public class ServicePointTest extends TestBase{
     TimeoutException,
     MalformedURLException {
 
-    Response response = createServicePoint(null, "Circ Desk 11", "cd11",
-      "Circulation Desk 11 -- Hallway", null, 20,
+    Response response = createServicePoint(null, "Circ Desk 101", "cd101",
+      "Circulation Desk 101 -- Hallway", null, 20,
       null, createHoldShelfExpiryPeriod());
 
     assertThat(response.getStatusCode(), is(422));
@@ -454,7 +454,7 @@ public class ServicePointTest extends TestBase{
 
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (5));
-    assertThat(holdShelfExpiryPeriod.getString("durationUnit"), is (HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
   }
 
   @Test
@@ -524,12 +524,12 @@ public class ServicePointTest extends TestBase{
     TimeoutException,
     MalformedURLException {
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    createServicePoint(id, "Circ Desk 102", "cd102",
       "Circulation Desk -- Hallway", null, 20, false, null);
     JsonObject request = new JsonObject()
       .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
+      .put("name", "Circ Desk 102")
+      .put("code", "cd102")
       .put("discoveryDisplayName", "Circulation Desk -- Basement")
       .put("pickupLocation", true);
 
@@ -649,7 +649,7 @@ public class ServicePointTest extends TestBase{
 
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (5));
-    assertThat(holdShelfExpiryPeriod.getString("durationUnit"), is (HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
   }
 
   @Test
@@ -683,6 +683,7 @@ public class ServicePointTest extends TestBase{
     assertThat(responseJson.getString("name"), is("Circ Desk 2"));
     assertThat(responseJson.getBoolean("pickupLocation"), is(false));
   }
+
 
   // --- END TESTS --- //
 
@@ -731,10 +732,10 @@ public class ServicePointTest extends TestBase{
 
   }
 
-  public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, HoldShelfExpiryPeriod.IntervalId unit){
+  public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, HoldShelfExpiryPeriod.IntervalId intervalId){
       HoldShelfExpiryPeriod holdShelfExpiryPeriod = new HoldShelfExpiryPeriod();
       holdShelfExpiryPeriod.setDuration(duration);
-      holdShelfExpiryPeriod.setIntervalId(unit);
+      holdShelfExpiryPeriod.setIntervalId(intervalId);
       return holdShelfExpiryPeriod;
   }
 
