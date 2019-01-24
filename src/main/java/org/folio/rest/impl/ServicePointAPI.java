@@ -356,7 +356,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
   private String validateServicePoint(Servicepoint svcpt){
 
     HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
-    Boolean pickupLocation = svcpt.getPickupLocation() == null ? false: svcpt.getPickupLocation();
+    Boolean pickupLocation = svcpt.getPickupLocation() == null ? Boolean.FALSE : svcpt.getPickupLocation();
 
     if (!pickupLocation && holdShelfExpiryPeriod != null ) {
       return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
