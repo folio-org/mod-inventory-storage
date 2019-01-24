@@ -6,7 +6,7 @@
       "type": "integer",
       "description": "Duration interval"
     },
-    "durationUnit": {
+    "intervalId": {
       "type": "string",
       "description": "Unit of time for the duration",
       "enum":[
@@ -21,7 +21,7 @@
   },
   "required": [
     "duration",
-    "durationUnit"
+    "intervalId"
   ],
   "additionalProperties": false
 }

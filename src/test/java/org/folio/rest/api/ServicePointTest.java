@@ -89,7 +89,7 @@ public class ServicePointTest extends TestBase{
           ExecutionException,
           TimeoutException,
           MalformedURLException {
-    Response response = createServicePoint(null, "Circ Desk 1", null,
+    Response response = createServicePoint(null, "Circ Desk 103", null,
         "Circulation Desk -- Hallway", null,
         20, true, createHoldShelfExpiryPeriod());
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
@@ -136,7 +136,7 @@ public class ServicePointTest extends TestBase{
 
     JsonObject holdShelfExpiryPeriod = response.getJson().getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (2));
-    assertThat(holdShelfExpiryPeriod.getString("durationUnit"), is (HoldShelfExpiryPeriod.DurationUnit.DAYS.toString()));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.DAYS.toString()));
   }
 
   @Test
@@ -261,7 +261,7 @@ public class ServicePointTest extends TestBase{
 
     Response response = createServicePoint(null, "Circ Desk 11", "cd11",
       "Circulation Desk 11 -- Hallway", null, 20,
-      true, createHoldShelfExpiryPeriod(3, HoldShelfExpiryPeriod.DurationUnit.MINUTES));
+      true, createHoldShelfExpiryPeriod(3, HoldShelfExpiryPeriod.IntervalId.MINUTES));
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject responseJson = response.getJson();
@@ -272,7 +272,7 @@ public class ServicePointTest extends TestBase{
 
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (3));
-    assertThat(holdShelfExpiryPeriod.getString("durationUnit"), is (HoldShelfExpiryPeriod.DurationUnit.MINUTES.toString()));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.MINUTES.toString()));
   }
 
   @Test
@@ -302,8 +302,8 @@ public class ServicePointTest extends TestBase{
     TimeoutException,
     MalformedURLException {
 
-    Response response = createServicePoint(null, "Circ Desk 11", "cd11",
-      "Circulation Desk 11 -- Hallway", null, 20,
+    Response response = createServicePoint(null, "Circ Desk 101", "cd101",
+      "Circulation Desk 101 -- Hallway", null, 20,
       null, createHoldShelfExpiryPeriod());
 
     assertThat(response.getStatusCode(), is(422));
@@ -381,7 +381,7 @@ public class ServicePointTest extends TestBase{
       .put("discoveryDisplayName", "Circulation Desk -- Basement")
       .put("pickupLocation", true)
       .put("holdShelfExpiryPeriod", new JsonObject(
-                                      Json.encode(createHoldShelfExpiryPeriod(5, HoldShelfExpiryPeriod.DurationUnit.WEEKS)))
+                                      Json.encode(createHoldShelfExpiryPeriod(5, HoldShelfExpiryPeriod.IntervalId.WEEKS)))
       );
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id.toString()), HttpMethod.PUT, request.encode(),
@@ -398,7 +398,7 @@ public class ServicePointTest extends TestBase{
 
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (5));
-    assertThat(holdShelfExpiryPeriod.getString("durationUnit"), is (HoldShelfExpiryPeriod.DurationUnit.WEEKS.toString()));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
   }
 
   @Test
@@ -468,12 +468,12 @@ public class ServicePointTest extends TestBase{
     TimeoutException,
     MalformedURLException {
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    createServicePoint(id, "Circ Desk 102", "cd102",
       "Circulation Desk -- Hallway", null, 20, false, null);
     JsonObject request = new JsonObject()
       .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
+      .put("name", "Circ Desk 102")
+      .put("code", "cd102")
       .put("discoveryDisplayName", "Circulation Desk -- Basement")
       .put("pickupLocation", true);
 
@@ -576,7 +576,7 @@ public class ServicePointTest extends TestBase{
       .put("discoveryDisplayName", "Circulation Desk -- Basement")
       .put("pickupLocation", true)
       .put("holdShelfExpiryPeriod", new JsonObject(
-        Json.encode(createHoldShelfExpiryPeriod(5, HoldShelfExpiryPeriod.DurationUnit.WEEKS)))
+        Json.encode(createHoldShelfExpiryPeriod(5, HoldShelfExpiryPeriod.IntervalId.WEEKS)))
       );
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id.toString()), HttpMethod.PUT, request.encode(),
@@ -593,7 +593,7 @@ public class ServicePointTest extends TestBase{
 
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (5));
-    assertThat(holdShelfExpiryPeriod.getString("durationUnit"), is (HoldShelfExpiryPeriod.DurationUnit.WEEKS.toString()));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
   }
 
   @Test
@@ -628,15 +628,15 @@ public class ServicePointTest extends TestBase{
     assertThat(responseJson.getBoolean("pickupLocation"), is(false));
   }
 
-  public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, HoldShelfExpiryPeriod.DurationUnit unit){
+  public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, HoldShelfExpiryPeriod.IntervalId intervalId){
       HoldShelfExpiryPeriod holdShelfExpiryPeriod = new HoldShelfExpiryPeriod();
       holdShelfExpiryPeriod.setDuration(duration);
-      holdShelfExpiryPeriod.setDurationUnit(unit);
+      holdShelfExpiryPeriod.setIntervalId(intervalId);
       return holdShelfExpiryPeriod;
   }
 
   public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(){
-      return createHoldShelfExpiryPeriod(2, HoldShelfExpiryPeriod.DurationUnit.DAYS);
+      return createHoldShelfExpiryPeriod(2, HoldShelfExpiryPeriod.IntervalId.DAYS);
   }
 
   private Response getById(UUID id)
