@@ -93,7 +93,7 @@ public class ServicePointTest extends TestBase{
           ExecutionException,
           TimeoutException,
           MalformedURLException {
-    Response response = createServicePoint(null, "Circ Desk 1", null,
+    Response response = createServicePoint(null, "Circ Desk 103", null,
         "Circulation Desk -- Hallway", null,
         20, true, createHoldShelfExpiryPeriod());
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));

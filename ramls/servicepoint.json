@@ -4,29 +4,37 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "description": "Id of service-point object"
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "description" : "service-point name, a required field"
     },
     "code": {
-      "type": "string"
+      "type": "string",
+      "description" : "service-point code, a required field"
     },
     "discoveryDisplayName": {
-      "type": "string"
+      "type": "string",
+      "description": "display name, a required field"
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "description" : "description of the service-point"
     },
     "shelvingLagTime": {
-      "type": "integer"
+      "type": "integer",
+      "description": "shelving lag time"
     },
     "pickupLocation": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "indicates whether or not the service point is a pickup location"
     },
     "holdShelfExpiryPeriod" :{
       "type": "object",
-      "$ref": "time-period.json"
+      "$ref": "time-period.json",
+      "description": "expiration period for items on the hold shelf at the service point"
     },
     "staffSlips": {
       "type": "array",
