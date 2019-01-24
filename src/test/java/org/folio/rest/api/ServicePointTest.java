@@ -230,8 +230,8 @@ public class ServicePointTest {
     String uuidTrue = UUID.randomUUID().toString();
     String uuidFalse = UUID.randomUUID().toString();
     List<StaffSlip> staffSlips = new ArrayList<>(2);
-    staffSlips.add(new StaffSlip().withStaffSlipId(uuidTrue).withPrintByDefault(Boolean.TRUE));
-    staffSlips.add(new StaffSlip().withStaffSlipId(uuidFalse).withPrintByDefault(Boolean.FALSE));
+    staffSlips.add(new StaffSlip().withId(uuidTrue).withPrintByDefault(Boolean.TRUE));
+    staffSlips.add(new StaffSlip().withId(uuidFalse).withPrintByDefault(Boolean.FALSE));
 
     Response response = createServicePoint(null, "Circ Desk 1", "cd1",
         "Circulation Desk -- Hallway", null, 20, true, staffSlips);
@@ -239,9 +239,9 @@ public class ServicePointTest {
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("code"), is("cd1"));
     assertThat(response.getJson().getString("name"), is("Circ Desk 1"));
-    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("staffSlipId"), is(uuidTrue));
+    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("id"), is(uuidTrue));
     assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(0).getBoolean("printByDefault"), is(Boolean.TRUE));
-    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(1).getString("staffSlipId"), is(uuidFalse));
+    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(1).getString("id"), is(uuidFalse));
     assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(1).getBoolean("printByDefault"), is(Boolean.FALSE));
   }
 
@@ -254,7 +254,7 @@ public class ServicePointTest {
   
     String uuid = UUID.randomUUID().toString();
     List<StaffSlip> staffSlips = new ArrayList<>(1);
-    staffSlips.add(new StaffSlip().withStaffSlipId(uuid));
+    staffSlips.add(new StaffSlip().withId(uuid));
 
     Response response = createServicePoint(null, "Circ Desk 1", "cd1",
         "Circulation Desk -- Hallway", null, 20, true, staffSlips);
@@ -270,7 +270,7 @@ public class ServicePointTest {
     UUID id = UUID.randomUUID();
     String staffSlipId = UUID.randomUUID().toString();
     List<StaffSlip> staffSlips = new ArrayList<>(2);
-    staffSlips.add(new StaffSlip().withStaffSlipId(staffSlipId).withPrintByDefault(Boolean.TRUE));
+    staffSlips.add(new StaffSlip().withId(staffSlipId).withPrintByDefault(Boolean.TRUE));
     createServicePoint(id, "Circ Desk 1", "cd1",
         "Circulation Desk -- Hallway", null, 20, true, staffSlips);
     JsonObject request = new JsonObject()
@@ -281,7 +281,7 @@ public class ServicePointTest {
             .put("pickupLocation", false)
             .put("staffSlips", new JsonArray()
                 .add(new JsonObject()
-                    .put("staffSlipId", staffSlipId)
+                    .put("id", staffSlipId)
                     .put("printByDefault", Boolean.FALSE)));
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id.toString()), HttpMethod.PUT, request.encode(),
@@ -293,7 +293,7 @@ public class ServicePointTest {
     assertThat(getResponse.getJson().getString("code"), is("cd2"));
     assertThat(getResponse.getJson().getString("name"), is("Circ Desk 2")); //should fail
     assertThat(getResponse.getJson().getBoolean("pickupLocation"), is(false));
-    assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("staffSlipId"), is(staffSlipId));
+    assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("id"), is(staffSlipId));
     assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getBoolean("printByDefault"), is(Boolean.FALSE));
   }
   // --- END TESTS --- //
@@ -328,7 +328,7 @@ public class ServicePointTest {
       JsonArray staffSlips = new JsonArray();
       for (StaffSlip ss : slips) {
         JsonObject staffSlip = new JsonObject();
-        staffSlip.put("staffSlipId", ss.getStaffSlipId());
+        staffSlip.put("id", ss.getId());
         staffSlip.put("printByDefault", ss.getPrintByDefault());
         staffSlips.add(staffSlip);
       }
