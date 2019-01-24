@@ -26,6 +26,7 @@ import org.junit.runners.Suite;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
 
@@ -222,10 +223,17 @@ public class StorageTestSuite {
 
     HttpClient client = new HttpClient(vertx);
 
-    client.post(storageUrl("/_/tenant"), null, tenantId,
+    JsonArray ar = new JsonArray();
+    ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
+
+    JsonObject jo = new JsonObject();
+    jo.put("parameters", ar);
+    jo.put("module_to", "mod-inventory-storage-1.0.0");
+
+    client.post(storageUrl("/_/tenant"), jo, tenantId,
       ResponseHandler.any(tenantPrepared));
 
-    Response response = tenantPrepared.get(20, TimeUnit.SECONDS);
+    Response response = tenantPrepared.get(30, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant preparation failed: %s: %s",
       response.getStatusCode(), response.getBody());

@@ -3,7 +3,7 @@
 CREATE SEQUENCE IF NOT EXISTS ${myuniversity}_${mymodule}.item_hrid_seq
   INCREMENT BY 1
   START WITH 1
-  OWNED BY item.jsonb;
+  OWNED BY ${myuniversity}_${mymodule}.item.jsonb;
 
 GRANT ALL ON SEQUENCE ${myuniversity}_${mymodule}.item_hrid_seq TO ${myuniversity}_${mymodule};
 
