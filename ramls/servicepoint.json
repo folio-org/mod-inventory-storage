@@ -35,6 +35,13 @@
       "type": "object",
       "$ref": "time-period.json",
       "description": "expiration period for items on the hold shelf at the service point"
+      "type": "boolean",
+      "description": "indicates whether or not the service point is a pickup location"
+    },
+    "holdShelfExpiryPeriod" :{
+      "type": "object",
+      "$ref": "time-period.json",
+      "description": "expiration period for items on the hold shelf at the service point"
     },
     "staffSlips": {
       "type": "array",

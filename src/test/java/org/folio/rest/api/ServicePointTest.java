@@ -232,83 +232,6 @@ public class ServicePointTest extends TestBase{
   }
 
   @Test
-  public void canCreateServicePointWithStaffSlips()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException,
-      MalformedURLException {
-
-    String uuidTrue = UUID.randomUUID().toString();
-    String uuidFalse = UUID.randomUUID().toString();
-    List<StaffSlip> staffSlips = new ArrayList<>(2);
-    staffSlips.add(new StaffSlip().withId(uuidTrue).withPrintByDefault(Boolean.TRUE));
-    staffSlips.add(new StaffSlip().withId(uuidFalse).withPrintByDefault(Boolean.FALSE));
-
-    Response response = createServicePoint(null, "Circ Desk 1", "cd1",
-        "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips);
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    assertThat(response.getJson().getString("id"), notNullValue());
-    assertThat(response.getJson().getString("code"), is("cd1"));
-    assertThat(response.getJson().getString("name"), is("Circ Desk 1"));
-    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("id"), is(uuidTrue));
-    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(0).getBoolean("printByDefault"), is(Boolean.TRUE));
-    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(1).getString("id"), is(uuidFalse));
-    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(1).getBoolean("printByDefault"), is(Boolean.FALSE));
-  }
-
-  @Test
-  public void cannotCreateServicePointWithStaffSlipsMissingFields()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException,
-      MalformedURLException {
-
-    String uuid = UUID.randomUUID().toString();
-    List<StaffSlip> staffSlips = new ArrayList<>(1);
-    staffSlips.add(new StaffSlip().withId(uuid));
-
-    Response response = createServicePoint(null, "Circ Desk 1", "cd1",
-        "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips);
-    assertThat(response.getStatusCode(), is(422));
-  }
-
-  @Test
-  public void canUpdateAServicePointWithStaffSlips()
-          throws InterruptedException,
-          ExecutionException,
-          TimeoutException,
-          MalformedURLException {
-    UUID id = UUID.randomUUID();
-    String staffSlipId = UUID.randomUUID().toString();
-    List<StaffSlip> staffSlips = new ArrayList<>(2);
-    staffSlips.add(new StaffSlip().withId(staffSlipId).withPrintByDefault(Boolean.TRUE));
-    createServicePoint(id, "Circ Desk 1", "cd1",
-        "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips);
-    JsonObject request = new JsonObject()
-            .put("id", id.toString())
-            .put("name", "Circ Desk 2")
-            .put("code", "cd2")
-            .put("discoveryDisplayName", "Circulation Desk -- Basement")
-            .put("pickupLocation", false)
-            .put("staffSlips", new JsonArray()
-                .add(new JsonObject()
-                    .put("id", staffSlipId)
-                    .put("printByDefault", Boolean.FALSE)));
-    CompletableFuture<Response> updated = new CompletableFuture<>();
-    send(servicePointsUrl("/" + id.toString()), HttpMethod.PUT, request.encode(),
-            SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
-    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
-    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    Response getResponse = getById(id);
-    assertThat(getResponse.getJson().getString("id"), is(id.toString()));
-    assertThat(getResponse.getJson().getString("code"), is("cd2"));
-    assertThat(getResponse.getJson().getString("name"), is("Circ Desk 2")); //should fail
-    assertThat(getResponse.getJson().getBoolean("pickupLocation"), is(false));
-    assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("id"), is(staffSlipId));
-    assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getBoolean("printByDefault"), is(Boolean.FALSE));
-  }
-
-  @Test
   public void canCreateServicePointWithHoldShelfExpiryPeriod()
     throws InterruptedException,
     ExecutionException,
@@ -685,6 +608,83 @@ public class ServicePointTest extends TestBase{
   }
 
 
+  @Test
+  public void canCreateServicePointWithStaffSlips()
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
+
+    String uuidTrue = UUID.randomUUID().toString();
+    String uuidFalse = UUID.randomUUID().toString();
+    List<StaffSlip> staffSlips = new ArrayList<>(2);
+    staffSlips.add(new StaffSlip().withId(uuidTrue).withPrintByDefault(Boolean.TRUE));
+    staffSlips.add(new StaffSlip().withId(uuidFalse).withPrintByDefault(Boolean.FALSE));
+
+    Response response = createServicePoint(null, "Circ Desk 1", "cd1",
+        "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(response.getJson().getString("id"), notNullValue());
+    assertThat(response.getJson().getString("code"), is("cd1"));
+    assertThat(response.getJson().getString("name"), is("Circ Desk 1"));
+    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("id"), is(uuidTrue));
+    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(0).getBoolean("printByDefault"), is(Boolean.TRUE));
+    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(1).getString("id"), is(uuidFalse));
+    assertThat(response.getJson().getJsonArray("staffSlips").getJsonObject(1).getBoolean("printByDefault"), is(Boolean.FALSE));
+  }
+
+  @Test
+  public void cannotCreateServicePointWithStaffSlipsMissingFields()
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
+
+    String uuid = UUID.randomUUID().toString();
+    List<StaffSlip> staffSlips = new ArrayList<>(1);
+    staffSlips.add(new StaffSlip().withId(uuid));
+
+    Response response = createServicePoint(null, "Circ Desk 1", "cd1",
+        "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips);
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void canUpdateAServicePointWithStaffSlips()
+          throws InterruptedException,
+          ExecutionException,
+          TimeoutException,
+          MalformedURLException {
+    UUID id = UUID.randomUUID();
+    String staffSlipId = UUID.randomUUID().toString();
+    List<StaffSlip> staffSlips = new ArrayList<>(2);
+    staffSlips.add(new StaffSlip().withId(staffSlipId).withPrintByDefault(Boolean.TRUE));
+    createServicePoint(id, "Circ Desk 1", "cd1",
+        "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips);
+    JsonObject request = new JsonObject()
+            .put("id", id.toString())
+            .put("name", "Circ Desk 2")
+            .put("code", "cd2")
+            .put("discoveryDisplayName", "Circulation Desk -- Basement")
+            .put("pickupLocation", false)
+            .put("staffSlips", new JsonArray()
+                .add(new JsonObject()
+                    .put("id", staffSlipId)
+                    .put("printByDefault", Boolean.FALSE)));
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(servicePointsUrl("/" + id.toString()), HttpMethod.PUT, request.encode(),
+            SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    Response getResponse = getById(id);
+    assertThat(getResponse.getJson().getString("id"), is(id.toString()));
+    assertThat(getResponse.getJson().getString("code"), is("cd2"));
+    assertThat(getResponse.getJson().getString("name"), is("Circ Desk 2")); //should fail
+    assertThat(getResponse.getJson().getBoolean("pickupLocation"), is(false));
+    assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("id"), is(staffSlipId));
+    assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getBoolean("printByDefault"), is(Boolean.FALSE));
+  }
+
   // --- END TESTS --- //
 
   public static Response createServicePoint(UUID id, String name, String code,
@@ -726,10 +726,9 @@ public class ServicePointTest extends TestBase{
     }
 
     send(servicePointsUrl(""), HttpMethod.POST, request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF,
-      ResponseHandler.json(createServicePoint));
+            SUPPORTED_CONTENT_TYPE_JSON_DEF,
+            ResponseHandler.json(createServicePoint));
     return createServicePoint.get(5, TimeUnit.SECONDS);
-
   }
 
   public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, HoldShelfExpiryPeriod.IntervalId intervalId){
