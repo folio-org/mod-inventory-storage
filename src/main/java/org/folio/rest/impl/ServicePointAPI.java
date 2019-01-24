@@ -166,6 +166,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
             PostServicePointsResponse.respond422WithApplicationJson(
               ValidationHelper.createValidationErrorMessage("name",
                 entity.getName(), validateSvcptResult))));
+          return;
         }
 
         String id = entity.getId();
@@ -313,6 +314,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
             PutServicePointsByServicepointIdResponse
               .respond422WithApplicationJson(ValidationHelper.createValidationErrorMessage("name",
                 entity.getName(), validateSvcptResult))));
+          return;
         }
 
         String tenantId = getTenant(okapiHeaders);

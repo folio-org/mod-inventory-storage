@@ -226,31 +226,6 @@ public class ServicePointTest extends TestBase{
     Response getResponse = gotten.get(5, TimeUnit.SECONDS);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
-  // --- END TESTS --- //
-
-  public static Response createServicePoint(UUID id, String name, String code,
-                                            String discoveryDisplayName, String description, Integer shelvingLagTime,
-                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod)
-          throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
-    JsonObject request = new JsonObject();
-    request
-            .put("name", name)
-            .put("code", code)
-            .put("discoveryDisplayName", discoveryDisplayName);
-    if(id != null) { request.put("id", id.toString()); }
-    if(description != null) { request.put("description", description); }
-    if(shelvingLagTime != null) { request.put("shelvingLagTime", shelvingLagTime); }
-    if(pickupLocation != null) { request.put("pickupLocation", pickupLocation); }
-    if(shelfExpiryPeriod != null) {request.put("holdShelfExpiryPeriod", new JsonObject(Json.encode(shelfExpiryPeriod)));}
-
-    send(servicePointsUrl(""), HttpMethod.POST, request.toString(),
-            SUPPORTED_CONTENT_TYPE_JSON_DEF,
-            ResponseHandler.json(createServicePoint));
-    return createServicePoint.get(5, TimeUnit.SECONDS);
-
-  }
 
   @Test
   public void canCreateServicePointWithHoldShelfExpiryPeriod()
@@ -626,6 +601,31 @@ public class ServicePointTest extends TestBase{
     assertThat(responseJson.getString("code"), is("cd2"));
     assertThat(responseJson.getString("name"), is("Circ Desk 2"));
     assertThat(responseJson.getBoolean("pickupLocation"), is(false));
+  }
+
+  // --- END TESTS --- //
+
+  public static Response createServicePoint(UUID id, String name, String code,
+                                            String discoveryDisplayName, String description, Integer shelvingLagTime,
+                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
+    JsonObject request = new JsonObject();
+    request
+      .put("name", name)
+      .put("code", code)
+      .put("discoveryDisplayName", discoveryDisplayName);
+    if(id != null) { request.put("id", id.toString()); }
+    if(description != null) { request.put("description", description); }
+    if(shelvingLagTime != null) { request.put("shelvingLagTime", shelvingLagTime); }
+    if(pickupLocation != null) { request.put("pickupLocation", pickupLocation); }
+    if(shelfExpiryPeriod != null) {request.put("holdShelfExpiryPeriod", new JsonObject(Json.encode(shelfExpiryPeriod)));}
+
+    send(servicePointsUrl(""), HttpMethod.POST, request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.json(createServicePoint));
+    return createServicePoint.get(5, TimeUnit.SECONDS);
   }
 
   public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, HoldShelfExpiryPeriod.IntervalId intervalId){
