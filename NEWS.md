@@ -1,5 +1,7 @@
 ## 14.1.0 Unreleased
 
+* Provides `service-points` interface version 3.1 (MODINVSTOR-235)
+* Adds `staffSlips` to `servicepoint` schema (MODINVSTOR-235)
 * Provides `item-storage` interface version 7.1 (MODINVSTOR-249)
 * Adds `circulationNotes` to `item` schema (MODINVSTOR-249)
 

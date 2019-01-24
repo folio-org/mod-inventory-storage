@@ -233,7 +233,7 @@ public class StorageTestSuite {
     client.post(storageUrl("/_/tenant"), jo, tenantId,
       ResponseHandler.any(tenantPrepared));
 
-    Response response = tenantPrepared.get(20, TimeUnit.SECONDS);
+    Response response = tenantPrepared.get(30, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant preparation failed: %s: %s",
       response.getStatusCode(), response.getBody());
