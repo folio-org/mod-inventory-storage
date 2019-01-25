@@ -840,7 +840,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     String error = searchResponse.getBody();
 
     assertThat(error,
-      is("org.z3950.zing.cql.cql2pgjson.QueryValidationException: cql.serverChoice requested, but no serverChoiceIndexes defined."));
+      is("CQL State Error for 't': org.z3950.zing.cql.cql2pgjson.QueryValidationException: cql.serverChoice requested, but no serverChoiceIndexes defined."));
   }
 
   @Test
