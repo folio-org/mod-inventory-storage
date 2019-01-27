@@ -47,6 +47,18 @@ public class InterfaceUrls {
 
     return StorageTestSuite.storageUrl("/instance-storage/instances" + subPath);
   }
+  
+  public static URL instanceRelationshipsUrl(String subPath)
+    throws MalformedURLException {
+    
+    return StorageTestSuite.storageUrl("/instance-storage/instance-relationships" + subPath);
+  }
+  
+  public static URL instanceRelationshipTypesUrl (String subPath)
+    throws MalformedURLException {
+    
+    return StorageTestSuite.storageUrl("/instance-relationship-types" + subPath);
+  }
 
   public static URL contributorTypesUrl(String subPath)
     throws MalformedURLException {
