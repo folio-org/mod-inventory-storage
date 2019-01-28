@@ -36,7 +36,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
   public static final String LOCATION_PREFIX = "/service-points/";
   public static final String ID_FIELD = "'id'";
   public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY = "Hold shelf expiry period must be specified when service point can be used for pickup.";
-  public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC= "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
+  public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC = "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
 
   PostgresClient getPGClient(Context vertxContext, String tenantId) {
     return PostgresClient.getInstance(vertxContext.owner(), tenantId);
@@ -347,10 +347,6 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
                 .respond500WithTextPlain(getErrorResponse(message))));
       }
     });
-  }
-
-  public void putServicePoints(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext){
-    throw new UnsupportedOperationException();
   }
 
   private String validateServicePoint(Servicepoint svcpt){

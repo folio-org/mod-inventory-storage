@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description" : "schema for time-period, which contains time interval 'duration' and the time unit",
   "properties": {
     "duration": {
       "type": "integer",
