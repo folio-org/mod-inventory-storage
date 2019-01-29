@@ -100,6 +100,9 @@ resourceTypes:
               description: "Source record deleted"
             404:
               description: "There is no source record for that instanceId"
+              body:
+                text/plain:
+                  example: "There is no source record for that instanceId"
             500:
               description: "Internal server error, e.g. due to misconfiguration"
               body:
