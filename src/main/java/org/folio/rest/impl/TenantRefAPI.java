@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import java.io.File;
+import io.vertx.core.json.JsonObject;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -152,6 +153,18 @@ public class TenantRefAPI extends TenantAPI {
     }
   }
 
+  private void applyHeaders(HttpClientRequest req, Map<String, String> headers, String json) {
+    for (Map.Entry<String, String> e : headers.entrySet()) {
+      String k = e.getKey();
+      if (k.startsWith("X-") || k.startsWith("x-")) {
+        req.headers().add(k, e.getValue());
+      }
+    }
+    req.headers().add("Content-Type", "application/json");
+    req.headers().add("Accept", "application/json, text/plain");
+    req.end(json);
+  }
+
   private void loadRef(Map<String, String> headers, String endPoint, Handler<AsyncResult<Void>> res) {
     log.info("loadRef " + endPoint + " begin");
     String okapiUrl = headers.get("X-Okapi-Url-to");
@@ -181,22 +194,29 @@ public class TenantRefAPI extends TenantAPI {
       Future f = Future.future();
       futures.add(f);
 
-      HttpClientRequest req = httpClient.postAbs(endPointUrl, x -> {
-        if (x.statusCode() >= 200 && x.statusCode() <= 299) {
+      JsonObject jsonObject = new JsonObject(json);
+      String id = jsonObject.getString("id");
+      if (id == null) {
+        f.handle(Future.failedFuture("Missing id for " + json));
+        return;
+      }
+      HttpClientRequest reqPut = httpClient.putAbs(endPointUrl + "/" + id, resPut -> {
+        if (resPut.statusCode() == 404) {
+          HttpClientRequest reqPost = httpClient.postAbs(endPointUrl, resPost -> {
+            if (resPost.statusCode() == 201) {
+              f.handle(Future.succeededFuture());
+            } else {
+              f.handle(Future.failedFuture("POST " + endPointUrl + " returned status " + resPost.statusCode()));
+            }
+          });
+          applyHeaders(reqPost, headers, json);
+        } else if (resPut.statusCode() == 200) {
           f.handle(Future.succeededFuture());
         } else {
-          f.handle(Future.failedFuture("POST " + endPointUrl + " returned status " + x.statusCode()));
+          f.handle(Future.failedFuture("PUT " + endPointUrl + "/" + id + " returned status " + resPut.statusCode()));
         }
       });
-      for (Map.Entry<String, String> e : headers.entrySet()) {
-        String k = e.getKey();
-        if (k.startsWith("X-") || k.startsWith("x-")) {
-          req.headers().add(k, e.getValue());
-        }
-      }
-      req.headers().add("Content-Type", "application/json");
-      req.headers().add("Accept", "application/json, text/plain");
-      req.end(json);
+      applyHeaders(reqPut, headers, json);
     }
     CompositeFuture.all(futures).setHandler(x -> {
       log.info("loadRef " + endPoint + " done. success=" + x.succeeded());

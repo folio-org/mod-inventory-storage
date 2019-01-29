@@ -133,7 +133,7 @@ public class StorageTestSuite {
         undeploymentComplete.completeExceptionally(res.cause());
       }
     });
-
+    PostgresClient.stopEmbeddedPostgres();
     undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
@@ -237,7 +237,20 @@ public class StorageTestSuite {
 
     Response response = tenantPrepared.get(30, TimeUnit.SECONDS);
 
-    String failureMessage = String.format("Tenant preparation failed: %s: %s",
+    String failureMessage = String.format("Tenant init failed: %s: %s",
+      response.getStatusCode(), response.getBody());
+
+    assertThat(failureMessage,
+      response.getStatusCode(), is(201));
+
+    jo.put("module_to", "mod-inventory-storage-1.1.0");
+    jo.put("module_from", "mod-inventory-storage-1.0.0");
+    client.post(storageUrl("/_/tenant"), jo, tenantId,
+      ResponseHandler.any(tenantPrepared));
+
+    response = tenantPrepared.get(20, TimeUnit.SECONDS);
+
+    failureMessage = String.format("Tenant upgrade failed: %s: %s",
       response.getStatusCode(), response.getBody());
 
     assertThat(failureMessage,
