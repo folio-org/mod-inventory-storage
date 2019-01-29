@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import java.io.File;
+import io.vertx.core.json.JsonObject;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -165,7 +166,7 @@ public class TenantRefAPI extends TenantAPI {
     try {
       List<InputStream> streams = getStreamsfromClassPathDir("ref-data/" + endPoint);
       for (InputStream stream : streams) {
-        jsonList.add(IOUtils.toString(stream, "UTF-8"));
+	jsonList.add(IOUtils.toString(stream, "UTF-8"));
       }
     } catch (URISyntaxException ex) {
       res.handle(Future.failedFuture("URISyntaxException for path " + endPoint + " ex=" + ex.getLocalizedMessage()));
@@ -181,18 +182,42 @@ public class TenantRefAPI extends TenantAPI {
       Future f = Future.future();
       futures.add(f);
 
-      HttpClientRequest req = httpClient.postAbs(endPointUrl, x -> {
-        if (x.statusCode() >= 200 && x.statusCode() <= 299) {
-          f.handle(Future.succeededFuture());
-        } else {
-          f.handle(Future.failedFuture("POST " + endPointUrl + " returned status " + x.statusCode()));
-        }
+      JsonObject jsonObject = new JsonObject(json);
+      String id = jsonObject.getString("id");
+      if (id == null) {
+	f.handle(Future.failedFuture("Missing id for " + json));
+	return;
+      }
+
+      final HttpClientRequest req = httpClient.putAbs(endPointUrl + "/" + id, x -> {
+	if (x.statusCode() == 404) {
+	  final HttpClientRequest req2 = httpClient.postAbs(endPointUrl, x2 -> {
+	    if (x2.statusCode() == 201) {
+	      f.handle(Future.succeededFuture());
+	    } else {
+	      f.handle(Future.failedFuture("POST " + endPointUrl + " returned status " + x.statusCode()));
+	    }
+	  });
+	  for (Map.Entry<String, String> e : headers.entrySet()) {
+	    String k = e.getKey();
+	    if (k.startsWith("X-") || k.startsWith("x-")) {
+	      req2.headers().add(k, e.getValue());
+	    }
+	  }
+	  req2.headers().add("Content-Type", "application/json");
+	  req2.headers().add("Accept", "application/json, text/plain");
+	  req2.end(json);
+	} else if (x.statusCode() == 200) {
+	  f.handle(Future.succeededFuture());
+	} else {
+	  f.handle(Future.failedFuture("PUT " + endPointUrl + "/" + id + " returned status " + x.statusCode()));
+	}
       });
       for (Map.Entry<String, String> e : headers.entrySet()) {
-        String k = e.getKey();
-        if (k.startsWith("X-") || k.startsWith("x-")) {
-          req.headers().add(k, e.getValue());
-        }
+	String k = e.getKey();
+	if (k.startsWith("X-") || k.startsWith("x-")) {
+	  req.headers().add(k, e.getValue());
+	}
       }
       req.headers().add("Content-Type", "application/json");
       req.headers().add("Accept", "application/json, text/plain");
