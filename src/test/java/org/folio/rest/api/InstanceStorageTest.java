@@ -33,7 +33,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.apache.commons.io.IOUtils;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.MarcJson;
@@ -395,14 +394,7 @@ public class InstanceStorageTest extends TestBase {
 
     createInstance(secondInstanceToCreate);
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(instancesStorageUrl(""), StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    Response response = getCompleted.get(5, TimeUnit.SECONDS);
-
-    JsonObject responseBody = response.getJson();
+    JsonObject responseBody = searchForInstances("cql.allRecords=1 sortBy title");
 
     JsonArray allInstances = responseBody.getJsonArray("instances");
 
@@ -688,18 +680,11 @@ public class InstanceStorageTest extends TestBase {
    * <p>
    * Example: searchForInstances("title = t*");
    * <p>
-   * The example produces "?query=title+%3D+t*&limit=3"
+   * The example runs an API request with "?query=title+%3D+t*&limit=3"
    * @return the response as an JsonObject
    */
   private JsonObject searchForInstances(String cql) {
     try {
-      // RMB ensures en_US locale so that sorting behaves that same in all environments
-      createInstance(smallAngryPlanet(UUID.randomUUID()));
-      createInstance(nod(UUID.randomUUID()));
-      createInstance(uprooted(UUID.randomUUID()));
-      createInstance(temeraire(UUID.randomUUID()));
-      createInstance(interestingTimes(UUID.randomUUID()));
-
       CompletableFuture<Response> searchCompleted = new CompletableFuture<Response>();
 
       String url = instancesStorageUrl("").toString() + "?query="
@@ -716,12 +701,36 @@ public class InstanceStorageTest extends TestBase {
   }
 
   /**
+   * Create the 5 example instances and run a get request using the provided cql query.
+   * <p>
+   * Example: searchForInstances("title = t*");
+   * <p>
+   * The example runs an API request with "?query=title+%3D+t*&limit=3"
+   * @return the response as an JsonObject
+   */
+  private JsonObject searchForInstancesWithin5(String cql) {
+    try {
+      // RMB ensures en_US locale so that sorting behaves that same in all environments
+      createInstance(smallAngryPlanet(UUID.randomUUID()));
+      createInstance(nod(UUID.randomUUID()));
+      createInstance(uprooted(UUID.randomUUID()));
+      createInstance(temeraire(UUID.randomUUID()));
+      createInstance(interestingTimes(UUID.randomUUID()));
+
+      return searchForInstances(cql);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
    * Assert that the cql query returns the expectedTitles in that order.
+   * Searches within the 5 example instance records.
    * @param cql  query to run
    * @param expectedTitles  titles in the expected order
    */
   private void canSort(String cql, String ... expectedTitles) {
-    JsonObject searchBody = searchForInstances(cql);
+    JsonObject searchBody = searchForInstancesWithin5(cql);
     assertThat(searchBody.getInteger("totalRecords"), is(expectedTitles.length));
     JsonArray foundInstances = searchBody.getJsonArray("instances");
     assertThat(foundInstances.size(), is(expectedTitles.length));
