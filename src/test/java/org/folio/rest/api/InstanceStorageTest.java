@@ -394,7 +394,14 @@ public class InstanceStorageTest extends TestBase {
 
     createInstance(secondInstanceToCreate);
 
-    JsonObject responseBody = searchForInstances("cql.allRecords=1 sortBy title");
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(instancesStorageUrl(""), StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject responseBody = response.getJson();
 
     JsonArray allInstances = responseBody.getJsonArray("instances");
 
@@ -403,6 +410,14 @@ public class InstanceStorageTest extends TestBase {
 
     JsonObject firstInstance = allInstances.getJsonObject(0);
     JsonObject secondInstance = allInstances.getJsonObject(1);
+
+    // no "sortBy" used so the database can return them in any order.
+    // swap if needed:
+    if (firstInstanceId.toString().equals(secondInstance.getString("id"))) {
+      JsonObject tmp = firstInstance;
+      firstInstance = secondInstance;
+      secondInstance = tmp;
+    }
 
     assertThat(firstInstance.getString("id"), is(firstInstanceId.toString()));
     assertThat(firstInstance.getString("title"), is("Long Way to a Small Angry Planet"));
