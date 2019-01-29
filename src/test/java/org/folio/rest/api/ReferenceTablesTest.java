@@ -65,7 +65,6 @@ public class ReferenceTablesTest extends TestBase {
             apiUrl,
             new AlternativeTitleType("Test alternative title type", "test source")
     );
-
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
@@ -90,12 +89,10 @@ public class ReferenceTablesTest extends TestBase {
             new CallNumberType("Test call number type", "test source")
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
     String entityUUID = postResponse.getJson().getString("id");
     URL deleteUrl = callNumberTypesUrl("/" + entityUUID);
     Response deleteResponse = deleteReferenceRecordById (deleteUrl);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
   }
 
   @Test
@@ -169,7 +166,6 @@ public class ReferenceTablesTest extends TestBase {
     URL deleteUrl = contributorTypesUrl("/" + entityUUID);
     Response deleteResponse = deleteReferenceRecordById (deleteUrl);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
   }
 
   @Test
@@ -464,7 +460,6 @@ public class ReferenceTablesTest extends TestBase {
     Response deleteResponseCodeType = deleteReferenceRecordById (deleteUrlCodeType);
     assertThat(deleteResponseCodeType.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-
   }
 
   private Response getReferenceRecords(URL baseUrl)
@@ -514,4 +509,6 @@ public class ReferenceTablesTest extends TestBase {
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     return deleteResponse;
   }
+
+
 }
