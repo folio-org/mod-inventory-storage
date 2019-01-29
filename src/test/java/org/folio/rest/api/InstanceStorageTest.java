@@ -680,7 +680,7 @@ public class InstanceStorageTest extends TestBase {
    * <p>
    * Example: searchForInstances("title = t*");
    * <p>
-   * The example runs an API request with "?query=title+%3D+t*&limit=3"
+   * The example runs an API request with "?query=title+%3D+t*"
    * @return the response as an JsonObject
    */
   private JsonObject searchForInstances(String cql) {
@@ -703,9 +703,10 @@ public class InstanceStorageTest extends TestBase {
   /**
    * Create the 5 example instances and run a get request using the provided cql query.
    * <p>
-   * Example: searchForInstances("title = t*");
+   * Example: searchForInstancesWithin5("title = t*");
    * <p>
-   * The example runs an API request with "?query=title+%3D+t*&limit=3"
+   * The example runs an API request with "?query=title+%3D+t*" against the
+   * 5 example instances.
    * @return the response as an JsonObject
    */
   private JsonObject searchForInstancesWithin5(String cql) {
