@@ -65,7 +65,13 @@ public class ReferenceTablesTest extends TestBase {
             apiUrl,
             new AlternativeTitleType("Test alternative title type", "test source")
     );
+
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = alternativeTitleTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
   @Test
@@ -85,6 +91,11 @@ public class ReferenceTablesTest extends TestBase {
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = callNumberTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
   }
 
   @Test
@@ -103,6 +114,11 @@ public class ReferenceTablesTest extends TestBase {
             new ClassificationType("Test classfication type")
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = classificationTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
   }
 
@@ -124,6 +140,11 @@ public class ReferenceTablesTest extends TestBase {
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = contributorNameTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
   }
 
   @Test
@@ -143,6 +164,11 @@ public class ReferenceTablesTest extends TestBase {
             new ContributorType("Test contributor type", "Test Code", "Test Source")
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = contributorTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
   }
 
@@ -164,6 +190,11 @@ public class ReferenceTablesTest extends TestBase {
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = electronicAccessRelationshipsUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
   }
 
   @Test
@@ -183,6 +214,11 @@ public class ReferenceTablesTest extends TestBase {
             new HoldingsNoteType("Test holdings note type", "test source")
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = holdingsNoteTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
   }
 
@@ -204,6 +240,11 @@ public class ReferenceTablesTest extends TestBase {
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = holdingsTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
   }
 
   @Test
@@ -223,6 +264,11 @@ public class ReferenceTablesTest extends TestBase {
             new IdentifierType("Test identifier type")
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = identifierTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
   }
 
@@ -244,6 +290,11 @@ public class ReferenceTablesTest extends TestBase {
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = illPoliciesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
   }
 
   @Test
@@ -263,6 +314,12 @@ public class ReferenceTablesTest extends TestBase {
             new InstanceFormat("Test instance format", "Test Code", "Test Source")
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = instanceFormatsUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
   }
 
   @Test
@@ -282,6 +339,11 @@ public class ReferenceTablesTest extends TestBase {
             new InstanceStatus("Test instance status", "Test Code", "Test Source")
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = instanceStatusesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
   }
 
@@ -303,6 +365,11 @@ public class ReferenceTablesTest extends TestBase {
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = instanceTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
   }
 
   @Test
@@ -323,6 +390,11 @@ public class ReferenceTablesTest extends TestBase {
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = itemNoteTypesUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
   }
 
   @Test
@@ -342,6 +414,11 @@ public class ReferenceTablesTest extends TestBase {
             new ModeOfIssuance("Test mode of issuance")
     );
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL deleteUrl = modesOfIssuanceUrl("/" + entityUUID);
+    Response deleteResponse = deleteReferenceRecordById (deleteUrl);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
   }
 
@@ -372,10 +449,21 @@ public class ReferenceTablesTest extends TestBase {
     validateNumberOfReferenceRecords("statistical codes", searchResponseCodes, 10, 500);
 
     Response postResponseCode = createReferenceRecord(
-            statisticalCodeTypesUrl,
+            statisticalCodesUrl,
             new StatisticalCode("Test statistical name", "Test statistical code", statisticalCodeTypeId, "Test source")
     );
     assertThat(postResponseCode.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUIDCode = postResponseCode.getJson().getString("id");
+    URL deleteUrlCode = statisticalCodesUrl("/" + entityUUIDCode);
+    Response deleteResponseCode = deleteReferenceRecordById (deleteUrlCode);
+    assertThat(deleteResponseCode.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    String entityUUIDCodeType = postResponseCodeType.getJson().getString("id");
+    URL deleteUrlCodeType = statisticalCodeTypesUrl("/" + entityUUIDCodeType);
+    Response deleteResponseCodeType = deleteReferenceRecordById (deleteUrlCodeType);
+    assertThat(deleteResponseCodeType.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
 
   }
 
@@ -401,7 +489,7 @@ public class ReferenceTablesTest extends TestBase {
     assertTrue(String.format("Expected >=%s \"%s\", found %s", min, dataDescription, totalRecords), min <= totalRecords);
   }
 
-  public Response createReferenceRecord(URL referenceUrl, JsonEntity referenceObject)
+  private Response createReferenceRecord(URL referenceUrl, JsonEntity referenceObject)
   throws ExecutionException, InterruptedException, TimeoutException {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
@@ -415,4 +503,15 @@ public class ReferenceTablesTest extends TestBase {
     return postResponse;
   }
 
+  private Response deleteReferenceRecordById (URL deleteUrl)
+  throws ExecutionException, InterruptedException, TimeoutException {
+    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+    client.delete(
+            deleteUrl,
+            StorageTestSuite.TENANT_ID,
+            ResponseHandler.any(deleteCompleted)
+    );
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    return deleteResponse;
+  }
 }
