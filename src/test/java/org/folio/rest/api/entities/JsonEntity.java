@@ -30,6 +30,10 @@ public abstract class JsonEntity {
     json.put(propertyKey, value);
   }
 
+  public String getString(String propertyKey) {
+    return json.getString(propertyKey);
+  }
+
   public JsonObject getJson() {
     return json;
   }
