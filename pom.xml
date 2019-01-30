@@ -54,7 +54,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>23.1.0</raml-module-builder-version>
+    <raml-module-builder-version>23.4.0</raml-module-builder-version>
     <argLine />
   </properties>
 
@@ -221,6 +221,22 @@
               <resources>
                 <resource>
                   <directory>${ramlfiles_path}</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-reference-data</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/ref-data</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/reference-data</directory>
                   <filtering>true</filtering>
                 </resource>
               </resources>

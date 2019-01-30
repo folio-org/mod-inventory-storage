@@ -20,6 +20,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OutStream;
@@ -58,7 +59,7 @@ public final class StorageHelper {
    * Create a Response using okMethod(entity, headersMethod().withLocationMethod(location)).
    * On exception create a Response using failResponseMethod.
    *
-   * <p>All exceptions are catched and reported via the returned Future.
+   * <p>All exceptions are caught and reported via the returned Future.
    */
   static <T> Future<Response> response(T entity, String location,
       Method headersMethod, Method withLocationMethod,
@@ -87,7 +88,7 @@ public final class StorageHelper {
    * On exception create a Response using failResponseMethod(String exceptionMessage).
    * If that also throws an exception create a failed future.
    *
-   * <p>All exceptions are catched and reported via the returned Future.
+   * <p>All exceptions are caught and reported via the returned Future.
    */
   static <T> Future<Response> response(T value, Method valueMethod, Method failResponseMethod) {
     try {
@@ -121,7 +122,7 @@ public final class StorageHelper {
    * wrapped in a succeeded future.
    * If that also throws an exception create a failed future.
    *
-   * <p>All exceptions are catched and reported via the returned Future.
+   * <p>All exceptions are caught and reported via the returned Future.
    */
   static Future<Response> response(Method responseMethod, Method failResponseMethod) {
     try {
@@ -152,8 +153,9 @@ public final class StorageHelper {
   /**
    * Delete a record from a table.
    *
-   * <p>All exceptions are catched and reported via the asyncResultHandler.
+   * <p>All exceptions are caught and reported via the asyncResultHandler.
    *
+   * @deprecated use {@link PgUtil#deleteById(String, String, Map, Context, Class, Handler)} instead.
    * @param table  where to delete
    * @param id  the primary key of the record to delete
    * @param okapiHeaders  http headers provided by okapi
@@ -164,6 +166,7 @@ public final class StorageHelper {
    * @param deleted
    * @param internalError
    */
+  @Deprecated
   protected static void deleteById(String table, String id,
       Map<String, String> okapiHeaders, Context vertxContext,
       Class<? extends ResponseDelegate> clazz,
@@ -201,8 +204,9 @@ public final class StorageHelper {
   /**
    * Get a record by id.
    *
-   * <p>All exceptions are catched and reported via the asyncResultHandler.
+   * <p>All exceptions are caught and reported via the asyncResultHandler.
    *
+   * @deprecated use {@link PgUtil#getById(String, Class, String, Map, Context, Class, Handler)} instead.
    * @param table  the table that contains the record
    * @param id  the primary key of the record to get
    * @param okapiHeaders  http headers provided by okapi
@@ -211,6 +215,7 @@ public final class StorageHelper {
    *               respond200(T), respond500WithTextPlain(Object).
    * @param asyncResultHandler  where to return the result created using clazz
    */
+  @Deprecated
   protected static <T> void getById(String table, Class<T> clazz, String id,
       Map<String, String> okapiHeaders, Context vertxContext,
       Class<? extends ResponseDelegate> responseDelegateClass,
@@ -288,8 +293,9 @@ public final class StorageHelper {
   /**
    * Post entity to table.
    *
-   * <p>All exceptions are catched and reported via the asyncResultHandler.
+   * <p>All exceptions are caught and reported via the asyncResultHandler.
    *
+   * @deprecated use {@link PgUtil#post(String, Object, Map, Context, Class, Handler)} instead.
    * @param table  table name
    * @param entity  the entity to post. If the id field is missing or null it is set to a random UUID.
    * @param clazz  the ResponseDelegate class created from the RAML file with these methods: headersFor201(),
@@ -297,6 +303,7 @@ public final class StorageHelper {
    *               respond500WithTextPlain(Object).
    * @param asyncResultHandler  where to return the result created using clazz
    */
+  @Deprecated
   protected static <T> void post(String table, T entity,
       Map<String, String> okapiHeaders, Context vertxContext,
       Class<? extends ResponseDelegate> clazz,
@@ -352,8 +359,9 @@ public final class StorageHelper {
   /**
    * Put entity to table.
    *
-   * <p>All exceptions are catched and reported via the asyncResultHandler.
+   * <p>All exceptions are caught and reported via the asyncResultHandler.
    *
+   * @deprecated use {@link PgUtil#put(String, Object, String, Map, Context, Class, Handler)} instead.
    * @param table  table name
    * @param entity  the new entity to store. The id field is set to the id value.
    * @param id  the id value to use for entity
@@ -361,6 +369,7 @@ public final class StorageHelper {
    *               respond204(), respond400WithTextPlain(Object), respond500WithTextPlain(Object).
    * @param asyncResultHandler  where to return the result created using clazz
    */
+  @Deprecated
   protected static <T> void put(String table, T entity, String id,
       Map<String, String> okapiHeaders, Context vertxContext,
       Class<? extends ResponseDelegate> clazz,

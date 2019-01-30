@@ -23,6 +23,7 @@ import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -541,110 +542,8 @@ public class InstanceStorageAPI implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      vertxContext.runOnContext(v -> {
-        try {
-          String[] fieldList = {"*"};
-
-          PreparedCQL preparedCql = handleCQL(String.format("id==%s", instanceId), 1, 0);
-          CQLWrapper cql = preparedCql.getCqlWrapper();
-
-          postgresClient.get(preparedCql.getTableName(), Instance.class, fieldList, cql, true, false,
-            reply -> {
-              if(reply.succeeded()) {
-                List<Instance> instancesList = reply.result().getResults();
-
-                if (instancesList.size() == 1) {
-                  try {
-                      postgresClient.update(preparedCql.getTableName(), entity, entity.getId(),
-                      update -> {
-                        try {
-                          if(update.succeeded()) {
-                            OutStream stream = new OutStream();
-                            stream.setData(entity);
-
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutInstanceStorageInstancesByInstanceIdResponse
-                                  .respond204()));
-                          }
-                          else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutInstanceStorageInstancesByInstanceIdResponse
-                                  .respond500WithTextPlain(
-                                    update.cause().getMessage())));
-                          }
-                        } catch (Exception e) {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PutInstanceStorageInstancesByInstanceIdResponse
-                                .respond500WithTextPlain(e.getMessage())));
-                        }
-                      });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      PutInstanceStorageInstancesByInstanceIdResponse
-                        .respond500WithTextPlain(e.getMessage())));
-                  }
-              }
-              else {
-                try {
-                      postgresClient.save(preparedCql.getTableName(), entity.getId(), entity,
-                    save -> {
-                      try {
-                        if(save.succeeded()) {
-                          OutStream stream = new OutStream();
-                          stream.setData(entity);
-
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PutInstanceStorageInstancesByInstanceIdResponse
-                                .respond204()));
-                        }
-                        else {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PutInstanceStorageInstancesByInstanceIdResponse
-                                .respond500WithTextPlain(
-                                  save.cause().getMessage())));
-                        }
-                      } catch (Exception e) {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PutInstanceStorageInstancesByInstanceIdResponse
-                              .respond500WithTextPlain(e.getMessage())));
-                      }
-                    });
-                } catch (Exception e) {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    PutInstanceStorageInstancesByInstanceIdResponse
-                      .respond500WithTextPlain(e.getMessage())));
-                }
-              }
-            } else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  PutInstanceStorageInstancesByInstanceIdResponse
-                    .respond500WithTextPlain(reply.cause().getMessage())));
-            }
-          });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            PutInstanceStorageInstancesByInstanceIdResponse
-              .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        PutInstanceStorageInstancesByInstanceIdResponse
-          .respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.put(INSTANCE_TABLE, entity, instanceId, okapiHeaders, vertxContext,
+        PutInstanceStorageInstancesByInstanceIdResponse.class, asyncResultHandler);
   }
 
   private boolean isUUID(String id) {
@@ -666,19 +565,8 @@ public class InstanceStorageAPI implements InstanceStorage {
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    PostgresClient postgresClient =
-        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-    postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply -> {
-      if (! reply.succeeded()) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          DeleteInstanceStorageInstancesSourceRecordByInstanceIdResponse
-            .respond500WithTextPlain(reply.cause().getMessage())));
-        return;
-      }
-
-      asyncResultHandler.handle(Future.succeededFuture(
-          DeleteInstanceStorageInstancesSourceRecordByInstanceIdResponse.respond204()));
-    });
+    PgUtil.deleteById(INSTANCE_SOURCE_MARC_TABLE, instanceId, okapiHeaders, vertxContext,
+        DeleteInstanceStorageInstancesSourceRecordByInstanceIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -725,19 +613,8 @@ public class InstanceStorageAPI implements InstanceStorage {
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    PostgresClient postgresClient =
-        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-
-    postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply -> {
-      if (! reply.succeeded()) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          DeleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-            .respond500WithTextPlain(reply.cause().getMessage())));
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(
-          DeleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond204()));
-    });
+    PgUtil.deleteById(INSTANCE_SOURCE_MARC_TABLE, instanceId, okapiHeaders, vertxContext,
+        DeleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.class, asyncResultHandler);
   }
 
   @Override
