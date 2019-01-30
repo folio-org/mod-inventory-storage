@@ -2,12 +2,40 @@ package org.folio.rest.impl;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.*;
 
+import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.impl.InstanceStorageAPI.PreparedCQL;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
+import org.junit.runner.RunWith;
+import org.mockito.AdditionalAnswers;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
+import org.mockito.stubbing.VoidAnswer2;
+import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
+import org.z3950.zing.cql.cql2pgjson.QueryValidationException;
 
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+
+/**
+ * @see org.folio.rest.api.InstanceStorageTest
+ */
+@RunWith(VertxUnitRunner.class)
 public class InstanceStorageAPITest {
+  @Rule
+  public MockitoRule mockitoRule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
+  @Rule
+  public Timeout timeoutRule = Timeout.seconds(5);
+
   private InstanceStorageAPI instanceStorageApi = new InstanceStorageAPI();
 
   private void handleCQL(String cql, String sql, String table) {
@@ -67,5 +95,37 @@ public class InstanceStorageAPITest {
             + "instance_holding_view.ho_jsonb->>'c' ~ '' AND "
             + "instance_holding_view.jsonb->>'d' ~ ''",
               "instance_holding_view");
+  }
+
+  private void optimizedSql500(TestContext testContext , VoidAnswer2<String, Handler> answer, String expected) {
+    try {
+      CQLWrapper cqlWrapper = new CQLWrapper().setQuery("name=a sortBy title").setField(new CQL2PgJSON("jsonb"));
+      PreparedCQL preparedCql = new PreparedCQL("nonexistingTableName", cqlWrapper);
+      PostgresClient postgresClient = mock(PostgresClient.class);
+      doAnswer(AdditionalAnswers.answerVoid(answer))
+          .when(postgresClient).select(anyString(), any(Handler.class));
+
+      InstanceStorageAPI.optimizedSql(preparedCql, StorageTestSuite.TENANT_ID, postgresClient, 0, 10,
+          testContext.asyncAssertSuccess(result -> {
+            testContext.assertEquals(500, result.getStatus());
+            testContext.assertEquals(expected, result.getEntity());
+      }));
+    } catch (QueryValidationException|FieldException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  public void optimizedSqlCanFail(TestContext testContext) {
+    optimizedSql500(testContext,
+        (String sql, Handler h) -> h.handle(Future.failedFuture("can fail")),
+        "can fail");
+  }
+
+  @Test
+  public void optimizedSqlCanCatchException(TestContext testContext) {
+    optimizedSql500(testContext,
+        (String sql, Handler h) -> h.handle(null),
+        null);
   }
 }

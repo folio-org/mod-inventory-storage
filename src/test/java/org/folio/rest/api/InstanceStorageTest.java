@@ -53,6 +53,9 @@ import org.junit.Test;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+/**
+ * @see org.folio.rest.impl.InstanceStorageAPITest
+ */
 public class InstanceStorageTest extends TestBase {
   private static UUID mainLibraryLocationId;
   private static UUID annexLocationId;

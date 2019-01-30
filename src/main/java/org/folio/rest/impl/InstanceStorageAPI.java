@@ -150,7 +150,7 @@ public class InstanceStorageAPI implements InstanceStorage {
    * @return true if an optimized query gets executed, false otherwise
    * @throws QueryValidationException on invalid CQL
    */
-  private static boolean optimizedSql(PreparedCQL preparedCql, String tenantId, PostgresClient postgresClient,
+  static boolean optimizedSql(PreparedCQL preparedCql, String tenantId, PostgresClient postgresClient,
       int offset, int limit, Handler<AsyncResult<Response>> asyncResultHandler) throws QueryValidationException {
 
     String cql = preparedCql.getCqlWrapper().getQuery();
@@ -211,8 +211,8 @@ public class InstanceStorageAPI implements InstanceStorage {
 
     postgresClient.select(sql, reply -> {
       try {
-        log.info("reply.success = " + reply.succeeded());
         if (reply.failed()) {
+          log.error("optimized SQL failed: " + reply.cause().getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetInstanceStorageInstancesResponse.
               respond500WithTextPlain(reply.cause().getMessage())));
@@ -223,7 +223,7 @@ public class InstanceStorageAPI implements InstanceStorage {
             GetInstanceStorageInstancesResponse.
             respond200WithApplicationJson(instances)));
       } catch (Exception e) {
-        log.error(e.getStackTrace());
+        log.error("Exception with reply from optimized SQL: " + e.getMessage(), e.getCause());
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetInstanceStorageInstancesResponse.
             respond500WithTextPlain(e.getMessage())));
@@ -260,7 +260,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
           CQLWrapper cql = preparedCql.getCqlWrapper();
 
-          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
+          log.info("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
 
           postgresClient.get(preparedCql.getTableName(), Instance.class, fieldList, cql,
             true, false, reply -> {
@@ -845,7 +845,7 @@ public class InstanceStorageAPI implements InstanceStorage {
     });
   }
 
-  class PreparedCQL {
+  static class PreparedCQL {
     private final String tableName;
     private final CQLWrapper cqlWrapper;
 
