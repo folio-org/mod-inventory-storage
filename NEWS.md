@@ -1,4 +1,4 @@
-## 15.1.0 2019-02-01
+## 15.0.0 2019-02-01
 
 * Provides `service-points` interface version 3.1 (MODINVSTOR-235)
 * Provides `item-storage` interface version 7.2 (MODINVSTOR-249)
