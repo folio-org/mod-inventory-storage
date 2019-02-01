@@ -832,6 +832,12 @@
           "removeAccents": true
         }
       ],
+      "fullTextIndex": [
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD"
+        }
+      ],
       "customSnippetPath": "itemHrid.sql"
     }
   ],
