@@ -72,7 +72,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
         UUID spID = UUID.randomUUID();
         servicePointIDs.add(spID);
         ServicePointTest.createServicePoint(spID, "Service Point", "SP", "Service Point",
-            "SP Description", 0, false);
+            "SP Description", 0, false, null);
       }
     } catch (Exception e) { // should not happen
       throw new AssertionError("CreateLocUnits failed:", e);

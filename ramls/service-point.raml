@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Service Points API
-version: v3.1
+version: v3.2
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -39,6 +39,12 @@ resourceTypes:
   post:
     description: Create a new service point
     is: [validate]
+    responses:
+      422:
+        description: "Validation error"
+        body:
+          application/json:
+            type: errors
   delete:
     description: "Delete all service points"
     is: [language]
@@ -56,4 +62,12 @@ resourceTypes:
       collection-item:
         exampleItem: !include examples/servicepoint.json
         schema: servicepoint
-
+    put:
+        description: Update a service point
+        is: [validate]
+        responses:
+          422:
+            description: "Validation error"
+            body:
+              application/json:
+                type: errors

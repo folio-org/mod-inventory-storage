@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.model.Servicepoints;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -34,6 +35,8 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
   public static final String SERVICE_POINT_TABLE = "service_point";
   public static final String LOCATION_PREFIX = "/service-points/";
   public static final String ID_FIELD = "'id'";
+  public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY = "Hold shelf expiry period must be specified when service point can be used for pickup.";
+  public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC = "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
 
   PostgresClient getPGClient(Context vertxContext, String tenantId) {
     return PostgresClient.getInstance(vertxContext.owner(), tenantId);
@@ -156,6 +159,16 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
           Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
+
+        String validateSvcptResult = validateServicePoint(entity);
+        if (validateSvcptResult != null){
+          asyncResultHandler.handle(Future.succeededFuture(
+            PostServicePointsResponse.respond422WithApplicationJson(
+              ValidationHelper.createValidationErrorMessage("name",
+                entity.getName(), validateSvcptResult))));
+          return;
+        }
+
         String id = entity.getId();
         if(id == null) {
           id = UUID.randomUUID().toString();
@@ -181,7 +194,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
             entity.setId(ret);
             asyncResultHandler.handle(Future.succeededFuture(
                     PostServicePointsResponse
-                      .respond201WithApplicationJson(entity, 
+                      .respond201WithApplicationJson(entity,
                         PostServicePointsResponse.headersFor201().withLocation((LOCATION_PREFIX + ret)))));
           }
         });
@@ -294,6 +307,16 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
           Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
+
+        String validateSvcptResult = validateServicePoint(entity) ;
+        if (validateSvcptResult != null){
+          asyncResultHandler.handle(Future.succeededFuture(
+            PutServicePointsByServicepointIdResponse
+              .respond422WithApplicationJson(ValidationHelper.createValidationErrorMessage("name",
+                entity.getName(), validateSvcptResult))));
+          return;
+        }
+
         String tenantId = getTenant(okapiHeaders);
         PostgresClient pgClient = getPGClient(vertxContext, tenantId);
         Criteria idCrit = new Criteria()
@@ -324,6 +347,19 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
                 .respond500WithTextPlain(getErrorResponse(message))));
       }
     });
+  }
+
+  private String validateServicePoint(Servicepoint svcpt){
+
+    HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
+    Boolean pickupLocation = svcpt.getPickupLocation() == null ? Boolean.FALSE : svcpt.getPickupLocation();
+
+    if (!pickupLocation && holdShelfExpiryPeriod != null ) {
+      return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
+    } else if (pickupLocation && holdShelfExpiryPeriod == null) {
+      return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
+    }
+    return null;
   }
 
   private Future<Boolean> checkServicepointInUse() {
