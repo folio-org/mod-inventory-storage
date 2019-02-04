@@ -45,6 +45,8 @@ import io.vertx.ext.sql.ResultSet;
   ServicePointTest.class,
   ServicePointsUserTest.class,
   StorageHelperTest.class,
+  InstanceRelationshipsTest.class,
+  ReferenceTablesTest.class,
 })
 @SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {

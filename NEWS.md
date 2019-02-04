@@ -1,10 +1,17 @@
-## 14.1.0 Unreleased
+## 15.0.0 2019-02-01
 
 * Provides `service-points` interface version 3.1 (MODINVSTOR-235)
+* Provides `item-storage` interface version 7.2 (MODINVSTOR-249)
 * Adds `staffSlips` to `servicepoint` schema (MODINVSTOR-235)
-* Provides `item-storage` interface version 7.1 (MODINVSTOR-249)
+* Adds property `ServicePoint.printByDefault` (MODINVSTOR-235)
 * Adds `circulationNotes` to `item` schema (MODINVSTOR-249)
-* Adds holdShelfExpiryPeriod to servicepoint schema (MODINVSTOR-251)
+* Adds sequences for generating human readable identifiers (MODINVSTOR-170)
+* Improves performance for items by barcode (MODINVSTOR-247)
+* Improves performance for items queried by ID (MODINVSTOR-248)
+* Improves performance for PUT of `Instance` (MODINVSTOR-254)
+* Adds property `Item.purchaseOrderLineIdentifier` (MODINVSTOR-245)
+* Miscellaneous bug-fixes (MODINVSTOR-253, MODINVSTOR-243)
+
 
 ## 14.0.0 2018-11-30
 
