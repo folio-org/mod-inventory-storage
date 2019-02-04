@@ -160,8 +160,8 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
     vertxContext.runOnContext(v -> {
       try {
 
-        String validateSvcptResult = validateServicePoint(entity) ;
-        if (validateSvcptResult != null && !validateSvcptResult.isEmpty()){
+        String validateSvcptResult = validateServicePoint(entity);
+        if (validateSvcptResult != null){
           asyncResultHandler.handle(Future.succeededFuture(
             PostServicePointsResponse.respond422WithApplicationJson(
               ValidationHelper.createValidationErrorMessage("name",
@@ -309,7 +309,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
       try {
 
         String validateSvcptResult = validateServicePoint(entity) ;
-        if (validateSvcptResult != null && !validateSvcptResult.isEmpty()){
+        if (validateSvcptResult != null){
           asyncResultHandler.handle(Future.succeededFuture(
             PutServicePointsByServicepointIdResponse
               .respond422WithApplicationJson(ValidationHelper.createValidationErrorMessage("name",
