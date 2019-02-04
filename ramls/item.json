@@ -204,6 +204,10 @@
       },
       "uniqueItems": true
     },
+    "purchaseOrderLineIdentifier": {
+      "type": "string",
+      "description": "ID referencing a remote purchase order object related to this item"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
