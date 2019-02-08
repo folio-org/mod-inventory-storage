@@ -197,7 +197,7 @@ public class TenantRefAPI extends TenantAPI {
       JsonObject jsonObject = new JsonObject(json);
       String id = jsonObject.getString("id");
       if (id == null) {
-        f.handle(Future.failedFuture("Missing id for " + json));
+        res.handle(Future.failedFuture("Missing id for " + json));
         return;
       }
       HttpClientRequest reqPut = httpClient.putAbs(endPointUrl + "/" + id, resPut -> {
