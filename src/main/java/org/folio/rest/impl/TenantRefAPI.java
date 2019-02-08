@@ -153,7 +153,7 @@ public class TenantRefAPI extends TenantAPI {
     }
   }
 
-  private void applyHeaders(HttpClientRequest req, Map<String, String> headers, String json) {
+  private void endWithXHeaders(HttpClientRequest req, Map<String, String> headers, String json) {
     for (Map.Entry<String, String> e : headers.entrySet()) {
       String k = e.getKey();
       if (k.startsWith("X-") || k.startsWith("x-")) {
@@ -209,14 +209,14 @@ public class TenantRefAPI extends TenantAPI {
               f.handle(Future.failedFuture("POST " + endPointUrl + " returned status " + resPost.statusCode()));
             }
           });
-          applyHeaders(reqPost, headers, json);
+          endWithXHeaders(reqPost, headers, json);
         } else if (resPut.statusCode() == 200) {
           f.handle(Future.succeededFuture());
         } else {
           f.handle(Future.failedFuture("PUT " + endPointUrl + "/" + id + " returned status " + resPut.statusCode()));
         }
       });
-      applyHeaders(reqPut, headers, json);
+      endWithXHeaders(reqPut, headers, json);
     }
     CompositeFuture.all(futures).setHandler(x -> {
       log.info("loadRef " + endPoint + " done. success=" + x.succeeded());
