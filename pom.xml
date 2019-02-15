@@ -243,6 +243,22 @@
             </configuration>
           </execution>
           <execution>
+            <id>copy-sample-data</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/sample-data</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/sample-data</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
             <id>filter-descriptor-inputs</id>
             <phase>generate-resources</phase>
             <goals>
