@@ -1,0 +1,21 @@
+{
+  "id" : "9ea1fd0b-0259-4edb-95a3-eb2f9a063e20",
+  "status" : {
+    "name" : "Available"
+  },
+  "formerIds" : [ "3806267" ],
+  "discoverySuppress" : null,
+  "holdingsRecordId" : "0c45bb50-7c9b-48b0-86eb-178a494e25fe",
+  "barcode" : "A14837334306",
+  "enumeration" : "v.70:no.1-6",
+  "chronology" : "1984:Jan.-June",
+  "copyNumbers" : [ "1" ],
+  "notes" : [ ],
+  "circulationNotes" : [ ],
+  "yearCaption" : [ ],
+  "electronicAccess" : [ ],
+  "statisticalCodeIds" : [ "775b6ad4-9c35-4d29-bf78-8775a9b42226" ],
+  "purchaseOrderLineIdentifier" : null,
+  "materialTypeId" : "d9acad2f-2aac-4b48-9097-e6ab85906b25",
+  "permanentLoanTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe27"
+}
