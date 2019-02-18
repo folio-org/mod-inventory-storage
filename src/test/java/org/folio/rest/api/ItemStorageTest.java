@@ -729,7 +729,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
-    String url = itemsStorageUrl("") + "?query=barcode=036000291452";
+    String url = itemsStorageUrl("") + "?query=barcode==036000291452";
 
     client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
@@ -766,7 +766,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
-    String url = itemsStorageUrl("") + "?query=barcode=673274826203";
+    String url = itemsStorageUrl("") + "?query=barcode==673274826203";
 
     client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
@@ -784,6 +784,35 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(foundItems.getJsonObject(0).getString("barcode"),
       is("673274826203"));
+  }
+
+  @Test
+  public void cannotSearchForItemsByBarcodeAndNotMatchingId()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    createItem(nod(holdingsRecordId));
+    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
+    createItem(smallAngryPlanet(holdingsRecordId).put("barcode", "673274826203"));
+    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
+    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
+
+    String url = itemsStorageUrl("") + "?query=" + urlEncode(String.format(
+      "barcode==\"673274826203\" and id<>%s'", UUID.randomUUID()));
+
+    client.get(url,
+      StorageTestSuite.TENANT_ID, ResponseHandler.any(searchCompleted));
+
+    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(500));
+    assertThat(searchResponse.getBody(), containsString("Unsupported operator '<>'"));
   }
 
   @Test
