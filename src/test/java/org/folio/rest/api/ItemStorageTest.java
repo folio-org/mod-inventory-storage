@@ -807,12 +807,20 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       "barcode==\"673274826203\" and id<>%s'", UUID.randomUUID()));
 
     client.get(url,
-      StorageTestSuite.TENANT_ID, ResponseHandler.any(searchCompleted));
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
 
     Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(searchResponse.getStatusCode(), is(500));
-    assertThat(searchResponse.getBody(), containsString("Unsupported operator '<>'"));
+    assertThat(searchResponse.getStatusCode(), is(200));
+    JsonObject searchBody = searchResponse.getJson();
+
+    JsonArray foundItems = searchBody.getJsonArray("items");
+
+    assertThat(foundItems.size(), is(1));
+    assertThat(searchBody.getInteger("totalRecords"), is(1));
+
+    assertThat(foundItems.getJsonObject(0).getString("barcode"),
+      is("673274826203"));
   }
 
   @Test
