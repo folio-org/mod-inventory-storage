@@ -140,6 +140,10 @@
         "name": {
           "description": "Name of the status e.g. Available, Checked out, In transit",
           "type": "string"
+        },
+        "date": {
+          "description": "Date of a status",
+          "type": "string"
         }
       },
       "additionalProperties": false
