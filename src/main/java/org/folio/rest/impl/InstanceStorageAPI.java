@@ -119,7 +119,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       .setOffset(new Offset(offset));
   }
 
-  private static Instances instances(ResultSet resultSet, int offset, int limit) throws IOException {
+  private static Instances instances(ResultSet resultSet, int limit) throws IOException {
     List<JsonObject> jsonList = resultSet.getRows();
     List<Instance> instanceList = new ArrayList<>(jsonList.size());
     int totalRecords = 0;
@@ -225,7 +225,7 @@ public class InstanceStorageAPI implements InstanceStorage {
               respond500WithTextPlain(reply.cause().getMessage())));
           return;
         }
-        Instances instances = instances(reply.result(), offset, limit);
+        Instances instances = instances(reply.result(), limit);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetInstanceStorageInstancesResponse.
             respond200WithApplicationJson(instances)));
