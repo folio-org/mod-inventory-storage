@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.RestVerticle;
+import org.folio.rest.impl.InstanceStorageAPITest;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
@@ -34,6 +35,7 @@ import io.vertx.ext.sql.ResultSet;
 
 @Suite.SuiteClasses({
   InstanceStorageTest.class,
+  InstanceStorageAPITest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
   LoanTypeTest.class,
@@ -122,8 +124,8 @@ public class StorageTestSuite {
     removeTenant(TENANT_ID);
 
     CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
- 
-    PostgresClient.getInstance(vertx).stopEmbeddedPostgres();
+
+    PostgresClient.stopEmbeddedPostgres();
 
     vertx.close(res -> {
       if(res.succeeded()) {
