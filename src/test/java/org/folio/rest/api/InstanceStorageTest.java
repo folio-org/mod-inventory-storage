@@ -526,7 +526,6 @@ public class InstanceStorageTest extends TestBase {
     String sql = "INSERT INTO " + table + " SELECT uuid, json_build_object" +
         "  ('title', '" + prefix + " ' || n, 'id', uuid)" +
         "  FROM (SELECT generate_series(1, " + n + ") AS n, gen_random_uuid() AS uuid) AS uuids";
-    System.out.println("sql = " + sql);
     pg.execute(sql, testContext.asyncAssertSuccess(updated -> {
         testContext.assertEquals(n, updated.getUpdated());
         async.complete();
@@ -594,7 +593,37 @@ public class InstanceStorageTest extends TestBase {
       JsonObject instance = allInstances.getJsonObject(4 + i);
       assertThat(instance.getString("title"), is("d foo " + (i + 1)));
     }
-  }
+
+    // "b foo", offset=1, limit=20
+    json = searchForInstances("title=b sortBy title", 1, 20);
+    allInstances = json.getJsonArray("instances");
+    assertThat(allInstances.size(), is(4));
+    assertThat(json.getInteger("totalRecords"), is(5));
+    for (int i=0; i<4; i++) {
+      JsonObject instance = allInstances.getJsonObject(i);
+      assertThat(instance.getString("title"), is("b foo " + (1 + i + 1)));
+    }
+
+    // sort.descending, offset=1, limit=3
+    json = searchForInstances("title=foo sortBy title/sort.descending", 1, 3);
+    allInstances = json.getJsonArray("instances");
+    assertThat(allInstances.size(), is(3));
+    assertThat(json.getInteger("totalRecords"), is(999999999));
+    for (int i=0; i<3; i++) {
+      JsonObject instance = allInstances.getJsonObject(i);
+      assertThat(instance.getString("title"), is("d foo " + (4 - i)));
+    }
+
+    // sort.descending, offset=6, limit=3
+    json = searchForInstances("title=foo sortBy title/sort.descending", 6, 3);
+    allInstances = json.getJsonArray("instances");
+    assertThat(allInstances.size(), is(3));
+    assertThat(json.getInteger("totalRecords"), is(10));
+    for (int i=0; i<3; i++) {
+      JsonObject instance = allInstances.getJsonObject(i);
+      assertThat(instance.getString("title"), is("b foo " + (4 - i)));
+    }
+}
 
   /** MARC record representation in JSON, compatible with MarcEdit's JSON export and import. */
   private MarcJson marcJson = new MarcJson();
@@ -1167,8 +1196,6 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void testCrossTableQueries() throws Exception {
-
-    System.out.println("--------------------------------------------------------------------------------------------------------------------");
 
     String url = instancesStorageUrl("") + "?query=";
 

@@ -131,13 +131,9 @@ public class InstanceStorageAPI implements InstanceStorage {
     Instances instances = new Instances();
     instances.setInstances(instanceList);
 
-    if (totalRecords == 0) {
-      totalRecords = jsonList.size();
-      if (totalRecords == limit) {
-        totalRecords = 999999999;  // unknown total
-      } else if (totalRecords > 0) {
-        totalRecords += offset;
-      }
+    // headrecords used, full table scan was stopped without total records calculation.
+    if (totalRecords == 0 && jsonList.size() == limit) {
+      totalRecords = 999999999;  // unknown total
     }
     instances.setTotalRecords(totalRecords);
     return instances;
@@ -173,46 +169,50 @@ public class InstanceStorageAPI implements InstanceStorage {
 
     cql = matcher.group(1);
     String sortBy = matcher.group(2);
-    String desc = sortBy.toLowerCase().contains("descending") ? "DESC" : "";
+    String ascDesc     = sortBy.toLowerCase().contains("descending") ? "DESC" : "";
+    String lessGreater = sortBy.toLowerCase().contains("descending") ? ">" : "<";
     preparedCql.getCqlWrapper().setQuery(cql);
     String tableName = PostgresClient.convertToPsqlStandard(tenantId)
         + "." + preparedCql.getTableName();
     String where = preparedCql.getCqlWrapper().getField().toSql(cql).getWhere();
     // If there are many matches use a full table scan in title sort order
-    // using the title index. Otherwise use full text matching because there
-    // are only a few matches.
+    // using the title index, but stop this scan after OPTIMIZED_SQL_SIZE index entries.
+    // Otherwise use full text matching because there are only a few matches.
     //
     // "headrecords" are the matching records found within the first OPTIMIZED_SQL_SIZE records
     // by stopping at the title from "OFFSET OPTIMIZED_SQL_SIZE LIMIT 1".
     // If "headrecords" are enough to return the requested "LIMIT" number of records we are done.
     // Otherwise use the full text index to create "allrecords" with all matching
-    // records and sort and LIMIT afterwards.
+    // records and do sorting and LIMIT afterwards.
     String sql =
         " WITH "
       + " headrecords AS ("
-      + "   SELECT jsonb FROM " + tableName
+      + "   SELECT jsonb, lower(f_unaccent(jsonb->>'title')) AS title FROM " + tableName
       + "   WHERE (" + where + ")"
-      + "     AND lower(f_unaccent(jsonb->>'title'))"
-      + "           < ( SELECT lower(f_unaccent(jsonb->>'title'))"
+      + "     AND lower(f_unaccent(jsonb->>'title'))" + lessGreater
+      + "             ( SELECT lower(f_unaccent(jsonb->>'title'))"
       + "               FROM " + tableName
-      + "               ORDER BY lower(f_unaccent(jsonb->>'title'))"
+      + "               ORDER BY lower(f_unaccent(jsonb->>'title')) " + ascDesc
       + "               OFFSET " + OPTIMIZED_SQL_SIZE + " LIMIT 1"
       + "             )"
-      + "   ORDER BY lower(f_unaccent(jsonb->>'title')) " + desc
+      + "   ORDER BY lower(f_unaccent(jsonb->>'title')) " + ascDesc
       + "   LIMIT " + limit + " OFFSET " + offset
       + " ), "
       + " allrecords AS ("
-      + "   SELECT jsonb FROM " + tableName
+      + "   SELECT jsonb, lower(f_unaccent(jsonb->>'title')) AS title FROM " + tableName
       + "   WHERE (" + where + ")"
       + "     AND (SELECT COUNT(*) FROM headrecords) < " + limit
       + " )"
-      + " SELECT jsonb, lower(f_unaccent(jsonb->>'title')) AS title, 0                                 AS count"
-      + " FROM headrecords"
+      + " SELECT jsonb, title,  0                                 AS count"
+      + "   FROM headrecords"
+      + "   WHERE (SELECT COUNT(*) FROM headrecords) >= " + limit
       + " UNION"
-      + " SELECT jsonb, lower(f_unaccent(jsonb->>'title')) AS title, (SELECT COUNT(*) FROM allrecords) AS count"
-      + " FROM allrecords"
-      + " ORDER BY count DESC, title " + desc
-      + " LIMIT " + limit + " OFFSET " + offset;
+      + " (SELECT jsonb, title, (SELECT COUNT(*) FROM allrecords) AS count"
+      + "   FROM allrecords"
+      + "   ORDER BY title " + ascDesc
+      + "   LIMIT " + limit + " OFFSET " + offset
+      + " )"
+      + " ORDER BY title " + ascDesc;
 
     log.info("optimized SQL generated from CQL: " + sql);
 
