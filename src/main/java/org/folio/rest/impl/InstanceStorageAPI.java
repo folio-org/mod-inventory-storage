@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Matcher;
-
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -33,6 +31,13 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.ObjectMapperTool;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
+import org.z3950.zing.cql.CQLDefaultNodeVisitor;
+import org.z3950.zing.cql.CQLNode;
+import org.z3950.zing.cql.CQLParseException;
+import org.z3950.zing.cql.CQLParser;
+import org.z3950.zing.cql.CQLSortNode;
+import org.z3950.zing.cql.Modifier;
+import org.z3950.zing.cql.ModifierSet;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 import org.z3950.zing.cql.cql2pgjson.QueryValidationException;
@@ -61,9 +66,6 @@ public class InstanceStorageAPI implements InstanceStorage {
   public static final String INSTANCE_TABLE =  "instance";
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
-  private static final java.util.regex.Pattern sortByTitlePattern =
-      java.util.regex.Pattern.compile("^(.*)\\b(sortBy title(/sort\\.descending|/sort\\.ascending)?) *$",
-          java.util.regex.Pattern.CASE_INSENSITIVE);
   private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
   private final Messages messages = Messages.getInstance();
 
@@ -147,6 +149,48 @@ public class InstanceStorageAPI implements InstanceStorage {
     return OPTIMIZED_SQL_SIZE;
   }
 
+  static CQLSortNode getSortNode(String cql) {
+    try {
+      CQLParser parser = new CQLParser();
+      CQLNode node = parser.parse(cql);
+      return getSortNode(node);
+    } catch (IOException|CQLParseException|NullPointerException e) {
+      return null;
+    }
+  }
+
+  private static CQLSortNode getSortNode(CQLNode node) {
+    CqlSortNodeVisitor visitor = new CqlSortNodeVisitor();
+    node.traverse(visitor);
+    return visitor.sortNode;
+  }
+
+  private static class CqlSortNodeVisitor extends CQLDefaultNodeVisitor {
+    CQLSortNode sortNode = null;
+
+    @Override
+    public void onSortNode(CQLSortNode cqlSortNode) {
+      sortNode = cqlSortNode;
+    }
+  }
+
+  private static String getAscDesc(ModifierSet modifierSet) {
+    String ascDesc = "";
+    for (Modifier modifier : modifierSet.getModifiers()) {
+      switch (modifier.getType()) {
+      case "sort.ascending":
+        ascDesc = "ASC";
+        break;
+      case "sort.descending":
+        ascDesc = "DESC";
+        break;
+      default:
+        // ignore
+      }
+    }
+    return ascDesc;
+  }
+
   /**
    * Execute an optimized query with performance hints for the PostgreSQL optimizer.
    *
@@ -158,19 +202,21 @@ public class InstanceStorageAPI implements InstanceStorage {
       int offset, int limit, Handler<AsyncResult<Response>> asyncResultHandler) throws QueryValidationException {
 
     String cql = preparedCql.getCqlWrapper().getQuery();
-    if (cql == null) {
+    CQLSortNode cqlSortNode = getSortNode(cql);
+    if (cqlSortNode == null) {
       return false;
     }
-
-    Matcher matcher = sortByTitlePattern.matcher(cql);
-    if (! matcher.find()) {
+    List<ModifierSet> sortIndexes = cqlSortNode.getSortIndexes();
+    if (sortIndexes.size() != 1) {
       return false;
     }
-
-    cql = matcher.group(1);
-    String sortBy = matcher.group(2);
-    String ascDesc     = sortBy.toLowerCase().contains("descending") ? "DESC" : "";
-    String lessGreater = sortBy.toLowerCase().contains("descending") ? ">" : "<";
+    ModifierSet modifierSet = sortIndexes.get(0);
+    if (! modifierSet.getBase().equals("title")) {
+      return false;
+    }
+    String ascDesc = getAscDesc(modifierSet);
+    cql = cqlSortNode.getSubtree().toCQL();
+    String lessGreater = ascDesc.equals("DESC") ? ">" : "<";
     preparedCql.getCqlWrapper().setQuery(cql);
     String tableName = PostgresClient.convertToPsqlStandard(tenantId)
         + "." + preparedCql.getTableName();

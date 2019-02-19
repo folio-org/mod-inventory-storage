@@ -595,7 +595,7 @@ public class InstanceStorageTest extends TestBase {
     }
 
     // "b foo", offset=1, limit=20
-    json = searchForInstances("title=b sortBy title", 1, 20);
+    json = searchForInstances("title=b sortBy title/sort.ascending", 1, 20);
     allInstances = json.getJsonArray("instances");
     assertThat(allInstances.size(), is(4));
     assertThat(json.getInteger("totalRecords"), is(5));

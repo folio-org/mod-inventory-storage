@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -95,6 +96,11 @@ public class InstanceStorageAPITest {
             + "instance_holding_view.ho_jsonb->>'c' ~ '' AND "
             + "instance_holding_view.jsonb->>'d' ~ ''",
               "instance_holding_view");
+  }
+
+  @Test
+  public void getSortNodeNull() {
+    assertThat(InstanceStorageAPI.getSortNode(null), is(nullValue()));
   }
 
   private void optimizedSql500(TestContext testContext , VoidAnswer2<String, Handler> answer, String expected) {
