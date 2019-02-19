@@ -143,6 +143,14 @@ public class InstanceStorageAPI implements InstanceStorage {
     return instances;
   }
 
+  /** Number of records to use from the title sort index in optimizedSql method */
+  private static final int OPTIMIZED_SQL_SIZE = 10000;
+
+  /** Number of records to use from the title sort index in optimizedSql method */
+  public static int getOptimizedSqlSize() {
+    return OPTIMIZED_SQL_SIZE;
+  }
+
   /**
    * Execute an optimized query with performance hints for the PostgreSQL optimizer.
    *
@@ -170,13 +178,12 @@ public class InstanceStorageAPI implements InstanceStorage {
     String tableName = PostgresClient.convertToPsqlStandard(tenantId)
         + "." + preparedCql.getTableName();
     String where = preparedCql.getCqlWrapper().getField().toSql(cql).getWhere();
-    final int n = 10000;
     // If there are many matches use a full table scan in title sort order
     // using the title index. Otherwise use full text matching because there
     // are only a few matches.
     //
-    // "headrecords" are the matching records found within the first n records
-    // by stopping at the title from "OFFSET n LIMIT 1".
+    // "headrecords" are the matching records found within the first OPTIMIZED_SQL_SIZE records
+    // by stopping at the title from "OFFSET OPTIMIZED_SQL_SIZE LIMIT 1".
     // If "headrecords" are enough to return the requested "LIMIT" number of records we are done.
     // Otherwise use the full text index to create "allrecords" with all matching
     // records and sort and LIMIT afterwards.
@@ -189,7 +196,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       + "           < ( SELECT lower(f_unaccent(jsonb->>'title'))"
       + "               FROM " + tableName
       + "               ORDER BY lower(f_unaccent(jsonb->>'title'))"
-      + "               OFFSET " + n + " LIMIT 1"
+      + "               OFFSET " + OPTIMIZED_SQL_SIZE + " LIMIT 1"
       + "             )"
       + "   ORDER BY lower(f_unaccent(jsonb->>'title')) " + desc
       + "   LIMIT " + limit + " OFFSET " + offset
