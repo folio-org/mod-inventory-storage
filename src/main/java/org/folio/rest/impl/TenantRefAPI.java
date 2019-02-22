@@ -11,7 +11,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.tools.utils.TenantLoading;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -62,14 +62,14 @@ public class TenantRefAPI extends TenantAPI {
         hndlr.handle(res);
         return;
       }
-      TenantTool.load(ta, headers, "loadReference", "ref-data",
+      TenantLoading.load(ta, headers, "loadReference", "ref-data",
         Arrays.asList(refPaths), vertx, res1 -> {
         if (res1.failed()) {
           hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
             .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
           return;
         }
-        TenantTool.load(ta, headers, "loadSample", "sample-data",
+        TenantLoading.load(ta, headers, "loadSample", "sample-data",
           Arrays.asList(samplePaths), vertx, res2 -> {
           if (res2.failed()) {
             hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
