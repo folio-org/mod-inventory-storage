@@ -50,7 +50,7 @@ done
 
 shift $((OPTIND -1))
 
-okapiUrl=${okapiUrl:-http://localhost:9130}
+okapiUrl=${okapiUrl:-http://localhost:8081}
 tenant=${tenant:-demo_tenant}
 dataDirs=${dataDirs:-'.'}
 modEndpoints_a='material-types loan-types'

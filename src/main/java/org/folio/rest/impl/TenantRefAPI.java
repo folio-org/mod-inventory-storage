@@ -40,21 +40,12 @@ public class TenantRefAPI extends TenantAPI {
     "holdings-types",
     "call-number-types",
     "holdings-note-types",
-    "item-note-types",
-    ""
-  };
-
-  final String[] samplePaths = new String[]{
-    "instances instance-storage/instances",
-    "instance-source-records instance-storage/instances/%d/source-record/marc-json",
-    "holdingsrecords holdings-storage/holdings",
-    "items instance-storage/instances",
-    "instance-relationships instance-storage/instance-relationships",
-    ""
+    "item-note-types"
   };
 
   @Override
-  public void postTenant(TenantAttributes ta, Map<String, String> headers, Handler<AsyncResult<Response>> hndlr, Context cntxt) {
+  public void postTenant(TenantAttributes ta, Map<String, String> headers,
+    Handler<AsyncResult<Response>> hndlr, Context cntxt) {
     log.info("postTenant");
     Vertx vertx = cntxt.owner();
     super.postTenant(ta, headers, res -> {
@@ -62,23 +53,25 @@ public class TenantRefAPI extends TenantAPI {
         hndlr.handle(res);
         return;
       }
-      TenantLoading.load(ta, headers, "loadReference", "ref-data",
-        Arrays.asList(refPaths), vertx, res1 -> {
+      TenantLoading tl = new TenantLoading();
+      for (String p : refPaths) {
+        tl.addJsonIdContent("loadReference", "ref-data", p, p);
+      }
+      tl.addJsonIdContent("loadSample", "sample-data", "instances", "instance-storage/instances");
+      tl.addJsonIdBasename("loadSample", "sample-data",
+        "instance-storages/instances/%d/source-record/marc-json", "instance-source-records");
+      tl.addJsonIdContent("loadSample", "sample-data", "holdingsrecords", "holdings-storage/holdings");
+      tl.addJsonIdContent("loadSample", "sample-data", "items", "item-storage/items");
+      tl.addJsonIdContent("loadSample", "sample-data", "instance-relationships",
+        "instance-storage/instance-relationships");
+      tl.perform(ta, headers, vertx, res1 -> {
         if (res1.failed()) {
           hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
             .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
           return;
         }
-        TenantLoading.load(ta, headers, "loadSample", "sample-data",
-          Arrays.asList(samplePaths), vertx, res2 -> {
-          if (res2.failed()) {
-            hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-              .respond500WithTextPlain(res2.cause().getLocalizedMessage())));
-            return;
-          }
-          hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond201WithApplicationJson("")));
-        });
+        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+          .respond201WithApplicationJson("")));
       });
     }, cntxt);
   }
