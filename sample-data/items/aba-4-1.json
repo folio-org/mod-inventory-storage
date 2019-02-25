@@ -1,0 +1,21 @@
+{
+  "id" : "bc90a3c9-26c9-4519-96bc-d9d44995afef",
+  "status" : {
+    "name" : "Available"
+  },
+  "formerIds" : [ ],
+  "discoverySuppress" : null,
+  "holdingsRecordId" : "0c45bb50-7c9b-48b0-86eb-178a494e25fe",
+  "barcode" : "A14811392695",
+  "enumeration" : "v.73:no.1-6",
+  "chronology" : "1987:Jan.-June",
+  "copyNumbers" : [ ],
+  "notes" : [ ],
+  "circulationNotes" : [ ],
+  "yearCaption" : [ ],
+  "electronicAccess" : [ ],
+  "statisticalCodeIds" : [ ],
+  "purchaseOrderLineIdentifier" : null,
+  "materialTypeId" : "d9acad2f-2aac-4b48-9097-e6ab85906b25",
+  "permanentLoanTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe27"
+}

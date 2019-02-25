@@ -1,0 +1,52 @@
+{
+  "id" : "0c45bb50-7c9b-48b0-86eb-178a494e25fe",
+  "hrid" : "ho00000136",
+  "formerIds" : [ "ABW4508", "442882" ],
+  "instanceId" : "69640328-788e-43fc-9c3c-af39e243f3b7",
+  "permanentLocationId" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
+  "electronicAccess" : [ {
+    "uri" : "http://www.ebscohost.com",
+    "materialsSpecification" : "1984-",
+    "relationshipId" : "3b430592-2e09-4b48-9a0c-0636d66b9fb3"
+  }, {
+    "uri" : "http://www.jstor.com",
+    "materialsSpecification" : "1984-",
+    "publicNote" : "Most recent 4 years not available.",
+    "relationshipId" : "3b430592-2e09-4b48-9a0c-0636d66b9fb3"
+  } ],
+  "callNumber" : "K1 .M44",
+  "acquisitionMethod" : "Purchase",
+  "receiptStatus" : "Not currently received",
+  "notes" : [ {
+    "note" : " Subscription cancelled per Evans Current Periodicals Selector Review. acq",
+    "staffOnly" : true
+  }, {
+    "note" : "Asked Ebsco to check with publisher and ask what years were paid since we are missing (2001:Oct.-Dec.), (All of 2002), & (2003:Jan.-Feb.). 20030305. evaldez",
+    "staffOnly" : false
+  }, {
+    "note" : "Backorder:v.87(2001:Oct.-Dec)-v.88(2002). eluza",
+    "staffOnly" : false
+  }, {
+    "note" : "WITH 2010 TREAT ISSUE S AS DISCARDS. dgill",
+    "staffOnly" : false
+  } ],
+  "retentionPolicy" : "Permanently retained.",
+  "holdingsStatements" : [ {
+    "statement" : "v.70-84 (1984-1998)"
+  }, {
+    "statement" : "v.85:no. 1-11 (1999:Jan.-Nov.)"
+  }, {
+    "statement" : "v.87:no.1-9 (2001:Jan.-Sept.)"
+  }, {
+    "statement" : "v.89:no.2-12 (2003:Feb.-Dec.)"
+  }, {
+    "statement" : "v.90-95 (2004-2009)"
+  } ],
+  "holdingsStatementsForIndexes" : [ ],
+  "holdingsStatementsForSupplements" : [ {
+    "statement" : "no.1-23 "
+  } ],
+  "copyNumber" : "1",
+  "statisticalCodeIds" : [ "775b6ad4-9c35-4d29-bf78-8775a9b42226" ],
+  "holdingsItems" : [ ]
+}

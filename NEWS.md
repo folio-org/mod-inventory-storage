@@ -1,3 +1,16 @@
+
+## 15.1.0 2019-02-19
+
+* Provides `item-storage` interface version 7.3 (MODINVSTOR-252)
+* Provides `service-points` interface version 3.2 (MODINVSTOR-251)
+* Adds `holdShelfExpiryPeriod` to `servicepoint` schema (MODINVSTOR-251)
+* Adds `status.date` to `item` schema (MODINVSTOR-252)
+* Improves performance:
+*   Fixes slow identifier search (MODINVSTOR-266)
+*   Use sort or search index depending on result size (MODINVSTOR-215)
+* Adds update of reference data on module upgrade (MODINVSTOR-263)
+* Bugfix: No longer supports <> relation for ID properties (MODINVSTOR-267)
+
 ## 15.0.0 2019-02-01
 
 * Provides `service-points` interface version 3.1 (MODINVSTOR-235)

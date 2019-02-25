@@ -1,0 +1,30 @@
+{
+ "formerIds" : [ ],
+ "instanceId" : "69640328-788e-43fc-9c3c-af39e243f3b7",
+ "permanentLocationId" : "53cf956f-c1df-410b-8bea-27f712cca7c0",
+ "electronicAccess" : [ {
+   "uri" : "https://search.proquest.com/publication/1396348",
+   "materialsSpecification" : "1.2012 -",
+   "publicNote" : "via ProQuest, the last 12 months are not available due to an embargo",
+   "relationshipId" : "f5d0068e-6272-458e-8a81-b85e7b9a14aa"
+ }, {
+   "uri" : "https://www.emeraldinsight.com/loi/jepp",
+   "materialsSpecification" : "1.2012 -",
+   "publicNote" : "via Emerald",
+   "relationshipId" : "f5d0068e-6272-458e-8a81-b85e7b9a14aa"
+ }, {
+   "uri" : "https://www.emeraldinsight.com/journal/jepp",
+   "materialsSpecification" : "1.2012 - 5.2016",
+   "publicNote" : "via Emerald, national license",
+   "relationshipId" : "f5d0068e-6272-458e-8a81-b85e7b9a14aa"
+ } ],
+ "callNumber" : "K1 .M44",
+ "notes" : [ ],
+ "holdingsStatements" : [ {
+   "statement" : "1.2012 -"
+ } ],
+ "holdingsStatementsForIndexes" : [ ],
+ "holdingsStatementsForSupplements" : [ ],
+ "statisticalCodeIds" : [ null ],
+ "holdingsItems" : [ ]
+} 
