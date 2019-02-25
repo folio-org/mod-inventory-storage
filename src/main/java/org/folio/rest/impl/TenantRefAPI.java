@@ -1,6 +1,5 @@
 package org.folio.rest.impl;
 
-import java.util.Arrays;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -14,6 +13,11 @@ import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.tools.utils.TenantLoading;
 
 public class TenantRefAPI extends TenantAPI {
+
+  private static final String SAMPLE_LEAD = "sample-data";
+  private static final String SAMPLE_KEY = "loadSample";
+  private static final String REFERENCE_KEY = "loadReference";
+  private static final String REFERENCE_LEAD = "ref-data";
 
   private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
   final String[] refPaths = new String[]{
@@ -55,14 +59,14 @@ public class TenantRefAPI extends TenantAPI {
       }
       TenantLoading tl = new TenantLoading();
       for (String p : refPaths) {
-        tl.addJsonIdContent("loadReference", "ref-data", p, p);
+        tl.addJsonIdContent(REFERENCE_KEY, REFERENCE_LEAD, p, p);
       }
-      tl.addJsonIdContent("loadSample", "sample-data", "instances", "instance-storage/instances");
-      tl.addJsonIdBasename("loadSample", "sample-data",
+      tl.addJsonIdContent(SAMPLE_KEY, SAMPLE_LEAD, "instances", "instance-storage/instances");
+      tl.addJsonIdBasename(SAMPLE_KEY, SAMPLE_LEAD,
         "instance-storages/instances/%d/source-record/marc-json", "instance-source-records");
-      tl.addJsonIdContent("loadSample", "sample-data", "holdingsrecords", "holdings-storage/holdings");
-      tl.addJsonIdContent("loadSample", "sample-data", "items", "item-storage/items");
-      tl.addJsonIdContent("loadSample", "sample-data", "instance-relationships",
+      tl.addJsonIdContent(SAMPLE_KEY, SAMPLE_LEAD, "holdingsrecords", "holdings-storage/holdings");
+      tl.addJsonIdContent(SAMPLE_KEY, SAMPLE_LEAD, "items", "item-storage/items");
+      tl.addJsonIdContent(SAMPLE_KEY, SAMPLE_LEAD, "instance-relationships",
         "instance-storage/instance-relationships");
       tl.perform(ta, headers, vertx, res1 -> {
         if (res1.failed()) {
