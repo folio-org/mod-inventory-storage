@@ -229,6 +229,7 @@ public class StorageTestSuite {
 
     JsonArray ar = new JsonArray();
     ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
+    ar.add(new JsonObject().put("key", "loadSample").put("value", "true"));
 
     JsonObject jo = new JsonObject();
     jo.put("parameters", ar);
