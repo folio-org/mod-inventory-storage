@@ -195,7 +195,7 @@
         "properties": {
           "uri": {
             "type": "string",
-            "description": "Uniform Resource Identifier (URI) is a string of characters designed for unambiguous identification of resources"
+            "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources"
           },
           "linkText": {
             "type": "string",
