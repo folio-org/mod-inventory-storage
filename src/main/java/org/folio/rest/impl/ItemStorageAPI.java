@@ -7,7 +7,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +22,8 @@ import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.util.ResourceUtil;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 /**
  * CRUD for Item.
@@ -32,9 +31,9 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
 public class ItemStorageAPI implements ItemStorage {
 
   static final String ITEM_TABLE = "item";
-  private static final String ITEM_MATERIALTYPE_VIEW = "items_mt_view";
 
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
+  private static final String ITEM_SCHEMA = ResourceUtil.asString("ramls/item.json");
   private static final String DEFAULT_STATUS_NAME = "Available";
 
   @Validate
@@ -53,7 +52,7 @@ public class ItemStorageAPI implements ItemStorage {
         try {
           PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
           String[] fieldList = {"*"};
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON("item.jsonb");
+          CQL2PgJSON cql2pgJson = new CQL2PgJSON("item.jsonb", ITEM_SCHEMA);
           CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
             .setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
