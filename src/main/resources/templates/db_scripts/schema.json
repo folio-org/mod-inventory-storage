@@ -790,8 +790,8 @@
         {
           "fieldName": "barcode",
           "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
+          "caseSensitive": true,
+          "removeAccents": false
         },
         {
           "fieldName": "status.name",
@@ -810,8 +810,8 @@
         {
           "fieldName": "barcode",
           "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
+          "caseSensitive": true,
+          "removeAccents": false
         },
         {
           "fieldName": "status.name",
