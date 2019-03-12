@@ -1,0 +1,31 @@
+{
+   "enrollmentDate" : "2016-03-02",
+   "type" : "patron",
+   "expirationDate" : "2020-01-27",
+   "id" : "251cfa92-24a7-45db-9f0d-acd2da450b50",
+   "personal" : {
+      "middleName" : "Misty",
+      "preferredContactTypeId" : "002",
+      "email" : "moises@blick-schuster-and-mohr.gu",
+      "lastName" : "Boehm",
+      "firstName" : "Elyse",
+      "phone" : "1-212-255-3771 x987",
+      "addresses" : [
+         {
+            "postalCode" : "56980-5449",
+            "city" : "Tustin",
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "region" : "AZ",
+            "primaryAddress" : true,
+            "addressLine1" : "17992 Maggio Islands",
+            "countryId" : "US"
+         }
+      ],
+      "dateOfBirth" : "1984-10-11",
+      "mobilePhone" : "(326)072-6068 x5435"
+   },
+   "barcode" : "979553133418729",
+   "username" : "dominic",
+   "active" : true
+}
+

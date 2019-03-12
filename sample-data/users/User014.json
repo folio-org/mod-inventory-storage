@@ -1,0 +1,30 @@
+{
+   "enrollmentDate" : "2015-07-18",
+   "type" : "patron",
+   "id" : "9a04ae0d-e39f-44c3-b520-43144f6d93e4",
+   "personal" : {
+      "dateOfBirth" : "1989-11-03",
+      "addresses" : [
+         {
+            "region" : "MO",
+            "primaryAddress" : true,
+            "countryId" : "US",
+            "addressLine1" : "51003 Efrain Mill #260",
+            "postalCode" : "16500",
+            "city" : "Nenana",
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880"
+         }
+      ],
+      "firstName" : "Kaylee",
+      "phone" : "1-284-395-8624 x5728",
+      "lastName" : "Becker",
+      "email" : "mackenzie@parisian-reilly-and-strosin.ac",
+      "middleName" : "Zola",
+      "preferredContactTypeId" : "001"
+   },
+   "expirationDate" : "2019-06-20",
+   "barcode" : "933948480962822",
+   "username" : "deonte",
+   "active" : true
+}
+

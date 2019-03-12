@@ -1,0 +1,31 @@
+{
+   "enrollmentDate" : "2015-05-09",
+   "id" : "785c6f6e-36a5-4434-8aa7-210bb55cea34",
+   "personal" : {
+      "email" : "nash@witting-mertz.om",
+      "lastName" : "McDermott",
+      "middleName" : "Macey",
+      "preferredContactTypeId" : "001",
+      "firstName" : "Bill",
+      "phone" : "082.266.7001 x1124",
+      "addresses" : [
+         {
+            "primaryAddress" : true,
+            "region" : "IN",
+            "countryId" : "US",
+            "addressLine1" : "97189 Dovie Place",
+            "city" : "Rolling Hills Estates",
+            "postalCode" : "60810-1305",
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880"
+         }
+      ],
+      "mobilePhone" : "856.132.1372 x669",
+      "dateOfBirth" : "1950-05-16"
+   },
+   "expirationDate" : "2019-04-27",
+   "type" : "patron",
+   "username" : "jett",
+   "active" : true,
+   "barcode" : "792078722873427"
+}
+

@@ -1,0 +1,31 @@
+{
+   "type" : "patron",
+   "personal" : {
+      "middleName" : "Thad",
+      "preferredContactTypeId" : "004",
+      "email" : "buford@turcotte-llc.is",
+      "lastName" : "Bechtelar",
+      "firstName" : "Cathrine",
+      "phone" : "(626)406-2046 x8906",
+      "addresses" : [
+         {
+            "postalCode" : "07536-0783",
+            "city" : "Rancho Cucamonga",
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "region" : "VI",
+            "primaryAddress" : true,
+            "addressLine1" : "19978 Carter Station",
+            "countryId" : "US"
+         }
+      ],
+      "dateOfBirth" : "1977-08-15",
+      "mobilePhone" : "1-817-764-3834 x43946"
+   },
+   "expirationDate" : "2019-03-13",
+   "id" : "c8c1eced-7ff5-44e2-89da-12d276c1e2bc",
+   "barcode" : "160344906506519",
+   "username" : "anibal",
+   "active" : true,
+   "enrollmentDate" : "2018-08-06"
+}
+

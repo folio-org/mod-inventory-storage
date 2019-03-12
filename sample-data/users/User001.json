@@ -1,0 +1,30 @@
+{
+   "enrollmentDate" : "2018-10-15",
+   "barcode" : "508444097915063",
+   "active" : true,
+   "username" : "delpha",
+   "type" : "patron",
+   "expirationDate" : "2019-09-10",
+   "personal" : {
+      "preferredContactTypeId" : "001",
+      "middleName" : "Kendall",
+      "email" : "maya@schmidt-moore-and-greenfelder.gu",
+      "lastName" : "Brakus",
+      "phone" : "577.401.1737 x5071",
+      "firstName" : "Velva",
+      "addresses" : [
+         {
+            "countryId" : "US",
+            "addressLine1" : "44688 Gerhold Centers",
+            "primaryAddress" : true,
+            "region" : "NH",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "city" : "Palm Springs",
+            "postalCode" : "74737"
+         }
+      ],
+      "dateOfBirth" : "1989-12-28"
+   },
+   "id" : "ab579dc3-219b-4f5b-8068-ab1c7a55c402"
+}
+

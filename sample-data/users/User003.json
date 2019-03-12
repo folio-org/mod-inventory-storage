@@ -1,0 +1,30 @@
+{
+   "enrollmentDate" : "2015-09-10",
+   "barcode" : "724600319597122",
+   "username" : "odie",
+   "active" : true,
+   "type" : "patron",
+   "id" : "9ad09b01-7429-455f-9f64-e3897027db61",
+   "personal" : {
+      "firstName" : "Foster",
+      "phone" : "1-943-518-4026 x78360",
+      "preferredContactTypeId" : "004",
+      "email" : "ansley@larson-williamson-and-williamson.eh",
+      "lastName" : "McDermott",
+      "dateOfBirth" : "1997-09-26",
+      "mobilePhone" : "254-111-0157",
+      "addresses" : [
+         {
+            "postalCode" : "11231-2104",
+            "city" : "Mentor-on-the-Lake",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "region" : "NH",
+            "primaryAddress" : true,
+            "countryId" : "US",
+            "addressLine1" : "15962 Block Stravenue Suite 557"
+         }
+      ]
+   },
+   "expirationDate" : "2020-12-04"
+}
+

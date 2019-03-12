@@ -1,0 +1,29 @@
+{
+   "enrollmentDate" : "2017-08-07",
+   "id" : "ffce08d4-c08d-4ff8-8ff8-060a5015aa2a",
+   "expirationDate" : "2020-11-26",
+   "personal" : {
+      "addresses" : [
+         {
+            "city" : "Dana Point",
+            "postalCode" : "20848",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "primaryAddress" : true,
+            "region" : "MN",
+            "countryId" : "US",
+            "addressLine1" : "87941 Douglas Lock Suite 230"
+         }
+      ],
+      "preferredContactTypeId" : "002",
+      "lastName" : "Donnelly",
+      "email" : "tristian@hettinger-parker.museum",
+      "firstName" : "Hildegard",
+      "dateOfBirth" : "2009-07-15",
+      "phone" : "1-042-803-9853 x64798"
+   },
+   "type" : "patron",
+   "active" : true,
+   "username" : "nina",
+   "barcode" : "851232198188977"
+}
+

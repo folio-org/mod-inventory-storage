@@ -1,0 +1,30 @@
+{
+   "type" : "patron",
+   "id" : "9207540e-91e9-4a75-ad1e-65a715784326",
+   "expirationDate" : "2019-11-15",
+   "personal" : {
+      "preferredContactTypeId" : "001",
+      "lastName" : "Gislason",
+      "email" : "millie@weissnat-beer-and-willms.mg",
+      "firstName" : "Merle",
+      "phone" : "221.437.5773",
+      "addresses" : [
+         {
+            "city" : "Huntington Beach",
+            "postalCode" : "13350",
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "primaryAddress" : true,
+            "region" : "MS",
+            "addressLine1" : "83654 Casimer Station Apt. 263",
+            "countryId" : "US"
+         }
+      ],
+      "dateOfBirth" : "1955-01-13",
+      "mobilePhone" : "330-670-9941 x17593"
+   },
+   "barcode" : "968532029020629",
+   "username" : "darron",
+   "active" : true,
+   "enrollmentDate" : "2017-12-30"
+}
+

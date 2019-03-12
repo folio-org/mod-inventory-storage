@@ -1,0 +1,30 @@
+{
+   "enrollmentDate" : "2017-04-29",
+   "username" : "marquise",
+   "active" : true,
+   "barcode" : "164574230428137",
+   "expirationDate" : "2019-06-20",
+   "personal" : {
+      "dateOfBirth" : "1974-05-13",
+      "addresses" : [
+         {
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "postalCode" : "65691-4705",
+            "city" : "Little Rock",
+            "countryId" : "US",
+            "addressLine1" : "65611 Harris Underpass",
+            "region" : "MO",
+            "primaryAddress" : true
+         }
+      ],
+      "phone" : "919-542-3508 x8519",
+      "firstName" : "Sadie",
+      "preferredContactTypeId" : "003",
+      "middleName" : "Sylvia",
+      "lastName" : "Rowe",
+      "email" : "mathias@gleichner-kozey-and-reinger.mo"
+   },
+   "id" : "e308411d-773e-416e-be58-f16176c0549e",
+   "type" : "patron"
+}
+

@@ -1,0 +1,31 @@
+{
+   "enrollmentDate" : "2017-02-19",
+   "type" : "patron",
+   "id" : "8616dd12-e244-4047-834a-db0c6cd1477b",
+   "expirationDate" : "2019-10-05",
+   "personal" : {
+      "mobilePhone" : "094.181.7710 x74672",
+      "dateOfBirth" : "2005-07-04",
+      "addresses" : [
+         {
+            "primaryAddress" : true,
+            "region" : "WY",
+            "countryId" : "US",
+            "addressLine1" : "81832 Francesco Rest",
+            "city" : "Jonesboro",
+            "postalCode" : "58204-7848",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e"
+         }
+      ],
+      "firstName" : "Cloyd",
+      "phone" : "1-446-276-4528 x71327",
+      "email" : "hyman@mcclure-volkman.fr",
+      "lastName" : "Harris",
+      "middleName" : "Jerrell",
+      "preferredContactTypeId" : "004"
+   },
+   "barcode" : "592137900094893",
+   "active" : false,
+   "username" : "rudy"
+}
+

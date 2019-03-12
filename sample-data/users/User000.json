@@ -1,0 +1,31 @@
+{
+   "id" : "47f7eaea-1a18-4058-907c-62b7d095c61b",
+   "personal" : {
+      "mobilePhone" : "(499)102-5994 x03456",
+      "dateOfBirth" : "1951-03-17",
+      "addresses" : [
+         {
+            "primaryAddress" : true,
+            "region" : "ID",
+            "addressLine1" : "79223 Mozelle Club Suite 154",
+            "countryId" : "US",
+            "city" : "Florence",
+            "postalCode" : "35704",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e"
+         }
+      ],
+      "firstName" : "Justen",
+      "phone" : "865.406.8773",
+      "email" : "pete@schulist-raynor-and-beer.ar.us",
+      "lastName" : "Hilll",
+      "middleName" : "Else",
+      "preferredContactTypeId" : "004"
+   },
+   "expirationDate" : "2019-11-27",
+   "type" : "patron",
+   "active" : true,
+   "username" : "janae",
+   "barcode" : "344058867767195",
+   "enrollmentDate" : "2016-12-31"
+}
+

@@ -1,0 +1,31 @@
+{
+   "enrollmentDate" : "2018-07-13",
+   "active" : true,
+   "username" : "emmet",
+   "barcode" : "109322966933845",
+   "expirationDate" : "2020-04-08",
+   "personal" : {
+      "addresses" : [
+         {
+            "region" : "IN",
+            "primaryAddress" : true,
+            "addressLine1" : "29948 Leo Ville",
+            "countryId" : "US",
+            "postalCode" : "38250-2292",
+            "city" : "San Fernando",
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880"
+         }
+      ],
+      "mobilePhone" : "245.227.6385 x84533",
+      "dateOfBirth" : "2000-09-26",
+      "lastName" : "Feil",
+      "email" : "anastacio@hansen-dickens-and-mante.vu",
+      "middleName" : "Myrna",
+      "preferredContactTypeId" : "003",
+      "firstName" : "Penelope",
+      "phone" : "(145)639-8408 x1218"
+   },
+   "id" : "d0fc4228-2e42-49b2-a5b0-9df48897e8c0",
+   "type" : "patron"
+}
+

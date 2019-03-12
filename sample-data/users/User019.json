@@ -1,0 +1,30 @@
+{
+   "type" : "patron",
+   "personal" : {
+      "mobilePhone" : "(470)016-1944",
+      "dateOfBirth" : "1978-12-31",
+      "addresses" : [
+         {
+            "primaryAddress" : true,
+            "region" : "MI",
+            "addressLine1" : "84348 Kaylin Turnpike",
+            "countryId" : "US",
+            "city" : "Fountain Valley",
+            "postalCode" : "07732-8693",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e"
+         }
+      ],
+      "firstName" : "Mossie",
+      "phone" : "1-915-933-6017 x91395",
+      "lastName" : "Koss",
+      "email" : "lavern@heller-ryan-and-stanton.zm",
+      "preferredContactTypeId" : "002"
+   },
+   "expirationDate" : "2019-08-11",
+   "id" : "745bdee1-458c-4076-bad1-be5a470c49fb",
+   "barcode" : "723090362753680",
+   "active" : true,
+   "username" : "roberto",
+   "enrollmentDate" : "2018-08-05"
+}
+

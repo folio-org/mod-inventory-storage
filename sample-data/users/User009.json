@@ -1,0 +1,31 @@
+{
+   "enrollmentDate" : "2015-06-09",
+   "active" : true,
+   "username" : "frederic",
+   "barcode" : "423963263517549",
+   "personal" : {
+      "addresses" : [
+         {
+            "region" : "LA",
+            "primaryAddress" : true,
+            "countryId" : "US",
+            "addressLine1" : "92083 Travis Fort Apt. 333",
+            "postalCode" : "23836",
+            "city" : "San Mateo",
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880"
+         }
+      ],
+      "mobilePhone" : "933.730.7529",
+      "dateOfBirth" : "2002-02-03",
+      "email" : "taryn@herman-inc.museum",
+      "lastName" : "Quitzon",
+      "middleName" : "Winona",
+      "preferredContactTypeId" : "001",
+      "firstName" : "Haley",
+      "phone" : "1-403-675-9843 x731"
+   },
+   "expirationDate" : "2019-06-06",
+   "id" : "6b5f249c-7df1-4c2f-afc2-0ef6fc21b701",
+   "type" : "patron"
+}
+

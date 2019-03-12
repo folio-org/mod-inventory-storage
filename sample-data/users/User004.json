@@ -1,0 +1,31 @@
+{
+   "username" : "lenny",
+   "active" : false,
+   "barcode" : "335422988847671",
+   "id" : "ab60d124-5d41-49c5-8aae-2ef2cd3704c2",
+   "expirationDate" : "2020-07-07",
+   "personal" : {
+      "mobilePhone" : "(236)191-9481 x29491",
+      "dateOfBirth" : "2008-05-29",
+      "addresses" : [
+         {
+            "addressLine1" : "16735 Leannon Trail #208",
+            "countryId" : "US",
+            "primaryAddress" : true,
+            "region" : "NY",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "city" : "Seward",
+            "postalCode" : "09576"
+         }
+      ],
+      "phone" : "1-857-058-1987",
+      "firstName" : "Thad",
+      "email" : "emelie@larkin-llc.rw",
+      "lastName" : "Torphy",
+      "preferredContactTypeId" : "005",
+      "middleName" : "Reba"
+   },
+   "type" : "patron",
+   "enrollmentDate" : "2017-10-11"
+}
+

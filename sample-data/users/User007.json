@@ -1,0 +1,30 @@
+{
+   "enrollmentDate" : "2017-08-31",
+   "active" : true,
+   "username" : "willie",
+   "barcode" : "119980534501859",
+   "id" : "75da2654-00a8-4ca5-9c73-2bf9e1e5c883",
+   "personal" : {
+      "addresses" : [
+         {
+            "postalCode" : "53061-3085",
+            "city" : "Youngstown",
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "region" : "ME",
+            "primaryAddress" : true,
+            "countryId" : "US",
+            "addressLine1" : "18497 Turcotte Village Suite 044"
+         }
+      ],
+      "dateOfBirth" : "1950-09-26",
+      "middleName" : "Doyle",
+      "preferredContactTypeId" : "004",
+      "email" : "caden@okon-roob-and-williamson.gp",
+      "lastName" : "Hagenes",
+      "firstName" : "Macey",
+      "phone" : "679.923.3990"
+   },
+   "expirationDate" : "2019-05-07",
+   "type" : "patron"
+}
+

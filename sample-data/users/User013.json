@@ -1,0 +1,29 @@
+{
+   "username" : "emery",
+   "active" : true,
+   "barcode" : "283482082624086",
+   "expirationDate" : "2020-10-16",
+   "id" : "bd566b21-d125-421c-9c78-2b9a8bc4c4f7",
+   "personal" : {
+      "lastName" : "Rutherford",
+      "email" : "hazel@kunze-blick.jo",
+      "preferredContactTypeId" : "005",
+      "addresses" : [
+         {
+            "region" : "ME",
+            "primaryAddress" : true,
+            "countryId" : "US",
+            "addressLine1" : "78856 Koch Creek #601",
+            "postalCode" : "60968",
+            "city" : "Nome",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e"
+         }
+      ],
+      "firstName" : "Izabella",
+      "phone" : "121.036.1972 x4837",
+      "dateOfBirth" : "1956-12-17"
+   },
+   "type" : "patron",
+   "enrollmentDate" : "2016-12-08"
+}
+

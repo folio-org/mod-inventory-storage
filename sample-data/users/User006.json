@@ -1,0 +1,31 @@
+{
+   "username" : "cleta",
+   "active" : true,
+   "barcode" : "591740048987109",
+   "personal" : {
+      "dateOfBirth" : "2009-08-01",
+      "mobilePhone" : "007.454.5835",
+      "addresses" : [
+         {
+            "postalCode" : "49987-9145",
+            "city" : "Forrest City",
+            "addressTypeId" : "1c4b225f-f669-4e9b-afcd-ebc0e273a34e",
+            "region" : "AP",
+            "primaryAddress" : true,
+            "addressLine1" : "30344 Alba Shoal",
+            "countryId" : "US"
+         }
+      ],
+      "firstName" : "Katrina",
+      "phone" : "461-124-2529 x456",
+      "middleName" : "Jean",
+      "preferredContactTypeId" : "004",
+      "email" : "jackie@kuhlman-and-sons.cs",
+      "lastName" : "Cartwright"
+   },
+   "id" : "1f2608df-ff79-4576-b578-14627bbe87fa",
+   "expirationDate" : "2019-10-30",
+   "type" : "patron",
+   "enrollmentDate" : "2018-12-17"
+}
+

@@ -1,0 +1,31 @@
+{
+   "username" : "deontae",
+   "active" : true,
+   "barcode" : "899099756585922",
+   "id" : "c926be9c-a8ce-4399-a9b3-11ec0fc8d6c9",
+   "personal" : {
+      "dateOfBirth" : "1952-02-27",
+      "mobilePhone" : "016-896-5945 x46110",
+      "addresses" : [
+         {
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "postalCode" : "61253-4819",
+            "city" : "Redlands",
+            "addressLine1" : "64411 Bednar Drive",
+            "countryId" : "US",
+            "region" : "OH",
+            "primaryAddress" : true
+         }
+      ],
+      "phone" : "1-528-887-7262 x08397",
+      "firstName" : "Chase",
+      "preferredContactTypeId" : "002",
+      "middleName" : "Annie",
+      "email" : "janie@jacobs-murazik.ky",
+      "lastName" : "McDermott"
+   },
+   "expirationDate" : "2021-02-03",
+   "type" : "patron",
+   "enrollmentDate" : "2018-09-19"
+}
+

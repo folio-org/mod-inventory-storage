@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.impl.ServicePointAPI.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
 import static org.folio.rest.impl.ServicePointAPI.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -39,6 +40,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
 
 /**
  *
@@ -54,6 +56,7 @@ public class ServicePointTest extends TestBase{
           ExecutionException,
           TimeoutException,
           MalformedURLException {
+             StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
              StorageTestSuite.deleteAll(servicePointsUrl(""));
       }
 

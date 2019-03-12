@@ -1,0 +1,30 @@
+{
+   "active" : false,
+   "username" : "aron",
+   "barcode" : "546815596354001",
+   "expirationDate" : "2020-05-30",
+   "id" : "4c564a60-8ac6-41f9-a8b6-088901a5f8ca",
+   "personal" : {
+      "addresses" : [
+         {
+            "countryId" : "US",
+            "addressLine1" : "56788 Isadore Mountains",
+            "region" : "KY",
+            "primaryAddress" : true,
+            "addressTypeId" : "93d3d88d-499b-45d0-9bc7-ac73c3a19880",
+            "postalCode" : "30671-2288",
+            "city" : "Monterey"
+         }
+      ],
+      "mobilePhone" : "1-886-930-2767 x9243",
+      "dateOfBirth" : "1957-03-08",
+      "email" : "juliana@reichel-bernhard.mm",
+      "lastName" : "McGlynn",
+      "preferredContactTypeId" : "002",
+      "phone" : "1-232-590-6006 x66909",
+      "firstName" : "Tyrel"
+   },
+   "type" : "patron",
+   "enrollmentDate" : "2017-08-19"
+}
+
