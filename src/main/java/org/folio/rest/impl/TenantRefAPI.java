@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -85,7 +84,8 @@ public class TenantRefAPI extends TenantAPI {
         return;
       }
       try {
-        List<URL> urls = TenantLoading.getURLsFromClassPathDir(REFERENCE_LEAD + "/service-points");
+        List<URL> urls = TenantLoading.getURLsFromClassPathDir(
+          REFERENCE_LEAD + "/service-points");
         servicePoints = new LinkedList<>();
         for (URL url : urls) {
           InputStream stream = url.openStream();
