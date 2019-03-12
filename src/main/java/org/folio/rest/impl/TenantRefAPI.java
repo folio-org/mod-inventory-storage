@@ -94,7 +94,9 @@ public class TenantRefAPI extends TenantAPI {
           servicePoints.add(new JsonObject(content));
         }
       } catch (URISyntaxException | IOException ex) {
-
+        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+          .respond500WithTextPlain(ex.getLocalizedMessage())));
+        return;
       }
       TenantLoading tl = new TenantLoading();
 
