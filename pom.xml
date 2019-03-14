@@ -60,7 +60,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>23.7.0</raml-module-builder-version>
+    <raml-module-builder-version>23.11.0</raml-module-builder-version>
     <argLine />
   </properties>
 
@@ -243,6 +243,22 @@
               <resources>
                 <resource>
                   <directory>${basedir}/reference-data</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-user-sample-data</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/sample-data/users</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/mod-users/src/main/resources/sample-data/users</directory>
                   <filtering>true</filtering>
                 </resource>
               </resources>

@@ -3,13 +3,22 @@ package org.folio.rest.impl;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
+import org.apache.commons.io.IOUtils;
 import org.folio.rest.tools.utils.TenantLoading;
 
 public class TenantRefAPI extends TenantAPI {
@@ -47,6 +56,23 @@ public class TenantRefAPI extends TenantAPI {
     "item-note-types"
   };
 
+  List<JsonObject> servicePoints = null;
+
+  String servicePointUserFilter(String s) {
+    JsonObject jInput = new JsonObject(s);
+    JsonObject jOutput = new JsonObject();
+    jOutput.put("userId", jInput.getString("id"));
+    JsonArray ar = new JsonArray();
+    for (JsonObject pt : servicePoints) {
+      ar.add(pt.getString("id"));
+    }
+    jOutput.put("servicePointsIds", ar);
+    jOutput.put("defaultServicePointId", ar.getString(0));
+    String res = jOutput.encodePrettily();
+    log.info("servicePointUser result : " + res);
+    return res;
+  }
+
   @Override
   public void postTenant(TenantAttributes ta, Map<String, String> headers,
     Handler<AsyncResult<Response>> hndlr, Context cntxt) {
@@ -57,17 +83,42 @@ public class TenantRefAPI extends TenantAPI {
         hndlr.handle(res);
         return;
       }
-      TenantLoading tl = new TenantLoading();
-      for (String p : refPaths) {
-        tl.addJsonIdContent(REFERENCE_KEY, REFERENCE_LEAD, p, p);
+      try {
+        List<URL> urls = TenantLoading.getURLsFromClassPathDir(
+          REFERENCE_LEAD + "/service-points");
+        servicePoints = new LinkedList<>();
+        for (URL url : urls) {
+          InputStream stream = url.openStream();
+          String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
+          stream.close();
+          servicePoints.add(new JsonObject(content));
+        }
+      } catch (URISyntaxException | IOException ex) {
+        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+          .respond500WithTextPlain(ex.getLocalizedMessage())));
+        return;
       }
-      tl.addJsonIdContent(SAMPLE_KEY, SAMPLE_LEAD, "instances", "instance-storage/instances");
-      tl.addJsonIdBasename(SAMPLE_KEY, SAMPLE_LEAD,
-        "instance-storages/instances/%d/source-record/marc-json", "instance-source-records");
-      tl.addJsonIdContent(SAMPLE_KEY, SAMPLE_LEAD, "holdingsrecords", "holdings-storage/holdings");
-      tl.addJsonIdContent(SAMPLE_KEY, SAMPLE_LEAD, "items", "item-storage/items");
-      tl.addJsonIdContent(SAMPLE_KEY, SAMPLE_LEAD, "instance-relationships",
-        "instance-storage/instance-relationships");
+      TenantLoading tl = new TenantLoading();
+
+      tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
+      tl.withIdContent();
+      for (String p : refPaths) {
+        tl.add(p);
+      }
+      tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+      tl.add("instances", "instance-storage/instances");
+      tl.withIdBasename().add("instance-storages/instances/%d/source-record/marc-json",
+        "instance-source-records");
+      tl.withIdContent();
+      tl.add("holdingsrecords", "holdings-storage/holdings");
+      tl.add("items", "item-storage/items");
+      tl.add("instance-relationships", "instance-storage/instance-relationships");
+      if (servicePoints != null) {
+        tl.withFilter(this::servicePointUserFilter)
+          .withPostOnly()
+          .withAcceptStatus(422)
+          .add("users", "service-points-users");
+      }
       tl.perform(ta, headers, vertx, res1 -> {
         if (res1.failed()) {
           hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
