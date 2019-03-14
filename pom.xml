@@ -60,7 +60,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>23.10.0</raml-module-builder-version>
+    <raml-module-builder-version>23.11.0</raml-module-builder-version>
     <argLine />
   </properties>
 
