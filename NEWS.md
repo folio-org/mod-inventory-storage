@@ -1,3 +1,9 @@
+## 15.2.0 2019-03-15
+
+* Provides service point users sample data (MODINVSTOR-270)
+* Loads sample data with `loadSample` (MODINVSTOR-264)
+* Performance optimization, search by barcode (MODINVSTOR-269)
+* Makes sample service points available for pickup (MODINVSTOR-268)
 
 ## 15.1.0 2019-02-19
 
