@@ -4,4 +4,3 @@
 [submodule "mod-users"]
 	path = mod-users
 	url = https://github.com/folio-org/mod-users.git
-	branch = modusers-103-load-reference
