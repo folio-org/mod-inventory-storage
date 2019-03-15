@@ -1,3 +1,7 @@
+## 15.3.0 2019-03-15
+
+* Remove branch tag for mod-users submodule
+
 ## 15.2.0 2019-03-15
 
 * Provides service point users sample data (MODINVSTOR-270)
