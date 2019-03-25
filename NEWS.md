@@ -1,3 +1,7 @@
+## 15.3.1 2019-03-23
+
+* Align sample data cross-module: Item statuses to match loan samples in circulation
+
 ## 15.3.0 2019-03-15
 
 * Remove branch tag for mod-users submodule
