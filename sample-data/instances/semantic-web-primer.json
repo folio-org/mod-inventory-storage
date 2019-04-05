@@ -1,0 +1,55 @@
+{
+  "id" : "5bf370e0-8cca-4d9c-82e4-5170ab2a0a39",
+  "source" : "manual",
+  "title" : "A semantic web primer",
+  "indexTitle" : "Semantic web primer",
+  "alternativeTitles" : [ ],
+  "editions" : [ ],
+  "series" : [ "Cooperative information systems" ],
+  "identifiers" : [ {
+    "identifierTypeId" : "8261054f-be78-422d-bd51-4ed9f33c3422",
+    "value" : "0262012103"
+  }, {
+    "identifierTypeId" : "8261054f-be78-422d-bd51-4ed9f33c3422",
+    "value" : "9780262012102"
+  }, {
+    "identifierTypeId" : "c858e4f2-2b6b-4385-842b-60732ee14abb",
+    "value" : "2003065165"
+  } ],
+  "contributors" : [ {
+    "contributorNameTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe2a",
+    "name" : "Antoniou, Grigoris",
+    "contributorTypeId" : "6e09d47d-95e2-4d8a-831b-f777b8ef6d81",
+    "contributorTypeText" : ""
+  }, {
+    "contributorNameTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe2a",
+    "name" : "Van Harmelen, Frank",
+    "contributorTypeId" : "6e09d47d-95e2-4d8a-831b-f777b8ef6d81",
+    "contributorTypeText" : ""
+  } ],
+  "subjects" : [ "Semantic Web" ],
+  "classifications" : [ {
+    "classificationNumber" : "025.04",
+    "classificationTypeId" : "42471af9-7d25-4f3a-bf78-60d29dcf463b"
+  }, {
+    "classificationNumber" : "TK5105.88815 .A58 2004",
+    "classificationTypeId" : "ce176ace-a53e-4b4d-aa89-725ed7b2edac"
+  } ],
+  "publication" : [ {
+    "publisher" : "MIT Press",
+    "place" : "Cambridge, Mass. ",
+    "dateOfPublication" : "c2004",
+    "role" : "Publisher"
+  } ],
+  "publicationFrequency" : [ ],
+  "publicationRange" : [ ],
+  "electronicAccess" : [ ],
+  "instanceTypeId" : "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
+  "physicalDescriptions" : [ "xx, 238 p. : ill. ; 24 cm." ],
+  "languages" : [ "eng" ],
+  "notes" : [ "Includes bibliographical references and index.", "The development of the Semantic Web, with machine-readable content, has the potential to revolutionize the World Wide Web and its uses. A Semantic Web Primer provides an introduction and guide to this continuously evolving field, describing its key ideas, languages, and technologies. Suitable for use as a textbook or for independent study by professionals, it concentrates on undergraduate-level fundamental concepts and techniques that will enable readers to proceed with building applications on their own and includes exercises, project descriptions, and annotated references to relevant online materials. The third edition of this widely used text has been thoroughly updated, with significant new material that reflects a rapidly developing field. Treatment of the different languages (OWL2, rules) expands the coverage of RDF and OWL, defining the data model independently of XML and including coverage of N3/Turtle and RDFa. A chapter is devoted to OWL2, the new W3C standard. This edition also features additional coverage of the query language SPARQL, the rule language RIF and the possibility of interaction between rules and ontology languages and applications. The chapter on Semantic Web applications reflects the rapid developments of the past few years. A new chapter offers ideas for term projects" ],
+  "modeOfIssuanceId" : "9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
+  "catalogedDate" : "2019-04-05",
+  "statisticalCodeIds" : [ "b5968c9e-cddc-4576-99e3-8e60aed8b0dd" ],
+  "statusId" : "9634a5ab-9228-4703-baf2-4d12ebc77d56"
+}
