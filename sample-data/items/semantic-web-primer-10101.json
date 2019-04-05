@@ -1,0 +1,26 @@
+{
+  "id" : "7212ba6a-8dcf-45a1-be9a-ffaa847c4423",
+  "status" : {
+    "name" : "Available"
+  },
+  "formerIds" : [ ],
+  "holdingsRecordId" : "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19",
+  "barcode" : "10101",
+  "itemLevelCallNumber" : "TK5105.88815 . A58 2004 FT MEADE",
+  "enumeration" : "",
+  "chronology" : "",
+  "copyNumbers" : [ "Copy 2" ],
+  "notes" : [ ],
+  "circulationNotes" : [ ],
+  "electronicAccess" : [ {
+    "uri" : "http://www.loc.gov/catdir/toc/ecip0718/2007020429.html",
+    "linkText" : "Links available",
+    "materialsSpecification" : "Table of contents",
+    "publicNote" : "Table of contents only",
+    "relationshipId" : "3b430592-2e09-4b48-9a0c-0636d66b9fb3"
+  } ],
+  "statisticalCodeIds" : [ "b5968c9e-cddc-4576-99e3-8e60aed8b0dd" ],
+  "materialTypeId" : "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+  "permanentLoanTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe27",
+  "permanentLocationId" : "fcd64ce1-6995-48f0-840e-89ffa2288371"
+}
