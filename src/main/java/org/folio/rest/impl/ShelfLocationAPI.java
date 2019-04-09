@@ -107,7 +107,7 @@ public class ShelfLocationAPI implements ShelfLocations {
     Context vertxContext) {
     try {
       String tenantId = getTenant(okapiHeaders);
-      Criteria criteria = new Criteria(LOCATION_SCHEMA_PATH);
+      Criteria criteria = new Criteria();
       criteria.addField(ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);

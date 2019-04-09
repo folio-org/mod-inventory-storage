@@ -422,7 +422,7 @@ public final class StorageHelper {
 
   protected static Criterion idCriterion(String id, String schemaPath, Handler<AsyncResult<Response>> asyncResultHandler) {
     try {
-      Criteria criteria = new Criteria(schemaPath);
+      Criteria criteria = new Criteria();
       criteria.addField(LocationUnitAPI.ID_FIELD_NAME);
       criteria.setOperation("=");
       criteria.setValue(id);
