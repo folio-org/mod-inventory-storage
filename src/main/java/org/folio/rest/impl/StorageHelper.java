@@ -420,7 +420,7 @@ public final class StorageHelper {
     return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
   }
 
-  protected static Criterion idCriterion(String id, String schemaPath, Handler<AsyncResult<Response>> asyncResultHandler) {
+  protected static Criterion idCriterion(String id, Handler<AsyncResult<Response>> asyncResultHandler) {
     try {
       Criteria criteria = new Criteria();
       criteria.addField(LocationUnitAPI.ID_FIELD_NAME);

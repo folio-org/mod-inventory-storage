@@ -22,7 +22,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.util.ArrayList;
 import org.apache.commons.lang.NotImplementedException;
-import static org.folio.rest.impl.LocationAPI.LOCATION_SCHEMA_PATH;
 import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
 import static org.folio.rest.impl.StorageHelper.*;
 import org.folio.rest.jaxrs.model.Location;
@@ -39,7 +38,6 @@ public class ShelfLocationAPI implements ShelfLocations {
   public static final String SHELF_LOCATION_TABLE = "shelflocation";
   public static final Logger logger = LoggerFactory.getLogger(ShelfLocationAPI.class);
   public static final String URL_PREFIX = "/shelflocations";
-  public static final String SHELF_LOCATION_SCHEMA_PATH = "apidocs/raml/shelflocation.json";
   public static final String ID_FIELD_NAME = "'id'";
 
   /**
