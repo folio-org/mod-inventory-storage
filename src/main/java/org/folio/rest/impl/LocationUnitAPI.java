@@ -29,13 +29,10 @@ public class LocationUnitAPI implements LocationUnits {
   public static final String ID_FIELD_NAME = "'id'"; // same for all of them
   public static final String INSTITUTION_TABLE = "locinstitution";
   public static final String URL_PREFIX_INST = URL_PREFIX + "/institutions";
-  public static final String INST_SCHEMA_PATH = "apidocs/raml/locinst.json";
   public static final String CAMPUS_TABLE = "loccampus";
   public static final String URL_PREFIX_CAMP = URL_PREFIX + "/campuses";
-  public static final String CAMP_SCHEMA_PATH = "apidocs/raml/loccamp.json";
   public static final String LIBRARY_TABLE = "loclibrary";
   public static final String URL_PREFIX_LIB = URL_PREFIX + "/libraries";
-  public static final String LIB_SCHEMA_PATH = "apidocs/raml/loclib.json";
   private static final String MOD_NAME = "mod_inventory_storage";
 
   @Override
@@ -142,7 +139,7 @@ public class LocationUnitAPI implements LocationUnits {
     Context vertxContext) {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -177,7 +174,7 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -216,7 +213,7 @@ public class LocationUnitAPI implements LocationUnits {
       return;
     }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, INST_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -345,7 +342,7 @@ public class LocationUnitAPI implements LocationUnits {
     Context vertxContext) {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -379,7 +376,7 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -416,7 +413,7 @@ public class LocationUnitAPI implements LocationUnits {
         return;
       }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, CAMP_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -547,7 +544,7 @@ public class LocationUnitAPI implements LocationUnits {
     Context vertxContext) {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -581,7 +578,7 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -617,7 +614,7 @@ public class LocationUnitAPI implements LocationUnits {
       return;
     }
     String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, LIB_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }

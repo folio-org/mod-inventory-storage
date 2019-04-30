@@ -44,7 +44,6 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   public static final String LOCATION_TABLE = "location";
   private final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
   public static final String URL_PREFIX = "/locations";
-  public static final String LOCATION_SCHEMA_PATH = "apidocs/raml/location.json";
   public static final String ID_FIELD_NAME = "'id'";
 
   public static final String SERVICEPOINT_IDS = "servicePointIds";
@@ -177,7 +176,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -214,7 +213,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Context vertxContext) {
 
     String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
+    Criterion criterion = idCriterion(id, asyncResultHandler);
     if (criterion == null) {
       return; // error already handled
     }
@@ -250,7 +249,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
             .setHandler(checksResult -> {
       if (checksResult.succeeded()) {
         String tenantId = getTenant(okapiHeaders);
-        Criterion criterion = idCriterion(id, LOCATION_SCHEMA_PATH, asyncResultHandler);
+        Criterion criterion = idCriterion(id, asyncResultHandler);
         if (criterion == null) {
           return; // error already handled
         }
