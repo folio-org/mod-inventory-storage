@@ -326,8 +326,8 @@
                   <destinationFile>${project.build.directory}/DeploymentDescriptor-environment.json</destinationFile>
                 </fileSet>
                 <fileSet>
-                  <sourceFile>${project.build.directory}/Activate-template.json</sourceFile>
-                  <destinationFile>${project.build.directory}/Activate.json</destinationFile>
+                  <sourceFile>${project.build.directory}/Install-template.json</sourceFile>
+                  <destinationFile>${project.build.directory}/Install.json</destinationFile>
                 </fileSet>
               </fileSets>
             </configuration>
