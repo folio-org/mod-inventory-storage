@@ -19,5 +19,5 @@ curl -w '\n' -D - -s \
 
 curl -w '\n' -X POST -D - \
      -H "Content-type: application/json" \
-     -d @./target/Activate.json  \
-     "${okapi_proxy_address}/_/proxy/tenants/${tenant_id}/modules"
+     -d @./target/Install.json  \
+     "${okapi_proxy_address}/_/proxy/tenants/${tenant_id}/install?deploy=false&tenantParameters=loadSample%3Dtrue%2CloadReference%3Dtrue"
