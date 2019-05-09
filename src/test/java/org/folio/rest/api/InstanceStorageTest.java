@@ -77,12 +77,12 @@ public class InstanceStorageTest extends TestBase {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
 
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     bookMaterialTypeId = UUID.fromString(
       new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
