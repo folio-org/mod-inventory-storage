@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.apache.commons.io.IOUtils;
 import org.folio.HttpStatus;
 import org.folio.rest.impl.InstanceStorageAPI;
@@ -77,12 +78,12 @@ public class InstanceStorageTest extends TestBase {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
 
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     bookMaterialTypeId = UUID.fromString(
       new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
