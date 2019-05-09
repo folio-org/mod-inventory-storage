@@ -1,3 +1,8 @@
+## 15.4.0 2019-05-08
+
+* Upgrades RAML Module Builder to version 24.0.0 and aligns MODINVSTOR-278
+* Adds reference data for locations, location units, service points MODINVSTOR 279
+
 ## 15.3.1 2019-03-23
 
 * Align sample data cross-module: Item statuses to match loan samples in circulation
