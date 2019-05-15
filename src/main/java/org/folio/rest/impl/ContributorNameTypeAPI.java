@@ -3,25 +3,17 @@ package org.folio.rest.impl;
 import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ContributorNameType;
 import org.folio.rest.jaxrs.model.ContributorNameTypes;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.CQLParseException;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import javax.ws.rs.core.Response;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -35,17 +27,6 @@ public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.Con
   private static final String LOCATION_PREFIX       = "/contributor-name-types/";
   private static final Logger log                 = LoggerFactory.getLogger(ContributorNameTypeAPI.class);
   private final Messages messages                 = Messages.getInstance();
-  private String idFieldName                      = "_id";
-
-
-  public ContributorNameTypeAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
-  }
-
-  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(CONTRIBUTOR_NAME_TYPE_TABLE+".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
-  }
 
   @Validate
   @Override
@@ -55,45 +36,8 @@ public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.Con
     /**
      * http://host:port/contributor-name-types
      */
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        CQLWrapper cql = getCQL(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CONTRIBUTOR_NAME_TYPE_TABLE, ContributorNameType.class,
-            new String[]{"*"}, cql, true, true,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  ContributorNameTypes ContributorNameTypes = new ContributorNameTypes();
-                  @SuppressWarnings("unchecked")
-                  List<ContributorNameType> ContributorNameType = (List<ContributorNameType>) reply.result().getResults();
-                  ContributorNameTypes.setContributorNameTypes(ContributorNameType);
-                  ContributorNameTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse.respond200WithApplicationJson(
-                      ContributorNameTypes)));
-                }
-                else{
-                  log.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
-                      .respond400WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
-                    .respond500WithTextPlain(messages.getMessage(
-                        lang, MessageConsts.InternalServerError))));
-              }
-            });
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
-        if (e.getCause() instanceof CQLParseException) {
-          message = " CQL parse error " + e.getLocalizedMessage();
-        }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesResponse
-            .respond500WithTextPlain(message)));
-      }
-    });
+    PgUtil.get(CONTRIBUTOR_NAME_TYPE_TABLE, ContributorNameType.class, ContributorNameTypes.class, query, offset, limit,
+        okapiHeaders, vertxContext, GetContributorNameTypesResponse.class, asyncResultHandler);
   }
 
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
@@ -144,57 +88,14 @@ public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.Con
     });
   }
 
-  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   @Validate
   @Override
-  public void getContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang,
+  public void getContributorNameTypesByContributorNameTypeId(String contributorNameTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-
-        Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+ContributorNameTypeId+"'"));
-
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CONTRIBUTOR_NAME_TYPE_TABLE, ContributorNameType.class, c, true,
-            reply -> {
-              try {
-                if (reply.failed()) {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse.
-                      respond404WithTextPlain(msg)));
-                  return;
-                }
-                @SuppressWarnings("unchecked")
-                List<ContributorNameType> ContributorNameType = (List<ContributorNameType>) reply.result().getResults();
-                if (ContributorNameType.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
-                      .respond404WithTextPlain(ContributorNameTypeId)));
-                }
-                else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorNameTypesByContributorNameTypeIdResponse
-                      .respond200WithApplicationJson(ContributorNameType.get(0))));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-              }
-            });
-      } catch (Exception e) {
-        internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-      }
-    });
+    PgUtil.getById(CONTRIBUTOR_NAME_TYPE_TABLE, ContributorNameType.class, contributorNameTypeId,
+        okapiHeaders, vertxContext, GetContributorNameTypesByContributorNameTypeIdResponse.class, asyncResultHandler);
   }
 
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
@@ -205,7 +106,7 @@ public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.Con
 
   @Validate
   @Override
-  public void deleteContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang,
+  public void deleteContributorNameTypesByContributorNameTypeId(String contributorNameTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
@@ -213,7 +114,7 @@ public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.Con
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(CONTRIBUTOR_NAME_TYPE_TABLE, ContributorNameTypeId,
+        postgres.delete(CONTRIBUTOR_NAME_TYPE_TABLE, contributorNameTypeId,
             reply -> {
               try {
                 if (reply.failed()) {
@@ -255,7 +156,7 @@ public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.Con
 
   @Validate
   @Override
-  public void putContributorNameTypesByContributorNameTypeId(String ContributorNameTypeId, String lang, ContributorNameType entity,
+  public void putContributorNameTypesByContributorNameTypeId(String contributorNameTypeId, String lang, ContributorNameType entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
@@ -263,10 +164,10 @@ public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.Con
       String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
-          entity.setId(ContributorNameTypeId);
+          entity.setId(contributorNameTypeId);
         }
         PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-            CONTRIBUTOR_NAME_TYPE_TABLE, entity, ContributorNameTypeId,
+            CONTRIBUTOR_NAME_TYPE_TABLE, entity, contributorNameTypeId,
             reply -> {
               try {
                 if (reply.succeeded()) {

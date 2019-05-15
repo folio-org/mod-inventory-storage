@@ -6,13 +6,14 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loantype;
 import org.folio.rest.jaxrs.model.Loantypes;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -20,8 +21,6 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -41,7 +40,6 @@ public class LoanTypeAPI implements org.folio.rest.jaxrs.resource.LoanTypes {
   private static final String LOCATION_PREFIX  = "/loan-types/";
   private static final Logger log              = LoggerFactory.getLogger(LoanTypeAPI.class);
   private final Messages messages              = Messages.getInstance();
-  private String idFieldName                   = "_id";
 
   /**
    * Return the PostgresClient instance for the vertx and the tenant.
@@ -148,44 +146,8 @@ public class LoanTypeAPI implements org.folio.rest.jaxrs.resource.LoanTypes {
   public void getLoanTypesByLoantypeId(String loantypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
-    vertxContext.runOnContext(v -> {
-      try {
-        Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+loantypeId+"'"));
-
-        getPostgresClient(vertxContext, okapiHeaders).get(LOAN_TYPE_TABLE, Loantype.class, c, true,
-            reply -> {
-              try {
-                if (reply.failed()) {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetLoanTypesByLoantypeIdResponse.
-                      respond404WithTextPlain(msg)));
-                  return;
-                }
-                @SuppressWarnings("unchecked")
-                List<Loantype> userGroup = (List<Loantype>) reply.result().getResults();
-                if (userGroup.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                      .respond404WithTextPlain(loantypeId)));
-                }
-                else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-                      .respond200WithApplicationJson(userGroup.get(0))));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-              }
-            });
-      } catch (Exception e) {
-        internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-      }
-    });
+    PgUtil.getById(LOAN_TYPE_TABLE, Loantype.class, loantypeId, okapiHeaders, vertxContext,
+        GetLoanTypesByLoantypeIdResponse.class, asyncResultHandler);
   }
 
   @Validate
@@ -280,7 +242,7 @@ public class LoanTypeAPI implements org.folio.rest.jaxrs.resource.LoanTypes {
     try {
       vertxContext.runOnContext(v -> {
         String tenantId = TenantTool.tenantId(okapiHeaders);
-        getPostgresClient(vertxContext, okapiHeaders).mutate(String.format("DELETE FROM %s_%s.%s",
+        getPostgresClient(vertxContext, okapiHeaders).execute(String.format("DELETE FROM %s_%s.%s",
           tenantId, "mod_inventory_storage", LOAN_TYPE_TABLE),
           reply -> {
             if (reply.succeeded()) {
@@ -298,12 +260,6 @@ public class LoanTypeAPI implements org.folio.rest.jaxrs.resource.LoanTypes {
         DeleteLoanTypesResponse.respond500WithTextPlain(e.getMessage())));
     }
 
-  }
-
-  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetLoanTypesByLoantypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
   private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
