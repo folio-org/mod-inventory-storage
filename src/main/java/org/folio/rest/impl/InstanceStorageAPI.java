@@ -29,7 +29,6 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.ObjectMapperTool;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLDefaultNodeVisitor;
 import org.z3950.zing.cql.CQLNode;
@@ -784,53 +783,8 @@ public class InstanceStorageAPI implements InstanceStorage {
 
   @Override
   public void postInstanceStorageInstanceRelationships(String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-
-      vertxContext.runOnContext(v -> {
-        try {
-
-          postgresClient.save(INSTANCE_RELATIONSHIP_TABLE, entity.getId(), entity,
-            reply -> {
-              try {
-                if(reply.succeeded()) {
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      PostInstanceStorageInstanceRelationshipsResponse
-                        .respond201WithApplicationJson(entity,
-                          PostInstanceStorageInstanceRelationshipsResponse.headersFor201().withLocation(reply.result()))));
-                }
-                else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      PostInstanceStorageInstanceRelationshipsResponse
-                        .respond400WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e.getStackTrace());
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(
-                    PostInstanceStorageInstanceRelationshipsResponse
-                      .respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e.getStackTrace());
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            PostInstanceStorageInstanceRelationshipsResponse
-              .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e.getStackTrace());
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        PostInstanceStorageInstanceRelationshipsResponse
-          .respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.post(INSTANCE_RELATIONSHIP_TABLE, entity, okapiHeaders, vertxContext,
+        PostInstanceStorageInstanceRelationshipsResponse.class, asyncResultHandler);
   }
 
   @Override

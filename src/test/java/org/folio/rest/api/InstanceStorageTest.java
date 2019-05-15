@@ -77,12 +77,12 @@ public class InstanceStorageTest extends TestBase {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
 
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     bookMaterialTypeId = UUID.fromString(
       new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
@@ -523,9 +523,12 @@ public class InstanceStorageTest extends TestBase {
   private void insert(TestContext testContext, PostgresClient pg, String prefix, int n) {
     Async async = testContext.async();
     String table = PostgresClient.convertToPsqlStandard(StorageTestSuite.TENANT_ID) + ".instance";
-    String sql = "INSERT INTO " + table + " SELECT uuid, json_build_object" +
-        "  ('title', '" + prefix + " ' || n, 'id', uuid)" +
-        "  FROM (SELECT generate_series(1, " + n + ") AS n, gen_random_uuid() AS uuid) AS uuids";
+    String sql = "INSERT INTO " + table +
+        " SELECT uuid, json_build_object('title', prefix || n, 'id', uuid)" +
+        " FROM (SELECT n, prefix, md5(prefix || n)::uuid AS uuid" +
+        "       FROM (SELECT generate_series(1, " + n + ") AS n, '" + prefix + " ' AS prefix) AS tmp1" +
+        "      ) AS tmp2";
+
     pg.execute(sql, testContext.asyncAssertSuccess(updated -> {
         testContext.assertEquals(n, updated.getUpdated());
         async.complete();
