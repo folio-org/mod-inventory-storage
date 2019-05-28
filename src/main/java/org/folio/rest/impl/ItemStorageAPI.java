@@ -7,7 +7,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +23,6 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 /**
  * CRUD for Item.
@@ -155,7 +153,7 @@ public class ItemStorageAPI implements ItemStorage {
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
 
-    postgresClient.mutate(String.format("TRUNCATE TABLE %s_%s.item", tenantId, "mod_inventory_storage"),
+    postgresClient.execute(String.format("DELETE FROM %s_%s.item", tenantId, "mod_inventory_storage"),
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(
