@@ -11,6 +11,7 @@ import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -35,8 +36,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.IOUtils;
 import org.folio.HttpStatus;
-import org.folio.rest.impl.InstanceStorageAPI;
 import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.JsonArrayHelper;
@@ -538,7 +539,7 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canGetWithOptimizedSql(TestContext testContext) {
-    int n = InstanceStorageAPI.getOptimizedSqlSize() / 2;
+    int n = PgUtil.getOptimizedSqlSize() / 2;
     PostgresClient pg = PostgresClient.getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID);
 
     // "b foo" records are before the getOptimizedSqlSize() limit
@@ -693,12 +694,13 @@ public class InstanceStorageTest extends TestBase {
 
     Response getResponse = getMarcJson(id);
     assertThat(getResponse.getStatusCode(), is(200));
+    assertThat(getResponse.getJson().getString("id"), is(id.toString()));
     assertThat(getResponse.getJson().getString("leader"), is("xxxxxnam a22yyyyy c 4500"));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("029857716"));
     assertThat(fields.getJsonObject(1).getJsonObject("245")
         .getJsonArray("subfields").getJsonObject(0).getString("a"), is("The Yearbook of Okapiology"));
-    assertThat(getResponse.getJson().size(), is(2));  // leader and fields
+    assertThat(getResponse.getJson().getMap().keySet(), containsInAnyOrder("id", "leader", "fields"));
   }
 
   @Test  // https://issues.folio.org/browse/MODINVSTOR-142?focusedCommentId=33665#comment-33665

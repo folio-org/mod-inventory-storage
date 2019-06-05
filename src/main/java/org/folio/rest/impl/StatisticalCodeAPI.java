@@ -1,11 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.folio.rest.impl;
-
-
 
 import java.util.List;
 import java.util.Map;
@@ -13,27 +6,24 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.StatisticalCode;
 import org.folio.rest.jaxrs.model.StatisticalCodes;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -47,11 +37,6 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
   private static final String LOCATION_PREFIX = "/statistical-codes/";
   private static final Logger LOG = LoggerFactory.getLogger(StatisticalCodeAPI.class);
   private static final Messages MESSAGES = Messages.getInstance();
-  private static final String IDFIELDNAME = "_id";
-
-  public StatisticalCodeAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
-  }
 
   @Override
   public void getStatisticalCodes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -139,45 +124,8 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
 
   @Override
   public void getStatisticalCodesByStatisticalCodeId(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-
-        Criterion c = new Criterion(
-            new Criteria().addField(IDFIELDNAME).setJSONB(false).setOperation("=").setValue("'"+id+"'"));
-
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, StatisticalCode.class, c, true,
-            reply -> {
-              try {
-                if (reply.failed()) {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  LOG.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetStatisticalCodesByStatisticalCodeIdResponse.
-                      respond404WithTextPlain(msg)));
-                  return;
-                }
-                @SuppressWarnings("unchecked")
-                List<StatisticalCode> reference = reply.result().getResults();
-                if (reference.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodesByStatisticalCodeIdResponse
-                      .respond404WithTextPlain(id)));
-                }
-                else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodesByStatisticalCodeIdResponse
-                      .respond200WithApplicationJson(reference.get(0))));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-              }
-            });
-      } catch (Exception e) {
-        internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-      }
-    });
+    PgUtil.getById(REFERENCE_TABLE, StatisticalCode.class, id, okapiHeaders, vertxContext,
+        GetStatisticalCodesByStatisticalCodeIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -257,7 +205,7 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
         internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
     });
   }
-  
+
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(REFERENCE_TABLE+".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
@@ -268,16 +216,10 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
     handler.handle(Future.succeededFuture(PostStatisticalCodesResponse
         .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
   }
-  
+
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     LOG.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteStatisticalCodesByStatisticalCodeIdResponse
-        .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
-  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    LOG.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetStatisticalCodesByStatisticalCodeIdResponse
         .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
   }
 

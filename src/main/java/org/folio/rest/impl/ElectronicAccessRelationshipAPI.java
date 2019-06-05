@@ -6,29 +6,25 @@
 package org.folio.rest.impl;
 
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
-import static org.folio.rest.tools.utils.ValidationHelper.isInvalidUUID;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationship;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationships;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -46,7 +42,6 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
   private static final String LOCATION_PREFIX = "/electronic-access-relationships/";
   private static final Logger LOG = LoggerFactory.getLogger(ElectronicAccessRelationshipAPI.class);
   private static final Messages MESSAGES = Messages.getInstance();
-  private static final String IDFIELDNAME = "_id";
 
   @Override
   public void getElectronicAccessRelationships(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -60,7 +55,6 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
                   try {
                     if (reply.succeeded()) {
                       ElectronicAccessRelationships electronicAccessRelationships = new ElectronicAccessRelationships();
-                      @SuppressWarnings("unchecked")
                       List<ElectronicAccessRelationship> relationships = reply.result().getResults();
                       electronicAccessRelationships.setElectronicAccessRelationships(relationships);
                       electronicAccessRelationships.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
@@ -138,48 +132,8 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
 
   @Override
   public void getElectronicAccessRelationshipsByElectronicAccessRelationshipId(String electronicAccessRelationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-
-        Criterion c = new Criterion(
-                new Criteria().addField(IDFIELDNAME).setJSONB(false).setOperation("=").setValue("'" + electronicAccessRelationshipId + "'"));
-
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(RESOURCE_TABLE, ElectronicAccessRelationship.class, c, true,
-                reply -> {
-                  try {
-                    if (reply.succeeded()) {
-                      @SuppressWarnings("unchecked")
-                      List<ElectronicAccessRelationship> electronicAccessRelationships = reply.result().getResults();
-                      if (electronicAccessRelationships.isEmpty()) {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                                .respond404WithTextPlain(electronicAccessRelationshipId)));
-                      } else {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                                .respond200WithApplicationJson(electronicAccessRelationships.get(0))));
-                      }
-                    } else {
-                      LOG.error(reply.cause().getMessage(), reply.cause());
-                      if (isInvalidUUID(reply.cause().getMessage())) {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                                .respond404WithTextPlain(electronicAccessRelationshipId)));
-                      } else {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-                      }
-                    }
-                  } catch (Exception e) {
-                    LOG.error(e.getMessage(), e);
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-                  }
-                });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-      }
-    });
+    PgUtil.getById(RESOURCE_TABLE, ElectronicAccessRelationship.class, electronicAccessRelationshipId,
+        okapiHeaders, vertxContext, GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -255,7 +209,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
       }
     });
   }
-  
+
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(RESOURCE_TABLE + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));

@@ -3,23 +3,22 @@ package org.folio.rest.impl;
 import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.IdentifierType;
 import org.folio.rest.jaxrs.model.IdentifierTypes;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +34,6 @@ public class IdentifierTypeAPI implements org.folio.rest.jaxrs.resource.Identifi
   private static final String LOCATION_PREFIX       = "/identifier-types/";
   private static final Logger log                 = LoggerFactory.getLogger(IdentifierTypeAPI.class);
   private final Messages messages                 = Messages.getInstance();
-  private String idFieldName                      = "_id";
-
-
-  public IdentifierTypeAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
-  }
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(IDENTIFIER_TYPE_TABLE+".jsonb");
@@ -65,8 +58,7 @@ public class IdentifierTypeAPI implements org.folio.rest.jaxrs.resource.Identifi
               try {
                 if (reply.succeeded()) {
                   IdentifierTypes identifierTypes = new IdentifierTypes();
-                  @SuppressWarnings("unchecked")
-                  List<IdentifierType> identifierType = (List<IdentifierType>) reply.result().getResults();
+                  List<IdentifierType> identifierType = reply.result().getResults();
                   identifierTypes.setIdentifierTypes(identifierType);
                   identifierTypes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesResponse.respond200WithApplicationJson(
@@ -145,57 +137,13 @@ public class IdentifierTypeAPI implements org.folio.rest.jaxrs.resource.Identifi
     });
   }
 
-  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   @Validate
   @Override
   public void getIdentifierTypesByIdentifierTypeId(String identifierTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-
-        Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+identifierTypeId+"'"));
-
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(IDENTIFIER_TYPE_TABLE, IdentifierType.class, c, true,
-            reply -> {
-              try {
-                if (reply.failed()) {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse.
-                      respond404WithTextPlain(msg)));
-                  return;
-                }
-                @SuppressWarnings("unchecked")
-                List<IdentifierType> identifierType = (List<IdentifierType>) reply.result().getResults();
-                if (identifierType.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse
-                      .respond404WithTextPlain(identifierTypeId)));
-                }
-                else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIdentifierTypesByIdentifierTypeIdResponse
-                      .respond200WithApplicationJson(identifierType.get(0))));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-              }
-            });
-      } catch (Exception e) {
-        internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-      }
-    });
+    PgUtil.getById(IDENTIFIER_TYPE_TABLE, IdentifierType.class, identifierTypeId,
+        okapiHeaders, vertxContext, GetIdentifierTypesByIdentifierTypeIdResponse.class, asyncResultHandler);
   }
 
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {

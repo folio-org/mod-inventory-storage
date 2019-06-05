@@ -43,7 +43,7 @@ import io.vertx.core.json.JsonObject;
 
 
 
-public class ShelfLocationsTest {
+public class ShelfLocationsTest extends TestBase {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private String canCirculateLoanTypeID;

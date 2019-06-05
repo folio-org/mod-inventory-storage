@@ -422,7 +422,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateAnItemAtSpecificLocation()
+  public void canCreateAnItemWithManyProperties()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -446,13 +446,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    client.put(itemsStorageUrl(String.format("/%s", id)), itemToCreate,
+    client.post(itemsStorageUrl(""), itemToCreate,
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(createCompleted));
 
-    Response putResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     Response getResponse = getById(id);
 
@@ -464,16 +463,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(item.getString("barcode"), is("565578437802"));
-    assertThat(item.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(item.getString("materialTypeId"),
-      is(journalMaterialTypeID));
-    assertThat(item.getString("permanentLoanTypeId"),
-      is(canCirculateLoanTypeID));
-    assertThat(item.getString("temporaryLocationId"),
-      is(annexLibraryLocationId.toString()));
-    assertThat(item.getString("inTransitDestinationServicePointId"),
-      is(inTransitServicePointId));
+    assertThat(item.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(item.getString("materialTypeId"), is(journalMaterialTypeID));
+    assertThat(item.getString("permanentLoanTypeId"), is(canCirculateLoanTypeID));
+    assertThat(item.getString("temporaryLocationId"), is(annexLibraryLocationId.toString()));
+    assertThat(item.getString("inTransitDestinationServicePointId"), is(inTransitServicePointId));
   }
 
   @Test
@@ -876,8 +870,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     String error = searchResponse.getBody();
 
-    assertThat(error,
-      is("CQL State Error for 't': org.z3950.zing.cql.cql2pgjson.QueryValidationException: cql.serverChoice requested, but no serverChoiceIndexes defined."));
+    assertThat(error, containsString(
+        "QueryValidationException: cql.serverChoice requested, but no serverChoiceIndexes defined."));
   }
 
   @Test
