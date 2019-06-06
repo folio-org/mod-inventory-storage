@@ -153,7 +153,7 @@ public class ItemStorageAPI implements ItemStorage {
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
 
-    postgresClient.execute(String.format("TRUNCATE TABLE %s_%s.item", tenantId, "mod_inventory_storage"),
+    postgresClient.execute(String.format("DELETE FROM %s_%s.item", tenantId, "mod_inventory_storage"),
         reply -> {
           if (reply.succeeded()) {
             asyncResultHandler.handle(Future.succeededFuture(

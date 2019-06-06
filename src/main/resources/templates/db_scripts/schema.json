@@ -437,6 +437,12 @@
           "removeAccents": true
         },
         {
+          "fieldName": "source",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
           "fieldName": "indexTitle",
           "tOps": "ADD",
           "caseSensitive": false,
