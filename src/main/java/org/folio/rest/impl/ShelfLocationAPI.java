@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.Shelflocation;
 import org.folio.rest.jaxrs.model.Shelflocations;
 import org.folio.rest.jaxrs.resource.ShelfLocations;
+import org.folio.rest.jaxrs.resource.Locations.GetLocationsByIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -34,6 +35,7 @@ public class ShelfLocationAPI implements ShelfLocations {
   public static final String SHELF_LOCATION_TABLE = "shelflocation";
   public static final Logger logger = LoggerFactory.getLogger(ShelfLocationAPI.class);
   public static final String URL_PREFIX = "/shelflocations";
+  public static final String USE_NEW = "Use the new /locations interface instead.";
 
   /**
    * Get a list of the new locations, and fake old kind of shelf-locations out
@@ -100,7 +102,21 @@ public class ShelfLocationAPI implements ShelfLocations {
     Context vertxContext) {
 
     PgUtil.getById(LOCATION_TABLE, Location.class, id, okapiHeaders, vertxContext,
-        GetShelfLocationsByIdResponse.class, asyncResultHandler);
+        GetLocationsByIdResponse.class, result -> {
+          if (result.failed()) {
+            asyncResultHandler.handle(Future.failedFuture(result.cause()));
+            return;
+          }
+          if (result.result().getStatus() != 200) {
+            asyncResultHandler.handle(Future.succeededFuture(result.result()));
+            return;
+          }
+          Location location = (Location) result.result().getEntity();
+          // convert from new-style Location to old-style Shelflocation
+          Shelflocation selfLocation = new Shelflocation().withId(location.getId()).withName(location.getName());
+          Response response = GetShelfLocationsByIdResponse.respond200WithApplicationJson(selfLocation);
+          asyncResultHandler.handle(Future.succeededFuture(response));
+        });
   }
 
   @Override
@@ -110,8 +126,7 @@ public class ShelfLocationAPI implements ShelfLocations {
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext) {
-    throw new NotImplementedException("Creating shelf-locations is DEPRECATED. "
-      + "Use the new locations insterface instead");
+    throw new NotImplementedException("Creating shelf-locations is DEPRECATED. " + USE_NEW);
   }
 
   @Override
@@ -120,8 +135,7 @@ public class ShelfLocationAPI implements ShelfLocations {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. "
-      + "Use the new locations insterface instead");
+    throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. " + USE_NEW);
   }
 
   @Override
@@ -130,8 +144,7 @@ public class ShelfLocationAPI implements ShelfLocations {
           String lang, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext) {
-    throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. "
-      + "Use the new locations insterface instead");
+    throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. " + USE_NEW);
   }
 
   @Override
@@ -142,8 +155,7 @@ public class ShelfLocationAPI implements ShelfLocations {
           Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>>asyncResultHandler,
           Context vertxContext) {
-    throw new NotImplementedException("Creating shelf-locations is DEPRECATED. "
-      + "Use the new locations insterface instead");
+    throw new NotImplementedException("Creating shelf-locations is DEPRECATED. " + USE_NEW);
   }
 
 }

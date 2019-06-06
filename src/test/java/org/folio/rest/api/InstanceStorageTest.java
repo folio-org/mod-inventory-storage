@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
@@ -854,7 +855,7 @@ public class InstanceStorageTest extends TestBase {
       client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
       Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
 
-      assertThat(searchResponse.getStatusCode(), is(200));
+      assertThat(searchResponse, statusCodeIs(200));
       return searchResponse.getJson();
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -893,9 +894,9 @@ public class InstanceStorageTest extends TestBase {
    */
   private void canSort(String cql, String ... expectedTitles) {
     JsonObject searchBody = searchForInstancesWithin5(cql);
-    assertThat(searchBody.getInteger("totalRecords"), is(expectedTitles.length));
+    assertThat("totalRecords", searchBody.getInteger("totalRecords"), is(expectedTitles.length));
     JsonArray foundInstances = searchBody.getJsonArray("instances");
-    assertThat(foundInstances.size(), is(expectedTitles.length));
+    assertThat("number of records found", foundInstances.size(), is(expectedTitles.length));
     String [] titles = new String [expectedTitles.length];
     for (int i=0; i<expectedTitles.length; i++) {
       titles[i] = foundInstances.getJsonObject(i).getString("title");
