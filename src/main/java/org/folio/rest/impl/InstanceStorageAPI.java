@@ -62,35 +62,34 @@ public class InstanceStorageAPI implements InstanceStorage {
       //ho_jsonb is the alias given holdings in the view in the DB
       query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".ho_jsonb.");
 
-      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb")));
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb"));
     }
 
     if(containsItemsRecordProperties) {
       //it_jsonb is the alias given items in the view in the DB
       query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
 
-      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb")));
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb"));
     }
 
     if(containsHoldingsRecordProperties) {
       //ho_jsonb is the alias given holdings in the view in the DB
       query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
 
-      return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_VIEW+".jsonb",
-          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb")));
+          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"));
     }
 
-    return new PreparedCQL(INSTANCE_TABLE,
-        createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb")));
+    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"));
   }
 
-  private CQLWrapper createCQLWrapper(
+  private static CQLWrapper createCQLWrapper(
     String query,
     int limit,
     int offset,
@@ -121,9 +120,37 @@ public class InstanceStorageAPI implements InstanceStorage {
             okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
         return;
       }
-      PgUtil.get(preparedCql.getTableName(), Instance.class, Instances.class, preparedCql.getCqlWrapper().getQuery(),
-          offset, limit,
-          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
+
+      CQLWrapper cql = preparedCql.getCqlWrapper();
+      log.info("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
+
+      PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+      postgresClient.get(preparedCql.getTableName(), Instance.class, preparedCql.getFieldArray(), cql,
+        true, false, reply -> {
+          try {
+            if (reply.succeeded()) {
+              List<Instance> instances = reply.result().getResults();
+
+              Instances instanceList = new Instances();
+              instanceList.setInstances(instances);
+              instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                GetInstanceStorageInstancesResponse.
+                  respond200WithApplicationJson(instanceList)));
+            }
+            else {
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                GetInstanceStorageInstancesResponse.
+                  respond500WithTextPlain(reply.cause().getMessage())));
+            }
+          } catch (Exception e) {
+            log.error(e.getStackTrace());
+            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+              GetInstanceStorageInstancesResponse.
+                respond500WithTextPlain(e.getMessage())));
+          }
+        });
     } catch (Exception e) {
       log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -632,10 +659,13 @@ public class InstanceStorageAPI implements InstanceStorage {
   static class PreparedCQL {
     private final String tableName;
     private final CQLWrapper cqlWrapper;
+    private final List<String> fieldList;
 
-    public PreparedCQL(String tableName, CQLWrapper cqlWrapper) {
+    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList)
+        throws FieldException {
       this.tableName = tableName;
-      this.cqlWrapper = cqlWrapper;
+      this.cqlWrapper = createCQLWrapper(query, limit, offset, fieldList);
+      this.fieldList = fieldList;
     }
 
     public String getTableName() {
@@ -646,6 +676,9 @@ public class InstanceStorageAPI implements InstanceStorage {
       return cqlWrapper;
     }
 
+    public String [] getFieldArray() {
+      return fieldList.toArray(new String [0]);
+    }
   }
 
 }
