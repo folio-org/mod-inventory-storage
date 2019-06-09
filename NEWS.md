@@ -1,3 +1,8 @@
+## 15.5.0 2019-06-09
+
+* Performance improvement (MODINVSTOR-255)
+* Bug fix (MODINVSTOR-289)
+
 ## 15.4.0 2019-05-08
 
 * Upgrades RAML Module Builder to version 24.0.0 and aligns MODINVSTOR-278
