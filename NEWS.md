@@ -1,4 +1,4 @@
-## 15.5.0 2019-06-09
+## 15.5.1 2019-06-09
 
 * Performance improvement (MODINVSTOR-255)
 * Bug fix (MODINVSTOR-289)
