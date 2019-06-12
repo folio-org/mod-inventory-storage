@@ -864,6 +864,21 @@ public class InstanceStorageTest extends TestBase {
 
   /**
    * Create the 5 example instances and run a get request using the provided cql query.
+   */
+  private void create5instances() {
+    try {
+      createInstance(smallAngryPlanet(UUID.randomUUID()));
+      createInstance(nod(UUID.randomUUID()));
+      createInstance(uprooted(UUID.randomUUID()));
+      createInstance(temeraire(UUID.randomUUID()));
+      createInstance(interestingTimes(UUID.randomUUID()));
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Create the 5 example instances and run a get request using the provided cql query.
    * <p>
    * Example: searchForInstancesWithin5("title = t*");
    * <p>
@@ -872,18 +887,23 @@ public class InstanceStorageTest extends TestBase {
    * @return the response as an JsonObject
    */
   private JsonObject searchForInstancesWithin5(String cql) {
-    try {
-      // RMB ensures en_US locale so that sorting behaves that same in all environments
-      createInstance(smallAngryPlanet(UUID.randomUUID()));
-      createInstance(nod(UUID.randomUUID()));
-      createInstance(uprooted(UUID.randomUUID()));
-      createInstance(temeraire(UUID.randomUUID()));
-      createInstance(interestingTimes(UUID.randomUUID()));
+    create5instances();
+    // RMB ensures en_US locale so that sorting behaves that same in all environments
+    return searchForInstances(cql);
+  }
 
-      return searchForInstances(cql);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+  /**
+   * Assert that the jsonObject contains an instances Array where each array element
+   * has one title String with the expectedTitles in the correct order.
+   */
+  private void matchInstanceTitles(JsonObject jsonObject, String ... expectedTitles) {
+    JsonArray foundInstances = jsonObject.getJsonArray("instances");
+    String [] titles = new String [foundInstances.size()];
+    for (int i=0; i<titles.length; i++) {
+      titles[i] = foundInstances.getJsonObject(i).getString("title");
     }
+    assertThat(titles, is(expectedTitles));
+    assertThat("totalRecords", jsonObject.getInteger("totalRecords"), is(expectedTitles.length));
   }
 
   /**
@@ -894,14 +914,7 @@ public class InstanceStorageTest extends TestBase {
    */
   private void canSort(String cql, String ... expectedTitles) {
     JsonObject searchBody = searchForInstancesWithin5(cql);
-    assertThat("totalRecords", searchBody.getInteger("totalRecords"), is(expectedTitles.length));
-    JsonArray foundInstances = searchBody.getJsonArray("instances");
-    assertThat("number of records found", foundInstances.size(), is(expectedTitles.length));
-    String [] titles = new String [expectedTitles.length];
-    for (int i=0; i<expectedTitles.length; i++) {
-      titles[i] = foundInstances.getJsonObject(i).getString("title");
-    }
-    assertThat(titles, is(expectedTitles));
+    matchInstanceTitles(searchBody, expectedTitles);
   }
 
   @Test
@@ -925,6 +938,33 @@ public class InstanceStorageTest extends TestBase {
   @Test
   public void canSearchForInstancesUsingSimilarQueryToUILookAheadSearch() {
     canSort("title=\"upr*\" or contributors=\"name\": \"upr*\" or identifiers=\"value\": \"upr*\"", "Uprooted");
+  }
+
+  @Test
+  public void canSearchWithoutSqlInjection() {
+    create5instances();
+
+    // check for MODINVSTOR-293:
+    // CQL identifiers=")" fails with "invalid regular expression: parentheses () not balanced" SQL Injection
+    String [] strings = { "'", "''",
+        "\\\"", "\\\"\\\"",
+        "(", "((", ")", "))",
+        "{", "{{", "}", "}}",
+    };
+
+    for (String s : strings) {
+      try {
+        // full text search ignores punctuation
+        matchInstanceTitles(searchForInstances("title=\"" + s + "Uprooted\""), "Uprooted");
+        // == will return 0 results
+        matchInstanceTitles(searchForInstances("title==\"" + s + "Uprooted\""));
+        // identifier search will always return 0 results
+        matchInstanceTitles(searchForInstances("identifiers=\"" + s + "\""));
+        matchInstanceTitles(searchForInstances("identifiers==\"" + s + "\""));
+      } catch (Exception e) {
+        throw new AssertionError(s, e);
+      }
+    }
   }
 
   @Test
@@ -1204,8 +1244,6 @@ public class InstanceStorageTest extends TestBase {
   public void testCrossTableQueries() throws Exception {
 
     String url = instancesStorageUrl("") + "?query=";
-
-    String holdingsURL = "/holdings-storage/holdings";
 
     //////// create instance objects /////////////////////////////
     JsonArray identifiers = new JsonArray();
