@@ -202,7 +202,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
@@ -240,7 +240,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
                     } else {
                       LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);

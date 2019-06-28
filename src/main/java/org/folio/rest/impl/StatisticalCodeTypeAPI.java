@@ -227,7 +227,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
@@ -265,7 +265,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
                     } else {
                       LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);

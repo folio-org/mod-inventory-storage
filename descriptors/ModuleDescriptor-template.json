@@ -764,7 +764,7 @@
           "permissionsRequired": ["inventory-storage.instance-note-types.item.put"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/holdings-note-types/{id}",
+          "pathPattern": "/instance-note-types/{id}",
           "permissionsRequired": ["inventory-storage.instance-note-types.item.delete"]
         }
       ]
