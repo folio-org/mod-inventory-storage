@@ -1,0 +1,47 @@
+#%RAML 1.0
+title: Instance note types API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Instance note types API
+    content: This documents the API calls that can be made to query and manage Instance note types of the system
+
+types:
+  instanceNoteType: !include instancenotetype.json
+  instanceNoteTypes: !include instancenotetypes.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/instance-note-types:
+  type:
+    collection:
+      exampleCollection: !include examples/instancenotetypes.json
+      exampleItem: !include examples/instancenotetype.json
+      schemaCollection: instanceNoteTypes
+      schemaItem: instanceNoteType
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of instance note types
+  post:
+    description: Create a new instance note type
+    is: [validate]
+  /{id}:
+    description: "Pass in the instance note type id"
+    type:
+      collection-item:
+        exampleItem: !include examples/instancenotetype.json
+        schema: instanceNoteType

@@ -33,6 +33,7 @@ import org.folio.rest.api.entities.HoldingsType;
 import org.folio.rest.api.entities.IdentifierType;
 import org.folio.rest.api.entities.IllPolicy;
 import org.folio.rest.api.entities.InstanceFormat;
+import org.folio.rest.api.entities.InstanceNoteType;
 import org.folio.rest.api.entities.InstanceStatus;
 import org.folio.rest.api.entities.InstanceType;
 import org.folio.rest.api.entities.ItemNoteType;
@@ -518,6 +519,40 @@ public class ReferenceTablesTest extends TestBase {
 
     testGetPutDelete(entityUrl, entity, updateProperty);
   }
+
+  @Test
+  public void instanceNoteTypesLoaded()
+          throws InterruptedException,
+          MalformedURLException,
+          TimeoutException,
+          ExecutionException,
+          UnsupportedEncodingException {
+    URL apiUrl = instanceNoteTypesUrl("");
+
+    Response searchResponse = getReferenceRecords(apiUrl);
+    validateNumberOfReferenceRecords("instance note types", searchResponse, 50, 60);
+  }
+
+  @Test
+  public void instanceNoteTypesBasicCrud()
+          throws InterruptedException,
+          MalformedURLException,
+          TimeoutException,
+          ExecutionException,
+          UnsupportedEncodingException {
+    URL apiUrl = instanceNoteTypesUrl("");
+    InstanceNoteType entity = new InstanceNoteType("Test instance note type", "Test source");
+
+    Response postResponse = createReferenceRecord(apiUrl, entity);
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    URL entityUrl = instanceNoteTypesUrl("/" + entityUUID);
+    String updateProperty = InstanceNoteType.NAME_KEY;
+
+    testGetPutDelete(entityUrl, entity, updateProperty);
+  }
+
 
   @Test
   public void modesOfIssuanceLoaded()

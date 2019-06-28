@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An Instance note type",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "unique ID of the Instance note type; a UUID",
+      "$ref": "uuid.json"
+    },
+    "name": {
+      "type": "string",
+      "description": "name of the Instance note type"
+    },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the Instance note type entry originates from, i.e. 'folio' or 'local'"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "source"
+  ]
+}
+
