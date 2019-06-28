@@ -685,8 +685,23 @@ public class ReferenceTablesTest extends TestBase {
     return getByIdResponse;
   }
 
+  private Response getByQuery(URL getByQueryUrl)
+          throws MalformedURLException, InterruptedException,
+          ExecutionException, TimeoutException {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(getByQueryUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.any(getCompleted));
+
+    Response getByQueryResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    return getByQueryResponse;
+
+  }
+
   private Response deleteReferenceRecordById (URL entityUrl)
   throws ExecutionException, InterruptedException, TimeoutException {
+
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(
             entityUrl,
@@ -718,7 +733,9 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put(updateProperty, entity.getString(updateProperty)+" UPDATED");
     URL url = StorageTestSuite.storageUrl(path + "/" + entityId);
-    URL badUrl = StorageTestSuite.storageUrl(path + "/baduuid");
+    URL urlWithBadUUID = StorageTestSuite.storageUrl(path + "/baduuid");
+    URL urlWithBadParameter = StorageTestSuite.storageUrl(path+"?offset=-3");
+    URL urlWithBadCql = StorageTestSuite.storageUrl(path + "?query=badcql");
 
     Response putResponse = updateRecord(url, entity);
 
@@ -729,7 +746,13 @@ public class ReferenceTablesTest extends TestBase {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getResponse.getJson().getString(updateProperty), is(entity.getString(updateProperty)));
 
-    Response putResponse2 = updateRecord(badUrl, entity);
+    Response badParameterResponse = getByQuery(urlWithBadParameter);
+    assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    Response badQueryResponse = getByQuery(urlWithBadCql);
+    assertThat(badQueryResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    Response putResponse2 = updateRecord(urlWithBadUUID, entity);
     assertThat(putResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
     Response deleteResponse = deleteReferenceRecordById (url);
@@ -744,7 +767,7 @@ public class ReferenceTablesTest extends TestBase {
 
     assertThat(deleteResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
 
-    Response deleteResponse3 = deleteReferenceRecordById (badUrl);
+    Response deleteResponse3 = deleteReferenceRecordById (urlWithBadUUID);
 
     assertThat(deleteResponse3.getStatusCode(), (is(HttpURLConnection.HTTP_BAD_REQUEST)));
 

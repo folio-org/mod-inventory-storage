@@ -56,7 +56,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
   @Override
   public void getInstanceNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
-     * http://host:port/holdings-note-types
+     * http://host:port/instance-note-types
      */
     vertxContext.runOnContext(v -> {
       try {
