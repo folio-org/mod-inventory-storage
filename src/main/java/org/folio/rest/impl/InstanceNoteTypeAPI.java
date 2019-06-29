@@ -110,17 +110,15 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
                   .respond201WithApplicationJson(entity, PostInstanceNoteTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
-                  return;
-                }
+                msg = (msg == null) ? "Internal server problem: Error message missing" : msg;
                 log.info(msg);
                 asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse
                     .respond400WithTextPlain(msg)));
               }
             });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
       }
     });
   }
@@ -138,10 +136,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
             reply -> {
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
-                  return;
-                }
+                msg = (msg == null) ? "Internal server problem: Error message missing" : msg;
                 log.info(msg);
                 asyncResultHandler.handle(Future.succeededFuture(GetInstanceNoteTypesByIdResponse.
                     respond404WithTextPlain(msg)));
@@ -159,7 +154,8 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
               }
             });
       } catch (Exception e) {
-        internalServerErrorDuringGetById(e, lang, asyncResultHandler);
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(Future.succeededFuture(GetInstanceNoteTypesByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -174,13 +170,10 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
             reply -> {
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
-                  return;
-                }
+                msg =  (msg == null) ? "Internal server problem: Error message missing" : msg;
                 log.info(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
-                    .respond400WithTextPlain(msg)));
+                    .respond400WithTextPlain((msg))));
                 return;
               }
               int updated = reply.result().getUpdated();
@@ -195,7 +188,8 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
                       .respond204()));
             });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
       }
     });
   }
@@ -220,17 +214,17 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
                 }
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
-                  return;
-                }
+                msg =  (msg == null) ? "Internal server problem: Error message missing" : msg;
                 log.info(msg);
                 asyncResultHandler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse
                     .respond400WithTextPlain(msg)));
               }
             });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      }
+
     });
   }
 
@@ -238,29 +232,4 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(REFERENCE_TABLE+".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
-
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
-  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetInstanceNoteTypesByIdResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
 }
