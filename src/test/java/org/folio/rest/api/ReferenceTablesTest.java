@@ -732,19 +732,26 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException {
 
     entity.put(updateProperty, entity.getString(updateProperty)+" UPDATED");
+
     URL url = StorageTestSuite.storageUrl(path + "/" + entityId);
     URL urlWithBadUUID = StorageTestSuite.storageUrl(path + "/baduuid");
     URL urlWithBadParameter = StorageTestSuite.storageUrl(path+"?offset=-3");
     URL urlWithBadCql = StorageTestSuite.storageUrl(path + "?query=badcql");
 
     Response putResponse = updateRecord(url, entity);
-
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     Response getResponse = getById(url);
-
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getResponse.getJson().getString(updateProperty), is(entity.getString(updateProperty)));
+
+    entity.put("id", entityId);
+    Response postResponse1 = createReferenceRecord(path, entity);
+    if (Arrays.asList("/electronic-access-relationships", "/instance-statuses", "/modes-of-issuance", "/statistical-code-types").contains(path)) {
+      assertThat(postResponse1.getStatusCode(), is(422));
+    } else {
+      assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    }
 
     Response badParameterResponse = getByQuery(urlWithBadParameter);
     assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
@@ -772,11 +779,11 @@ public class ReferenceTablesTest extends TestBase {
     assertThat(deleteResponse3.getStatusCode(), (is(HttpURLConnection.HTTP_BAD_REQUEST)));
 
     entity.put("id", "baduuid");
-    Response postResponse = createReferenceRecord(path, entity);
+    Response postResponse2 = createReferenceRecord(path, entity);
     if (Arrays.asList("/instance-note-types").contains(path)) {
-      assertThat(postResponse.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
+      assertThat(postResponse2.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
     } else {
-      assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+      assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     }
   }
 }
