@@ -65,24 +65,17 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, InstanceNoteType.class,
             new String[]{"*"}, cql, true, true,
             reply -> {
-              try {
-                if (reply.succeeded()) {
-                  InstanceNoteTypes records = new InstanceNoteTypes();
-                  List<InstanceNoteType> record = reply.result().getResults();
-                  records.setInstanceNoteTypes(record);
-                  records.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesResponse.respond200WithApplicationJson(records)));
-                }
-                else{
-                  log.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesResponse
-                      .respond400WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e.getMessage(), e);
+              if (reply.succeeded()) {
+                InstanceNoteTypes records = new InstanceNoteTypes();
+                List<InstanceNoteType> record = reply.result().getResults();
+                records.setInstanceNoteTypes(record);
+                records.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesResponse.respond200WithApplicationJson(records)));
+              }
+              else{
+                log.error(reply.cause().getMessage(), reply.cause());
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesResponse
-                    .respond500WithTextPlain(messages.getMessage(
-                        lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(reply.cause().getMessage())));
               }
             });
       } catch (Exception e) {
@@ -110,24 +103,20 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
         String tenantId = TenantTool.tenantId(okapiHeaders);
         PostgresClient.getInstance(vertxContext.owner(), tenantId).save(REFERENCE_TABLE, id, entity,
             reply -> {
-              try {
-                if (reply.succeeded()) {
-                  String ret = reply.result();
-                  entity.setId(ret);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceNoteTypesResponse
-                    .respond201WithApplicationJson(entity, PostInstanceNoteTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
-                } else {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse
-                      .respond400WithTextPlain(msg)));
+              if (reply.succeeded()) {
+                String ret = reply.result();
+                entity.setId(ret);
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceNoteTypesResponse
+                  .respond201WithApplicationJson(entity, PostInstanceNoteTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
+              } else {
+                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                if (msg == null) {
+                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  return;
                 }
-              } catch (Exception e) {
-                internalServerErrorDuringPost(e, lang, asyncResultHandler);
+                log.info(msg);
+                asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse
+                    .respond400WithTextPlain(msg)));
               }
             });
       } catch (Exception e) {
@@ -147,30 +136,26 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
 
         PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, InstanceNoteType.class, c, true,
             reply -> {
-              try {
-                if (reply.failed()) {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetInstanceNoteTypesByIdResponse.
-                      respond404WithTextPlain(msg)));
+              if (reply.failed()) {
+                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                if (msg == null) {
+                  internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
                   return;
                 }
-                @SuppressWarnings("unchecked")
-                List<InstanceNoteType> records = reply.result().getResults();
-                if (records.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesByIdResponse
-                      .respond404WithTextPlain(id)));
-                }
-                else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesByIdResponse
-                      .respond200WithApplicationJson(records.get(0))));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringGetById(e, lang, asyncResultHandler);
+                log.info(msg);
+                asyncResultHandler.handle(Future.succeededFuture(GetInstanceNoteTypesByIdResponse.
+                    respond404WithTextPlain(msg)));
+                return;
+              }
+              @SuppressWarnings("unchecked")
+              List<InstanceNoteType> records = reply.result().getResults();
+              if (records.isEmpty()) {
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesByIdResponse
+                    .respond404WithTextPlain(id)));
+              }
+              else{
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesByIdResponse
+                    .respond200WithApplicationJson(records.get(0))));
               }
             });
       } catch (Exception e) {
@@ -187,31 +172,27 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
         PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
         postgres.delete(REFERENCE_TABLE, id,
             reply -> {
-              try {
-                if (reply.failed()) {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
-                      .respond400WithTextPlain(msg)));
+              if (reply.failed()) {
+                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                if (msg == null) {
+                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
                   return;
                 }
-                int updated = reply.result().getUpdated();
-                if (updated != 1) {
-                  String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
-                  log.error(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
-                      .respond404WithTextPlain(msg)));
-                  return;
-                }
+                log.info(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
-                        .respond204()));
-              } catch (Exception e) {
-                internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+                    .respond400WithTextPlain(msg)));
+                return;
               }
+              int updated = reply.result().getUpdated();
+              if (updated != 1) {
+                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                log.error(msg);
+                asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
+                    .respond404WithTextPlain(msg)));
+                return;
+              }
+              asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
+                      .respond204()));
             });
       } catch (Exception e) {
         internalServerErrorDuringDelete(e, lang, asyncResultHandler);
@@ -229,27 +210,23 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
         }
         PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
             reply -> {
-              try {
-                if (reply.succeeded()) {
-                  if (reply.result().getUpdated() == 0) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
-                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
-                  } else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
-                        .respond204()));
-                  }
-                } else {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse
-                      .respond400WithTextPlain(msg)));
+              if (reply.succeeded()) {
+                if (reply.result().getUpdated() == 0) {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
+                      .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                } else{
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
+                      .respond204()));
                 }
-              } catch (Exception e) {
-                internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              } else {
+                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                if (msg == null) {
+                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  return;
+                }
+                log.info(msg);
+                asyncResultHandler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse
+                    .respond400WithTextPlain(msg)));
               }
             });
       } catch (Exception e) {
