@@ -141,10 +141,10 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
                     .respond422WithApplicationJson(
                       org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
-                        "name", entity.getName(), "Material Type exists"))));
+                        "name", entity.getName(), "Statistical Code Type exists"))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-                    .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                 }
               }
             } catch (Exception e) {

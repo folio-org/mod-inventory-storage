@@ -151,7 +151,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
                         "name", entity.getName(), "Mode of issuance exists"))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                    .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                 }
               }
             } catch (Exception e) {

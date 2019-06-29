@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -84,7 +85,7 @@ public class ReferenceTablesTest extends TestBase {
 
     String updateProperty = AlternativeTitleType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
 
   }
 
@@ -118,7 +119,7 @@ public class ReferenceTablesTest extends TestBase {
 
     String updateProperty = CallNumberType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -150,7 +151,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = ClassificationType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -182,7 +183,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = ContributorNameType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -214,7 +215,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = ContributorType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -246,7 +247,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = ElectronicAccessRelationship.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -278,7 +279,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = HoldingsNoteType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -310,7 +311,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = HoldingsType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
 
   }
 
@@ -344,7 +345,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = IdentifierType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -376,7 +377,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = IllPolicy.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -409,7 +410,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = InstanceFormat.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -442,7 +443,7 @@ public class ReferenceTablesTest extends TestBase {
     URL entityUrl = instanceStatusesUrl("/" + entityUUID);
     String updateProperty = InstanceStatus.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -474,7 +475,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = InstanceType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -506,7 +507,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = ItemNoteType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -538,7 +539,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = InstanceNoteType.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
 
@@ -571,7 +572,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUID = postResponse.getJson().getString("id");
     String updateProperty = ModeOfIssuance.NAME_KEY;
 
-    testGetPutDelete(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -624,13 +625,12 @@ public class ReferenceTablesTest extends TestBase {
     String entityUUIDCode = postResponseCode.getJson().getString("id");
     String updatePropertyCode = StatisticalCode.NAME_KEY;
 
-    testGetPutDelete(statisticalCodesPath, entityUUIDCode, statisticalCode, updatePropertyCode);
+    testGetPutDeletePost(statisticalCodesPath, entityUUIDCode, statisticalCode, updatePropertyCode);
 
     String entityUUIDCodeType = postResponseCodeType.getJson().getString("id");
-    URL entityUrlCodeType = statisticalCodeTypesUrl("/" + entityUUIDCodeType);
     String updatePropertyCodeType = StatisticalCodeType.NAME_KEY;
 
-    testGetPutDelete(statisticalCodeTypesPath, entityUUIDCodeType, statisticalCodeType, updatePropertyCodeType);
+    testGetPutDeletePost(statisticalCodeTypesPath, entityUUIDCodeType, statisticalCodeType, updatePropertyCodeType);
 
   }
 
@@ -665,7 +665,7 @@ public class ReferenceTablesTest extends TestBase {
             referenceUrl,
             referenceObject.getJson(),
             StorageTestSuite.TENANT_ID,
-            ResponseHandler.json(createCompleted)
+            ResponseHandler.any(createCompleted)
     );
     Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
     return postResponse;
@@ -725,7 +725,7 @@ public class ReferenceTablesTest extends TestBase {
     return putResponse;
   }
 
-  private void testGetPutDelete (String path, String entityId, JsonEntity entity, String updateProperty)
+  private void testGetPutDeletePost (String path, String entityId, JsonEntity entity, String updateProperty)
           throws ExecutionException,
           InterruptedException,
           MalformedURLException,
@@ -771,5 +771,12 @@ public class ReferenceTablesTest extends TestBase {
 
     assertThat(deleteResponse3.getStatusCode(), (is(HttpURLConnection.HTTP_BAD_REQUEST)));
 
+    entity.put("id", "baduuid");
+    Response postResponse = createReferenceRecord(path, entity);
+    if (Arrays.asList("/instance-note-types").contains(path)) {
+      assertThat(postResponse.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
+    } else {
+      assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    }
   }
 }

@@ -119,7 +119,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
                                                 "name", entity.getName(), "Relationship type exists"))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                                .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
