@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +34,7 @@ import org.folio.rest.api.entities.HoldingsType;
 import org.folio.rest.api.entities.IdentifierType;
 import org.folio.rest.api.entities.IllPolicy;
 import org.folio.rest.api.entities.InstanceFormat;
+import org.folio.rest.api.entities.InstanceNoteType;
 import org.folio.rest.api.entities.InstanceStatus;
 import org.folio.rest.api.entities.InstanceType;
 import org.folio.rest.api.entities.ItemNoteType;
@@ -69,21 +71,21 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = alternativeTitleTypesUrl("");
+
+    String entityPath = "/alternative-title-types";
 
     AlternativeTitleType entity =
             new AlternativeTitleType("Test alternative title type", "test source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = alternativeTitleTypesUrl("/" + entityUUID);
 
     String updateProperty = AlternativeTitleType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
 
   }
 
@@ -108,17 +110,16 @@ public class ReferenceTablesTest extends TestBase {
           ExecutionException,
           UnsupportedEncodingException {
 
-    URL apiUrl = callNumberTypesUrl("");
+    String entityPath = "/call-number-types";
     CallNumberType entity = new CallNumberType("Test call number type", "test source");
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = callNumberTypesUrl("/" + entityUUID);
 
     String updateProperty = CallNumberType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -141,17 +142,16 @@ public class ReferenceTablesTest extends TestBase {
           ExecutionException,
           UnsupportedEncodingException {
 
-    URL apiUrl = classificationTypesUrl("");
+    String entityPath = "/classification-types";
     ClassificationType entity = new ClassificationType("Test classfication type");
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = classificationTypesUrl("/" + entityUUID);
     String updateProperty = ClassificationType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -174,17 +174,16 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = contributorNameTypesUrl("");
+    String entityPath = "/contributor-name-types";
     ContributorNameType entity = new ContributorNameType("Test contributor name type", "100");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = contributorNameTypesUrl("/" + entityUUID);
     String updateProperty = ContributorNameType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -207,17 +206,16 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = contributorTypesUrl("");
+    String entityPath = "/contributor-types";
     ContributorType entity = new ContributorType("Test contributor type", "Test Code", "Test Source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = contributorTypesUrl("/" + entityUUID);
     String updateProperty = ContributorType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -240,17 +238,16 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = electronicAccessRelationshipsUrl("");
+    String entityPath = "/electronic-access-relationships";
     ElectronicAccessRelationship entity = new ElectronicAccessRelationship("Test electronic access relationship type");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = electronicAccessRelationshipsUrl("/" + entityUUID);
     String updateProperty = ElectronicAccessRelationship.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -273,16 +270,16 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = holdingsNoteTypesUrl("");
+    String entityPath = "/holdings-note-types";
     HoldingsNoteType entity = new HoldingsNoteType("Test holdings note type", "test source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = holdingsNoteTypesUrl("/" + entityUUID);
     String updateProperty = HoldingsNoteType.NAME_KEY;
 
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -305,17 +302,16 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = holdingsTypesUrl("");
+    String entityPath = "/holdings-types";
     HoldingsType entity = new HoldingsType("Test holdings note type", "test source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = holdingsTypesUrl("/" + entityUUID);
     String updateProperty = HoldingsType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
 
   }
 
@@ -339,18 +335,17 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = identifierTypesUrl("");
+    String entityPath = "/identifier-types";
     IdentifierType entity = new IdentifierType("Test identifier type") ;
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = identifierTypesUrl("/" + entityUUID);
     String updateProperty = IdentifierType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -373,17 +368,16 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = illPoliciesUrl("");
+    String entityPath = "/ill-policies";
     IllPolicy entity = new IllPolicy("Test ILL policy", "Test source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = illPoliciesUrl("/" + entityUUID);
     String updateProperty = IllPolicy.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -406,18 +400,17 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = instanceFormatsUrl("");
+    String entityPath = "/instance-formats";
     InstanceFormat entity = new InstanceFormat("Test instance format", "Test Code", "Test Source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = instanceFormatsUrl("/" + entityUUID);
     String updateProperty = InstanceFormat.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -440,17 +433,17 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = instanceStatusesUrl("");
+    String entityPath = "/instance-statuses";
     InstanceStatus entity = new InstanceStatus("Test instance status", "Test Code", "Test Source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
     URL entityUrl = instanceStatusesUrl("/" + entityUUID);
     String updateProperty = InstanceStatus.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -473,17 +466,16 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = instanceTypesUrl("");
+    String entityPath = "/instance-types";
     InstanceType entity = new InstanceType("Test instance type", "Test Code", "Test Source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = instanceTypesUrl("/" + entityUUID);
     String updateProperty = InstanceType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -506,18 +498,50 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = itemNoteTypesUrl("");
+    String entityPath = "/item-note-types";
     ItemNoteType entity = new ItemNoteType("Test item note type", "Test source");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = itemNoteTypesUrl("/" + entityUUID);
     String updateProperty = ItemNoteType.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
+
+  @Test
+  public void instanceNoteTypesLoaded()
+          throws InterruptedException,
+          MalformedURLException,
+          TimeoutException,
+          ExecutionException,
+          UnsupportedEncodingException {
+    URL apiUrl = instanceNoteTypesUrl("");
+
+    Response searchResponse = getReferenceRecords(apiUrl);
+    validateNumberOfReferenceRecords("instance note types", searchResponse, 50, 60);
+  }
+
+  @Test
+  public void instanceNoteTypesBasicCrud()
+          throws InterruptedException,
+          MalformedURLException,
+          TimeoutException,
+          ExecutionException,
+          UnsupportedEncodingException {
+    String entityPath = "/instance-note-types";
+    InstanceNoteType entity = new InstanceNoteType("Test instance note type", "Test source");
+
+    Response postResponse = createReferenceRecord(entityPath, entity);
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    String updateProperty = InstanceNoteType.NAME_KEY;
+
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+  }
+
 
   @Test
   public void modesOfIssuanceLoaded()
@@ -539,17 +563,16 @@ public class ReferenceTablesTest extends TestBase {
           TimeoutException,
           ExecutionException,
           UnsupportedEncodingException {
-    URL apiUrl = modesOfIssuanceUrl("");
+    String entityPath = "/modes-of-issuance";
     ModeOfIssuance entity = new ModeOfIssuance("Test mode of issuance");
 
-    Response postResponse = createReferenceRecord(apiUrl, entity);
+    Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = modesOfIssuanceUrl("/" + entityUUID);
     String updateProperty = ModeOfIssuance.NAME_KEY;
 
-    testGetPutDelete(entityUrl, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test
@@ -586,30 +609,28 @@ public class ReferenceTablesTest extends TestBase {
           ExecutionException,
           UnsupportedEncodingException {
 
-    URL statisticalCodeTypesUrl = statisticalCodeTypesUrl("");
-    URL statisticalCodesUrl = statisticalCodesUrl("");
+    String statisticalCodeTypesPath = "/statistical-code-types";
+    String statisticalCodesPath = "/statistical-codes";
 
     String statisticalCodeTypeId = "8c5b634a-0a4a-47ec-b9b2-d66980656ffd";
     StatisticalCodeType statisticalCodeType = new StatisticalCodeType(statisticalCodeTypeId, "Test statistical code type", "Test source");
     StatisticalCode statisticalCode = new StatisticalCode("Test statistical name", "Test statistical code", statisticalCodeTypeId, "Test source");
 
-    Response postResponseCodeType = createReferenceRecord(statisticalCodeTypesUrl, statisticalCodeType);
+    Response postResponseCodeType = createReferenceRecord(statisticalCodeTypesPath, statisticalCodeType);
     assertThat(postResponseCodeType.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    Response postResponseCode = createReferenceRecord(statisticalCodesUrl, statisticalCode);
+    Response postResponseCode = createReferenceRecord(statisticalCodesPath, statisticalCode);
     assertThat(postResponseCode.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUIDCode = postResponseCode.getJson().getString("id");
-    URL entityUrlCode = statisticalCodesUrl("/" + entityUUIDCode);
     String updatePropertyCode = StatisticalCode.NAME_KEY;
 
-    testGetPutDelete(entityUrlCode, statisticalCode, updatePropertyCode);
+    testGetPutDeletePost(statisticalCodesPath, entityUUIDCode, statisticalCode, updatePropertyCode);
 
     String entityUUIDCodeType = postResponseCodeType.getJson().getString("id");
-    URL entityUrlCodeType = statisticalCodeTypesUrl("/" + entityUUIDCodeType);
     String updatePropertyCodeType = StatisticalCodeType.NAME_KEY;
 
-    testGetPutDelete(entityUrlCodeType, statisticalCodeType, updatePropertyCodeType);
+    testGetPutDeletePost(statisticalCodeTypesPath, entityUUIDCodeType, statisticalCodeType, updatePropertyCodeType);
 
   }
 
@@ -635,15 +656,16 @@ public class ReferenceTablesTest extends TestBase {
     assertTrue(String.format("Expected >=%s \"%s\", found %s", min, dataDescription, totalRecords), min <= totalRecords);
   }
 
-  private Response createReferenceRecord(URL referenceUrl, JsonEntity referenceObject)
-  throws ExecutionException, InterruptedException, TimeoutException {
+  private Response createReferenceRecord(String path, JsonEntity referenceObject)
+  throws ExecutionException, InterruptedException, TimeoutException, MalformedURLException {
 
+    URL referenceUrl = StorageTestSuite.storageUrl(path);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     client.post(
             referenceUrl,
             referenceObject.getJson(),
             StorageTestSuite.TENANT_ID,
-            ResponseHandler.json(createCompleted)
+            ResponseHandler.any(createCompleted)
     );
     Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
     return postResponse;
@@ -663,8 +685,23 @@ public class ReferenceTablesTest extends TestBase {
     return getByIdResponse;
   }
 
+  private Response getByQuery(URL getByQueryUrl)
+          throws MalformedURLException, InterruptedException,
+          ExecutionException, TimeoutException {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(getByQueryUrl, StorageTestSuite.TENANT_ID,
+      ResponseHandler.any(getCompleted));
+
+    Response getByQueryResponse = getCompleted.get(5, TimeUnit.SECONDS);
+
+    return getByQueryResponse;
+
+  }
+
   private Response deleteReferenceRecordById (URL entityUrl)
   throws ExecutionException, InterruptedException, TimeoutException {
+
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(
             entityUrl,
@@ -688,28 +725,65 @@ public class ReferenceTablesTest extends TestBase {
     return putResponse;
   }
 
-  private void testGetPutDelete (URL entityUrl, JsonEntity entity, String updateProperty)
+  private void testGetPutDeletePost (String path, String entityId, JsonEntity entity, String updateProperty)
           throws ExecutionException,
           InterruptedException,
           MalformedURLException,
           TimeoutException {
 
     entity.put(updateProperty, entity.getString(updateProperty)+" UPDATED");
-    Response putResponse = updateRecord(entityUrl, entity);
 
+    URL url = StorageTestSuite.storageUrl(path + "/" + entityId);
+    URL urlWithBadUUID = StorageTestSuite.storageUrl(path + "/baduuid");
+    URL urlWithBadParameter = StorageTestSuite.storageUrl(path+"?offset=-3");
+    URL urlWithBadCql = StorageTestSuite.storageUrl(path + "?query=badcql");
+
+    Response putResponse = updateRecord(url, entity);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    Response getResponse = getById(entityUrl);
-
+    Response getResponse = getById(url);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getResponse.getJson().getString(updateProperty), is(entity.getString(updateProperty)));
 
-    Response deleteResponse = deleteReferenceRecordById (entityUrl);
+    entity.put("id", entityId);
+    Response postResponse1 = createReferenceRecord(path, entity);
+    if (Arrays.asList("/electronic-access-relationships", "/instance-statuses", "/modes-of-issuance", "/statistical-code-types").contains(path)) {
+      assertThat(postResponse1.getStatusCode(), is(422));
+    } else {
+      assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    }
+
+    Response badParameterResponse = getByQuery(urlWithBadParameter);
+    assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    Response badQueryResponse = getByQuery(urlWithBadCql);
+    assertThat(badQueryResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    Response putResponse2 = updateRecord(urlWithBadUUID, entity);
+    assertThat(putResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+
+    Response deleteResponse = deleteReferenceRecordById (url);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    Response getResponse2 = getById(entityUrl);
+    Response getResponse2 = getById(url);
 
     assertThat(getResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+
+    Response deleteResponse2 = deleteReferenceRecordById (url);
+
+    assertThat(deleteResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+
+    Response deleteResponse3 = deleteReferenceRecordById (urlWithBadUUID);
+
+    assertThat(deleteResponse3.getStatusCode(), (is(HttpURLConnection.HTTP_BAD_REQUEST)));
+
+    entity.put("id", "baduuid");
+    Response postResponse2 = createReferenceRecord(path, entity);
+    if (Arrays.asList("/instance-note-types").contains(path)) {
+      assertThat(postResponse2.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
+    } else {
+      assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    }
   }
 }

@@ -1,8 +1,20 @@
 package org.folio.rest.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.io.IOUtils;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.tools.utils.TenantLoading;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -11,15 +23,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
-import java.util.List;
-import org.apache.commons.io.IOUtils;
-import org.folio.rest.tools.utils.TenantLoading;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -52,6 +55,7 @@ public class TenantRefAPI extends TenantAPI {
     "ill-policies",
     "holdings-types",
     "call-number-types",
+    "instance-note-types",
     "holdings-note-types",
     "item-note-types"
   };

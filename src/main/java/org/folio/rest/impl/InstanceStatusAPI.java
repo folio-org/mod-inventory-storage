@@ -141,10 +141,10 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
                                 .respond422WithApplicationJson(
                                         org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
-                                                "name", entity.getName(), "Material Type exists"))));
+                                                "name", entity.getName(), "Instance status exists"))));
                       } else {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
-                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                                .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                       }
                     }
                   } catch (Exception e) {
@@ -227,7 +227,7 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
@@ -265,7 +265,7 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
                     } else {
                       LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);

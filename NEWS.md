@@ -1,3 +1,7 @@
+## Unreleased
+
+* Provides `instance-note-types` interface version 1.0 (MODINVSTOR-300)
+
 ## 15.5.1 2019-06-09
 
 * Performance improvement (MODINVSTOR-255)
