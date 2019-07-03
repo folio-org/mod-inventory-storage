@@ -566,6 +566,19 @@
       ]
     },
     {
+      "tableName": "instance_note_type",
+      "withMetadata": true,
+      "generateId": false,
+      "pkColumnName": "_id",
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "holdings_note_type",
       "withMetadata": true,
       "withAuditing": false,

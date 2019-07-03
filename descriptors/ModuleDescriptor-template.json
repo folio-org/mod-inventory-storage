@@ -743,6 +743,33 @@
       ]
     },
     {
+      "id": "instance-note-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-note-types",
+          "permissionsRequired": ["inventory-storage.instance-note-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-note-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-note-types",
+          "permissionsRequired": ["inventory-storage.instance-note-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-note-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-note-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "holdings-note-types",
       "version": "1.0",
       "handlers": [
@@ -1581,6 +1608,31 @@
       "displayName": "inventory storage - delete individual holdings-type",
       "description": "delete individual holdings-type from storage"
     },
+    {
+      "permissionName": "inventory-storage.instance-note-types.collection.get",
+      "displayName": "inventory storage - get instance-note-type collection",
+      "description": "get instance-note-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-note-types.item.get",
+      "displayName": "inventory storage - get individual instance-note-type",
+      "description": "get individual instance-note-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-note-types.item.post",
+      "displayName": "inventory storage - create individual instance-note-type",
+      "description": "create individual instance-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-note-types.item.put",
+      "displayName": "inventory storage - modify instance-note-type",
+      "description": "modify instance-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instance-note-types.item.delete",
+      "displayName": "inventory storage - delete individual instance-note-type",
+      "description": "delete individual instance-note-type from storage"
+    },
 
     {
       "permissionName": "inventory-storage.holdings-note-types.collection.get",
@@ -1801,6 +1853,11 @@
         "inventory-storage.call-number-types.item.post",
         "inventory-storage.call-number-types.item.put",
         "inventory-storage.call-number-types.item.delete",
+        "inventory-storage.instance-note-types.collection.get",
+        "inventory-storage.instance-note-types.item.get",
+        "inventory-storage.instance-note-types.item.post",
+        "inventory-storage.instance-note-types.item.put",
+        "inventory-storage.instance-note-types.item.delete",
         "inventory-storage.holdings-note-types.collection.get",
         "inventory-storage.holdings-note-types.item.get",
         "inventory-storage.holdings-note-types.item.post",

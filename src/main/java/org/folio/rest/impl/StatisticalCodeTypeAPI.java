@@ -135,10 +135,10 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
                     .respond422WithApplicationJson(
                       org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
-                        "name", entity.getName(), "Material Type exists"))));
+                        "name", entity.getName(), "Statistical Code Type exists"))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-                    .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                 }
               }
             } catch (Exception e) {
@@ -181,7 +181,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
@@ -219,7 +219,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
                     } else {
                       LOG.error(reply.cause().getMessage());
                       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                              .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                              .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
                     }
                   } catch (Exception e) {
                     LOG.error(e.getMessage(), e);
