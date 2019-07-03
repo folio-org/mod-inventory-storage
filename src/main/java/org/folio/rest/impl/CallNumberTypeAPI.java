@@ -24,6 +24,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.annotations.Validate;
 
 /**
  *
@@ -39,12 +40,14 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
   /**
    * http://host:port/call-number-types
    */
+  @Validate
   @Override
   public void getCallNumberTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.get(REFERENCE_TABLE, CallNumberType.class, CallNumberTypes.class, query, offset, limit,
         okapiHeaders, vertxContext, GetCallNumberTypesResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postCallNumberTypes(String lang, CallNumberType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -84,12 +87,14 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
     });
   }
 
+  @Validate
   @Override
   public void getCallNumberTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE,  CallNumberType.class, id,
         okapiHeaders, vertxContext, GetCallNumberTypesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteCallNumberTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -130,6 +135,7 @@ public class CallNumberTypeAPI implements org.folio.rest.jaxrs.resource.CallNumb
     });
   }
 
+  @Validate
   @Override
   public void putCallNumberTypesById(String id, String lang, CallNumberType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
