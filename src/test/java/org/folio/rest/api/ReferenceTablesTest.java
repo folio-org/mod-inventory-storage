@@ -753,10 +753,8 @@ public class ReferenceTablesTest extends TestBase {
       assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     }
 
-    /* TODO .. need to figure out why this now returns 200 and not 400 as expected
-      Response badParameterResponse = getByQuery(urlWithBadParameter);
-      assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-   */
+    Response badParameterResponse = getByQuery(urlWithBadParameter);
+    assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
     Response badQueryResponse = getByQuery(urlWithBadCql);
     assertThat(badQueryResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
