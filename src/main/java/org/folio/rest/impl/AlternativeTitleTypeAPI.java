@@ -24,6 +24,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.rest.annotations.Validate;
 
 /**
  *
@@ -36,6 +37,7 @@ public class AlternativeTitleTypeAPI implements org.folio.rest.jaxrs.resource.Al
   private static final Logger log             = LoggerFactory.getLogger(AlternativeTitleTypeAPI.class);
   private final Messages messages             = Messages.getInstance();
 
+  @Validate
   @Override
   public void getAlternativeTitleTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
@@ -45,6 +47,7 @@ public class AlternativeTitleTypeAPI implements org.folio.rest.jaxrs.resource.Al
         okapiHeaders, vertxContext, GetAlternativeTitleTypesResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postAlternativeTitleTypes(String lang, AlternativeTitleType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -84,12 +87,14 @@ public class AlternativeTitleTypeAPI implements org.folio.rest.jaxrs.resource.Al
     });
   }
 
+  @Validate
   @Override
   public void getAlternativeTitleTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, AlternativeTitleType.class, id,
         okapiHeaders, vertxContext, GetAlternativeTitleTypesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteAlternativeTitleTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -130,6 +135,7 @@ public class AlternativeTitleTypeAPI implements org.folio.rest.jaxrs.resource.Al
     });
   }
 
+  @Validate
   @Override
   public void putAlternativeTitleTypesById(String id, String lang, AlternativeTitleType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
