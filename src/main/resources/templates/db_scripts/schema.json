@@ -568,8 +568,6 @@
     {
       "tableName": "instance_note_type",
       "withMetadata": true,
-      "generateId": false,
-      "pkColumnName": "_id",
       "withAuditing": false,
       "uniqueIndex": [
         {

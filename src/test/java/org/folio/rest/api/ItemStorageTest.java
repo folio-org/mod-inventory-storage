@@ -334,10 +334,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    //Postgresql 10.0 has a different error message for invalid UUID
-    assertThat(postResponse.getBody(), anyOf(
-      is("invalid input syntax for type uuid: \"1234\""),
-      is("invalid input syntax for uuid: \"1234\"")));
+    assertThat(postResponse.getBody(), containsString("UUID"));
   }
 
   @Test
