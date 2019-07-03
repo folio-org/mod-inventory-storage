@@ -124,6 +124,34 @@
             "type": "string",
             "description": "Text to display"
           },
+          "source": {
+            "type": "object",
+            "description": "The user who added the note",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The id of the user who added the note"
+              },
+              "personal": {
+                "type": "object",
+                "description": "Personal information about the user",
+                "properties": {
+                  "lastName": {
+                    "description": "The user's last name",
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "description": "The user's first name",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "date": {
+            "type": "string",
+            "description": "Date and time added"
+          },
           "staffOnly": {
             "type": "boolean",
             "default": "Flag to restrict display of this note",
