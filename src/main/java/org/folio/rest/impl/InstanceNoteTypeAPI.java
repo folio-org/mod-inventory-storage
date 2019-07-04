@@ -27,7 +27,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.cql2pgjson.CQL2PgJSON;
@@ -45,11 +44,6 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
   private static final String LOCATION_PREFIX = "/instance-note-types/";
   private static final Logger log             = LoggerFactory.getLogger(InstanceNoteTypeAPI.class);
   private final Messages messages             = Messages.getInstance();
-
-  public InstanceNoteTypeAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId);
-  }
-
 
   @Override
   public void getInstanceNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
