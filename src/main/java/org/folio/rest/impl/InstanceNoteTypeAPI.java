@@ -13,8 +13,6 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.InstanceNoteType;
 import org.folio.rest.jaxrs.model.InstanceNoteTypes;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -24,8 +22,6 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -34,6 +30,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.persist.PgUtil;
 
 /**
  *
@@ -46,10 +45,9 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
   private static final String LOCATION_PREFIX = "/instance-note-types/";
   private static final Logger log             = LoggerFactory.getLogger(InstanceNoteTypeAPI.class);
   private final Messages messages             = Messages.getInstance();
-  private String idFieldName                  = "_id";
 
   public InstanceNoteTypeAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
+    PostgresClient.getInstance(vertx, tenantId);
   }
 
 
@@ -124,40 +122,11 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
   }
 
   @Override
-  public void getInstanceNoteTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
+  public void getInstanceNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-        Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+id+"'"));
-
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, InstanceNoteType.class, c, true,
-            reply -> {
-              if (reply.failed()) {
-                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                msg = (msg == null) ? "Internal server problem: Error message missing" : msg;
-                log.info(msg);
-                asyncResultHandler.handle(Future.succeededFuture(GetInstanceNoteTypesByIdResponse.
-                    respond404WithTextPlain(msg)));
-                return;
-              }
-              @SuppressWarnings("unchecked")
-              List<InstanceNoteType> records = reply.result().getResults();
-              if (records.isEmpty()) {
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesByIdResponse
-                    .respond404WithTextPlain(id)));
-              }
-              else{
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesByIdResponse
-                    .respond200WithApplicationJson(records.get(0))));
-              }
-            });
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        asyncResultHandler.handle(Future.succeededFuture(GetInstanceNoteTypesByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-      }
-    });
+    PgUtil.getById(REFERENCE_TABLE, InstanceNoteType.class, id, okapiHeaders,
+      vertxContext, GetInstanceNoteTypesByIdResponse.class, asyncResultHandler);
   }
 
   @Override

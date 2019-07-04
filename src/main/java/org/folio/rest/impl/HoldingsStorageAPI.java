@@ -11,17 +11,16 @@ import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -57,7 +56,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("DELETE FROM %s_%s."+HOLDINGS_RECORD_TABLE,
+        postgresClient.execute(String.format("DELETE FROM %s_%s."+HOLDINGS_RECORD_TABLE,
           tenantId, "mod_inventory_storage"),
           reply -> {
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -290,48 +289,8 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      Criteria a = new Criteria();
-
-      a.addField("'id'");
-      a.setOperation("=");
-      a.setValue(holdingsRecordId);
-
-      Criterion criterion = new Criterion(a);
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.delete(HOLDINGS_RECORD_TABLE, criterion,
-            reply -> {
-              if(reply.succeeded()) {
-                asyncResultHandler.handle(
-                  Future.succeededFuture(
-                    DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                      .respond204()));
-              }
-              else {
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                    .respond500WithTextPlain(reply.cause().getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse
-              .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse
-          .respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.deleteById(HOLDINGS_RECORD_TABLE, holdingsRecordId,
+        okapiHeaders, vertxContext, DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse.class, asyncResultHandler);
   }
 
   @Override

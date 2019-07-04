@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.http.InterfaceUrls.ShelfLocationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -43,7 +44,7 @@ import io.vertx.core.json.JsonObject;
 
 
 
-public class ShelfLocationsTest {
+public class ShelfLocationsTest extends TestBase {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private String canCirculateLoanTypeID;
@@ -114,16 +115,19 @@ public class ShelfLocationsTest {
     MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    LocationsTest.createLocation(id, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
-    Response getResponse = getById(id);
+    Response createResponse = LocationsTest.createLocation(
+        id, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
+    assertThat(createResponse, statusCodeIs(201));
 
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    Response getResponse = getById(id);
+    assertThat(getResponse, statusCodeIs(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Main Library"));
   }
 
-  private static void send(URL url, HttpMethod method, String content,                           String contentType, Handler<HttpClientResponse> handler) {
+  private static void send(URL url, HttpMethod method, String content,
+      String contentType, Handler<HttpClientResponse> handler) {
 
     HttpClient client = StorageTestSuite.getVertx().createHttpClient();
     HttpClientRequest request;

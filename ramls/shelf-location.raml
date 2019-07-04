@@ -51,7 +51,7 @@ resourceTypes:
           text/plain:
             example: "Internal server error, contact administrator"
   /{id}:
-    description: "Pass in the shelf location id"
+    description: "Get a new-kind of Location object, and convert it to old-style shelf-location."
     type:
       collection-item:
         exampleItem: !include examples/shelflocation.json

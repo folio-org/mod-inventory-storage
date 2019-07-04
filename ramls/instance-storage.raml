@@ -98,6 +98,11 @@ resourceTypes:
           responses:
             204:
               description: "Source record deleted"
+            400:
+              description: "Bad request"
+              body:
+                text/plain:
+                  example: "This MARC record is still in use"
             404:
               description: "There is no source record for that instanceId"
               body:
