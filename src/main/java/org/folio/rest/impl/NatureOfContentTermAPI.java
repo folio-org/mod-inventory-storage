@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -8,8 +9,8 @@ import javax.ws.rs.core.Response;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.jaxrs.model.InstanceNoteType;
-import org.folio.rest.jaxrs.model.InstanceNoteTypes;
+import org.folio.rest.jaxrs.model.NatureOfContentTerm;
+import org.folio.rest.jaxrs.model.NatureOfContentTerms;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -32,36 +33,37 @@ import io.vertx.core.logging.LoggerFactory;
  *
  * @author ne
  */
-public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.InstanceNoteTypes {
+public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.NatureOfContentTerms {
 
-  public static final String REFERENCE_TABLE  = "instance_note_type";
+  public static final String REFERENCE_TABLE  = "nature_of_content_term";
 
-  private static final String LOCATION_PREFIX = "/instance-note-types/";
-  private static final Logger log             = LoggerFactory.getLogger(InstanceNoteTypeAPI.class);
+  private static final String LOCATION_PREFIX = "/nature-of-content-terms/";
+  private static final Logger log             = LoggerFactory.getLogger(NatureOfContentTermAPI.class);
   private final Messages messages             = Messages.getInstance();
 
+
   @Override
-  public void getInstanceNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getNatureOfContentTerms(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
-     * http://host:port/instance-note-types
+     * http://host:port/nature-of-content-terms
      */
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCQL(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, InstanceNoteType.class,
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, NatureOfContentTerm.class,
             new String[]{"*"}, cql, true, true,
             reply -> {
               if (reply.succeeded()) {
-                InstanceNoteTypes records = new InstanceNoteTypes();
-                List<InstanceNoteType> record = reply.result().getResults();
-                records.setInstanceNoteTypes(record);
+                NatureOfContentTerms records = new NatureOfContentTerms();
+                List<NatureOfContentTerm> record = reply.result().getResults();
+                records.setNatureOfContentTerms(record);
                 records.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesResponse.respond200WithApplicationJson(records)));
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetNatureOfContentTermsResponse.respond200WithApplicationJson(records)));
               }
               else{
                 log.error(reply.cause().getMessage(), reply.cause());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesResponse
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetNatureOfContentTermsResponse
                     .respond400WithTextPlain(reply.cause().getMessage())));
               }
             });
@@ -71,14 +73,14 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceNoteTypesResponse
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetNatureOfContentTermsResponse
             .respond500WithTextPlain(message)));
       }
     });
   }
 
   @Override
-  public void postInstanceNoteTypes(String lang, InstanceNoteType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postNatureOfContentTerms(String lang, NatureOfContentTerm entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String id = entity.getId();
@@ -93,33 +95,31 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
               if (reply.succeeded()) {
                 String ret = reply.result();
                 entity.setId(ret);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceNoteTypesResponse
-                  .respond201WithApplicationJson(entity, PostInstanceNoteTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostNatureOfContentTermsResponse
+                  .respond201WithApplicationJson(entity, PostNatureOfContentTermsResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 msg = (msg == null) ? "Internal server problem: Error message missing" : msg;
                 log.info(msg);
-                asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse
+                asyncResultHandler.handle(Future.succeededFuture(PostNatureOfContentTermsResponse
                     .respond400WithTextPlain(msg)));
               }
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
+        asyncResultHandler.handle(Future.succeededFuture(PostNatureOfContentTermsResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
       }
     });
   }
 
   @Override
-  public void getInstanceNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-    PgUtil.getById(REFERENCE_TABLE, InstanceNoteType.class, id, okapiHeaders,
-      vertxContext, GetInstanceNoteTypesByIdResponse.class, asyncResultHandler);
+  public void getNatureOfContentTermsById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    PgUtil.getById(REFERENCE_TABLE, NatureOfContentTerm.class, id, okapiHeaders,
+      vertxContext, GetNatureOfContentTermsByIdResponse.class, asyncResultHandler);
   }
 
   @Override
-  public void deleteInstanceNoteTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteNatureOfContentTermsById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
         String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -130,7 +130,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 msg =  (msg == null) ? "Internal server problem: Error message missing" : msg;
                 log.info(msg);
-                asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
+                asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
                     .respond400WithTextPlain((msg))));
                 return;
               }
@@ -138,22 +138,22 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
               if (updated != 1) {
                 String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
-                asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
+                asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
                     .respond404WithTextPlain(msg)));
                 return;
               }
-              asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
+              asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
                       .respond204()));
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
+        asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
       }
     });
   }
 
   @Override
-  public void putInstanceNoteTypesById(String id, String lang, InstanceNoteType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putNatureOfContentTermsById(String id, String lang, NatureOfContentTerm entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
@@ -164,30 +164,31 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
             reply -> {
               if (reply.succeeded()) {
                 if (reply.result().getUpdated() == 0) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutNatureOfContentTermsByIdResponse
                       .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                 } else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutNatureOfContentTermsByIdResponse
                       .respond204()));
                 }
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 msg =  (msg == null) ? "Internal server problem: Error message missing" : msg;
                 log.info(msg);
-                asyncResultHandler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse
+                asyncResultHandler.handle(Future.succeededFuture(PutNatureOfContentTermsByIdResponse
                     .respond400WithTextPlain(msg)));
               }
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        asyncResultHandler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+        asyncResultHandler.handle(Future.succeededFuture(PutNatureOfContentTermsByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
 
     });
   }
-
+  
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(REFERENCE_TABLE+".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
+
 }

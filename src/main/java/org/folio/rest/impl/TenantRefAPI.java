@@ -46,6 +46,7 @@ public class TenantRefAPI extends TenantAPI {
     "contributor-name-types",
     "instance-types",
     "instance-formats",
+    "nature-of-content-terms",
     "classification-types",
     "instance-statuses",
     "statistical-code-types", "statistical-codes",
