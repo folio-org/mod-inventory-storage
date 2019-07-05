@@ -10,6 +10,10 @@
       "description": "label for the classification type",
       "type": "string"
     },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the classification type entry originates from, i.e. 'folio' or 'local'"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

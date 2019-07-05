@@ -2,31 +2,38 @@
   "classificationTypes": [
     {
       "id": "74c08086-81a4-4466-93d8-d117ce8646db",
-      "name": "Additional Dewey"
+      "name": "Additional Dewey",
+      "source": "folio"
     },
     {
       "id": "ad615f6e-e28c-4343-b4a0-457397c5be3e",
-      "name": "Canadian Classification"
+      "name": "Canadian Classification",
+      "source": "folio"
     },
     {
       "id": "fb12264c-ff3b-47e0-8e09-b0aa074361f1",
-      "name": "GDC"
+      "name": "GDC",
+      "source": "folio"
     },
     {
       "id": "ce176ace-a53e-4b4d-aa89-725ed7b2edac",
-      "name": "LC"
+      "name": "LC",
+      "source": "folio"
     },
     {
       "id": "a7f4d03f-b0d8-496c-aebf-4e9cdb678200",
-      "name": "NLM"
+      "name": "NLM",
+      "source": "folio"
     },
     {
       "id": "9a60012a-0fcf-4da9-a1d1-148e818c27ad",
-      "name": "National Agricultural Library"
+      "name": "National Agricultural Library",
+      "source": "folio"
     },
     {
       "id": "e8662436-75a8-4984-bebc-531e38c774a0",
-      "name": "UDC"
+      "name": "UDC",
+      "source": "folio"
     }
   ],
   "totalRecords": 7
