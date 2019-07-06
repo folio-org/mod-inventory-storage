@@ -1,0 +1,48 @@
+#%RAML 1.0
+title: Nature of content terms API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Nature of content term API
+    content: This documents the API calls that can be made to query and manage nature-of-content terms of the system
+
+types:
+  natureOfContentTerm: !include natureofcontentterm.json
+  natureOfContentTerms: !include natureofcontentterms.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/nature-of-content-terms:
+  type:
+    collection:
+      exampleCollection: !include examples/natureofcontentterms.json
+      exampleItem: !include examples/natureofcontentterm.json
+      schemaCollection: natureOfContentTerms
+      schemaItem: natureOfContentTerm
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of nature-of-content terms
+  post:
+    description: Create a new nature-of-content term
+    is: [validate]
+  /{id}:
+    description: "Pass in the nature-of-content term id"
+    type:
+      collection-item:
+        exampleItem: !include examples/natureofcontentterm.json
+        schema: natureOfContentTerm
+

@@ -40,6 +40,7 @@ import org.folio.rest.api.entities.InstanceType;
 import org.folio.rest.api.entities.ItemNoteType;
 import org.folio.rest.api.entities.JsonEntity;
 import org.folio.rest.api.entities.ModeOfIssuance;
+import org.folio.rest.api.entities.NatureOfContentTerm;
 import org.folio.rest.api.entities.StatisticalCode;
 import org.folio.rest.api.entities.StatisticalCodeType;
 import org.folio.rest.support.Response;
@@ -414,6 +415,40 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
+  public void natureOfContentTermsLoaded()
+          throws InterruptedException,
+          MalformedURLException,
+          TimeoutException,
+          ExecutionException,
+          UnsupportedEncodingException {
+    URL apiUrl = natureOfContentTermsUrl("");
+
+    Response searchResponse = getReferenceRecords(apiUrl);
+    validateNumberOfReferenceRecords("nature-of-content terms", searchResponse, 20, 200);
+  }
+
+  @Test
+  public void natureOfContentTermsBasicCrud()
+          throws InterruptedException,
+          MalformedURLException,
+          TimeoutException,
+          ExecutionException,
+          UnsupportedEncodingException {
+    String entityPath = "/nature-of-content-terms";
+    NatureOfContentTerm entity = new NatureOfContentTerm("Test Term", "Test Source");
+
+    Response postResponse = createReferenceRecord(entityPath, entity);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    String updateProperty = InstanceFormat.NAME_KEY;
+
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+  }
+
+
+  @Test
   public void instanceStatusesLoaded()
           throws InterruptedException,
           MalformedURLException,
@@ -780,7 +815,7 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put("id", "baduuid");
     Response postResponse2 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/instance-note-types").contains(path)) {
+    if (Arrays.asList("/instance-note-types", "/nature-of-content-terms").contains(path)) {
       assertThat(postResponse2.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
     } else {
       assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
