@@ -942,6 +942,31 @@ public class InstanceStorageTest extends TestBase {
   }
 
   @Test
+  public void arrayModifierfsContributors1() {
+    canSort("contributors = /@name novik", "Uprooted", "Temeraire" );
+  }
+
+  @Test
+  public void arrayModifierfsContributors2() {
+    canSort("contributors = /@contributorNameTypeId = personal novik",  "Uprooted", "Temeraire");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers1() {
+    canSort("identifiers = /@value 9781447294146", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers2() {
+    canSort("identifiers = /@identifierTypeId = isbn 9781447294146", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers3() {
+    canSort("identifiers = /@identifierTypeId asin", "Nod");
+  }
+
+  @Test
   public void canSearchWithoutSqlInjection() {
     create5instances();
 

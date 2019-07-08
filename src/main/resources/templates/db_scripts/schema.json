@@ -499,6 +499,16 @@
         },
         {
           "fieldName": "instanceTypeId"
+        },
+        {
+          "fieldName": "contributors",
+          "arraySubfield" : "name",
+          "arrayModifiers": ["contributorNameTypeId"]
+        },
+        {
+          "fieldName": "identifiers",
+          "arraySubfield" : "value",
+          "arrayModifiers": ["identifierTypeId"]
         }
       ],
       "customSnippetPath": "instanceHrid.sql"
