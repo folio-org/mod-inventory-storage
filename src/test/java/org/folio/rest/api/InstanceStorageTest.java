@@ -963,7 +963,7 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void arrayModifierfsIdentifiers3() {
-    canSort("identifiers = @identifierTypeId asin", "Nod");
+    canSort("identifiers = /@identifierTypeId asin", "Nod");
   }
 
   @Test
