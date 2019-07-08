@@ -259,6 +259,23 @@
       ]
     },
     {
+      "tableName": "nature_of_content_term",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "id",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "classification_type",
       "withMetadata": true,
       "withAuditing": false,

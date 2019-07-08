@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of nature-of-content terms (controlled vocabulary)",
+  "type": "object",
+  "properties": {
+    "natureOfContentTerms": {
+      "description": "List of nature-of-content terms",
+      "id": "natureOfContentTerm",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "natureofcontentterm.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "natureOfContentTerms",
+    "totalRecords"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "natureOfContentTerms": [
+    {
+      "id": "dc25b657-d892-4b7e-adf4-67e47af18064",
+      "name": "audiobook",
+      "source": "folio"
+    },
+    {
+      "id": "5621fb72-8282-4819-9b89-61349ff88027",
+      "name": "autobiography",
+      "source": "folio"
+    },
+    {
+      "id": "f9f9e23d-c7f8-446c-97c9-d173f604ad50",
+      "name": "bibliography",
+      "source": "folio"
+    }
+  ],
+  "totalRecords": 3
+}

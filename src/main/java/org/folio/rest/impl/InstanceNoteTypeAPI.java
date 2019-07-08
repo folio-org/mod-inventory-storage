@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.folio.rest.impl;
 
 import java.util.List;
@@ -11,11 +6,14 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.InstanceNoteType;
 import org.folio.rest.jaxrs.model.InstanceNoteTypes;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
@@ -27,12 +25,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.persist.PgUtil;
 
 /**
  *
@@ -45,11 +39,6 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
   private static final String LOCATION_PREFIX = "/instance-note-types/";
   private static final Logger log             = LoggerFactory.getLogger(InstanceNoteTypeAPI.class);
   private final Messages messages             = Messages.getInstance();
-
-  public InstanceNoteTypeAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId);
-  }
-
 
   @Override
   public void getInstanceNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {

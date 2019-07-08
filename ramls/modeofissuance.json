@@ -10,6 +10,10 @@
       "description": "label for the mode of issuance",
       "type": "string"
     },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the mode of issuance entry originates from, i.e. 'rdamodeissue' or 'local'"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
