@@ -1,5 +1,5 @@
 ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
-  ADD FOREIGN KEY (_id) REFERENCES ${myuniversity}_${mymodule}.instance;
+  ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance;
 
 -- Trigger: If instance changes then enforce a correct value in instance.jsonb->sourceRecordFormat
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.set_instance_sourceRecordFormat()
@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.set_instance_sourceRecord
       -- a newly inserted instance cannot have a source record because of foreign key relationship
       NEW.jsonb := NEW.jsonb - 'sourceRecordFormat';
     ELSE
-      NEW.jsonb := CASE (SELECT count(*) FROM ${myuniversity}_${mymodule}.instance_source_marc WHERE _id=NEW._id)
+      NEW.jsonb := CASE (SELECT count(*) FROM ${myuniversity}_${mymodule}.instance_source_marc WHERE id=NEW.id)
                    WHEN 0 THEN NEW.jsonb - 'sourceRecordFormat'
                    ELSE jsonb_set(NEW.jsonb, '{sourceRecordFormat}', '"MARC-JSON"')
                    END;
@@ -30,11 +30,11 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.update_${table.tableName}
     IF (TG_OP = 'DELETE') THEN
       UPDATE ${myuniversity}_${mymodule}.instance
         SET jsonb = jsonb - 'sourceRecordFormat'
-        WHERE _id = OLD._id;
+        WHERE id = OLD.id;
     ELSE
       UPDATE ${myuniversity}_${mymodule}.instance
         SET jsonb = jsonb_set(jsonb, '{sourceRecordFormat}', '"MARC-JSON"')
-        WHERE _id = NEW._id;
+        WHERE id = NEW.id;
     END IF;
     RETURN NULL;
   END;

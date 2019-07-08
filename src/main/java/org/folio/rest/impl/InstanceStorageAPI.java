@@ -1,8 +1,6 @@
 package org.folio.rest.impl;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +12,7 @@ import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
@@ -28,30 +27,14 @@ import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.ObjectMapperTool;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.CQLDefaultNodeVisitor;
-import org.z3950.zing.cql.CQLNode;
-import org.z3950.zing.cql.CQLParseException;
-import org.z3950.zing.cql.CQLParser;
-import org.z3950.zing.cql.CQLSortNode;
-import org.z3950.zing.cql.Modifier;
-import org.z3950.zing.cql.ModifierSet;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.z3950.zing.cql.cql2pgjson.QueryValidationException;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.folio.cql2pgjson.exception.FieldException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.ResultSet;
 
 public class InstanceStorageAPI implements InstanceStorage {
 
@@ -66,7 +49,6 @@ public class InstanceStorageAPI implements InstanceStorage {
   public static final String INSTANCE_TABLE =  "instance";
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
-  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
   private final Messages messages = Messages.getInstance();
 
   PreparedCQL handleCQL(String query, int limit, int offset) throws FieldException {
@@ -80,35 +62,34 @@ public class InstanceStorageAPI implements InstanceStorage {
       //ho_jsonb is the alias given holdings in the view in the DB
       query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".ho_jsonb.");
 
-      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb")));
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb"));
     }
 
     if(containsItemsRecordProperties) {
       //it_jsonb is the alias given items in the view in the DB
       query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
 
-      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb")));
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb"));
     }
 
     if(containsHoldingsRecordProperties) {
       //ho_jsonb is the alias given holdings in the view in the DB
       query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
 
-      return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, createCQLWrapper(query, limit, offset, Arrays.asList(
+      return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_VIEW+".jsonb",
-          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb")));
+          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"));
     }
 
-    return new PreparedCQL(INSTANCE_TABLE,
-        createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb")));
+    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"));
   }
 
-  private CQLWrapper createCQLWrapper(
+  private static CQLWrapper createCQLWrapper(
     String query,
     int limit,
     int offset,
@@ -121,171 +102,6 @@ public class InstanceStorageAPI implements InstanceStorage {
       .setOffset(new Offset(offset));
   }
 
-  private static Instances instances(ResultSet resultSet, int limit) throws IOException {
-    List<JsonObject> jsonList = resultSet.getRows();
-    List<Instance> instanceList = new ArrayList<>(jsonList.size());
-    int totalRecords = 0;
-    for (JsonObject object : jsonList) {
-      String jsonb = object.getString("jsonb");
-      instanceList.add(OBJECT_MAPPER.readValue(jsonb, Instance.class));
-      totalRecords = object.getInteger("count");
-    }
-    Instances instances = new Instances();
-    instances.setInstances(instanceList);
-
-    // headrecords used, full table scan was stopped without total records calculation.
-    if (totalRecords == 0 && jsonList.size() == limit) {
-      totalRecords = 999999999;  // unknown total
-    }
-    instances.setTotalRecords(totalRecords);
-    return instances;
-  }
-
-  /** Number of records to use from the title sort index in optimizedSql method */
-  private static final int OPTIMIZED_SQL_SIZE = 10000;
-
-  /** Number of records to use from the title sort index in optimizedSql method */
-  public static int getOptimizedSqlSize() {
-    return OPTIMIZED_SQL_SIZE;
-  }
-
-  static CQLSortNode getSortNode(String cql) {
-    try {
-      CQLParser parser = new CQLParser();
-      CQLNode node = parser.parse(cql);
-      return getSortNode(node);
-    } catch (IOException|CQLParseException|NullPointerException e) {
-      return null;
-    }
-  }
-
-  private static CQLSortNode getSortNode(CQLNode node) {
-    CqlSortNodeVisitor visitor = new CqlSortNodeVisitor();
-    node.traverse(visitor);
-    return visitor.sortNode;
-  }
-
-  private static class CqlSortNodeVisitor extends CQLDefaultNodeVisitor {
-    CQLSortNode sortNode = null;
-
-    @Override
-    public void onSortNode(CQLSortNode cqlSortNode) {
-      sortNode = cqlSortNode;
-    }
-  }
-
-  private static String getAscDesc(ModifierSet modifierSet) {
-    String ascDesc = "";
-    for (Modifier modifier : modifierSet.getModifiers()) {
-      switch (modifier.getType()) {
-      case "sort.ascending":
-        ascDesc = "ASC";
-        break;
-      case "sort.descending":
-        ascDesc = "DESC";
-        break;
-      default:
-        // ignore
-      }
-    }
-    return ascDesc;
-  }
-
-  /**
-   * Execute an optimized query with performance hints for the PostgreSQL optimizer.
-   *
-   * @param preparedCql the query to optimize
-   * @return true if an optimized query gets executed, false otherwise
-   * @throws QueryValidationException on invalid CQL
-   */
-  static boolean optimizedSql(PreparedCQL preparedCql, String tenantId, PostgresClient postgresClient,
-      int offset, int limit, Handler<AsyncResult<Response>> asyncResultHandler) throws QueryValidationException {
-
-    String cql = preparedCql.getCqlWrapper().getQuery();
-    CQLSortNode cqlSortNode = getSortNode(cql);
-    if (cqlSortNode == null) {
-      return false;
-    }
-    List<ModifierSet> sortIndexes = cqlSortNode.getSortIndexes();
-    if (sortIndexes.size() != 1) {
-      return false;
-    }
-    ModifierSet modifierSet = sortIndexes.get(0);
-    if (! modifierSet.getBase().equals("title")) {
-      return false;
-    }
-    String ascDesc = getAscDesc(modifierSet);
-    cql = cqlSortNode.getSubtree().toCQL();
-    String lessGreater = ascDesc.equals("DESC") ? ">" : "<";
-    preparedCql.getCqlWrapper().setQuery(cql);
-    String tableName = PostgresClient.convertToPsqlStandard(tenantId)
-        + "." + preparedCql.getTableName();
-    String where = preparedCql.getCqlWrapper().getField().toSql(cql).getWhere();
-    // If there are many matches use a full table scan in title sort order
-    // using the title index, but stop this scan after OPTIMIZED_SQL_SIZE index entries.
-    // Otherwise use full text matching because there are only a few matches.
-    //
-    // "headrecords" are the matching records found within the first OPTIMIZED_SQL_SIZE records
-    // by stopping at the title from "OFFSET OPTIMIZED_SQL_SIZE LIMIT 1".
-    // If "headrecords" are enough to return the requested "LIMIT" number of records we are done.
-    // Otherwise use the full text index to create "allrecords" with all matching
-    // records and do sorting and LIMIT afterwards.
-    String sql =
-        " WITH "
-      + " headrecords AS ("
-      + "   SELECT jsonb, lower(f_unaccent(jsonb->>'title')) AS title FROM " + tableName
-      + "   WHERE (" + where + ")"
-      + "     AND lower(f_unaccent(jsonb->>'title'))" + lessGreater
-      + "             ( SELECT lower(f_unaccent(jsonb->>'title'))"
-      + "               FROM " + tableName
-      + "               ORDER BY lower(f_unaccent(jsonb->>'title')) " + ascDesc
-      + "               OFFSET " + OPTIMIZED_SQL_SIZE + " LIMIT 1"
-      + "             )"
-      + "   ORDER BY lower(f_unaccent(jsonb->>'title')) " + ascDesc
-      + "   LIMIT " + limit + " OFFSET " + offset
-      + " ), "
-      + " allrecords AS ("
-      + "   SELECT jsonb, lower(f_unaccent(jsonb->>'title')) AS title FROM " + tableName
-      + "   WHERE (" + where + ")"
-      + "     AND (SELECT COUNT(*) FROM headrecords) < " + limit
-      + " )"
-      + " SELECT jsonb, title,  0                                 AS count"
-      + "   FROM headrecords"
-      + "   WHERE (SELECT COUNT(*) FROM headrecords) >= " + limit
-      + " UNION"
-      + " (SELECT jsonb, title, (SELECT COUNT(*) FROM allrecords) AS count"
-      + "   FROM allrecords"
-      + "   ORDER BY title " + ascDesc
-      + "   LIMIT " + limit + " OFFSET " + offset
-      + " )"
-      + " ORDER BY title " + ascDesc;
-
-    log.info("optimized SQL generated from CQL: " + sql);
-
-    postgresClient.select(sql, reply -> {
-      try {
-        if (reply.failed()) {
-          log.error("optimized SQL failed: " + reply.cause().getMessage());
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              GetInstanceStorageInstancesResponse.
-              respond500WithTextPlain(reply.cause().getMessage())));
-          return;
-        }
-        Instances instances = instances(reply.result(), limit);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            GetInstanceStorageInstancesResponse.
-            respond200WithApplicationJson(instances)));
-      } catch (Exception e) {
-        log.error("Exception with reply from optimized SQL: " + e.getMessage(), e.getCause());
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            GetInstanceStorageInstancesResponse.
-            respond500WithTextPlain(e.getMessage())));
-      }
-    });
-
-    return true;
-  }
-
   @Override
   public void getInstanceStorageInstances(
     @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
@@ -296,58 +112,45 @@ public class InstanceStorageAPI implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
     try {
-      vertxContext.runOnContext(v -> {
-        try {
-          PostgresClient postgresClient = PostgresClient.getInstance(
-            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+      PreparedCQL preparedCql = handleCQL(query, limit, offset);
+      if (preparedCql.getTableName().equals(INSTANCE_TABLE)) {
+        PgUtil.getWithOptimizedSql(INSTANCE_TABLE, Instance.class, Instances.class,
+            "title", query, offset, limit,
+            okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
+        return;
+      }
 
-          String[] fieldList = {"*"};
+      CQLWrapper cql = preparedCql.getCqlWrapper();
+      log.info("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
 
-          PreparedCQL preparedCql = handleCQL(query, limit, offset);
-          if (optimizedSql(preparedCql, tenantId, postgresClient, offset, limit, asyncResultHandler)) {
-            return;
+      PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+      postgresClient.get(preparedCql.getTableName(), Instance.class, preparedCql.getFieldArray(), cql,
+        true, false, reply -> {
+          try {
+            if (reply.succeeded()) {
+              List<Instance> instances = reply.result().getResults();
+
+              Instances instanceList = new Instances();
+              instanceList.setInstances(instances);
+              instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                GetInstanceStorageInstancesResponse.
+                  respond200WithApplicationJson(instanceList)));
+            }
+            else {
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                GetInstanceStorageInstancesResponse.
+                  respond500WithTextPlain(reply.cause().getMessage())));
+            }
+          } catch (Exception e) {
+            log.error(e.getStackTrace());
+            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+              GetInstanceStorageInstancesResponse.
+                respond500WithTextPlain(e.getMessage())));
           }
-
-          CQLWrapper cql = preparedCql.getCqlWrapper();
-
-          log.info("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
-
-          postgresClient.get(preparedCql.getTableName(), Instance.class, fieldList, cql,
-            true, false, reply -> {
-              try {
-                if(reply.succeeded()) {
-                  List<Instance> instances = reply.result().getResults();
-
-                  Instances instanceList = new Instances();
-                  instanceList.setInstances(instances);
-                  instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetInstanceStorageInstancesResponse.
-                      respond200WithApplicationJson(instanceList)));
-                }
-                else {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetInstanceStorageInstancesResponse.
-                      respond500WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e.getStackTrace());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  GetInstanceStorageInstancesResponse.
-                    respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e.getStackTrace());
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            GetInstanceStorageInstancesResponse.
-              respond500WithTextPlain(e.getMessage())));
-        }
-      });
+        });
     } catch (Exception e) {
       log.error(e.getStackTrace());
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -438,7 +241,7 @@ public class InstanceStorageAPI implements InstanceStorage {
         PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("DELETE FROM "
+        postgresClient.execute(String.format("DELETE FROM "
               + tenantId + "_" + MODULE + "." + INSTANCE_SOURCE_MARC_TABLE ),
             reply1 -> {
               if (! reply1.succeeded()) {
@@ -447,7 +250,7 @@ public class InstanceStorageAPI implements InstanceStorage {
                     .respond500WithTextPlain(reply1.cause().getMessage())));
                 return;
               }
-              postgresClient.mutate(String.format("DELETE FROM "
+              postgresClient.execute(String.format("DELETE FROM "
                + tenantId + "_" + MODULE + "." + INSTANCE_RELATIONSHIP_TABLE),
               reply2 -> {
                 if (! reply2.succeeded()) {
@@ -456,7 +259,7 @@ public class InstanceStorageAPI implements InstanceStorage {
                       .respond500WithTextPlain(reply1.cause().getMessage())));
                   return;
                 }
-                postgresClient.mutate("DELETE FROM "
+                postgresClient.execute("DELETE FROM "
                   + tenantId + "_" + MODULE + "." + INSTANCE_TABLE, reply3 -> {
                   if (! reply3.succeeded()) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -630,7 +433,7 @@ public class InstanceStorageAPI implements InstanceStorage {
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
-    String where = "WHERE _id='" + instanceId + "'";
+    String where = "WHERE id='" + instanceId + "'";
     postgresClient.get(INSTANCE_SOURCE_MARC_TABLE, MarcJson.class, where, false, false, reply -> {
       if (! reply.succeeded()) {
         asyncResultHandler.handle(Future.succeededFuture(
@@ -784,53 +587,8 @@ public class InstanceStorageAPI implements InstanceStorage {
 
   @Override
   public void postInstanceStorageInstanceRelationships(String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    try {
-      PostgresClient postgresClient =
-        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-
-      vertxContext.runOnContext(v -> {
-        try {
-
-          postgresClient.save(INSTANCE_RELATIONSHIP_TABLE, entity.getId(), entity,
-            reply -> {
-              try {
-                if(reply.succeeded()) {
-                  OutStream stream = new OutStream();
-                  stream.setData(entity);
-
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      PostInstanceStorageInstanceRelationshipsResponse
-                        .respond201WithApplicationJson(entity,
-                          PostInstanceStorageInstanceRelationshipsResponse.headersFor201().withLocation(reply.result()))));
-                }
-                else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      PostInstanceStorageInstanceRelationshipsResponse
-                        .respond400WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e.getStackTrace());
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(
-                    PostInstanceStorageInstanceRelationshipsResponse
-                      .respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e.getStackTrace());
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            PostInstanceStorageInstanceRelationshipsResponse
-              .respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e.getStackTrace());
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        PostInstanceStorageInstanceRelationshipsResponse
-          .respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.post(INSTANCE_RELATIONSHIP_TABLE, entity, okapiHeaders, vertxContext,
+        PostInstanceStorageInstanceRelationshipsResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -901,10 +659,13 @@ public class InstanceStorageAPI implements InstanceStorage {
   static class PreparedCQL {
     private final String tableName;
     private final CQLWrapper cqlWrapper;
+    private final List<String> fieldList;
 
-    public PreparedCQL(String tableName, CQLWrapper cqlWrapper) {
+    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList)
+        throws FieldException {
       this.tableName = tableName;
-      this.cqlWrapper = cqlWrapper;
+      this.cqlWrapper = createCQLWrapper(query, limit, offset, fieldList);
+      this.fieldList = fieldList;
     }
 
     public String getTableName() {
@@ -915,6 +676,9 @@ public class InstanceStorageAPI implements InstanceStorage {
       return cqlWrapper;
     }
 
+    public String [] getFieldArray() {
+      return fieldList.toArray(new String [0]);
+    }
   }
 
 }

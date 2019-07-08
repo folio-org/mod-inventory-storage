@@ -64,6 +64,11 @@ public class Response {
     return contentType;
   }
 
+  @Override
+  public String toString() {
+    return "[statusCode=" + statusCode + ", contentType=" + contentType + ", body=" + body + "]";
+  }
+
   private static String convertNullToEmpty(String text) {
     return text != null ? text : "";
   }

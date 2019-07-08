@@ -2,8 +2,6 @@ package org.folio.rest.impl;
 
 import static org.folio.rest.impl.StorageHelper.getCQL;
 import static org.folio.rest.impl.StorageHelper.getTenant;
-import static org.folio.rest.impl.StorageHelper.idCriterion;
-import static org.folio.rest.impl.StorageHelper.isInUse;
 import static org.folio.rest.impl.StorageHelper.logAndSaveError;
 
 import java.util.ArrayList;
@@ -16,17 +14,14 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Locations;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.messages.MessageConsts;
-import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
@@ -40,19 +35,12 @@ import io.vertx.core.logging.LoggerFactory;
  * @author kurt
  */
 public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
-  private final Messages messages = Messages.getInstance();
   public static final String LOCATION_TABLE = "location";
   private final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
   public static final String URL_PREFIX = "/locations";
-  public static final String ID_FIELD_NAME = "'id'";
 
   public static final String SERVICEPOINT_IDS = "servicePointIds";
   public static final String PRIMARY_SERVICEPOINT = "primaryServicePoint";
-
-  private String getErrorResponse(String response) {
-    // Check to see if we're suppressing messages or not
-    return response;
-  }
 
   @Override
   public void deleteLocations(String lang,
@@ -62,7 +50,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   {
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient.getInstance(vertxContext.owner(), TenantTool.calculateTenantId(tenantId))
-      .mutate(String.format("DELETE FROM %s_%s.%s",
+      .execute(String.format("DELETE FROM %s_%s.%s",
         tenantId, "mod_inventory_storage", LOCATION_TABLE),
       reply -> {
         if (reply.succeeded()) {
@@ -175,33 +163,8 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId).get(
-      LOCATION_TABLE, Location.class, criterion, true, false, getReply -> {
-        if (getReply.failed()) {
-          String message = logAndSaveError(getReply.cause());
-          asyncResultHandler.handle(Future.succeededFuture(
-            GetLocationsByIdResponse.respond500WithTextPlain(message)));
-        } else {
-          List<Location> locationList = (List<Location>) getReply.result().getResults();
-          if (locationList.isEmpty()) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationsByIdResponse.respond404WithTextPlain(
-                messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-          } else if (locationList.size() > 1) {
-            String message = "Multiple locations found with the same id";
-            logger.error(message);
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationsByIdResponse.respond500WithTextPlain(message)));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(GetLocationsByIdResponse.respond200WithApplicationJson(locationList.get(0))));
-          }
-        }
-      });
+    PgUtil.getById(LOCATION_TABLE, Location.class, id, okapiHeaders, vertxContext,
+        GetLocationsByIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -212,28 +175,8 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
-    Criterion criterion = idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .delete(LOCATION_TABLE, criterion, deleteReply -> {
-      if (deleteReply.failed()) {
-        logAndSaveError(deleteReply.cause());
-        if (isInUse(deleteReply.cause().getMessage())) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationsByIdResponse
-              .respond400WithTextPlain("Location is in use, can not be deleted")));
-        } else {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationsByIdResponse.respond404WithTextPlain("Not found")));
-        }
-      } else {
-        asyncResultHandler.handle(Future.succeededFuture(
-          DeleteLocationsByIdResponse.respond204()));
-      }
-      });
+    PgUtil.deleteById(LOCATION_TABLE, id, okapiHeaders, vertxContext,
+        DeleteLocationsByIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -247,44 +190,22 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     runLocationChecks(checkIdChange(id, entity), checkAtLeastOneServicePoint(entity),
         checkPrimaryServicePointRelationship(entity), checkForDuplicateServicePoints(entity))
             .setHandler(checksResult -> {
-      if (checksResult.succeeded()) {
-        String tenantId = getTenant(okapiHeaders);
-        Criterion criterion = idCriterion(id, asyncResultHandler);
-        if (criterion == null) {
-          return; // error already handled
-        }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(LOCATION_TABLE, entity, criterion, false,
-            updateReply -> {
-              if (updateReply.failed()) {
-                String message = logAndSaveError(updateReply.cause());
-                asyncResultHandler
-                        .handle(Future.succeededFuture(
-                            PutLocationsByIdResponse.respond500WithTextPlain(getErrorResponse(message))));
-              } else {
-                if (updateReply.result().getUpdated() == 0) {
-                  asyncResultHandler
-                      .handle(Future.succeededFuture(PutLocationsByIdResponse.respond404WithTextPlain("Not found")));
-                  // Not found
-                } else {
-                      asyncResultHandler.handle(Future.succeededFuture(PutLocationsByIdResponse.respond204()));
-                }
-              }
-            });
-      } else {
-
+      if (checksResult.failed()) {
         String message = logAndSaveError(checksResult.cause());
         asyncResultHandler
                     .handle(Future.succeededFuture(PutLocationsByIdResponse.respond422WithApplicationJson(
                         ValidationHelper.createValidationErrorMessage(
                             ((LocationCheckError) checksResult.cause()).getField(), entity.getId(), message))));
+        return;
       }
-
+      PgUtil.put(LOCATION_TABLE, entity, id, okapiHeaders, vertxContext,
+          PutLocationsByIdResponse.class, asyncResultHandler);
     });
-
   }
 
   @SafeVarargs
   private final CompositeFuture runLocationChecks(Future<LocationCheckError>... futures) {
+    @SuppressWarnings("rawtypes")
     List<Future> allFutures = new ArrayList<>(Arrays.asList(futures));
     return CompositeFuture.all(allFutures);
   }

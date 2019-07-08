@@ -3,23 +3,22 @@ package org.folio.rest.impl;
 import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ContributorType;
 import org.folio.rest.jaxrs.model.ContributorTypes;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +34,6 @@ public class ContributorTypeAPI implements org.folio.rest.jaxrs.resource.Contrib
   private static final String LOCATION_PREFIX       = "/contributor-types/";
   private static final Logger log                 = LoggerFactory.getLogger(ContributorTypeAPI.class);
   private final Messages messages                 = Messages.getInstance();
-  private String idFieldName                      = "_id";
-
-
-  public ContributorTypeAPI(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
-  }
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(CONTRIBUTOR_TYPE_TABLE+".jsonb");
@@ -144,57 +137,13 @@ public class ContributorTypeAPI implements org.folio.rest.jaxrs.resource.Contrib
     });
   }
 
-  private void internalServerErrorDuringGetById(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(GetContributorTypesByContributorTypeIdResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   @Validate
   @Override
   public void getContributorTypesByContributorTypeId(String contributorTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-
-        Criterion c = new Criterion(
-            new Criteria().addField(idFieldName).setJSONB(false).setOperation("=").setValue("'"+contributorTypeId+"'"));
-
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CONTRIBUTOR_TYPE_TABLE, ContributorType.class, c, true,
-            reply -> {
-              try {
-                if (reply.failed()) {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringGetById(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(GetContributorTypesByContributorTypeIdResponse.
-                      respond404WithTextPlain(msg)));
-                  return;
-                }
-                @SuppressWarnings("unchecked")
-                List<ContributorType> contributorType = (List<ContributorType>) reply.result().getResults();
-                if (contributorType.isEmpty()) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorTypesByContributorTypeIdResponse
-                      .respond404WithTextPlain(contributorTypeId)));
-                }
-                else{
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetContributorTypesByContributorTypeIdResponse
-                      .respond200WithApplicationJson(contributorType.get(0))));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-              }
-            });
-      } catch (Exception e) {
-        internalServerErrorDuringGetById(e, lang, asyncResultHandler);
-      }
-    });
+    PgUtil.getById(CONTRIBUTOR_TYPE_TABLE, ContributorType.class, contributorTypeId,
+        okapiHeaders, vertxContext, GetContributorTypesByContributorTypeIdResponse.class, asyncResultHandler);
   }
 
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {

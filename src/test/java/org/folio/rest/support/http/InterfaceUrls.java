@@ -128,6 +128,12 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/instance-formats" + subPath);
   }
 
+    public static URL natureOfContentTermsUrl(String subPath)
+          throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl("/nature-of-content-terms" + subPath);
+  }
+
   public static URL instanceNoteTypesUrl(String subPath)
           throws MalformedURLException {
 

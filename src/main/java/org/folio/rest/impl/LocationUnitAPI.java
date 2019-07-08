@@ -15,18 +15,14 @@ import org.folio.rest.jaxrs.model.Locinsts;
 import org.folio.rest.jaxrs.model.Loclib;
 import org.folio.rest.jaxrs.model.Loclibs;
 import org.folio.rest.jaxrs.resource.LocationUnits;
-import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.messages.MessageConsts;
-import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 
 public class LocationUnitAPI implements LocationUnits {
-  private final Messages messages = Messages.getInstance();
   public static final String URL_PREFIX = "/location-units";
-  public static final String ID_FIELD_NAME = "'id'"; // same for all of them
   public static final String INSTITUTION_TABLE = "locinstitution";
   public static final String URL_PREFIX_INST = URL_PREFIX + "/institutions";
   public static final String CAMPUS_TABLE = "loccampus";
@@ -43,7 +39,7 @@ public class LocationUnitAPI implements LocationUnits {
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient.getInstance(vertxContext.owner(),
       TenantTool.calculateTenantId(tenantId))
-      .mutate(String.format("DELETE FROM %s_%s.%s",
+      .execute(String.format("DELETE FROM %s_%s.%s",
         tenantId, MOD_NAME, INSTITUTION_TABLE),
         reply -> {
           if (reply.succeeded()) {
@@ -138,34 +134,8 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .get(INSTITUTION_TABLE, Locinst.class, criterion, true, false, getReply -> {
-          if (getReply.failed()) {
-            String message = StorageHelper.logAndSaveError(getReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationUnitsInstitutionsByIdResponse
-                .respond500WithTextPlain(message)));
-          } else {
-            List<Locinst> instlist = getReply.result().getResults();
-            if (instlist.isEmpty()) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationUnitsInstitutionsByIdResponse
-                  .respond404WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-              // We can safely ignore the case that we have more than one with
-              // the same id, RMB has a primary key on ID, will not allow it
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationUnitsInstitutionsByIdResponse
-                  .respond200WithApplicationJson(instlist.get(0))));
-            }
-          }
-        });
+    PgUtil.getById(INSTITUTION_TABLE, Locinst.class, id, okapiHeaders, vertxContext,
+        GetLocationUnitsInstitutionsByIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -173,29 +143,9 @@ public class LocationUnitAPI implements LocationUnits {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .delete(INSTITUTION_TABLE, criterion, deleteReply -> {
-        if (deleteReply.failed()) {
-          StorageHelper.logAndSaveError(deleteReply.cause());
-          if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              DeleteLocationUnitsInstitutionsByIdResponse
-                .respond400WithTextPlain("Institution is in use, can not be deleted")));
-          } else {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationUnitsInstitutionsByIdResponse
-                .respond404WithTextPlain("Institution not found")));
-          }
-        } else {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationUnitsInstitutionsByIdResponse.respond204()));
-        }
-      });
+
+    PgUtil.deleteById(INSTITUTION_TABLE, id, okapiHeaders, vertxContext,
+        DeleteLocationUnitsInstitutionsByIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -212,29 +162,9 @@ public class LocationUnitAPI implements LocationUnits {
           .respond400WithTextPlain(message)));
       return;
     }
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .update(INSTITUTION_TABLE, entity, criterion,
-        false, updateReply -> {
-          if (updateReply.failed()) {
-            String message = StorageHelper.logAndSaveError(updateReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              PutLocationUnitsInstitutionsByIdResponse.respond500WithTextPlain(message)));
-          } else {
-            if (updateReply.result().getUpdated() == 0) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationUnitsInstitutionsByIdResponse
-                  .respond404WithTextPlain("Institution not found")));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationUnitsInstitutionsByIdResponse.respond204()));
-            }
-          }
-        });
+
+    PgUtil.put(INSTITUTION_TABLE, entity, id, okapiHeaders, vertxContext,
+        PutLocationUnitsInstitutionsByIdResponse.class, asyncResultHandler);
   }
 
   ////////////////////////////////////////////
@@ -246,7 +176,7 @@ public class LocationUnitAPI implements LocationUnits {
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient.getInstance(vertxContext.owner(),
       TenantTool.calculateTenantId(tenantId))
-      .mutate(String.format("DELETE FROM %s_%s.%s",
+      .execute(String.format("DELETE FROM %s_%s.%s",
         tenantId, MOD_NAME, CAMPUS_TABLE),
         reply -> {
           if (reply.succeeded()) {
@@ -341,33 +271,8 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .get(CAMPUS_TABLE, Loccamp.class, criterion,
-        true, false, getReply -> {
-          if (getReply.failed()) {
-            String message = StorageHelper.logAndSaveError(getReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationUnitsCampusesByIdResponse
-                .respond500WithTextPlain(message)));
-          } else {
-            List<Loccamp> items = getReply.result().getResults();
-            if (items.isEmpty()) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationUnitsCampusesByIdResponse
-                  .respond404WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationUnitsCampusesByIdResponse
-                  .respond200WithApplicationJson(items.get(0))));
-            }
-          }
-        });
+    PgUtil.getById(CAMPUS_TABLE, Loccamp.class, id, okapiHeaders, vertxContext,
+        GetLocationUnitsCampusesByIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -375,29 +280,8 @@ public class LocationUnitAPI implements LocationUnits {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .delete(CAMPUS_TABLE, criterion, deleteReply -> {
-        if (deleteReply.failed()) {
-          StorageHelper.logAndSaveError(deleteReply.cause());
-          if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              DeleteLocationUnitsInstitutionsByIdResponse
-                .respond400WithTextPlain("Campus is in use, can not be deleted")));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(
-              DeleteLocationUnitsCampusesByIdResponse
-                .respond404WithTextPlain("Campus not found")));
-          }
-        } else {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationUnitsCampusesByIdResponse.respond204()));
-        }
-      });
+    PgUtil.deleteById(CAMPUS_TABLE, id, okapiHeaders, vertxContext,
+        DeleteLocationUnitsCampusesByIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -406,36 +290,15 @@ public class LocationUnitAPI implements LocationUnits {
     String lang, Loccamp entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation:Campus  id cannot be changed";
-        asyncResultHandler.handle(Future.succeededFuture(
+      asyncResultHandler.handle(Future.succeededFuture(
           PutLocationUnitsCampusesByIdResponse.respond400WithTextPlain(message)));
-        return;
-      }
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
+      return;
     }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .update(CAMPUS_TABLE, entity, criterion,
-        false, updateReply -> {
-          if (updateReply.failed()) {
-            String message = StorageHelper.logAndSaveError(updateReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              PutLocationUnitsCampusesByIdResponse
-                .respond500WithTextPlain(message)));
-          } else {
-            if (updateReply.result().getUpdated() == 0) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationUnitsCampusesByIdResponse
-                  .respond404WithTextPlain("Campus not found")));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationUnitsCampusesByIdResponse.respond204()));
-            }
-          }
-        });
+    PgUtil.put(CAMPUS_TABLE, entity, id, okapiHeaders, vertxContext,
+        PutLocationUnitsCampusesByIdResponse.class, asyncResultHandler);
   }
 
   ////////////////////////////////////////////
@@ -444,10 +307,11 @@ public class LocationUnitAPI implements LocationUnits {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
     String tenantId = TenantTool.tenantId(okapiHeaders);
     PostgresClient postgresClient = PostgresClient.getInstance(
       vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-    postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+    postgresClient.execute(String.format("DELETE FROM %s_%s.%s",
       tenantId, MOD_NAME, LIBRARY_TABLE),
       reply -> {
         if (reply.succeeded()) {
@@ -543,33 +407,8 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .get(LIBRARY_TABLE, Loclib.class, criterion,
-        true, false, getReply -> {
-          if (getReply.failed()) {
-            String message = StorageHelper.logAndSaveError(getReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              GetLocationUnitsLibrariesByIdResponse
-                .respond500WithTextPlain(message)));
-          } else {
-            List<Loclib> items = (List<Loclib>) getReply.result().getResults();
-            if (items.isEmpty()) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationUnitsLibrariesByIdResponse
-                  .respond404WithTextPlain(
-                    messages.getMessage(lang, MessageConsts.ObjectDoesNotExist))));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                GetLocationUnitsLibrariesByIdResponse
-                  .respond200WithApplicationJson(items.get(0))));
-            }
-          }
-        });
+    PgUtil.getById(LIBRARY_TABLE, Loclib.class, id, okapiHeaders, vertxContext,
+        GetLocationUnitsLibrariesByIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -577,28 +416,8 @@ public class LocationUnitAPI implements LocationUnits {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .delete(LIBRARY_TABLE, criterion, deleteReply -> {
-        if (deleteReply.failed()) {
-          StorageHelper.logAndSaveError(deleteReply.cause());
-          if (StorageHelper.isInUse(deleteReply.cause().getMessage())) {
-            asyncResultHandler.handle(Future.succeededFuture(
-              DeleteLocationUnitsLibrariesByIdResponse
-                .respond400WithTextPlain("Library is in use, can not be deleted")));
-          } else {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationUnitsLibrariesByIdResponse.respond404WithTextPlain("Library not found")));
-          }
-        } else {
-          asyncResultHandler.handle(Future.succeededFuture(
-            DeleteLocationUnitsLibrariesByIdResponse.respond204()));
-        }
-      });
+    PgUtil.deleteById(LIBRARY_TABLE, id, okapiHeaders, vertxContext,
+        DeleteLocationUnitsLibrariesByIdResponse.class, asyncResultHandler);
   }
 
   @Override
@@ -607,36 +426,14 @@ public class LocationUnitAPI implements LocationUnits {
     String lang, Loclib entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation: Library id cannot be changed";
       asyncResultHandler.handle(Future.succeededFuture(
         PutLocationUnitsLibrariesByIdResponse.respond400WithTextPlain(message)));
       return;
     }
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
-    Criterion criterion = StorageHelper.idCriterion(id, asyncResultHandler);
-    if (criterion == null) {
-      return; // error already handled
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .update(LIBRARY_TABLE, entity, criterion,
-        false, updateReply -> {
-          if (updateReply.failed()) {
-            String message = StorageHelper.logAndSaveError(updateReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              PutLocationUnitsLibrariesByIdResponse
-                .respond500WithTextPlain(message)));
-          } else {
-            if (updateReply.result().getUpdated() == 0) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationUnitsLibrariesByIdResponse
-                  .respond404WithTextPlain("Library not found")));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                PutLocationUnitsLibrariesByIdResponse.respond204()));
-            }
-          }
-        });
+    PgUtil.put(LIBRARY_TABLE, entity, id, okapiHeaders, vertxContext,
+        PutLocationUnitsLibrariesByIdResponse.class, asyncResultHandler);
   }
-
 }
