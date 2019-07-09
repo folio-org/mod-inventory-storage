@@ -471,6 +471,33 @@
       ]
     },
     {
+      "id": "nature-of-content-terms",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/nature-of-content-terms",
+          "permissionsRequired": ["inventory-storage.nature-of-content-terms.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/nature-of-content-terms/{id}",
+          "permissionsRequired": ["inventory-storage.nature-of-content-terms.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/nature-of-content-terms",
+          "permissionsRequired": ["inventory-storage.nature-of-content-terms.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/nature-of-content-terms/{id}",
+          "permissionsRequired": ["inventory-storage.nature-of-content-terms.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/nature-of-content-terms/{id}",
+          "permissionsRequired": ["inventory-storage.nature-of-content-terms.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "classification-types",
       "version": "1.1",
       "handlers": [
@@ -1380,6 +1407,31 @@
       "description": "delete instance type in storage"
     },
     {
+      "permissionName": "inventory-storage.nature-of-content-terms.collection.get",
+      "displayName": "inventory storage - get content terms collection",
+      "description": "get nature-of-content terms collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.nature-of-content-terms.item.get",
+      "displayName": "inventory storage - get individual content term",
+      "description": "get individual nature-of-content term from storage"
+    },
+    {
+      "permissionName": "inventory-storage.nature-of-content-terms.item.post",
+      "displayName": "inventory storage - create individual content term",
+      "description": "create individual nature-of-content term in storage"
+    },
+    {
+      "permissionName": "inventory-storage.nature-of-content-terms.item.put",
+      "displayName": "inventory storage - modify content term",
+      "description": "modify nature-of-content term in storage"
+    },
+    {
+      "permissionName": "inventory-storage.nature-of-content-terms.item.delete",
+      "displayName": "inventory storage - delete individual content term",
+      "description": "delete nature-of-content term in storage"
+    },
+    {
       "permissionName": "inventory-storage.classification-types.collection.get",
       "displayName": "inventory storage - get classification types collection",
       "description": "get classification types collection from storage"
@@ -1803,6 +1855,11 @@
         "inventory-storage.instance-types.item.post",
         "inventory-storage.instance-types.item.put",
         "inventory-storage.instance-types.item.delete",
+        "inventory-storage.nature-of-content-terms.collection.get",
+        "inventory-storage.nature-of-content-terms.item.get",
+        "inventory-storage.nature-of-content-terms.item.post",
+        "inventory-storage.nature-of-content-terms.item.put",
+        "inventory-storage.nature-of-content-terms.item.delete",
         "inventory-storage.classification-types.collection.get",
         "inventory-storage.classification-types.item.get",
         "inventory-storage.classification-types.item.post",

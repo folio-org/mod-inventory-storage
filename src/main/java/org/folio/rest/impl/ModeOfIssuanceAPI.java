@@ -1,30 +1,26 @@
 package org.folio.rest.impl;
 
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
-import static org.folio.rest.tools.utils.ValidationHelper.isInvalidUUID;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.IssuanceMode;
 import org.folio.rest.jaxrs.model.IssuanceModes;
 import org.folio.rest.jaxrs.resource.ModesOfIssuance;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -42,8 +38,6 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
   private static final String LOCATION_PREFIX = "/modes-of-issuance/";
   private static final Logger LOG = LoggerFactory.getLogger(ModeOfIssuanceAPI.class);
   private static final Messages MESSAGES = Messages.getInstance();
-  private static final String IDFIELDNAME = "_id";
-
 
   @Override
   public void deleteModesOfIssuance(String lang, Map<String, String> okapiHeaders,
@@ -55,7 +49,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
         PostgresClient postgresClient = PostgresClient.getInstance(
                 vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
 
-        postgresClient.mutate(String.format("DELETE FROM %s_%s.%s",
+        postgresClient.execute(String.format("DELETE FROM %s_%s.%s",
                 tenantId, "mod_inventory_storage", RESOURCE_TABLE),
                 reply -> {
                   if (reply.succeeded()) {
@@ -170,48 +164,8 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
 
   @Override
   public void getModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-
-        Criterion c = new Criterion(
-                new Criteria().addField(IDFIELDNAME).setJSONB(false).setOperation("=").setValue("'" + modeOfIssuanceId + "'"));
-
-        
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(RESOURCE_TABLE, IssuanceMode.class, c, true,
-                reply -> {
-                  try {
-                    if (reply.succeeded()) {
-                      List<IssuanceMode> userGroup = reply.result().getResults();
-                      if (userGroup.isEmpty()) {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                                .respond404WithTextPlain(modeOfIssuanceId)));
-                      } else {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                                .respond200WithApplicationJson(userGroup.get(0))));
-                      }
-                    } else {
-                      LOG.error(reply.cause().getMessage(), reply.cause());
-                      if (isInvalidUUID(reply.cause().getMessage())) {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                                .respond404WithTextPlain(modeOfIssuanceId)));
-                      } else {
-                        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-                      }
-                    }
-                  } catch (Exception e) {
-                    LOG.error(e.getMessage(), e);
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-                  }
-                });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceByModeOfIssuanceIdResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
-      }
-    });
+    PgUtil.getById(RESOURCE_TABLE, IssuanceMode.class, modeOfIssuanceId, okapiHeaders, vertxContext,
+        GetModesOfIssuanceByModeOfIssuanceIdResponse.class, asyncResultHandler);
   }
 
   @Override

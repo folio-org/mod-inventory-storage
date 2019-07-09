@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
@@ -7,6 +8,7 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -32,8 +34,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.IOUtils;
 import org.folio.HttpStatus;
-import org.folio.rest.impl.InstanceStorageAPI;
 import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.JsonArrayHelper;
@@ -81,6 +83,9 @@ public class InstanceStorageTest extends TestBase {
     //StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     //StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
 
+
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     bookMaterialTypeId = UUID.fromString(
       new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
@@ -521,9 +526,12 @@ public class InstanceStorageTest extends TestBase {
   private void insert(TestContext testContext, PostgresClient pg, String prefix, int n) {
     Async async = testContext.async();
     String table = PostgresClient.convertToPsqlStandard(StorageTestSuite.TENANT_ID) + ".instance";
-    String sql = "INSERT INTO " + table + " SELECT uuid, json_build_object" +
-        "  ('title', '" + prefix + " ' || n, 'id', uuid)" +
-        "  FROM (SELECT generate_series(1, " + n + ") AS n, gen_random_uuid() AS uuid) AS uuids";
+    String sql = "INSERT INTO " + table +
+        " SELECT uuid, json_build_object('title', prefix || n, 'id', uuid)" +
+        " FROM (SELECT n, prefix, md5(prefix || n)::uuid AS uuid" +
+        "       FROM (SELECT generate_series(1, " + n + ") AS n, '" + prefix + " ' AS prefix) AS tmp1" +
+        "      ) AS tmp2";
+
     pg.execute(sql, testContext.asyncAssertSuccess(updated -> {
         testContext.assertEquals(n, updated.getUpdated());
         async.complete();
@@ -533,7 +541,7 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void canGetWithOptimizedSql(TestContext testContext) {
-    int n = InstanceStorageAPI.getOptimizedSqlSize() / 2;
+    int n = PgUtil.getOptimizedSqlSize() / 2;
     PostgresClient pg = PostgresClient.getInstance(StorageTestSuite.getVertx(), StorageTestSuite.TENANT_ID);
 
     // "b foo" records are before the getOptimizedSqlSize() limit
@@ -688,12 +696,13 @@ public class InstanceStorageTest extends TestBase {
 
     Response getResponse = getMarcJson(id);
     assertThat(getResponse.getStatusCode(), is(200));
+    assertThat(getResponse.getJson().getString("id"), is(id.toString()));
     assertThat(getResponse.getJson().getString("leader"), is("xxxxxnam a22yyyyy c 4500"));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("029857716"));
     assertThat(fields.getJsonObject(1).getJsonObject("245")
         .getJsonArray("subfields").getJsonObject(0).getString("a"), is("The Yearbook of Okapiology"));
-    assertThat(getResponse.getJson().size(), is(2));  // leader and fields
+    assertThat(getResponse.getJson().getMap().keySet(), containsInAnyOrder("id", "leader", "fields"));
   }
 
   @Test  // https://issues.folio.org/browse/MODINVSTOR-142?focusedCommentId=33665#comment-33665
@@ -847,8 +856,23 @@ public class InstanceStorageTest extends TestBase {
       client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
       Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
 
-      assertThat(searchResponse.getStatusCode(), is(200));
+      assertThat(searchResponse, statusCodeIs(200));
       return searchResponse.getJson();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Create the 5 example instances and run a get request using the provided cql query.
+   */
+  private void create5instances() {
+    try {
+      createInstance(smallAngryPlanet(UUID.randomUUID()));
+      createInstance(nod(UUID.randomUUID()));
+      createInstance(uprooted(UUID.randomUUID()));
+      createInstance(temeraire(UUID.randomUUID()));
+      createInstance(interestingTimes(UUID.randomUUID()));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -864,18 +888,23 @@ public class InstanceStorageTest extends TestBase {
    * @return the response as an JsonObject
    */
   private JsonObject searchForInstancesWithin5(String cql) {
-    try {
-      // RMB ensures en_US locale so that sorting behaves that same in all environments
-      createInstance(smallAngryPlanet(UUID.randomUUID()));
-      createInstance(nod(UUID.randomUUID()));
-      createInstance(uprooted(UUID.randomUUID()));
-      createInstance(temeraire(UUID.randomUUID()));
-      createInstance(interestingTimes(UUID.randomUUID()));
+    create5instances();
+    // RMB ensures en_US locale so that sorting behaves that same in all environments
+    return searchForInstances(cql);
+  }
 
-      return searchForInstances(cql);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+  /**
+   * Assert that the jsonObject contains an instances Array where each array element
+   * has one title String with the expectedTitles in the correct order.
+   */
+  private void matchInstanceTitles(JsonObject jsonObject, String ... expectedTitles) {
+    JsonArray foundInstances = jsonObject.getJsonArray("instances");
+    String [] titles = new String [foundInstances.size()];
+    for (int i=0; i<titles.length; i++) {
+      titles[i] = foundInstances.getJsonObject(i).getString("title");
     }
+    assertThat(titles, is(expectedTitles));
+    assertThat("totalRecords", jsonObject.getInteger("totalRecords"), is(expectedTitles.length));
   }
 
   /**
@@ -886,14 +915,7 @@ public class InstanceStorageTest extends TestBase {
    */
   private void canSort(String cql, String ... expectedTitles) {
     JsonObject searchBody = searchForInstancesWithin5(cql);
-    assertThat(searchBody.getInteger("totalRecords"), is(expectedTitles.length));
-    JsonArray foundInstances = searchBody.getJsonArray("instances");
-    assertThat(foundInstances.size(), is(expectedTitles.length));
-    String [] titles = new String [expectedTitles.length];
-    for (int i=0; i<expectedTitles.length; i++) {
-      titles[i] = foundInstances.getJsonObject(i).getString("title");
-    }
-    assertThat(titles, is(expectedTitles));
+    matchInstanceTitles(searchBody, expectedTitles);
   }
 
   @Test
@@ -917,6 +939,58 @@ public class InstanceStorageTest extends TestBase {
   @Test
   public void canSearchForInstancesUsingSimilarQueryToUILookAheadSearch() {
     canSort("title=\"upr*\" or contributors=\"name\": \"upr*\" or identifiers=\"value\": \"upr*\"", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsContributors1() {
+    canSort("contributors = /@name novik", "Uprooted", "Temeraire" );
+  }
+
+  @Test
+  public void arrayModifierfsContributors2() {
+    canSort("contributors = /@contributorNameTypeId = personal novik",  "Uprooted", "Temeraire");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers1() {
+    canSort("identifiers = /@value 9781447294146", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers2() {
+    canSort("identifiers = /@identifierTypeId = isbn 9781447294146", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers3() {
+    canSort("identifiers = /@identifierTypeId asin", "Nod");
+  }
+
+  @Test
+  public void canSearchWithoutSqlInjection() {
+    create5instances();
+
+    // check for MODINVSTOR-293:
+    // CQL identifiers=")" fails with "invalid regular expression: parentheses () not balanced" SQL Injection
+    String [] strings = { "'", "''",
+        "\\\"", "\\\"\\\"",
+        "(", "((", ")", "))",
+        "{", "{{", "}", "}}",
+    };
+
+    for (String s : strings) {
+      try {
+        // full text search ignores punctuation
+        matchInstanceTitles(searchForInstances("title=\"" + s + "Uprooted\""), "Uprooted");
+        // == will return 0 results
+        matchInstanceTitles(searchForInstances("title==\"" + s + "Uprooted\""));
+        // identifier search will always return 0 results
+        matchInstanceTitles(searchForInstances("identifiers=\"" + s + "\""));
+        matchInstanceTitles(searchForInstances("identifiers==\"" + s + "\""));
+      } catch (Exception e) {
+        throw new AssertionError(s, e);
+      }
+    }
   }
 
   @Test
@@ -1196,8 +1270,6 @@ public class InstanceStorageTest extends TestBase {
   public void testCrossTableQueries() throws Exception {
 
     String url = instancesStorageUrl("") + "?query=";
-
-    String holdingsURL = "/holdings-storage/holdings";
 
     //////// create instance objects /////////////////////////////
     JsonArray identifiers = new JsonArray();

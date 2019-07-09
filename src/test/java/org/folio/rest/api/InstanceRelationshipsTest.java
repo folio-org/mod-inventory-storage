@@ -5,9 +5,10 @@
  */
 package org.folio.rest.api;
 
-import static org.folio.rest.api.TestBase.client;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -27,7 +28,6 @@ import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
 
-
 /**
  *
  * @author ne
@@ -44,6 +44,8 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     TimeoutException,
     MalformedURLException {
 
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 

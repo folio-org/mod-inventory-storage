@@ -12,17 +12,18 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.ItemStorage;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 
 /**
  * CRUD for Item.
@@ -30,7 +31,6 @@ import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 public class ItemStorageAPI implements ItemStorage {
 
   static final String ITEM_TABLE = "item";
-  private static final String ITEM_MATERIALTYPE_VIEW = "items_mt_view";
 
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
   private static final String DEFAULT_STATUS_NAME = "Available";
@@ -129,7 +129,7 @@ public class ItemStorageAPI implements ItemStorage {
     if (entity.getStatus() == null) {
       entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
     }
-    StorageHelper.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
+    PgUtil.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
         PostItemStorageItemsResponse.class, asyncResultHandler);
   }
 
@@ -140,7 +140,7 @@ public class ItemStorageAPI implements ItemStorage {
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    StorageHelper.getById(ITEM_TABLE, Item.class, itemId, okapiHeaders, vertxContext,
+    PgUtil.getById(ITEM_TABLE, Item.class, itemId, okapiHeaders, vertxContext,
         GetItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 
@@ -175,7 +175,7 @@ public class ItemStorageAPI implements ItemStorage {
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    StorageHelper.put(ITEM_TABLE, entity, itemId, okapiHeaders, vertxContext,
+    PgUtil.put(ITEM_TABLE, entity, itemId, okapiHeaders, vertxContext,
         PutItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 
@@ -186,7 +186,7 @@ public class ItemStorageAPI implements ItemStorage {
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    StorageHelper.deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
+    PgUtil.deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
         DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 }

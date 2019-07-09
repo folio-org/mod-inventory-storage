@@ -2,11 +2,13 @@
   "issuanceModes": [
     {
       "id": "9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
-      "name": "A mode of issuance"
+      "name": "A mode of issuance",
+      "source": "folio"
     },
     {
       "id": "2463bd81-a745-4c70-bfe6-3ec168ae8bd1",
-      "name": "Another mode of issuance"
+      "name": "Another mode of issuance",
+      "source": "folio"
     }
   ],
   "totalRecords": 2
