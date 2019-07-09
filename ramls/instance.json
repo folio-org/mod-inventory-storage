@@ -250,7 +250,22 @@
       "type": "array",
       "description": "Bibliographic notes (e.g. general notes, specialized notes), and administrative notes",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "instanceNoteTypeId": {
+            "description": "ID of the type of note",
+            "$ref": "uuid.json"
+          },
+          "note": {
+            "type": "string",
+            "description": "Text content of the note"
+          },
+          "staffOnly": {
+            "type": "boolean",
+            "description": "If true, determines that the note should not be visible for others than staff",
+            "default": false
+          }
+        }
       }
     },
     "modeOfIssuanceId": {

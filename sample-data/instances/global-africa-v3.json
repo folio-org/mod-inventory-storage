@@ -67,7 +67,7 @@
       "uri": "http://www.gbv.de/dms/zbw/880159367.pdf",
       "linkText": "Electronic resource (PDF)",
       "publicNote": "Address for accessing the table of content. PDF file"
-    } 
+    }
   ],
   "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
   "physicalDescriptions": [
@@ -77,8 +77,20 @@
     "eng"
   ],
   "notes": [
-    "Enthält 16 Beiträge",
-    "Includes bibliographical references and index",
-    "Introduction / Mike Odugbo Odey and Toyin Falola -- Part I: Dimensions and assessments of poverty reduction policies and programs in Sub-Saharan Africa -- Poverty in post-colonial Africa: the legacy of contested perspectives / Sati U. Fwatshak -- Scaling up power infrastructure investment in Sub-Saharan Africa for poverty alleviation / Aori R. Nyambati -- The impact of anti-corruption conventions in Sub-Saharan Africa / Daniel Barkley and Claire Maduka -- The besieged continent: interrogating contemporary issues of corruption and poverty in Africa / Idris S. Jimada -- PEPFAR and preventing HIV transmission: evidence from Sub-Saharan Africa / Daniel Barkley and Opeyemi Adeniyi -- Reflections on the current challenges of poverty reduction in Africa / Loveday N. Gbara -- A critical analysis of poverty reduction strategies in post-colonial Africa / Okokhere O. Felix -- Part II: Problems of good governance and institutional failures in West-Africa -- Weaknesses and failures of poverty reduction policies and programs in Nigeria since 1960 / Mike O. Odey -- In the web of neo-liberalism and deepening contradictions? Assessing poverty reform strategies in West Africa since the mid-1980s / Okpeh O. Okpeh, Jr. -- An assessment of abuse of the elderly as an aspect of poverty in Akwa-Ibom State, Nigeria / Ekot O. Mildred -- Reflections on the interface between poverty and food insecurity in Nigeria / Funso A. Adesola -- An appraisal of poverty reduction program in Bayelsa State of Nigeria: \\\"In-Care of the People\\\" (COPE) / Ezi Beedie -- A comparative analysis of incidence of poverty in three urban centers in Ghana from 1945-1990 / Wilhelmina J. Donkoh -- Part III: Dimensions of poverty in east and southern Africa -- Landlessness, national politics, and the future of land reforms in Kenya / Shanguhyia S. Martin -- Extra-version and development in northwestern Ethiopia: the case of the Humera Agricultural Project (1967-1975) / Luca Pudu -- Affirmative action as a theological-pastoral challenge in the south-African democratic context / Elijah M. Baloyi."
+    {
+      "note": "Enthält 16 Beiträge",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    },
+    {
+      "note": "Includes bibliographical references and index",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    },
+    {
+      "note": "Introduction / Mike Odugbo Odey and Toyin Falola -- Part I: Dimensions and assessments of poverty reduction policies and programs in Sub-Saharan Africa -- Poverty in post-colonial Africa: the legacy of contested perspectives / Sati U. Fwatshak -- Scaling up power infrastructure investment in Sub-Saharan Africa for poverty alleviation / Aori R. Nyambati -- The impact of anti-corruption conventions in Sub-Saharan Africa / Daniel Barkley and Claire Maduka -- The besieged continent: interrogating contemporary issues of corruption and poverty in Africa / Idris S. Jimada -- PEPFAR and preventing HIV transmission: evidence from Sub-Saharan Africa / Daniel Barkley and Opeyemi Adeniyi -- Reflections on the current challenges of poverty reduction in Africa / Loveday N. Gbara -- A critical analysis of poverty reduction strategies in post-colonial Africa / Okokhere O. Felix -- Part II: Problems of good governance and institutional failures in West-Africa -- Weaknesses and failures of poverty reduction policies and programs in Nigeria since 1960 / Mike O. Odey -- In the web of neo-liberalism and deepening contradictions? Assessing poverty reform strategies in West Africa since the mid-1980s / Okpeh O. Okpeh, Jr. -- An assessment of abuse of the elderly as an aspect of poverty in Akwa-Ibom State, Nigeria / Ekot O. Mildred -- Reflections on the interface between poverty and food insecurity in Nigeria / Funso A. Adesola -- An appraisal of poverty reduction program in Bayelsa State of Nigeria: \\\"In-Care of the People\\\" (COPE) / Ezi Beedie -- A comparative analysis of incidence of poverty in three urban centers in Ghana from 1945-1990 / Wilhelmina J. Donkoh -- Part III: Dimensions of poverty in east and southern Africa -- Landlessness, national politics, and the future of land reforms in Kenya / Shanguhyia S. Martin -- Extra-version and development in northwestern Ethiopia: the case of the Humera Agricultural Project (1967-1975) / Luca Pudu -- Affirmative action as a theological-pastoral challenge in the south-African democratic context / Elijah M. Baloyi.",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    }
   ]
 }
