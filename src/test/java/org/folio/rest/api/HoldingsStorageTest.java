@@ -43,7 +43,7 @@ import org.junit.Test;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class HoldingsStorageTest extends TestBase {
+public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static UUID mainLibraryLocationId;
   private static UUID annexLibraryLocationId;
 
@@ -510,92 +510,57 @@ public class HoldingsStorageTest extends TestBase {
 
   private JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "9781473619777"));
+    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Chambers, Becky"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
 
     return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID().toString());
-  }
-
-  private JsonObject identifier(String identifierTypeId, String value) {
-    return new JsonObject()
-      .put("identifierTypeId", identifierTypeId)
-      .put("value", value);
-  }
-
-  private JsonObject contributor(String contributorNameTypeId, String name) {
-    return new JsonObject()
-      .put("contributorNameTypeId", contributorNameTypeId)
-      .put("name", name);
-  }
-
-  private JsonObject createInstanceRequest(
-    UUID id,
-    String source,
-    String title,
-    JsonArray identifiers,
-    JsonArray contributors,
-    String instanceTypeId) {
-
-    JsonObject instanceToCreate = new JsonObject();
-
-    if(id != null) {
-      instanceToCreate.put("id",id.toString());
-    }
-
-    instanceToCreate.put("title", title);
-    instanceToCreate.put("source", source);
-    instanceToCreate.put("identifiers", identifiers);
-    instanceToCreate.put("contributors", contributors);
-    instanceToCreate.put("instanceTypeId", instanceTypeId);
-
-    return instanceToCreate;
+      identifiers, contributors, UUID.randomUUID());
   }
 
   private JsonObject nod(UUID id) {
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("asin", "B01D1PLMDO"));
+    identifiers.add(identifier(UUID_ASIN, "B01D1PLMDO"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Barnes, Adrian"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Barnes, Adrian"));
     return createInstanceRequest(id, "TEST", "Nod",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
   }
 
   private JsonObject uprooted(UUID id) {
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "1447294149"));
-    identifiers.add(identifier("isbn", "9781447294146"));
+    identifiers.add(identifier(UUID_ISBN, "1447294149"));
+    identifiers.add(identifier(UUID_ISBN, "9781447294146"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Novik, Naomi"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
 
     return createInstanceRequest(id, "TEST", "Uprooted",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
   }
 
   private JsonObject temeraire(UUID id) {
 
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "0007258712"));
-    identifiers.add(identifier("isbn", "9780007258710"));
+    identifiers.add(identifier(UUID_ISBN, "0007258712"));
+    identifiers.add(identifier(UUID_ISBN, "9780007258710"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Novik, Naomi"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
     return createInstanceRequest(id, "TEST", "Temeraire",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
   }
 
   private JsonObject interestingTimes(UUID id) {
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "0552167541"));
-    identifiers.add(identifier("isbn", "9780552167541"));
+    identifiers.add(identifier(UUID_ISBN, "0552167541"));
+    identifiers.add(identifier(UUID_ISBN, "9780552167541"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Pratchett, Terry"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Pratchett, Terry"));
     return createInstanceRequest(id, "TEST", "Interesting Times",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
   }
 
   private Predicate<JsonObject> filterById(UUID holdingId) {
