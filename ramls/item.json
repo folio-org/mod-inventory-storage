@@ -115,6 +115,10 @@
       "items": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the circulation note"
+          },
           "noteType": {
             "type": "string",
             "description": "Type of circulation process that the note applies to",
