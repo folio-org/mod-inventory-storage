@@ -59,7 +59,11 @@
     "eng"
   ],
   "notes": [
-    "Bridget Jones finds herself unexpectedly pregnant at the eleventh hour. However, her joyful pregnancy is dominated by one crucial but awkward question --who is the father? Could it be honorable, decent, notable human rights lawyer, Mark Darcy? Or, is it charming, witty, and totally despicable, Daniel Cleaver?"
+    {
+      "note": "Bridget Jones finds herself unexpectedly pregnant at the eleventh hour. However, her joyful pregnancy is dominated by one crucial but awkward question --who is the father? Could it be honorable, decent, notable human rights lawyer, Mark Darcy? Or, is it charming, witty, and totally despicable, Daniel Cleaver?",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    }
   ],
   "previouslyHeld": true,
   "staffSuppress": true,

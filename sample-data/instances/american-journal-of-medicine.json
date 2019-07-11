@@ -2,16 +2,16 @@
   "id" : "30fcc8e7-a019-43f4-b642-2edc389f4501",
   "source" : "MARC",
   "title" : "The American Journal of Medicine",
-  "alternativeTitles" : [ 
+  "alternativeTitles" : [
     {
-      "alternativeTitle": "The American journal of medicine Ionline)"
-    }, 
-    { 
+      "alternativeTitle": "The American journal of medicine (online)"
+    },
+    {
       "alternativeTitle": "Am. J. med"
-    }, 
+    },
     {
-      "alternativeTitle": "Green journal" 
-    } 
+      "alternativeTitle": "Green journal"
+    }
   ],
   "series" : [ ],
   "identifiers" : [ {
@@ -41,5 +41,36 @@
   "instanceTypeId" : "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
   "physicalDescriptions" : [ "v., ill. 27 cm." ],
   "languages" : [ "eng" ],
-  "notes" : [ "Print subscription cancelled by Dec. 2016.", "May 1988-: \"A Yorke medical. Also known as the Green journal", "Publisher: Excerpta Medica, 2008-; New York, NY : Elsevier Inc. 2013-", "Supplements issued irregularly, 1982.", "Official journal of the Association of Professors of Medicine 2005-", "Indexed quinquennially in: American journal of medicine 5 year cumulative index" ]
+  "notes" : [
+    {
+      "note": "Print subscription cancelled by Dec. 2016.",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    },
+    {
+      "note": "May 1988-: A Yorke medical. Also known as the Green journal",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    },
+    {
+      "note": "Publisher: Excerpta Medica, 2008-; New York, NY : Elsevier Inc. 2013-",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    },
+    {
+      "note": "Supplements issued irregularly, 1982.",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    },
+    {
+      "note": "Official journal of the Association of Professors of Medicine 2005-",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    },
+    {
+      "note": "Indexed quinquennially in: American journal of medicine 5 year cumulative index",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    }
+  ]
 }
