@@ -19,15 +19,19 @@
   "receiptStatus" : "Not currently received",
   "notes" : [ {
     "note" : " Subscription cancelled per Evans Current Periodicals Selector Review. acq",
+    "holdingsNoteTypeId": "b160f13a-ddba-4053-b9c4-60ec5ea45d56",
     "staffOnly" : true
   }, {
     "note" : "Asked Ebsco to check with publisher and ask what years were paid since we are missing (2001:Oct.-Dec.), (All of 2002), & (2003:Jan.-Feb.). 20030305. evaldez",
+    "holdingsNoteTypeId": "b160f13a-ddba-4053-b9c4-60ec5ea45d56",
     "staffOnly" : false
   }, {
     "note" : "Backorder:v.87(2001:Oct.-Dec)-v.88(2002). eluza",
+    "holdingsNoteTypeId": "b160f13a-ddba-4053-b9c4-60ec5ea45d56",
     "staffOnly" : false
   }, {
     "note" : "WITH 2010 TREAT ISSUE S AS DISCARDS. dgill",
+    "holdingsNoteTypeId": "b160f13a-ddba-4053-b9c4-60ec5ea45d56",
     "staffOnly" : false
   } ],
   "retentionPolicy" : "Permanently retained.",
