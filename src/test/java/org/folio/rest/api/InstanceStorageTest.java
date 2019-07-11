@@ -943,12 +943,12 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void arrayModifierfsContributors1() {
-    canSort("contributors = /@name novik", "Uprooted", "Temeraire" );
+    canSort("contributors = /@name novik sortby title", "Temeraire", "Uprooted");
   }
 
   @Test
   public void arrayModifierfsContributors2() {
-    canSort("contributors = /@contributorNameTypeId = personal novik",  "Uprooted", "Temeraire");
+    canSort("contributors = /@contributorNameTypeId = personal novik sortby title", "Temeraire", "Uprooted" );
   }
 
   @Test
