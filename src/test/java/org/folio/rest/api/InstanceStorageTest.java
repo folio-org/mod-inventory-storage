@@ -8,11 +8,11 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
@@ -62,7 +62,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
  * @see org.folio.rest.impl.InstanceStorageAPITest
  */
 @RunWith(VertxUnitRunner.class)
-public class InstanceStorageTest extends TestBase {
+public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static UUID mainLibraryLocationId;
   private static UUID annexLocationId;
   private static UUID bookMaterialTypeId;
@@ -136,7 +136,7 @@ public class InstanceStorageTest extends TestBase {
 
     JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
-    assertThat(identifiers, hasItem(identifierMatches("isbn", "9781473619777")));
+    assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
 
     Response getResponse = getById(id);
 
@@ -149,7 +149,7 @@ public class InstanceStorageTest extends TestBase {
 
     JsonArray identifiersFromGet = instanceFromGet.getJsonArray("identifiers");
     assertThat(identifiersFromGet.size(), is(1));
-    assertThat(identifiersFromGet, hasItem(identifierMatches("isbn", "9781473619777")));
+    assertThat(identifiersFromGet, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
   }
 
   @Test
@@ -187,7 +187,7 @@ public class InstanceStorageTest extends TestBase {
 
     JsonArray identifiers = instanceFromGet.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
-    assertThat(identifiers, hasItem(identifierMatches("isbn", "9781473619777")));
+    assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
   }
 
   @Test
@@ -200,10 +200,10 @@ public class InstanceStorageTest extends TestBase {
     String id = "6556456";
 
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "9781473619777"));
+    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Chambers, Becky"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
 
     JsonObject instanceToCreate = new JsonObject();
 
@@ -212,18 +212,18 @@ public class InstanceStorageTest extends TestBase {
     instanceToCreate.put("title", "Long Way to a Small Angry Planet");
     instanceToCreate.put("identifiers", identifiers);
     instanceToCreate.put("contributors", contributors);
-    instanceToCreate.put("instanceTypeId", "resource type id");
+    instanceToCreate.put("instanceTypeId", UUID_TEXT.toString());
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(instancesStorageUrl(""), instanceToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.json(createCompleted));
 
     Response response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getStatusCode(), is(422));
 
-    assertThat(response.getBody(), containsString("ID must be a UUID"));
+    assertThat(response.getBody(), containsString("must match"));
   }
 
   @Test
@@ -281,7 +281,7 @@ public class InstanceStorageTest extends TestBase {
     JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID());
 
     requestWithAdditionalProperty
-      .getJsonArray("identifiers").add(identifier("isbn", "5645678432576")
+      .getJsonArray("identifiers").add(identifier(UUID_ISBN, "5645678432576")
       .put("somethingAdditional", "foo"));
 
     CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
@@ -385,7 +385,7 @@ public class InstanceStorageTest extends TestBase {
 
     JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
-    assertThat(identifiers, hasItem(identifierMatches("isbn", "9781473619777")));
+    assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
   }
 
   @Test
@@ -437,14 +437,14 @@ public class InstanceStorageTest extends TestBase {
 
     assertThat(firstInstance.getJsonArray("identifiers").size(), is(1));
     assertThat(firstInstance.getJsonArray("identifiers"),
-      hasItem(identifierMatches("isbn", "9781473619777")));
+      hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
 
     assertThat(secondInstance.getString("id"), is(secondInstanceId.toString()));
     assertThat(secondInstance.getString("title"), is("Nod"));
 
     assertThat(secondInstance.getJsonArray("identifiers").size(), is(1));
     assertThat(secondInstance.getJsonArray("identifiers"),
-      hasItem(identifierMatches("asin", "B01D1PLMDO")));
+      hasItem(identifierMatches(UUID_ASIN.toString(), "B01D1PLMDO")));
   }
 
   @Test
@@ -842,7 +842,7 @@ public class InstanceStorageTest extends TestBase {
    */
   private JsonObject searchForInstances(String cql, int offset, int limit) {
     try {
-      CompletableFuture<Response> searchCompleted = new CompletableFuture<Response>();
+      CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
       String url = instancesStorageUrl("").toString() + "?query="
           + URLEncoder.encode(cql, StandardCharsets.UTF_8.name());
@@ -943,12 +943,12 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void arrayModifierfsContributors1() {
-    canSort("contributors = /@name novik", "Uprooted", "Temeraire" );
+    canSort("contributors = /@name novik sortBy title ", "Temeraire", "Uprooted" );
   }
 
   @Test
   public void arrayModifierfsContributors2() {
-    canSort("contributors = /@contributorNameTypeId = personal novik",  "Uprooted", "Temeraire");
+    canSort("contributors = /@contributorNameTypeId = " + UUID_PERSONAL_NAME + " novik sortBy title", "Temeraire", "Uprooted");
   }
 
   @Test
@@ -958,12 +958,12 @@ public class InstanceStorageTest extends TestBase {
 
   @Test
   public void arrayModifierfsIdentifiers2() {
-    canSort("identifiers = /@identifierTypeId = isbn 9781447294146", "Uprooted");
+    canSort("identifiers = /@identifierTypeId = " + UUID_ISBN + " 9781447294146", "Uprooted");
   }
 
   @Test
   public void arrayModifierfsIdentifiers3() {
-    canSort("identifiers = /@identifierTypeId asin", "Nod");
+    canSort("identifiers = /@identifierTypeId " + UUID_ASIN, "Nod");
   }
 
   @Test
@@ -1273,19 +1273,19 @@ public class InstanceStorageTest extends TestBase {
 
     //////// create instance objects /////////////////////////////
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "9781473619777"));
+    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Chambers, Becky"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
 
     UUID idJ1 = UUID.randomUUID();
     JsonObject j1 = createInstanceRequest(idJ1, "TEST1", "Long Way to a Small Angry Planet 1",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
     UUID idJ2 = UUID.randomUUID();
     JsonObject j2 = createInstanceRequest(idJ2, "TEST2", "Long Way to a Small Angry Planet 2",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
     UUID idJ3 = UUID.randomUUID();
     JsonObject j3 = createInstanceRequest(idJ3, "TEST3", "Long Way to a Small Angry Planet 3",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
 
     createInstance(j1);
     createInstance(j2);
@@ -1407,25 +1407,14 @@ public class InstanceStorageTest extends TestBase {
 
   private JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "9781473619777"));
+    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Chambers, Becky"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
 
     return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID().toString());
+      identifiers, contributors, UUID.randomUUID());
   }
 
-  private JsonObject identifier(String identifierTypeId, String value) {
-    return new JsonObject()
-      .put("identifierTypeId", identifierTypeId)
-      .put("value", value);
-  }
-
-  private JsonObject contributor(String contributorNameTypeId, String name) {
-    return new JsonObject()
-      .put("contributorNameTypeId", contributorNameTypeId)
-      .put("name", name);
-  }
 
   private Response getById(UUID id)
     throws MalformedURLException, InterruptedException,
@@ -1458,72 +1447,49 @@ public class InstanceStorageTest extends TestBase {
     }
   }
 
-  private JsonObject createInstanceRequest(
-    UUID id,
-    String source,
-    String title,
-    JsonArray identifiers,
-    JsonArray contributors,
-    String instanceTypeId) {
-
-    JsonObject instanceToCreate = new JsonObject();
-
-    if(id != null) {
-      instanceToCreate.put("id",id.toString());
-    }
-
-    instanceToCreate.put("title", title);
-    instanceToCreate.put("source", source);
-    instanceToCreate.put("identifiers", identifiers);
-    instanceToCreate.put("contributors", contributors);
-    instanceToCreate.put("instanceTypeId", instanceTypeId);
-
-    return instanceToCreate;
-  }
-
   private JsonObject nod(UUID id) {
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("asin", "B01D1PLMDO"));
+    identifiers.add(identifier(UUID_ASIN, "B01D1PLMDO"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Barnes, Adrian"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Barnes, Adrian"));
     return createInstanceRequest(id, "TEST", "Nod",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
   }
 
   private JsonObject uprooted(UUID id) {
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "1447294149"));
-    identifiers.add(identifier("isbn", "9781447294146"));
+    identifiers.add(identifier(UUID_ISBN, "1447294149"));
+    identifiers.add(identifier(UUID_ISBN, "9781447294146"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Novik, Naomi"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
 
     return createInstanceRequest(id, "TEST", "Uprooted",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
   }
 
   private JsonObject temeraire(UUID id) {
 
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "0007258712"));
-    identifiers.add(identifier("isbn", "9780007258710"));
+    identifiers.add(identifier(UUID_ISBN, "0007258712"));
+    identifiers.add(identifier(UUID_ISBN, "9780007258710"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Novik, Naomi"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
     return createInstanceRequest(id, "TEST", "Temeraire",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
   }
 
   private JsonObject interestingTimes(UUID id) {
     JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier("isbn", "0552167541"));
-    identifiers.add(identifier("isbn", "9780552167541"));
+    identifiers.add(identifier(UUID_ISBN, "0552167541"));
+    identifiers.add(identifier(UUID_ISBN, "9780552167541"));
 
     JsonArray contributors = new JsonArray();
-    contributors.add(contributor("personal name", "Pratchett, Terry"));
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Pratchett, Terry"));
     return createInstanceRequest(id, "TEST", "Interesting Times",
-      identifiers, contributors, "resource type id");
+      identifiers, contributors, UUID_TEXT);
   }
 
   private void createItem(JsonObject itemToCreate)
