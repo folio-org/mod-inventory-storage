@@ -5,7 +5,8 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "The system assigned unique ID of the instance record; UUID"
+      "description": "The system assigned unique ID of the instance record; a UUID",
+      "$ref": "uuid.json"
     },
     "hrid": {
       "type": "string",
@@ -31,7 +32,8 @@
         "properties": {
           "alternativeTitleTypeId": {
             "type": "string",
-            "description": "ID for an alternative title qualifier"
+            "description": "UUID for an alternative title qualifier",
+            "$ref": "uuid.json"
           },
           "alternativeTitle": {
             "type": "string",
@@ -70,7 +72,8 @@
           },
           "identifierTypeId": {
             "type": "string",
-            "description": "Resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)"
+            "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
+            "$ref": "uuid.json"
           }
         },
         "additionalProperties": false,
@@ -93,7 +96,8 @@
           },
           "contributorTypeId": {
             "type": "string",
-            "description": "ID for the contributor type term defined as a referencetable in settings"
+            "description": "UUID for the contributor type term defined in controlled vocabulary",
+            "$ref": "uuid.json"
           },
           "contributorTypeText": {
             "type": "string",
@@ -101,7 +105,8 @@
           },
           "contributorNameTypeId": {
             "type": "string",
-            "description": "Contributor type terms defined by the MARC code list for relators"
+            "description": "UUID of contributor name type term defined by the MARC code list for relators",
+            "$ref": "uuid.json"
           },
           "primary": {
             "type": "boolean",
@@ -136,7 +141,8 @@
           },
           "classificationTypeId": {
             "type": "string",
-            "description": "List of classification schemas (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)"
+            "description": "UUID of classification schema (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)",
+            "$ref": "uuid.json"
           }
         },
         "additionalProperties": false,
@@ -211,7 +217,8 @@
           },
           "relationshipId": {
             "type": "string",
-            "description": "Relationship between the electronic resource at the location identified and the item described in the record as a whole"
+            "description": "UUID for the type of relationship between the electronic resource at the location identified and the item described in the record as a whole",
+            "$ref": "uuid.json"
           }
         },
         "additionalProperties": false,
@@ -222,13 +229,15 @@
     },
     "instanceTypeId": {
       "type": "string",
-      "description": "The unique term for the resource type whether it's from the RDA content term list of locally defined"
+      "description": "UUID of the unique term for the resource type whether it's from the RDA content term list of locally defined",
+      "$ref": "uuid.json"
     },
     "instanceFormatIds": {
       "type": "array",
-      "description": "The unique term for the format whether it's from the RDA carrier term list of locally defined",
+      "description": "UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined",
       "items": {
-        "type": "string"
+        "type": "string",
+        "$ref": "uuid.json"
       }
     },
     "physicalDescriptions": {
@@ -250,12 +259,28 @@
       "type": "array",
       "description": "Bibliographic notes (e.g. general notes, specialized notes), and administrative notes",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "instanceNoteTypeId": {
+            "description": "ID of the type of note",
+            "$ref": "uuid.json"
+          },
+          "note": {
+            "type": "string",
+            "description": "Text content of the note"
+          },
+          "staffOnly": {
+            "type": "boolean",
+            "description": "If true, determines that the note should not be visible for others than staff",
+            "default": false
+          }
+        }
       }
     },
     "modeOfIssuanceId": {
       "type": "string",
-      "description": "RDA mode of issuance is a categorization reflecting whether a resource is issued in one or more parts, the way it is updated, and whether its termination is predetermined or not (e.g. monograph,  sequential monograph, serial; integrating Resource, other)"
+      "description": "UUID of the RDA mode of issuance, a categorization reflecting whether a resource is issued in one or more parts, the way it is updated, and whether its termination is predetermined or not (e.g. monograph,  sequential monograph, serial; integrating Resource, other)",
+      "$ref": "uuid.json"
     },
     "catalogedDate": {
       "type": "string",
@@ -277,7 +302,8 @@
       "type": "array",
       "description": "List of statistical code IDs",
       "items": {
-        "type": "string"
+        "type": "string",
+        "$ref": "uuid.json"
       },
       "uniqueItems": true
     },
@@ -289,7 +315,8 @@
     },
     "statusId": {
       "type": "string",
-      "description": "Instance status term (e.g. cataloged, uncatalogued, batch loaded, temporary, other, not yet assigned)"
+      "description": "UUID for the Instance status term (e.g. cataloged, uncatalogued, batch loaded, temporary, other, not yet assigned)",
+      "$ref": "uuid.json"
     },
     "statusUpdatedDate": {
       "type": "string",

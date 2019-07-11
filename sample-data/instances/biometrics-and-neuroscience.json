@@ -75,6 +75,10 @@
     "eng"
   ],
   "notes": [
-    "Enthält 9 Beiträge"
+    {
+      "note": "Enthält 9 Beiträge",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    }
   ]
 }
