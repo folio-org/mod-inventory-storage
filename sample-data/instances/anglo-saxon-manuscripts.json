@@ -74,7 +74,16 @@
     "lat"
   ],
   "notes": [
-    "Titel und Angaben zu beteiligter Person vom Begleitheft",
-    "In English with segments in Anglo-Saxon and Latin"
+    {
+      "note": "Titel und Angaben zu beteiligter Person vom Begleitheft",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+      
+    },
+    {
+      "note": "In English with segments in Anglo-Saxon and Latin",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    }
   ]
 }

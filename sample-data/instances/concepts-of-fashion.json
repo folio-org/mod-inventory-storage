@@ -37,7 +37,13 @@
     "eng"
   ],
   "notes": [
-    "Dissertation New York University 1993",
-    "Mikrofiche-Ausgabe"
+    {
+      "note": "Dissertation New York University 1993"
+    },
+    {
+      "note": "Mikrofiche-Ausgabe",
+      "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "staffOnly": false
+    }
   ]
 }
