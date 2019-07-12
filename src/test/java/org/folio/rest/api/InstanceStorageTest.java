@@ -4,6 +4,7 @@ import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
@@ -46,6 +47,7 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -1369,6 +1371,89 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         assertThat(0, is(cqlResponse.getJson().getInteger("totalRecords")));
       }
     }
+  }
+
+  @Test
+  public void canCreateACollectionOfInstances()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id_1 = UUID.randomUUID();
+    UUID id_2 = UUID.randomUUID();
+
+    JsonObject instanceToCreate_1 = smallAngryPlanet(id_1);
+    JsonObject instanceToCreate_2 = smallAngryPlanet(id_2);
+
+    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+      .put("instances", new JsonArray().add(instanceToCreate_1).add(instanceToCreate_2))
+      .put("totalRecords", 2));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(instancesStorageBatchInstancesUrl(""), instanceCollection, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject instancesResponse = response.getJson();
+
+    assertThat(instancesResponse.getInteger("totalRecords"), is(2));
+
+    JsonArray instances = instancesResponse.getJsonArray("instances");
+    assertThat(instances.size(), is(2));
+    assertThat(instances.getJsonObject(0).getString("id"), is(id_1.toString()));
+    assertThat(instances.getJsonObject(1).getString("id"), is(id_2.toString()));
+
+    Response getResponse_1 = getById(id_1);
+    assertThat(getResponse_1.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    Response getResponse_2 = getById(id_2);
+    assertThat(getResponse_2.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+  }
+
+  @Test
+  public void canCreateInstancesEvenIfSomeFailed()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID id_1 = UUID.randomUUID();
+
+    JsonObject instanceToCreate_1 = smallAngryPlanet(id_1);
+    JsonObject instanceToCreate_2 = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
+
+    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+      .put("instances", new JsonArray().add(instanceToCreate_1).add(instanceToCreate_2))
+      .put("totalRecords", 2));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(instancesStorageBatchInstancesUrl(""), instanceCollection, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+
+    JsonObject instancesResponse = response.getJson();
+
+    assertThat(instancesResponse.getInteger("totalRecords"), is(1));
+
+    JsonArray errorMessages = instancesResponse.getJsonArray("errorMessages");
+    assertThat(errorMessages.size(), is(1));
+    assertThat(errorMessages.getString(0), notNullValue());
+
+    JsonArray instances = instancesResponse.getJsonArray("instances");
+    assertThat(instances.size(), is(1));
+    assertThat(instances.getJsonObject(0).getString("id"), is(id_1.toString()));
+
+    Response getResponse_1 = getById(id_1);
+    assertThat(getResponse_1.getStatusCode(), is(HttpURLConnection.HTTP_OK));
   }
 
   private void createHoldings(JsonObject holdingsToCreate)
