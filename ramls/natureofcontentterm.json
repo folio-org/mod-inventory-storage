@@ -4,7 +4,7 @@
   "type": "object",
   "properties": {
     "id": {
-      "description": "unique ID of the nature-of-content term; a UUID",
+      "description": "unique ID of the nature-of-content term",
       "$ref": "uuid.json"
     },
     "name": {
