@@ -771,7 +771,7 @@
         },
         {
           "fieldName": "barcode",
-          "tOps": "ADD"
+          "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
         },
