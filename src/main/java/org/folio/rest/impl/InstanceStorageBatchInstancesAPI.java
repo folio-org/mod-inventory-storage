@@ -48,13 +48,13 @@ public class InstanceStorageBatchInstancesAPI implements InstanceStorageBatchIns
 
         CompositeFuture.join(new ArrayList<>(savedInstances.values())).setHandler(ar -> {
 
-            savedInstances.forEach(((instance, future) -> {
+            savedInstances.forEach((instance, future) -> {
               if (future.succeeded()) {
                 response.getInstances().add(instance);
               } else {
                 response.getErrorMessages().add(future.cause().getMessage());
               }
-            }));
+            });
 
             response.setTotalRecords(response.getInstances().size());
 
