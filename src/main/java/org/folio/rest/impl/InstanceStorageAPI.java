@@ -145,14 +145,14 @@ public class InstanceStorageAPI implements InstanceStorage {
                   respond500WithTextPlain(reply.cause().getMessage())));
             }
           } catch (Exception e) {
-            log.error(e.getStackTrace());
+            log.error(e.getMessage(), e);
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetInstanceStorageInstancesResponse.
                 respond500WithTextPlain(e.getMessage())));
           }
         });
     } catch (Exception e) {
-      log.error(e.getStackTrace());
+      log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetInstanceStorageInstancesResponse.
           respond500WithTextPlain(e.getMessage())));
@@ -205,7 +205,7 @@ public class InstanceStorageAPI implements InstanceStorage {
                         .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                log.error(e.getStackTrace());
+                log.error(e.getMessage(), e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     PostInstanceStorageInstancesResponse
@@ -213,14 +213,14 @@ public class InstanceStorageAPI implements InstanceStorage {
               }
             });
         } catch (Exception e) {
-          log.error(e.getStackTrace());
+          log.error(e.getMessage(), e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             PostInstanceStorageInstancesResponse
               .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e.getStackTrace());
+      log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         PostInstanceStorageInstancesResponse
           .respond500WithTextPlain(e.getMessage())));
@@ -333,21 +333,21 @@ public class InstanceStorageAPI implements InstanceStorage {
 
                 }
               } catch (Exception e) {
-                log.error(e.getStackTrace());
+                log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   GetInstanceStorageInstancesByInstanceIdResponse.
                     respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          log.error(e.getStackTrace());
+          log.error(e.getMessage(), e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetInstanceStorageInstancesByInstanceIdResponse.
               respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e.getStackTrace());
+      log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetInstanceStorageInstancesByInstanceIdResponse.
           respond500WithTextPlain(e.getMessage())));
@@ -564,21 +564,21 @@ public class InstanceStorageAPI implements InstanceStorage {
                       respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                log.error(e.getStackTrace());
+                log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   GetInstanceStorageInstanceRelationshipsResponse.
                     respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          log.error(e.getStackTrace());
+          log.error(e.getMessage(), e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetInstanceStorageInstanceRelationshipsResponse.
               respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e.getStackTrace());
+      log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetInstanceStorageInstanceRelationshipsResponse.
           respond500WithTextPlain(e.getMessage())));
