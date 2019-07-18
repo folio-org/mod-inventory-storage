@@ -5,7 +5,7 @@
   "properties": {
     "instances": {
       "id": "instancesList",
-      "description": "List of Instances",
+      "description": "List of all successfully saved Instances",
       "type": "array",
       "items": {
         "type": "object",

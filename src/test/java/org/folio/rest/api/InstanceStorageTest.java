@@ -1380,15 +1380,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     ExecutionException,
     TimeoutException {
 
-    UUID id_1 = UUID.randomUUID();
-    UUID id_2 = UUID.randomUUID();
+    JsonArray instancesArray = new JsonArray();
+    int numberOfInstances = 1000;
 
-    JsonObject instanceToCreate_1 = smallAngryPlanet(id_1);
-    JsonObject instanceToCreate_2 = smallAngryPlanet(id_2);
+    for(int i = 0; i < numberOfInstances; i++) {
+      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
+    }
 
     JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
-      .put("instances", new JsonArray().add(instanceToCreate_1).add(instanceToCreate_2))
-      .put("totalRecords", 2));
+      .put("instances", instancesArray)
+      .put("totalRecords", numberOfInstances));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1401,18 +1402,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject instancesResponse = response.getJson();
 
-    assertThat(instancesResponse.getInteger("totalRecords"), is(2));
+    assertThat(instancesResponse.getInteger("totalRecords"), is(numberOfInstances));
 
     JsonArray instances = instancesResponse.getJsonArray("instances");
-    assertThat(instances.size(), is(2));
-    assertThat(instances.getJsonObject(0).getString("id"), is(id_1.toString()));
-    assertThat(instances.getJsonObject(1).getString("id"), is(id_2.toString()));
+    assertThat(instances.size(), is(numberOfInstances));
 
-    Response getResponse_1 = getById(id_1);
+    Response getResponse_1 = getById(UUID.fromString(instancesArray.getJsonObject(50).getString("id")));
     assertThat(getResponse_1.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    Response getResponse_2 = getById(id_2);
-    assertThat(getResponse_2.getStatusCode(), is(HttpURLConnection.HTTP_OK));
   }
 
   @Test
@@ -1422,14 +1418,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     ExecutionException,
     TimeoutException {
 
-    UUID id_1 = UUID.randomUUID();
-
-    JsonObject instanceToCreate_1 = smallAngryPlanet(id_1);
-    JsonObject instanceToCreate_2 = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
+    JsonObject correctInstance = smallAngryPlanet(null);
+    JsonObject errorInstance = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
 
     JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
-      .put("instances", new JsonArray().add(instanceToCreate_1).add(instanceToCreate_2))
-      .put("totalRecords", 2));
+      .put("instances", new JsonArray().add(correctInstance).add(errorInstance).add(correctInstance).add(errorInstance))
+      .put("totalRecords", 4));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1442,18 +1436,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject instancesResponse = response.getJson();
 
-    assertThat(instancesResponse.getInteger("totalRecords"), is(1));
+    assertThat(instancesResponse.getInteger("totalRecords"), is(2));
 
     JsonArray errorMessages = instancesResponse.getJsonArray("errorMessages");
-    assertThat(errorMessages.size(), is(1));
+    assertThat(errorMessages.size(), is(2));
     assertThat(errorMessages.getString(0), notNullValue());
+    assertThat(errorMessages.getString(1), notNullValue());
 
     JsonArray instances = instancesResponse.getJsonArray("instances");
-    assertThat(instances.size(), is(1));
-    assertThat(instances.getJsonObject(0).getString("id"), is(id_1.toString()));
-
-    Response getResponse_1 = getById(id_1);
-    assertThat(getResponse_1.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(instances.size(), is(2));
   }
 
   private void createHoldings(JsonObject holdingsToCreate)

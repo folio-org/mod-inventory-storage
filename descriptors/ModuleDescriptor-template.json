@@ -132,6 +132,17 @@
       ]
     },
     {
+      "id": "instance-storage-batch",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/batch/instances",
+          "permissionsRequired": ["inventory-storage.instances.batch.post"]
+        }
+      ]
+    },
+    {
       "id": "loan-types",
       "version": "2.2",
       "handlers": [
@@ -906,17 +917,6 @@
       ]
     },
     {
-      "id": "instance-storage-batch",
-      "version": "0.1",
-      "handlers": [
-        {
-          "methods": ["POST"],
-          "pathPattern": "/instance-storage/batch/instances",
-          "permissionsRequired": ["inventory-storage.instances.batch.post"]
-        }
-      ]
-    },
-    {
       "id" : "_tenant",
       "version" : "1.2",
       "interfaceType": "system",
@@ -1021,6 +1021,11 @@
       "permissionName": "inventory-storage.instances.item.delete",
       "displayName": "inventory storage - delete individual instance",
       "description": "delete individual instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.batch.post",
+      "displayName": "inventory storage - create a number of instances",
+      "description": "create a number of instances in storage"
     },
     {
       "permissionName": "inventory-storage.instances.source-record.delete",
@@ -1775,11 +1780,6 @@
       "description": "delete individual call-number-type from storage"
     },
     {
-      "permissionName": "inventory-storage.instances.batch.post",
-      "displayName": "inventory storage - create a number of instances",
-      "description": "create a number of instances in storage"
-    },
-    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -1806,6 +1806,7 @@
         "inventory-storage.instances.source-record.marc-json.put",
         "inventory-storage.instances.source-record.marc-json.delete",
         "inventory-storage.instances.collection.delete",
+        "inventory-storage.instances.batch.post",
         "inventory-storage.loan-types.collection.get",
         "inventory-storage.loan-types.item.get",
         "inventory-storage.loan-types.item.post",
@@ -1950,8 +1951,7 @@
         "inventory-storage.service-points-users.item.get",
         "inventory-storage.service-points-users.item.post",
         "inventory-storage.service-points-users.item.put",
-        "inventory-storage.service-points-users.item.delete",
-        "inventory-storage.instances.batch.post"
+        "inventory-storage.service-points-users.item.delete"
       ]
     }
   ],
