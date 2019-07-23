@@ -14,7 +14,7 @@
 * Sets array modifiers for contributors, identifiers (MODINVSTOR-311)
 * Populate identifiers reference table with more identifiers (MODINVSTOR-313)
 * Aligns barcode index (on `item`) with the SQL generated
-* Upgrades RAML Module Builder to version 26.2.0 (MODINVSTOR-285)
+* Upgrades RAML Module Builder to version 26.2.2 (MODINVSTOR-285)
 * Improves test coverage, error logging, sample data.
 
 ## 15.5.1 2019-06-09
