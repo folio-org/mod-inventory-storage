@@ -1406,9 +1406,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray instances = instancesResponse.getJsonArray("instances");
     assertThat(instances.size(), is(numberOfInstances));
-
-    Response getResponse_1 = getById(UUID.fromString(instancesArray.getJsonObject(50).getString("id")));
-    assertThat(getResponse_1.getStatusCode(), is(HttpURLConnection.HTTP_OK));
   }
 
   @Test
@@ -1432,7 +1429,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Response response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject instancesResponse = response.getJson();
 
@@ -1445,6 +1442,42 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray instances = instancesResponse.getJsonArray("instances");
     assertThat(instances.size(), is(2));
+  }
+
+  @Test
+  public void shouldReturnErrorResponseIfAllInstancesFailed()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    JsonObject errorInstance = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
+
+    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+      .put("instances", new JsonArray().add(errorInstance).add(errorInstance).add(errorInstance))
+      .put("totalRecords", 3));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+
+    JsonObject instancesResponse = response.getJson();
+
+    assertThat(instancesResponse.getInteger("totalRecords"), is(0));
+
+    JsonArray errorMessages = instancesResponse.getJsonArray("errorMessages");
+    assertThat(errorMessages.size(), is(3));
+    assertThat(errorMessages.getString(0), notNullValue());
+    assertThat(errorMessages.getString(1), notNullValue());
+    assertThat(errorMessages.getString(2), notNullValue());
+
+    JsonArray instances = instancesResponse.getJsonArray("instances");
+    assertThat(instances.size(), is(0));
   }
 
   private void createHoldings(JsonObject holdingsToCreate)

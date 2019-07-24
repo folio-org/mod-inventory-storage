@@ -48,10 +48,12 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
 
             InstancesBatchResponse response = constructResponse(ar.result());
 
-            if (response.getErrorMessages().isEmpty()) {
+            if (!response.getInstances().isEmpty()) {
+              // return 201 response - at least one Instance was successfully created
               asyncResultHandler.handle(Future.succeededFuture(
                 PostInstanceStorageBatchInstancesResponse.respond201WithApplicationJson(response)));
             } else {
+              // return 500 response with the list of errors - not one Instance was created
               log.error("Failed to create some of the Instances: " + response.getErrorMessages());
               asyncResultHandler.handle(Future.succeededFuture(
                 PostInstanceStorageBatchInstancesResponse.respond500WithApplicationJson(response)
