@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "7.3",
+      "version": "7.4",
       "handlers": [
         {
           "methods": ["GET"],
@@ -348,7 +348,7 @@
     },
     {
       "id": "identifier-types",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -510,7 +510,7 @@
     },
     {
       "id": "classification-types",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -565,7 +565,7 @@
 
     {
       "id": "modes-of-issuance",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
