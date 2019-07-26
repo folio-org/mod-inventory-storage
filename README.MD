@@ -159,3 +159,20 @@ If these methods don't work for you, please do get in touch, so this section can
 On Linux, `ifconfig docker0 | grep 'inet addr:'` should give output similar to `inet addr:192.168.X.X  Bcast:0.0.0.0  Mask:255.255.0.0`, , the first IP address is usually routable from within containers.
 
 On Mac OS X (using Docker Native), `ifconfig en0 | grep 'inet '` should give output similar to `inet 192.168.X.X netmask 0xffffff00 broadcast 192.168.X.X`, the first IP address is usually routable from within containers.
+
+# Batch interface
+
+Batch interface was introduced for processing a collection of entities in bulk. It is not transactional, each entity is processed separately, response contains combined results of processing.
+
+###Design for batch save Instances endpoint
+_Method_: POST
+
+_Resource_: /instance-storage/batch/instances (interface "instance-storage-batch")
+
+_Body_: collection of Instances and total number of Instances
+
+_Returns_: collection of successfully created Instances, error messages for failure Instances, total number of created Instances:
+
+- If at least one Instance is successfully saved - returns 201 response with saved instances ("instances" section), "errorMessages" array contains errors for failed Instances (empty if all Instances are successfully saved).
+
+- If save for all Instances failed - returns 500 response with "errorMessages" array, explaining a reason of why Instances were processed with failures (one error message per one Instance). Instances array is empty.
