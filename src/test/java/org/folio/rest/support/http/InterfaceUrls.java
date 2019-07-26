@@ -206,4 +206,9 @@ public class InterfaceUrls {
           throws MalformedURLException {
     return StorageTestSuite.storageUrl("/location-units/libraries" + subPath);
   }
+
+  public static URL instancesStorageBatchInstancesUrl(String subPath)
+    throws MalformedURLException {
+    return StorageTestSuite.storageUrl("/instance-storage/batch/instances" + subPath);
+  }
 }
