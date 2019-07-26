@@ -109,7 +109,7 @@ public class InstanceStorageAPI implements InstanceStorage {
     for (String s : fields) {
       fieldsString += fields + " ";
     }
-    log.error("create wrapper" + fieldsString + "------" + view);
+    log.info("create wrapper" + fieldsString + "------" + view);
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(fields, view);
 
     return new CQLWrapper(cql2pgJson, query)
