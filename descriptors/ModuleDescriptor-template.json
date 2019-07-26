@@ -132,6 +132,17 @@
       ]
     },
     {
+      "id": "instance-storage-batch",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/batch/instances",
+          "permissionsRequired": ["inventory-storage.instances.batch.post"]
+        }
+      ]
+    },
+    {
       "id": "loan-types",
       "version": "2.2",
       "handlers": [
@@ -1012,6 +1023,11 @@
       "description": "delete individual instance from storage"
     },
     {
+      "permissionName": "inventory-storage.instances.batch.post",
+      "displayName": "inventory storage - create a number of instances",
+      "description": "create a number of instances in storage"
+    },
+    {
       "permissionName": "inventory-storage.instances.source-record.delete",
       "displayName": "inventory storage - delete source record of an individual instance",
       "description": "delete source record of individual instance from storage"
@@ -1790,6 +1806,7 @@
         "inventory-storage.instances.source-record.marc-json.put",
         "inventory-storage.instances.source-record.marc-json.delete",
         "inventory-storage.instances.collection.delete",
+        "inventory-storage.instances.batch.post",
         "inventory-storage.loan-types.collection.get",
         "inventory-storage.loan-types.item.get",
         "inventory-storage.loan-types.item.post",
