@@ -86,7 +86,7 @@ public class InstanceStorageAPI implements InstanceStorage {
           INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"), "instance.jsonb");
     }
 
-    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"));
+    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"), "instance.jsonb");
   }
   private static CQLWrapper createCQLWrapper(
       String query,
