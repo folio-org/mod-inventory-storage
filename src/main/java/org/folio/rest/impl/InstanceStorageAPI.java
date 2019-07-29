@@ -65,7 +65,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb"));
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb"), INSTANCE_TABLE + ".jsonb");
     }
 
     if(containsItemsRecordProperties) {
@@ -74,7 +74,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
       return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb"));
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb"), INSTANCE_TABLE + ".jsonb");
     }
 
     if(containsHoldingsRecordProperties) {
@@ -83,19 +83,34 @@ public class InstanceStorageAPI implements InstanceStorage {
 
       return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_VIEW+".jsonb",
-          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"));
+          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"), INSTANCE_TABLE + ".jsonb");
     }
 
-    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"));
+    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"), INSTANCE_TABLE + ".jsonb");
   }
-
+  private static CQLWrapper createCQLWrapper(
+      String query,
+      int limit,
+      int offset,
+      List<String> fields) throws FieldException {
+    return createCQLWrapper(
+        query,
+        limit,
+        offset,
+         fields,null);
+  }
   private static CQLWrapper createCQLWrapper(
     String query,
     int limit,
     int offset,
-    List<String> fields) throws FieldException {
-
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(fields);
+    List<String> fields, String view) throws FieldException {
+    
+    String fieldsString = "";
+    for (String s : fields) {
+      fieldsString += fields + " ";
+    }
+    log.info("create wrapper" + fieldsString + "------" + view);
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(fields, view);
 
     return new CQLWrapper(cql2pgJson, query)
       .setLimit(new Limit(limit))
@@ -122,7 +137,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       }
 
       CQLWrapper cql = preparedCql.getCqlWrapper();
-      log.info("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
+      log.error("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
 
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
       postgresClient.get(preparedCql.getTableName(), Instance.class, preparedCql.getFieldArray(), cql,
@@ -661,13 +676,17 @@ public class InstanceStorageAPI implements InstanceStorage {
     private final CQLWrapper cqlWrapper;
     private final List<String> fieldList;
 
-    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList)
+
+    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList, String view)
         throws FieldException {
       this.tableName = tableName;
-      this.cqlWrapper = createCQLWrapper(query, limit, offset, fieldList);
+      this.cqlWrapper = createCQLWrapper(query, limit, offset, fieldList, view);
       this.fieldList = fieldList;
     }
-
+    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList)
+        throws FieldException {
+      this(tableName,  query,  limit, offset, fieldList,  null);
+    }
     public String getTableName() {
       return tableName;
     }
