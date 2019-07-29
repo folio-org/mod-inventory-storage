@@ -322,6 +322,12 @@
       "type": "string",
       "description": "Date [or timestamp] for when the instance status was updated"
     },
+    "tags": {
+      "description": "arbitrary tags associated with this instance",
+      "id": "tags",
+      "type": "object",
+      "$ref": "raml-util/schemas/tags.schema"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
