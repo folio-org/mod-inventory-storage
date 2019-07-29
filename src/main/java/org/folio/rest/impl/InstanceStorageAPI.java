@@ -65,7 +65,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb"), "instance.jsonb");
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb"), INSTANCE_TABLE + ".jsonb");
     }
 
     if(containsItemsRecordProperties) {
@@ -74,7 +74,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
       return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb"), "instance.jsonb");
+          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb"), INSTANCE_TABLE + ".jsonb");
     }
 
     if(containsHoldingsRecordProperties) {
@@ -83,10 +83,10 @@ public class InstanceStorageAPI implements InstanceStorage {
 
       return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, query, limit, offset, Arrays.asList(
         INSTANCE_HOLDINGS_VIEW+".jsonb",
-          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"), "instance.jsonb");
+          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"), INSTANCE_TABLE + ".jsonb");
     }
 
-    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"), "instance.jsonb");
+    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"), INSTANCE_TABLE + ".jsonb");
   }
   private static CQLWrapper createCQLWrapper(
       String query,
