@@ -97,7 +97,7 @@ public class InstanceStorageAPI implements InstanceStorage {
         query,
         limit,
         offset,
-         fields,null);
+         fields,INSTANCE_TABLE + ".jsonb");
   }
   private static CQLWrapper createCQLWrapper(
     String query,
