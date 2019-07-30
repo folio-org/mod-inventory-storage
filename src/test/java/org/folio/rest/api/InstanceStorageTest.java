@@ -1112,6 +1112,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     canSort(String.format("item.barcode==706949453641 and holdingsRecords.permanentLocationId==%s",
       mainLibraryLocationId),
       "Long Way to a Small Angry Planet");
+    
+    canSort(String.format("((contributors =/@name \"becky\") and holdingsRecords.permanentLocationId=\"%s\")",mainLibraryLocationId),"Long Way to a Small Angry Planet" );
+
   }
 
   // This is intended to demonstrate that instances without holdings or items
