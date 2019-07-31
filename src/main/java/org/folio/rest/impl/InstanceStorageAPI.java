@@ -88,17 +88,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
     return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"), INSTANCE_TABLE + ".jsonb");
   }
-  private static CQLWrapper createCQLWrapper(
-      String query,
-      int limit,
-      int offset,
-      List<String> fields) throws FieldException {
-    return createCQLWrapper(
-        query,
-        limit,
-        offset,
-         fields,null);
-  }
+
   private static CQLWrapper createCQLWrapper(
     String query,
     int limit,
@@ -556,7 +546,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
           String[] fieldList = {"*"};
 
-          CQLWrapper cql = createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_RELATIONSHIP_TABLE+".jsonb"));
+          CQLWrapper cql = createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_RELATIONSHIP_TABLE+".jsonb"),INSTANCE_RELATIONSHIP_TABLE+".jsonb");
 
           log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
