@@ -12,16 +12,21 @@ import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.util.StringUtil.urlEncode;
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -778,6 +783,47 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canSearchForItemsByTags()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    UnsupportedEncodingException {
+
+    String tagValue = "important";
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    createItem(addTags(tagValue, holdingsRecordId));
+    createItem(nod(holdingsRecordId));
+
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
+
+    String url = itemsStorageUrl("") + "?query=" + URLEncoder.encode("tags.tagList=" + tagValue,
+      StandardCharsets.UTF_8.name());
+
+    client.get(url,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+
+    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(200));
+
+    JsonObject searchBody = searchResponse.getJson();
+
+    JsonArray foundItems = searchBody.getJsonArray("items");
+
+    LinkedHashMap item = (LinkedHashMap) foundItems.getList().get(0);
+    LinkedHashMap<String, ArrayList<String>> itemTags = (LinkedHashMap<String, ArrayList<String>>) item.get("tags");
+
+    assertTrue(searchResponse.getBody().contains(tagValue));
+
+    assertThat(foundItems.size(), is(1));
+    assertThat(itemTags.get("tagList"), hasItem(tagValue));
+    assertThat(searchBody.getInteger("totalRecords"), is(1));
+  }
+
+  @Test
   public void cannotSearchForItemsByBarcodeAndNotMatchingId()
     throws MalformedURLException,
     InterruptedException,
@@ -1046,5 +1092,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   private JsonObject interestingTimes(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "56454543534");
+  }
+
+  private JsonObject addTags(String tagValue, UUID holdingsRecordId) {
+    return smallAngryPlanet(holdingsRecordId)
+      .put("tags", new JsonObject()
+        .put("tagList", new JsonArray()
+          .add(tagValue)));
   }
 }
