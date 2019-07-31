@@ -1,3 +1,8 @@
+## 16.0.1 2019-07-31
+
+* Fixes bug with certain combinations of CQL query clauses (MODINVSTOR-319)
+* Upgrades RAML Module Builder to version 26.2.4
+
 ## 16.0.0 2019-07-23
 
 * Provides `instance-note-types` interface version 1.0 (MODINVSTOR-300)
