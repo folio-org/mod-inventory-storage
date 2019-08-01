@@ -66,7 +66,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "7.0",
+      "version": "7.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -133,7 +133,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [
         {
           "methods": ["POST"],
