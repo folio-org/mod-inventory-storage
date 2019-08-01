@@ -4,6 +4,7 @@ import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.persist.PgUtil;
@@ -1103,6 +1105,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     canSort(String.format("item.barcode==706949453641 and holdingsRecords.permanentLocationId==%s",
       mainLibraryLocationId),
       "Long Way to a Small Angry Planet");
+    
+    canSort(String.format("((contributors =/@name \"becky\") and holdingsRecords.permanentLocationId=\"%s\")",mainLibraryLocationId),"Long Way to a Small Angry Planet" );
+
   }
 
   // This is intended to demonstrate that instances without holdings or items
@@ -1369,6 +1374,113 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         assertThat(0, is(cqlResponse.getJson().getInteger("totalRecords")));
       }
     }
+  }
+
+  @Test
+  public void canCreateACollectionOfInstances()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    JsonArray instancesArray = new JsonArray();
+    int numberOfInstances = 1000;
+
+    for(int i = 0; i < numberOfInstances; i++) {
+      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
+    }
+
+    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+      .put("instances", instancesArray)
+      .put("totalRecords", numberOfInstances));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject instancesResponse = response.getJson();
+
+    assertThat(instancesResponse.getInteger("totalRecords"), is(numberOfInstances));
+
+    JsonArray instances = instancesResponse.getJsonArray("instances");
+    assertThat(instances.size(), is(numberOfInstances));
+  }
+
+  @Test
+  public void canCreateInstancesEvenIfSomeFailed()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    JsonObject correctInstance = smallAngryPlanet(null);
+    JsonObject errorInstance = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
+
+    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+      .put("instances", new JsonArray().add(correctInstance).add(errorInstance).add(correctInstance).add(errorInstance))
+      .put("totalRecords", 4));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject instancesResponse = response.getJson();
+
+    assertThat(instancesResponse.getInteger("totalRecords"), is(2));
+
+    JsonArray errorMessages = instancesResponse.getJsonArray("errorMessages");
+    assertThat(errorMessages.size(), is(2));
+    assertThat(errorMessages.getString(0), notNullValue());
+    assertThat(errorMessages.getString(1), notNullValue());
+
+    JsonArray instances = instancesResponse.getJsonArray("instances");
+    assertThat(instances.size(), is(2));
+  }
+
+  @Test
+  public void shouldReturnErrorResponseIfAllInstancesFailed()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    JsonObject errorInstance = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
+
+    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+      .put("instances", new JsonArray().add(errorInstance).add(errorInstance).add(errorInstance))
+      .put("totalRecords", 3));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+
+    JsonObject instancesResponse = response.getJson();
+
+    assertThat(instancesResponse.getInteger("totalRecords"), is(0));
+
+    JsonArray errorMessages = instancesResponse.getJsonArray("errorMessages");
+    assertThat(errorMessages.size(), is(3));
+    assertThat(errorMessages.getString(0), notNullValue());
+    assertThat(errorMessages.getString(1), notNullValue());
+    assertThat(errorMessages.getString(2), notNullValue());
+
+    JsonArray instances = instancesResponse.getJsonArray("instances");
+    assertThat(instances.size(), is(0));
   }
 
   private void createHoldings(JsonObject holdingsToCreate)
