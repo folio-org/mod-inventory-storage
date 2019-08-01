@@ -626,6 +626,17 @@
       ]
     },
     {
+      "tableName": "item_damaged_status",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "holdings_record",
       "withMetadata": true,
       "foreignKeys": [

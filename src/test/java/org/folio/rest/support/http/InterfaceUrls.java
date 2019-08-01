@@ -158,6 +158,12 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/item-note-types" + subPath);
   }
 
+  public static URL itemDamagedStatusesUrl(String subPath)
+          throws MalformedURLException {
+
+    return StorageTestSuite.storageUrl("/item-damaged-statuses" + subPath);
+  }
+
   public static URL modesOfIssuanceUrl(String subPath)
           throws MalformedURLException {
 

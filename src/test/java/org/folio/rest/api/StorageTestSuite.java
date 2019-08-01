@@ -26,10 +26,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
+import io.vertx.ext.sql.UpdateResult;
 
 @RunWith(Suite.class)
 
@@ -49,6 +51,7 @@ import io.vertx.ext.sql.ResultSet;
   StorageHelperTest.class,
   InstanceRelationshipsTest.class,
   ReferenceTablesTest.class,
+  ItemDamagedStatusAPITest.class
 })
 @SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
@@ -173,6 +176,19 @@ public class StorageTestSuite {
       System.out.println(
         "WARNING!!!!! Unable to determine mismatched ID rows");
     }
+  }
+
+  protected static Boolean deleteAll(String tenantId, String tableName) {
+
+    PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
+
+    Future<UpdateResult> future = Future.future();
+    String sql = String.format("DELETE FROM %s_%s.%s", tenantId, "mod_inventory_storage", tableName);
+    postgresClient.execute(sql, future.completer());
+
+    return future.map(updateResult -> updateResult.getUpdated() > 0)
+      .otherwise(false)
+      .result();
   }
 
   private static ResultSet getRecordsWithUnmatchedIds(String tenantId,
