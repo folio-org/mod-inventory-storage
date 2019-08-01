@@ -19,6 +19,7 @@ import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -51,7 +52,8 @@ import io.vertx.ext.sql.UpdateResult;
   StorageHelperTest.class,
   InstanceRelationshipsTest.class,
   ReferenceTablesTest.class,
-  ItemDamagedStatusAPITest.class
+  ItemDamagedStatusAPITest.class,
+  ItemDamagedStatusAPIUnitTest.class
 })
 @SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {

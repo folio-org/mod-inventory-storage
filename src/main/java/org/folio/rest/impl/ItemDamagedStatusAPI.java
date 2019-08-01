@@ -4,7 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 import static org.folio.rest.impl.StorageHelper.getCQL;
-import static org.folio.rest.impl.StorageHelper.postgresClient;
 import static org.folio.rest.jaxrs.resource.ItemDamagedStatuses.PostItemDamagedStatusesResponse.headersFor201;
 import static org.folio.rest.jaxrs.resource.ItemDamagedStatuses.PostItemDamagedStatusesResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.ItemDamagedStatuses.PostItemDamagedStatusesResponse.respond500WithTextPlain;
@@ -22,6 +21,7 @@ import org.folio.rest.jaxrs.model.ItemDamageStatuses;
 import org.folio.rest.jaxrs.resource.ItemDamagedStatuses;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.interfaces.Results;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 
@@ -38,6 +38,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
   public static final String REFERENCE_TABLE = "item_damaged_status";
   private static final String LOCATION_PREFIX = "/item-damaged-statuses/";
   private final Messages messages = Messages.getInstance();
+  private PostgresClientFactory pgClientFactory = new PostgresClientFactory();
 
   @Override
   public void getItemDamagedStatuses(
@@ -77,7 +78,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
 
     Future<Results<ItemDamageStatus>> future = Future.future();
 
-    postgresClient(vertxContext, okapiHeaders)
+    pgClientFactory.getInstance(vertxContext, okapiHeaders)
       .get(
         REFERENCE_TABLE,
         ItemDamageStatus.class,
@@ -127,7 +128,10 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     if (isNull(entity.getId())) {
       entity.setId(UUID.randomUUID().toString());
     }
-    postgresClient(vertxContext, okapiHeaders).save(REFERENCE_TABLE, entity.getId(), entity, future.completer());
+
+    pgClientFactory.getInstance(vertxContext, okapiHeaders)
+      .save(REFERENCE_TABLE, entity.getId(), entity, future.completer());
+
     return future.map(entity::withId);
   }
 
@@ -147,11 +151,6 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
               .map(GetItemDamagedStatusesByIdResponse::respond200WithApplicationJson)
               .orElseGet(() -> GetItemDamagedStatusesByIdResponse.respond404WithTextPlain("Not found"))
           )
-          .otherwise(ex -> {
-            String message = messages.getMessage(lang, InternalServerError);
-            LOGGER.error(message, ex);
-            return GetItemDamagedStatusesByIdResponse.respond500WithTextPlain(message);
-          })
           .map(Response.class::cast)
           .setHandler(asyncResultHandler);
       } catch (Exception e) {
@@ -170,7 +169,8 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Context vertxContext) {
 
     Future<ItemDamageStatus> future = Future.future();
-    postgresClient(vertxContext, okapiHeaders).getById(REFERENCE_TABLE, id, ItemDamageStatus.class, future.completer());
+    pgClientFactory.getInstance(vertxContext, okapiHeaders)
+      .getById(REFERENCE_TABLE, id, ItemDamageStatus.class, future.completer());
     return future;
   }
 
@@ -228,7 +228,8 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Context vertxContext) {
 
     Future<UpdateResult> future = Future.future();
-    postgresClient(vertxContext, okapiHeaders).delete(REFERENCE_TABLE, id, future.completer());
+    pgClientFactory.getInstance(vertxContext, okapiHeaders)
+      .delete(REFERENCE_TABLE, id, future.completer());
     return future.map(UpdateResult::getUpdated);
   }
 
@@ -292,7 +293,9 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     if (isNull(entity.getId())) {
       entity.setId(id);
     }
-    postgresClient(vertxContext, okapiHeaders).update(REFERENCE_TABLE, entity, id, future.completer());
+    pgClientFactory.getInstance(vertxContext, okapiHeaders)
+      .update(REFERENCE_TABLE, entity, id, future.completer());
+
     return future.map(UpdateResult::getUpdated);
   }
 }
