@@ -51,7 +51,7 @@ import io.vertx.core.json.JsonObject;
 
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
-  public static final String TAG_VALUE = "test-tag";
+  private static final String TAG_VALUE = "test-tag";
 
   private static String journalMaterialTypeID;
   private static String bookMaterialTypeID;
