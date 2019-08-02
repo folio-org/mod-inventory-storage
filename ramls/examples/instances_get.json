@@ -21,7 +21,12 @@
           "value": "1"
         }
       ],
-      "instanceTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2c"
+      "instanceTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2c",
+      "tags" : {
+        "tagList" : [
+          "important"
+        ]
+      }
     },
     {
       "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
