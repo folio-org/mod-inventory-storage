@@ -50,6 +50,9 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
+
+  public static final String TAG_VALUE = "test-tag";
+
   private static String journalMaterialTypeID;
   private static String bookMaterialTypeID;
   private static String videoMaterialTypeID;
@@ -120,6 +123,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("tags", new JsonObject().put("tagList",new JsonArray().add(TAG_VALUE)));
 
     //TODO: Replace with real service point when validated
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
@@ -168,6 +172,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(annexLibraryLocationId.toString()));
     assertThat(itemFromPost.getString("inTransitDestinationServicePointId"),
       is(inTransitServicePointId));
+
+    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -183,7 +192,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("id", id.toString())
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID);
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("tags", new JsonObject().put("tagList",new JsonArray().add(TAG_VALUE)));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -208,6 +218,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("id"), is(id.toString()));
     assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
 
+    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -218,6 +232,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     JsonObject itemToCreate = nod(null, holdingsRecordId);
+
+    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -251,6 +267,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(canCirculateLoanTypeID));
     assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLibraryLocationId.toString()));
+
+    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -443,6 +464,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     //TODO: Replace with real service point when validated
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
@@ -462,6 +484,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
+    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(item.getString("barcode"), is("565578437802"));
@@ -470,6 +494,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getString("permanentLoanTypeId"), is(canCirculateLoanTypeID));
     assertThat(item.getString("temporaryLocationId"), is(annexLibraryLocationId.toString()));
     assertThat(item.getString("inTransitDestinationServicePointId"), is(inTransitServicePointId));
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -561,7 +587,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject replacement = itemToCreate.copy();
       replacement.put("barcode", "125845734657")
-              .put("temporaryLocationId", mainLibraryLocationId.toString());
+              .put("temporaryLocationId", mainLibraryLocationId.toString())
+              .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
@@ -579,6 +607,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
+    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(item.getString("barcode"), is("125845734657"));
@@ -588,6 +618,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(journalMaterialTypeID));
     assertThat(item.getString("temporaryLocationId"),
       is(mainLibraryLocationId.toString()));
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -608,7 +640,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     replacement
       .put("status", new JsonObject().put("name", "In transit"))
-      .put("inTransitDestinationServicePointId", inTransitServicePointId);
+      .put("inTransitDestinationServicePointId", inTransitServicePointId)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
@@ -626,6 +659,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
+    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+
     assertThat(item.getString("id"), is(id.toString()));
 
     assertThat(item.getJsonObject("status").getString("name"),
@@ -633,6 +668,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(item.getString("inTransitDestinationServicePointId"),
       is(inTransitServicePointId));
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -790,16 +827,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     TimeoutException,
     UnsupportedEncodingException {
 
-    String tagValue = "important";
-
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
-    createItem(addTags(tagValue, holdingsRecordId));
+    createItem(addTags(TAG_VALUE, holdingsRecordId));
     createItem(nod(holdingsRecordId));
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
-    String url = itemsStorageUrl("") + "?query=" + URLEncoder.encode("tags.tagList=" + tagValue,
+    String url = itemsStorageUrl("") + "?query=" + URLEncoder.encode("tags.tagList=" + TAG_VALUE,
       StandardCharsets.UTF_8.name());
 
     client.get(url,
@@ -813,14 +848,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray foundItems = searchBody.getJsonArray("items");
 
+    assertThat(searchBody.getInteger("totalRecords"), is(1));
+
+    assertThat(foundItems.size(), is(1));
+
+    assertTrue(searchResponse.getBody().contains(TAG_VALUE));
+
     LinkedHashMap item = (LinkedHashMap) foundItems.getList().get(0);
     LinkedHashMap<String, ArrayList<String>> itemTags = (LinkedHashMap<String, ArrayList<String>>) item.get("tags");
 
-    assertTrue(searchResponse.getBody().contains(tagValue));
-
-    assertThat(foundItems.size(), is(1));
-    assertThat(itemTags.get("tagList"), hasItem(tagValue));
-    assertThat(searchBody.getInteger("totalRecords"), is(1));
+    assertThat(itemTags.get("tagList"), hasItem(TAG_VALUE));
   }
 
   @Test
@@ -865,7 +902,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
-    createItem(smallAngryPlanet(holdingsRecordId).put("barcode", "673274826203"));
+    createItem(smallAngryPlanet(holdingsRecordId)
+      .put("barcode", "673274826203")
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))));
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
@@ -883,6 +922,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(foundItems.size(), is(1));
     assertThat(searchBody.getInteger("totalRecords"), is(1));
     assertThat(foundItems.getJsonObject(0).getString("barcode"), is("673274826203"));
+
+    LinkedHashMap item = (LinkedHashMap) foundItems.getList().get(0);
+    LinkedHashMap<String, ArrayList<String>> itemTags = (LinkedHashMap<String, ArrayList<String>>) item.get("tags");
+
+    assertThat(itemTags.get("tagList"), hasItem(TAG_VALUE));
   }
 
   @Test
