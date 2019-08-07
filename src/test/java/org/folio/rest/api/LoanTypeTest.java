@@ -287,6 +287,66 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     updateItemWithNonexistingId("temporaryLoanTypeId");
   }
 
+  private JsonObject send(URL url, HttpMethod method, String content,
+                          int expectedStatusCode) {
+
+    CompletableFuture<Response> future = new CompletableFuture<>();
+    Handler<HttpClientResponse> handler = ResponseHandler.any(future);
+    send(url, method, content, handler);
+    Response response;
+
+    try {
+      response = future.get(5, TimeUnit.SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new IllegalStateException(e);
+    }
+
+    assertThat(url + " - " + method + " - " + content + ":" + response.getBody(),
+      response.getStatusCode(), is(expectedStatusCode));
+
+    try {
+      return response.getJson();
+    }
+    catch (DecodeException e) {
+      // No body at all or not in JSON format.
+      return null;
+    }
+  }
+
+  private void send(URL url, HttpMethod method, String content,
+                    Handler<HttpClientResponse> handler) {
+    HttpClient client = StorageTestSuite.getVertx().createHttpClient();
+    HttpClientRequest request;
+    if (content == null) {
+      content = "";
+    }
+    Buffer buffer = Buffer.buffer(content);
+
+    switch (method) {
+      case POST:
+        request = client.postAbs(url.toString());
+        break;
+      case DELETE:
+        request = client.deleteAbs(url.toString());
+        break;
+      case GET:
+        request = client.getAbs(url.toString());
+        break;
+      default:
+        request = client.putAbs(url.toString());
+    }
+    request.exceptionHandler(error -> {
+      Assert.fail(error.getLocalizedMessage());
+    })
+      .handler(handler);
+    request.putHeader("Authorization", "test_tenant");
+    request.putHeader("x-okapi-tenant", "test_tenant");
+    request.putHeader("Accept", "application/json,text/plain");
+    request.putHeader("Content-type", SUPPORTED_CONTENT_TYPE_JSON_DEF);
+    request.end(buffer);
+  }
+
+
   /** Create a JSON String of an item; set permanentLoanTypeId and temporaryLoanTypeId
    * if the passed variable is not null */
   private static String createItem(UUID holdingsRecordId, String permanentLoanTypeId, String temporaryLoanTypeId) {

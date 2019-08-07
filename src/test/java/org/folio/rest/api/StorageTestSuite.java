@@ -55,15 +55,20 @@ import io.vertx.ext.sql.UpdateResult;
   ItemDamagedStatusAPITest.class,
   ItemDamagedStatusAPIUnitTest.class
 })
-@SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
+@SuppressWarnings("squid:S1118")
+// suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
   private static int port;
 
-  public static URL storageUrl(String path) throws MalformedURLException {
-    return new URL("http", "localhost", port, path);
+  public static URL storageUrl(String path) {
+    try {
+      return new URL("http", "localhost", port, path);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static Vertx getVertx() {
@@ -83,7 +88,7 @@ public class StorageTestSuite {
       "org.folio.inventory.storage.test.database",
       "embedded");
 
-    switch(useExternalDatabase) {
+    switch (useExternalDatabase) {
       case "environment":
         System.out.println("Using environment settings");
         break;
@@ -133,10 +138,9 @@ public class StorageTestSuite {
     PostgresClient.stopEmbeddedPostgres();
 
     vertx.close(res -> {
-      if(res.succeeded()) {
+      if (res.succeeded()) {
         undeploymentComplete.complete(null);
-      }
-      else {
+      } else {
         undeploymentComplete.completeExceptionally(res.cause());
       }
     });
@@ -155,12 +159,11 @@ public class StorageTestSuite {
 
       Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
-      if(response.getStatusCode() != 204) {
+      if (response.getStatusCode() != 204) {
         Assert.fail("Delete all preparation failed: " +
           response.getBody());
       }
-    }
-    catch(Exception e) {
+    } catch (Exception e) {
       Assert.fail("WARNING!!!!! Unable to delete all: " + e.getMessage());
     }
   }
@@ -173,8 +176,7 @@ public class StorageTestSuite {
       Integer mismatchedRowCount = results.getNumRows();
 
       assertThat(mismatchedRowCount, is(0));
-    }
-    catch(Exception e) {
+    } catch (Exception e) {
       System.out.println(
         "WARNING!!!!! Unable to determine mismatched ID rows");
     }
@@ -194,7 +196,7 @@ public class StorageTestSuite {
   }
 
   private static ResultSet getRecordsWithUnmatchedIds(String tenantId,
-                                                     String tableName)
+                                                      String tableName)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     PostgresClient dbClient = PostgresClient.getInstance(
@@ -207,10 +209,9 @@ public class StorageTestSuite {
       tenantId, "mod_inventory_storage", tableName);
 
     dbClient.select(sql, result -> {
-      if(result.succeeded()) {
+      if (result.succeeded()) {
         selectCompleted.complete(result.result());
-      }
-      else {
+      } else {
         selectCompleted.completeExceptionally(result.cause());
       }
     });
@@ -224,10 +225,9 @@ public class StorageTestSuite {
     CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-      if(res.succeeded()) {
+      if (res.succeeded()) {
         deploymentComplete.complete(res.result());
-      }
-      else {
+      } else {
         deploymentComplete.completeExceptionally(res.cause());
       }
     });

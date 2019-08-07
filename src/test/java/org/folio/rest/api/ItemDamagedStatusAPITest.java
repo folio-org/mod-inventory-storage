@@ -1,65 +1,57 @@
 package org.folio.rest.api;
 
-import static io.vertx.core.http.HttpMethod.DELETE;
-import static io.vertx.core.http.HttpMethod.GET;
-import static io.vertx.core.http.HttpMethod.POST;
-import static io.vertx.core.http.HttpMethod.PUT;
-import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
-import static java.net.HttpURLConnection.HTTP_OK;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.rest.support.http.InterfaceUrls.itemDamagedStatusesUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.UUID;
 
+import org.folio.HttpStatus;
 import org.folio.rest.impl.ItemDamagedStatusAPI;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.JsonObject;
 
 public class ItemDamagedStatusAPITest extends TestBase {
 
+  public static final String TEST_TENANT = "test_tenant";
+
   @Before
   public void beforeEach() {
-    StorageTestSuite.deleteAll("test_tenant", ItemDamagedStatusAPI.REFERENCE_TABLE);
+    StorageTestSuite.deleteAll(TEST_TENANT, ItemDamagedStatusAPI.REFERENCE_TABLE);
   }
 
   @Test
-  public void canCreateItemDamagedStatus()
-    throws MalformedURLException {
+  public void canCreateItemDamagedStatus() {
 
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
 
-    JsonObject response = send(
-      itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_CREATED
-    );
-
-    assertThat(response.getString("id"), notNullValue());
-    assertThat(response.getString("name"), is(status.getName()));
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+        JsonObject statusJson = response.getJson();
+        assertThat(statusJson.getString("id"), notNullValue());
+        assertThat(statusJson.getString("name"), is(status.getName()));
+      });
   }
 
   @Test
-  public void shouldNotCreateItemDamagedStatusWhenUnprocessableEntity()
-    throws MalformedURLException {
-
-    send(itemDamagedStatusesUrl(""),
-      POST,
-      new JsonObject().put("foo", "boo").encode(),
-      HttpResponseStatus.UNPROCESSABLE_ENTITY.code()
-    );
+  public void shouldNotCreateItemDamagedStatusWhenUnprocessableEntity() {
+    JsonObject object = new JsonObject().put("foo", "boo");
+    client.post(itemDamagedStatusesUrl(EMPTY), object, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(422));
+      });
   }
 
   @Test
@@ -70,181 +62,186 @@ public class ItemDamagedStatusAPITest extends TestBase {
       .withName("test item damaged status name")
       .withSource("local");
 
-    send(
-      itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_CREATED
-    );
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      });
 
-    send(
-      itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_BAD_REQUEST
-    );
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
+      });
   }
 
   @Test
-  public void shouldNotCreateItemDamagedStatusWithTheSameId()
-    throws MalformedURLException {
+  public void shouldNotCreateItemDamagedStatusWithTheSameId() {
 
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
 
-    JsonObject createdItemDamagedStatusResponse = send(
-      itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_CREATED
-    );
-
-    String id = createdItemDamagedStatusResponse.getString("id");
-
-    JsonObject result = send(
-      itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status.withId(id)).encode(),
-      HTTP_BAD_REQUEST
-    );
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      })
+      .thenCompose(response -> {
+        status.setId(response.getJson().getString("id"));
+        return client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT);
+      })
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
+      });
   }
 
   @Test
-  public void canGetItemDamagedStatus()
-    throws MalformedURLException {
+  public void canGetItemDamagedStatus() {
 
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
 
-    JsonObject createdItemDamagedStatusResponse = send(
-      itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_CREATED
-    );
-
-    String id = createdItemDamagedStatusResponse.getString("id");
-    JsonObject result = send(
-      itemDamagedStatusesUrl("/" + id),
-      GET,
-      null,
-      HTTP_OK
-    );
-
-    assertThat(result, notNullValue());
-    assertThat(result.getString("id"), notNullValue());
-    assertThat(result.getString("name"), is(status.getName()));
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      })
+      .thenCompose(response -> {
+        String id = response.getJson().getString("id");
+        return client.get(itemDamagedStatusesUrl("/" + id), TEST_TENANT);
+      })
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+        JsonObject statusJson = response.getJson();
+        assertThat(statusJson.getString("id"), notNullValue());
+        assertThat(statusJson.getString("name"), is(status.getName()));
+      });
   }
 
   @Test
-  public void canGetAllItemDamagedStatuses() throws MalformedURLException {
+  public void canGetAllItemDamagedStatuses() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
 
-    send(itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_CREATED
-    );
-
-    send(itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status.withName("second test item damaged status name")).encode(),
-      HTTP_CREATED
-    );
-
-    JsonObject result = send(itemDamagedStatusesUrl(""), GET, null, HTTP_OK);
-    assertThat(result.getJsonArray("itemDamageStatuses").size(), is(2));
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      })
+      .thenCompose(response -> {
+        status.setName("second test item damaged status name");
+        return client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT);
+      })
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      })
+      .thenCompose(it -> client.get(itemDamagedStatusesUrl(EMPTY), TEST_TENANT))
+      .whenComplete((response, throwable) -> {
+        int size = response.getJson().getJsonArray("itemDamageStatuses").size();
+        assertThat(size, is(2));
+      });
   }
 
   @Test
-  public void shouldFindItemDamagedStatusesByName() throws MalformedURLException {
+  public void shouldFindItemDamagedStatusesByName() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
 
-    send(itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_CREATED
-    );
-
-    send(itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status.withName("itemDamagedStatusName")).encode(),
-      HTTP_CREATED
-    );
-
-    JsonObject result = send(
-      itemDamagedStatusesUrl("?query=name=itemDamagedStatusName"),
-      GET,
-      null,
-      HTTP_OK);
-
-    assertThat(result.getJsonArray("itemDamageStatuses").size(), is(1));
-    JsonObject itemDamageStatuses = result.getJsonArray("itemDamageStatuses").getJsonObject(0);
-    assertThat(itemDamageStatuses.getString("name"), is("itemDamagedStatusName"));
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      })
+      .thenCompose(response -> {
+        status.setName("itemDamagedStatusName");
+        return client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT);
+      })
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      })
+      .thenCompose(it -> {
+        URL url = itemDamagedStatusesUrl("?query=name=itemDamagedStatusName");
+        return client.get(url, TEST_TENANT);
+      })
+      .whenComplete((response, throwable) -> {
+        JsonObject body = response.getJson();
+        int size = body.getJsonArray("itemDamageStatuses").size();
+        assertThat(size, is(1));
+        JsonObject statuses = body.getJsonArray("itemDamageStatuses").getJsonObject(0);
+        assertThat(statuses.getString("name"), is("itemDamagedStatusName"));
+      });
   }
 
   @Test
-  public void canDeleteItemDamagedStatus() throws MalformedURLException {
+  public void canDeleteItemDamagedStatus() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
 
-    JsonObject createdItemDamagedStatusResponse = send(
-      itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_CREATED
-    );
-
-    String id = createdItemDamagedStatusResponse.getString("id");
-
-    send(itemDamagedStatusesUrl("/" + id), DELETE, null, HTTP_NO_CONTENT);
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      })
+      .thenCompose(response -> {
+        String id = response.getJson().getString("id");
+        return client.delete(itemDamagedStatusesUrl("/" + id), TEST_TENANT);
+      })
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+      });
   }
 
   @Test
-  public void cannotDeleteItemDamagedStatusThatDoesNotExist()
-    throws MalformedURLException {
+  public void cannotDeleteItemDamagedStatusThatDoesNotExist() {
 
-    send(itemDamagedStatusesUrl("/" + UUID.randomUUID()), DELETE, null, HTTP_NOT_FOUND);
+    client.delete(itemDamagedStatusesUrl("/" + UUID.randomUUID()), TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
+      });
   }
 
   @Test
-  public void canUpdateItemDamagedStatus() throws MalformedURLException {
+  public void canUpdateItemDamagedStatus() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
 
-    JsonObject createdItemDamagedStatusResponse = send(
-      itemDamagedStatusesUrl(""),
-      POST,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_CREATED
-    );
-
-    String id = createdItemDamagedStatusResponse.getString("id");
-
-    send(itemDamagedStatusesUrl("/" + id),
-      PUT,
-      JsonObject.mapFrom(status.withSource("folio")).encode(),
-      HTTP_NO_CONTENT);
+    client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
+      })
+      .thenCompose(response -> {
+        status.setSource("folio");
+        return client.put(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT);
+      })
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
+      });
   }
 
   @Test
-  public void cannotUpdateItemDamagedStatusThatDoesNotExist()
-    throws MalformedURLException {
+  public void cannotUpdateItemDamagedStatusThatDoesNotExist() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
-    send(itemDamagedStatusesUrl("/" + UUID.randomUUID()),
-      DELETE,
-      JsonObject.mapFrom(status).encode(),
-      HTTP_NOT_FOUND);
-  }
 
+    client.put(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
+      .whenComplete((response, throwable) -> {
+        assertThat(response, notNullValue());
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
+      });
+  }
 }

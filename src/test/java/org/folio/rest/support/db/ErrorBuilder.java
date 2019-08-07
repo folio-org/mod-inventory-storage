@@ -79,7 +79,7 @@ public class ErrorBuilder {
     return this;
   }
 
-  public Map<Object, String> build(){
+  public Map<Object, String> build() {
     java.util.Map<Object, String> map = new java.util.HashMap<>();
     map.computeIfAbsent('D', val -> detail);
     map.computeIfAbsent('s', val -> schema);

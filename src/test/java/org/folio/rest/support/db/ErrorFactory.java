@@ -1,6 +1,7 @@
 package org.folio.rest.support.db;
 
 import static org.folio.rest.support.db.ErrorConstants.CHECK_VIOLATION_ERROR_CODE;
+import static org.folio.rest.support.db.ErrorConstants.CHILD_TABLE_NAME;
 import static org.folio.rest.support.db.ErrorConstants.DATATYPE_MISMATCH_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.DATA_LENGTH_MISMATCH_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.ERROR_TYPE;
@@ -12,32 +13,32 @@ import static org.folio.rest.support.db.ErrorConstants.INVALID_PASSWORD_ERROR_CO
 import static org.folio.rest.support.db.ErrorConstants.INVALID_TEXT_REPRESENTATION_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.NOT_NULL_VIOLATION_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.PARENT_TABLE_NAME;
-import static org.folio.rest.support.db.ErrorConstants.UNIQUE_VIOLATION_ERROR_CODE;
-import static org.folio.rest.support.db.ErrorConstants.CHILD_TABLE_NAME;
 import static org.folio.rest.support.db.ErrorConstants.SCHEMA_NAME;
+import static org.folio.rest.support.db.ErrorConstants.UNIQUE_VIOLATION_ERROR_CODE;
 
 import scala.collection.immutable.Map;
 
 public class ErrorFactory {
 
-  private ErrorFactory() {}
+  private ErrorFactory() {
+  }
 
- public  static Map<Object, String> getForeignKeyErrorMap(){
-     return new ErrorBuilder()
-       .setMessage("insert or update on table \"child\" violates foreign key constraint \"fk_parent\"")
-       .setDetail("Key (parent_id1, parent_id2)=(22222, 813205855) is not a present in table \"parent\"")
-       .setSchema(SCHEMA_NAME)
-       .setTable(CHILD_TABLE_NAME)
-       .setFieldName("fk_parent")
-       .setLine("3321")
-       .setFile("ri.triggers.c")
-       .setSqlState(FOREIGN_KEY_VIOLATION_ERROR_CODE)
-       .setRoutine("ri_ReportViolation")
-       .setErrorType(ERROR_TYPE)
-       .setSeverity(ERROR_TYPE).build();
- }
+  public static Map<Object, String> getForeignKeyErrorMap() {
+    return new ErrorBuilder()
+      .setMessage("insert or update on table \"child\" violates foreign key constraint \"fk_parent\"")
+      .setDetail("Key (parent_id1, parent_id2)=(22222, 813205855) is not a present in table \"parent\"")
+      .setSchema(SCHEMA_NAME)
+      .setTable(CHILD_TABLE_NAME)
+      .setFieldName("fk_parent")
+      .setLine("3321")
+      .setFile("ri.triggers.c")
+      .setSqlState(FOREIGN_KEY_VIOLATION_ERROR_CODE)
+      .setRoutine("ri_ReportViolation")
+      .setErrorType(ERROR_TYPE)
+      .setSeverity(ERROR_TYPE).build();
+  }
 
-  public static Map<Object, String> getPrimaryKeyErrorMap(){
+  public static Map<Object, String> getPrimaryKeyErrorMap() {
     return new ErrorBuilder()
       .setMessage("duplicate key value violates unique constraint \"pk_parent\"")
       .setDetail("Key (id1, id2)=(22222, 813205855) already exists")
@@ -52,7 +53,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getUUIDErrorMap(){
+  public static Map<Object, String> getUUIDErrorMap() {
     return new ErrorBuilder()
       .setMessage("invalid input syntax for type uuid: \"INVALID\"")
       .setLine("137")
@@ -63,7 +64,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getNotNullViolationErrorMap(){
+  public static Map<Object, String> getNotNullViolationErrorMap() {
     return new ErrorBuilder()
       .setMessage("null value in column \"name\" violates not-null constraint")
       .setDetail("Failing row constraints (1697635108, 858317485, null, 4670207833.23)")
@@ -78,7 +79,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getUniqueViolationErrorMap(){
+  public static Map<Object, String> getUniqueViolationErrorMap() {
     return new ErrorBuilder()
       .setMessage("duplicate key value violates unique constraint \"unq_name\"")
       .setDetail("Key (name)=(eOMtThyhVNLWUZNRcBaQKxl) already exists")
@@ -93,7 +94,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getCheckViolationErrorMap(){
+  public static Map<Object, String> getCheckViolationErrorMap() {
     return new ErrorBuilder()
       .setMessage("new ow for relation \"parent\" violates check constraint")
       .setDetail("Failing row contains (1704747953, 1372598141, eOMtThyhVNLWUZNRcBaQKxl, -1.00)")
@@ -108,7 +109,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getIntegrityViolationErrorMap(){
+  public static Map<Object, String> getIntegrityViolationErrorMap() {
     return new ErrorBuilder()
       .setMessage("new row for relation \"parent\" violates check constraint")
       .setDetail("Failing row contains (1704747953, 1372598141, eOMtThyhVNLWUZNRcBaQKxl, -1.00)")
@@ -123,7 +124,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getExclusionViolationErrorMap(){
+  public static Map<Object, String> getExclusionViolationErrorMap() {
     return new ErrorBuilder()
       .setMessage("conflicting key value violates exclusion constraint \"exclude_overlapping_bookings\"")
       .setDetail("Key (daterange(from_date, to_date, '[]'::text))=([2017-04-20,2017-05-01)) " +
@@ -139,7 +140,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getDataTypeMismatchViolation(){
+  public static Map<Object, String> getDataTypeMismatchViolation() {
     return new ErrorBuilder()
       .setMessage("column \"addresses\" is of type json but expression is of type character varying")
       .setSchema(SCHEMA_NAME)
@@ -152,7 +153,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getDataLengthMismatch(){
+  public static Map<Object, String> getDataLengthMismatch() {
     return new ErrorBuilder()
       .setMessage("value too long for type character varying(10)")
       .setLine("624")
@@ -163,7 +164,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Object, String> getInvalidPasswordErrorMap(){
+  public static Map<Object, String> getInvalidPasswordErrorMap() {
     return new ErrorBuilder()
       .setMessage("password authentication failed for user \"wrong_mod_notes\"")
       .setLine("328")
@@ -174,67 +175,67 @@ public class ErrorFactory {
       .setSeverity(FATAL_TYPE).build();
   }
 
-  public static Map<Object, String> getErrorMapWithFieldNameOnly(String name){
+  public static Map<Object, String> getErrorMapWithFieldNameOnly(String name) {
     return new ErrorBuilder().setFieldName(name).build();
   }
 
-  public static Map<Object, String> getErrorMapWithFieldNameNull(){
+  public static Map<Object, String> getErrorMapWithFieldNameNull() {
     return new ErrorBuilder().setFieldName(null).build();
   }
 
-  public static Map<Object, String> getErrorMapWithDetailOnly(String detail){
+  public static Map<Object, String> getErrorMapWithDetailOnly(String detail) {
     return new ErrorBuilder().setDetail(detail).build();
   }
 
-  public static Map<Object, String> getErrorMapWithDetailNull(){
+  public static Map<Object, String> getErrorMapWithDetailNull() {
     return new ErrorBuilder().setDetail(null).build();
   }
 
-  public static Map<Object, String> getErrorMapWithSqlStateOnly(String sqlState){
+  public static Map<Object, String> getErrorMapWithSqlStateOnly(String sqlState) {
     return new ErrorBuilder().setSqlState(sqlState).build();
   }
 
-  public static Map<Object, String> getErrorMapWithSqlStateNull(){
+  public static Map<Object, String> getErrorMapWithSqlStateNull() {
     return new ErrorBuilder().setSqlState(null).build();
   }
 
-  public static Map<Object, String> getErrorMapWithPsql(String psql){
+  public static Map<Object, String> getErrorMapWithPsql(String psql) {
     return new ErrorBuilder().setSqlState(psql).build();
   }
 
-  public static Map<Object, String> getErrorMapWithPsqlStateNull(){
+  public static Map<Object, String> getErrorMapWithPsqlStateNull() {
     return new ErrorBuilder().setSqlState(null).build();
   }
 
-  public static Map<Object, String> getErrorMapWithSchema(String schema){
+  public static Map<Object, String> getErrorMapWithSchema(String schema) {
     return new ErrorBuilder().setSchema(schema).build();
   }
 
-  public static Map<Object, String> getErrorMapWithSchemaNull(){
+  public static Map<Object, String> getErrorMapWithSchemaNull() {
     return new ErrorBuilder().setSchema(null).build();
   }
 
-  public static Map<Object, String> getErrorMapWithTable(String table){
+  public static Map<Object, String> getErrorMapWithTable(String table) {
     return new ErrorBuilder().setTable(table).build();
   }
 
-  public static Map<Object, String> getErrorMapWithTableNull(){
+  public static Map<Object, String> getErrorMapWithTableNull() {
     return new ErrorBuilder().setTable(null).build();
   }
 
-  public static Map<Object, String> getErrorMapWithMessage(String message){
+  public static Map<Object, String> getErrorMapWithMessage(String message) {
     return new ErrorBuilder().setMessage(message).build();
   }
 
-  public static Map<Object, String> getErrorMapWithMessageNull(){
+  public static Map<Object, String> getErrorMapWithMessageNull() {
     return new ErrorBuilder().setMessage(null).build();
   }
 
-  public static Map<Object, String> getErrorMapWithColumn(String column){
+  public static Map<Object, String> getErrorMapWithColumn(String column) {
     return new ErrorBuilder().setFieldColumn(column).build();
   }
 
-  public static Map<Object, String> getErrorMapWithColumnNull(){
+  public static Map<Object, String> getErrorMapWithColumnNull() {
     return new ErrorBuilder().setMessage(null).build();
   }
 }
