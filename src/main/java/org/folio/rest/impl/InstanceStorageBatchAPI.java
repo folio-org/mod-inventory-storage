@@ -31,7 +31,7 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
 
   private static final String INSTANCE_TABLE = "instance";
   private static final String BATCH_SIZE_KEY = "inventory.storage.max.batch.size";
-  private static final int MAX_BATCH_SIZE = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault(BATCH_SIZE_KEY, "50"));
+  private static final int MAX_BATCH_SIZE = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault(BATCH_SIZE_KEY, "4"));
 
   @Override
   public void postInstanceStorageBatchInstances(Instances entity,
