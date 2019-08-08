@@ -44,48 +44,12 @@ public class InstanceStorageAPI implements InstanceStorage {
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
   public static final String MODULE = "mod_inventory_storage";
-  public static final String INSTANCE_HOLDINGS_VIEW = "instance_holding_view";
-  public static final String INSTANCE_HOLDINGS_ITEMS_VIEW = "instance_holding_item_view";
   public static final String INSTANCE_TABLE =  "instance";
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
   private final Messages messages = Messages.getInstance();
 
   PreparedCQL handleCQL(String query, int limit, int offset) throws FieldException {
-    boolean containsHoldingsRecordProperties = query != null && query.contains("holdingsRecords.");
-    boolean containsItemsRecordProperties = query != null && query.contains("item.");
-
-    if(containsItemsRecordProperties && containsHoldingsRecordProperties) {
-      //it_jsonb is the alias given items in the view in the DB
-      query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
-
-      //ho_jsonb is the alias given holdings in the view in the DB
-      query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".ho_jsonb.");
-
-      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
-        INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-        INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb"), INSTANCE_TABLE + ".jsonb");
-    }
-
-    if(containsItemsRecordProperties) {
-      //it_jsonb is the alias given items in the view in the DB
-      query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
-
-      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
-        INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb"), INSTANCE_TABLE + ".jsonb");
-    }
-
-    if(containsHoldingsRecordProperties) {
-      //ho_jsonb is the alias given holdings in the view in the DB
-      query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
-
-      return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, query, limit, offset, Arrays.asList(
-        INSTANCE_HOLDINGS_VIEW+".jsonb",
-          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"), INSTANCE_TABLE + ".jsonb");
-    }
-
     return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"), INSTANCE_TABLE + ".jsonb");
   }
 
