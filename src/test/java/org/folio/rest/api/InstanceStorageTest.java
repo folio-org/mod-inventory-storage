@@ -1334,12 +1334,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createHoldings(jho3);
     ////////////////////////done //////////////////////////////////////
 
-    String url1 = url+ encode("title=Long Way to a Small Angry Planet* sortBy holdingsRecords.permanentLocationId/sort.descending title", "UTF-8");
-    String url2 = url+ encode("title=cql.allRecords=1 sortBy holdingsRecords.permanentLocationId/sort.ascending", "UTF-8");
-    String url3 = url+ encode("holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 sortBy holdingsRecords.permanentLocationId/sort.descending title", "UTF-8");
-    String url4 = url+ encode("title=cql.allRecords=1 sortby holdingsRecords.permanentLocationId title", "UTF-8");
+    String url1 = url+ encode("title=Long Way to a Small Angry Planet*", "UTF-8");
+    String url2 = url+ encode("title=cql.allRecords=1 sortBy title", "UTF-8");
+    String url3 = url+ encode("holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 sortBy title", "UTF-8");
+    String url4 = url+ encode("title=cql.allRecords=1 sortby title", "UTF-8");
     String url5 = url+ encode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 "
-        + "sortby holdingsRecords.permanentLocationId", "UTF-8");
+        + "sortby title", "UTF-8");
     //non existant - 0 results
     String url6 = url+ encode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=abc* sortby holdingsRecords.permanentLocationId", "UTF-8");
 
@@ -1366,7 +1366,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
       if(i==0){
         assertThat(3, is(cqlResponse.getJson().getInteger(TOTAL_RECORDS_KEY)));
-        assertThat("TEST2" , is(cqlResponse.getJson().getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
+        assertThat("TEST1" , is(cqlResponse.getJson().getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
       } else if(i==1){
         assertThat(3, is(cqlResponse.getJson().getInteger(TOTAL_RECORDS_KEY)));
         assertThat("TEST1" , is(cqlResponse.getJson().getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
