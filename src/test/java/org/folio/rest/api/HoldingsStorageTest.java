@@ -542,9 +542,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
 
     return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID());
+      identifiers, contributors, UUID.randomUUID(), tags);
   }
 
   private JsonObject nod(UUID id) {
@@ -553,8 +555,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Barnes, Adrian"));
+
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Nod",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
   }
 
   private JsonObject uprooted(UUID id) {
@@ -565,8 +570,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
 
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
+
     return createInstanceRequest(id, "TEST", "Uprooted",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
   }
 
   private JsonObject temeraire(UUID id) {
@@ -577,8 +585,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
+
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Temeraire",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
   }
 
   private JsonObject interestingTimes(UUID id) {
@@ -588,8 +599,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Pratchett, Terry"));
+
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Interesting Times",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
   }
 
   private Predicate<JsonObject> filterById(UUID holdingId) {
