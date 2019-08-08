@@ -71,6 +71,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String INSTANCES_KEY = "instances";
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
+  private static final String TAG_VALUE = "test-tag";
   private static UUID mainLibraryLocationId;
   private static UUID annexLocationId;
   private static UUID bookMaterialTypeId;
@@ -158,6 +159,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray identifiersFromGet = instanceFromGet.getJsonArray("identifiers");
     assertThat(identifiersFromGet.size(), is(1));
     assertThat(identifiersFromGet, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+
+    List<String> tags = instanceFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -1288,16 +1294,18 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
 
     UUID idJ1 = UUID.randomUUID();
     JsonObject j1 = createInstanceRequest(idJ1, "TEST1", "Long Way to a Small Angry Planet 1",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
     UUID idJ2 = UUID.randomUUID();
     JsonObject j2 = createInstanceRequest(idJ2, "TEST2", "Long Way to a Small Angry Planet 2",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
     UUID idJ3 = UUID.randomUUID();
     JsonObject j3 = createInstanceRequest(idJ3, "TEST3", "Long Way to a Small Angry Planet 3",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
 
     createInstance(j1);
     createInstance(j2);
@@ -1561,9 +1569,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
 
     return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID());
+      identifiers, contributors, UUID.randomUUID(), tags);
   }
 
 
@@ -1604,8 +1614,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Barnes, Adrian"));
+
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Nod",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
   }
 
   private JsonObject uprooted(UUID id) {
@@ -1616,8 +1629,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
 
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
+
     return createInstanceRequest(id, "TEST", "Uprooted",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
   }
 
   private JsonObject temeraire(UUID id) {
@@ -1628,8 +1644,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
+
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Temeraire",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
   }
 
   private JsonObject interestingTimes(UUID id) {
@@ -1639,8 +1658,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Pratchett, Terry"));
+
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Interesting Times",
-      identifiers, contributors, UUID_TEXT);
+      identifiers, contributors, UUID_TEXT, tags);
   }
 
   private void createItem(JsonObject itemToCreate)

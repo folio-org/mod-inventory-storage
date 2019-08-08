@@ -9,5 +9,10 @@
   "permanentLoanTypeId": "2b94c631-fca9-4892-a730-03ee529ffe27",
   "temporaryLoanTypeId": "e8b311a6-3b21-43f2-a269-dd9310cb2d0e",
   "temporaryLocationId": "0df935eb-f3f4-4741-9ac6-33c500174b96",
-  "inTransitDestinationServicePointId": "5b31ec8c-95a7-4b91-95cc-b551a74b91ca"
+  "inTransitDestinationServicePointId": "5b31ec8c-95a7-4b91-95cc-b551a74b91ca",
+  "tags" : {
+    "tagList" : [
+      "important"
+    ]
+  }
 }
