@@ -1,3 +1,8 @@
+## 16.0.2 2019-08-08
+
+* Update to use new foreign key search (MODINVSTOR-339) and
+  use RMB 26.3.1
+
 ## 16.0.1 2019-07-31
 
 * Fixes bug with certain combinations of CQL query clauses (MODINVSTOR-319)
