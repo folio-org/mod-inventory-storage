@@ -1334,7 +1334,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createHoldings(jho3);
     ////////////////////////done //////////////////////////////////////
 
-    String url1 = url+ encode("title=Long Way to a Small Angry Planet*", "UTF-8");
+    String url1 = url+ encode("title=Long Way to a Small Angry Planet* sortby title", "UTF-8");
     String url2 = url+ encode("title=cql.allRecords=1 sortBy title", "UTF-8");
     String url3 = url+ encode("holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 sortBy title", "UTF-8");
     String url4 = url+ encode("title=cql.allRecords=1 sortby title", "UTF-8");

@@ -64,12 +64,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       fieldsString += fields + " ";
     }
     log.info("create wrapper" + fieldsString + "------" + view);
-    CQL2PgJSON cql2pgJson = null;
-    if (fields.size() == 1) {
-      cql2pgJson = new CQL2PgJSON(view);
-    } else {
-      cql2pgJson = new CQL2PgJSON(fields, view);
-    }
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(fields, view);
 
     return new CQLWrapper(cql2pgJson, query)
       .setLimit(new Limit(limit))
