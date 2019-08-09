@@ -302,7 +302,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     }
 
     assertThat(url + " - " + method + " - " + content + ":" + response.getBody(),
-        response.getStatusCode(), is(expectedStatusCode));
+      response.getStatusCode(), is(expectedStatusCode));
 
     try {
       return response.getJson();
@@ -314,7 +314,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
   }
 
   private void send(URL url, HttpMethod method, String content,
-      Handler<HttpClientResponse> handler) {
+                    Handler<HttpClientResponse> handler) {
     HttpClient client = StorageTestSuite.getVertx().createHttpClient();
     HttpClientRequest request;
     if (content == null) {
@@ -323,28 +323,29 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     Buffer buffer = Buffer.buffer(content);
 
     switch (method) {
-    case POST:
-      request = client.postAbs(url.toString());
-      break;
-    case DELETE:
-      request = client.deleteAbs(url.toString());
-      break;
-    case GET:
-      request = client.getAbs(url.toString());
-      break;
-    default:
-      request = client.putAbs(url.toString());
+      case POST:
+        request = client.postAbs(url.toString());
+        break;
+      case DELETE:
+        request = client.deleteAbs(url.toString());
+        break;
+      case GET:
+        request = client.getAbs(url.toString());
+        break;
+      default:
+        request = client.putAbs(url.toString());
     }
     request.exceptionHandler(error -> {
       Assert.fail(error.getLocalizedMessage());
     })
-    .handler(handler);
+      .handler(handler);
     request.putHeader("Authorization", "test_tenant");
     request.putHeader("x-okapi-tenant", "test_tenant");
     request.putHeader("Accept", "application/json,text/plain");
     request.putHeader("Content-type", SUPPORTED_CONTENT_TYPE_JSON_DEF);
     request.end(buffer);
   }
+
 
   /** Create a JSON String of an item; set permanentLoanTypeId and temporaryLoanTypeId
    * if the passed variable is not null */

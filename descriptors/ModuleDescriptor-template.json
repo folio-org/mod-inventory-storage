@@ -861,7 +861,33 @@
         }
       ]
     },
-
+    {
+      "id": "item-damaged-statuses",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/item-damaged-statuses",
+          "permissionsRequired": ["inventory-storage.item-damaged-statuses.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/item-damaged-statuses/{id}",
+          "permissionsRequired": ["inventory-storage.item-damaged-statuses.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/item-damaged-statuses",
+          "permissionsRequired": ["inventory-storage.item-damaged-statuses.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/item-damaged-statuses/{id}",
+          "permissionsRequired": ["inventory-storage.item-damaged-statuses.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/item-damaged-statuses/{id}",
+          "permissionsRequired": ["inventory-storage.item-damaged-statuses.item.delete"]
+        }
+      ]
+    },
     {
       "id": "service-points",
       "version": "3.2",
@@ -1753,6 +1779,31 @@
       "displayName": "inventory storage - delete individual item-note-type",
       "description": "delete individual item-note-type from storage"
     },
+    {
+      "permissionName": "inventory-storage.item-damaged-statuses.collection.get",
+      "displayName": "inventory storage - get item-damaged-statuses collection",
+      "description": "get item-damaged-statuses collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.item-damaged-statuses.item.get",
+      "displayName": "inventory storage - get individual item-damaged-status",
+      "description": "get individual item-damaged-status from storage"
+    },
+    {
+      "permissionName": "inventory-storage.item-damaged-statuses.item.post",
+      "displayName": "inventory storage - create individual item-damaged-status",
+      "description": "create individual item-damaged-status in storage"
+    },
+    {
+      "permissionName": "inventory-storage.item-damaged-statuses.item.put",
+      "displayName": "inventory storage - modify item-damaged-status",
+      "description": "modify item-damaged-status in storage"
+    },
+    {
+      "permissionName": "inventory-storage.item-damaged-statuses.item.delete",
+      "displayName": "inventory storage - delete individual item-damaged-status",
+      "description": "delete individual item-damaged-status from storage"
+    },
 
     {
       "permissionName": "inventory-storage.call-number-types.collection.get",
@@ -1942,6 +1993,11 @@
         "inventory-storage.item-note-types.item.post",
         "inventory-storage.item-note-types.item.put",
         "inventory-storage.item-note-types.item.delete",
+        "inventory-storage.item-damaged-statuses.collection.get",
+        "inventory-storage.item-damaged-statuses.item.get",
+        "inventory-storage.item-damaged-statuses.item.post",
+        "inventory-storage.item-damaged-statuses.item.put",
+        "inventory-storage.item-damaged-statuses.item.delete",
         "inventory-storage.service-points.collection.get",
         "inventory-storage.service-points.item.get",
         "inventory-storage.service-points.item.post",

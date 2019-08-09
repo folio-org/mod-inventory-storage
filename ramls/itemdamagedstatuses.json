@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of item damage statuses",
+  "type": "object",
+  "properties": {
+    "itemDamageStatuses": {
+      "description": "List of item damage statuses",
+      "id": "itemDamageStatus",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "itemdamagedstatus.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "itemDamageStatuses",
+    "totalRecords"
+  ]
+}
+
