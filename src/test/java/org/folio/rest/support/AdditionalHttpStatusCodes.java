@@ -1,6 +1,6 @@
 package org.folio.rest.support;
 
-//TODO remove it and use io.netty.handler.codec.http.HttpResponseStatus.UNPROCESSABLE_ENTITY
+//TODO remove it when this ticket will be done https://issues.folio.org/browse/RMB-445
 public class AdditionalHttpStatusCodes {
 
   public static final int UNPROCESSABLE_ENTITY = 422;

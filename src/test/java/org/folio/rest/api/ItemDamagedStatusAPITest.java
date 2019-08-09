@@ -6,7 +6,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
@@ -28,8 +27,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
   }
 
   @Test
-  public void canCreateItemDamagedStatus() {
-
+  public void canCreateAnItemDamagedStatus() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
@@ -45,7 +43,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
   }
 
   @Test
-  public void shouldNotCreateItemDamagedStatusWhenUnprocessableEntity() {
+  public void shouldNotCreateItemDamagedStatusWhenUnexpectedPropertiesAreProvided() {
     JsonObject object = new JsonObject().put("foo", "boo");
     client.post(itemDamagedStatusesUrl(EMPTY), object, TEST_TENANT)
       .whenComplete((response, throwable) -> {
@@ -55,9 +53,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
   }
 
   @Test
-  public void shouldNotCreateItemDamagedStatusWithTheSameName()
-    throws MalformedURLException {
-
+  public void shouldNotBeAbleToCreateItemDamagedStatusWithTheSameName() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
@@ -76,8 +72,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
   }
 
   @Test
-  public void shouldNotCreateItemDamagedStatusWithTheSameId() {
-
+  public void shouldNotBeAbleToCreateItemDamagedStatusWithTheSameId() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
@@ -99,7 +94,6 @@ public class ItemDamagedStatusAPITest extends TestBase {
 
   @Test
   public void canGetItemDamagedStatus() {
-
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
@@ -149,7 +143,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
   }
 
   @Test
-  public void shouldFindItemDamagedStatusesByName() {
+  public void shouldFindAnItemDamagedStatusByName() {
     ItemDamageStatus status = new ItemDamageStatus()
       .withName("test item damaged status name")
       .withSource("local");
@@ -203,7 +197,6 @@ public class ItemDamagedStatusAPITest extends TestBase {
 
   @Test
   public void cannotDeleteItemDamagedStatusThatDoesNotExist() {
-
     client.delete(itemDamagedStatusesUrl("/" + UUID.randomUUID()), TEST_TENANT)
       .whenComplete((response, throwable) -> {
         assertThat(response, notNullValue());

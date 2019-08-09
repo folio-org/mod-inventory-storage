@@ -32,15 +32,15 @@ public class HttpClient {
     client = vertx.createHttpClient();
   }
 
-  private void initDefaultHeaders(HttpClientRequest request, String url, String tenantId) {
+  private void addDefaultHeaders(HttpClientRequest request, String url, String tenantId) {
     try {
-      initDefaultHeaders(request, new URL(url), tenantId);
+      addDefaultHeaders(request, new URL(url), tenantId);
     } catch (MalformedURLException ex) {
       LOG.info(format("Malformed url: %s, message: %s", url, ex.getMessage()));
     }
   }
 
-  private void initDefaultHeaders(HttpClientRequest request, URL url, String tenantId) {
+  private void addDefaultHeaders(HttpClientRequest request, URL url, String tenantId) {
     if (isNotBlank(tenantId)) {
       request.headers().add(TENANT_HEADER, tenantId);
     }
@@ -60,7 +60,7 @@ public class HttpClient {
 
     HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
     request.putHeader(CONTENT_TYPE, APPLICATION_JSON);
-    initDefaultHeaders(request, url, tenantId);
+    addDefaultHeaders(request, url, tenantId);
 
     if (body == null) {
       request.end();
@@ -86,7 +86,7 @@ public class HttpClient {
     HttpClientRequest request = client.putAbs(url.toString(), responseHandler);
 
     request.putHeader(CONTENT_TYPE, APPLICATION_JSON);
-    initDefaultHeaders(request, url, tenantId);
+    addDefaultHeaders(request, url, tenantId);
 
     String encodedBody = Json.encodePrettily(body);
     LOG.info(format("PUT %s, Request: %s", url.toString(), encodedBody));
@@ -113,7 +113,7 @@ public class HttpClient {
     Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.getAbs(url, responseHandler);
-    initDefaultHeaders(request, url, tenantId);
+    addDefaultHeaders(request, url, tenantId);
     request.end();
   }
 
@@ -137,7 +137,7 @@ public class HttpClient {
     Handler<HttpClientResponse> responseHandler) {
 
     HttpClientRequest request = client.deleteAbs(url, responseHandler);
-    initDefaultHeaders(request, url, tenantId);
+    addDefaultHeaders(request, url, tenantId);
     request.end();
   }
 

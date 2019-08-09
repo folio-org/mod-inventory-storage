@@ -62,13 +62,13 @@ public class ItemDamagedStatusAPIUnitTest {
 
 
   @Before
-  public void setUp(TestContext testContext) throws Exception {
+  public void setUp() {
     MockitoAnnotations.initMocks(this);
     when(pgClientFactory.getInstance(any(Context.class), any(Map.class))).thenReturn(postgresClient);
   }
 
   @Test
-  public void getItemDamagedStatusesShouldReturnBadRequest(TestContext testContext) {
+  public void getItemDamagedStatusesShouldRespondWithBadRequestWhenAQueryIsBadFormatted(TestContext testContext) {
     RuntimeException exception = new RuntimeException(INTERNAL_SERVER_ERROR_MSG);
     doAnswer(setExceptionForHandlerArgument(6, exception))
       .when(postgresClient)
@@ -85,7 +85,7 @@ public class ItemDamagedStatusAPIUnitTest {
     Async async = testContext.async();
     Future<Response> responseFuture = Future.future();
     itemDamagedStatusAPI.getItemDamagedStatuses(
-      DEFAULT_QUERY,
+      "cql=bad*?/format",
       DEFAULT_OFFSET,
       DEFAULT_LIMIT,
       DEFAULT_LANGUAGE,
@@ -101,7 +101,7 @@ public class ItemDamagedStatusAPIUnitTest {
   }
 
   @Test
-  public void getItemDamagedStatusesShouldReturnInternalServerError(TestContext testContext) {
+  public void getItemDamagedStatusesShouldRespondWithServerErrorWhenUnexpectedExceptionIsThrown(TestContext testContext) {
 
     doThrow(new RuntimeException(INTERNAL_SERVER_ERROR_MSG))
       .when(postgresClient).get(
@@ -132,7 +132,7 @@ public class ItemDamagedStatusAPIUnitTest {
   }
 
   @Test
-  public void postItemDamagedStatusesShouldReturnBadRequest(TestContext testContext) {
+  public void postItemDamagedStatusesShouldReturnBadRequestWhenInputDataIsCorrupted(TestContext testContext) {
     GenericDatabaseException exception = new GenericDatabaseException(new ErrorMessage(getUUIDErrorMap()));
     doAnswer(setExceptionForHandlerArgument(3, exception))
       .when(postgresClient)
@@ -160,7 +160,7 @@ public class ItemDamagedStatusAPIUnitTest {
   }
 
   @Test
-  public void postItemDamagedStatusesShouldReturnInternalServerError(TestContext testContext) {
+  public void postItemDamagedStatusesShouldReturnInternalServerErrorWhenUnexpectedExceptionIsThrown(TestContext testContext) {
     doThrow(new RuntimeException(INTERNAL_SERVER_ERROR_MSG))
       .when(postgresClient)
       .save(
@@ -187,7 +187,7 @@ public class ItemDamagedStatusAPIUnitTest {
   }
 
   @Test
-  public void getItemDamagedStatusesByIdShouldReturnInternalServerError(TestContext testContext) {
+  public void getItemDamagedStatusesByIdShouldReturnInternalServerErrorWhenUnexpectedExceptionIsThrown(TestContext testContext) {
     doThrow(new RuntimeException(INTERNAL_SERVER_ERROR_MSG))
       .when(postgresClient)
       .getById(
@@ -214,7 +214,7 @@ public class ItemDamagedStatusAPIUnitTest {
   }
 
   @Test
-  public void deleteItemDamagedStatusesByIdShouldReturnInternalServerError(TestContext testContext) {
+  public void deleteItemDamagedStatusesByIdShouldReturnInternalServerErrorWhenUnexpectedExceptionIsThrown(TestContext testContext) {
     doThrow(new RuntimeException(INTERNAL_SERVER_ERROR_MSG))
       .when(postgresClient)
       .delete(
@@ -240,7 +240,7 @@ public class ItemDamagedStatusAPIUnitTest {
   }
 
   @Test
-  public void deleteItemDamagedStatusesByIdShouldReturnBadRequest(TestContext testContext) {
+  public void deleteItemDamagedStatusesByIdShouldReturnBadRequestWhenInputDataIsCorrupted(TestContext testContext) {
     GenericDatabaseException exception = new GenericDatabaseException(new ErrorMessage(getUUIDErrorMap()));
     doAnswer(setExceptionForHandlerArgument(2, exception))
       .when(postgresClient)
@@ -267,7 +267,7 @@ public class ItemDamagedStatusAPIUnitTest {
   }
 
   @Test
-  public void putItemDamagedStatusesByIdShouldReturnBadRequest(TestContext testContext) {
+  public void putItemDamagedStatusesByIdShouldReturnBadRequestWhenInputDataIsCorrupted(TestContext testContext) {
     GenericDatabaseException exception = new GenericDatabaseException(new ErrorMessage(getUUIDErrorMap()));
     doAnswer(setExceptionForHandlerArgument(3, exception))
       .when(postgresClient)
@@ -296,7 +296,7 @@ public class ItemDamagedStatusAPIUnitTest {
   }
 
   @Test
-  public void putItemDamagedStatusesByIdShouldInternalServerError(TestContext testContext) {
+  public void putItemDamagedStatusesByIdShouldInternalServerErrorWhenUnexpectedExceptionIsThrown(TestContext testContext) {
     doThrow(new RuntimeException(INTERNAL_SERVER_ERROR_MSG))
       .when(postgresClient)
       .update(
