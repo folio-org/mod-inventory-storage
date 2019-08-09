@@ -5,8 +5,6 @@
  */
 package org.folio.rest.api;
 
-import static org.folio.rest.api.TestBase.instancesClient;
-
 import java.net.MalformedURLException;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -48,9 +46,11 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
 
     return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID());
+      identifiers, contributors, UUID.randomUUID(),tags);
   }
 
 
@@ -72,7 +72,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     String title,
     JsonArray identifiers,
     JsonArray contributors,
-    UUID instanceTypeId) {
+    UUID instanceTypeId,
+    JsonArray tags) {
 
     JsonObject instanceToCreate = new JsonObject();
 
@@ -85,7 +86,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     instanceToCreate.put("identifiers", identifiers);
     instanceToCreate.put("contributors", contributors);
     instanceToCreate.put("instanceTypeId", instanceTypeId.toString());
-
+    instanceToCreate.put("tags", new JsonObject().put("tagList", tags));
     return instanceToCreate;
   }
 

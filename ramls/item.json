@@ -249,6 +249,12 @@
       "type": "string",
       "description": "ID referencing a remote purchase order object related to this item"
     },
+    "tags": {
+      "description": "arbitrary tags associated with this item",
+      "id": "tags",
+      "type": "object",
+      "$ref": "raml-util/schemas/tags.schema"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

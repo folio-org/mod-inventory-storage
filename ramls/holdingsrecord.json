@@ -236,6 +236,12 @@
       "folio:linkToField": "id",
       "folio:includedElement": "instances.0"
     },
+    "tags": {
+      "description": "arbitrary tags associated with this holding",
+      "id": "tags",
+      "type": "object",
+      "$ref": "raml-util/schemas/tags.schema"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

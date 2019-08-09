@@ -11,5 +11,10 @@
       "statement": "Line 2",
       "note": "Note to line2"
     }
-  ]
+  ],
+  "tags" : {
+    "tagList" : [
+      "important"
+    ]
+  }
 }
