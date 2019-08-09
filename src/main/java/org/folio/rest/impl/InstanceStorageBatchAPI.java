@@ -30,8 +30,8 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private static final String INSTANCE_TABLE = "instance";
-  private static final String BATCH_SIZE_KEY = "inventory.storage.max.batch.size";
-  private static final int MAX_BATCH_SIZE = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault(BATCH_SIZE_KEY, "4"));
+  private static final String PARALLEL_DB_CONNECTIONS_LIMIT_KEY = "inventory.storage.parallel.db.connections.limit";
+  private static final int PARALLEL_DB_CONNECTIONS_LIMIT = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault(PARALLEL_DB_CONNECTIONS_LIMIT_KEY, "4"));
 
   @Override
   public void postInstanceStorageBatchInstances(Instances entity,
@@ -80,7 +80,7 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
                                               BiFunction<List<Instance>, List<Future>, Future<List<Future>>> action) {
     Future<List<Future>> future = Future.succeededFuture(new ArrayList<>());
 
-    List<List<Instance>> batches = Lists.partition(instances, MAX_BATCH_SIZE);
+    List<List<Instance>> batches = Lists.partition(instances, PARALLEL_DB_CONNECTIONS_LIMIT);
     for (List<Instance> batch : batches) {
       future = future.compose(futures -> action.apply(batch, futures));
     }
