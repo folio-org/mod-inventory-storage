@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An item damage status",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "unique ID of the item damage status; a UUID"
+    },
+    "name": {
+      "type": "string",
+      "description": "name of the item damage status"
+    },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the item damage status entry originates from, i.e. 'folio' or 'local'"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "source"
+  ]
+}
+
