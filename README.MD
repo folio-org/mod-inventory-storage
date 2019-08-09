@@ -176,3 +176,7 @@ _Returns_: collection of successfully created Instances, error messages for fail
 - If at least one Instance is successfully saved - returns 201 response with saved instances ("instances" section), "errorMessages" array contains errors for failed Instances (empty if all Instances are successfully saved).
 
 - If save for all Instances failed - returns 500 response with "errorMessages" array, explaining a reason of why Instances were processed with failures (one error message per one Instance). Instances array is empty.
+
+Regardless the batch size, number of parallel connections to the db is limited to 4 by default. To override the default number of concurrent db connections - "inventory.storage.parallel.db.connections.limit" program argument should be specified on module deployment.
+
+`java -Dport=%p -jar ../mod-source-record-storage/mod-source-record-storage-server/target/mod-source-record-storage-server-fat.jar -Dhttp.port=%p embed_postgres=true inventory.storage.parallel.db.connections.limit=10`
