@@ -15,12 +15,15 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
@@ -36,11 +39,15 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.jaxrs.model.NatureOfContentTerm;
+import org.folio.rest.jaxrs.model.NatureOfContentTerms;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -1528,6 +1535,51 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
     assertThat(instances.size(), is(0));
+  }
+
+  @Test
+  public void canCreateAnInstanceWithNatureOfContent() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    CompletableFuture<Response> instanceCreate = new CompletableFuture<>();
+    CompletableFuture<Response> natureOfContentGet = new CompletableFuture<>();
+
+    // 1st: Retrieve two NatureOfContentTerms
+    client.get(natureOfContentTermsUrl(
+      "/?query=name=" + encode("(audiobook or website)", UTF_8.name())),
+      TENANT_ID, json(natureOfContentGet));
+
+    NatureOfContentTerms natureOfContentTerms = natureOfContentGet
+      .get(10, SECONDS)
+      .getJson()
+      .mapTo(NatureOfContentTerms.class);
+    assertThat(natureOfContentTerms.getNatureOfContentTerms().size(),
+      greaterThanOrEqualTo(2));
+
+    List<String> natureOfContentIds = natureOfContentTerms
+      .getNatureOfContentTerms().stream()
+      .map(NatureOfContentTerm::getId)
+      .collect(Collectors.toList());
+
+    JsonObject instanceToCreate = smallAngryPlanet(instanceId);
+    instanceToCreate.put("natureOfContentTermIds", natureOfContentIds);
+
+    // 2nd: Create an instance with nature of content IDs specified
+    client.post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
+      json(instanceCreate));
+
+    Response response = instanceCreate.get(5, SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    // Make sure Nature of content IDs are get saved
+    Instance instanceCreated = response.getJson().mapTo(Instance.class);
+    assertEquals(natureOfContentIds, instanceCreated.getNatureOfContentTermIds());
+    assertEquals(instanceId.toString(), instanceCreated.getId());
+
+    // Re-reed instance by id and make sure nature of content IDs are still here
+    Instance instanceRetrieved = getById(instanceId).getJson().mapTo(Instance.class);
+    assertEquals(instanceId.toString(), instanceRetrieved.getId());
+    assertEquals(natureOfContentIds, instanceCreated.getNatureOfContentTermIds());
   }
 
   private void createHoldings(JsonObject holdingsToCreate)

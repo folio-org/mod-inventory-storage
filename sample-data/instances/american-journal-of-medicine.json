@@ -72,5 +72,8 @@
       "instanceNoteTypeId": "6a2533a7-4de2-4e64-8466-074c2fa9308c",
       "staffOnly": false
     }
+  ],
+  "natureOfContentTermIds" : [
+    "0abeee3d-8ad2-4b04-92ff-221b4fce1075"
   ]
 }
