@@ -32,6 +32,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +40,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -1556,13 +1556,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(natureOfContentTerms.getNatureOfContentTerms().size(),
       greaterThanOrEqualTo(2));
 
-    List<String> natureOfContentIds = natureOfContentTerms
+    String[] natureOfContentIds = natureOfContentTerms
       .getNatureOfContentTerms().stream()
       .map(NatureOfContentTerm::getId)
-      .collect(Collectors.toList());
+      .toArray(String[]::new);
 
     JsonObject instanceToCreate = smallAngryPlanet(instanceId);
-    instanceToCreate.put("natureOfContentTermIds", natureOfContentIds);
+    instanceToCreate.put("natureOfContentTermIds", Arrays
+      .asList(natureOfContentIds));
 
     // 2nd: Create an instance with nature of content IDs specified
     client.post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
@@ -1573,13 +1574,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     // Make sure Nature of content IDs are get saved
     Instance instanceCreated = response.getJson().mapTo(Instance.class);
-    assertEquals(natureOfContentIds, instanceCreated.getNatureOfContentTermIds());
+    assertThat(instanceCreated.getNatureOfContentTermIds(),
+      containsInAnyOrder(natureOfContentIds));
     assertEquals(instanceId.toString(), instanceCreated.getId());
 
-    // Re-reed instance by id and make sure nature of content IDs are still here
+    // Re-read instance by id and make sure nature of content IDs are still here
     Instance instanceRetrieved = getById(instanceId).getJson().mapTo(Instance.class);
     assertEquals(instanceId.toString(), instanceRetrieved.getId());
-    assertEquals(natureOfContentIds, instanceCreated.getNatureOfContentTermIds());
+    assertThat(instanceRetrieved.getNatureOfContentTermIds(),
+      containsInAnyOrder(natureOfContentIds));
   }
 
   private void createHoldings(JsonObject holdingsToCreate)
