@@ -20,10 +20,8 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
@@ -44,7 +42,6 @@ import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.folio.HttpStatus;
-import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.jaxrs.model.NatureOfContentTerms;
@@ -133,8 +130,21 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     TimeoutException {
 
     UUID id = UUID.randomUUID();
+    CompletableFuture<Response> natureOfContentGet = new CompletableFuture<>();
+
+    client.get(natureOfContentTermsUrl("/?limit=2"), TENANT_ID, json(natureOfContentGet));
+
+    String[] natureOfContentIds = natureOfContentGet
+      .get(5, SECONDS)
+      .getJson()
+      .mapTo(NatureOfContentTerms.class)
+      .getNatureOfContentTerms()
+      .stream()
+      .map(NatureOfContentTerm::getId)
+      .toArray(String[]::new);
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -153,6 +163,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
     assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+    assertThat(instance.getJsonArray("natureOfContentTermIds"),
+      containsInAnyOrder(natureOfContentIds));
 
     Response getResponse = getById(id);
 
@@ -171,6 +183,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+    assertThat(instanceFromGet.getJsonArray("natureOfContentTermIds"),
+      containsInAnyOrder(natureOfContentIds));
   }
 
   @Test
@@ -1535,54 +1549,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
     assertThat(instances.size(), is(0));
-  }
-
-  @Test
-  public void canCreateAnInstanceWithNatureOfContent() throws Exception {
-    UUID instanceId = UUID.randomUUID();
-
-    CompletableFuture<Response> instanceCreate = new CompletableFuture<>();
-    CompletableFuture<Response> natureOfContentGet = new CompletableFuture<>();
-
-    // 1st: Retrieve two NatureOfContentTerms
-    client.get(natureOfContentTermsUrl(
-      "/?query=name=" + encode("(audiobook or website)", UTF_8.name())),
-      TENANT_ID, json(natureOfContentGet));
-
-    NatureOfContentTerms natureOfContentTerms = natureOfContentGet
-      .get(10, SECONDS)
-      .getJson()
-      .mapTo(NatureOfContentTerms.class);
-    assertThat(natureOfContentTerms.getNatureOfContentTerms().size(),
-      greaterThanOrEqualTo(2));
-
-    String[] natureOfContentIds = natureOfContentTerms
-      .getNatureOfContentTerms().stream()
-      .map(NatureOfContentTerm::getId)
-      .toArray(String[]::new);
-
-    JsonObject instanceToCreate = smallAngryPlanet(instanceId);
-    instanceToCreate.put("natureOfContentTermIds", Arrays
-      .asList(natureOfContentIds));
-
-    // 2nd: Create an instance with nature of content IDs specified
-    client.post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
-      json(instanceCreate));
-
-    Response response = instanceCreate.get(5, SECONDS);
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    // Make sure Nature of content IDs are get saved
-    Instance instanceCreated = response.getJson().mapTo(Instance.class);
-    assertThat(instanceCreated.getNatureOfContentTermIds(),
-      containsInAnyOrder(natureOfContentIds));
-    assertEquals(instanceId.toString(), instanceCreated.getId());
-
-    // Re-read instance by id and make sure nature of content IDs are still here
-    Instance instanceRetrieved = getById(instanceId).getJson().mapTo(Instance.class);
-    assertEquals(instanceId.toString(), instanceRetrieved.getId());
-    assertThat(instanceRetrieved.getNatureOfContentTermIds(),
-      containsInAnyOrder(natureOfContentIds));
   }
 
   private void createHoldings(JsonObject holdingsToCreate)
