@@ -31,20 +31,22 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
-import org.folio.rest.jaxrs.model.NatureOfContentTerms;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -80,6 +82,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static UUID annexLocationId;
   private static UUID bookMaterialTypeId;
   private static UUID canCirculateLoanTypeId;
+  private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
   @BeforeClass
   public static void beforeAny() throws Exception {
@@ -115,11 +118,19 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    natureOfContentIdsToRemoveAfterTest.clear();
   }
 
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("instance");
+  }
+
+  @After
+  public void removeGeneratedEntities() {
+    natureOfContentIdsToRemoveAfterTest.forEach(id -> client
+      .delete(natureOfContentTermsUrl("/" + id), TENANT_ID));
   }
 
   @Test
@@ -130,21 +141,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     TimeoutException {
 
     UUID id = UUID.randomUUID();
-    CompletableFuture<Response> natureOfContentGet = new CompletableFuture<>();
-
-    client.get(natureOfContentTermsUrl("/?limit=2"), TENANT_ID, json(natureOfContentGet));
-
-    String[] natureOfContentIds = natureOfContentGet
-      .get(5, SECONDS)
-      .getJson()
-      .mapTo(NatureOfContentTerms.class)
-      .getNatureOfContentTerms()
-      .stream()
+    String[] natureOfContentIds = Stream.of(
+      createNatureOfContentTerm("journal_test"),
+      createNatureOfContentTerm("book_test"))
       .map(NatureOfContentTerm::getId)
       .toArray(String[]::new);
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
-    instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
+    instanceToCreate.put("natureOfContentTermIds", Arrays
+      .asList(natureOfContentIds));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1701,5 +1706,25 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(String.format("Create item failed: %s", response.getBody()),
       response.getStatusCode(), is(201));
+  }
+
+  private NatureOfContentTerm createNatureOfContentTerm(final String name)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    NatureOfContentTerm natureOfContentTerm = new NatureOfContentTerm()
+      .withId(UUID.randomUUID().toString())
+      .withName(name)
+      .withSource("test");
+
+    CompletableFuture<Response> createNatureOfContent =
+      new CompletableFuture<>();
+
+    client.post(natureOfContentTermsUrl(""), natureOfContentTerm,
+      TENANT_ID, json(createNatureOfContent));
+
+    Response response = createNatureOfContent.get(5, SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    natureOfContentIdsToRemoveAfterTest.add(natureOfContentTerm.getId());
+    return response.getJson().mapTo(NatureOfContentTerm.class);
   }
 }
