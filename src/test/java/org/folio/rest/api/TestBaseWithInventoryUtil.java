@@ -21,36 +21,43 @@ import io.vertx.core.json.JsonObject;
  */
 public abstract class TestBaseWithInventoryUtil extends TestBase {
 
+  // These UUIDs were taken from reference-data folder.
+  // When the vertical gets started the data from the reference-data folder are loaded to the DB.
+  // see org.folio.rest.impl.TenantRefAPI.refPaths
   protected static final UUID UUID_ISBN = UUID.fromString("8261054f-be78-422d-bd51-4ed9f33c3422");
   protected static final UUID UUID_ASIN = UUID.fromString("7f907515-a1bf-4513-8a38-92e1a07c539d");
   protected static final UUID UUID_PERSONAL_NAME = UUID.fromString("2b94c631-fca9-4892-a730-03ee529ffe2a");
   protected static final UUID UUID_TEXT = UUID.fromString("6312d172-f0cf-40f6-b27d-9fa8feaf332f");
+  protected static final UUID UUID_INSTANCE_TYPE = UUID.fromString("535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
 
-  protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId) throws ExecutionException, InterruptedException, MalformedURLException, TimeoutException{
+
+  protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId)
+    throws ExecutionException,
+    InterruptedException,
+    MalformedURLException,
+    TimeoutException {
+
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(instance(instanceId));
 
-    UUID holdingsRecordId = UUID.randomUUID();
-
-    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
-      .withId(holdingsRecordId)
-      .forInstance(instanceId)
-      .withPermanentLocation(holdingsPermanentLocationId)).getJson();
-
-    return holdingsRecordId;
+    return holdingsClient.create(
+      new HoldingRequestBuilder()
+        .withId(UUID.randomUUID())
+        .forInstance(instanceId)
+        .withPermanentLocation(holdingsPermanentLocationId)
+    ).getId();
   }
 
   private static JsonObject instance(UUID id) {
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
-    JsonArray tags = new JsonArray();
-    tags.add("test-tag");
-
-    return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID(),tags);
+    return createInstanceRequest(
+      id,
+      "TEST",
+      "Long Way to a Small Angry Planet",
+      new JsonArray().add(identifier(UUID_ISBN, "9781473619777")),
+      new JsonArray().add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky")),
+      UUID_INSTANCE_TYPE,
+      new JsonArray().add("test-tag")
+    );
   }
 
 
@@ -78,7 +85,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     JsonObject instanceToCreate = new JsonObject();
 
     if(id != null) {
-      instanceToCreate.put("id",id.toString());
+      instanceToCreate.put("id", id.toString());
     }
 
     instanceToCreate.put("title", title);
