@@ -92,6 +92,10 @@
     "itemDamagedStatusDate": {
       "type": "string"
     },
+    "itemDamagedStatusDescription": {
+      "type": "string",
+      "description": "Holds information about how an item is damaged"
+    },
     "notes": {
       "type": "array",
       "description": "Notes about action, copy, binding etc.",

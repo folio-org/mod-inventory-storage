@@ -448,6 +448,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void canCreateAnItemWithManyProperties()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
+    final String damagedDescription = "Somehow damaged";
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -465,6 +466,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
     itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    itemToCreate.put("itemDamagedStatusDescription", damagedDescription);
 
     //TODO: Replace with real service point when validated
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
@@ -496,6 +498,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getString("inTransitDestinationServicePointId"), is(inTransitServicePointId));
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+    assertThat(item.getString("itemDamagedStatusDescription"), is(damagedDescription));
   }
 
   @Test
