@@ -15,6 +15,7 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -29,18 +30,23 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -76,6 +82,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static UUID annexLocationId;
   private static UUID bookMaterialTypeId;
   private static UUID canCirculateLoanTypeId;
+  private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
   @BeforeClass
   public static void beforeAny() throws Exception {
@@ -111,11 +118,19 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    natureOfContentIdsToRemoveAfterTest.clear();
   }
 
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("instance");
+  }
+
+  @After
+  public void removeGeneratedEntities() {
+    natureOfContentIdsToRemoveAfterTest.forEach(id -> client
+      .delete(natureOfContentTermsUrl("/" + id), TENANT_ID));
   }
 
   @Test
@@ -126,8 +141,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     TimeoutException {
 
     UUID id = UUID.randomUUID();
+    NatureOfContentTerm journalContentType = createNatureOfContentTerm("journal_test");
+    NatureOfContentTerm bookContentType = createNatureOfContentTerm("book_test");
+
+    String[] natureOfContentIds = Stream.of(journalContentType, bookContentType)
+      .map(NatureOfContentTerm::getId)
+      .toArray(String[]::new);
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put("natureOfContentTermIds", Arrays
+      .asList(natureOfContentIds));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -146,6 +169,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
     assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+    assertThat(instance.getJsonArray("natureOfContentTermIds"),
+      containsInAnyOrder(natureOfContentIds));
 
     Response getResponse = getById(id);
 
@@ -164,6 +189,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+    assertThat(instanceFromGet.getJsonArray("natureOfContentTermIds"),
+      containsInAnyOrder(natureOfContentIds));
   }
 
   @Test
@@ -1680,5 +1707,25 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(String.format("Create item failed: %s", response.getBody()),
       response.getStatusCode(), is(201));
+  }
+
+  private NatureOfContentTerm createNatureOfContentTerm(final String name)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    NatureOfContentTerm natureOfContentTerm = new NatureOfContentTerm()
+      .withId(UUID.randomUUID().toString())
+      .withName(name)
+      .withSource("test");
+
+    CompletableFuture<Response> createNatureOfContent =
+      new CompletableFuture<>();
+
+    client.post(natureOfContentTermsUrl(""), natureOfContentTerm,
+      TENANT_ID, json(createNatureOfContent));
+
+    Response response = createNatureOfContent.get(5, SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    natureOfContentIdsToRemoveAfterTest.add(natureOfContentTerm.getId());
+    return response.getJson().mapTo(NatureOfContentTerm.class);
   }
 }

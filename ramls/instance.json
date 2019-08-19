@@ -346,6 +346,16 @@
       "folio:linkFromField": "id",
       "folio:linkToField": "instanceId",
       "folio:includedElement": "holdingsRecords"
+    },
+    "natureOfContentTermIds": {
+      "type": "array",
+      "description": "Array of UUID for the Instance nature of content (e.g. bibliography, biography, exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "description": "Single UUID for the Instance nature of content",
+        "$ref": "uuid.json"
+      }
     }
   },
   "additionalProperties": false,
