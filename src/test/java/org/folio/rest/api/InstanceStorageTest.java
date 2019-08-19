@@ -141,9 +141,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     TimeoutException {
 
     UUID id = UUID.randomUUID();
-    String[] natureOfContentIds = Stream.of(
-      createNatureOfContentTerm("journal_test"),
-      createNatureOfContentTerm("book_test"))
+    NatureOfContentTerm journalContentType = createNatureOfContentTerm("journal_test");
+    NatureOfContentTerm bookContentType = createNatureOfContentTerm("book_test");
+
+    String[] natureOfContentIds = Stream.of(journalContentType, bookContentType)
       .map(NatureOfContentTerm::getId)
       .toArray(String[]::new);
 
