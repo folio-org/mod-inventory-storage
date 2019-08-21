@@ -51,12 +51,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static UUID annexLibraryLocationId;
 
   @BeforeClass
-  public static void beforeAny()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public static void beforeAny() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -76,7 +71,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Before
-  public void beforeEach() throws MalformedURLException {
+  public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -546,7 +541,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     tags.add("test-tag");
 
     return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID(), tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
   private JsonObject nod(UUID id) {
@@ -559,7 +554,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Nod",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
   private JsonObject uprooted(UUID id) {
@@ -574,36 +569,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     tags.add("test-tag");
 
     return createInstanceRequest(id, "TEST", "Uprooted",
-      identifiers, contributors, UUID_TEXT, tags);
-  }
-
-  private JsonObject temeraire(UUID id) {
-
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier(UUID_ISBN, "0007258712"));
-    identifiers.add(identifier(UUID_ISBN, "9780007258710"));
-
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
-
-    JsonArray tags = new JsonArray();
-    tags.add("test-tag");
-    return createInstanceRequest(id, "TEST", "Temeraire",
-      identifiers, contributors, UUID_TEXT, tags);
-  }
-
-  private JsonObject interestingTimes(UUID id) {
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier(UUID_ISBN, "0552167541"));
-    identifiers.add(identifier(UUID_ISBN, "9780552167541"));
-
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor(UUID_PERSONAL_NAME, "Pratchett, Terry"));
-
-    JsonArray tags = new JsonArray();
-    tags.add("test-tag");
-    return createInstanceRequest(id, "TEST", "Interesting Times",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
   private Predicate<JsonObject> filterById(UUID holdingId) {
