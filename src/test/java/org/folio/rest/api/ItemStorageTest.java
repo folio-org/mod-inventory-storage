@@ -55,7 +55,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   private static String journalMaterialTypeID;
   private static String bookMaterialTypeID;
-  private static String videoMaterialTypeID;
   private static String canCirculateLoanTypeID;
   private static UUID mainLibraryLocationId;
   private static UUID annexLibraryLocationId;
@@ -79,19 +78,18 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
 
-    journalMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("journal");
-    bookMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book");
-    videoMaterialTypeID = new MaterialTypesClient(client, materialTypesStorageUrl("")).create("video");
+    MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
+    journalMaterialTypeID = materialTypesClient.create("journal");
+    bookMaterialTypeID = materialTypesClient.create("book");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesStorageUrl("")).create("Can Circulate");
 
     LocationsTest.createLocUnits(true);
     mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Item)", "It/M");
     annexLibraryLocationId = LocationsTest.createLocation(null, "Annex Library (item)", "It/A");
-
   }
 
   @Before
-  public void beforeEach() throws MalformedURLException {
+  public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
