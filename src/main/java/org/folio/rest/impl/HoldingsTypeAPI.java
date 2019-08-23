@@ -1,5 +1,8 @@
 package org.folio.rest.impl;
 
+import static java.util.Collections.singletonList;
+import static org.folio.rest.persist.PgUtil.postgresClient;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -8,8 +11,11 @@ import javax.ws.rs.core.Response;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.jaxrs.model.Error;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.HoldingsType;
 import org.folio.rest.jaxrs.model.HoldingsTypes;
+import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -20,6 +26,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -84,42 +91,22 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
   }
 
   @Override
-  public void postHoldingsTypes(String lang, HoldingsType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String id = entity.getId();
-        if (id == null) {
-          id = UUID.randomUUID().toString();
-          entity.setId(id);
-        }
+  public void postHoldingsTypes(String lang,
+                                HoldingsType entity,
+                                Map<String, String> okapiHeaders,
+                                Handler<AsyncResult<Response>> asyncResultHandler,
+                                Context vertxContext) {
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(REFERENCE_TABLE, id, entity,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  String ret = reply.result();
-                  entity.setId(ret);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostHoldingsTypesResponse
-                    .respond201WithApplicationJson(entity, PostHoldingsTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
-                } else {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PostHoldingsTypesResponse
-                      .respond400WithTextPlain(msg)));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringPost(e, lang, asyncResultHandler);
-              }
-            });
-      } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
-      }
-    });
+    if (entity.getId() == null) {
+      entity.setId(UUID.randomUUID().toString());
+    }
+
+    saveHoldingsType(postgresClient(vertxContext, okapiHeaders), entity)
+      .map(s -> PostHoldingsTypesResponse.respond201WithApplicationJson(
+        entity, PostHoldingsTypesResponse.headersFor201()))
+      .otherwise(this::handleSaveHoldingsTypeException)
+      .map(Response.class::cast)
+      .setHandler(asyncResultHandler);
   }
 
   @Override
@@ -211,12 +198,6 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PostHoldingsTypesResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteHoldingsTypesByIdResponse
@@ -229,5 +210,25 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
         .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
   }
 
+  private Future<String> saveHoldingsType(PostgresClient pgClient, HoldingsType entity) {
+    Future<String> future = Future.future();
+    pgClient.save(REFERENCE_TABLE, entity, future);
+    return future;
+  }
 
+  private PostHoldingsTypesResponse handleSaveHoldingsTypeException(Throwable t) {
+    if (PgExceptionUtil.isUniqueViolation(t)) {
+      Error error = new Error()
+        .withCode("name.duplicate")
+        .withMessage("Cannot create entity with not unique name")
+        .withParameters(singletonList(new Parameter()
+          .withKey("fieldLabel")
+          .withValue("name")));
+
+      return PostHoldingsTypesResponse
+        .respond422WithApplicationJson(new Errors().withErrors(singletonList(error)));
+    }
+    return PostHoldingsTypesResponse.respond500WithTextPlain(
+      "Internal Server Error, Please contact System Administrator or try again");
+  }
 }
