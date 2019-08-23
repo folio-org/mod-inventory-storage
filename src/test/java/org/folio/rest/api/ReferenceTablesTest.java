@@ -5,6 +5,7 @@
  */
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.alternativeTitleTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.callNumberTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.classificationTypesUrl;
@@ -50,6 +51,7 @@ import org.folio.rest.api.entities.HoldingsNoteType;
 import org.folio.rest.api.entities.HoldingsType;
 import org.folio.rest.api.entities.IdentifierType;
 import org.folio.rest.api.entities.IllPolicy;
+import org.folio.rest.api.entities.Instance;
 import org.folio.rest.api.entities.InstanceFormat;
 import org.folio.rest.api.entities.InstanceNoteType;
 import org.folio.rest.api.entities.InstanceStatus;
@@ -513,11 +515,10 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void instanceTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
     String entityPath = "/instance-types";
     InstanceType entity = new InstanceType("Test instance type", "Test Code", "Test Source");
 
@@ -528,6 +529,27 @@ public class ReferenceTablesTest extends TestBase {
     String updateProperty = InstanceType.NAME_KEY;
 
     testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+  }
+
+  @Test
+  public void cannotDeleteInstanceTypeAssociatedToAnInstance()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    InstanceType instanceType = new InstanceType("new type", "nt", "rdacontent");
+    Response instanceTypeResponse = createReferenceRecord("/instance-types", instanceType);
+    assertThat(instanceTypeResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String instanceTypeId = instanceTypeResponse.getJson().getString("id");
+
+    Instance instance = new Instance("test", "folio", instanceTypeId);
+    Response instanceResponse = createReferenceRecord("/instance-storage/instances", instance);
+    assertThat(instanceResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    Response result = deleteReferenceRecordById(StorageTestSuite.storageUrl("/instance-types/" + instanceTypeId));
+
+    assertThat(result.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -696,7 +718,7 @@ public class ReferenceTablesTest extends TestBase {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
     String url = baseUrl.toString() + "?limit=400&query="
             + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8.name());
-    client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+    client.get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
     Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
     return searchResponse;
   }
@@ -709,14 +731,14 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   private Response createReferenceRecord(String path, JsonEntity referenceObject)
-  throws ExecutionException, InterruptedException, TimeoutException, MalformedURLException {
+    throws ExecutionException, InterruptedException, TimeoutException {
 
     URL referenceUrl = StorageTestSuite.storageUrl(path);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     client.post(
             referenceUrl,
             referenceObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+      TENANT_ID,
             ResponseHandler.any(createCompleted)
     );
     Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
@@ -729,7 +751,7 @@ public class ReferenceTablesTest extends TestBase {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(getByIdUrl, StorageTestSuite.TENANT_ID,
+    client.get(getByIdUrl, TENANT_ID,
       ResponseHandler.any(getCompleted));
 
     Response getByIdResponse = getCompleted.get(5, TimeUnit.SECONDS);
@@ -742,7 +764,7 @@ public class ReferenceTablesTest extends TestBase {
           ExecutionException, TimeoutException {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(getByQueryUrl, StorageTestSuite.TENANT_ID,
+    client.get(getByQueryUrl, TENANT_ID,
       ResponseHandler.any(getCompleted));
 
     Response getByQueryResponse = getCompleted.get(5, TimeUnit.SECONDS);
@@ -757,7 +779,7 @@ public class ReferenceTablesTest extends TestBase {
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     client.delete(
             entityUrl,
-            StorageTestSuite.TENANT_ID,
+      TENANT_ID,
             ResponseHandler.any(deleteCompleted)
     );
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
@@ -770,7 +792,7 @@ public class ReferenceTablesTest extends TestBase {
     client.put(
             entityUrl,
             referenceObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+      TENANT_ID,
             ResponseHandler.any(updateCompleted)
     );
     Response putResponse = updateCompleted.get(5, TimeUnit.SECONDS);

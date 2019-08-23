@@ -382,6 +382,11 @@
           "fieldName": "modeOfIssuanceId",
           "targetTable": "mode_of_issuance",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "instanceTypeId",
+          "targetTable": "instance_type",
+          "tOps": "ADD"
         }
       ],
       "uniqueIndex": [

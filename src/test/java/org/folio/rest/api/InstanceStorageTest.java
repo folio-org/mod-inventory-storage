@@ -70,9 +70,6 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-/**
- * @see org.folio.rest.impl.InstanceStorageAPITest
- */
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String INSTANCES_KEY = "instances";
@@ -94,27 +91,18 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
-    //StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    //StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
-    //StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    //StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-
-
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-
-    bookMaterialTypeId = UUID.fromString(
-      new MaterialTypesClient(client, materialTypesStorageUrl("")).create("book"));
+    MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
+    bookMaterialTypeId = UUID.fromString(materialTypesClient.create("book"));
 
     mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Inst)", "I/M");
     annexLocationId = LocationsTest.createLocation(null, "Annex Library (Inst)", "I/A");
 
-    canCirculateLoanTypeId = UUID.fromString(new LoanTypesClient(client,
-      loanTypesStorageUrl("")).create("Can Circulate"));
+    LoanTypesClient loanTypesClient = new LoanTypesClient(client, loanTypesStorageUrl(""));
+    canCirculateLoanTypeId = UUID.fromString(loanTypesClient.create("Can Circulate"));
   }
 
   @Before
-  public void beforeEach() throws Exception {
+  public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -1145,7 +1133,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     canSort(String.format("item.barcode==706949453641 and holdingsRecords.permanentLocationId==%s",
       mainLibraryLocationId),
       "Long Way to a Small Angry Planet");
-    
+
     canSort(String.format("((contributors =/@name \"becky\") and holdingsRecords.permanentLocationId=\"%s\")",mainLibraryLocationId),"Long Way to a Small Angry Planet" );
 
   }
@@ -1326,13 +1314,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     UUID idJ1 = UUID.randomUUID();
     JsonObject j1 = createInstanceRequest(idJ1, "TEST1", "Long Way to a Small Angry Planet 1",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
     UUID idJ2 = UUID.randomUUID();
     JsonObject j2 = createInstanceRequest(idJ2, "TEST2", "Long Way to a Small Angry Planet 2",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
     UUID idJ3 = UUID.randomUUID();
     JsonObject j3 = createInstanceRequest(idJ3, "TEST3", "Long Way to a Small Angry Planet 3",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
 
     createInstance(j1);
     createInstance(j2);
@@ -1600,7 +1588,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     tags.add("test-tag");
 
     return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID.randomUUID(), tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
 
@@ -1645,7 +1633,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Nod",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
   private JsonObject uprooted(UUID id) {
@@ -1660,7 +1648,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     tags.add("test-tag");
 
     return createInstanceRequest(id, "TEST", "Uprooted",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
   private JsonObject temeraire(UUID id) {
@@ -1675,7 +1663,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Temeraire",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
   private JsonObject interestingTimes(UUID id) {
@@ -1689,14 +1677,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Interesting Times",
-      identifiers, contributors, UUID_TEXT, tags);
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
   private void createItem(JsonObject itemToCreate)
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 

@@ -1,30 +1,15 @@
 package org.folio.rest.api;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.DecodeException;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.client.MaterialTypesClient;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static java.net.HttpURLConnection.*;
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
+import static org.folio.rest.impl.LocationUnitAPI.CAMPUS_TABLE;
+import static org.folio.rest.impl.LocationUnitAPI.INSTITUTION_TABLE;
+import static org.folio.rest.impl.LocationUnitAPI.LIBRARY_TABLE;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
@@ -37,7 +22,32 @@ import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.http.ResourceClient;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
+
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
 
 public class LoanTypeTest extends TestBaseWithInventoryUtil {
 
@@ -51,11 +61,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
   private static UUID mainLibraryLocationId;
 
   @BeforeClass
-  public static void beforeAny()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public static void beforeAny() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -80,9 +86,10 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
-    materialTypeID = new MaterialTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
-      materialTypesStorageUrl("")).create("Journal");
+    materialTypeID = ResourceClient.forMaterialTypes(client)
+      .create(new JsonObject().put("name", "Journal"))
+      .getId()
+      .toString();
   }
 
   @Test
