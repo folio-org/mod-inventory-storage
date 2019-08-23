@@ -5,8 +5,25 @@
  */
 package org.folio.rest.api;
 
-import static org.folio.rest.api.TestBase.client;
-import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.http.InterfaceUrls.alternativeTitleTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.callNumberTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.classificationTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.contributorNameTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.contributorTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.electronicAccessRelationshipsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsNoteTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.identifierTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.illPoliciesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instanceFormatsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instanceNoteTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instanceTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemNoteTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.modesOfIssuanceUrl;
+import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -782,7 +799,8 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put("id", entityId);
     Response postResponse1 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/electronic-access-relationships", "/instance-statuses", "/modes-of-issuance", "/statistical-code-types").contains(path)) {
+    if (Arrays.asList("/electronic-access-relationships", "/instance-statuses",
+      "/modes-of-issuance", "/statistical-code-types", "/holdings-types").contains(path)) {
       assertThat(postResponse1.getStatusCode(), is(422));
     } else {
       assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));

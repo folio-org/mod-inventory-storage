@@ -212,7 +212,7 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
 
   private Future<String> saveHoldingsType(PostgresClient pgClient, HoldingsType entity) {
     Future<String> future = Future.future();
-    pgClient.save(REFERENCE_TABLE, entity, future);
+    pgClient.save(REFERENCE_TABLE, entity.getId(), entity, future);
     return future;
   }
 
@@ -228,6 +228,12 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
       return PostHoldingsTypesResponse
         .respond422WithApplicationJson(new Errors().withErrors(singletonList(error)));
     }
+
+    String msg = PgExceptionUtil.badRequestMessage(t);
+    if (msg != null) {
+      return PostHoldingsTypesResponse.respond400WithTextPlain(msg);
+    }
+
     return PostHoldingsTypesResponse.respond500WithTextPlain(
       "Internal Server Error, Please contact System Administrator or try again");
   }
