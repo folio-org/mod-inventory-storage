@@ -742,6 +742,12 @@
           "tOps": "ADD"
         },
         {
+          "targetPath": ["holdingsRecordId", "instanceId"],
+          "targetTable":      "instance",
+          "targetTableAlias": "instance",
+          "tableAlias": "item"
+        },
+        {
           "fieldName": "permanentLoanTypeId",
           "targetTable": "loan_type",
           "tOps": "ADD"
