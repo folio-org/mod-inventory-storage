@@ -36,6 +36,7 @@ import io.vertx.ext.sql.UpdateResult;
 @RunWith(Suite.class)
 
 @Suite.SuiteClasses({
+  // these run with loadReference=true, loadSample=false
   InstanceStorageTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
@@ -51,15 +52,20 @@ import io.vertx.ext.sql.UpdateResult;
   InstanceRelationshipsTest.class,
   ReferenceTablesTest.class,
   ItemDamagedStatusAPITest.class,
-  ItemDamagedStatusAPIUnitTest.class
+  ItemDamagedStatusAPIUnitTest.class,
+
+  // these run with loadReference=true, loadSample=true
+  SampleDataTest.class,
 })
-@SuppressWarnings("squid:S1118")
-// suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
   private static int port;
+
+  private StorageTestSuite() {
+    throw new UnsupportedOperationException("Cannot instantiate utility class.");
+  }
 
   public static URL storageUrl(String path) {
     try {
@@ -119,7 +125,7 @@ public class StorageTestSuite {
 
     startVerticle(options);
 
-    prepareTenant(TENANT_ID);
+    prepareTenant(TENANT_ID, false);
   }
 
   @AfterClass
@@ -233,7 +239,7 @@ public class StorageTestSuite {
     deploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  private static void prepareTenant(String tenantId)
+  static void prepareTenant(String tenantId, boolean loadSample)
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -245,7 +251,7 @@ public class StorageTestSuite {
 
     JsonArray ar = new JsonArray();
     ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
-    ar.add(new JsonObject().put("key", "loadSample").put("value", "false"));
+    ar.add(new JsonObject().put("key", "loadSample").put("value", Boolean.toString(loadSample)));
 
     JsonObject jo = new JsonObject();
     jo.put("parameters", ar);
@@ -276,7 +282,7 @@ public class StorageTestSuite {
       response.getStatusCode(), is(201));
   }
 
-  private static void removeTenant(String tenantId)
+  static void removeTenant(String tenantId)
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -296,5 +302,9 @@ public class StorageTestSuite {
 
     assertThat(failureMessage,
       response.getStatusCode(), is(204));
+
+    // Prevent "aclcheck_error" "permission denied for schema"
+    // when recreating the ROLE with the same name but a different role OID.
+    PostgresClient.closeAllClients();
   }
 }
