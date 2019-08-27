@@ -821,7 +821,8 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put("id", entityId);
     Response postResponse1 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/electronic-access-relationships", "/instance-statuses", "/modes-of-issuance", "/statistical-code-types").contains(path)) {
+    if (Arrays.asList("/electronic-access-relationships", "/instance-statuses",
+      "/modes-of-issuance", "/statistical-code-types", "/holdings-types").contains(path)) {
       assertThat(postResponse1.getStatusCode(), is(422));
     } else {
       assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
