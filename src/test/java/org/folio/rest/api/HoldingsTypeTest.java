@@ -50,7 +50,7 @@ public class HoldingsTypeTest extends TestBase {
 
     JsonObject error = errors.getJsonObject(0);
     assertThat(error.getString("code"), is("name.duplicate"));
-    assertThat(error.getString("message"), is("Cannot create entity with not unique name"));
+    assertThat(error.getString("message"), is("Cannot create entity; name is not unique"));
 
     JsonArray errorParameters = error.getJsonArray("parameters");
     assertThat(errorParameters.size(), is(1));

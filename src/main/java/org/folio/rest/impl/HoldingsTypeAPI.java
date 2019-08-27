@@ -220,7 +220,7 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
     if (PgExceptionUtil.isUniqueViolation(t)) {
       Error error = new Error()
         .withCode("name.duplicate")
-        .withMessage("Cannot create entity with not unique name")
+        .withMessage("Cannot create entity; name is not unique")
         .withParameters(singletonList(new Parameter()
           .withKey("fieldLabel")
           .withValue("name")));
