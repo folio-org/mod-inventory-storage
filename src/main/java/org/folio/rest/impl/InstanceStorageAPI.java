@@ -83,43 +83,9 @@ public class InstanceStorageAPI implements InstanceStorage {
 
     try {
       PreparedCQL preparedCql = handleCQL(query, limit, offset);
-      if (preparedCql.getTableName().equals(INSTANCE_TABLE)) {
-        PgUtil.getWithOptimizedSql(INSTANCE_TABLE, Instance.class, Instances.class,
-            "title", query, offset, limit,
-            okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
-        return;
-      }
-
-      CQLWrapper cql = preparedCql.getCqlWrapper();
-      log.error("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
-
-      PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-      postgresClient.get(preparedCql.getTableName(), Instance.class, preparedCql.getFieldArray(), cql,
-        true, false, reply -> {
-          try {
-            if (reply.succeeded()) {
-              List<Instance> instances = reply.result().getResults();
-
-              Instances instanceList = new Instances();
-              instanceList.setInstances(instances);
-              instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                GetInstanceStorageInstancesResponse.
-                  respond200WithApplicationJson(instanceList)));
-            }
-            else {
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                GetInstanceStorageInstancesResponse.
-                  respond500WithTextPlain(reply.cause().getMessage())));
-            }
-          } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-              GetInstanceStorageInstancesResponse.
-                respond500WithTextPlain(e.getMessage())));
-          }
-        });
+      PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
+        "title", query, offset, limit,
+        okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
