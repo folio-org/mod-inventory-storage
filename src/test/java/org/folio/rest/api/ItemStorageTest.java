@@ -71,12 +71,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
     journalMaterialTypeID = materialTypesClient.create("journal");
@@ -856,6 +855,43 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     LinkedHashMap<String, ArrayList<String>> itemTags = (LinkedHashMap<String, ArrayList<String>>) item.get("tags");
 
     assertThat(itemTags.get("tagList"), hasItem(TAG_VALUE));
+  }
+
+  @Test
+  public void canSearchForItemsByStatus()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    UnsupportedEncodingException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    createItem(smallAngryPlanet(UUID.randomUUID(), holdingsRecordId));
+    createItem(nod(UUID.randomUUID(), holdingsRecordId));
+    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
+    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
+    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
+
+    String url = itemsStorageUrl("") + "?query=" + URLEncoder.encode("status.name==\"Available\"",
+      StandardCharsets.UTF_8.name());
+
+    client.get(url,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+
+    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(searchResponse.getStatusCode(), is(200));
+
+    JsonObject searchBody = searchResponse.getJson();
+
+    JsonArray foundItems = searchBody.getJsonArray("items");
+
+    assertThat(searchBody.getInteger("totalRecords"), is(5));
+
+    assertThat(foundItems.size(), is(5));
   }
 
   @Test
