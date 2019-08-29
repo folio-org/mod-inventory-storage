@@ -16,4 +16,10 @@ public class JsonRequestBuilder {
       request.put(property, value.toString());
     }
   }
+
+  protected void put(JsonObject request, String property, JsonObject value) {
+    if(value != null) {
+      request.put(property, value);
+    }
+  }
 }

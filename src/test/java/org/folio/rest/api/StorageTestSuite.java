@@ -12,13 +12,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.RestVerticle;
-import org.folio.rest.impl.InstanceStorageAPITest;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -26,16 +26,18 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.ResultSet;
+import io.vertx.ext.sql.UpdateResult;
 
 @RunWith(Suite.class)
 
 @Suite.SuiteClasses({
+  // these run with loadReference=true, loadSample=false
   InstanceStorageTest.class,
-  InstanceStorageAPITest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
   LoanTypeTest.class,
@@ -49,16 +51,28 @@ import io.vertx.ext.sql.ResultSet;
   StorageHelperTest.class,
   InstanceRelationshipsTest.class,
   ReferenceTablesTest.class,
+  ItemDamagedStatusAPITest.class,
+  ItemDamagedStatusAPIUnitTest.class,
+
+  // these run with loadReference=true, loadSample=true
+  SampleDataTest.class,
 })
-@SuppressWarnings("squid:S1118")  // suppress "Utility classes should not have public constructors"
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
 
   private static Vertx vertx;
   private static int port;
 
-  public static URL storageUrl(String path) throws MalformedURLException {
-    return new URL("http", "localhost", port, path);
+  private StorageTestSuite() {
+    throw new UnsupportedOperationException("Cannot instantiate utility class.");
+  }
+
+  public static URL storageUrl(String path) {
+    try {
+      return new URL("http", "localhost", port, path);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static Vertx getVertx() {
@@ -78,7 +92,7 @@ public class StorageTestSuite {
       "org.folio.inventory.storage.test.database",
       "embedded");
 
-    switch(useExternalDatabase) {
+    switch (useExternalDatabase) {
       case "environment":
         System.out.println("Using environment settings");
         break;
@@ -111,7 +125,7 @@ public class StorageTestSuite {
 
     startVerticle(options);
 
-    prepareTenant(TENANT_ID);
+    prepareTenant(TENANT_ID, false);
   }
 
   @AfterClass
@@ -128,10 +142,9 @@ public class StorageTestSuite {
     PostgresClient.stopEmbeddedPostgres();
 
     vertx.close(res -> {
-      if(res.succeeded()) {
+      if (res.succeeded()) {
         undeploymentComplete.complete(null);
-      }
-      else {
+      } else {
         undeploymentComplete.completeExceptionally(res.cause());
       }
     });
@@ -150,12 +163,11 @@ public class StorageTestSuite {
 
       Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
 
-      if(response.getStatusCode() != 204) {
+      if (response.getStatusCode() != 204) {
         Assert.fail("Delete all preparation failed: " +
           response.getBody());
       }
-    }
-    catch(Exception e) {
+    } catch (Exception e) {
       Assert.fail("WARNING!!!!! Unable to delete all: " + e.getMessage());
     }
   }
@@ -168,15 +180,27 @@ public class StorageTestSuite {
       Integer mismatchedRowCount = results.getNumRows();
 
       assertThat(mismatchedRowCount, is(0));
-    }
-    catch(Exception e) {
+    } catch (Exception e) {
       System.out.println(
         "WARNING!!!!! Unable to determine mismatched ID rows");
     }
   }
 
+  protected static Boolean deleteAll(String tenantId, String tableName) {
+
+    PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
+
+    Future<UpdateResult> future = Future.future();
+    String sql = String.format("DELETE FROM %s_%s.%s", tenantId, "mod_inventory_storage", tableName);
+    postgresClient.execute(sql, future.completer());
+
+    return future.map(updateResult -> updateResult.getUpdated() > 0)
+      .otherwise(false)
+      .result();
+  }
+
   private static ResultSet getRecordsWithUnmatchedIds(String tenantId,
-                                                     String tableName)
+                                                      String tableName)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     PostgresClient dbClient = PostgresClient.getInstance(
@@ -189,10 +213,9 @@ public class StorageTestSuite {
       tenantId, "mod_inventory_storage", tableName);
 
     dbClient.select(sql, result -> {
-      if(result.succeeded()) {
+      if (result.succeeded()) {
         selectCompleted.complete(result.result());
-      }
-      else {
+      } else {
         selectCompleted.completeExceptionally(result.cause());
       }
     });
@@ -206,10 +229,9 @@ public class StorageTestSuite {
     CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
 
     vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-      if(res.succeeded()) {
+      if (res.succeeded()) {
         deploymentComplete.complete(res.result());
-      }
-      else {
+      } else {
         deploymentComplete.completeExceptionally(res.cause());
       }
     });
@@ -217,7 +239,7 @@ public class StorageTestSuite {
     deploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  private static void prepareTenant(String tenantId)
+  static void prepareTenant(String tenantId, boolean loadSample)
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -229,7 +251,7 @@ public class StorageTestSuite {
 
     JsonArray ar = new JsonArray();
     ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
-    ar.add(new JsonObject().put("key", "loadSample").put("value", "false"));
+    ar.add(new JsonObject().put("key", "loadSample").put("value", Boolean.toString(loadSample)));
 
     JsonObject jo = new JsonObject();
     jo.put("parameters", ar);
@@ -260,7 +282,7 @@ public class StorageTestSuite {
       response.getStatusCode(), is(201));
   }
 
-  private static void removeTenant(String tenantId)
+  static void removeTenant(String tenantId)
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -280,5 +302,9 @@ public class StorageTestSuite {
 
     assertThat(failureMessage,
       response.getStatusCode(), is(204));
+
+    // Prevent "aclcheck_error" "permission denied for schema"
+    // when recreating the ROLE with the same name but a different role OID.
+    PostgresClient.closeAllClients();
   }
 }

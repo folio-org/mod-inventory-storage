@@ -13,7 +13,12 @@
           "statement": "Line 2",
           "note": "Note to line2"
         }
-      ]
+      ],
+      "tags" : {
+        "tagList" : [
+          "important"
+        ]
+      }
     },
     {
       "id": "807084d2-1b6c-4448-a566-d3d9ebfd1c08",
@@ -28,7 +33,11 @@
           "statement": "Line 2",
           "note": "Note to line2"
         }
-      ]
+      ],"tags" : {
+      "tagList" : [
+        "important"
+        ]
+      }
     }
   ],
   "totalRecords": 2

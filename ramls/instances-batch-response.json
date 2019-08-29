@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Response schema for instances batch request",
+  "type": "object",
+  "properties": {
+    "instances": {
+      "id": "instancesList",
+      "description": "List of all successfully saved Instances",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "instance.json"
+      }
+    },
+    "errorMessages": {
+      "id": "errorMessagesList",
+      "description": "List of error messages",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "totalRecords": {
+      "description": "Total number of successfully saved instances",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "instances",
+    "errorMessages",
+    "totalRecords"
+  ]
+}

@@ -1,0 +1,47 @@
+#%RAML 1.0
+title: Item dameged statuses API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Item dameged statuses API
+    content: This documents the API calls that can be made to query and manage item dameged statuses of the system
+
+types:
+  itemDamageStatus: !include itemdamagedstatus.json
+  itemDamageStatuses: !include itemdamagedstatuses.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/item-damaged-statuses:
+  type:
+    collection:
+      exampleCollection: !include examples/itemdamagedstatuses.json
+      exampleItem: !include examples/itemdamagedstatus.json
+      schemaCollection: itemDamageStatuses
+      schemaItem: itemDamageStatus
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of item damaged status
+  post:
+    description: Create a new item damaged status
+    is: [validate]
+  /{id}:
+    description: "Pass in the item damaged status id"
+    type:
+      collection-item:
+        exampleItem: !include examples/itemdamagedstatus.json
+        schema: itemDamageStatus

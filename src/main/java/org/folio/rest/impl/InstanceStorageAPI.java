@@ -44,58 +44,27 @@ public class InstanceStorageAPI implements InstanceStorage {
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
   public static final String MODULE = "mod_inventory_storage";
-  public static final String INSTANCE_HOLDINGS_VIEW = "instance_holding_view";
-  public static final String INSTANCE_HOLDINGS_ITEMS_VIEW = "instance_holding_item_view";
   public static final String INSTANCE_TABLE =  "instance";
   private static final String INSTANCE_SOURCE_MARC_TABLE = "instance_source_marc";
   private static final String INSTANCE_RELATIONSHIP_TABLE = "instance_relationship";
   private final Messages messages = Messages.getInstance();
 
   PreparedCQL handleCQL(String query, int limit, int offset) throws FieldException {
-    boolean containsHoldingsRecordProperties = query != null && query.contains("holdingsRecords.");
-    boolean containsItemsRecordProperties = query != null && query.contains("item.");
-
-    if(containsItemsRecordProperties && containsHoldingsRecordProperties) {
-      //it_jsonb is the alias given items in the view in the DB
-      query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
-
-      //ho_jsonb is the alias given holdings in the view in the DB
-      query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".ho_jsonb.");
-
-      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
-        INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-        INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".ho_jsonb"));
-    }
-
-    if(containsItemsRecordProperties) {
-      //it_jsonb is the alias given items in the view in the DB
-      query = query.replaceAll("item\\.", INSTANCE_HOLDINGS_ITEMS_VIEW+".it_jsonb.");
-
-      return new PreparedCQL(INSTANCE_HOLDINGS_ITEMS_VIEW, query, limit, offset, Arrays.asList(
-        INSTANCE_HOLDINGS_ITEMS_VIEW + ".jsonb",
-          INSTANCE_HOLDINGS_ITEMS_VIEW + ".it_jsonb"));
-    }
-
-    if(containsHoldingsRecordProperties) {
-      //ho_jsonb is the alias given holdings in the view in the DB
-      query = query.replaceAll("holdingsRecords\\.", INSTANCE_HOLDINGS_VIEW+".ho_jsonb.");
-
-      return new PreparedCQL(INSTANCE_HOLDINGS_VIEW, query, limit, offset, Arrays.asList(
-        INSTANCE_HOLDINGS_VIEW+".jsonb",
-          INSTANCE_HOLDINGS_VIEW + ".ho_jsonb"));
-    }
-
-    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"));
+    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"), INSTANCE_TABLE + ".jsonb");
   }
 
   private static CQLWrapper createCQLWrapper(
     String query,
     int limit,
     int offset,
-    List<String> fields) throws FieldException {
-
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(fields);
+    List<String> fields, String view) throws FieldException {
+    
+    String fieldsString = "";
+    for (String s : fields) {
+      fieldsString += fields + " ";
+    }
+    log.info("create wrapper" + fieldsString + "------" + view);
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(fields, view);
 
     return new CQLWrapper(cql2pgJson, query)
       .setLimit(new Limit(limit))
@@ -122,7 +91,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       }
 
       CQLWrapper cql = preparedCql.getCqlWrapper();
-      log.info("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
+      log.error("getInstanceStorageInstances: SQL generated from CQL: " + cql.toString());
 
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
       postgresClient.get(preparedCql.getTableName(), Instance.class, preparedCql.getFieldArray(), cql,
@@ -145,14 +114,14 @@ public class InstanceStorageAPI implements InstanceStorage {
                   respond500WithTextPlain(reply.cause().getMessage())));
             }
           } catch (Exception e) {
-            log.error(e.getStackTrace());
+            log.error(e.getMessage(), e);
             asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
               GetInstanceStorageInstancesResponse.
                 respond500WithTextPlain(e.getMessage())));
           }
         });
     } catch (Exception e) {
-      log.error(e.getStackTrace());
+      log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetInstanceStorageInstancesResponse.
           respond500WithTextPlain(e.getMessage())));
@@ -205,7 +174,7 @@ public class InstanceStorageAPI implements InstanceStorage {
                         .respond400WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                log.error(e.getStackTrace());
+                log.error(e.getMessage(), e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(
                     PostInstanceStorageInstancesResponse
@@ -213,14 +182,14 @@ public class InstanceStorageAPI implements InstanceStorage {
               }
             });
         } catch (Exception e) {
-          log.error(e.getStackTrace());
+          log.error(e.getMessage(), e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             PostInstanceStorageInstancesResponse
               .respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e.getStackTrace());
+      log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         PostInstanceStorageInstancesResponse
           .respond500WithTextPlain(e.getMessage())));
@@ -333,21 +302,21 @@ public class InstanceStorageAPI implements InstanceStorage {
 
                 }
               } catch (Exception e) {
-                log.error(e.getStackTrace());
+                log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   GetInstanceStorageInstancesByInstanceIdResponse.
                     respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          log.error(e.getStackTrace());
+          log.error(e.getMessage(), e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetInstanceStorageInstancesByInstanceIdResponse.
               respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e.getStackTrace());
+      log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetInstanceStorageInstancesByInstanceIdResponse.
           respond500WithTextPlain(e.getMessage())));
@@ -541,7 +510,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
           String[] fieldList = {"*"};
 
-          CQLWrapper cql = createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_RELATIONSHIP_TABLE+".jsonb"));
+          CQLWrapper cql = createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_RELATIONSHIP_TABLE+".jsonb"),INSTANCE_RELATIONSHIP_TABLE+".jsonb");
 
           log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
@@ -564,21 +533,21 @@ public class InstanceStorageAPI implements InstanceStorage {
                       respond500WithTextPlain(reply.cause().getMessage())));
                 }
               } catch (Exception e) {
-                log.error(e.getStackTrace());
+                log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   GetInstanceStorageInstanceRelationshipsResponse.
                     respond500WithTextPlain(e.getMessage())));
               }
             });
         } catch (Exception e) {
-          log.error(e.getStackTrace());
+          log.error(e.getMessage(), e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
             GetInstanceStorageInstanceRelationshipsResponse.
               respond500WithTextPlain(e.getMessage())));
         }
       });
     } catch (Exception e) {
-      log.error(e.getStackTrace());
+      log.error(e.getMessage(), e);
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
         GetInstanceStorageInstanceRelationshipsResponse.
           respond500WithTextPlain(e.getMessage())));
@@ -661,13 +630,17 @@ public class InstanceStorageAPI implements InstanceStorage {
     private final CQLWrapper cqlWrapper;
     private final List<String> fieldList;
 
-    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList)
+
+    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList, String view)
         throws FieldException {
       this.tableName = tableName;
-      this.cqlWrapper = createCQLWrapper(query, limit, offset, fieldList);
+      this.cqlWrapper = createCQLWrapper(query, limit, offset, fieldList, view);
       this.fieldList = fieldList;
     }
-
+    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList)
+        throws FieldException {
+      this(tableName,  query,  limit, offset, fieldList,  null);
+    }
     public String getTableName() {
       return tableName;
     }
