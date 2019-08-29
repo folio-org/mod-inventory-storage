@@ -72,8 +72,7 @@
           },
           "identifierTypeId": {
             "type": "string",
-            "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
-            "$ref": "uuid.json"
+            "description": "Resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)"
           }
         },
         "additionalProperties": false,
@@ -96,8 +95,7 @@
           },
           "contributorTypeId": {
             "type": "string",
-            "description": "UUID for the contributor type term defined in controlled vocabulary",
-            "$ref": "uuid.json"
+            "description": "Contributor type term defined in controlled vocabulary"
           },
           "contributorTypeText": {
             "type": "string",
@@ -105,8 +103,7 @@
           },
           "contributorNameTypeId": {
             "type": "string",
-            "description": "UUID of contributor name type term defined by the MARC code list for relators",
-            "$ref": "uuid.json"
+            "description": "Contributor name type term defined by the MARC code list for relators"
           },
           "primary": {
             "type": "boolean",
@@ -141,8 +138,7 @@
           },
           "classificationTypeId": {
             "type": "string",
-            "description": "UUID of classification schema (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)",
-            "$ref": "uuid.json"
+            "description": "Classification type (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)"
           }
         },
         "additionalProperties": false,
@@ -262,8 +258,8 @@
         "type": "object",
         "properties": {
           "instanceNoteTypeId": {
-            "description": "ID of the type of note",
-            "$ref": "uuid.json"
+            "type": "string",
+            "description": "The type of note"
           },
           "note": {
             "type": "string",
