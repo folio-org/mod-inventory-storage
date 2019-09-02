@@ -4,6 +4,7 @@ import static org.folio.rest.api.ServicePointTest.createHoldShelfExpiryPeriod;
 import static org.folio.rest.api.ServicePointTest.createServicePoint;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
+import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -284,7 +285,7 @@ public class ServicePointsUserTest {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL url = null;
     if(query != null) {
-      url = servicePointsUsersUrl("?query=" + query);
+      url = servicePointsUsersUrl("?query=" + urlEncode(query));
     } else {
       url = servicePointsUsersUrl("");
     }

@@ -1,8 +1,6 @@
 package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_OK;
-import static java.net.URLEncoder.encode;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -16,6 +14,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
+import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -874,8 +873,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     try {
       CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
-      String url = instancesStorageUrl("").toString() + "?query="
-          + encode(cql, UTF_8.name());
+      String url = instancesStorageUrl("").toString() + "?query=" + urlEncode(cql);
       if (offset >= 0) {
         url += "&offset=" + offset;
       }
@@ -1135,6 +1133,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       "Long Way to a Small Angry Planet");
 
     canSort(String.format("((contributors =/@name \"becky\") and holdingsRecords.permanentLocationId=\"%s\")",mainLibraryLocationId),"Long Way to a Small Angry Planet" );
+    System.out.println("canSearchByBarcodeAndPermanentLocation");
 
   }
 
@@ -1172,8 +1171,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
     String url = instancesStorageUrl("").toString() + "?query="
-        + encode("item.barcode=706949453641* or title=Nod*",
-      UTF_8.name());
+        + urlEncode("item.barcode=706949453641* or title=Nod*");
 
     client.get(url, TENANT_ID, json(searchCompleted));
     Response searchResponse = searchCompleted.get(5, SECONDS);
@@ -1357,14 +1355,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createHoldings(jho3);
     ////////////////////////done //////////////////////////////////////
 
-    String url1 = url+ encode("title=Long Way to a Small Angry Planet* sortby title", "UTF-8");
-    String url2 = url+ encode("title=cql.allRecords=1 sortBy title", "UTF-8");
-    String url3 = url+ encode("holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 sortBy title", "UTF-8");
-    String url4 = url+ encode("title=cql.allRecords=1 sortby title", "UTF-8");
-    String url5 = url+ encode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 "
-        + "sortby title", "UTF-8");
+    String url1 = url+ urlEncode("title=Long Way to a Small Angry Planet* sortby title");
+    String url2 = url+ urlEncode("title=cql.allRecords=1 sortBy title");
+    String url3 = url+ urlEncode("holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 sortBy title");
+    String url4 = url+ urlEncode("title=cql.allRecords=1 sortby title");
+    String url5 = url+ urlEncode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 "
+        + "sortby title");
     //non existant - 0 results
-    String url6 = url+ encode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=abc* sortby holdingsRecords.permanentLocationId", "UTF-8");
+    String url6 = url+ urlEncode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=abc* sortby holdingsRecords.permanentLocationId");
 
     CompletableFuture<Response> cqlCF1 = new CompletableFuture<>();
     CompletableFuture<Response> cqlCF2 = new CompletableFuture<>();
@@ -1420,7 +1418,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> future = new CompletableFuture<>();
 
-    client.get(instancesStorageUrl("") + "?query=" + encode(searchByTagQuery, UTF_8.name()), TENANT_ID, json(future));
+    client.get(instancesStorageUrl("") + "?query=" + urlEncode(searchByTagQuery), TENANT_ID, json(future));
 
     Response response = future.get(5, SECONDS);
 
