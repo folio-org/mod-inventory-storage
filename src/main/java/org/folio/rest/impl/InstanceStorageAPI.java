@@ -1,7 +1,6 @@
 package org.folio.rest.impl;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -50,21 +49,16 @@ public class InstanceStorageAPI implements InstanceStorage {
   private final Messages messages = Messages.getInstance();
 
   PreparedCQL handleCQL(String query, int limit, int offset) throws FieldException {
-    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset, Arrays.asList(INSTANCE_TABLE + ".jsonb"), INSTANCE_TABLE + ".jsonb");
+    return new PreparedCQL(INSTANCE_TABLE, query, limit, offset);
   }
 
   private static CQLWrapper createCQLWrapper(
     String query,
     int limit,
     int offset,
-    List<String> fields, String view) throws FieldException {
+    String tableName) throws FieldException {
     
-    String fieldsString = "";
-    for (String s : fields) {
-      fieldsString += fields + " ";
-    }
-    log.info("create wrapper" + fieldsString + "------" + view);
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(fields, view);
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
 
     return new CQLWrapper(cql2pgJson, query)
       .setLimit(new Limit(limit))
@@ -476,7 +470,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
           String[] fieldList = {"*"};
 
-          CQLWrapper cql = createCQLWrapper(query, limit, offset, Arrays.asList(INSTANCE_RELATIONSHIP_TABLE+".jsonb"),INSTANCE_RELATIONSHIP_TABLE+".jsonb");
+          CQLWrapper cql = createCQLWrapper(query, limit, offset, INSTANCE_RELATIONSHIP_TABLE);
 
           log.info(String.format("SQL generated from CQL: %s", cql.toString()));
 
@@ -594,29 +588,19 @@ public class InstanceStorageAPI implements InstanceStorage {
   static class PreparedCQL {
     private final String tableName;
     private final CQLWrapper cqlWrapper;
-    private final List<String> fieldList;
 
-
-    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList, String view)
+    public PreparedCQL(String tableName, String query, int limit, int offset)
         throws FieldException {
       this.tableName = tableName;
-      this.cqlWrapper = createCQLWrapper(query, limit, offset, fieldList, view);
-      this.fieldList = fieldList;
+      this.cqlWrapper = createCQLWrapper(query, limit, offset, tableName);
     }
-    public PreparedCQL(String tableName, String query, int limit, int offset, List<String> fieldList)
-        throws FieldException {
-      this(tableName,  query,  limit, offset, fieldList,  null);
-    }
+
     public String getTableName() {
       return tableName;
     }
 
     public CQLWrapper getCqlWrapper() {
       return cqlWrapper;
-    }
-
-    public String [] getFieldArray() {
-      return fieldList.toArray(new String [0]);
     }
   }
 
