@@ -23,8 +23,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -831,8 +829,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
-    String url = itemsStorageUrl("") + "?query=" + URLEncoder.encode("tags.tagList=" + TAG_VALUE,
-      StandardCharsets.UTF_8.name());
+    String url = itemsStorageUrl("") + "?query=" + urlEncode("tags.tagList=" + TAG_VALUE);
 
     client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
@@ -875,8 +872,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
-    String url = itemsStorageUrl("") + "?query=" + URLEncoder.encode("status.name==\"Available\"",
-      StandardCharsets.UTF_8.name());
+    String url = itemsStorageUrl("") + "?query=" + urlEncode("status.name==\"Available\"");
 
     client.get(url,
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));

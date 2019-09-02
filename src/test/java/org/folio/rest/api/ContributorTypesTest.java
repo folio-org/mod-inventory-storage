@@ -1,13 +1,12 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.support.http.InterfaceUrls.contributorTypesUrl;
+import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +29,7 @@ public class ContributorTypesTest extends TestBase {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<Response>();
 
     String url = contributorTypesUrl("").toString() + "?limit=400&query="
-      + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8.name());
+      + urlEncode("cql.allRecords=1");
 
     client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
     Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
