@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "tags",
+  "description": "List of simple tags that can be added to an object",
+  "type": "object",
+    "properties": {
+      "tagList": {
+        "type": "array",
+        "items": {
+          "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

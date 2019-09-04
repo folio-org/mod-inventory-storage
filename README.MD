@@ -180,3 +180,17 @@ _Returns_: collection of successfully created Instances, error messages for fail
 Regardless the batch size, number of parallel connections to the db is limited to 4 by default. To override the default number of concurrent db connections - "inventory.storage.parallel.db.connections.limit" program argument should be specified on module deployment.
 
 `java -Dport=%p -jar ../mod-source-record-storage/mod-source-record-storage-server/target/mod-source-record-storage-server-fat.jar -Dhttp.port=%p embed_postgres=true inventory.storage.parallel.db.connections.limit=10`
+
+# Instance schema
+Modules mod-inventory-storage, mod-inventory and mod-source-record-manager use the same schema of instance.
+During data import module mod-source-record-manager sends the instances to the mod-inventory and stores them in the mod-inventory-storage.
+So, there is a need to keep compatibility of the instance schemas in modules: [mod-inventory-storage](https://github.com/folio-org/mod-inventory-storage/blob/master/ramls/instance.json),
+[mod-inventory](https://github.com/folio-org/mod-inventory/blob/master/ramls/instance.json) and
+[mod-source-record-manager](https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/instance.json).
+This module contains a test that serves as a notification of an instance schema change.
+The test covers the current state of the instance schema and fails if the schema has been changed.
+This test just helps developers to keep in mind that measures should be taken to update the instance schema in
+[mod-inventory-storage](https://github.com/folio-org/mod-inventory-storage/blob/master/ramls/instance.json),
+[mod-inventory](https://github.com/folio-org/mod-inventory/blob/master/ramls/instance.json) and
+[mod-source-record-manager](https://github.com/folio-org/mod-source-record-manager/blob/master/ramls/instance.json) modules.
+To fix the test you should copy the changed instance schema and copy/add other related schemas to the 'schema' directory in test resources.

@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Metadata Schema",
+  "type": "object",
+  "properties": {
+    "createdDate": {
+      "description": "Date and time when the record was created",
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdByUserId": {
+      "description": "ID of the user who created the record",
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "createdByUsername": {
+      "description": "Username of the user who created the record (when available)",
+      "type": "string"
+    },
+    "updatedDate": {
+      "description": "Date and time when the record was last updated",
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedByUserId": {
+      "description": "ID of the user who last updated the record",
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "updatedByUsername": {
+      "description": "Username of the user who last updated the record (when available)",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "createdDate",
+    "createdByUserId"
+  ]
+}
