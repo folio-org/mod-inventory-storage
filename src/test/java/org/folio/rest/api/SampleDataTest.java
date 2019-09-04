@@ -53,7 +53,7 @@ public class SampleDataTest extends TestBase {
 
   @Test
   public void instanceCount() {
-    assertCount(instancesStorageUrl("?limit=100"), "instances", 28);
+    assertCount(instancesStorageUrl("?limit=100"), "instances", 29);
   }
 
   @Test
@@ -68,7 +68,7 @@ public class SampleDataTest extends TestBase {
 
   @Test
   public void instanceRelationshipsCount() {
-    assertCount(instanceRelationshipsUrl("?limit=100"), "instanceRelationships", 5);
+    assertCount(instanceRelationshipsUrl("?limit=100"), "instanceRelationships", 6);
   }
 
   private JsonObject get(URL url) {
