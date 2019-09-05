@@ -983,7 +983,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(searchResponse.getStatusCode(), is(500));
+    assertThat(searchResponse.getStatusCode(), is(400));
 
     String error = searchResponse.getBody();
 
