@@ -1,3 +1,23 @@
+## 17.0.0 2019-09-09
+
+* Adds tags to `items records` (MODINVSTOR-322)
+* Adds tags to `holdings records` (MODINVSTOR-324)
+* Adds tags to `instances` (MODINVSTOR-323)
+* Adds nature of content terms to `instances` (MODINVSTOR-327)
+* Introduces `item damaged statuses` (MODINVSTOR-286)
+* Introduces preview `instance storage batch` API (MODINVSTOR-291)
+* Limits number of database connections when processing instance batches (MODINVSTOR-330)
+* Disallows deletion of in use `instance types` (MODINVSTOR-301)
+* Disallows creation of `holdings type` with existing name (MODINVSTOR-318)
+* Fixes failures when combining CQL array index and other indexes (MODINVSTOR-319)
+* Use sub-queries rather than views for cross-record searching (MODINVSTOR-339, MODINVSTOR-347)
+* Provides `item-storage` interface version 7.5 (MODINVSTOR-322)
+* Provides `holdings-storage` interface version 3.1 (MODINVSTOR-324)
+* Provides `instance-storage` interface version 7.2 (MODINVSTOR-323, MODINVSTOR-327)
+* Provides `instance-storage-batch` interface version 0.2 (MODINVSTOR-291)
+* Provides `item-damaged-statuses` interface version 1.0 (MODINVSTOR-286)
+* Upgrades RAML Module Builder to version 27.0.0 (MODINVSTOR-342)
+
 ## 16.0.0 2019-07-23
 
 * Provides `instance-note-types` interface version 1.0 (MODINVSTOR-300)
