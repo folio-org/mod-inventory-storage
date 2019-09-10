@@ -13,6 +13,7 @@ import static org.folio.rest.support.http.InterfaceUrls.identifierTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.illPoliciesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceFormatsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceNoteTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemNoteTypesUrl;
@@ -31,6 +32,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -49,6 +51,7 @@ import org.folio.rest.api.entities.IllPolicy;
 import org.folio.rest.api.entities.Instance;
 import org.folio.rest.api.entities.InstanceFormat;
 import org.folio.rest.api.entities.InstanceNoteType;
+import org.folio.rest.api.entities.InstanceRelationshipType;
 import org.folio.rest.api.entities.InstanceStatus;
 import org.folio.rest.api.entities.InstanceType;
 import org.folio.rest.api.entities.ItemNoteType;
@@ -701,6 +704,28 @@ public class ReferenceTablesTest extends TestBase {
 
     testGetPutDeletePost(statisticalCodeTypesPath, entityUUIDCodeType, statisticalCodeType, updatePropertyCodeType);
 
+  }
+
+  @Test
+  public void instanceRelationshipTypesLoaded() throws Exception {
+    Response searchResponse = getReferenceRecords(instanceRelationshipTypesUrl(""));
+    validateNumberOfReferenceRecords("instance-relationship types",
+      searchResponse, 4, 200);
+  }
+
+  @Test
+  public void instanceRelationshipTypesCrud() throws Exception {
+    final String entityPath = "/instance-relationship-types";
+    final String instanceRelationshipId = UUID.randomUUID().toString();
+
+    InstanceRelationshipType instanceRelationshipType =
+      new InstanceRelationshipType(instanceRelationshipId, "Test Type");
+    Response createResponse = createReferenceRecord(entityPath, instanceRelationshipType);
+
+    assertThat(createResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    testGetPutDeletePost(entityPath, instanceRelationshipId, instanceRelationshipType,
+      InstanceRelationshipType.NAME_KEY);
   }
 
   private Response getReferenceRecords(URL baseUrl)
