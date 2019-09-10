@@ -1,0 +1,110 @@
+{
+  "id": "00f10ab9-d845-4334-92d2-ff55862bf4f9",
+  "hrid": "in00000035",
+  "source": "MARC",
+  "title": "American Bar Association journal.",
+  "indexTitle": "American Bar Association journal.",
+  "identifiers": [
+    {
+      "identifierTypeId": "c858e4f2-2b6b-4385-842b-60732ee14abb",
+      "value": "15017355"
+    },
+    {
+      "identifierTypeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
+      "value": "1964851"
+    },
+    {
+      "identifierTypeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
+      "value": "236213576"
+    },
+    {
+      "identifierTypeId": "913300b2-03ed-469a-8179-c1092c991227",
+      "value": "0002-7596"
+    },
+    {
+      "identifierTypeId": "913300b2-03ed-469a-8179-c1092c991227",
+      "value": "0002-7596"
+    },
+    {
+      "identifierTypeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
+      "value": "(ICU)BID9651294"
+    },
+    {
+      "identifierTypeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
+      "value": "(OCoLC)1479565"
+    },
+    {
+      "identifierTypeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
+      "value": "(OCoLC)1964851"
+    },
+    {
+      "identifierTypeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
+      "value": "(OCoLC)236213576"
+    },
+    {
+      "identifierTypeId": "7e591197-f335-4afb-bc6d-a6d76ca3bace",
+      "value": "2363771"
+    }
+  ],
+  "contributors": [
+    {
+      "contributorNameTypeId": "d376e36c-b759-4fed-8502-7130d1eeff39",
+      "name": "American Bar Association",
+      "contributorTypeId": "6e09d47d-95e2-4d8a-831b-f777b8ef6d81",
+      "contributorTypeText": ""
+    },
+    {
+      "contributorNameTypeId": "d376e36c-b759-4fed-8502-7130d1eeff39",
+      "name": "American Bar Association. Journal",
+      "contributorTypeId": "06b2cbd8-66bf-4956-9d90-97c9776365a4",
+      "contributorTypeText": ""
+    }
+  ],
+  "subjects": [
+    "Law--United States--Periodicals",
+    "Advocatuur.--gtt",
+    "Droit--Périodiques",
+    "LAW--unbist",
+    "LAWYERS--unbist",
+    "UNITED STATES--unbist",
+    "Law.--fast",
+    "United States.--fast"
+  ],
+  "classifications": [
+    {
+      "classificationNumber": "K1 .M385",
+      "classificationTypeId": "ce176ace-a53e-4b4d-aa89-725ed7b2edac"
+    },
+    {
+      "classificationNumber": "KB1 .A437",
+      "classificationTypeId": "ce176ace-a53e-4b4d-aa89-725ed7b2edac"
+    },
+    {
+      "classificationNumber": "347.05 A512",
+      "classificationTypeId": "42471af9-7d25-4f3a-bf78-60d29dcf463b"
+    }
+  ],
+  "publication": [
+    {
+      "publisher": "American Bar Association",
+      "place": "Chicago, Ill."
+    }
+  ],
+  "publicationFrequency": [
+    "Monthly, 1921-83",
+    "Quarterly, 1915-20"
+  ],
+  "publicationRange": [
+    "Began with vol. 1, no. 1 (Jan. 1915); ceased with v. 69, [no.12] (Dec. 1983)"
+  ],
+  "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
+  "instanceFormatIds": [
+    "volume nc rdacarrier"
+  ],
+  "physicalDescriptions": [
+    "69 v. : ill. ; 23-30 cm."
+  ],
+  "languages": [
+    "eng"
+  ]
+}
