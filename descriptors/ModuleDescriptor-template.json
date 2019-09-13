@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "7.5",
+      "version": "7.6",
       "handlers": [
         {
           "methods": ["GET"],

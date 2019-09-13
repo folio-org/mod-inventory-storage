@@ -846,5 +846,12 @@
       ],
       "customSnippetPath": "itemHrid.sql"
     }
+  ],
+  "scripts": [
+    {
+      "run": "after",
+      "snippetPath": "itemEffectiveLocation.sql",
+      "fromModuleVersion": "17.1.0"
+    }
   ]
 }

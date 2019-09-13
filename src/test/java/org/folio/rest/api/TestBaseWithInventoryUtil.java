@@ -27,6 +27,11 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
 
   protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId)
+    throws ExecutionException, InterruptedException, MalformedURLException, TimeoutException {
+    return createInstanceAndHolding(holdingsPermanentLocationId, null);
+  }
+
+  protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId, UUID holdingTempLocation)
     throws ExecutionException,
     InterruptedException,
     MalformedURLException,
@@ -40,6 +45,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .withId(UUID.randomUUID())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
+        .withTemporaryLocation(holdingTempLocation)
     ).getId();
   }
 

@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.ResponseUtil;
 import org.folio.rest.tools.utils.TenantTool;
 
 /**
@@ -55,8 +56,16 @@ public class ItemStorageAPI implements ItemStorage {
     if (entity.getStatus() == null) {
       entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
     }
+
     PgUtil.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
-        PostItemStorageItemsResponse.class, asyncResultHandler);
+      PostItemStorageItemsResponse.class, response -> {
+        // Have to re-read item to get calculated fields like effectiveLocationId
+        if (ResponseUtil.hasCreatedStatus(response.result())) {
+          rereadCreatedItemAndRespond(entity, okapiHeaders, asyncResultHandler, vertxContext);
+        } else {
+          asyncResultHandler.handle(Future.succeededFuture(response.result()));
+        }
+      });
   }
 
   @Validate
@@ -114,5 +123,29 @@ public class ItemStorageAPI implements ItemStorage {
 
     PgUtil.deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
         DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
+  }
+
+  private void rereadCreatedItemAndRespond(
+    Item entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
+      .getById(ITEM_TABLE, entity.getId(), Item.class, response -> {
+        if (response.succeeded() && response.result() != null) {
+          asyncResultHandler.handle(respond201Created(response.result()));
+        } else {
+          log.warn("Unable to re-read item [{}] returning old item",
+            entity.getId());
+          asyncResultHandler.handle(respond201Created(entity));
+        }
+      });
+  }
+
+  private Future<Response> respond201Created(Item item) {
+    return Future.succeededFuture(PostItemStorageItemsResponse
+      .respond201WithApplicationJson(
+        item,
+        PostItemStorageItemsResponse.headersFor201()
+      ));
   }
 }

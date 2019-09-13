@@ -53,6 +53,7 @@ import io.vertx.ext.sql.UpdateResult;
   ReferenceTablesTest.class,
   ItemDamagedStatusAPITest.class,
   ItemDamagedStatusAPIUnitTest.class,
+  ItemEffectiveLocationTest.class,
 
   // these run with loadReference=true, loadSample=true
   SampleDataTest.class,

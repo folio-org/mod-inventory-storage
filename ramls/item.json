@@ -200,6 +200,11 @@
     "temporaryLocationId": {
       "type": "string"
     },
+    "effectiveLocationId": {
+      "type": "string",
+      "description": "The effective location is used by FOLIO and other integrated systems to know the current home location for the item (read only, derived from locations on HoldingsRecord and Item)",
+      "readonly": true
+    },
     "electronicAccess": {
       "type": "array",
       "items": {
