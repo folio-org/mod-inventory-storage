@@ -15,4 +15,14 @@ public final class ResponseUtil {
     return response != null
       && response.getStatus() == Response.Status.CREATED.getStatusCode();
   }
+
+  public static <T> Response copyResponseWithNewEntity(Response originalResponse, T newEntity) {
+    if (originalResponse == null) {
+      return null;
+    }
+
+    return Response.fromResponse(originalResponse)
+      .entity(newEntity)
+      .build();
+  }
 }

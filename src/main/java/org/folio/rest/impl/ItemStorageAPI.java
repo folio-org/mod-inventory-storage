@@ -1,13 +1,11 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import static org.folio.rest.support.ResponseUtil.copyResponseWithNewEntity;
+import static org.folio.rest.support.ResponseUtil.hasCreatedStatus;
+import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import javax.ws.rs.core.Response;
 
@@ -18,8 +16,14 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.ResponseUtil;
 import org.folio.rest.tools.utils.TenantTool;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  * CRUD for Item.
@@ -58,12 +62,16 @@ public class ItemStorageAPI implements ItemStorage {
     }
 
     PgUtil.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
-      PostItemStorageItemsResponse.class, response -> {
+      PostItemStorageItemsResponse.class, postResponse -> {
         // Have to re-read item to get calculated fields like effectiveLocationId
-        if (ResponseUtil.hasCreatedStatus(response.result())) {
-          rereadCreatedItemAndRespond(entity, okapiHeaders, asyncResultHandler, vertxContext);
+        if (hasCreatedStatus(postResponse.result())) {
+          readItemById(entity.getId(), okapiHeaders, vertxContext)
+            // copy original response to save all headers etc. and set
+            // the retrieved item or set the original entity in case item is null
+            .thenApply(item -> copyResponseWithNewEntity(postResponse.result(), firstNonNull(item, entity)))
+            .thenAccept(respToSend -> asyncResultHandler.handle(Future.succeededFuture(respToSend)));
         } else {
-          asyncResultHandler.handle(Future.succeededFuture(response.result()));
+          asyncResultHandler.handle(postResponse);
         }
       });
   }
@@ -125,27 +133,15 @@ public class ItemStorageAPI implements ItemStorage {
         DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 
-  private void rereadCreatedItemAndRespond(
-    Item entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  private CompletableFuture<Item> readItemById(
+    String itemId, Map<String, String> okapiHeaders, Context vertxContext) {
+    final CompletableFuture<Item> readItemFuture = new CompletableFuture<>();
 
     PgUtil.postgresClient(vertxContext, okapiHeaders)
-      .getById(ITEM_TABLE, entity.getId(), Item.class, response -> {
-        if (response.succeeded() && response.result() != null) {
-          asyncResultHandler.handle(respond201Created(response.result()));
-        } else {
-          log.warn("Unable to re-read item [{}] returning old item",
-            entity.getId());
-          asyncResultHandler.handle(respond201Created(entity));
-        }
-      });
-  }
+      .getById(ITEM_TABLE, itemId, Item.class,
+        response -> readItemFuture.complete(response.result())
+      );
 
-  private Future<Response> respond201Created(Item item) {
-    return Future.succeededFuture(PostItemStorageItemsResponse
-      .respond201WithApplicationJson(
-        item,
-        PostItemStorageItemsResponse.headersFor201()
-      ));
+    return readItemFuture;
   }
 }

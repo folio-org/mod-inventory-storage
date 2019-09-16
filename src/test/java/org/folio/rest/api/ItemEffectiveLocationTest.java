@@ -12,6 +12,8 @@ import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -29,11 +31,13 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
+import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -313,6 +317,23 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     assertEquals(1, secondFloorLibraryItems.getTotalRecords().intValue());
     assertThat(secondFloorLibraryItems.getItems().get(0).getId(), is(itemWithPermLocation.getId()));
+  }
+
+  @Test
+  public void responseContainsAllRequiredHeaders() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+
+    CompletableFuture<HttpClientResponse> createCompleted = new CompletableFuture<>();
+    Item item = buildItem(holdingsRecordId, null, null);
+
+    client
+      .post(InterfaceUrls.itemsStorageUrl(""), item,
+        StorageTestSuite.TENANT_ID, createCompleted::complete);
+
+    HttpClientResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.statusCode(), is(201));
+    assertThat(response.getHeader("location"), not(isEmptyString()));
   }
 
   private Item buildItem(UUID holdingsRecordId,
