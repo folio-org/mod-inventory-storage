@@ -499,7 +499,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     client.get(instancesStorageUrl("?query%3Dall%3D%22Long%20Way%20to%20a%20Small%20Angry%20Planet%20Chambers%2C%20Becky%209781473619777%22"), StorageTestSuite.TENANT_ID,
         ResponseHandler.json(getCompleted));
 
-    Response response = getCompleted.get(300, TimeUnit.SECONDS);
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
 
     JsonObject responseBody = response.getJson();
 
