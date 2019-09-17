@@ -273,7 +273,8 @@ public class LocationUnitTest {
 
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
-      .put("name", "The Other Institute");
+      .put("name", "The Other Institute")
+      .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
@@ -290,6 +291,7 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Institute"));
+    assertThat(item.getString("code"), is("MPA"));
   }
 
   @Test
@@ -303,7 +305,8 @@ public class LocationUnitTest {
     createInst(id, "Institute of MetaPhysics", "MPI");
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString())
-      .put("name", "The Other Institute");
+      .put("name", "The Other Institute")
+      .put("code", "MPA");
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
@@ -509,7 +512,8 @@ public class LocationUnitTest {
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
       .put("name", "The Other Campus")
-      .put("institutionId", instId.toString());
+      .put("institutionId", instId.toString())
+      .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
@@ -525,6 +529,7 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Campus"));
+    assertThat(item.getString("code"), is("MPA"));
   }
 
   @Test
@@ -542,7 +547,8 @@ public class LocationUnitTest {
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("name", "The Other Campus")
-      .put("institutionId", instId.toString());
+      .put("institutionId", instId.toString())
+      .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locCampusStorageUrl("/" + id.toString()), HttpMethod.PUT,
@@ -768,7 +774,8 @@ public class LocationUnitTest {
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
       .put("name", "The Other Library")
-      .put("campusId", campId.toString());
+      .put("campusId", campId.toString())
+      .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
@@ -784,6 +791,7 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Library"));
+    assertThat(item.getString("code"), is("MPA"));
   }
 
   public void cannotUpdateALibId()
