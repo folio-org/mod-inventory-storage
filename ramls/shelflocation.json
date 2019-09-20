@@ -1,11 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "DEPRECATED: The name and id of a (shelf) location, the forth-level location unit. Use the /locations endpoint instead.",
   "properties": {
     "id": {
+      "description": "UUID of the (shelf) location",
       "type": "string"
     },
     "name": {
+      "description": "Name of the (shelf) location",
       "type": "string"
     }
   },

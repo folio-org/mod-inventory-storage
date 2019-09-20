@@ -1,9 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "DEPRECATED: A collection of (shelf) locations, the forth-level location unit. Use the /locations endpoint instead.",
   "properties": {
     "shelflocations": {
       "id": "shelflocations",
+      "description": "DEPRECATED: List of (shelf) locations, the forth-level location unit. Use the /locations endpoint instead.",
       "type": "array",
       "items": {
         "type": "object",
