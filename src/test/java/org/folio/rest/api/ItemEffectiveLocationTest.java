@@ -131,8 +131,8 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   public void canCalculateEffectiveLocationOnItemInsertWithTempLocationOnItem() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId,
       annexLibraryLocationId);
-    Item itemToCreate = buildItem(holdingsRecordId, secondFloorLocationId,
-      onlineLocationId);
+    Item itemToCreate = buildItem(holdingsRecordId, onlineLocationId,
+      secondFloorLocationId);
 
     IndividualResource createdItem = createItem(itemToCreate);
     assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
@@ -197,7 +197,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     Item itemWithPermLocation = buildItem(holdingsRecordId, null, onlineLocationId);
     Item itemNoLocation = buildItem(holdingsRecordId, null, null);
-    Item itemWithTempLocation = buildItem(holdingsRecordId, annexLibraryLocationId, null);
+    Item itemWithTempLocation = buildItem(holdingsRecordId, null, annexLibraryLocationId);
 
     createItem(itemWithPermLocation);
     createItem(itemNoLocation);
@@ -285,9 +285,9 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     Item itemWithHoldingPermLocation = buildItem(holdingsWithPermLocation, null, null);
     Item itemWithHoldingTempLocation = buildItem(holdingsWithTempLocation, null, null);
-    Item itemWithTempLocation = buildItem(holdingsWithPermLocation, onlineLocationId, null);
+    Item itemWithTempLocation = buildItem(holdingsWithPermLocation, null, onlineLocationId);
     Item itemWithPermLocation = buildItem(holdingsWithTempLocation, null, secondFloorLocationId);
-    Item itemWithAllLocation = buildItem(holdingsWithTempLocation, onlineLocationId, secondFloorLocationId);
+    Item itemWithAllLocation = buildItem(holdingsWithTempLocation, secondFloorLocationId, onlineLocationId);
 
     Item[] itemsToCreate = {itemWithHoldingPermLocation, itemWithHoldingTempLocation,
       itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
@@ -337,8 +337,47 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertThat(response.getHeader("location"), not(isEmptyString()));
   }
 
+  @Test
+  public void canCalculateEffectiveLocationWhenItemAssociatedToAnotherHolding() throws Exception {
+    UUID initialHoldingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+    UUID updatedHoldingRecordId = createInstanceAndHolding(onlineLocationId, secondFloorLocationId);
+
+    Item item = buildItem(initialHoldingsRecordId, null, null);
+    createItem(item);
+
+    Item itemFetched = getItem(item.getId());
+    assertEquals(itemFetched.getEffectiveLocationId(), annexLibraryLocationId.toString());
+
+    itemsClient.replace(UUID.fromString(itemFetched.getId()),
+      JsonObject.mapFrom(itemFetched).copy()
+        .put("holdingsRecordId", updatedHoldingRecordId.toString())
+    );
+
+    assertEquals(getItem(item.getId()).getEffectiveLocationId(), secondFloorLocationId.toString());
+  }
+
+  @Test
+  public void canCalculateEffectiveLocationWhenItemHasPermLocationAndAssociatedToAnotherHolding() throws Exception {
+    UUID initialHoldingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+    UUID updatedHoldingRecordId = createInstanceAndHolding(secondFloorLocationId);
+
+    Item item = buildItem(initialHoldingsRecordId, null, onlineLocationId);
+    createItem(item);
+
+    Item itemFetched = getItem(item.getId());
+    assertEquals(itemFetched.getEffectiveLocationId(), onlineLocationId.toString());
+
+    itemsClient.replace(UUID.fromString(itemFetched.getId()),
+      JsonObject.mapFrom(itemFetched).copy()
+        .put("holdingsRecordId", updatedHoldingRecordId.toString())
+    );
+
+    assertEquals(getItem(item.getId()).getEffectiveLocationId(), onlineLocationId.toString());
+  }
+
   private Item buildItem(UUID holdingsRecordId,
-                         UUID tempLocation, UUID permLocation) {
+                         UUID permLocation,
+                         UUID tempLocation) {
     JsonObject itemToCreate = new JsonObject();
 
     itemToCreate.put("id", UUID.randomUUID().toString());

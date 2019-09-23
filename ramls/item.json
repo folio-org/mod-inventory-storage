@@ -202,7 +202,7 @@
     },
     "effectiveLocationId": {
       "type": "string",
-      "description": "The effective location is used by FOLIO and other integrated systems to know the current home location for the item (read only, derived from locations on HoldingsRecord and Item)",
+      "description": "The current home location for the item. Read only, it is automatically updated to be the first defined value from item.temporaryLocationId, item.permanentLocationId, holdingsRecord.temporaryLocationId, holdingsRecord.permanentLocationId.",
       "$ref": "uuid.json",
       "readonly": true
     },
