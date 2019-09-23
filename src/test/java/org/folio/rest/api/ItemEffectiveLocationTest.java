@@ -86,6 +86,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("item");
+    StorageTestSuite.checkForMismatchedIDs("holdings_record");
   }
 
   @Test

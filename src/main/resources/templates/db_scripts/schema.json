@@ -815,7 +815,7 @@
           "fieldName": "effectiveLocationId",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         }
       ],
       "ginIndex": [

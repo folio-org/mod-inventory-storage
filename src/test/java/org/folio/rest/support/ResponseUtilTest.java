@@ -1,24 +1,17 @@
 package org.folio.rest.support;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.Constructor;
-
 import javax.ws.rs.core.Response;
 
-import org.junit.Rule;
+import org.folio.rest.testing.UtilityClassTester;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ResponseUtilTest {
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
   @Test
   public void canReturnFalseIfNullResponse() {
     assertFalse(ResponseUtil.hasCreatedStatus(null));
@@ -39,14 +32,8 @@ public class ResponseUtilTest {
   }
 
   @Test
-  public void canNotInstantiateClass() throws Exception {
-    final Constructor<ResponseUtil> constructor = ResponseUtil.class
-      .getDeclaredConstructor();
-
-    constructor.setAccessible(true);
-
-    expectedException.expectCause(instanceOf(UnsupportedOperationException.class));
-    constructor.newInstance();
+  public void isUtilityClass(){
+    UtilityClassTester.assertUtilityClass(ResponseUtil.class);
   }
 
   @Test
