@@ -5,8 +5,8 @@ protocols: [ HTTP, HTTPS ]
 baseUri: http://github.com/org/folio/mod-inventory-storage
 
 documentation:
-  - title: Shelf Locations API
-    content: This documents the API calls that can be made to query and manage shelf locations types of the system
+  - title: DEPRECATED Shelf Locations API (forth-level location unit)
+    content: DEPRECATED: Can report the name and id of a (shelf) location, the forth-level location unit. This is a read-only proxy to the new locations interface at /locations that should be used instead.
 
 types:
   shelflocation: !include shelflocation.json
@@ -35,12 +35,12 @@ resourceTypes:
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
       pageable
     ]
-    description: Return a list of shelf locations
+    description: DEPRECATED - return a list of (shelf) locations, the forth-level location unit. This is a read-only proxy to the new locations interface at /locations that should be used instead.
   post:
-    description: Create a new shelf location
+    description: DEPRECATED and NOT IMPLEMENTED - Create a new shelf location
     is: [validate]
   delete:
-    description: "Delete all shelf locations"
+    description: "DEPRECATED and NOT IMPLEMENTED: Delete all shelf locations"
     is: [language]
     responses:
       204:
@@ -51,7 +51,7 @@ resourceTypes:
           text/plain:
             example: "Internal server error, contact administrator"
   /{id}:
-    description: "Get a new-kind of Location object, and convert it to old-style shelf-location."
+    description: "DEPRECATED: Get a new-kind of Location object, and convert it to old-style shelf-location. This is a read-only proxy to the new locations interface at /locations that should be used instead."
     type:
       collection-item:
         exampleItem: !include examples/shelflocation.json
