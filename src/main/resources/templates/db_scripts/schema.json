@@ -734,6 +734,7 @@
     {
       "tableName": "item",
       "withMetadata": true,
+      "fromModuleVersion": "17.1.0",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
