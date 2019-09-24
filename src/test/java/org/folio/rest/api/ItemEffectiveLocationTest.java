@@ -18,6 +18,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -33,24 +35,31 @@ import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented
  * as two triggers for holdings_record and item tables (see itemEffectiveLocation.sql)
  */
+@RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static String journalMaterialTypeID;
   private static String canCirculateLoanTypeID;
+  private static UUID instanceId;
   private static UUID mainLibraryLocationId;
   private static UUID annexLibraryLocationId;
   private static UUID onlineLocationId;
   private static UUID secondFloorLocationId;
+  private static UUID thirdFloorLocationId;
+  private static UUID fourthFloorLocationId;
+  private static UUID [] location;
 
   @BeforeClass
   public static void beforeAny() throws Exception {
@@ -69,18 +78,24 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     journalMaterialTypeID = materialTypesClient.create("journal");
     canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesStorageUrl("")).create("Can Circulate");
 
+    instanceId = instancesClient.create(instance(UUID.randomUUID())).getId();
+
     LocationsTest.createLocUnits(true);
     mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Item)", "It/M");
     annexLibraryLocationId = LocationsTest.createLocation(null, "Annex Library (item)", "It/A");
     onlineLocationId = LocationsTest.createLocation(null, "Online (item)", "It/O");
     secondFloorLocationId = LocationsTest.createLocation(null, "Second Floor (item)", "It/SF");
-  }
-
-  @Before
-  public void beforeEach() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    thirdFloorLocationId = LocationsTest.createLocation(null, "Third Floor (item)", "It/TF");
+    fourthFloorLocationId = LocationsTest.createLocation(null, "Fourth Floor (item)", "It/FoF");
+    location = new UUID [] {
+        null,
+        mainLibraryLocationId,
+        secondFloorLocationId,
+        thirdFloorLocationId,
+        fourthFloorLocationId,
+        annexLibraryLocationId,
+        onlineLocationId
+    };
   }
 
   @After
@@ -89,59 +104,6 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.checkForMismatchedIDs("holdings_record");
   }
 
-  @Test
-  public void canCalculateEffectiveLocationOnItemInsertWithPermLocationOnHolding() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
-    Item itemToCreate = buildItem(holdingsRecordId, null, null);
-
-    IndividualResource createdItem = createItem(itemToCreate);
-    assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
-
-    Item fetchedItem = getItem(itemToCreate.getId());
-    assertEquals(fetchedItem.getEffectiveLocationId(), mainLibraryLocationId.toString());
-  }
-
-  @Test
-  public void canCalculateEffectiveLocationOnItemInsertWithTempLocationOnHolding() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId,
-      annexLibraryLocationId);
-    Item itemToCreate = buildItem(holdingsRecordId, null, null);
-
-    IndividualResource createdItem = createItem(itemToCreate);
-    assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
-
-    Item fetchedItem = getItem(itemToCreate.getId());
-    assertEquals(fetchedItem.getEffectiveLocationId(), annexLibraryLocationId.toString());
-  }
-
-  @Test
-  public void canCalculateEffectiveLocationOnItemInsertWithPermLocationOnItem() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId,
-      annexLibraryLocationId);
-    Item itemToCreate = buildItem(holdingsRecordId, null, onlineLocationId);
-
-    IndividualResource createdItem = createItem(itemToCreate);
-    assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
-
-    Item fetchedItem = getItem(itemToCreate.getId());
-    assertEquals(fetchedItem.getEffectiveLocationId(), onlineLocationId.toString());
-  }
-
-  @Test
-  public void canCalculateEffectiveLocationOnItemInsertWithTempLocationOnItem() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId,
-      annexLibraryLocationId);
-    Item itemToCreate = buildItem(holdingsRecordId, onlineLocationId,
-      secondFloorLocationId);
-
-    IndividualResource createdItem = createItem(itemToCreate);
-    assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
-
-    Item fetchedItem = getItem(itemToCreate.getId());
-    assertEquals(fetchedItem.getEffectiveLocationId(), secondFloorLocationId.toString());
-  }
-
-  @Test
   public void canCalculateEffectiveLocationOnHoldingUpdate() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -187,7 +149,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     for (Item item : itemsToCreate) {
       Item fetchedItem = getItem(item.getId());
-      assertEquals(fetchedItem.getEffectiveLocationId(), mainLibraryLocationId.toString());
+      assertEquals(fetchedItem.toString(), fetchedItem.getEffectiveLocationId(), mainLibraryLocationId.toString());
     }
   }
 
@@ -195,7 +157,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   public void canCalculateEffectiveLocationOnHoldingUpdateWhenSomeItemsHasLocation() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
-    Item itemWithPermLocation = buildItem(holdingsRecordId, null, onlineLocationId);
+    Item itemWithPermLocation = buildItem(holdingsRecordId, onlineLocationId, null);
     Item itemNoLocation = buildItem(holdingsRecordId, null, null);
     Item itemWithTempLocation = buildItem(holdingsRecordId, null, annexLibraryLocationId);
 
@@ -220,72 +182,135 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     // Assert that itemWithPermLocationFetched was not updated
     assertEquals(itemWithTempLocationFetched.getEffectiveLocationId(), annexLibraryLocationId.toString());
+  }
 
+  private void setPermTempLocation(JsonObject json, int perm, int temp) {
+    if (perm == 0) {
+      json.remove("permanentLocationId");
+    } else {
+      json.put("permanentLocationId", location[perm].toString());
+    }
+    if (temp == 0) {
+      json.remove("temporaryLocationId");
+    } else {
+      json.put("temporaryLocationId", location[temp].toString());
+    }
+  }
+
+  private String effectiveLocation(int holdingPerm, int holdingTemp, int itemPerm, int itemTemp) {
+    int loc = 0;
+    if (itemTemp != 0) {
+      loc = itemTemp;
+    } else if (itemPerm != 0) {
+      loc = itemPerm;
+    } else if (holdingTemp != 0) {
+      loc = holdingTemp;
+    } else {
+      loc = holdingPerm;
+    }
+    UUID uuid = location[loc];
+    return uuid == null ? null : uuid.toString();
+  }
+
+  private void assertEffectiveLocation(JsonObject item, int holdingPerm, int holdingTemp, int itemPerm, int itemTemp) throws Exception {
+    String effectiveLocation = effectiveLocation(holdingPerm, holdingTemp, itemPerm, itemTemp);
+    if (effectiveLocation == null) {
+      // { "effectiveLocationId": null } is not allowed, the property must have been removed
+      assertThat(item.containsKey("effectiveLocationId"), is(false));
+      return;
+    }
+    assertThat(item.getString("effectiveLocationId"), is(effectiveLocation));
+  }
+
+  @SuppressWarnings("unused")  // is actually used by @Parameters(method = "parameters")
+  private Object parameters() throws Exception {
+    List<Integer []> list = new ArrayList<>();
+    int holdingPerm = 0;
+    int holdingTemp = 0;
+    int itemPerm = 0;
+    int itemTemp = 0;
+    int newItemPerm = 0;
+    int newItemTemp = 0;
+    for (int i=0; i<=3; i++) {
+      switch (i) {
+      case 0: holdingPerm = 0; holdingTemp = 0; break;
+      case 1: holdingPerm = 0; holdingTemp = 1; break;
+      case 2: holdingPerm = 1; holdingTemp = 0; break;
+      case 3: holdingPerm = 1; holdingTemp = 2; break;
+      }
+      for (int j=0; j<=3; j++) {
+        switch (j) {
+        case 0: itemPerm = 0; itemTemp = 0; break;
+        case 1: itemPerm = 0; itemTemp = 3; break;
+        case 2: itemPerm = 3; itemTemp = 0; break;
+        case 3: itemPerm = 3; itemTemp = 4; break;
+        }
+        for (int k=0; k<=6; k++) {
+          switch (k) {
+          case 0:  newItemPerm = 0; newItemTemp = 0; break;
+          case 1:  newItemPerm = 0; newItemTemp = 3; break;
+          case 2:  newItemPerm = 3; newItemTemp = 0; break;
+          case 3:  newItemPerm = 3; newItemTemp = 4; break;
+          case 4:  newItemPerm = 0; newItemTemp = 5; break;
+          case 5:  newItemPerm = 5; newItemTemp = 0; break;
+          case 6:  newItemPerm = 5; newItemTemp = 6; break;
+          }
+          list.add(new Integer [] { holdingPerm, holdingTemp, itemPerm, itemTemp, newItemPerm, newItemTemp });
+        }
+      }
+    }
+    return list;
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnItemPermLocationUpdate() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+  @Parameters(method = "parameters")
+  public void canCalculateEffecticeLocationOnItemUpdate(
+      int holdingPerm, int holdingTemp, int itemPerm, int itemTemp, int newItemPerm, int newItemTemp) throws Exception {
 
-    Item item = buildItem(holdingsRecordId, null, null);
-    createItem(item);
+    UUID holdingsRecordId = createHolding(instanceId, location[holdingPerm], location[holdingTemp]);
 
-    Item itemFetched = getItem(item.getId());
-    assertEquals(itemFetched.getEffectiveLocationId(), annexLibraryLocationId.toString());
+    Item item = buildItem(holdingsRecordId, location[itemPerm], location[itemTemp]);
+    UUID itemId = UUID.fromString(item.getId());
+    IndividualResource itemResource = createItem(item);
+    JsonObject item2 = itemResource.getJson();
+    assertEffectiveLocation(item2, holdingPerm, holdingTemp, itemPerm, itemTemp);
 
-    itemsClient.replace(UUID.fromString(itemFetched.getId()),
-      JsonObject.mapFrom(itemFetched).copy()
-        .put("permanentLocationId", onlineLocationId.toString())
-    );
-
-    assertEquals(getItem(item.getId()).getEffectiveLocationId(), onlineLocationId.toString());
+    setPermTempLocation(item2, newItemPerm, newItemTemp);
+    itemsClient.replace(itemId, item2);
+    JsonObject item3 = itemsClient.getById(itemId).getJson();
+    assertEffectiveLocation(item3, holdingPerm, holdingTemp, newItemPerm, newItemTemp);
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnItemTempLocationUpdate() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+  @Parameters(method = "parameters")   // res-use swapping item and holding
+  public void canCalculateEffecticeLocationOnHoldingsUpdate(
+      int itemPerm, int itemTemp, int holdingPerm, int holdingTemp, int newHoldingPerm, int newHoldingTemp) throws Exception {
 
-    Item item = buildItem(holdingsRecordId, null, null);
-    createItem(item);
+    UUID holdingsRecordId = createHolding(instanceId, location[holdingPerm], location[holdingTemp]);
 
-    Item itemFetched = getItem(item.getId());
-    assertEquals(itemFetched.getEffectiveLocationId(), annexLibraryLocationId.toString());
+    Item item = buildItem(holdingsRecordId, location[itemPerm], location[itemTemp]);
+    UUID itemId = UUID.fromString(item.getId());
+    JsonObject item2 = createItem(item).getJson();
+    assertEffectiveLocation(item2, holdingPerm, holdingTemp, itemPerm, itemTemp);
 
-    itemsClient.replace(UUID.fromString(itemFetched.getId()),
-      JsonObject.mapFrom(itemFetched).copy()
-        .put("temporaryLocationId", onlineLocationId.toString())
-    );
-
-    assertEquals(getItem(item.getId()).getEffectiveLocationId(), onlineLocationId.toString());
-  }
-
-  @Test
-  public void canCalculateEffectiveLocationOnItemAllLocationUpdate() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
-
-    Item item = buildItem(holdingsRecordId, null, null);
-    createItem(item);
-
-    Item itemFetched = getItem(item.getId());
-    assertEquals(itemFetched.getEffectiveLocationId(), annexLibraryLocationId.toString());
-
-    itemsClient.replace(UUID.fromString(itemFetched.getId()),
-      JsonObject.mapFrom(itemFetched).copy()
-        .put("temporaryLocationId", onlineLocationId.toString())
-        .put("permanentLocationId", secondFloorLocationId.toString())
-    );
-
-    assertEquals(getItem(item.getId()).getEffectiveLocationId(), onlineLocationId.toString());
+    JsonObject holding2 = holdingsClient.getById(holdingsRecordId).getJson();
+    setPermTempLocation(holding2, newHoldingPerm, newHoldingTemp);
+    holdingsClient.replace(holdingsRecordId, holding2);
+    JsonObject item3 = itemsClient.getById(itemId).getJson();
+    assertEffectiveLocation(item3, newHoldingPerm, newHoldingTemp, itemPerm, itemTemp);
   }
 
   @Test
   public void canSearchItemByEffectiveLocation() throws Exception {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+
     UUID holdingsWithPermLocation = createInstanceAndHolding(mainLibraryLocationId);
     UUID holdingsWithTempLocation = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
 
     Item itemWithHoldingPermLocation = buildItem(holdingsWithPermLocation, null, null);
     Item itemWithHoldingTempLocation = buildItem(holdingsWithTempLocation, null, null);
-    Item itemWithTempLocation = buildItem(holdingsWithPermLocation, null, onlineLocationId);
+    Item itemWithTempLocation = buildItem(holdingsWithPermLocation, onlineLocationId, null);
     Item itemWithPermLocation = buildItem(holdingsWithTempLocation, null, secondFloorLocationId);
     Item itemWithAllLocation = buildItem(holdingsWithTempLocation, secondFloorLocationId, onlineLocationId);
 
@@ -361,7 +386,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     UUID initialHoldingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
     UUID updatedHoldingRecordId = createInstanceAndHolding(secondFloorLocationId);
 
-    Item item = buildItem(initialHoldingsRecordId, null, onlineLocationId);
+    Item item = buildItem(initialHoldingsRecordId, onlineLocationId, null);
     createItem(item);
 
     Item itemFetched = getItem(item.getId());

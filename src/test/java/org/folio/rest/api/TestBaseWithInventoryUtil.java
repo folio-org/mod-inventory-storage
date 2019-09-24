@@ -40,17 +40,26 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
-
-    return holdingsClient.create(
-      new HoldingRequestBuilder()
-        .withId(UUID.randomUUID())
-        .forInstance(instanceId)
-        .withPermanentLocation(holdingsPermanentLocationId)
-        .withTemporaryLocation(holdingsTemporaryLocationId)
-    ).getId();
+    return createHolding(instanceId, holdingsPermanentLocationId, holdingsTemporaryLocationId);
   }
 
-  private static JsonObject instance(UUID id) {
+  protected static UUID createHolding(UUID instanceId,
+                                      UUID holdingsPermanentLocationId,
+                                      UUID holdingsTemporaryLocationId)
+                                          throws ExecutionException,
+                                          InterruptedException,
+                                          MalformedURLException,
+                                          TimeoutException {
+    return holdingsClient.create(
+        new HoldingRequestBuilder()
+          .withId(UUID.randomUUID())
+          .forInstance(instanceId)
+          .withPermanentLocation(holdingsPermanentLocationId)
+          .withTemporaryLocation(holdingsTemporaryLocationId)
+      ).getId();
+  }
+
+  protected static JsonObject instance(UUID id) {
     return createInstanceRequest(
       id,
       "TEST",
