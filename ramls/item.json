@@ -12,7 +12,8 @@
       "description": "The human readable ID, also called eye readable ID. A system-assigned sequential alternate ID"
     },
     "holdingsRecordId": {
-      "type": "string"
+      "type": "string",
+      "description": "ID of the holdings record the item is a member of."
     },
     "formerIds": {
       "type": "array",
@@ -31,60 +32,75 @@
       "description": "Also called inventar number"
     },
     "barcode": {
-      "type": "string"
+      "type": "string",
+      "description": "Unique inventory control number for physical resources, used largely for circulation purposes"
     },
     "itemLevelCallNumber": {
-      "type": "string"
+      "type": "string",
+      "description": "Call Number is an identifier assigned to an item, usually printed on a label attached to the item. The call number is used to determine the items physical position in a shelving sequence, e.g. K1 .M44. The Item level call number, is the call number on item level."
     },
     "itemLevelCallNumberPrefix": {
-      "type": "string"
+      "type": "string",
+      "description": "Prefix of the call number on the item level."
     },
     "itemLevelCallNumberSuffix": {
-      "type": "string"
+      "type": "string",
+      "description": "Suffix of the call number on the item level."
     },
     "itemLevelCallNumberTypeId": {
-      "type": "string"
+      "type": "string",
+      "description": "Identifies the source of the call number, e.g., LCC, Dewey, NLM, etc."
     },
     "volume": {
-      "type": "string"
+      "type": "string",
+      "description": "Volume is intended for monographs when a multipart monograph (e.g. a biography of George Bernard Shaw in three volumes)."
     },
     "enumeration": {
-      "type": "string"
+      "type": "string",
+      "description": "Enumeration is the descriptive information for the numbering scheme of a serial."
     },
     "chronology": {
-      "type": "string"
+      "type": "string",
+      "description": "Chronology is the descriptive information for the dating scheme of a serial."
     },
     "yearCaption": {
       "type": "array",
+      "description": "In multipart monographs, a caption is a character(s) used to label a level of chronology, e.g., year 1985.",
       "items": {
         "type": "string"
       },
       "uniqueItems": true
     },
     "itemIdentifier": {
-      "type": "string"
+      "type": "string",
+      "description": "Item identifier number, e.g. imported from the union catalogue (read only)."
     },
     "copyNumbers": {
       "type": "array",
+      "description": "Copy number is the piece identifier. The copy number reflects if the library has one (or more) copies of a single-volume monograph; one (or more) copies of a multi-volume, (e.g. Copy 1, or C.7.)",
       "items": {
         "type": "string"
       },
       "uniqueItems": true
     },
     "numberOfPieces": {
-      "type": "string"
+      "type": "string",
+      "description": "Number of pieces. Used when an item is checked out or returned to verify that all parts are present (e.g. 7 CDs in a set)."
     },
     "descriptionOfPieces": {
       "type": "string"
     },
     "numberOfMissingPieces": {
-      "type": "string"
+      "type": "string",
+      "description": "Number of missing pieces."
     },
     "missingPieces": {
-      "type": "string"
+      "type": "string",
+      "description": "Description of the missing pieces. "
     },
     "missingPiecesDate": {
-      "type": "string"
+      "type": "string",
+      "description": "Date when the piece(s) went missing."
     },
     "itemDamagedStatusId": {
       "type": "string"
@@ -186,19 +202,24 @@
       "additionalProperties": false
     },
     "materialTypeId": {
-      "type": "string"
+      "type": "string",
+      "description": "Material type, term. Define what type of thing the item is."
     },
     "permanentLoanTypeId": {
-      "type": "string"
+      "type": "string",
+      "description": "The permanent loan type, is the default loan type for a given item. Loan types are tenant-defined."
     },
     "temporaryLoanTypeId": {
-      "type": "string"
+      "type": "string",
+      "description": "Temporary loan type, is the temporary loan type for a given item."
     },
     "permanentLocationId": {
-      "type": "string"
+      "type": "string",
+      "description": "Permanent item location is the default location, shelving location, or holding which is a physical place where items are stored, or an Online location."
     },
     "temporaryLocationId": {
-      "type": "string"
+      "type": "string",
+      "description": "Temporary item location is the temporarily location, shelving location, or holding which is a physical place where items are stored, or an Online location."
     },
     "effectiveLocationId": {
       "type": "string",
