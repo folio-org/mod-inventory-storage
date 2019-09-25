@@ -79,7 +79,7 @@ public class ReferenceTablesTest extends TestBase {
           UnsupportedEncodingException {
     URL apiUrl = alternativeTitleTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
-    validateNumberOfReferenceRecords("alternative title types", searchResponse, 5, 40);
+    validateNumberOfReferenceRecords("alternative title types", searchResponse, 11, 40);
   }
 
   @Test
