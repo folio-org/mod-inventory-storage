@@ -15,11 +15,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.text.IsEmptyString.isEmptyString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -59,21 +62,20 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static final String SECOND_FLOOR_LOCATION = "Second Floor (item)";
   private static final String ANNEX_LIBRARY_LOCATION = "Annex Library (item)";
   private static final String ONLINE_LOCATION = "Online (item)";
+  private static final String THIRD_FLOOR_LOCATION = "Third Floor (item)";
+  private static final String FOURTH_FLOOR_LOCATION = "Fourth Floor (item)";
 
   private static String journalMaterialTypeID;
   private static String canCirculateLoanTypeID;
   private static UUID instanceId;
-  private static UUID mainLibraryLocationId;
-  private static UUID annexLibraryLocationId;
-  private static UUID onlineLocationId;
-  private static UUID secondFloorLocationId;
 
-  private static UUID loc1 = UUID.fromString("11111111-1111-4111-8111-111111111111");
-  private static UUID loc2 = UUID.fromString("22222222-2222-4222-8222-222222222222");
-  private static UUID loc3 = UUID.fromString("33333333-3333-4333-8333-333333333333");
-  private static UUID loc4 = UUID.fromString("44444444-4444-4444-8444-444444444444");
-  private static UUID loc5 = UUID.fromString("55555555-5555-4555-8555-555555555555");
-  private static UUID loc6 = UUID.fromString("66666666-6666-4666-8666-666666666666");
+  private static UUID mainLibraryLocationId = UUID.randomUUID();
+  private static UUID annexLibraryLocationId = UUID.randomUUID();
+  private static UUID onlineLocationId = UUID.randomUUID();
+  private static UUID secondFloorLocationId = UUID.randomUUID();
+  private static UUID thirdFloorLocationId = UUID.randomUUID();
+  private static UUID fourthFloorLocationId = UUID.randomUUID();
+  private static Map<UUID, String> locationIdToNameMap = buildLocationIdToNameMap();
 
   @BeforeClass
   public static void beforeAny() throws Exception {
@@ -95,16 +97,12 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     instanceId = instancesClient.create(instance(UUID.randomUUID())).getId();
 
     LocationsTest.createLocUnits(true);
-    mainLibraryLocationId = LocationsTest.createLocation(null, MAIN_LIBRARY_LOCATION, "It/M");
-    annexLibraryLocationId = LocationsTest.createLocation(null, ANNEX_LIBRARY_LOCATION, "It/A");
-    onlineLocationId = LocationsTest.createLocation(null, ONLINE_LOCATION, "It/O");
-    secondFloorLocationId = LocationsTest.createLocation(null, SECOND_FLOOR_LOCATION, "It/SF");
-    LocationsTest.createLocation(loc1, "Loc 1", "L1");
-    LocationsTest.createLocation(loc2, "Loc 2", "L2");
-    LocationsTest.createLocation(loc3, "Loc 3", "L3");
-    LocationsTest.createLocation(loc4, "Loc 4", "L4");
-    LocationsTest.createLocation(loc5, "Loc 5", "L5");
-    LocationsTest.createLocation(loc6, "Loc 6", "L6");
+    LocationsTest.createLocation(mainLibraryLocationId, MAIN_LIBRARY_LOCATION, "It/M");
+    LocationsTest.createLocation(annexLibraryLocationId, ANNEX_LIBRARY_LOCATION, "It/A");
+    LocationsTest.createLocation(onlineLocationId, ONLINE_LOCATION, "It/O");
+    LocationsTest.createLocation(secondFloorLocationId, SECOND_FLOOR_LOCATION, "It/SF");
+    LocationsTest.createLocation(thirdFloorLocationId, THIRD_FLOOR_LOCATION, "It/TF");
+    LocationsTest.createLocation(fourthFloorLocationId, FOURTH_FLOOR_LOCATION, "It/FF");
   }
 
   @After
@@ -138,7 +136,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnHoldingRemoveTempLocation() throws Exception {
+  public void canCalculateEffectiveLocationOnHoldingRemoveTempLocationShouldBeHoldingPermLocation() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
 
     final Item[] itemsToCreate = {
@@ -194,8 +192,18 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void removesPropertyWhenEffectiveLocationIsNull() throws Exception {
+    UUID holdingsRecordId = createHolding(instanceId, null, null);
+
+    Item item = buildItem(holdingsRecordId, null, null);
+    JsonObject createdItem = createItem(item).getJson();
+
+    assertFalse(createdItem.containsKey("effectiveLocationId"));
+  }
+
+  @Test
   @Parameters(method = "parameters")
-  public void canCalculateEffecticeLocationOnItemUpdate(
+  public void canCalculateEffectiveLocationOnItemUpdate(
       PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) throws Exception {
 
     UUID holdingsRecordId = createHolding(instanceId, holdingLoc.perm, holdingLoc.temp);
@@ -214,7 +222,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
   @Test
   @Parameters(method = "parameters")   // res-use swapping item and holding
-  public void canCalculateEffecticeLocationOnIHoldingUpdate(
+  public void canCalculateEffectiveLocationOnIHoldingUpdate(
       PermTemp itemLoc, PermTemp holdingStartLoc, PermTemp holdingEndLoc) throws Exception {
 
     UUID holdingsRecordId = createHolding(instanceId, holdingStartLoc.perm, holdingStartLoc.temp);
@@ -371,7 +379,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   /** Store a permanent location UUID and a temporary location UUID. */
-  class PermTemp {
+  private static class PermTemp {
     /** permanent location UUID */
     UUID perm;
     /** temporary location UUID */
@@ -390,41 +398,39 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
      */
     @Override
     public String toString() {
-      return
-          (perm == null ? "_" : perm.toString().substring(0, 1)) +
-          (temp == null ? "_" : temp.toString().substring(0, 1))  ;
+      return locationIdToNameMap.get(perm) + ", " + locationIdToNameMap.get(temp);
     }
-  };
+  }
 
-  @SuppressWarnings("unused")  // is actually used by @Parameters(method = "parameters")
-  private List<PermTemp []> parameters() throws Exception {
-    List<PermTemp []> list = new ArrayList<>();
-    PermTemp [] holdingLocationsList = {
-        new PermTemp(null, null),
-        new PermTemp(null, loc1),
-        new PermTemp(loc1, null),
-        new PermTemp(loc1, loc2),
-        };
-    PermTemp [] itemStartLocationsList = {
-        new PermTemp(null, null),
-        new PermTemp(null, loc3),
-        new PermTemp(loc3, null),
-        new PermTemp(loc3, loc4),
-        };
-    PermTemp [] itemEndLocationsList = {
-        new PermTemp(null, null),
-        new PermTemp(null, loc3),
-        new PermTemp(loc3, null),
-        new PermTemp(loc3, loc4),
-        new PermTemp(null, loc5),
-        new PermTemp(loc5, null),
-        new PermTemp(loc5, loc6),
-        };
+@SuppressWarnings("unused")  // is actually used by @Parameters(method = "parameters")
+private List<PermTemp[]> parameters() {
+    List<PermTemp[]> list = new ArrayList<>();
+    PermTemp[] holdingLocationsList = {
+      new PermTemp(null, null),
+      new PermTemp(null, mainLibraryLocationId),
+      new PermTemp(mainLibraryLocationId, null),
+      new PermTemp(mainLibraryLocationId, annexLibraryLocationId),
+    };
+    PermTemp[] itemStartLocationsList = {
+      new PermTemp(null, null),
+      new PermTemp(null, onlineLocationId),
+      new PermTemp(onlineLocationId, null),
+      new PermTemp(onlineLocationId, secondFloorLocationId),
+    };
+    PermTemp[] itemEndLocationsList = {
+      new PermTemp(null, null),
+      new PermTemp(null, onlineLocationId),
+      new PermTemp(onlineLocationId, null),
+      new PermTemp(onlineLocationId, secondFloorLocationId),
+      new PermTemp(null, thirdFloorLocationId),
+      new PermTemp(thirdFloorLocationId, null),
+      new PermTemp(thirdFloorLocationId, fourthFloorLocationId),
+    };
 
     for (PermTemp holdingLocations : holdingLocationsList) {
       for (PermTemp itemStartLocations : itemStartLocationsList) {
         for (PermTemp itemEndLocations : itemEndLocationsList) {
-          list.add(new PermTemp [] { holdingLocations, itemStartLocations, itemEndLocations });
+          list.add(new PermTemp[]{holdingLocations, itemStartLocations, itemEndLocations});
         }
       }
     }
@@ -445,7 +451,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   private void assertEffectiveLocation(
-      JsonObject item, PermTemp holdingLocations, PermTemp itemLocations) throws Exception {
+      JsonObject item, PermTemp holdingLocations, PermTemp itemLocations) {
 
     UUID expectedEffectiveLocation = ObjectUtils
         .firstNonNull(itemLocations.temp, itemLocations.perm, holdingLocations.temp, holdingLocations.perm);
@@ -455,5 +461,18 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
       return;
     }
     assertThat(item.getString(EFFECTIVE_LOCATION_ID_KEY), is(expectedEffectiveLocation.toString()));
+  }
+
+  private static Map<UUID, String> buildLocationIdToNameMap() {
+    HashMap<UUID, String> idToNameMap = new HashMap<>();
+
+    idToNameMap.put(mainLibraryLocationId, MAIN_LIBRARY_LOCATION);
+    idToNameMap.put(annexLibraryLocationId, ANNEX_LIBRARY_LOCATION);
+    idToNameMap.put(onlineLocationId, ONLINE_LOCATION);
+    idToNameMap.put(secondFloorLocationId, SECOND_FLOOR_LOCATION);
+    idToNameMap.put(thirdFloorLocationId, THIRD_FLOOR_LOCATION);
+    idToNameMap.put(fourthFloorLocationId, FOURTH_FLOOR_LOCATION);
+
+    return idToNameMap;
   }
 }
