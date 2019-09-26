@@ -1,15 +1,30 @@
-UPDATE ${myuniversity}_${mymodule}.item AS it
-SET jsonb = jsonb_set(jsonb, '{effectiveLocationId}',
+-- 1st step - update items with holding records linked.
+UPDATE  ${myuniversity}_${mymodule}.item AS it
+SET jsonb =
 	CASE
-	  -- Check item's locations first
-		WHEN jsonb->'temporaryLocationId' IS NOT NULL THEN jsonb->'temporaryLocationId'
-		WHEN jsonb->'permanentLocationId' IS NOT NULL THEN jsonb->'permanentLocationId'
-		-- If no item's locations present - check holding's locations, and return an empty string by default
-		ELSE (
-			SELECT COALESCE(hr.jsonb->'temporaryLocationId', hr.jsonb->'permanentLocationId', to_jsonb(''::text))
-		    FROM ${myuniversity}_${mymodule}.holdings_record AS hr
-			WHERE hr.id = it.holdingsrecordid LIMIT 1
-		)
+		WHEN it.jsonb->'temporaryLocationId' IS NOT NULL
+			THEN jsonb_set(it.jsonb, '{effectiveLocationId}', it.jsonb->'temporaryLocationId')
+		WHEN it.jsonb->'permanentLocationId' IS NOT NULL
+			THEN jsonb_set(it.jsonb, '{effectiveLocationId}', it.jsonb->'permanentLocationId')
+		WHEN hr.jsonb->'temporaryLocationId' IS NOT NULL
+			THEN jsonb_set(it.jsonb, '{effectiveLocationId}', hr.jsonb->'temporaryLocationId')
+		WHEN hr.jsonb->'permanentLocationId' IS NOT NULL
+			THEN jsonb_set(it.jsonb, '{effectiveLocationId}', hr.jsonb->'permanentLocationId')
+		-- do nothing if all locations are nulls
+		ELSE it.jsonb
 	END
-)
-WHERE jsonb->'effectiveLocationId' IS NULL;
+FROM  ${myuniversity}_${mymodule}.holdings_record AS hr
+WHERE it.jsonb->'effectiveLocationId' IS NULL AND hr.id = it.holdingsrecordid;
+
+-- 2nd step - update 'orphaned' items.
+UPDATE  ${myuniversity}_${mymodule}.item it
+SET jsonb =
+	CASE
+		WHEN it.jsonb->'temporaryLocationId' IS NOT NULL
+			THEN jsonb_set(it.jsonb, '{effectiveLocationId}', it.jsonb->'temporaryLocationId')
+		WHEN it.jsonb->'permanentLocationId' IS NOT NULL
+			THEN jsonb_set(it.jsonb, '{effectiveLocationId}', it.jsonb->'permanentLocationId')
+		-- do nothing if all locations are nulls
+		ELSE it.jsonb
+	END
+WHERE it.jsonb->'effectiveLocationId' IS NULL AND it.holdingsrecordid IS NULL;
