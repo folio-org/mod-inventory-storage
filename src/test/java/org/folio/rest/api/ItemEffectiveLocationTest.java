@@ -144,6 +144,12 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertFalse(createdItem.containsKey("effectiveLocationId"));
   }
 
+  /**
+   * Test that updating an item correctly sets the effectiveLocationId.
+   * @param holdingLoc permanent and temporary location of the holding
+   * @param itemStartLoc permanent and temporary location of the item before the update
+   * @param itemEndLoc permanent and temporary location of the item after the update
+   */
   @Test
   @Parameters(method = "parameters")
   public void canCalculateEffectiveLocationOnItemUpdate(
@@ -155,12 +161,12 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     UUID itemId = UUID.fromString(item.getId());
     IndividualResource itemResource = createItem(item);
     JsonObject item2 = itemResource.getJson();
-    assertEffectiveLocation(item2, holdingLoc, itemStartLoc);
+    assertEffectiveLocation(item2, effectiveLocation(holdingLoc, itemStartLoc));
 
     setPermanentTemporaryLocation(item2, itemEndLoc);
     itemsClient.replace(itemId, item2);
     JsonObject item3 = itemsClient.getById(itemId).getJson();
-    assertEffectiveLocation(item3, holdingLoc, itemEndLoc);
+    assertEffectiveLocation(item3, effectiveLocation(holdingLoc, itemEndLoc));
   }
 
   @Test
@@ -173,13 +179,13 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     Item item = buildItem(holdingsRecordId, itemLoc.perm, itemLoc.temp);
     UUID itemId = UUID.fromString(item.getId());
     JsonObject item2 = createItem(item).getJson();
-    assertEffectiveLocation(item2, holdingStartLoc, itemLoc);
+    assertEffectiveLocation(item2, effectiveLocation(holdingStartLoc, itemLoc));
 
     JsonObject holding2 = holdingsClient.getById(holdingsRecordId).getJson();
     setPermanentTemporaryLocation(holding2, holdingEndLoc);
     holdingsClient.replace(holdingsRecordId, holding2);
     JsonObject item3 = itemsClient.getById(itemId).getJson();
-    assertEffectiveLocation(item3, holdingEndLoc, itemLoc);
+    assertEffectiveLocation(item3, effectiveLocation(holdingEndLoc, itemLoc));
   }
 
   @Test
@@ -313,11 +319,16 @@ private List<PermTemp[]> parameters() {
     }
   }
 
-  private void assertEffectiveLocation(
-      JsonObject item, PermTemp holdingLocations, PermTemp itemLocations) {
+  private UUID effectiveLocation(PermTemp holdingLocations, PermTemp itemLocations) {
+    return ObjectUtils
+      .firstNonNull(itemLocations.temp, itemLocations.perm, holdingLocations.temp, holdingLocations.perm);
+  }
 
-    UUID expectedEffectiveLocation = ObjectUtils
-        .firstNonNull(itemLocations.temp, itemLocations.perm, holdingLocations.temp, holdingLocations.perm);
+  /**
+   * Assert that item's "effectiveLocationId" value equals expectedEffectiveLocation;
+   * assert that item does not have the "effectiveLocationId" key if expectedEffectiveLocation is null.
+   */
+  private void assertEffectiveLocation(JsonObject item, UUID expectedEffectiveLocation) {
     if (expectedEffectiveLocation == null) {
       // { "effectiveLocationId": null } is not allowed, the complete property must have been removed
       assertThat(item.containsKey(EFFECTIVE_LOCATION_ID_KEY), is(false));
