@@ -1,9 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "List of (shelf) locations.",
   "type": "object",
   "properties": {
     "locations": {
       "id": "locations",
+      "description": "List of (shelf) locations.",
       "type": "array",
       "items": {
         "type": "object",
