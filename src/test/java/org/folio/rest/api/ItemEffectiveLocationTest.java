@@ -1,16 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
-import static org.folio.util.StringUtil.urlEncode;
-import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.text.IsEmptyString.isEmptyString;
@@ -23,20 +12,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -54,55 +35,17 @@ import junitparams.Parameters;
  */
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
-  private static final String PERMANENT_LOCATION_ID_KEY = "permanentLocationId";
-  private static final String TEMPORARY_LOCATION_ID_KEY = "temporaryLocationId";
-  private static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
-
-  private static final String MAIN_LIBRARY_LOCATION = "Main Library (Item)";
-  private static final String SECOND_FLOOR_LOCATION = "Second Floor (item)";
-  private static final String ANNEX_LIBRARY_LOCATION = "Annex Library (item)";
-  private static final String ONLINE_LOCATION = "Online (item)";
-  private static final String THIRD_FLOOR_LOCATION = "Third Floor (item)";
-  private static final String FOURTH_FLOOR_LOCATION = "Fourth Floor (item)";
-
-  private static String journalMaterialTypeID;
-  private static String canCirculateLoanTypeID;
-  private static UUID instanceId;
-
-  private static UUID mainLibraryLocationId = UUID.randomUUID();
-  private static UUID annexLibraryLocationId = UUID.randomUUID();
-  private static UUID onlineLocationId = UUID.randomUUID();
-  private static UUID secondFloorLocationId = UUID.randomUUID();
-  private static UUID thirdFloorLocationId = UUID.randomUUID();
-  private static UUID fourthFloorLocationId = UUID.randomUUID();
+  private static UUID instanceId = UUID.randomUUID();
   private static Map<UUID, String> locationIdToNameMap = buildLocationIdToNameMap();
 
+  // for @BeforeClass beforeAny() see TestBaseWithInventoryUtil
+
   @BeforeClass
-  public static void beforeAny() throws Exception {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-
-    MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
-    journalMaterialTypeID = materialTypesClient.create("journal");
-    canCirculateLoanTypeID = new LoanTypesClient(client, loanTypesStorageUrl("")).create("Can Circulate");
-
-    instanceId = instancesClient.create(instance(UUID.randomUUID())).getId();
-
-    LocationsTest.createLocUnits(true);
-    LocationsTest.createLocation(mainLibraryLocationId, MAIN_LIBRARY_LOCATION, "It/M");
-    LocationsTest.createLocation(annexLibraryLocationId, ANNEX_LIBRARY_LOCATION, "It/A");
-    LocationsTest.createLocation(onlineLocationId, ONLINE_LOCATION, "It/O");
-    LocationsTest.createLocation(secondFloorLocationId, SECOND_FLOOR_LOCATION, "It/SF");
-    LocationsTest.createLocation(thirdFloorLocationId, THIRD_FLOOR_LOCATION, "It/TF");
-    LocationsTest.createLocation(fourthFloorLocationId, FOURTH_FLOOR_LOCATION, "It/FF");
+  public static void createInstance() throws Exception {
+    // Create once to be used by the many parameterized unit test in
+    // canCalculateEffectiveLocationOnIHoldingUpdate(PermTemp, PermTemp, PermTemp)
+    // canCalculateEffectiveLocationOnItemUpdate(PermTemp, PermTemp, PermTemp)
+    instancesClient.create(instance(instanceId));
   }
 
   @After
@@ -240,51 +183,6 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchItemByEffectiveLocation() throws Exception {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-
-    UUID holdingsWithPermLocation = createInstanceAndHolding(mainLibraryLocationId);
-    UUID holdingsWithTempLocation = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
-
-    Item itemWithHoldingPermLocation = buildItem(holdingsWithPermLocation, null, null);
-    Item itemWithHoldingTempLocation = buildItem(holdingsWithTempLocation, null, null);
-    Item itemWithTempLocation = buildItem(holdingsWithPermLocation, onlineLocationId, null);
-    Item itemWithPermLocation = buildItem(holdingsWithTempLocation, null, secondFloorLocationId);
-    Item itemWithAllLocation = buildItem(holdingsWithTempLocation, secondFloorLocationId, onlineLocationId);
-
-    Item[] itemsToCreate = {itemWithHoldingPermLocation, itemWithHoldingTempLocation,
-      itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
-
-    for (Item item : itemsToCreate) {
-      IndividualResource createdItem = createItem(item);
-      assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
-    }
-
-    Items mainLibraryItems = findItems("effectiveLocationId=" + mainLibraryLocationId);
-    Items annexLibraryItems = findItems("effectiveLocationId=" + annexLibraryLocationId);
-    Items onlineLibraryItems = findItems("effectiveLocationId=" + onlineLocationId);
-    Items secondFloorLibraryItems = findItems("effectiveLocationId=" + secondFloorLocationId);
-
-    assertEquals(1, mainLibraryItems.getTotalRecords().intValue());
-    assertThat(mainLibraryItems.getItems().get(0).getId(), is(itemWithHoldingPermLocation.getId()));
-
-    assertEquals(1, annexLibraryItems.getTotalRecords().intValue());
-    assertThat(annexLibraryItems.getItems().get(0).getId(), is(itemWithHoldingTempLocation.getId()));
-
-    assertEquals(2, onlineLibraryItems.getTotalRecords().intValue());
-
-    assertThat(onlineLibraryItems.getItems()
-        .stream()
-        .map(Item::getId)
-        .collect(Collectors.toList()),
-      hasItems(itemWithTempLocation.getId(), itemWithAllLocation.getId()));
-
-    assertEquals(1, secondFloorLibraryItems.getTotalRecords().intValue());
-    assertThat(secondFloorLibraryItems.getItems().get(0).getId(), is(itemWithPermLocation.getId()));
-  }
-
-  @Test
   public void responseContainsAllRequiredHeaders() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
 
@@ -339,43 +237,8 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertEquals(getItem(item.getId()).getEffectiveLocationId(), onlineLocationId.toString());
   }
 
-  private Item buildItem(UUID holdingsRecordId,
-                         UUID permLocation,
-                         UUID tempLocation) {
-    JsonObject itemToCreate = new JsonObject();
-
-    itemToCreate.put("id", UUID.randomUUID().toString());
-    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
-    itemToCreate.put("barcode", Long.toString(new Random().nextLong()));
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("materialTypeId", journalMaterialTypeID);
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    if (tempLocation != null) {
-      itemToCreate.put(TEMPORARY_LOCATION_ID_KEY, tempLocation.toString());
-    }
-    if (permLocation != null) {
-      itemToCreate.put(PERMANENT_LOCATION_ID_KEY, permLocation.toString());
-    }
-
-    return itemToCreate.mapTo(Item.class);
-  }
-
   private Item getItem(String id) throws Exception {
     return itemsClient.getById(UUID.fromString(id)).getJson().mapTo(Item.class);
-  }
-
-  private Items findItems(String searchQuery) throws Exception {
-    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-
-    client.get(itemsStorageUrl("?query=") + urlEncode(searchQuery),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-
-    return searchCompleted.get(5, TimeUnit.SECONDS).getJson()
-      .mapTo(Items.class);
-  }
-
-  private IndividualResource createItem(Item item) throws Exception {
-    return itemsClient.create(JsonObject.mapFrom(item));
   }
 
   /** Store a permanent location UUID and a temporary location UUID. */

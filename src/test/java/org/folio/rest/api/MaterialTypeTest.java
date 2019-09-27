@@ -28,33 +28,12 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
-import org.junit.BeforeClass;
 
 public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-  private static UUID mainLibraryLocationId;
 
-  private String canCirculateLoanTypeID;
-  
-  @BeforeClass
-  public static void beforeAny()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-
-    LocationsTest.createLocUnits(true);
-    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Loan)", "Lo/M");
-  }
+  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
   @Before
   public void beforeEach()
