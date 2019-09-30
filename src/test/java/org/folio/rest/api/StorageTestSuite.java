@@ -268,6 +268,7 @@ public class StorageTestSuite {
     assertThat(failureMessage,
       response.getStatusCode(), is(201));
 
+    tenantPrepared = new CompletableFuture<>();
     jo.put("module_to", "mod-inventory-storage-1.1.0");
     jo.put("module_from", "mod-inventory-storage-1.0.0");
     client.post(storageUrl("/_/tenant"), jo, tenantId,
