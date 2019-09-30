@@ -27,10 +27,12 @@
       "type": "string"
     },
     "permanentLocationId": {
-      "type": "string"
+      "type": "string",
+      "description": "The permanent shelving location in which an item resides."
     },
     "temporaryLocationId": {
-      "type": "string"
+      "type": "string",
+      "description": "Temporary location is the temporarily location, shelving location, or holding which is a physical place where items are stored, or an Online location."
     },
     "electronicAccess": {
       "type": "array",
@@ -69,16 +71,20 @@
       "description": "unique ID for the type of call number on a holdings record, a UUID"
     },
     "callNumberPrefix": {
-      "type": "string"
+      "type": "string",
+      "description": "Prefix of the call number on the holding level."
     },
     "callNumber": {
-      "type": "string"
+      "type": "string",
+      "description": "Call Number is an identifier assigned to an item, usually printed on a label attached to the item."
     },
     "callNumberSuffix": {
-      "type": "string"
+      "type": "string",
+      "description": "Suffix of the call number on the holding level."
     },
     "shelvingTitle": {
-      "type": "string"
+      "type": "string",
+      "description": "Indicates the shelving form of title."
     },
     "acquisitionFormat": {
       "type": "string"
@@ -87,7 +93,8 @@
       "type": "string"
     },
     "receiptStatus": {
-      "type": "string"
+      "type": "string",
+      "description": "Receipt status (e.g. pending, awaiting receipt, partially received, fully received, receipt not required, and cancelled)"
     },
     "notes": {
       "type": "array",
@@ -116,7 +123,8 @@
       "description": "unique ID for an ILL policy, a UUID"
     },
     "retentionPolicy": {
-      "type": "string"
+      "type": "string",
+      "description": "Records how information regarding how long we have agreed to keep something."
     },
     "digitizationPolicy": {
       "type": "string"
@@ -128,7 +136,7 @@
         "properties": {
           "statement": {
             "type": "string",
-            "description": "Textual description of the holdings"
+            "description": "Specifices the exact content to which the library has access, typically for continuing publications."
           },
           "note": {
             "type": "string",
@@ -170,10 +178,12 @@
       }
     },
     "copyNumber": {
-      "type": "string"
+      "type": "string",
+      "description": "Item/Piece ID (usually barcode) for systems that do not use item records. Ability to designate the copy number if institution chooses to use copy numbers."
     },
     "numberOfItems": {
-      "type": "string"
+      "type": "string",
+      "description": "Text (Number)"
     },
     "receivingHistory": {
       "type": "object",
@@ -184,17 +194,21 @@
         },
         "entries": {
           "type": "array",
+          "description": ".",
           "items": {
             "type": "object",
             "properties": {
               "publicDisplay": {
-                "type": "boolean"
+                "type": "boolean",
+                "description": "Defines if the receivingHistory should be visible to the public."
               },
               "enumeration": {
-                "type": "string"
+                "type": "string",
+                "description": "This is the volume/issue number (e.g. v.71:no.6-2)"
               },
               "chronology": {
-                "type": "string"
+                "type": "string",
+                "description": "Repeated element from Receiving history - Enumeration AND Receiving history - Chronology"
               }
             }
           }

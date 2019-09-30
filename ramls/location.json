@@ -1,44 +1,58 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A (shelf) location, the forth-level location unit below institution, campus, and library.",
   "type": "object",
   "properties": {
     "id": {
+      "description": "id of this (shelf) location record as UUID.",
       "type": "string"
     },
     "name": {
+      "description": "Name of the (shelf) location",
       "type": "string"
     },
     "code": {
+      "description": "Code of the (shelf) location, usually an abbreviation of the name.",
       "type": "string"
     },
     "description": {
+      "description": "Description of the (shelf) location.",
       "type": "string"
     },
     "discoveryDisplayName": {
+      "description": "Name of the (shelf) location to be shown in the discovery.",
       "type": "string"
     },
     "isActive": {
+      "description": "Whether this (shelf) location is active. Inactive (shelf) locations can no longer been used.",
       "type": "boolean"
     },
     "institutionId": {
+      "description": "The UUID of the institution, the first-level location unit, this (shelf) location belongs to.",
       "type": "string"
     },
     "campusId": {
+      "description": "The UUID of the campus, the second-level location unit, this (shelf) location belongs to.",
       "type": "string"
     },
     "libraryId": {
+      "description": "The UUID of the library, the third-level location unit, this (shelf) location belongs to.",
       "type": "string"
     },
     "details": {
+      "description": "Details about this (shelf) location.",
       "type": "object"
     },
     "primaryServicePoint": {
+      "description": "The UUID of the primary service point of this (shelf) location.",
       "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
       "type": "string"
     },
     "servicePointIds": {
+      "description": "All service points that this (shelf) location has.",
       "type": "array",
       "items": {
+        "description": "The UUID of a service point that belongs to this (shelf) location.",
         "type": "string",
         "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
         "not": {
