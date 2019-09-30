@@ -274,7 +274,7 @@ public class StorageTestSuite {
     client.post(storageUrl("/_/tenant"), jo, tenantId,
       ResponseHandler.any(tenantPrepared));
 
-    response = tenantPrepared.get(20, TimeUnit.SECONDS);
+    response = tenantPrepared.get(40, TimeUnit.SECONDS);
 
     failureMessage = String.format("Tenant upgrade failed: %s: %s",
       response.getStatusCode(), response.getBody());
