@@ -264,7 +264,8 @@
   },
   "additionalProperties": false,
   "required": [
-    "instanceId"
+    "instanceId",
+    "permanentLocationId"
   ]
 }
 
