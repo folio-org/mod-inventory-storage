@@ -51,6 +51,10 @@
       "type": "string",
       "description": "Identifies the source of the call number, e.g., LCC, Dewey, NLM, etc."
     },
+    "effectiveCallNumber": {
+      "type": "string",
+      "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item."
+    },
     "volume": {
       "type": "string",
       "description": "Volume is intended for monographs when a multipart monograph (e.g. a biography of George Bernard Shaw in three volumes)."
