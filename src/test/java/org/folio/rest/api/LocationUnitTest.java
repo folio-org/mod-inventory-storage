@@ -717,7 +717,7 @@ public class LocationUnitTest {
   }
 
   @Test
-  public void canCreateALibWithoutCode()
+  public void cannotCreateALibWithoutCode()
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
