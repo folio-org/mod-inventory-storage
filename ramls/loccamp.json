@@ -26,6 +26,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "name", "institutionId"
+    "name", "institutionId", "code"
   ]
 }
