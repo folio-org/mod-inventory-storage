@@ -170,6 +170,19 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotCreateAnInstWithoutCode()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+    Response response = createInst(id, "Institute of MetaPhysics", null);
+
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
   public void canGetAnInstById()
     throws InterruptedException,
     ExecutionException,
@@ -432,6 +445,22 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotCreateACampWithoutCode()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+
+    UUID id = UUID.randomUUID();
+    Response response = createCamp(id, "Campus on the other Side of the River", null, instId);
+
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
   public void canGetACampById()
     throws InterruptedException,
     ExecutionException,
@@ -684,6 +713,24 @@ public class LocationUnitTest {
     UUID id = UUID.randomUUID();
     createLib(id, "Main Library", "RS", campId);
     Response response = createLib(id, "Library on the other Side of the River", "OS", campId);
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
+  public void canCreateALibWithoutCode()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+
+    UUID id = UUID.randomUUID();
+    Response response = createLib(id, "Main Library", null, campId);
+
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
