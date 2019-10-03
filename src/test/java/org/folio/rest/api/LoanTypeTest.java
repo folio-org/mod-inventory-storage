@@ -257,7 +257,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     send(itemsStorageUrl(""), HttpMethod.POST, createItem(holdingsRecordId, nonexistentLoanId, null),
-      HTTP_BAD_REQUEST);
+      AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY);
   }
 
   @Test
@@ -272,7 +272,8 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     String nonexistentLoanId = UUID.randomUUID().toString();
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     send(itemsStorageUrl(""), HttpMethod.POST,
-      createItem(holdingsRecordId, circulateLoanTypeId, nonexistentLoanId), HTTP_BAD_REQUEST);
+      createItem(holdingsRecordId, circulateLoanTypeId, nonexistentLoanId),
+      AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY);
   }
 
   @Test
