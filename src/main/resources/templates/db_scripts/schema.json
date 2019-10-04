@@ -367,24 +367,6 @@
           "removeAccents": true
         },
         {
-          "fieldName": "instanceTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "instanceStatusId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
-          "fieldName": "modeOfIssuanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
           "fieldName": "classifications",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -443,9 +425,6 @@
           "fieldName": "languages"
         },
         {
-          "fieldName": "instanceTypeId"
-        },
-        {
           "fieldName": "contributors",
           "arraySubfield" : "name",
           "arrayModifiers": ["contributorNameTypeId"]
@@ -461,20 +440,6 @@
     {
       "tableName": "instance_relationship",
       "withMetadata": true,
-      "index": [
-        {
-          "fieldName": "superInstanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "subInstanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
       "foreignKeys": [
         {
           "fieldName": "superInstanceId",
@@ -617,46 +582,6 @@
           "tOps": "ADD"
         }
       ],
-      "ginIndex": [
-        {
-          "fieldName": "instanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "permanentLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "temporaryLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "instanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "permanentLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "temporaryLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
       "customSnippetPath": "holdingsRecordHrid.sql"
     },
     {
@@ -710,18 +635,6 @@
       ],
       "index": [
         {
-          "fieldName": "holdingsRecordId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "materialTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "barcode",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -749,12 +662,6 @@
         },
         {
           "fieldName": "materialTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "holdingsRecordId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
