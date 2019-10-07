@@ -32,7 +32,7 @@
     },
     "temporaryLocationId": {
       "type": "string",
-      "description": "Temporary location is the temporarily location, shelving location, or holding which is a physical place where items are stored, or an Online location."
+      "description": "Temporary location is the temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location."
     },
     "electronicAccess": {
       "type": "array",
@@ -124,7 +124,7 @@
     },
     "retentionPolicy": {
       "type": "string",
-      "description": "Records how information regarding how long we have agreed to keep something."
+      "description": "Records information regarding how long we have agreed to keep something."
     },
     "digitizationPolicy": {
       "type": "string"

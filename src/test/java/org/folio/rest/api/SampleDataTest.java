@@ -29,12 +29,13 @@ public class SampleDataTest extends TestBase {
 
   /**
    * Remove tenant WITHOUT sample data,
-   * recreate tenant (with reference and) WITH sample data.
+   * recreate tenant (with reference and) WITH sample data
+   * Omit update for now.. It hangs for unknown reasons when using Embedded Postgres MODINVSTOR-369
    */
   @BeforeClass
   public static void beforeAny() throws Exception {
     StorageTestSuite.removeTenant(StorageTestSuite.TENANT_ID);
-    StorageTestSuite.prepareTenant(StorageTestSuite.TENANT_ID, /* loadSample= */ true);
+    StorageTestSuite.prepareTenant(StorageTestSuite.TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
   }
 
   private void assertCount(URL url, String arrayName, int expectedCount) {
