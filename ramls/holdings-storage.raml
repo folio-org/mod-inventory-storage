@@ -11,11 +11,13 @@ documentation:
 types:
   holdingsRecord: !include holdingsrecord.json
   holdingsRecords: !include holdingsrecords.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
   language: !include raml-util/traits/language.raml
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
@@ -36,6 +38,7 @@ resourceTypes:
                         example: "instanceId=\"2b94c631-fca9-4892-a730-03ee529ffe2a\""},
           ]
     post:
+      is: [validate]
     delete:
       is: [language]
       responses:
