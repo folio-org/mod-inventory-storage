@@ -184,13 +184,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(holdingsStorageUrl(""), request, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.json(createCompleted));
 
     Response response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getStatusCode(), is(422));
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
 
-    assertThat(response.getBody(), containsString("ID must be a UUID"));
+    JsonObject firstError = errors.getJsonObject(0);
+    assertThat(firstError.getString("message"), containsString("must match"));
+    assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
+      is("id"));
   }
 
   @Test
