@@ -26,6 +26,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "name", "campusId"
+    "name", "campusId", "code"
   ]
 }

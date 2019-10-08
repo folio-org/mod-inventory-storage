@@ -24,12 +24,6 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -153,12 +147,6 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -168,12 +156,6 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
           "tOps": "ADD"
         }
       ]
@@ -191,12 +173,6 @@
           "fieldName": "code",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -206,12 +182,6 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
           "tOps": "ADD"
         }
       ]
@@ -229,12 +199,6 @@
           "fieldName": "code",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -250,12 +214,6 @@
           "fieldName": "code",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -267,12 +225,6 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -282,12 +234,6 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
           "tOps": "ADD"
         }
       ]
@@ -421,24 +367,6 @@
           "removeAccents": true
         },
         {
-          "fieldName": "instanceTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "instanceStatusId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
-          "fieldName": "modeOfIssuanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
           "fieldName": "classifications",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -452,12 +380,6 @@
         }
       ],
       "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
         {
           "fieldName": "source",
           "tOps": "ADD",
@@ -503,9 +425,6 @@
           "fieldName": "languages"
         },
         {
-          "fieldName": "instanceTypeId"
-        },
-        {
           "fieldName": "contributors",
           "arraySubfield" : "name",
           "arrayModifiers": ["contributorNameTypeId"]
@@ -521,26 +440,6 @@
     {
       "tableName": "instance_relationship",
       "withMetadata": true,
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "superInstanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "subInstanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
       "foreignKeys": [
         {
           "fieldName": "superInstanceId",
@@ -683,52 +582,6 @@
           "tOps": "ADD"
         }
       ],
-      "ginIndex": [
-        {
-          "fieldName": "instanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "permanentLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "temporaryLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "instanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "permanentLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "temporaryLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
       "customSnippetPath": "holdingsRecordHrid.sql"
     },
     {
@@ -782,18 +635,6 @@
       ],
       "index": [
         {
-          "fieldName": "holdingsRecordId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "materialTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "barcode",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -801,12 +642,6 @@
         },
         {
           "fieldName": "status.name",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "id",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
@@ -821,18 +656,6 @@
         },
         {
           "fieldName": "status.name",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "materialTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "holdingsRecordId",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true

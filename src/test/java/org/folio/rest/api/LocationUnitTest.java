@@ -170,6 +170,19 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotCreateAnInstWithoutCode()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID id = UUID.randomUUID();
+    Response response = createInst(id, "Institute of MetaPhysics", null);
+
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
   public void canGetAnInstById()
     throws InterruptedException,
     ExecutionException,
@@ -273,7 +286,8 @@ public class LocationUnitTest {
 
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
-      .put("name", "The Other Institute");
+      .put("name", "The Other Institute")
+      .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
@@ -290,6 +304,7 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Institute"));
+    assertThat(item.getString("code"), is("MPA"));
   }
 
   @Test
@@ -303,7 +318,8 @@ public class LocationUnitTest {
     createInst(id, "Institute of MetaPhysics", "MPI");
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString())
-      .put("name", "The Other Institute");
+      .put("name", "The Other Institute")
+      .put("code", "MPA");
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
@@ -429,6 +445,22 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotCreateACampWithoutCode()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+
+    UUID id = UUID.randomUUID();
+    Response response = createCamp(id, "Campus on the other Side of the River", null, instId);
+
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
   public void canGetACampById()
     throws InterruptedException,
     ExecutionException,
@@ -509,7 +541,8 @@ public class LocationUnitTest {
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
       .put("name", "The Other Campus")
-      .put("institutionId", instId.toString());
+      .put("institutionId", instId.toString())
+      .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
@@ -525,6 +558,7 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Campus"));
+    assertThat(item.getString("code"), is("MPA"));
   }
 
   @Test
@@ -542,7 +576,8 @@ public class LocationUnitTest {
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("name", "The Other Campus")
-      .put("institutionId", instId.toString());
+      .put("institutionId", instId.toString())
+      .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locCampusStorageUrl("/" + id.toString()), HttpMethod.PUT,
@@ -682,6 +717,24 @@ public class LocationUnitTest {
   }
 
   @Test
+  public void cannotCreateALibWithoutCode()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+
+    UUID instId = UUID.randomUUID();
+    createInst(instId, "Institute of MetaPhysics", "MPI");
+    UUID campId = UUID.randomUUID();
+    createCamp(campId, "Riverside Campus", "RS", instId);
+
+    UUID id = UUID.randomUUID();
+    Response response = createLib(id, "Main Library", null, campId);
+
+    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
   public void canGetALibById()
     throws InterruptedException,
     ExecutionException,
@@ -768,7 +821,8 @@ public class LocationUnitTest {
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
       .put("name", "The Other Library")
-      .put("campusId", campId.toString());
+      .put("campusId", campId.toString())
+      .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
@@ -784,6 +838,7 @@ public class LocationUnitTest {
     JsonObject item = getResponse.getJson();
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("The Other Library"));
+    assertThat(item.getString("code"), is("MPA"));
   }
 
   public void cannotUpdateALibId()
