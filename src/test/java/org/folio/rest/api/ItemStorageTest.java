@@ -288,14 +288,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.json(createCompleted));
 
     Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
     assertThat(postResponse.getBody(),
-        containsString("violates foreign key constraint \"item_permanentlocationid_fkey\""));
+        containsString("Cannot set item.permanentlocationid"));
   }
 
   @Test
@@ -318,14 +318,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.json(createCompleted));
 
     Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
     assertThat(postResponse.getBody(),
-        containsString("violates foreign key constraint \"item_temporarylocationid_fkey\""));
+        containsString("Cannot set item.temporarylocationid"));
   }
 
   @Test
@@ -349,11 +349,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.json(createCompleted));
 
     Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
     assertThat(postResponse.getBody(), containsString("UUID"));
   }
@@ -404,13 +404,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.json(createCompleted));
 
     Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(postResponse.getBody(),
-        containsString("violates foreign key constraint \"item_materialtypeid_fkey\""));
+        containsString("Cannot set item.materialtypeid"));
   }
 
   @Test
@@ -436,7 +436,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-        containsString("violates foreign key constraint \"item_materialtypeid_fkey\""));
+        containsString("Cannot set item.materialtypeid"));
   }
 
   @Test
