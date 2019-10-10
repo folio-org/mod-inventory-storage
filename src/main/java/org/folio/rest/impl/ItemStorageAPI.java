@@ -121,27 +121,36 @@ public class ItemStorageAPI implements ItemStorage {
         DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 
-  private Item setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item entity) {
-    if (entity.getItemLevelCallNumber() != null && !entity.getItemLevelCallNumber().isEmpty()) {
-      entity.setEffectiveCallNumber(entity.getItemLevelCallNumber());
+  private Item setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
+    if (item.getItemLevelCallNumber() != null && !item.getItemLevelCallNumber().isEmpty()) {
+      item.setEffectiveCallNumber(item.getItemLevelCallNumber());
     } else {
-      try {
-        HoldingsRecord holdingsRecord = getHoldingsRecordById(okapiHeaders, vertxContext, entity.getHoldingsRecordId()).get();
-        if (holdingsRecord.getCallNumber() != null && !holdingsRecord.getCallNumber().isEmpty()) {
-          entity.setEffectiveCallNumber(holdingsRecord.getCallNumber());
+      if (item.getHoldingsRecordId() != null && !item.getHoldingsRecordId().isEmpty()) {
+        try {
+          HoldingsRecord holdingsRecord = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).get();
+          if (holdingsRecord != null && holdingsRecord.getCallNumber() != null && !holdingsRecord.getCallNumber().isEmpty()) {
+            item.setEffectiveCallNumber(holdingsRecord.getCallNumber());
+          }
+        } catch (InterruptedException | ExecutionException e) {
+          e.printStackTrace();
         }
-      } catch (InterruptedException | ExecutionException e) {
-        e.printStackTrace();
       }
     }
-    return entity;
+    return item;
   }
 
-  private CompletableFuture<HoldingsRecord> getHoldingsRecordById(Map<String, String> okapiHeaders, Context vertxContext, String holdingsRecordId) {
+  private CompletableFuture<HoldingsRecord> getHoldingsRecordById(Map<String, String> okapiHeaders,
+      Context vertxContext, String holdingsRecordId) {
+
     final CompletableFuture<HoldingsRecord> readHoldingsRecordFuture = new CompletableFuture<>();
-    PgUtil.postgresClient(vertxContext, okapiHeaders)
-    .getById(HOLDINGS_RECORD_TABLE, holdingsRecordId, HoldingsRecord.class,
-      response -> readHoldingsRecordFuture.complete(response.result())
+    PgUtil.postgresClient(vertxContext, okapiHeaders).getById(HOLDINGS_RECORD_TABLE, holdingsRecordId, HoldingsRecord.class,
+      response -> {
+        if (response.succeeded()) {
+          readHoldingsRecordFuture.complete(response.result());
+        } else {
+          readHoldingsRecordFuture.complete(null);
+        }
+      }
     );
     return readHoldingsRecordFuture;
   }
