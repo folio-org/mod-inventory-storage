@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Response;
 
@@ -59,9 +58,13 @@ public class ItemStorageAPI implements ItemStorage {
     if (entity.getStatus() == null) {
       entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
     }
-    setEffectiveCallNumber(okapiHeaders, vertxContext, entity);
-    PgUtil.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
-        PostItemStorageItemsResponse.class, asyncResultHandler);
+
+    setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(i ->
+      {
+        PgUtil.post(ITEM_TABLE, i, okapiHeaders, vertxContext,
+          PostItemStorageItemsResponse.class, asyncResultHandler);
+      }
+    );
   }
 
   @Validate
@@ -105,9 +108,10 @@ public class ItemStorageAPI implements ItemStorage {
       String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-    setEffectiveCallNumber(okapiHeaders, vertxContext, entity);
-    PgUtil.put(ITEM_TABLE, entity, itemId, okapiHeaders, vertxContext,
+    setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(i -> {
+      PgUtil.put(ITEM_TABLE, i, itemId, okapiHeaders, vertxContext,
         PutItemStorageItemsByItemIdResponse.class, asyncResultHandler);
+    });
   }
 
   @Validate
@@ -121,37 +125,30 @@ public class ItemStorageAPI implements ItemStorage {
         DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
   }
 
-  private Item setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
+  private CompletableFuture<Item> setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
+    CompletableFuture<Item> completableFuture = CompletableFuture.supplyAsync(() -> item);
     if (item.getItemLevelCallNumber() != null && !item.getItemLevelCallNumber().isEmpty()) {
       item.setEffectiveCallNumber(item.getItemLevelCallNumber());
     } else {
       if (item.getHoldingsRecordId() != null && !item.getHoldingsRecordId().isEmpty()) {
-        try {
-          HoldingsRecord holdingsRecord = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).get();
-          if (holdingsRecord != null && holdingsRecord.getCallNumber() != null && !holdingsRecord.getCallNumber().isEmpty()) {
-            item.setEffectiveCallNumber(holdingsRecord.getCallNumber());
-          }
-        } catch (InterruptedException | ExecutionException e) {
-          e.printStackTrace();
-        }
+        completableFuture.thenCombineAsync(getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()), (i, hr) ->
+          {
+            i.setEffectiveCallNumber(hr.getCallNumber());
+            return i;
+          });
       }
     }
-    return item;
+
+    return completableFuture;
   }
 
-  private CompletableFuture<HoldingsRecord> getHoldingsRecordById(Map<String, String> okapiHeaders,
-      Context vertxContext, String holdingsRecordId) {
-
+  private CompletableFuture<HoldingsRecord> getHoldingsRecordById(Map<String, String> okapiHeaders, Context vertxContext, String holdingsRecordId) {
     final CompletableFuture<HoldingsRecord> readHoldingsRecordFuture = new CompletableFuture<>();
-    PgUtil.postgresClient(vertxContext, okapiHeaders).getById(HOLDINGS_RECORD_TABLE, holdingsRecordId, HoldingsRecord.class,
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
+    .getById(HOLDINGS_RECORD_TABLE, holdingsRecordId, HoldingsRecord.class,
       response -> {
-        if (response.succeeded()) {
-          readHoldingsRecordFuture.complete(response.result());
-        } else {
-          readHoldingsRecordFuture.complete(null);
-        }
-      }
-    );
+        readHoldingsRecordFuture.complete(response.result());
+    });
     return readHoldingsRecordFuture;
   }
 }
