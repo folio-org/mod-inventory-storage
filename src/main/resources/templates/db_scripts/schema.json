@@ -592,6 +592,7 @@
           "fieldName": "holdingsRecordId",
           "targetTable": "holdings_record",
           "targetTableAlias" : "holdingsRecords",
+          "tableAlias": "item",
           "tOps": "ADD"
         },
         {
