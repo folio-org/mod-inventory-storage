@@ -10,12 +10,14 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private final UUID instanceId;
   private final UUID permanentLocationId;
   private JsonObject tags;
+  private String callNumber;
 
   public HoldingRequestBuilder() {
     this(
       null,
       null,
       UUID.randomUUID(),
+      null,
       null);
   }
 
@@ -23,12 +25,14 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     UUID id,
     UUID instanceId,
     UUID permanentLocationId,
-    JsonObject tags) {
+    JsonObject tags,
+    String callNumber) {
 
     this.id = id;
     this.instanceId = instanceId;
     this.permanentLocationId = permanentLocationId;
     this.tags = tags;
+    this.callNumber = callNumber;
   }
 
   @Override
@@ -39,6 +43,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "instanceId", instanceId);
     put(request, "permanentLocationId", permanentLocationId);
     put(request, "tags", tags);
+    put(request, "callNumber", callNumber);
 
     return request;
   }
@@ -48,7 +53,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.id,
       this.instanceId,
       permanentLocationId,
-      this.tags);
+      this.tags,
+      this.callNumber);
   }
 
   public HoldingRequestBuilder forInstance(UUID instanceId) {
@@ -56,7 +62,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.id,
       instanceId,
       this.permanentLocationId,
-      this.tags);
+      this.tags,
+      this.callNumber);
   }
 
   public HoldingRequestBuilder withId(UUID id) {
@@ -64,7 +71,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       id,
       this.instanceId,
       this.permanentLocationId,
-      this.tags);
+      this.tags,
+      this.callNumber);
   }
 
   public HoldingRequestBuilder withTags(JsonObject tags) {
@@ -72,6 +80,16 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.id,
       this.instanceId,
       this.permanentLocationId,
-      tags);
+      tags,
+      this.callNumber);
+  }
+
+  public HoldingRequestBuilder withCallNumber(String callNumber) {
+    return new HoldingRequestBuilder(
+        this.id,
+        this.instanceId,
+        this.permanentLocationId,
+        this.tags,
+        callNumber);
   }
 }
