@@ -126,16 +126,17 @@ public class ItemStorageAPI implements ItemStorage {
   }
 
   private CompletableFuture<Item> setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
-    CompletableFuture<Item> completableFuture = CompletableFuture.supplyAsync(() -> item);
+    CompletableFuture<Item> completableFuture = null;
     if (item.getItemLevelCallNumber() != null && !item.getItemLevelCallNumber().isEmpty()) {
       item.setEffectiveCallNumber(item.getItemLevelCallNumber());
+      completableFuture = CompletableFuture.supplyAsync(() -> item);
     } else {
       if (item.getHoldingsRecordId() != null && !item.getHoldingsRecordId().isEmpty()) {
-        completableFuture.thenCombineAsync(getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()), (i, hr) ->
-          {
-            i.setEffectiveCallNumber(hr.getCallNumber());
-            return i;
-          });
+        completableFuture = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).thenCombineAsync(CompletableFuture.supplyAsync(() -> item), (hr, i) ->
+        {
+          i.setEffectiveCallNumber(hr.getCallNumber());
+          return i;
+        });
       }
     }
 
