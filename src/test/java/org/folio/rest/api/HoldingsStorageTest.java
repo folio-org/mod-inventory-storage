@@ -375,6 +375,72 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotPageWithNegativeLimit() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(holdingsStorageUrl("?limit=-3"), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody().trim(),
+      is("'limit' parameter is incorrect. parameter value {-3} is not valid: must be greater than or equal to 0"));
+  }
+
+  @Test
+  public void cannotPageWithNegativeOffset() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(holdingsStorageUrl("?offset=-3"), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody().trim(),
+      is("'offset' parameter is incorrect. parameter value {-3} is not valid: must be greater than or equal to 0"));
+  }
+
+  @Test
+  public void cannotDeleteHoldingWhenLangParameterIsInvalid() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.delete(holdingsStorageUrl("/" + holdingId + "?lang=eng"),
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(),
+      containsString("'lang' parameter is incorrect."));
+  }
+
+  @Test
   public void canPageAllHoldings()
     throws MalformedURLException,
     InterruptedException,
