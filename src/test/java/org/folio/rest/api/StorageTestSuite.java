@@ -36,7 +36,6 @@ import io.vertx.ext.sql.UpdateResult;
 @RunWith(Suite.class)
 
 @Suite.SuiteClasses({
-  // these run with loadReference=true, loadSample=false
   InstanceStorageTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
@@ -54,8 +53,6 @@ import io.vertx.ext.sql.UpdateResult;
   ItemDamagedStatusAPITest.class,
   ItemDamagedStatusAPIUnitTest.class,
   ItemEffectiveLocationTest.class,
-
-  // these run with loadReference=true, loadSample=true
   SampleDataTest.class,
 })
 public class StorageTestSuite {
@@ -240,7 +237,7 @@ public class StorageTestSuite {
     deploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
-  static void prepareTenant(String tenantId, boolean loadSample)
+  static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)
     throws InterruptedException,
     ExecutionException,
     TimeoutException,
@@ -256,7 +253,10 @@ public class StorageTestSuite {
 
     JsonObject jo = new JsonObject();
     jo.put("parameters", ar);
-    jo.put("module_to", "mod-inventory-storage-1.0.0");
+    if (moduleFrom != null) {
+      jo.put("module_from", moduleFrom);
+    }
+    jo.put("module_to", moduleTo);
 
     client.post(storageUrl("/_/tenant"), jo, tenantId,
       ResponseHandler.any(tenantPrepared));
@@ -268,19 +268,14 @@ public class StorageTestSuite {
 
     assertThat(failureMessage,
       response.getStatusCode(), is(201));
+  }
 
-    jo.put("module_to", "mod-inventory-storage-1.1.0");
-    jo.put("module_from", "mod-inventory-storage-1.0.0");
-    client.post(storageUrl("/_/tenant"), jo, tenantId,
-      ResponseHandler.any(tenantPrepared));
-
-    response = tenantPrepared.get(20, TimeUnit.SECONDS);
-
-    failureMessage = String.format("Tenant upgrade failed: %s: %s",
-      response.getStatusCode(), response.getBody());
-
-    assertThat(failureMessage,
-      response.getStatusCode(), is(201));
+  static void prepareTenant(String tenantId, boolean loadSample)
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
+    prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
   static void removeTenant(String tenantId)
