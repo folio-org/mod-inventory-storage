@@ -603,6 +603,33 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
+  @Test
+  public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
+    JsonObject holdingsRecord = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(null)
+      .create();
+
+    client.post(holdingsStorageUrl(""), holdingsRecord,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(postCompleted));
+
+    Response response = postCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
+
+    JsonObject firstError = errors.getJsonObject(0);
+    assertThat(firstError.getString("message"), is("may not be null"));
+    assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
+      is("permanentLocationId"));
+  }
+
   private JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
