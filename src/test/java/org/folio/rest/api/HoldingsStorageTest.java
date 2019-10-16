@@ -184,13 +184,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(holdingsStorageUrl(""), request, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.json(createCompleted));
 
     Response response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getStatusCode(), is(422));
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
 
-    assertThat(response.getBody(), containsString("ID must be a UUID"));
+    JsonObject firstError = errors.getJsonObject(0);
+    assertThat(firstError.getString("message"), containsString("must match"));
+    assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
+      is("id"));
   }
 
   @Test
@@ -370,6 +375,72 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotPageWithNegativeLimit() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(holdingsStorageUrl("?limit=-3"), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody().trim(),
+      is("'limit' parameter is incorrect. parameter value {-3} is not valid: must be greater than or equal to 0"));
+  }
+
+  @Test
+  public void cannotPageWithNegativeOffset() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(holdingsStorageUrl("?offset=-3"), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody().trim(),
+      is("'offset' parameter is incorrect. parameter value {-3} is not valid: must be greater than or equal to 0"));
+  }
+
+  @Test
+  public void cannotDeleteHoldingWhenLangParameterIsTooLong() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.delete(holdingsStorageUrl("/" + holdingId + "?lang=eng"),
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(),
+      containsString("'lang' parameter is incorrect."));
+  }
+
+  @Test
   public void canPageAllHoldings()
     throws MalformedURLException,
     InterruptedException,
@@ -530,6 +601,33 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
+  }
+
+  @Test
+  public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
+    JsonObject holdingsRecord = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(null)
+      .create();
+
+    client.post(holdingsStorageUrl(""), holdingsRecord,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(postCompleted));
+
+    Response response = postCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
+
+    JsonObject firstError = errors.getJsonObject(0);
+    assertThat(firstError.getString("message"), is("may not be null"));
+    assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
+      is("permanentLocationId"));
   }
 
   private JsonObject smallAngryPlanet(UUID id) {
