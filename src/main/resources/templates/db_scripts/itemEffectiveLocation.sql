@@ -9,21 +9,19 @@ AS $$
   BEGIN
     old_effective_location_id = coalesce(OLD.jsonb->'temporaryLocationId', OLD.jsonb->'permanentLocationId');
     new_effective_location_id = coalesce(NEW.jsonb->'temporaryLocationId', NEW.jsonb->'permanentLocationId');
-    -- null-safe comparison
+
+    -- null-safe comparison, do nothing if location is not changed.
     if (new_effective_location_id IS NOT DISTINCT FROM old_effective_location_id) THEN
       RETURN NEW;
     end if;
-    if (new_effective_location_id IS NULL) then
-      -- empty string signals the item trigger to remove the effective location without running a holdings query
-      new_effective_location_id = to_jsonb(''::text);
-    end if;
+
     UPDATE ${myuniversity}_${mymodule}.item
       SET jsonb = jsonb_set(jsonb, '{effectiveLocationId}', new_effective_location_id)
       WHERE holdingsRecordId = new.id
+            -- if item's either temp or perm location is not null then we don't need to update it's effective location
+            -- as item's location has more priority than holding's one.
             AND permanentLocationId IS NULL
             AND temporaryLocationId IS NULL;
-    -- if item's either temp or perm location is not null then we don't need to update it's effective location
-    -- as item's location has more priority than holding's one.
     RETURN NEW;
   END;
   $$ LANGUAGE 'plpgsql';
@@ -34,22 +32,23 @@ AS $$
   declare
     effective_location_id jsonb;
   begin
+    -- If location attributes set on item - use tem as they have higher priority
     effective_location_id = coalesce(NEW.jsonb->'temporaryLocationId', NEW.jsonb->'permanentLocationId');
     if (effective_location_id IS NOT NULL) then
       NEW.jsonb = jsonb_set(NEW.jsonb, '{effectiveLocationId}', effective_location_id);
       return NEW;
     end if;
+
+    -- If 'effectiveLocationId' is present than it was set by holdings trigger,
+    -- so we're skipping the main logic.
     effective_location_id = NEW.jsonb->'effectiveLocationId';
     if (effective_location_id IS NOT NULL) then
       -- Field exists so we know it was set by the holdings trigger
       -- because RMB always removes this read-only field.
-      if (effective_location_id ? '') then
-        -- Holdings trigger uses empty string to signal removal, so there is no need to run a holdings query.
-        -- "effectiveLocationId" must be a valid UUID or removed at all, null or empty string is not allowed.
-        NEW.jsonb = NEW.jsonb - 'effectiveLocationId';
-      end if;
       return NEW;
     end if;
+
+    -- If sensitive fields (holdingsRecordId, permanent/temporaryLocationId) have not been changed
     -- No change in item's sensitive fields?
     if (TG_OP = 'UPDATE'
         AND (OLD.jsonb->'holdingsRecordId' IS NOT DISTINCT FROM NEW.jsonb->'holdingsRecordId')
@@ -63,14 +62,16 @@ AS $$
       end if;
       return NEW;
     end if;
+
+    -- If item has holdingsRecordId then use location from holdings_record
     SELECT coalesce(jsonb->'temporaryLocationId', jsonb->'permanentLocationId')
       INTO effective_location_id
       FROM ${myuniversity}_${mymodule}.holdings_record
       WHERE id = (NEW.jsonb->>'holdingsRecordId')::uuid
       LIMIT 1;
-    if (effective_location_id IS NOT NULL) then
-      NEW.jsonb = jsonb_set(NEW.jsonb, '{effectiveLocationId}', effective_location_id);
-    end if;
+
+    NEW.jsonb = jsonb_set(NEW.jsonb, '{effectiveLocationId}', effective_location_id);
+
     return NEW;
   END;
 $$ LANGUAGE 'plpgsql';
