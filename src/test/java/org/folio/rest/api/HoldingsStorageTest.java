@@ -419,7 +419,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotDeleteHoldingWhenLangParameterIsInvalid() throws Exception {
+  public void cannotDeleteHoldingWhenLangParameterIsTooLong() throws Exception {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
