@@ -26,7 +26,7 @@ AS $$
   END;
   $$ LANGUAGE 'plpgsql';
 
--- Set Item effective location in case insert or update of temporary/permanentLocationId or holdingsRecordId properties
+-- Set Item effective location when inserting or updating an Item.
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.update_effective_location_on_item_update() RETURNS trigger
 AS $$
   declare
