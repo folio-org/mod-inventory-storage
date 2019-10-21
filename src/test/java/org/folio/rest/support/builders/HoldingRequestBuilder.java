@@ -9,6 +9,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private final UUID id;
   private final UUID instanceId;
   private final UUID permanentLocationId;
+  private final UUID temporaryLocationId;
   private JsonObject tags;
 
   public HoldingRequestBuilder() {
@@ -16,6 +17,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       null,
       null,
       UUID.randomUUID(),
+      null,
       null);
   }
 
@@ -23,11 +25,13 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     UUID id,
     UUID instanceId,
     UUID permanentLocationId,
+    UUID temporaryLocationId,
     JsonObject tags) {
 
     this.id = id;
     this.instanceId = instanceId;
     this.permanentLocationId = permanentLocationId;
+    this.temporaryLocationId = temporaryLocationId;
     this.tags = tags;
   }
 
@@ -38,6 +42,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "id", id);
     put(request, "instanceId", instanceId);
     put(request, "permanentLocationId", permanentLocationId);
+    put(request, "temporaryLocationId", temporaryLocationId);
     put(request, "tags", tags);
 
     return request;
@@ -48,6 +53,16 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.id,
       this.instanceId,
       permanentLocationId,
+      temporaryLocationId,
+      this.tags);
+  }
+
+  public HoldingRequestBuilder withTemporaryLocation(UUID temporaryLocationId) {
+    return new HoldingRequestBuilder(
+      this.id,
+      this.instanceId,
+      this.permanentLocationId,
+      temporaryLocationId,
       this.tags);
   }
 
@@ -56,6 +71,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.id,
       instanceId,
       this.permanentLocationId,
+      this.temporaryLocationId,
       this.tags);
   }
 
@@ -64,6 +80,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       id,
       this.instanceId,
       this.permanentLocationId,
+      this.temporaryLocationId,
       this.tags);
   }
 
@@ -72,6 +89,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.id,
       this.instanceId,
       this.permanentLocationId,
+      this.temporaryLocationId,
       tags);
   }
 }

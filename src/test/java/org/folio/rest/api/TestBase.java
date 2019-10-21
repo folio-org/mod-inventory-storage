@@ -21,6 +21,8 @@ public abstract class TestBase {
   static HttpClient client;
   static ResourceClient instancesClient;
   static ResourceClient holdingsClient;
+  static ResourceClient itemsClient;
+  static ResourceClient locationsClient;
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -34,6 +36,8 @@ public abstract class TestBase {
     client = new HttpClient(vertx);
     instancesClient = ResourceClient.forInstances(client);
     holdingsClient = ResourceClient.forHoldings(client);
+    itemsClient = ResourceClient.forItems(client);
+    locationsClient = ResourceClient.forLocations(client);
   }
 
   @AfterClass

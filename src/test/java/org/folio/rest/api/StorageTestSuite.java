@@ -52,6 +52,7 @@ import io.vertx.ext.sql.UpdateResult;
   ReferenceTablesTest.class,
   ItemDamagedStatusAPITest.class,
   ItemDamagedStatusAPIUnitTest.class,
+  ItemEffectiveLocationTest.class,
   SampleDataTest.class,
 })
 public class StorageTestSuite {

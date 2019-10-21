@@ -187,7 +187,7 @@
     },
     "copyNumber": {
       "type": "string",
-      "description": "Item/Piece ID (usually barcode) for systems that do not use item records. Ability to designate the copy number if institution chooses to use copy numbers."
+      "description": "Item/Piece ID (usually barcode) for systems that do not use item records. Ability to designate the copy number if institution chooses to use copy numbers."
     },
     "numberOfItems": {
       "type": "string",
