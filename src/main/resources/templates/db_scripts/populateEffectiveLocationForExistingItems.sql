@@ -6,4 +6,4 @@ SET	jsonb = JSONB_SET(it.jsonb,
 			hr.jsonb->'temporaryLocationId', hr.jsonb->'permanentLocationId')
 )
 FROM ${myuniversity}_${mymodule}.holdings_record AS hr
-WHERE it.jsonb->'effectiveLocationId' IS NULL AND hr.id = it.holdingsrecordid;
+WHERE hr.id = it.holdingsrecordid;
