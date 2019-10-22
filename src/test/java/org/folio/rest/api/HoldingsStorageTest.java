@@ -4,12 +4,6 @@ import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -37,7 +31,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -47,28 +40,8 @@ import io.vertx.core.json.JsonObject;
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final String TAG_VALUE = "test-tag";
   public static final String NEW_TEST_TAG = "new test tag";
-  private static UUID mainLibraryLocationId;
-  private static UUID annexLibraryLocationId;
 
-  @BeforeClass
-  public static void beforeAny() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-
-    LocationsTest.createLocUnits(true);
-    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (H)", "H/M");
-    annexLibraryLocationId = LocationsTest.createLocation(null, "Annex Library (H)", "H/A");
-
-  }
+  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
   @Before
   public void beforeEach() {
@@ -184,13 +157,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(holdingsStorageUrl(""), request, StorageTestSuite.TENANT_ID,
-      ResponseHandler.text(createCompleted));
+      ResponseHandler.json(createCompleted));
 
     Response response = createCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getStatusCode(), is(422));
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
 
-    assertThat(response.getBody(), containsString("ID must be a UUID"));
+    JsonObject firstError = errors.getJsonObject(0);
+    assertThat(firstError.getString("message"), containsString("must match"));
+    assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
+      is("id"));
   }
 
   @Test
@@ -370,6 +348,72 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotPageWithNegativeLimit() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(holdingsStorageUrl("?limit=-3"), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody().trim(),
+      is("'limit' parameter is incorrect. parameter value {-3} is not valid: must be greater than or equal to 0"));
+  }
+
+  @Test
+  public void cannotPageWithNegativeOffset() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(holdingsStorageUrl("?offset=-3"), StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody().trim(),
+      is("'offset' parameter is incorrect. parameter value {-3} is not valid: must be greater than or equal to 0"));
+  }
+
+  @Test
+  public void cannotDeleteHoldingWhenLangParameterIsTooLong() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.delete(holdingsStorageUrl("/" + holdingId + "?lang=eng"),
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(),
+      containsString("'lang' parameter is incorrect."));
+  }
+
+  @Test
   public void canPageAllHoldings()
     throws MalformedURLException,
     InterruptedException,
@@ -530,6 +574,33 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
+  }
+
+  @Test
+  public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
+    JsonObject holdingsRecord = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(null)
+      .create();
+
+    client.post(holdingsStorageUrl(""), holdingsRecord,
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(postCompleted));
+
+    Response response = postCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
+
+    JsonObject firstError = errors.getJsonObject(0);
+    assertThat(firstError.getString("message"), is("may not be null"));
+    assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
+      is("permanentLocationId"));
   }
 
   private JsonObject smallAngryPlanet(UUID id) {

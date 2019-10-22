@@ -5,14 +5,8 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -32,7 +26,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.ResourceClient;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.vertx.core.Handler;
@@ -53,22 +46,8 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
   private static String postRequestCirculate = "{\"name\": \"Can circulate\"}";
   private static String postRequestCourse    = "{\"name\": \"Course reserve\"}";
   private static String putRequest  = "{\"name\": \"Reading room\"}";
-  private static UUID mainLibraryLocationId;
 
-  @BeforeClass
-  public static void beforeAny() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-
-    LocationsTest.createLocUnits(true);
-    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Loan)", "Lo/M");
-  }
+  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
   @Before
   public void beforeEach()
@@ -257,7 +236,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     send(itemsStorageUrl(""), HttpMethod.POST, createItem(holdingsRecordId, nonexistentLoanId, null),
-      HTTP_BAD_REQUEST);
+      AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY);
   }
 
   @Test
@@ -272,7 +251,8 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     String nonexistentLoanId = UUID.randomUUID().toString();
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     send(itemsStorageUrl(""), HttpMethod.POST,
-      createItem(holdingsRecordId, circulateLoanTypeId, nonexistentLoanId), HTTP_BAD_REQUEST);
+      createItem(holdingsRecordId, circulateLoanTypeId, nonexistentLoanId),
+      AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY);
   }
 
   @Test

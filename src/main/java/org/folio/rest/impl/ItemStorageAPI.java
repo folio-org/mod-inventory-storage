@@ -1,13 +1,11 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import static org.folio.rest.support.ResponseUtil.copyResponseWithNewEntity;
+import static org.folio.rest.support.ResponseUtil.hasCreatedStatus;
+import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import javax.ws.rs.core.Response;
 
@@ -19,6 +17,13 @@ import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  * CRUD for Item.
@@ -55,8 +60,20 @@ public class ItemStorageAPI implements ItemStorage {
     if (entity.getStatus() == null) {
       entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
     }
+
     PgUtil.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
-        PostItemStorageItemsResponse.class, asyncResultHandler);
+      PostItemStorageItemsResponse.class, postResponse -> {
+        // Have to re-read item to get calculated fields like effectiveLocationId
+        if (hasCreatedStatus(postResponse.result())) {
+          readItemById(entity.getId(), okapiHeaders, vertxContext)
+            // copy original response to save all headers etc. and set
+            // the retrieved item or set the original entity in case item is null
+            .thenApply(item -> copyResponseWithNewEntity(postResponse.result(), firstNonNull(item, entity)))
+            .thenAccept(respToSend -> asyncResultHandler.handle(Future.succeededFuture(respToSend)));
+        } else {
+          asyncResultHandler.handle(postResponse);
+        }
+      });
   }
 
   @Validate
@@ -114,5 +131,17 @@ public class ItemStorageAPI implements ItemStorage {
 
     PgUtil.deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
         DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
+  }
+
+  private CompletableFuture<Item> readItemById(
+    String itemId, Map<String, String> okapiHeaders, Context vertxContext) {
+    final CompletableFuture<Item> readItemFuture = new CompletableFuture<>();
+
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
+      .getById(ITEM_TABLE, itemId, Item.class,
+        response -> readItemFuture.complete(response.result())
+      );
+
+    return readItemFuture;
   }
 }

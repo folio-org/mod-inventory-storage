@@ -11,8 +11,6 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -56,11 +54,8 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -75,31 +70,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String INSTANCES_KEY = "instances";
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
   private static final String TAG_VALUE = "test-tag";
-  private static UUID mainLibraryLocationId;
-  private static UUID annexLocationId;
-  private static UUID bookMaterialTypeId;
-  private static UUID canCirculateLoanTypeId;
   private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
-  @BeforeClass
-  public static void beforeAny() throws Exception {
-
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-
-    MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
-    bookMaterialTypeId = UUID.fromString(materialTypesClient.create("book"));
-
-    mainLibraryLocationId = LocationsTest.createLocation(null, "Main Library (Inst)", "I/M");
-    annexLocationId = LocationsTest.createLocation(null, "Annex Library (Inst)", "I/A");
-
-    LoanTypesClient loanTypesClient = new LoanTypesClient(client, loanTypesStorageUrl(""));
-    canCirculateLoanTypeId = UUID.fromString(loanTypesClient.create("Can Circulate"));
-  }
+  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
   @Before
   public void beforeEach() {
@@ -1141,7 +1114,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createHoldings(new HoldingRequestBuilder()
       .withId(annexSmallAngryHoldingId)
-      .withPermanentLocation(annexLocationId)
+      .withPermanentLocation(annexLibraryLocationId)
       .forInstance(smallAngryPlanetInstanceId)
       .create());
 
@@ -1719,22 +1692,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     tags.add("test-tag");
     return createInstanceRequest(id, "TEST", "Interesting Times",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
-  }
-
-  private void createItem(JsonObject itemToCreate)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    client.post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
-      json(createCompleted));
-
-    Response response = createCompleted.get(2, SECONDS);
-
-    assertThat(String.format("Create item failed: %s", response.getBody()),
-      response.getStatusCode(), is(201));
   }
 
   private NatureOfContentTerm createNatureOfContentTerm(final String name)

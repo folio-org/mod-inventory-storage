@@ -31,7 +31,6 @@ import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.vertx.core.Handler;
@@ -53,8 +52,6 @@ import io.vertx.core.logging.LoggerFactory;
 public class LocationsTest extends TestBaseWithInventoryUtil {
   private static Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-  private String canCirculateLoanTypeID;
-  private String journalMaterialTypeID;
   private static UUID instID;
   private static UUID campID;
   private static UUID libID;
@@ -79,17 +76,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  @BeforeClass
-  public static void beforeAny()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-  }
+  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
   @Before
   public void beforeEach()

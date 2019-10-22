@@ -1,8 +1,4 @@
 {
-  "fullText": {
-    "defaultDictionary": "simple"
-  },
-
   "tables": [
     {
       "tableName": "loan_type",
@@ -22,12 +18,6 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
           "tOps": "ADD"
         }
       ]
@@ -153,12 +143,6 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -168,12 +152,6 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
           "tOps": "ADD"
         }
       ]
@@ -191,12 +169,6 @@
           "fieldName": "code",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -206,12 +178,6 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
           "tOps": "ADD"
         }
       ]
@@ -229,12 +195,6 @@
           "fieldName": "code",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -250,12 +210,6 @@
           "fieldName": "code",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -267,12 +221,6 @@
           "fieldName": "name",
           "tOps": "ADD"
         }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD"
-        }
       ]
     },
     {
@@ -282,12 +230,6 @@
       "uniqueIndex": [
         {
           "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
           "tOps": "ADD"
         }
       ]
@@ -421,24 +363,6 @@
           "removeAccents": true
         },
         {
-          "fieldName": "instanceTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "instanceStatusId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
-          "fieldName": "modeOfIssuanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
           "fieldName": "classifications",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -452,12 +376,6 @@
         }
       ],
       "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
         {
           "fieldName": "source",
           "tOps": "ADD",
@@ -507,9 +425,6 @@
           "fieldName": "languages"
         },
         {
-          "fieldName": "instanceTypeId"
-        },
-        {
           "fieldName": "contributors",
           "arraySubfield" : "name",
           "arrayModifiers": ["contributorNameTypeId"]
@@ -525,26 +440,6 @@
     {
       "tableName": "instance_relationship",
       "withMetadata": true,
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "superInstanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "subInstanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
       "foreignKeys": [
         {
           "fieldName": "superInstanceId",
@@ -687,62 +582,18 @@
           "tOps": "ADD"
         }
       ],
-      "ginIndex": [
-        {
-          "fieldName": "instanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "permanentLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "temporaryLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
-      "index": [
-        {
-          "fieldName": "id",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "instanceId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "permanentLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "temporaryLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
-      ],
       "customSnippetPath": "holdingsRecordHrid.sql"
     },
     {
       "tableName": "item",
       "withMetadata": true,
+      "fromModuleVersion": "17.1.0",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
           "targetTable": "holdings_record",
           "targetTableAlias" : "holdingsRecords",
+          "tableAlias": "item",
           "tOps": "ADD"
         },
         {
@@ -786,18 +637,6 @@
       ],
       "index": [
         {
-          "fieldName": "holdingsRecordId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "materialTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "barcode",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -810,10 +649,10 @@
           "removeAccents": true
         },
         {
-          "fieldName": "id",
+          "fieldName": "effectiveLocationId",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         }
       ],
       "ginIndex": [
@@ -828,18 +667,6 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        },
-        {
-          "fieldName": "materialTypeId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "holdingsRecordId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
         }
       ],
       "fullTextIndex": [
@@ -849,6 +676,18 @@
         }
       ],
       "customSnippetPath": "itemHrid.sql"
+    }
+  ],
+  "scripts": [
+    {
+      "run": "after",
+      "snippetPath": "itemEffectiveLocation.sql",
+      "fromModuleVersion": "17.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateEffectiveLocationForExistingItems.sql",
+      "fromModuleVersion": "17.1.0"
     }
   ]
 }
