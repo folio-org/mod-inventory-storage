@@ -296,6 +296,45 @@
       "folio:linkFromField": "holdingsRecordId",
       "folio:linkToField": "id",
       "folio:includedElement": "holdingsRecords.0"
+    },
+    "lastCheckIn": {
+      "type": "object",
+      "readonly": true,
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "Date and time of the last check in of the item."
+        },
+        "servicePointName": {
+          "type": "string",
+          "description": "Service point being used by user when item was scanned in Check in app."
+        },
+        "source": {
+          "type": "object",
+          "readonly": true,
+          "additionalProperties": false,
+          "description": "Lastname, first name middle name (with link to user profile) of user who scanned the item",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "ID of user who scanned the item"
+            },
+            "firstName": {
+              "type": "string",
+              "description": "First name of user who scanned the item"
+            },
+            "middleName": {
+              "type": "string",
+              "description": "Middle name of user who scanned the item"
+            },
+            "lastName": {
+              "type": "string",
+              "description": "Last name of user who scanned the item"
+            }
+          }
+        }
+      }
     }
   },
   "additionalProperties": false,
