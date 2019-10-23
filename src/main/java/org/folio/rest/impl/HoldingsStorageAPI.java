@@ -14,7 +14,11 @@ import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
+import org.folio.rest.jaxrs.resource.ItemStorage.GetItemStorageItemsResponse;
+import org.folio.rest.jaxrs.resource.ItemStorage.PutItemStorageItemsByItemIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Limit;
@@ -41,6 +45,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
+  public static final String ITEM_TABLE = "item";
 
   @Override
   public void deleteHoldingsStorageHoldings(
@@ -323,9 +328,10 @@ public class HoldingsStorageAPI implements HoldingsStorage {
           postgresClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cql, true, false,
             reply -> {
               if(reply.succeeded()) {
-                List<HoldingsRecord> itemList = reply.result().getResults();
+                List<HoldingsRecord> holdingsList = reply.result().getResults();
 
-                if (itemList.size() == 1) {
+                if (holdingsList.size() == 1) {
+                  updateItemEffectiveCallNumbersByHoldings(entity, okapiHeaders, vertxContext);
                   try {
                     postgresClient.update(HOLDINGS_RECORD_TABLE, entity, entity.getId(),
                       update -> {
@@ -414,5 +420,32 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     catch(IllegalArgumentException e) {
       return false;
     }
+  }
+
+  private void updateItemEffectiveCallNumbersByHoldings(HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders, Context vertexContext) {
+    String query = String.format("holdingsRecordId==%s", holdingsRecord.getId());
+    log.info(query);
+    PgUtil.get(ITEM_TABLE, Item.class, Items.class, query, 0, -1, okapiHeaders, vertexContext, GetItemStorageItemsResponse.class, response -> {
+      if (response.succeeded()) {
+        updateEffectiveCallNumbers((Items) response.result().getEntity(), holdingsRecord, okapiHeaders, vertexContext);
+      }
+    });
+  }
+
+  private void updateEffectiveCallNumbers(Items items, HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders,
+      Context vertexContext) {
+    items.getItems().forEach(i -> {
+      String updatedCallNumner = null;
+      if (i.getItemLevelCallNumber() != null && !i.getItemLevelCallNumber().isEmpty()) {
+          updatedCallNumner = i.getItemLevelCallNumber();
+      } else if (i.getHoldingsRecordId() != null && !i.getHoldingsRecordId().isEmpty()) {
+          updatedCallNumner = holdingsRecord.getCallNumber();
+      }
+      if (updatedCallNumner != null && !updatedCallNumner.equals(i.getEffectiveCallNumber())) {
+        i.setEffectiveCallNumber(updatedCallNumner);
+        PgUtil.put(ITEM_TABLE, i, i.getId(), okapiHeaders, vertexContext,
+          PutItemStorageItemsByItemIdResponse.class, response -> {});
+      }
+    });
   }
 }
