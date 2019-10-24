@@ -1,8 +1,7 @@
 package org.folio.rest.support.db;
 
-import scala.Tuple2;
-import scala.collection.immutable.Map;
-import scala.collection.immutable.Map$;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ErrorBuilder {
 
@@ -79,8 +78,8 @@ public class ErrorBuilder {
     return this;
   }
 
-  public Map<Object, String> build() {
-    java.util.Map<Object, String> map = new java.util.HashMap<>();
+  public Map<Character, String> build() {
+    Map<Character, String> map = new HashMap<>();
     map.computeIfAbsent('D', val -> detail);
     map.computeIfAbsent('s', val -> schema);
     map.computeIfAbsent('n', val -> fieldName);
@@ -94,11 +93,6 @@ public class ErrorBuilder {
     map.computeIfAbsent('M', val -> message);
     map.computeIfAbsent('S', val -> severity);
 
-    return getScalaMap(map);
-  }
-
-  private static Map<Object, String> getScalaMap(java.util.Map<Object, String> map) {
-    final scala.collection.Seq<Tuple2<Object, String>> seq = scala.collection.JavaConverters.mapAsScalaMapConverter(map).asScala().toSeq();
-    return (Map<Object, String>) Map$.MODULE$.apply(seq);
+    return map;
   }
 }
