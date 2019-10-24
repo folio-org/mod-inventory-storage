@@ -1,8 +1,4 @@
 {
-  "fullText": {
-    "defaultDictionary": "simple"
-  },
-
   "tables": [
     {
       "tableName": "loan_type",
@@ -587,11 +583,13 @@
     {
       "tableName": "item",
       "withMetadata": true,
+      "fromModuleVersion": "17.1.0",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
           "targetTable": "holdings_record",
           "targetTableAlias" : "holdingsRecords",
+          "tableAlias": "item",
           "tOps": "ADD"
         },
         {
@@ -645,6 +643,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "effectiveLocationId",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "ginIndex": [
@@ -668,6 +672,18 @@
         }
       ],
       "customSnippetPath": "itemHrid.sql"
+    }
+  ],
+  "scripts": [
+    {
+      "run": "after",
+      "snippetPath": "itemEffectiveLocation.sql",
+      "fromModuleVersion": "17.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateEffectiveLocationForExistingItems.sql",
+      "fromModuleVersion": "17.1.0"
     }
   ]
 }

@@ -419,7 +419,7 @@ public class InstanceStorageAPI implements InstanceStorage {
           PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond204()));
         return;
       }
-      Map<Object, String> fields = PgExceptionUtil.getBadRequestFields(reply.cause());
+      Map<Character, String> fields = PgExceptionUtil.getBadRequestFields(reply.cause());
       if (fields != null && "23503".equals(fields.get('C'))  // foreign key constraint violation
           && INSTANCE_SOURCE_MARC_TABLE.equals(fields.get('t'))) {
         asyncResultHandler.handle(Future.succeededFuture(

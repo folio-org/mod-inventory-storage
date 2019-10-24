@@ -4,14 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
@@ -47,9 +43,9 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
   public static final String ITEM_TABLE = "item";
 
+  @Validate
   @Override
-  public void deleteHoldingsStorageHoldings(
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+  public void deleteHoldingsStorageHoldings(String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -78,12 +74,10 @@ public class HoldingsStorageAPI implements HoldingsStorage {
 
   }
 
+  @Validate
   @Override
   public void getHoldingsStorageHoldings(
-    @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
-    @DefaultValue("10") @Min(1L) @Max(100L) int limit,
-    String query,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    int offset, int limit, String query, String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -144,10 +138,9 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     }
   }
 
+  @Validate
   @Override
-  public void postHoldingsStorageHoldings(
-    @DefaultValue("en")
-    @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+  public void postHoldingsStorageHoldings(String lang,
     HoldingsRecord entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -212,10 +205,10 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     }
   }
 
+  @Validate
   @Override
   public void getHoldingsStorageHoldingsByHoldingsRecordId(
-    @NotNull String holdingsRecordId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String holdingsRecordId, String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -286,10 +279,10 @@ public class HoldingsStorageAPI implements HoldingsStorage {
 
   }
 
+  @Validate
   @Override
   public void deleteHoldingsStorageHoldingsByHoldingsRecordId(
-    @NotNull String holdingsRecordId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String holdingsRecordId, String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -298,10 +291,10 @@ public class HoldingsStorageAPI implements HoldingsStorage {
         okapiHeaders, vertxContext, DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putHoldingsStorageHoldingsByHoldingsRecordId(
-    @NotNull String holdingsRecordId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String holdingsRecordId, String lang,
     HoldingsRecord entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,

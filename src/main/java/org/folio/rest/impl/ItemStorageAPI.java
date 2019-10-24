@@ -1,5 +1,9 @@
 package org.folio.rest.impl;
 
+import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
+import static org.folio.rest.support.ResponseUtil.copyResponseWithNewEntity;
+import static org.folio.rest.support.ResponseUtil.hasCreatedStatus;
+
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -62,7 +66,18 @@ public class ItemStorageAPI implements ItemStorage {
     setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(i ->
       {
         PgUtil.post(ITEM_TABLE, i, okapiHeaders, vertxContext,
-          PostItemStorageItemsResponse.class, asyncResultHandler);
+          PostItemStorageItemsResponse.class, postResponse -> {
+            // Have to re-read item to get calculated fields like effectiveLocationId
+            if (hasCreatedStatus(postResponse.result())) {
+              readItemById(i.getId(), okapiHeaders, vertxContext)
+                // copy original response to save all headers etc. and set
+                // the retrieved item or set the original entity in case item is null
+                .thenApply(item -> copyResponseWithNewEntity(postResponse.result(), firstNonNull(item, entity)))
+                .thenAccept(respToSend -> asyncResultHandler.handle(Future.succeededFuture(respToSend)));
+            } else {
+              asyncResultHandler.handle(postResponse);
+            }
+          });
       }
     );
   }
@@ -151,5 +166,17 @@ public class ItemStorageAPI implements ItemStorage {
         readHoldingsRecordFuture.complete(response.result());
     });
     return readHoldingsRecordFuture;
+  }
+
+  private CompletableFuture<Item> readItemById(
+    String itemId, Map<String, String> okapiHeaders, Context vertxContext) {
+    final CompletableFuture<Item> readItemFuture = new CompletableFuture<>();
+
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
+      .getById(ITEM_TABLE, itemId, Item.class,
+        response -> readItemFuture.complete(response.result())
+      );
+
+    return readItemFuture;
   }
 }
