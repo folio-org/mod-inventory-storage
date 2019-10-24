@@ -478,8 +478,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray allInstances = responseBody.getJsonArray("instances");
 
-    //assertThat(allInstances.size(), is(1));
-    //assertThat(responseBody.getInteger("totalRecords"), is(1));
+    assertThat(allInstances.size(), is(1));
+    assertThat(responseBody.getInteger("totalRecords"), is(1));
 
     JsonObject firstInstance = allInstances.getJsonObject(0);
 
