@@ -440,7 +440,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
       String updatedCallNumner = null;
       if (StringUtils.isNotBlank(item.getEffectiveCallNumber())) {
           updatedCallNumner = item.getItemLevelCallNumber();
-      } else if (item.getHoldingsRecordId() != null && !item.getHoldingsRecordId().isEmpty()) {
+      } else if (StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
           updatedCallNumner = holdingsRecord.getCallNumber();
       }
       if (updatedCallNumner != null && !updatedCallNumner.equals(item.getEffectiveCallNumber())) {
