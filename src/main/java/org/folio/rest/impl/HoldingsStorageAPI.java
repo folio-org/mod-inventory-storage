@@ -327,23 +327,28 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                 List<HoldingsRecord> holdingsList = reply.result().getResults();
 
                 if (holdingsList.size() == 1) {
-                  updateItemEffectiveCallNumbersByHoldings(entity, okapiHeaders, vertxContext);
                   try {
-                    postgresClient.update(HOLDINGS_RECORD_TABLE, entity, entity.getId(),
+                    postgresClient.startTx(connection -> {
+                      postgresClient.update(HOLDINGS_RECORD_TABLE, entity, entity.getId(),
                       update -> {
                         try {
                           if (update.succeeded()) {
-                            asyncResultHandler.handle(
+                            updateItemEffectiveCallNumbersByHoldings(entity, okapiHeaders, vertxContext);
+                            postgresClient.endTx(connection, done -> {
+                              asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
                                   .respond204()));
+                            });
                           }
                           else {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                  .respond500WithTextPlain(
-                                    update.cause().getMessage())));
+                            postgresClient.rollbackTx(connection, rollback -> {
+                              asyncResultHandler.handle(
+                                Future.succeededFuture(
+                                  PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                    .respond500WithTextPlain(
+                                      update.cause().getMessage())));
+                            });
                           }
                         } catch (Exception e) {
                           asyncResultHandler.handle(
@@ -352,6 +357,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                                 .respond500WithTextPlain(e.getMessage())));
                         }
                       });
+                    });
                   } catch (Exception e) {
                     asyncResultHandler.handle(Future.succeededFuture(
                       PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
