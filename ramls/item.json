@@ -308,9 +308,21 @@
           "description": "Date and time of the last check in of the item.",
           "format": "date-time"
         },
-        "servicePointName": {
-          "type": "string",
-          "description": "Service point being used by a staff member when item was scanned in Check in app."
+        "servicePointInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Service point being used by a staff member when item was scanned in Check in app.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Service point ID being used by a staff member when item was scanned in Check in app.",
+              "pattern": "[A-F0-9]{8}-[A-F0-9]{4}-4[A-F0-9]{3}-[89AB][A-F0-9]{3}-[A-F0-9]{12}"
+            },
+            "name": {
+              "type": "string",
+              "description": "Service point name being used by a staff member when item was scanned in Check in app."
+            }
+          }
         },
         "source": {
           "type": "object",
