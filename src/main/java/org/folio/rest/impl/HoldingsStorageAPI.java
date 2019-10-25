@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang.StringUtils;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -42,6 +43,8 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   private static final String TENANT_HEADER = "x-okapi-tenant";
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
   public static final String ITEM_TABLE = "item";
+  public static final int NO_OFFSET = 0;
+  public static final int NO_LIMIT = -1;
 
   @Validate
   @Override
@@ -418,8 +421,8 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   private void updateItemEffectiveCallNumbersByHoldings(HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders, Context vertexContext) {
     String query = String.format("holdingsRecordId==%s", holdingsRecord.getId());
     log.info(query);
-    PgUtil.get(ITEM_TABLE, Item.class, Items.class, query, 0, -1, okapiHeaders, vertexContext, GetItemStorageItemsResponse.class, response -> {
-      if (response.succeeded()) {
+    PgUtil.get(ITEM_TABLE, Item.class, Items.class, query, NO_OFFSET, NO_LIMIT, okapiHeaders, vertexContext, GetItemStorageItemsResponse.class, response -> {
+      if (response.succeeded() && response.result() != null && response.result().getStatus() == 200) {
         updateEffectiveCallNumbers((Items) response.result().getEntity(), holdingsRecord, okapiHeaders, vertexContext);
       }
     });
@@ -427,16 +430,16 @@ public class HoldingsStorageAPI implements HoldingsStorage {
 
   private void updateEffectiveCallNumbers(Items items, HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders,
       Context vertexContext) {
-    items.getItems().forEach(i -> {
+    items.getItems().forEach(item -> {
       String updatedCallNumner = null;
-      if (i.getItemLevelCallNumber() != null && !i.getItemLevelCallNumber().isEmpty()) {
-          updatedCallNumner = i.getItemLevelCallNumber();
-      } else if (i.getHoldingsRecordId() != null && !i.getHoldingsRecordId().isEmpty()) {
+      if (StringUtils.isNotBlank(item.getEffectiveCallNumber())) {
+          updatedCallNumner = item.getItemLevelCallNumber();
+      } else if (item.getHoldingsRecordId() != null && !item.getHoldingsRecordId().isEmpty()) {
           updatedCallNumner = holdingsRecord.getCallNumber();
       }
-      if (updatedCallNumner != null && !updatedCallNumner.equals(i.getEffectiveCallNumber())) {
-        i.setEffectiveCallNumber(updatedCallNumner);
-        PgUtil.put(ITEM_TABLE, i, i.getId(), okapiHeaders, vertexContext,
+      if (updatedCallNumner != null && !updatedCallNumner.equals(item.getEffectiveCallNumber())) {
+        item.setEffectiveCallNumber(updatedCallNumner);
+        PgUtil.put(ITEM_TABLE, item, item.getId(), okapiHeaders, vertexContext,
           PutItemStorageItemsByItemIdResponse.class, response -> {});
       }
     });

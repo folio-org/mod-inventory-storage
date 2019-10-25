@@ -123,8 +123,8 @@ public class ItemStorageAPI implements ItemStorage {
       String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-    setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(i -> {
-      PgUtil.put(ITEM_TABLE, i, itemId, okapiHeaders, vertxContext,
+    setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(item -> {
+      PgUtil.put(ITEM_TABLE, item, itemId, okapiHeaders, vertxContext,
         PutItemStorageItemsByItemIdResponse.class, asyncResultHandler);
     });
   }
