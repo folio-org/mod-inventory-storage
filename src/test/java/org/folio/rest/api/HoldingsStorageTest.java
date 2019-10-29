@@ -638,12 +638,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holding.remove("callNumber");
     holding.put("callNumber", "updatedCallNumber");
 
-    CompletableFuture<Response> putHoldingCompleted = new CompletableFuture<>();
-
-    client.put(holdingsUrl, holding, StorageTestSuite.TENANT_ID,
-      ResponseHandler.empty(putHoldingCompleted));
-
-    Response putResponse = putHoldingCompleted.get(5, TimeUnit.SECONDS);
+    Response putResponse = update(holdingsUrl, holding);
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     assertThat(holding.getString("callNumber"), is("updatedCallNumber"));
@@ -662,20 +657,78 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(secondUpdatedItemFromGet.getString("effectiveCallNumber"), is("updatedCallNumber"));
   }
 
+  @Test
+  public void clearingHoldingsCallNumberUpdatesItemEffectiveCallNumber()
+      throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withCallNumber("testCallNumber")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("holdingsRecordId", holdingId.toString());
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+
+    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
+
+    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
+
+    String firstItemId = firstItemFromPost.getString("id");
+
+    assertThat(firstItemId, is(notNullValue()));
+
+    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
+
+    Response getFirstItemResponse = get(getFirstItemUrl);
+
+    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
+
+    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(firstItemFromGet.getString("effectiveCallNumber"), is("testCallNumber"));
+
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    holding.remove("callNumber");
+
+    Response putResponse = update(holdingsUrl, holding);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(holding.containsKey("callNumber"), is(false));
+
+    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
+
+    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
+
+    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstUpdatedItemFromGet.getString("effectiveCallNumber"), is(""));
+  }
+
   public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
-    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     JsonObject holdingsRecord = new HoldingRequestBuilder()
       .forInstance(instanceId)
       .withPermanentLocation(null)
       .create();
 
-    client.post(holdingsStorageUrl(""), holdingsRecord,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(postCompleted));
-
-    Response response = postCompleted.get(5, TimeUnit.SECONDS);
+    Response response = create(holdingsStorageUrl(""), holdingsRecord);
 
     assertThat(response.getStatusCode(), is(422));
 
@@ -748,5 +801,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private Response update(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+
+    client.put(url, entity, StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(putCompleted));
+
+    return putCompleted.get(5, TimeUnit.SECONDS);
   }
 }
