@@ -602,35 +602,36 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
     itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
+    Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
 
-    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
+    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
+    JsonObject secondItemFromPost = postSecondItemResponse.getJson();
 
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    String firstItemId = firstItemFromPost.getString("id");
+    String secondItemId = secondItemFromPost.getString("id");
 
-    JsonObject itemFromPost = postResponse.getJson();
+    assertThat(firstItemId, is(notNullValue()));
+    assertThat(secondItemId, is(notNullValue()));
 
-    String newId = itemFromPost.getString("id");
+    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
+    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
 
-    assertThat(newId, is(notNullValue()));
+    Response getFirstItemResponse = get(getFirstItemUrl);
+    Response getSecondItemResponse = get(getSecondItemUrl);
 
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", newId));
+    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
+    JsonObject secondItemFromGet = getSecondItemResponse.getJson();
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(getItemUrl, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    Response getItemResponse = getCompleted.get(5, TimeUnit.SECONDS);
-
-    JsonObject itemFromGet = getItemResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(newId));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(itemFromGet.getString("effectiveCallNumber"), is("testCallNumber"));
+    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(firstItemFromGet.getString("effectiveCallNumber"), is("testCallNumber"));
+    assertThat(secondItemFromGet.getString("id"), is(secondItemId));
+    assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(secondItemFromGet.getString("effectiveCallNumber"), is("testCallNumber"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
@@ -647,17 +648,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     assertThat(holding.getString("callNumber"), is("updatedCallNumber"));
 
-    CompletableFuture<Response> getUpdatedItemCompleted = new CompletableFuture<>();
+    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
+    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
 
-    client.get(getItemUrl, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getUpdatedItemCompleted));
+    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
+    JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
 
-    Response getUpdatedItemResponse = getUpdatedItemCompleted.get(5, TimeUnit.SECONDS);
-    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
-
-    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(updatedItemFromGet.getString("id"), is(newId));
-    assertThat(updatedItemFromGet.getString("effectiveCallNumber"), is("updatedCallNumber"));
+    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstUpdatedItemFromGet.getString("effectiveCallNumber"), is("updatedCallNumber"));
+    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
+    assertThat(secondUpdatedItemFromGet.getString("effectiveCallNumber"), is("updatedCallNumber"));
   }
 
   public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
@@ -728,5 +730,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   private Predicate<JsonObject> filterById(UUID holdingId) {
     return holding -> StringUtils.equals(holding.getString("id"), holdingId.toString());
+  }
+
+  private Response create(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(url, entity, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    return createCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private Response get(URL url) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(url, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS);
   }
 }
