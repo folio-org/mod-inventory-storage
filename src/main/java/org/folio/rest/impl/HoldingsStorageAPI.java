@@ -443,15 +443,15 @@ public class HoldingsStorageAPI implements HoldingsStorage {
       Context vertexContext) {
     CompletableFuture<Void> setEffectiveCallNumberFuture = new CompletableFuture<>();
     items.getItems().forEach(item -> {
-      String updatedCallNumner = null;
+      String updatedCallNumber = "";
       if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
-        updatedCallNumner = item.getItemLevelCallNumber();
+        updatedCallNumber = item.getItemLevelCallNumber();
       } else if (StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
-        updatedCallNumner = holdingsRecord.getCallNumber();
+        updatedCallNumber = holdingsRecord.getCallNumber();
       }
 
-      if (updatedCallNumner != null && !updatedCallNumner.equals(item.getEffectiveCallNumber())) {
-        item.setEffectiveCallNumber(updatedCallNumner);
+      if (!updatedCallNumber.equals(item.getEffectiveCallNumber())) {
+        item.setEffectiveCallNumber(updatedCallNumber);
         PgUtil.put(ITEM_TABLE, item, item.getId(), okapiHeaders, vertexContext,
           PutItemStorageItemsByItemIdResponse.class, response -> {});
       }
