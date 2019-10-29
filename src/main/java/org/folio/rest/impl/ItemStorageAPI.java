@@ -152,6 +152,8 @@ public class ItemStorageAPI implements ItemStorage {
           i.setEffectiveCallNumber(hr.getCallNumber());
           return i;
         });
+      } else {
+        completableFuture = CompletableFuture.supplyAsync(() -> item);
       }
     }
 

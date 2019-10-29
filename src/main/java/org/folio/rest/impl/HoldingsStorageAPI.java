@@ -427,7 +427,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   }
 
   private CompletableFuture<Void> updateItemEffectiveCallNumbersByHoldings(HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders, Context vertexContext) {
-    CompletableFuture<Void> future = new CompletableFuture<Void>();
+    CompletableFuture<Void> future = new CompletableFuture<>();
     String query = String.format("holdingsRecordId==%s", holdingsRecord.getId());
     PgUtil.get(ITEM_TABLE, Item.class, Items.class, query, NO_OFFSET, NO_LIMIT, okapiHeaders, vertexContext, GetItemStorageItemsResponse.class, response -> {
       if (response.succeeded() && response.result() != null && response.result().getStatus() == 200) {
