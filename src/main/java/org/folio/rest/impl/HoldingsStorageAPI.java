@@ -455,11 +455,10 @@ public class HoldingsStorageAPI implements HoldingsStorage {
       if (updatedCallNumner != null && !updatedCallNumner.equals(item.getEffectiveCallNumber())) {
         item.setEffectiveCallNumber(updatedCallNumner);
         PgUtil.put(ITEM_TABLE, item, item.getId(), okapiHeaders, vertexContext,
-          PutItemStorageItemsByItemIdResponse.class, response -> {
-            if (itemCount.incrementAndGet() == items.getItems().size()) {
-              setEffectiveCallNumberFuture.complete(null);
-            }
-          });
+          PutItemStorageItemsByItemIdResponse.class, response -> {});
+      }
+      if (itemCount.incrementAndGet() == items.getItems().size()) {
+        setEffectiveCallNumberFuture.complete(null);
       }
     });
     return setEffectiveCallNumberFuture;
