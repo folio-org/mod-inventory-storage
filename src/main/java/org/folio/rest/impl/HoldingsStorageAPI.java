@@ -3,6 +3,8 @@ package org.folio.rest.impl;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.core.Response;
 
@@ -329,33 +331,34 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                 if (holdingsList.size() == 1) {
                   try {
                     postgresClient.startTx(connection -> {
+                      updateItemEffectiveCallNumbersByHoldings(entity, okapiHeaders, vertxContext).thenAccept(voidResult -> {
                       postgresClient.update(HOLDINGS_RECORD_TABLE, entity, entity.getId(),
-                      update -> {
-                        try {
-                          if (update.succeeded()) {
-                            updateItemEffectiveCallNumbersByHoldings(entity, okapiHeaders, vertxContext);
-                            postgresClient.endTx(connection, done -> {
-                              asyncResultHandler.handle(
+                        update -> {
+                          try {
+                            if (update.succeeded()) {
+                              postgresClient.endTx(connection, done -> {
+                                asyncResultHandler.handle(
+                                  Future.succeededFuture(
+                                    PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                      .respond204()));
+                              });
+                            }
+                            else {
+                              postgresClient.rollbackTx(connection, rollback -> {
+                                asyncResultHandler.handle(
+                                  Future.succeededFuture(
+                                    PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                      .respond500WithTextPlain(
+                                        update.cause().getMessage())));
+                              });
+                            }
+                          } catch (Exception e) {
+                            asyncResultHandler.handle(
                               Future.succeededFuture(
                                 PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                  .respond204()));
-                            });
+                                  .respond500WithTextPlain(e.getMessage())));
                           }
-                          else {
-                            postgresClient.rollbackTx(connection, rollback -> {
-                              asyncResultHandler.handle(
-                                Future.succeededFuture(
-                                  PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                    .respond500WithTextPlain(
-                                      update.cause().getMessage())));
-                            });
-                          }
-                        } catch (Exception e) {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                .respond500WithTextPlain(e.getMessage())));
-                        }
+                        });
                       });
                     });
                   } catch (Exception e) {
@@ -424,30 +427,41 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     }
   }
 
-  private void updateItemEffectiveCallNumbersByHoldings(HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders, Context vertexContext) {
+  private CompletableFuture<Void> updateItemEffectiveCallNumbersByHoldings(HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders, Context vertexContext) {
+    CompletableFuture<Void> future = new CompletableFuture<Void>();
     String query = String.format("holdingsRecordId==%s", holdingsRecord.getId());
-    log.info(query);
     PgUtil.get(ITEM_TABLE, Item.class, Items.class, query, NO_OFFSET, NO_LIMIT, okapiHeaders, vertexContext, GetItemStorageItemsResponse.class, response -> {
       if (response.succeeded() && response.result() != null && response.result().getStatus() == 200) {
-        updateEffectiveCallNumbers((Items) response.result().getEntity(), holdingsRecord, okapiHeaders, vertexContext);
+        updateEffectiveCallNumbers((Items) response.result().getEntity(), holdingsRecord, okapiHeaders, vertexContext).thenAccept(voidResult -> {
+          future.complete(null);
+        });
       }
     });
+    return future;
   }
 
-  private void updateEffectiveCallNumbers(Items items, HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders,
+  private CompletableFuture<Void> updateEffectiveCallNumbers(Items items, HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders,
       Context vertexContext) {
+    CompletableFuture<Void> setEffectiveCallNumberFuture = new CompletableFuture<>();
+    AtomicInteger itemCount = new AtomicInteger();
     items.getItems().forEach(item -> {
       String updatedCallNumner = null;
-      if (StringUtils.isNotBlank(item.getEffectiveCallNumber())) {
-          updatedCallNumner = item.getItemLevelCallNumber();
+      if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
+        updatedCallNumner = item.getItemLevelCallNumber();
       } else if (StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
-          updatedCallNumner = holdingsRecord.getCallNumber();
+        updatedCallNumner = holdingsRecord.getCallNumber();
       }
+
       if (updatedCallNumner != null && !updatedCallNumner.equals(item.getEffectiveCallNumber())) {
         item.setEffectiveCallNumber(updatedCallNumner);
         PgUtil.put(ITEM_TABLE, item, item.getId(), okapiHeaders, vertexContext,
-          PutItemStorageItemsByItemIdResponse.class, response -> {});
+          PutItemStorageItemsByItemIdResponse.class, response -> {
+            if (itemCount.incrementAndGet() == items.getItems().size()) {
+              setEffectiveCallNumberFuture.complete(null);
+            }
+          });
       }
     });
+    return setEffectiveCallNumberFuture;
   }
 }

@@ -671,12 +671,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
+    holding.remove("callNumber");
     holding.put("callNumber", "updatedCallNumber");
 
-    Response putResponse = client.put(holdingsUrl, holding, StorageTestSuite.TENANT_ID)
-      .get(5, TimeUnit.SECONDS);
+    CompletableFuture<Response> putHoldingCompleted = new CompletableFuture<>();
+
+    client.put(holdingsUrl, holding, StorageTestSuite.TENANT_ID,
+      ResponseHandler.empty(putHoldingCompleted));
+
+    Response putResponse = putHoldingCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(holding.getString("callNumber"), is("updatedCallNumber"));
 
     CompletableFuture<Response> getUpdatedItemCompleted = new CompletableFuture<>();
 
@@ -687,6 +693,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
 
     assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(updatedItemFromGet.getString("id"), is(newId));
     assertThat(updatedItemFromGet.getString("effectiveCallNumber"), is("updatedCallNumber"));
   }
 
