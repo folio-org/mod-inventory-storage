@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.core.Response;
 
@@ -443,7 +442,6 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   private CompletableFuture<Void> updateEffectiveCallNumbers(Items items, HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders,
       Context vertexContext) {
     CompletableFuture<Void> setEffectiveCallNumberFuture = new CompletableFuture<>();
-    AtomicInteger itemCount = new AtomicInteger();
     items.getItems().forEach(item -> {
       String updatedCallNumner = null;
       if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
@@ -457,10 +455,8 @@ public class HoldingsStorageAPI implements HoldingsStorage {
         PgUtil.put(ITEM_TABLE, item, item.getId(), okapiHeaders, vertexContext,
           PutItemStorageItemsByItemIdResponse.class, response -> {});
       }
-      if (itemCount.incrementAndGet() == items.getItems().size()) {
-        setEffectiveCallNumberFuture.complete(null);
-      }
     });
+    setEffectiveCallNumberFuture.complete(null);
     return setEffectiveCallNumberFuture;
   }
 }
