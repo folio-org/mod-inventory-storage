@@ -299,7 +299,6 @@
     },
     "lastCheckIn": {
       "type": "object",
-      "readonly": true,
       "additionalProperties": false,
       "description": "Information about when an item was last scanned in the Inventory app.",
       "properties": {
