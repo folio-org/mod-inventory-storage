@@ -10,6 +10,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -630,6 +631,125 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(inTransitServicePointId));
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  @Test
+  public void checkIfStatusDateExistsWhenItemStatusUpdated()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+
+    createItem(itemToCreate);
+
+    final String inTransitServicePointId = UUID.randomUUID().toString();
+
+    JsonObject replacement = itemToCreate.copy();
+
+    replacement
+      .put("status", new JsonObject().put("name", "Checked out"));
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject item = getResponse.getJson();
+
+    assertThat(item.getString("id"), is(id.toString()));
+
+    assertThat(item.getJsonObject("status").getString("name"),
+      is("Checked out"));
+
+    assertThat(item.getJsonObject("status").getString("date"),
+      notNullValue());
+  }
+
+  @Test
+  public void checkIfStatusDateChangesWhenItemStatusUpdated()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+
+    createItem(itemToCreate);
+
+    final String inTransitServicePointId = UUID.randomUUID().toString();
+
+    JsonObject replacement = itemToCreate.copy();
+
+    replacement
+      .put("status", new JsonObject().put("name", "Checked out"));
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject item = getResponse.getJson();
+
+    assertThat(item.getString("id"), is(id.toString()));
+
+    assertThat(item.getJsonObject("status").getString("name"),
+      is("Checked out"));
+
+    assertThat(item.getJsonObject("status").getString("date"),
+      notNullValue());
+
+    String changedStatusDate = item.getJsonObject("status").getString("date");
+
+    JsonObject secondReplacement = itemToCreate.copy();
+
+    secondReplacement
+      .put("status", new JsonObject().put("name", "Available"));
+
+    CompletableFuture<Response> secondReplaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), secondReplacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(secondReplaceCompleted));
+
+    Response secondPutResponse = secondReplaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(secondPutResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject resultItem = getResponse.getJson();
+
+    assertThat(resultItem.getString("id"), is(id.toString()));
+
+    assertThat(resultItem.getJsonObject("status").getString("name"),
+      is("Available"));
+
+    assertThat(resultItem.getJsonObject("status").getString("date"),
+      notNullValue());
+
+    assertThat(resultItem.getJsonObject("status").getString("date"),
+      not(changedStatusDate));
   }
 
   @Test

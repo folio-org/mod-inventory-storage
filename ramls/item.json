@@ -195,8 +195,9 @@
           "type": "string"
         },
         "date": {
-          "description": "Date of a status",
-          "type": "string"
+          "description": "Date and time when the status was last changed",
+          "type": "string",
+          "format": "date-time"
         }
       },
       "additionalProperties": false
