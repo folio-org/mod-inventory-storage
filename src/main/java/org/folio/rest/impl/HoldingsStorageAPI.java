@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
@@ -13,12 +15,11 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
-import org.folio.rest.jaxrs.resource.ItemStorage.GetItemStorageItemsResponse;
-import org.folio.rest.jaxrs.resource.ItemStorage.PutItemStorageItemsByItemIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -30,6 +31,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.sql.SQLConnection;
+import io.vertx.ext.sql.UpdateResult;
 
 /**
  *
@@ -42,6 +45,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
   private static final String TENANT_HEADER = "x-okapi-tenant";
+  private static final String WHERE_CLAUSE = "WHERE id = '%s'";
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
   public static final String ITEM_TABLE = "item";
   public static final int NO_OFFSET = 0;
@@ -330,34 +334,34 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                 if (holdingsList.size() == 1) {
                   try {
                     postgresClient.startTx(connection -> {
-                      updateItemEffectiveCallNumbersByHoldings(entity, okapiHeaders, vertxContext).thenAccept(voidResult -> {
-                      postgresClient.update(HOLDINGS_RECORD_TABLE, entity, entity.getId(),
-                        update -> {
-                          try {
-                            if (update.succeeded()) {
-                              postgresClient.endTx(connection, done -> {
-                                asyncResultHandler.handle(
-                                  Future.succeededFuture(
-                                    PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                      .respond204()));
-                              });
+                      updateItemEffectiveCallNumbersByHoldings(connection, postgresClient, entity).thenAccept(voidResult -> {
+                        postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity, null, false,
+                          update -> {
+                            try {
+                              if (update.succeeded()) {
+                                postgresClient.endTx(connection, done -> {
+                                  asyncResultHandler.handle(
+                                    Future.succeededFuture(
+                                      PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                        .respond204()));
+                                });
+                              }
+                              else {
+                                postgresClient.rollbackTx(connection, rollback -> {
+                                  asyncResultHandler.handle(
+                                    Future.succeededFuture(
+                                      PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                        .respond500WithTextPlain(
+                                          update.cause().getMessage())));
+                                });
+                              }
+                            } catch (Exception e) {
+                              asyncResultHandler.handle(
+                                Future.succeededFuture(
+                                  PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                    .respond500WithTextPlain(e.getMessage())));
                             }
-                            else {
-                              postgresClient.rollbackTx(connection, rollback -> {
-                                asyncResultHandler.handle(
-                                  Future.succeededFuture(
-                                    PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                      .respond500WithTextPlain(
-                                        update.cause().getMessage())));
-                              });
-                            }
-                          } catch (Exception e) {
-                            asyncResultHandler.handle(
-                              Future.succeededFuture(
-                                PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                  .respond500WithTextPlain(e.getMessage())));
-                          }
-                        });
+                          });
                       });
                     });
                   } catch (Exception e) {
@@ -426,37 +430,61 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     }
   }
 
-  private CompletableFuture<Void> updateItemEffectiveCallNumbersByHoldings(HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders, Context vertexContext) {
+  private CompletableFuture<Void> updateItemEffectiveCallNumbersByHoldings(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, HoldingsRecord holdingsRecord) {
     CompletableFuture<Void> future = new CompletableFuture<>();
-    String query = String.format("holdingsRecordId==%s", holdingsRecord.getId());
-    PgUtil.get(ITEM_TABLE, Item.class, Items.class, query, NO_OFFSET, NO_LIMIT, okapiHeaders, vertexContext, GetItemStorageItemsResponse.class, response -> {
-      if (response.succeeded() && response.result() != null && response.result().getStatus() == 200) {
-        updateEffectiveCallNumbers((Items) response.result().getEntity(), holdingsRecord, okapiHeaders, vertexContext).thenAccept(voidResult -> {
-          future.complete(null);
-        });
-      }
+    Criterion criterion = new Criterion(
+      new Criteria().addField("holdingsRecordId")
+        .setJSONB(false).setOperation("=").setVal(holdingsRecord.getId()));
+    postgresClient.get(connection, ITEM_TABLE, Item.class, criterion, false, false, response -> {
+      updateEffectiveCallNumbers(connection, postgresClient, response.result().getResults(), holdingsRecord).thenAccept(voidResult -> {
+        future.complete(null);
+      });
     });
     return future;
   }
 
-  private CompletableFuture<Void> updateEffectiveCallNumbers(Items items, HoldingsRecord holdingsRecord, Map<String, String> okapiHeaders,
-      Context vertexContext) {
-    CompletableFuture<Void> setEffectiveCallNumberFuture = new CompletableFuture<>();
-    items.getItems().forEach(item -> {
-      String updatedCallNumber = "";
-      if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
-        updatedCallNumber = item.getItemLevelCallNumber();
-      } else if (StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
-        updatedCallNumber = holdingsRecord.getCallNumber();
-      }
+  private CompletableFuture<Void> updateEffectiveCallNumbers(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, List<Item> items, HoldingsRecord holdingsRecord) {
+    CompletableFuture<Void> allItemsUpdated = new CompletableFuture<>();
+    List<Function<SQLConnection, Future<UpdateResult>>> batchFactories = items
+      .stream()
+      .map(item -> updateItemEffectiveCallNumber(item, holdingsRecord))
+      .map(item -> updateSingleBatchFactory(ITEM_TABLE, item.getId(), item, postgresClient))
+      .collect(Collectors.toList());
 
-      if (!updatedCallNumber.equals(item.getEffectiveCallNumber())) {
-        item.setEffectiveCallNumber(updatedCallNumber);
-        PgUtil.put(ITEM_TABLE, item, item.getId(), okapiHeaders, vertexContext,
-          PutItemStorageItemsByItemIdResponse.class, response -> {});
+    SQLConnection connectionResult = connection.result();
+    Future<UpdateResult> lastUpdate = Future.succeededFuture();
+    for (Function<SQLConnection, Future<UpdateResult>> factory : batchFactories) {
+      lastUpdate = lastUpdate.compose(prev -> factory.apply(connectionResult));
+    }
+
+    lastUpdate.setHandler(updateResult -> {
+      if (updateResult.succeeded()) {
+        allItemsUpdated.complete(null);
       }
     });
-    setEffectiveCallNumberFuture.complete(null);
-    return setEffectiveCallNumberFuture;
+    return allItemsUpdated;
+  }
+
+  private Item updateItemEffectiveCallNumber(Item item, HoldingsRecord holdingsRecord) {
+    String updatedCallNumber = "";
+    if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
+      updatedCallNumber = item.getItemLevelCallNumber();
+    } else if (StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
+      updatedCallNumber = holdingsRecord.getCallNumber();
+    }
+
+    if (!updatedCallNumber.equals(item.getEffectiveCallNumber())) {
+      item.setEffectiveCallNumber(updatedCallNumber);
+    }
+    return item;
+  }
+
+  private <T> Function<SQLConnection, Future<UpdateResult>> updateSingleBatchFactory(String tableName, String id, T entity, PostgresClient postgresClient) {
+    return connection -> {
+      Future<UpdateResult> updateResultFuture = Future.future();
+      Future<SQLConnection> connectionResult = Future.succeededFuture(connection);
+      postgresClient.update(connectionResult, tableName, entity, "jsonb", String.format(WHERE_CLAUSE, id), false, updateResultFuture);
+      return updateResultFuture;
+    };
   }
 }
