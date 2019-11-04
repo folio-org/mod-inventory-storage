@@ -1562,7 +1562,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
    * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
    */
   @Test
-  public void shouldOverrideStatusUpdatedDate() throws Exception {
+  public void shouldChangeStatusUpdatedDateOnSubsequentStatusChanges() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id)
       .put("statusId", getOtherInstanceType().getId().toString());
@@ -1597,7 +1597,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
    * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
    */
   @Test
-  public void shouldNotOverrideStatusUpdatedDateOnSameStatusId() throws Exception {
+  public void shouldNotChangeStatusUpdatedDateWhenStatusHasNotChanged() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id)
       .put("statusId", getOtherInstanceType().getId().toString());
