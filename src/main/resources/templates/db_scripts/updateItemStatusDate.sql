@@ -11,7 +11,7 @@ AS $$
   END IF;
 	IF (TG_OP='UPDATE') THEN
 	  IF (newStatus!=OLD.jsonb->'status'->>'name') THEN
-          NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}', to_jsonb(NOW()), true);
+          NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}', to_jsonb(CURRENT_TIMESTAMP(3)), true);
 	  END IF;
 	END IF;
 	RETURN NEW;

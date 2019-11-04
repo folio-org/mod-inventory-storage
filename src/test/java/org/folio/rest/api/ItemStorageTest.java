@@ -20,9 +20,14 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -674,6 +679,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(item.getJsonObject("status").getString("date"),
       notNullValue());
+
+    assertTrue(isValidDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+      item.getJsonObject("status").getString("date")));
   }
 
   @Test
@@ -750,6 +758,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(resultItem.getJsonObject("status").getString("date"),
       not(changedStatusDate));
+
+    assertTrue(isValidDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+      resultItem.getJsonObject("status").getString("date")));
   }
 
   @Test
@@ -1206,6 +1217,21 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
+
+   private boolean isValidDateFormat(String format, String value){
+     Date date = null;
+     try {
+       SimpleDateFormat sdf = new SimpleDateFormat(format);
+       sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+       date = sdf.parse(value);
+       if (!Objects.equals(value, sdf.format(date))) {
+         date = null;
+       }
+     } catch (ParseException ex) {
+       ex.printStackTrace();
+     }
+     return Objects.nonNull(date);
+   }
 
    private Response getById(UUID id)
     throws MalformedURLException, InterruptedException,
