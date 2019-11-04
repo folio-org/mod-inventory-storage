@@ -53,6 +53,7 @@ import io.vertx.core.json.JsonObject;
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   private static final String TAG_VALUE = "test-tag";
+  private static final String ISO_8601_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
   // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
@@ -680,7 +681,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getJsonObject("status").getString("date"),
       notNullValue());
 
-    assertTrue(isValidDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+    assertTrue(isValidDateFormat(ISO_8601_DATE_FORMAT,
       item.getJsonObject("status").getString("date")));
   }
 
@@ -759,7 +760,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(resultItem.getJsonObject("status").getString("date"),
       not(changedStatusDate));
 
-    assertTrue(isValidDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+    assertTrue(isValidDateFormat(ISO_8601_DATE_FORMAT,
       resultItem.getJsonObject("status").getString("date")));
   }
 
