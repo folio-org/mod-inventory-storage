@@ -20,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
+import org.folio.rest.jaxrs.model.LastCheckIn;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -1245,6 +1247,38 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
+
+  @Test
+  public void testItemHasLastCheckInProperties()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+    UUID itemId = UUID.randomUUID();
+    UUID userId = UUID.randomUUID();
+    UUID servicePointId = UUID.randomUUID();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject itemData = smallAngryPlanet(itemId, holdingsRecordId);
+    createItem(itemData);
+
+    LastCheckIn expected = new LastCheckIn();
+    expected.setStaffMemberId(userId.toString());
+    expected.setServicePointId(servicePointId.toString());
+    expected.setDateTime(new Date());
+    JsonObject lastCheckInData = JsonObject.mapFrom(expected);
+    itemData.put("lastCheckIn", lastCheckInData);
+
+    itemsClient.replace(itemId, itemData);
+    JsonObject actualItem = itemsClient.getById(itemId).getJson();
+    JsonObject actualLastCheckin = actualItem.getJsonObject("lastCheckIn");
+
+    LastCheckIn actual = actualLastCheckin.mapTo(LastCheckIn.class);
+
+    assertThat(expected.getDateTime(), is(actual.getDateTime()));
+    assertThat(expected.getServicePointId(), is(actual.getServicePointId()));
+    assertThat(expected.getStaffMemberId(), is(actual.getStaffMemberId()));
+  }
+
 
    private Response getById(UUID id)
     throws MalformedURLException, InterruptedException,
