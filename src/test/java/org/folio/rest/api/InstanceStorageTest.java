@@ -69,6 +69,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String INSTANCES_KEY = "instances";
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
+  private static final String METADATA_KEY = "metadata";
   private static final String TAG_VALUE = "test-tag";
   private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
@@ -1509,6 +1510,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
     assertThat(instances.size(), is(numberOfInstances));
+    assertThat(instances.getJsonObject(1).getJsonObject(METADATA_KEY), notNullValue());
   }
 
   @Test
