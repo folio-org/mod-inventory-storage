@@ -3,12 +3,14 @@ package org.folio.rest.api;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
@@ -186,7 +188,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(newId, is(notNullValue()));
 
-    Response getResponse = getById(UUID.fromString(newId));
+    Response getResponse = getById(newId);
 
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
 
@@ -1625,6 +1627,78 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .getString(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
   }
 
+  private void assertExists(JsonObject expectedInstance) throws Exception {
+    Response response = getById(expectedInstance.getString("id"));
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
+    assertThat(response.getBody(), containsString(expectedInstance.getString("title")));
+  }
+
+  @Test
+  public void canSyncPost() throws Exception {
+    JsonArray instancesArray = new JsonArray();
+    int numberOfInstances = 1000;
+
+    instancesArray.add(uprooted(UUID.randomUUID()));
+    for(int i = 2; i < numberOfInstances; i++) {
+      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
+    }
+    instancesArray.add(temeraire(UUID.randomUUID()));
+
+    JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.empty(createCompleted));
+    Response response = createCompleted.get(5, SECONDS);
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    JsonObject uprooted         = instancesArray.getJsonObject(0);
+    JsonObject smallAngryPlanet = instancesArray.getJsonObject(numberOfInstances / 2);
+    JsonObject temeraire        = instancesArray.getJsonObject(numberOfInstances - 1);
+    assertExists(uprooted);
+    assertExists(smallAngryPlanet);
+    assertExists(temeraire);
+  }
+
+  @Test
+  public void cannotSyncPostWithInvalidInstance() throws Exception {
+    JsonArray instancesArray = new JsonArray();
+    instancesArray.add(uprooted(UUID.randomUUID()));
+    instancesArray.add(smallAngryPlanet(UUID.randomUUID()).put("foo", "bar"));  // "foo" is invalid
+    instancesArray.add(temeraire(UUID.randomUUID()));
+    JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
+    Response response = createCompleted.get(5, SECONDS);
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+    assertThat(response, errorMessageContains("Unrecognized field \"foo\""));
+
+    for (int i=0; i<instancesArray.size(); i++) {
+      assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(i).getString("id")));
+    }
+  }
+
+  @Test
+  public void cannotSyncPostWithDuplicateId() throws Exception {
+    JsonArray instancesArray = new JsonArray();
+    instancesArray.add(uprooted(UUID.randomUUID()));
+    instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
+    instancesArray.add(temeraire(UUID.randomUUID()));
+    JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+
+    createInstance(instancesArray.getJsonObject(1));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
+    Response response = createCompleted.get(5, SECONDS);
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+    assertThat(response, errorMessageContains("duplicate"));
+
+    assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(0).getString("id")));
+    assertExists(instancesArray.getJsonObject(1));
+    assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(2).getString("id")));
+  }
+
   private void createHoldings(JsonObject holdingsToCreate)
     throws MalformedURLException,
     InterruptedException,
@@ -1671,19 +1745,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
-
-  private Response getById(UUID id)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    URL getInstanceUrl = instancesStorageUrl(String.format("/%s", id));
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(getInstanceUrl, TENANT_ID,
-      json(getCompleted));
-
-    return getCompleted.get(5, SECONDS);
+  private Response getById(UUID id) {
+    return getById(id.toString());
   }
 
   private IndividualResource updateInstance(JsonObject instance)
@@ -1704,18 +1767,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     return new IndividualResource(getResponse);
   }
 
-  /**
-   * Assert that a GET at the url returns 404 status code (= not found).
-   * @param url  endpoint where to execute a GET request
-   */
-  private void assertGetNotFound(URL url) {
+  private Response getById(String id) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(url, TENANT_ID, ResponseHandler.text(getCompleted));
-    Response response;
+    client.get(instancesStorageUrl(String.format("/" + id)), TENANT_ID, json(getCompleted));
     try {
-      response = getCompleted.get(5, SECONDS);
-      assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+      return getCompleted.get(5, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }

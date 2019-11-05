@@ -1,0 +1,40 @@
+#%RAML 1.0
+title: Inventory Storage Item Batch Sync API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: "Inventory Storage Item Batch Sync API"
+    content: <b>Batch API for synchronously uploading items into the inventory</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  items-with-id: !include items-with-id.json
+/item-storage/sync:
+  displayName: Item Batch Upload Sync API
+  post:
+    description: "Create a collection of items in a single synchronous request"
+    body:
+      application/json:
+        type: items-with-id
+        example: !include examples/items-with-id.json
+    responses:
+      201:
+        description: "All items have been successfully created"
+      413:
+        description: "Payload Too Large"
+        body:
+          text/plain:
+            example: "Payload Too Large"
+      422:
+        description: "Unprocessable Entity"
+        body:
+          application/json:
+            type: errors
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+

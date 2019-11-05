@@ -34,6 +34,17 @@
       ]
     },
     {
+      "id": "item-storage-batch-sync",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/item-storage/sync",
+          "permissionsRequired": ["inventory-storage.items.batch.post"]
+        }
+      ]
+    },
+    {
       "id": "holdings-storage",
       "version": "4.0",
       "handlers": [
@@ -61,6 +72,17 @@
           "methods": ["DELETE"],
           "pathPattern": "/holdings-storage/holdings",
           "permissionsRequired": ["inventory-storage.holdings.collection.delete"]
+        }
+      ]
+    },
+    {
+      "id": "holdings-storage-batch-sync",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/holdings-storage/sync",
+          "permissionsRequired": ["inventory-storage.holdings.batch.post"]
         }
       ]
     },
@@ -138,6 +160,17 @@
         {
           "methods": ["POST"],
           "pathPattern": "/instance-storage/batch/instances",
+          "permissionsRequired": ["inventory-storage.instances.batch.post"]
+        }
+      ]
+    },
+    {
+      "id": "instance-storage-batch-sync",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/sync",
           "permissionsRequired": ["inventory-storage.instances.batch.post"]
         }
       ]
@@ -989,6 +1022,11 @@
       "description": "delete individual item from storage"
     },
     {
+      "permissionName": "inventory-storage.items.batch.post",
+      "displayName": "inventory storage - create a number of items",
+      "description": "create a number of items in storage"
+    },
+    {
       "permissionName": "inventory-storage.holdings.collection.get",
       "displayName": "inventory storage - get holdings collection",
       "description": "get holdings collection from storage"
@@ -1017,6 +1055,11 @@
       "permissionName": "inventory-storage.holdings.item.delete",
       "displayName": "inventory storage - delete individual holdings record",
       "description": "delete individual holdings record from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings.batch.post",
+      "displayName": "inventory storage - create a number of holdings",
+      "description": "create a number of holdings in storage"
     },
     {
       "permissionName": "inventory-storage.instances.collection.get",
@@ -1841,12 +1884,14 @@
         "inventory-storage.items.item.put",
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
+        "inventory-storage.items.batch.post",
         "inventory-storage.holdings.collection.get",
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",
         "inventory-storage.holdings.item.put",
         "inventory-storage.holdings.item.delete",
         "inventory-storage.holdings.collection.delete",
+        "inventory-storage.holdings.batch.post",
         "inventory-storage.instances.collection.get",
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",

@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "An instance record",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceWithId",
   "type": "object",
   "properties": {
     "id": {
@@ -360,6 +361,7 @@
   },
   "additionalProperties": false,
   "required": [
+    "id",
     "source",
     "title",
     "instanceTypeId"
