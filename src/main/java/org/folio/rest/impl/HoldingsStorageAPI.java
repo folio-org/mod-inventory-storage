@@ -466,14 +466,14 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   }
 
   private Item updateItemEffectiveCallNumber(Item item, HoldingsRecord holdingsRecord) {
-    String updatedCallNumber = "";
+    String updatedCallNumber = null;
     if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
       updatedCallNumber = item.getItemLevelCallNumber();
     } else if (StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
       updatedCallNumber = holdingsRecord.getCallNumber();
     }
 
-    if (!updatedCallNumber.equals(item.getEffectiveCallNumber())) {
+    if ((updatedCallNumber == null && item.getEffectiveCallNumber() != null) || !updatedCallNumber.equals(item.getEffectiveCallNumber())) {
       item.setEffectiveCallNumber(updatedCallNumber);
     }
     return item;
