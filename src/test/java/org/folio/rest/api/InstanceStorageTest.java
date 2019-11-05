@@ -12,13 +12,16 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchIns
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
+import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
@@ -48,6 +51,7 @@ import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
@@ -71,6 +75,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
   private static final String METADATA_KEY = "metadata";
   private static final String TAG_VALUE = "test-tag";
+  private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
+
   private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
   // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
@@ -153,6 +159,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags, hasItem(TAG_VALUE));
     assertThat(instanceFromGet.getJsonArray("natureOfContentTermIds"),
       containsInAnyOrder(natureOfContentIds));
+    assertThat(
+      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
   }
 
   @Test
@@ -191,6 +199,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray identifiers = instanceFromGet.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
     assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+    assertThat(
+      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
   }
 
   @Test
@@ -332,6 +342,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
     assertThat(itemFromGet.getString("title"), is("A Long Way to a Small Angry Planet"));
+    assertThat(itemFromGet.getString(STATUS_UPDATED_DATE_PROPERTY),
+      is(replacement.getString(STATUS_UPDATED_DATE_PROPERTY)));
   }
 
   @Test
@@ -773,6 +785,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(fields.getJsonObject(1).getJsonObject("245")
         .getJsonArray("subfields").getJsonObject(0).getString("a"), is("The Yearbook of Okapiology"));
     assertThat(getResponse.getJson().getMap().keySet(), containsInAnyOrder("id", "leader", "fields"));
+    assertThat(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
   }
 
   @Test  // https://issues.folio.org/browse/MODINVSTOR-142?focusedCommentId=33665#comment-33665
@@ -787,6 +800,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(200));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
+    assertThat(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
   }
 
   @Test  // https://issues.folio.org/browse/MODINVSTOR-143?focusedCommentId=33618#comment-33618
@@ -801,6 +815,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(200));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("1011273942"));
+    assertThat(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
   }
 
   @Test
@@ -816,6 +831,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(200));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
+    assertThat(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
   }
 
   @Test
@@ -1585,6 +1601,97 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instances.size(), is(0));
   }
 
+  /**
+   * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
+   */
+  @Test
+  public void shouldSetStatusUpdatedDate() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id)
+      .put("statusId", getOtherInstanceType().getId().toString());
+
+    createInstance(instanceToCreate);
+
+    Response createdInstance = getById(id);
+    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
+      nullValue());
+
+    JsonObject replacement = instanceToCreate.copy()
+      .put("statusId", getCatalogedInstanceType().getId().toString());
+
+    JsonObject updatedInstance = updateInstance(replacement).getJson();
+
+    assertThat(updatedInstance
+        .getString(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
+  }
+
+  /**
+   * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
+   */
+  @Test
+  public void shouldChangeStatusUpdatedDateOnSubsequentStatusChanges() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id)
+      .put("statusId", getOtherInstanceType().getId().toString());
+
+    createInstance(instanceToCreate);
+
+    Response createdInstance = getById(id);
+    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
+      nullValue());
+
+    JsonObject instanceWithCatStatus = instanceToCreate.copy()
+      .put("statusId", getCatalogedInstanceType().getId().toString());
+    JsonObject updatedInstanceWithCatStatus = updateInstance(instanceWithCatStatus)
+      .getJson();
+
+    JsonObject instanceWithOthStatus = instanceWithCatStatus.copy()
+      .put("statusId", getOtherInstanceType().getId().toString());
+    JsonObject updatedInstanceWithOthStatus = updateInstance(instanceWithOthStatus)
+      .getJson();
+
+    // Assert that status updated date was changed since the first update
+    assertThat(updatedInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY),
+      not(updatedInstanceWithOthStatus.getString(STATUS_UPDATED_DATE_PROPERTY)));
+
+    assertThat(updatedInstanceWithCatStatus
+        .getString(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
+    assertThat(updatedInstanceWithOthStatus
+        .getString(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(1)));
+  }
+
+  /**
+   * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
+   */
+  @Test
+  public void shouldNotChangeStatusUpdatedDateWhenStatusHasNotChanged() throws Exception {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id)
+      .put("statusId", getOtherInstanceType().getId().toString());
+
+    createInstance(instanceToCreate);
+
+    Response createdInstance = getById(id);
+    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
+      nullValue());
+
+    JsonObject instanceWithCatStatus = instanceToCreate.copy()
+      .put("statusId", getCatalogedInstanceType().getId().toString());
+    JsonObject updatedInstanceWithCatStatus = updateInstance(instanceWithCatStatus)
+      .getJson();
+
+    JsonObject anotherInstanceWithCatStatus = updatedInstanceWithCatStatus.copy()
+      .put("statusId", getCatalogedInstanceType().getId().toString());
+    JsonObject updatedAnotherInstanceWithCatStatus =
+      updateInstance(anotherInstanceWithCatStatus)
+        .getJson();
+
+    assertThat(updatedInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY),
+      is(updatedAnotherInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY)));
+    assertThat(updatedInstanceWithCatStatus
+      .getString(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
+  }
+
   private void createHoldings(JsonObject holdingsToCreate)
     throws MalformedURLException,
     InterruptedException,
@@ -1644,6 +1751,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       json(getCompleted));
 
     return getCompleted.get(5, SECONDS);
+  }
+
+  private IndividualResource updateInstance(JsonObject instance)
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
+    final UUID id = UUID.fromString(instance.getString("id"));
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(instancesStorageUrl(String.format("/%s", id)), instance,
+      TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, SECONDS);
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    return new IndividualResource(getResponse);
   }
 
   /**
