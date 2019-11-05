@@ -448,8 +448,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(secondInstance.getJsonArray("identifiers"),
       hasItem(identifierMatches(UUID_ASIN.toString(), "B01D1PLMDO")));
   }
+
   @Test
-  public void canGetWithAllIndex()
+  public void canSearchUsingKeywordIndex()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -479,18 +480,41 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray allInstances = responseBody.getJsonArray("instances");
 
     assertThat(allInstances.size(), is(1));
-    assertThat(responseBody.getInteger("totalRecords"), is(1));
-
-    JsonObject firstInstance = allInstances.getJsonObject(0);
-
-
-    assertThat(firstInstance.getString("id"), is(firstInstanceId.toString()));
-    assertThat(firstInstance.getString("title"), is("Long Way to a Small Angry Planet"));
-
-    assertThat(firstInstance.getJsonArray("identifiers").size(), is(1));
-    assertThat(firstInstance.getJsonArray("identifiers"),
-      hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
   }
+
+  @Test
+  public void canSearchUsingKeywordIndexAll()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID firstInstanceId = UUID.randomUUID();
+
+    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
+
+    createInstance(firstInstanceToCreate);
+
+    UUID secondInstanceId = UUID.randomUUID();
+
+    JsonObject secondInstanceToCreate = nod(secondInstanceId);
+
+    createInstance(secondInstanceToCreate);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(instancesStorageUrl("?query=keyword%20all%20%22Long%20Way%20to%20a%20Small%20Angry%20Planet%20Chambers%2C%20Becky%209781473619777%22"), StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject responseBody = response.getJson();
+
+    JsonArray allInstances = responseBody.getJsonArray("instances");
+
+    assertThat(allInstances.size(), is(1));
+  }
+
   @Test
   public void canPageAllInstances()
     throws MalformedURLException,
