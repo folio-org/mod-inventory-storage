@@ -1,8 +1,4 @@
 {
-  "fullText": {
-    "defaultDictionary": "simple"
-  },
-
   "tables": [
     {
       "tableName": "loan_type",
@@ -698,6 +694,11 @@
     {
       "run": "after",
       "snippetPath": "removeOldHridOperations.sql",
+      "fromModuleVersion": "17.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instanceStatusUpdatedDateTrigger.sql",
       "fromModuleVersion": "17.1.0"
     }
   ]

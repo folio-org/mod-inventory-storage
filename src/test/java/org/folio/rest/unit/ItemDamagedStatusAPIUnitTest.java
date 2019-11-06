@@ -1,6 +1,8 @@
 package org.folio.rest.unit;
 
 
+import com.github.jasync.sql.db.postgresql.exceptions.GenericDatabaseException;
+import com.github.jasync.sql.db.postgresql.messages.backend.ErrorMessage;
 import static org.folio.rest.impl.ItemDamagedStatusAPI.REFERENCE_TABLE;
 import static org.folio.rest.support.db.ErrorFactory.getUUIDErrorMap;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,9 +32,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
-
-import com.github.mauricio.async.db.postgresql.exceptions.GenericDatabaseException;
-import com.github.mauricio.async.db.postgresql.messages.backend.ErrorMessage;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;

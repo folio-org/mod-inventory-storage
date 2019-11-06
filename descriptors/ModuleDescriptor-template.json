@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "7.6",
+      "version": "7.7",
       "handlers": [
         {
           "methods": ["GET"],
@@ -2039,10 +2039,6 @@
       ]
     }
   ],
-  "metadata": {
-    "containerMemory": "512",
-    "databaseConnection": "true"
-  },
   "launchDescriptor": {
     "dockerImage": "${artifactId}:${version}",
     "dockerPull": false,

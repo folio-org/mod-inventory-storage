@@ -6,21 +6,25 @@ import java.util.UUID;
 
 public class IndividualResource {
 
-  private final Response response;
+  private final JsonObject response;
 
   public IndividualResource(Response response) {
-    this.response = response;
+    this.response = response.getJson();
+  }
+
+  public IndividualResource(JsonObject response) {
+    this.response = response.copy();
   }
 
   public UUID getId() {
-    return UUID.fromString(response.getJson().getString("id"));
+    return UUID.fromString(response.getString("id"));
   }
 
   public JsonObject getJson() {
-    return response.getJson().copy();
+    return response.copy();
   }
 
   public JsonObject copyJson() {
-    return response.getJson().copy();
+    return response.copy();
   }
 }
