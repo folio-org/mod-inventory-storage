@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "The HRID settings",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.HridSettings",
+  "properties": {
+    "id": {
+      "description": "The ID of the one and only HRID settings record",
+      "type": "string",
+      "readonly": true,
+      "$ref": "uuid.json"
+    },
+    "instance": {
+      "description": "The HRID settings for instances",
+      "type": "object",
+      "$ref": "hridsetting.json",
+      "default": {"prefix": "in", "startNumber": 1}
+    },
+    "holding": {
+      "description": "The HRID settings for holdings",
+      "type": "object",
+      "$ref": "hridsetting.json",
+      "default": {"prefix": "ho", "startNumber": 1}
+    },
+    "item": {
+      "description": "The HRID settings for items",
+      "type": "object",
+      "$ref": "hridsetting.json",
+      "default": {"prefix": "it", "startNumber": 1}
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "instance",
+    "holding",
+    "item"
+  ]
+}
