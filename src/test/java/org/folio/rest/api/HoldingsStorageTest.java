@@ -716,7 +716,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstUpdatedItemFromGet.getString("effectiveCallNumber"), is(""));
+    assertThat(firstUpdatedItemFromGet.containsKey("effectiveCallNumber"), is(false));
   }
 
   public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {

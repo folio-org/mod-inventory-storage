@@ -356,10 +356,12 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                                 });
                               }
                             } catch (Exception e) {
-                              asyncResultHandler.handle(
-                                Future.succeededFuture(
-                                  PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                    .respond500WithTextPlain(e.getMessage())));
+                              postgresClient.rollbackTx(connection, rollback -> {
+                                asyncResultHandler.handle(
+                                  Future.succeededFuture(
+                                    PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                      .respond500WithTextPlain(e.getMessage())));
+                              });
                             }
                           });
                       });
@@ -435,7 +437,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     Criterion criterion = new Criterion(
       new Criteria().addField("holdingsRecordId")
         .setJSONB(false).setOperation("=").setVal(holdingsRecord.getId()));
-    postgresClient.get(connection, ITEM_TABLE, Item.class, criterion, false, false, response -> {
+    postgresClient.get(ITEM_TABLE, Item.class, criterion, false, false, response -> {
       updateEffectiveCallNumbers(connection, postgresClient, response.result().getResults(), holdingsRecord).thenAccept(voidResult -> {
         future.complete(null);
       });
@@ -473,9 +475,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
       updatedCallNumber = holdingsRecord.getCallNumber();
     }
 
-    if ((updatedCallNumber == null && item.getEffectiveCallNumber() != null) || !updatedCallNumber.equals(item.getEffectiveCallNumber())) {
-      item.setEffectiveCallNumber(updatedCallNumber);
-    }
+    item.setEffectiveCallNumber(updatedCallNumber);
     return item;
   }
 

@@ -1,5 +1,5 @@
 -- Generates an eight digit HRID prefixed with 'in' for new instance records, starting with in00000001.
--- Ignores the value in 'hrid' -- if any -- in the instance POSTed by the client 
+-- Ignores the value in 'hrid' -- if any -- in the instance POSTed by the client
 CREATE SEQUENCE IF NOT EXISTS ${myuniversity}_${mymodule}.instance_hrid_seq
   INCREMENT BY 1
   START WITH 1
