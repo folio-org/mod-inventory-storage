@@ -1663,7 +1663,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   public void cannotSyncPostWithInvalidInstance() throws Exception {
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(UUID.randomUUID()));
-    instancesArray.add(smallAngryPlanet(UUID.randomUUID()).put("foo", "bar"));  // "foo" is invalid
+    instancesArray.add(smallAngryPlanet(UUID.randomUUID()).put("invalidPropertyName", "bar"));
     instancesArray.add(temeraire(UUID.randomUUID()));
     JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
 
