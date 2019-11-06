@@ -1671,7 +1671,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
     Response response = createCompleted.get(5, SECONDS);
     assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
-    assertThat(response, errorMessageContains("Unrecognized field \"foo\""));
+    assertThat(response, errorMessageContains("Unrecognized field \"invalidPropertyName\""));
 
     for (int i=0; i<instancesArray.size(); i++) {
       assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(i).getString("id")));
