@@ -8,6 +8,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -378,6 +379,51 @@ public class HridSettingsStorageTest extends TestBase {
               hrid -> validateHrid(hrid, "00000300", testContext))
             .setHandler(testContext.asyncAssertSuccess(
               v -> log.info("Finished canGetNextItemHridWithNoPrefix()")))));
+  }
+
+  @Test
+  public void canRollbackFailedTransaction(TestContext testContext)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    log.info("Starting canRollbackFailedTransaction()");
+
+    final Vertx vertx = StorageTestSuite.getVertx();
+    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+
+    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
+
+    final HridSettings newHridSettings = new HridSettings()
+        .withInstance(new HridSetting().withStartNumber(999999999))
+        .withHolding(new HridSetting().withStartNumber(200))
+        .withItem(new HridSetting().withStartNumber(300));
+
+    hridManager.getHridSettings()
+        .compose(originalHridSettings -> {
+          Promise<HridSettings> promise = Promise.promise();
+          hridManager.updateHridSettings(newHridSettings).setHandler(ar -> {
+            assertTrue(ar.failed());
+            hridManager.getHridSettings()
+                .compose(currentHridSettings -> {
+                  assertThat(currentHridSettings.getId(), is(originalHridSettings.getId()));
+                  assertThat(currentHridSettings.getInstance().getPrefix(),
+                      is(originalHridSettings.getInstance().getPrefix()));
+                  assertThat(currentHridSettings.getInstance().getStartNumber(),
+                      is(originalHridSettings.getInstance().getStartNumber()));
+                  assertThat(currentHridSettings.getHolding().getPrefix(),
+                      is(originalHridSettings.getHolding().getPrefix()));
+                  assertThat(currentHridSettings.getHolding().getStartNumber(),
+                      is(originalHridSettings.getHolding().getStartNumber()));
+                  assertThat(currentHridSettings.getItem().getPrefix(),
+                      is(originalHridSettings.getItem().getPrefix()));
+                  assertThat(currentHridSettings.getItem().getStartNumber(),
+                      is(originalHridSettings.getItem().getStartNumber()));
+                  return Promise.succeededPromise(currentHridSettings).future();
+                })
+                .setHandler(promise);
+          });
+          return promise.future();
+        })
+        .setHandler(testContext.asyncAssertSuccess(
+            v1 -> log.info("Finished canRollbackFailedTransaction()")));
   }
 
   private Future<Void> validateHrid(String hrid, String expectedValue, TestContext testContext) {
