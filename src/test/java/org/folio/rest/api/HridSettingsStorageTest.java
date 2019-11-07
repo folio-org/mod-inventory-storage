@@ -4,6 +4,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.rest.support.ResponseHandler.text;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -88,6 +89,8 @@ public class HridSettingsStorageTest extends TestBase {
 
     final Response response = getCompleted.get(5, SECONDS);
 
+    assertThat(response.getStatusCode(), is(200));
+
     final HridSettings actualHridSettings = response.getJson().mapTo(HridSettings.class);
 
     assertThat(actualHridSettings.getInstance(), is(notNullValue()));
@@ -103,6 +106,21 @@ public class HridSettingsStorageTest extends TestBase {
     assertThat(actualHridSettings.getItem().getStartNumber(), is(1));
 
     log.info("Finished canRetrieveHridSettings()");
+  }
+
+  @Test
+  public void cannotRetrieveHridSettingsWithBadTenant()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    log.info("Starting cannotRetrieveHridSettingsWithBadTenant()");
+    final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(InterfaceUrls.hridSettingsStorageUrl(""), "BAD", text(getCompleted));
+
+    final Response response = getCompleted.get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(500));
+
+    log.info("Finished cannotRetrieveHridSettingsWithBadTenant()");
   }
 
   @Test
@@ -149,6 +167,28 @@ public class HridSettingsStorageTest extends TestBase {
         is(newHridSettings.getItem().getPrefix()));
     assertThat(actualHridSettings.getItem().getStartNumber(),
         is(newHridSettings.getItem().getStartNumber()));
+
+    log.info("Finished canUpdateHridSettings()");
+  }
+
+  @Test
+  public void cannotUpdateHridSettingsWithBadTenant()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    log.info("Starting cannotUpdateHridSettingsWithBadTenant()");
+
+    final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+
+    final HridSettings newHridSettings = new HridSettings()
+        .withInstance(new HridSetting().withPrefix("inst").withStartNumber(100))
+        .withHolding(new HridSetting().withPrefix("hold").withStartNumber(200))
+        .withItem(new HridSetting().withPrefix("item").withStartNumber(500));
+
+    client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, "BAD",
+        text(putCompleted));
+
+    final Response putResponse = putCompleted.get(5, SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(500));
 
     log.info("Finished canUpdateHridSettings()");
   }
