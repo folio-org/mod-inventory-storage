@@ -13,6 +13,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -20,14 +21,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -672,18 +669,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonObject item = getResponse.getJson();
+    Item item = getResponse.getJson().mapTo(Item.class);
 
-    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getId(), is(id.toString()));
 
-    assertThat(item.getJsonObject("status").getString("name"),
+    assertThat(item.getStatus().getName(),
       is("Checked out"));
 
-    assertThat(item.getJsonObject("status").getString("date"),
-      notNullValue());
+    Date itemStatusDate = item.getStatus().getDate();
 
-    assertTrue(isValidDateFormat(ISO_8601_DATE_FORMAT,
-      item.getJsonObject("status").getString("date")));
+    assertNotNull(itemStatusDate);
+
   }
 
   @Test
@@ -697,8 +693,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
 
     createItem(itemToCreate);
-
-    final String inTransitServicePointId = UUID.randomUUID().toString();
 
     JsonObject replacement = itemToCreate.copy();
 
@@ -718,17 +712,18 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonObject item = getResponse.getJson();
 
-    assertThat(item.getString("id"), is(id.toString()));
+    Item item = getResponse.getJson().mapTo(Item.class);
 
-    assertThat(item.getJsonObject("status").getString("name"),
+    assertThat(item.getId(), is(id.toString()));
+
+    assertThat(item.getStatus().getName(),
       is("Checked out"));
 
-    assertThat(item.getJsonObject("status").getString("date"),
+    assertThat(item.getStatus().getDate(),
       notNullValue());
 
-    String changedStatusDate = item.getJsonObject("status").getString("date");
+    Date changedStatusDate = item.getStatus().getDate();
 
     JsonObject secondReplacement = itemToCreate.copy();
 
@@ -748,21 +743,18 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonObject resultItem = getResponse.getJson();
+    Item resultItem = getResponse.getJson().mapTo(Item.class);
 
-    assertThat(resultItem.getString("id"), is(id.toString()));
+    assertThat(resultItem.getId(), is(id.toString()));
 
-    assertThat(resultItem.getJsonObject("status").getString("name"),
+    assertThat(resultItem.getStatus().getName(),
       is("Available"));
 
-    assertThat(resultItem.getJsonObject("status").getString("date"),
-      notNullValue());
+    Date itemStatusDate = resultItem.getStatus().getDate();
 
-    assertThat(resultItem.getJsonObject("status").getString("date"),
-      not(changedStatusDate));
+    assertThat(itemStatusDate, notNullValue());
 
-    assertTrue(isValidDateFormat(ISO_8601_DATE_FORMAT,
-      resultItem.getJsonObject("status").getString("date")));
+    assertThat(itemStatusDate, not(changedStatusDate));
   }
 
   @Test
@@ -1250,22 +1242,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(expected.getServicePointId(), is(actual.getServicePointId()));
     assertThat(expected.getStaffMemberId(), is(actual.getStaffMemberId()));
   }
-
-
-   private boolean isValidDateFormat(String format, String value){
-     Date date = null;
-     try {
-       SimpleDateFormat sdf = new SimpleDateFormat(format);
-       sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-       date = sdf.parse(value);
-       if (!Objects.equals(value, sdf.format(date))) {
-         date = null;
-       }
-     } catch (ParseException ex) {
-       ex.printStackTrace();
-     }
-     return Objects.nonNull(date);
-   }
 
    private Response getById(UUID id)
     throws MalformedURLException, InterruptedException,
