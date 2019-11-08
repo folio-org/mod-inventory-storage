@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -462,6 +463,8 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     lastUpdate.setHandler(updateResult -> {
       if (updateResult.succeeded()) {
         allItemsUpdated.complete(null);
+      } else {
+        allItemsUpdated.completeExceptionally(updateResult.cause());
       }
     });
     return allItemsUpdated;
