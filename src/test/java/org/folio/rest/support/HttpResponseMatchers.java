@@ -34,6 +34,11 @@ public class HttpResponseMatchers {
     return statusCodeIs(httpStatus.toInt());
   }
 
+  /**
+   * Expect that the body is a JSON where errors[0].message contains the substring.
+   * @param substring the expected substring
+   * @return the matcher
+   */
   public static Matcher<Response> errorMessageContains(String substring) {
     return new TypeSafeDiagnosingMatcher<Response>() {
       @Override
@@ -63,6 +68,46 @@ public class HttpResponseMatchers {
           return true;
         }
         description.appendText("Response: " + jsonObject.encodePrettily());
+        return false;
+      }
+    };
+  }
+
+  /**
+   * Expect that the body is a JSON where errors[0].parameters[0].value equals the expected value.
+   * @param value the expected string
+   * @return the matcher
+   */
+  public static Matcher<Response> errorParametersValueIs(String value) {
+    return new TypeSafeDiagnosingMatcher<Response>() {
+      @Override
+      public void describeTo(Description description) {
+        description
+          .appendText("an response where the body is a JSON where errors[0].parameters[0].value equals '")
+          .appendText(value).appendText("'");
+      }
+
+      @Override
+      protected boolean matchesSafely(Response response, Description description) {
+        JsonObject jsonObject;
+        try {
+          jsonObject = response.getJson();
+        } catch (Exception e) {
+          description.appendText("Response where body has no or invalid JSON (" + e.getMessage() + "): " + response.getBody());
+          return false;
+        }
+        String actualValue;
+        try {
+          actualValue = jsonObject.getJsonArray("errors").getJsonObject(0).getJsonArray("parameters").getJsonObject(0).getString("value");
+        } catch (Exception e) {
+          description.appendText("Response where JSON body does not have errors[0].parameters[0].value ("
+              + e.getMessage() + "): " + jsonObject.encodePrettily());
+          return false;
+        }
+        if (value.equals(actualValue)) {
+          return true;
+        }
+        description.appendText("Actual value is '" + actualValue + "'. JSON response: " + jsonObject.encodePrettily());
         return false;
       }
     };

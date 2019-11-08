@@ -10,15 +10,15 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  instances-with-id: !include instances-with-id.json
-/instance-storage/sync:
+  instances_post: !include instances_post.json
+/instance-storage/batch/synchronous:
   displayName: Instances Batch Upload Sync API
   post:
     description: "Create a collection of instances in a single synchronous request"
     body:
       application/json:
-        type: instances-with-id
-        example: !include examples/instances-with-id.json
+        type: instances_post
+        example: !include examples/instances_post.json
     responses:
       201:
         description: "All instances have been successfully created"

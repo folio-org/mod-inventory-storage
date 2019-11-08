@@ -5,17 +5,16 @@
   "properties": {
     "holdingsRecords": {
       "description": "List of holdings records",
-      "id": "holdingsRecords",
+      "id": "holdingsRecord",
       "type": "array",
-      "className": "HoldingsRecordsWithId",
       "items": {
         "type": "object",
-        "$ref": "holdingsrecord-with-id.json"
+        "$ref": "holdingsrecord.json"
       }
     }
   },
+  "additionalProperties": false,
   "required": [
     "holdingsRecords"
   ]
 }
-

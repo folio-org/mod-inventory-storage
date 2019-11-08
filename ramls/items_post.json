@@ -7,13 +7,13 @@
       "description": "List of item records",
       "id": "items",
       "type": "array",
-      "className": "ItemsWithId",
       "items": {
         "type": "object",
         "$ref": "item.json"
       }
     }
   },
+  "additionalProperties": false,
   "required": [
     "items"
   ]

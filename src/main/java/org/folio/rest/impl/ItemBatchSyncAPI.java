@@ -4,19 +4,18 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.ItemsWithId;
-import org.folio.rest.jaxrs.resource.ItemStorageSync;
-
+import org.folio.rest.jaxrs.model.ItemsPost;
+import org.folio.rest.jaxrs.resource.ItemStorageBatchSynchronous;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
-public class ItemSyncAPI implements ItemStorageSync {
+public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
   @Validate
   @Override
-  public void postItemStorageSync(ItemsWithId entity, Map<String, String> okapiHeaders,
+  public void postItemStorageBatchSynchronous(ItemsPost entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     StorageHelper.postSync(ItemStorageAPI.ITEM_TABLE, entity.getItems(),
         okapiHeaders, asyncResultHandler, vertxContext,
-        ItemStorageSync.PostItemStorageSyncResponse::respond201);
+        ItemStorageBatchSynchronous.PostItemStorageBatchSynchronousResponse::respond201);
   }
 }

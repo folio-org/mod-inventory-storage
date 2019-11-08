@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
+import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.ResponseHandler.json;
@@ -10,6 +11,7 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -631,7 +633,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     return holdingsArray;
   }
 
-  private Response postSync(JsonArray holdingsArray) {
+  private Response postSynchronousBatch(JsonArray holdingsArray) {
     JsonObject holdingsCollection = new JsonObject().put("holdingsRecords", holdingsArray);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     client.post(holdingsStorageSyncUrl(""), holdingsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
@@ -643,21 +645,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSyncPost() {
+  public void canPostSynchronousBatch() {
     JsonArray holdingsArray = threeHoldings();
-    assertThat(postSync(holdingsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
     for (Object holding : holdingsArray) {
       assertExists((JsonObject) holding);
     }
   }
 
   @Test
-  public void cannoteSyncPostWithDuplicateId() {
+  public void cannotePostSynchronousBatchWithDuplicateId() {
     JsonArray holdingsArray = threeHoldings();
-    holdingsArray.getJsonObject(1).put("id", holdingsArray.getJsonObject(0).getString("id"));
-    Response response = postSync(holdingsArray);
-    assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
-    assertThat(response, errorMessageContains("duplicate key"));
+    String duplicateId = holdingsArray.getJsonObject(0).getString("id");
+    holdingsArray.getJsonObject(1).put("id", duplicateId);
+    assertThat(postSynchronousBatch(holdingsArray), allOf(
+        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        errorMessageContains("duplicate key"),
+        errorParametersValueIs(duplicateId)));
 
     for (int i=0; i<holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));

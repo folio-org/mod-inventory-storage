@@ -27,7 +27,7 @@ public class InterfaceUrls {
   }
 
   public static URL itemsStorageSyncUrl(String subPath) {
-    return StorageTestSuite.storageUrl("/item-storage/sync" + subPath);
+    return StorageTestSuite.storageUrl("/item-storage/batch/synchronous" + subPath);
   }
 
   public static URL holdingsStorageUrl(String subPath) {
@@ -35,7 +35,7 @@ public class InterfaceUrls {
   }
 
   public static URL holdingsStorageSyncUrl(String subPath) {
-    return StorageTestSuite.storageUrl("/holdings-storage/sync" + subPath);
+    return StorageTestSuite.storageUrl("/holdings-storage/batch/synchronous" + subPath);
   }
 
   public static URL instancesStorageUrl(String subPath) {
@@ -47,7 +47,7 @@ public class InterfaceUrls {
   }
 
   public static URL instancesStorageSyncUrl(String subPath) {
-    return StorageTestSuite.storageUrl("/instance-storage/sync" + subPath);
+    return StorageTestSuite.storageUrl("/instance-storage/batch/synchronous" + subPath);
   }
 
   public static URL instanceRelationshipsUrl(String subPath) {

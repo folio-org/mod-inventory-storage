@@ -1,5 +1,5 @@
 #%RAML 1.0
-title: Inventory Storage Holdings Batch Sync API
+title: Inventory Storage Holdings Batch Synchronous API
 version: v0.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
@@ -10,15 +10,15 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  holdingsrecords-with-id: !include holdingsrecords-with-id.json
-/holdings-storage/sync:
+  holdingsrecords_post: !include holdingsrecords_post.json
+/holdings-storage/batch/synchronous:
   displayName: Holdings Batch Upload Sync API
   post:
     description: "Create a collection of holdings in a single synchronous request"
     body:
       application/json:
-        type: holdingsrecords-with-id
-        example: !include examples/holdingsrecords-with-id.json
+        type: holdingsrecords_post
+        example: !include examples/holdingsrecords_post.json
     responses:
       201:
         description: "All holdings have been successfully created"

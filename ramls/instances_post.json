@@ -7,10 +7,9 @@
       "description": "List of instance records",
       "id": "instances",
       "type": "array",
-      "className": "InstancesWithId",
       "items": {
         "type": "object",
-        "$ref": "instance-with-id.json"
+        "$ref": "instance.json"
       }
     }
   },

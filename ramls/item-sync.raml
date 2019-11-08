@@ -10,15 +10,15 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  items-with-id: !include items-with-id.json
-/item-storage/sync:
+  items_post: !include items_post.json
+/item-storage/batch/synchronous:
   displayName: Item Batch Upload Sync API
   post:
     description: "Create a collection of items in a single synchronous request"
     body:
       application/json:
-        type: items-with-id
-        example: !include examples/items-with-id.json
+        type: items_post
+        example: !include examples/items_post.json
     responses:
       201:
         description: "All items have been successfully created"

@@ -4,6 +4,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
+import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
@@ -16,6 +17,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -1627,14 +1629,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .getString(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
   }
 
-  private void assertExists(JsonObject expectedInstance) throws Exception {
-    Response response = getById(expectedInstance.getString("id"));
-    assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
-    assertThat(response.getBody(), containsString(expectedInstance.getString("title")));
-  }
-
   @Test
-  public void canSyncPost() throws Exception {
+  public void canPostSynchronousBatch() throws Exception {
     JsonArray instancesArray = new JsonArray();
     int numberOfInstances = 1000;
 
@@ -1648,8 +1644,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.empty(createCompleted));
-    Response response = createCompleted.get(5, SECONDS);
-    assertThat(response, statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(createCompleted.get(5, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
 
     JsonObject uprooted         = instancesArray.getJsonObject(0);
     JsonObject smallAngryPlanet = instancesArray.getJsonObject(numberOfInstances / 2);
@@ -1660,7 +1655,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotSyncPostWithInvalidInstance() throws Exception {
+  public void cannotPostSynchronousBatchWithInvalidInstance() throws Exception {
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(UUID.randomUUID()));
     instancesArray.add(smallAngryPlanet(UUID.randomUUID()).put("invalidPropertyName", "bar"));
@@ -1669,9 +1664,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
-    Response response = createCompleted.get(5, SECONDS);
-    assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
-    assertThat(response, errorMessageContains("Unrecognized field \"invalidPropertyName\""));
+    assertThat(createCompleted.get(5, SECONDS), allOf(
+        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        errorMessageContains("Unrecognized field \"invalidPropertyName\"")));
 
     for (int i=0; i<instancesArray.size(); i++) {
       assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(i).getString("id")));
@@ -1679,10 +1674,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotSyncPostWithDuplicateId() throws Exception {
+  public void cannotPostSynchronousBatchWithExistingId() throws Exception {
+    UUID duplicateId = UUID.randomUUID();
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(UUID.randomUUID()));
-    instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
+    instancesArray.add(smallAngryPlanet(duplicateId));
     instancesArray.add(temeraire(UUID.randomUUID()));
     JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
 
@@ -1690,13 +1686,34 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
-    Response response = createCompleted.get(5, SECONDS);
-    assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
-    assertThat(response, errorMessageContains("duplicate"));
+    assertThat(createCompleted.get(5, SECONDS), allOf(
+        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        errorMessageContains("duplicate")));
 
     assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(0).getString("id")));
     assertExists(instancesArray.getJsonObject(1));
     assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(2).getString("id")));
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithDuplicateId() throws Exception {
+    UUID duplicateId = UUID.randomUUID();
+    JsonArray instancesArray = new JsonArray();
+    instancesArray.add(uprooted(duplicateId));
+    instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
+    instancesArray.add(temeraire(duplicateId));
+    JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
+    assertThat(createCompleted.get(5, SECONDS), allOf(
+        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        errorMessageContains("duplicate"),
+        errorParametersValueIs(duplicateId.toString())));
+
+    for (int i=0; i<instancesArray.size(); i++) {
+      assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(i).getString("id")));
+    }
   }
 
   private void createHoldings(JsonObject holdingsToCreate)
@@ -1733,22 +1750,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       response.getStatusCode(), is(201));
   }
 
-  private JsonObject smallAngryPlanet(UUID id) {
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
-    JsonArray tags = new JsonArray();
-    tags.add("test-tag");
-
-    return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
-  }
-
-  private Response getById(UUID id) {
-    return getById(id.toString());
-  }
-
   private IndividualResource updateInstance(JsonObject instance)
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
@@ -1767,6 +1768,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     return new IndividualResource(getResponse);
   }
 
+  private Response getById(UUID id) {
+    return getById(id.toString());
+  }
+
   private Response getById(String id) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(instancesStorageUrl(String.format("/" + id)), TENANT_ID, json(getCompleted));
@@ -1775,6 +1780,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private void assertExists(JsonObject expectedInstance) throws Exception {
+    Response response = getById(expectedInstance.getString("id"));
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
+    assertThat(response.getBody(), containsString(expectedInstance.getString("title")));
+  }
+
+  private JsonObject smallAngryPlanet(UUID id) {
+    JsonArray identifiers = new JsonArray();
+    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
+
+    return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
   private JsonObject nod(UUID id) {
