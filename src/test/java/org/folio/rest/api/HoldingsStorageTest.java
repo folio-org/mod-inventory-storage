@@ -654,7 +654,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotePostSynchronousBatchWithDuplicateId() {
+  public void cannotPostSynchronousBatchWithDuplicateId() {
     JsonArray holdingsArray = threeHoldings();
     String duplicateId = holdingsArray.getJsonObject(0).getString("id");
     holdingsArray.getJsonObject(1).put("id", duplicateId);
