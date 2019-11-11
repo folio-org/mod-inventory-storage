@@ -688,6 +688,11 @@
       "run": "after",
       "snippetPath": "populateEffectiveLocationForExistingItems.sql",
       "fromModuleVersion": "17.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instanceStatusUpdatedDateTrigger.sql",
+      "fromModuleVersion": "17.1.0"
     }
   ]
 }

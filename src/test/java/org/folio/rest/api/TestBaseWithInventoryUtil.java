@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
@@ -231,4 +232,24 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return instanceToCreate;
   }
 
+  IndividualResource getCatalogedInstanceType() throws Exception {
+    return getInstanceStatusByCode("cat");
+  }
+
+  IndividualResource getOtherInstanceType() throws Exception {
+    return getInstanceStatusByCode("other");
+  }
+
+  private IndividualResource getInstanceStatusByCode(String code) throws Exception {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(instanceStatusesUrl("?query=code=" + code),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+
+    JsonObject instanceStatus = getCompleted.get(5, TimeUnit.SECONDS)
+      .getJson()
+      .getJsonArray("instanceStatuses").getJsonObject(0);
+
+    return new IndividualResource(instanceStatus);
+  }
 }
