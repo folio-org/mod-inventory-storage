@@ -5,6 +5,7 @@ import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -12,8 +13,8 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -51,7 +52,6 @@ import io.vertx.core.json.JsonObject;
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   private static final String TAG_VALUE = "test-tag";
-  private static final String ISO_8601_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
   // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
@@ -649,8 +649,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     createItem(itemToCreate);
 
-    final String inTransitServicePointId = UUID.randomUUID().toString();
-
     JsonObject replacement = itemToCreate.copy();
 
     replacement
@@ -676,10 +674,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getStatus().getName(),
       is("Checked out"));
 
-    Date itemStatusDate = item.getStatus().getDate();
-
-    assertNotNull(itemStatusDate);
-
+    assertThat(item.getStatus().getDate(), withinSecondsBeforeNow(seconds(2)));
   }
 
   @Test
@@ -723,7 +718,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getStatus().getDate(),
       notNullValue());
 
-    Date changedStatusDate = item.getStatus().getDate();
+    String changedStatusDate = item.getStatus().getDate();
 
     JsonObject secondReplacement = itemToCreate.copy();
 
@@ -750,9 +745,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(resultItem.getStatus().getName(),
       is("Available"));
 
-    Date itemStatusDate = resultItem.getStatus().getDate();
+    String itemStatusDate = resultItem.getStatus().getDate();
 
-    assertThat(itemStatusDate, notNullValue());
+    assertThat(itemStatusDate, withinSecondsBeforeNow(seconds(2)));
 
     assertThat(itemStatusDate, not(changedStatusDate));
   }
