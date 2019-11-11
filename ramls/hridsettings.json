@@ -10,29 +10,26 @@
       "readonly": true,
       "$ref": "uuid.json"
     },
-    "instance": {
+    "instances": {
       "description": "The HRID settings for instances",
       "type": "object",
-      "$ref": "hridsetting.json",
-      "default": {"prefix": "in", "startNumber": 1}
+      "$ref": "hridsetting.json"
     },
-    "holding": {
+    "holdings": {
       "description": "The HRID settings for holdings",
       "type": "object",
-      "$ref": "hridsetting.json",
-      "default": {"prefix": "ho", "startNumber": 1}
+      "$ref": "hridsetting.json"
     },
-    "item": {
+    "items": {
       "description": "The HRID settings for items",
       "type": "object",
-      "$ref": "hridsetting.json",
-      "default": {"prefix": "it", "startNumber": 1}
+      "$ref": "hridsetting.json"
     }
   },
   "additionalProperties": false,
   "required": [
-    "instance",
-    "holding",
-    "item"
+    "instances",
+    "holdings",
+    "items"
   ]
 }

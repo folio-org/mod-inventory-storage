@@ -85,11 +85,11 @@ public class HridSettingsStorageParameterizedTest extends TestBase {
     final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstance(new HridSetting().withPrefix(instancePrefix)
+        .withInstances(new HridSetting().withPrefix(instancePrefix)
             .withStartNumber(instanceStartNumber))
-        .withHolding(new HridSetting().withPrefix(holdingPrefix)
+        .withHoldings(new HridSetting().withPrefix(holdingPrefix)
             .withStartNumber(holdingStartNumber))
-        .withItem(new HridSetting().withPrefix(itemPrefix).withStartNumber(itemStartNumber));
+        .withItems(new HridSetting().withPrefix(itemPrefix).withStartNumber(itemStartNumber));
 
     client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
         json(putCompleted));

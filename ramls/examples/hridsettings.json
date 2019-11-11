@@ -1,14 +1,14 @@
 {
   "id": "ca81eafd-ddb8-416a-89e1-4f772ab6afee",
-  "instance": {
+  "instances": {
     "prefix": "in",
     "startNumber": 1
   },
-  "holding": {
+  "holdings": {
     "prefix": "ho",
     "startNumber": 1
   },
-  "item": {
+  "items": {
     "prefix": "it",
     "startNumber": 1
   }

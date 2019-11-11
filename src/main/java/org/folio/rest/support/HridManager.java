@@ -33,15 +33,15 @@ public class HridManager {
   }
 
   public Future<String> getNextInstanceHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getInstance(), "instance"));
+    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getInstances(), "instance"));
   }
 
   public Future<String> getNextHoldingHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getHolding(), "holding"));
+    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getHoldings(), "holding"));
   }
 
   public Future<String> getNextItemHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getItem(), "item"));
+    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getItems(), "item"));
   }
 
   public Future<HridSettings> getHridSettings() {
@@ -134,11 +134,11 @@ public class HridManager {
       // update the instance sequence, then update the holdings sequence and finally update
       // the item sequence.
       return promise.future().compose(v -> updateSequence(conn, "instance",
-          existingHridSettings.getInstance(), hridSettings.getInstance())
-          .compose(v1 -> updateSequence(conn, "holding", existingHridSettings.getHolding(),
-                  hridSettings.getHolding())
-              .compose(v2 -> updateSequence(conn, "item", existingHridSettings.getItem(),
-                      hridSettings.getItem()))));
+          existingHridSettings.getInstances(), hridSettings.getInstances())
+          .compose(v1 -> updateSequence(conn, "holding", existingHridSettings.getHoldings(),
+                  hridSettings.getHoldings())
+              .compose(v2 -> updateSequence(conn, "item", existingHridSettings.getItems(),
+                      hridSettings.getItems()))));
     } catch (Exception e) {
       fail(promise, "Failed to update the HRID settings and sequences", e);
     }
