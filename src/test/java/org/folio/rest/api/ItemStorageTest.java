@@ -5,12 +5,15 @@ import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -635,6 +638,121 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void checkIfStatusDateExistsWhenItemStatusUpdated()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+
+    createItem(itemToCreate);
+
+    JsonObject replacement = itemToCreate.copy();
+
+    replacement
+      .put("status", new JsonObject().put("name", "Checked out"));
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    Item item = getResponse.getJson().mapTo(Item.class);
+
+    assertThat(item.getId(), is(id.toString()));
+
+    assertThat(item.getStatus().getName(),
+      is("Checked out"));
+
+    assertThat(item.getStatus().getDate(), withinSecondsBeforeNow(seconds(2)));
+  }
+
+  @Test
+  public void checkIfStatusDateChangesWhenItemStatusUpdated()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+
+    createItem(itemToCreate);
+
+    JsonObject replacement = itemToCreate.copy();
+
+    replacement
+      .put("status", new JsonObject().put("name", "Checked out"));
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+
+    Item item = getResponse.getJson().mapTo(Item.class);
+
+    assertThat(item.getId(), is(id.toString()));
+
+    assertThat(item.getStatus().getName(),
+      is("Checked out"));
+
+    assertThat(item.getStatus().getDate(),
+      notNullValue());
+
+    String changedStatusDate = item.getStatus().getDate();
+
+    JsonObject secondReplacement = itemToCreate.copy();
+
+    secondReplacement
+      .put("status", new JsonObject().put("name", "Available"));
+
+    CompletableFuture<Response> secondReplaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), secondReplacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(secondReplaceCompleted));
+
+    Response secondPutResponse = secondReplaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(secondPutResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    Item resultItem = getResponse.getJson().mapTo(Item.class);
+
+    assertThat(resultItem.getId(), is(id.toString()));
+
+    assertThat(resultItem.getStatus().getName(),
+      is("Available"));
+
+    String itemStatusDate = resultItem.getStatus().getDate();
+
+    assertThat(itemStatusDate, withinSecondsBeforeNow(seconds(2)));
+
+    assertThat(itemStatusDate, not(changedStatusDate));
+  }
+
+  @Test
   public void canDeleteAnItem() throws InterruptedException,
     MalformedURLException, TimeoutException, ExecutionException {
 
@@ -1119,7 +1237,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(expected.getServicePointId(), is(actual.getServicePointId()));
     assertThat(expected.getStaffMemberId(), is(actual.getStaffMemberId()));
   }
-
 
    private Response getById(UUID id)
     throws MalformedURLException, InterruptedException,
