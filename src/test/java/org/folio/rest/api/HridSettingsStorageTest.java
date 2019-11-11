@@ -62,13 +62,13 @@ public class HridSettingsStorageTest extends TestBase {
       Promise<JsonArray> instancePromise = Promise.promise();
       Promise<JsonArray> holdingPromise = Promise.promise();
       Promise<JsonArray> itemPromise = Promise.promise();
-      postgresClient.selectSingle("select setval('hrid_instance_seq',1,FALSE)", instancePromise);
+      postgresClient.selectSingle("select setval('hrid_instances_seq',1,FALSE)", instancePromise);
       instancePromise.future().map(v -> {
-        postgresClient.selectSingle("select setval('hrid_holding_seq',1,FALSE)", holdingPromise);
+        postgresClient.selectSingle("select setval('hrid_holdings_seq',1,FALSE)", holdingPromise);
         return null;
       });
       holdingPromise.future().map(v -> {
-        postgresClient.selectSingle("select setval('hrid_item_seq',1,FALSE)", itemPromise);
+        postgresClient.selectSingle("select setval('hrid_items_seq',1,FALSE)", itemPromise);
         return null;
       });
       itemPromise.future().map(v -> {

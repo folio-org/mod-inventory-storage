@@ -36,18 +36,18 @@ public class HridSettingsStorageParameterizedTest extends TestBase {
   @Parameters(name = "{index}: test validation failure {6}.{7} = {8}")
   public static Collection<Object[]> data() {
     return Arrays.asList(new Object[][] {
-      {"in", 999999999, "ho", 1, "it", 1, "instance", "startNumber", "999999999"},
-      {"in", 1, "ho", 999999999, "it", 1, "holding", "startNumber", "999999999"},
-      {"in", 1, "ho", 1, "it", 999999999, "item", "startNumber", "999999999"},
-      {"in", 0, "ho", 1, "it", 1, "instance", "startNumber", "0"},
-      {"in", 1, "ho", 0, "it", 1, "holding", "startNumber", "0"},
-      {"in", 1, "ho", 1, "it", 0, "item", "startNumber", "0"},
-      {"invalidprefix", 1, "ho", 1, "it", 1, "instance", "prefix", "invalidprefix"},
-      {"in", 1, "invalidprefix", 1, "it", 1, "holding", "prefix", "invalidprefix"},
-      {"in", 1, "ho", 1, "invalidprefix", 1, "item", "prefix", "invalidprefix"},
-      {"_invalid", 1, "ho", 1, "it", 1, "instance", "prefix", "_invalid"},
-      {"in", 1, "_invalid", 1, "it", 1, "holding", "prefix", "_invalid"},
-      {"in", 1, "ho", 1, "_invalid", 1, "item", "prefix", "_invalid"}
+      {"in", 999999999, "ho", 1, "it", 1, "instances", "startNumber", "999999999"},
+      {"in", 1, "ho", 999999999, "it", 1, "holdings", "startNumber", "999999999"},
+      {"in", 1, "ho", 1, "it", 999999999, "items", "startNumber", "999999999"},
+      {"in", 0, "ho", 1, "it", 1, "instances", "startNumber", "0"},
+      {"in", 1, "ho", 0, "it", 1, "holdings", "startNumber", "0"},
+      {"in", 1, "ho", 1, "it", 0, "items", "startNumber", "0"},
+      {"invalidprefix", 1, "ho", 1, "it", 1, "instances", "prefix", "invalidprefix"},
+      {"in", 1, "invalidprefix", 1, "it", 1, "holdings", "prefix", "invalidprefix"},
+      {"in", 1, "ho", 1, "invalidprefix", 1, "items", "prefix", "invalidprefix"},
+      {"_invalid", 1, "ho", 1, "it", 1, "instances", "prefix", "_invalid"},
+      {"in", 1, "_invalid", 1, "it", 1, "holdings", "prefix", "_invalid"},
+      {"in", 1, "ho", 1, "_invalid", 1, "items", "prefix", "_invalid"}
     });
   }
 
