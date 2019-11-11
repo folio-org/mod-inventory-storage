@@ -415,6 +415,10 @@
       ],
       "fullTextIndex": [
         {
+          "fieldName": "keyword",
+          "multiFieldNames": "title,contributors[*].name,identifiers[*].value"
+        },
+        {
           "fieldName": "title"
         },
         {
