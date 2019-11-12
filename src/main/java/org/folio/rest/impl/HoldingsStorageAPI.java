@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
@@ -477,8 +478,9 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     } else if (StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
       updatedCallNumber = holdingsRecord.getCallNumber();
     }
-
-    item.setEffectiveCallNumber(updatedCallNumber);
+    EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
+    components.setCallNumber(updatedCallNumber);
+    item.setEffectiveCallNumberComponents(components);
     return item;
   }
 
