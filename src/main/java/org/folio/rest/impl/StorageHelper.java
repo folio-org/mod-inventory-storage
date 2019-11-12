@@ -76,7 +76,7 @@ public final class StorageHelper {
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
     postgresClient.saveBatch(table, entities, result -> {
       if (result.failed()) {
-        logger.error(result.cause().getMessage(), result.cause());
+        logger.error("postSync: " + result.cause().getMessage(), result.cause());
         ValidationHelper.handleError(result.cause(), asyncResultHandler);
         return;
       }
