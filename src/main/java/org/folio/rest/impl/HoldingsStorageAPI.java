@@ -49,8 +49,6 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   private static final String WHERE_CLAUSE = "WHERE id = '%s'";
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
   public static final String ITEM_TABLE = "item";
-  public static final int NO_OFFSET = 0;
-  public static final int NO_LIMIT = -1;
 
   @Validate
   @Override
