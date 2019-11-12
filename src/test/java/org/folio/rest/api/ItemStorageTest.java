@@ -12,13 +12,16 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -243,6 +246,165 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  @Test
+  public void canCreateAnItemWithHoldingCallNumberAsEffectiveCallNumber()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
+
+    JsonObject itemToCreate = nod(null, holdingsRecordId);
+
+    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postResponse.getJson();
+
+    String newId = itemFromPost.getString("id");
+
+    assertThat(newId, is(notNullValue()));
+
+    Response getResponse = getById(UUID.fromString(newId));
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(newId));
+    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
+    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"),
+      is("Available"));
+    assertThat(itemFromGet.getString("materialTypeId"),
+      is(journalMaterialTypeID));
+    assertThat(itemFromGet.getString("permanentLoanTypeId"),
+      is(canCirculateLoanTypeID));
+    assertThat(itemFromGet.getString("temporaryLocationId"),
+      is(annexLibraryLocationId.toString()));
+
+    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
+    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"), is("testCallNumber"));
+  }
+
+  @Test
+  public void canCreateAnItemWithItemLevelCallNumberAsEffectiveCallNumber()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
+
+    JsonObject itemToCreate = nod(null, holdingsRecordId);
+
+    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    itemToCreate.put("itemLevelCallNumber", "testItemCallNumber");
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postResponse.getJson();
+
+    String newId = itemFromPost.getString("id");
+
+    assertThat(newId, is(notNullValue()));
+
+    Response getResponse = getById(UUID.fromString(newId));
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(newId));
+    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
+    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"),
+      is("Available"));
+    assertThat(itemFromGet.getString("materialTypeId"),
+      is(journalMaterialTypeID));
+    assertThat(itemFromGet.getString("permanentLoanTypeId"),
+      is(canCirculateLoanTypeID));
+    assertThat(itemFromGet.getString("temporaryLocationId"),
+      is(annexLibraryLocationId.toString()));
+
+    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
+    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"), is("testItemCallNumber"));
+  }
+
+  @Test
+  public void canUpdateAnItemWithHoldingCallNumberAsEffectiveCallNumber()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
+    JsonObject itemToCreate = new JsonObject();
+    String itemId = UUID.randomUUID().toString();
+    itemToCreate.put("id", itemId);
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    createItem(itemToCreate);
+
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + itemId), itemToCreate, StorageTestSuite.TENANT_ID,
+        ResponseHandler.text(completed));
+
+    Response getResponse = getById(UUID.fromString(itemId));
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"), is("testCallNumber"));
+  }
+
+  @Test
+  public void canUpdateAnItemWithItemLevelCallNumberAsEffectiveCallNumber()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
+    JsonObject itemToCreate = new JsonObject();
+    String itemId = UUID.randomUUID().toString();
+    itemToCreate.put("id", itemId);
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    itemToCreate.put("itemLevelCallNumber", "testItemCallNumber");
+    createItem(itemToCreate);
+
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + itemId), itemToCreate, StorageTestSuite.TENANT_ID,
+        ResponseHandler.text(completed));
+
+    Response getResponse = getById(UUID.fromString(itemId));
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"), is("testItemCallNumber"));
   }
 
   @Test
@@ -687,6 +849,121 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(inTransitServicePointId));
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  @Test
+  public void checkIfStatusDateExistsWhenItemStatusUpdated()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+
+    createItem(itemToCreate);
+
+    JsonObject replacement = itemToCreate.copy();
+
+    replacement
+      .put("status", new JsonObject().put("name", "Checked out"));
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    Item item = getResponse.getJson().mapTo(Item.class);
+
+    assertThat(item.getId(), is(id.toString()));
+
+    assertThat(item.getStatus().getName(),
+      is("Checked out"));
+
+    assertThat(item.getStatus().getDate(), withinSecondsBeforeNow(seconds(2)));
+  }
+
+  @Test
+  public void checkIfStatusDateChangesWhenItemStatusUpdated()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+
+    createItem(itemToCreate);
+
+    JsonObject replacement = itemToCreate.copy();
+
+    replacement
+      .put("status", new JsonObject().put("name", "Checked out"));
+
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), replacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+
+    Item item = getResponse.getJson().mapTo(Item.class);
+
+    assertThat(item.getId(), is(id.toString()));
+
+    assertThat(item.getStatus().getName(),
+      is("Checked out"));
+
+    assertThat(item.getStatus().getDate(),
+      notNullValue());
+
+    String changedStatusDate = item.getStatus().getDate();
+
+    JsonObject secondReplacement = itemToCreate.copy();
+
+    secondReplacement
+      .put("status", new JsonObject().put("name", "Available"));
+
+    CompletableFuture<Response> secondReplaceCompleted = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl(String.format("/%s", id)), secondReplacement,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(secondReplaceCompleted));
+
+    Response secondPutResponse = secondReplaceCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(secondPutResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    Item resultItem = getResponse.getJson().mapTo(Item.class);
+
+    assertThat(resultItem.getId(), is(id.toString()));
+
+    assertThat(resultItem.getStatus().getName(),
+      is("Available"));
+
+    String itemStatusDate = resultItem.getStatus().getDate();
+
+    assertThat(itemStatusDate, withinSecondsBeforeNow(seconds(2)));
+
+    assertThat(itemStatusDate, not(changedStatusDate));
   }
 
   @Test
@@ -1174,7 +1451,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(expected.getServicePointId(), is(actual.getServicePointId()));
     assertThat(expected.getStaffMemberId(), is(actual.getStaffMemberId()));
   }
-
 
    private Response getById(UUID id)
     throws MalformedURLException, InterruptedException,
