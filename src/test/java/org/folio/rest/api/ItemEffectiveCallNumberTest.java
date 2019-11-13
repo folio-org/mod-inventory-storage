@@ -12,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
@@ -46,16 +47,18 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
 
     UUID holding = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
+    EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
+    item.setEffectiveCallNumberComponents(components);
 
     String query = String.format("INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
         item.getId(), mapper.writeValueAsString(item));
     runSql(query);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumber(), is(nullValue()));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is(nullValue()));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumber(), is("testCallNumber"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is("testCallNumber"));
   }
 
   @Test
@@ -65,7 +68,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item item = buildItem(holding, null, null);
     createItem(item);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumber(), is("testCallNumber"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is("testCallNumber"));
 
     // Update holdings directly without updating item
     String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb_set(jsonb, '{callNumber}', '\"%s\"') WHERE id = '%s';";
@@ -73,12 +76,12 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     runSql(query);
 
     assertThat(getHoldings(holding).getCallNumber(), is("updatedCallNumber"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumber(), is("testCallNumber"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is("testCallNumber"));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
     assertThat(getHoldings(holding).getCallNumber(), is("updatedCallNumber"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumber(), is("updatedCallNumber"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is("updatedCallNumber"));
   }
 
   @Test
@@ -87,7 +90,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item item = buildItem(holding, null, null);
     createItem(item);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumber(), is("testCallNumber"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is("testCallNumber"));
 
     // Update item directly without updating item effective call number
     String template = "UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumber}', '\"%s\"') WHERE id = '%s';";
@@ -97,14 +100,14 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item updatedItem = getItem(item.getId());
 
     assertThat(updatedItem.getItemLevelCallNumber(), is("updatedCallNumber"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumber(), is("testCallNumber"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is("testCallNumber"));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
     Item populatedItem = getItem(item.getId());
 
     assertThat(populatedItem.getItemLevelCallNumber(), is("updatedCallNumber"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumber(), is("updatedCallNumber"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is("updatedCallNumber"));
   }
 
   private Item getItem(String id) throws Exception {
