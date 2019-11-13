@@ -335,7 +335,8 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                     postgresClient.startTx(connection -> {
                       updateItemEffectiveCallNumbersByHoldings(connection, postgresClient, entity).setHandler(updateResult -> {
                         if (updateResult.succeeded()) {
-                          postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity, null, false,
+                          postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity,
+                            "jsonb", String.format(WHERE_CLAUSE, holdingsRecordId), false,
                             update -> {
                               try {
                                 if (update.succeeded()) {
