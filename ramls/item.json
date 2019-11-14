@@ -58,6 +58,10 @@
         "callNumber": {
           "type": "string",
           "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item."
+        },
+        "callNumberSuffix": {
+          "type": "string",
+          "description": "Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item."
         }
       }
     },
