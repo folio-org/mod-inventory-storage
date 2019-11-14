@@ -8,10 +8,8 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang.StringUtils;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
@@ -23,6 +21,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.AsyncResult;
@@ -471,15 +470,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   }
 
   private Item updateItemEffectiveCallNumber(Item item, HoldingsRecord holdingsRecord) {
-    String updatedCallNumber = null;
-    if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
-      updatedCallNumber = item.getItemLevelCallNumber();
-    } else if (StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
-      updatedCallNumber = holdingsRecord.getCallNumber();
-    }
-    EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
-    components.setCallNumber(updatedCallNumber);
-    item.setEffectiveCallNumberComponents(components);
+    item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(holdingsRecord, item));
     return item;
   }
 
