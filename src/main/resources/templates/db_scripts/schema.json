@@ -416,6 +416,10 @@
       ],
       "fullTextIndex": [
         {
+          "fieldName": "keyword",
+          "multiFieldNames": "title,contributors[*].name,identifiers[*].value"
+        },
+        {
           "fieldName": "title"
         },
         {
@@ -699,6 +703,11 @@
     {
       "run": "after",
       "snippetPath": "instanceStatusUpdatedDateTrigger.sql",
+      "fromModuleVersion": "17.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "updateItemStatusDate.sql",
       "fromModuleVersion": "17.1.0"
     }
   ]

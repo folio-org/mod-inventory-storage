@@ -1,8 +1,8 @@
 package org.folio.rest.impl;
 
+import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 import static org.folio.rest.support.ResponseUtil.copyResponseWithNewEntity;
 import static org.folio.rest.support.ResponseUtil.hasCreatedStatus;
-import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -10,6 +10,8 @@ import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.Status;
@@ -31,6 +33,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class ItemStorageAPI implements ItemStorage {
 
   static final String ITEM_TABLE = "item";
+  static final String HOLDINGS_RECORD_TABLE = "holdings_record";
 
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
   private static final String DEFAULT_STATUS_NAME = "Available";
@@ -61,19 +64,23 @@ public class ItemStorageAPI implements ItemStorage {
       entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
     }
 
-    PgUtil.post(ITEM_TABLE, entity, okapiHeaders, vertxContext,
-      PostItemStorageItemsResponse.class, postResponse -> {
-        // Have to re-read item to get calculated fields like effectiveLocationId
-        if (hasCreatedStatus(postResponse.result())) {
-          readItemById(entity.getId(), okapiHeaders, vertxContext)
-            // copy original response to save all headers etc. and set
-            // the retrieved item or set the original entity in case item is null
-            .thenApply(item -> copyResponseWithNewEntity(postResponse.result(), firstNonNull(item, entity)))
-            .thenAccept(respToSend -> asyncResultHandler.handle(Future.succeededFuture(respToSend)));
-        } else {
-          asyncResultHandler.handle(postResponse);
-        }
-      });
+    setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(i ->
+      {
+        PgUtil.post(ITEM_TABLE, i, okapiHeaders, vertxContext,
+          PostItemStorageItemsResponse.class, postResponse -> {
+            // Have to re-read item to get calculated fields like effectiveLocationId
+            if (hasCreatedStatus(postResponse.result())) {
+              readItemById(i.getId(), okapiHeaders, vertxContext)
+                // copy original response to save all headers etc. and set
+                // the retrieved item or set the original entity in case item is null
+                .thenApply(item -> copyResponseWithNewEntity(postResponse.result(), firstNonNull(item, entity)))
+                .thenAccept(respToSend -> asyncResultHandler.handle(Future.succeededFuture(respToSend)));
+            } else {
+              asyncResultHandler.handle(postResponse);
+            }
+          });
+      }
+    );
   }
 
   @Validate
@@ -117,9 +124,10 @@ public class ItemStorageAPI implements ItemStorage {
       String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
-    PgUtil.put(ITEM_TABLE, entity, itemId, okapiHeaders, vertxContext,
+    setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(item -> {
+      PgUtil.put(ITEM_TABLE, item, itemId, okapiHeaders, vertxContext,
         PutItemStorageItemsByItemIdResponse.class, asyncResultHandler);
+    });
   }
 
   @Validate
@@ -131,6 +139,39 @@ public class ItemStorageAPI implements ItemStorage {
 
     PgUtil.deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
         DeleteItemStorageItemsByItemIdResponse.class, asyncResultHandler);
+  }
+
+  private CompletableFuture<Item> setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
+    CompletableFuture<Item> completableFuture = null;
+    EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
+    if (item.getItemLevelCallNumber() != null && !item.getItemLevelCallNumber().isEmpty()) {
+      components.setCallNumber(item.getItemLevelCallNumber());
+      item.setEffectiveCallNumberComponents(components);
+      completableFuture = CompletableFuture.supplyAsync(() -> item);
+    } else {
+      if (item.getHoldingsRecordId() != null && !item.getHoldingsRecordId().isEmpty()) {
+        completableFuture = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).thenCombineAsync(CompletableFuture.supplyAsync(() -> item), (hr, i) ->
+        {
+          components.setCallNumber(hr.getCallNumber());
+          i.setEffectiveCallNumberComponents(components);
+          return i;
+        });
+      } else {
+        completableFuture = CompletableFuture.supplyAsync(() -> item);
+      }
+    }
+
+    return completableFuture;
+  }
+
+  private CompletableFuture<HoldingsRecord> getHoldingsRecordById(Map<String, String> okapiHeaders, Context vertxContext, String holdingsRecordId) {
+    final CompletableFuture<HoldingsRecord> readHoldingsRecordFuture = new CompletableFuture<>();
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
+    .getById(HOLDINGS_RECORD_TABLE, holdingsRecordId, HoldingsRecord.class,
+      response -> {
+        readHoldingsRecordFuture.complete(response.result());
+    });
+    return readHoldingsRecordFuture;
   }
 
   private CompletableFuture<Item> readItemById(

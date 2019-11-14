@@ -51,6 +51,16 @@
       "type": "string",
       "description": "Identifies the source of the call number, e.g., LCC, Dewey, NLM, etc."
     },
+    "effectiveCallNumberComponents": {
+      "type": "object",
+      "description": "Elements of a full call number generated from the item or holding",
+      "properties": {
+        "callNumber": {
+          "type": "string",
+          "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item."
+        }
+      }
+    },
     "volume": {
       "type": "string",
       "description": "Volume is intended for monographs when a multipart monograph (e.g. a biography of George Bernard Shaw in three volumes)."
@@ -195,7 +205,7 @@
           "type": "string"
         },
         "date": {
-          "description": "Date of a status",
+          "description": "Date and time when the status was last changed",
           "type": "string"
         }
       },
