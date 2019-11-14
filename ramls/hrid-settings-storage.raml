@@ -1,0 +1,72 @@
+#%RAML 1.0
+title: HRID Settings Storage
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: HRID Settings Storage API
+    content: <b>Storage for Human Readable Identifier (HRID) Settings</b>
+
+types:
+  HridSettings: !include hridsettings.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/hrid-settings-storage:
+  /hrid-settings:
+    displayName: HRID Settings
+    description: Service endpoints that manage HRID settings
+    get:
+      description: Return the HRID settings
+      responses:
+        200:
+          description: Returns the user account info
+          body:
+            application/json:
+              schema: HridSettings
+              example: !include examples/hridsettings.json
+        401:
+          description: Not authorized to perform requested action
+          body:
+            text/plain:
+              example: unable to get account -- unauthorized
+        403:
+          description: Access Denied
+          body:
+            text/plain:
+              example: Access Denied
+        500:
+          description: Internal server error, e.g. due to misconfiguration
+          body:
+            text/plain:
+              example: internal server error, contact administrator
+    put:
+      description: Modifies HRID settings
+      is: [validate]
+      body:
+        application/json:
+          type: HridSettings
+          example:
+            strict: false
+            value: !include examples/hridsettings.json
+      responses:
+        204:
+          description: Item successfully updated
+        401:
+          description: Not authorized to perform requested action
+          body:
+            text/plain:
+              example: unable to get account -- unauthorized
+        403:
+          description: Access Denied
+          body:
+            text/plain:
+              example: Access Denied
+        500:
+          description: Internal server error, e.g. due to misconfiguration
+          body:
+            text/plain:
+              example: internal server error, contact administrator

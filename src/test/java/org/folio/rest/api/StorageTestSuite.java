@@ -54,6 +54,8 @@ import io.vertx.ext.sql.UpdateResult;
   ItemDamagedStatusAPIUnitTest.class,
   ItemEffectiveLocationTest.class,
   SampleDataTest.class,
+  HridSettingsStorageTest.class,
+  HridSettingsStorageParameterizedTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

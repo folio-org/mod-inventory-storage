@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "The HRID setting",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.HridSetting",
+  "properties": {
+    "prefix": {
+      "description": "A prefix to apply to the HRID",
+      "type": "string",
+      "pattern": "^[0-9a-zA-Z.-]{0,10}$"
+    },
+    "startNumber": {
+      "description": "The number from which to start generating HRIDs",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99999999
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "startNumber"
+  ]
+}
