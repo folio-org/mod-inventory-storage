@@ -180,3 +180,26 @@ _Returns_: collection of successfully created Instances, error messages for fail
 Regardless the batch size, number of parallel connections to the db is limited to 4 by default. To override the default number of concurrent db connections - "inventory.storage.parallel.db.connections.limit" program argument should be specified on module deployment.
 
 `java -Dport=%p -jar ../mod-source-record-storage/mod-source-record-storage-server/target/mod-source-record-storage-server-fat.jar -Dhttp.port=%p embed_postgres=true inventory.storage.parallel.db.connections.limit=10`
+
+# HRID Management
+
+When instances, holdings records and items are added to inventory, they will be assigned a human
+readable identifier (HRID) if one is not provided. The HRID is created using settings stored in and
+managed by this module via the `/hrid-settings-storage/hrid-settings` API.
+
+The default settings, on enabling the module, are:
+|Type     |Prefix|Start Number|First HRID String|Max HRID String|
+|---------|------|------------|-----------------|---------------|
+|Instances|in    |1           |in00000001       |in99999999     |
+|Holdings |ho    |1           |ho00000001       |ho99999999     |
+|Items    |it    |1           |it00000001       |it99999999     |
+
+The prefix is optional for each inventory type and is restricted to 10 alphanumeric characters as
+well as `.` and `-`. The start number is required. A generated HRID will consist of the prefix,
+if supplied, prepended to `0` padded 8 digit string starting from the start number. Every HRID
+generated will increment the current number of that inventory type by 1. HRID strings are case
+insensitive and must be unique or not present when adding a new inventory type.
+
+Changing the start number to a number lower than the current number is not supported and will
+likely lead to generation of duplicate HRIDs. If an inventory type is added that contains a
+duplicate HRID, the module will reject the submission.
