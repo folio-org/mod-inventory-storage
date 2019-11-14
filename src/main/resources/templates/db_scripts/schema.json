@@ -313,6 +313,7 @@
     },
     {
       "tableName": "instance",
+      "fromModuleVersion": "17.1.0",
       "withMetadata": true,
       "foreignKeys": [
         {
@@ -415,6 +416,10 @@
       ],
       "fullTextIndex": [
         {
+          "fieldName": "keyword",
+          "multiFieldNames": "title,contributors[*].name,identifiers[*].value"
+        },
+        {
           "fieldName": "title"
         },
         {
@@ -430,8 +435,7 @@
           "arraySubfield" : "value",
           "arrayModifiers": ["identifierTypeId"]
         }
-      ],
-      "customSnippetPath": "instanceHrid.sql"
+      ]
     },
     {
       "tableName": "instance_relationship",
@@ -538,6 +542,7 @@
     },
     {
       "tableName": "holdings_record",
+      "fromModuleVersion": "17.1.0",
       "withMetadata": true,
       "foreignKeys": [
         {
@@ -577,8 +582,7 @@
           "fieldName": "hrid",
           "tOps": "ADD"
         }
-      ],
-      "customSnippetPath": "holdingsRecordHrid.sql"
+      ]
     },
     {
       "tableName": "item",
@@ -670,8 +674,14 @@
           "fieldName": "barcode",
           "tOps": "ADD"
         }
-      ],
-      "customSnippetPath": "itemHrid.sql"
+      ]
+    },
+    {
+      "tableName": "hrid_settings",
+      "fromModuleVersion": "17.1.0",
+      "withMetadata": false,
+      "withAuditing": false,
+      "customSnippetPath": "hridSettings.sql"
     }
   ],
   "scripts": [
@@ -692,7 +702,17 @@
     },
     {
       "run": "after",
+      "snippetPath": "removeOldHridOperations.sql",
+      "fromModuleVersion": "17.1.0"
+    },
+    {
+      "run": "after",
       "snippetPath": "instanceStatusUpdatedDateTrigger.sql",
+      "fromModuleVersion": "17.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "updateItemStatusDate.sql",
       "fromModuleVersion": "17.1.0"
     }
   ]
