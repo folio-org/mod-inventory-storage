@@ -6,7 +6,7 @@ SET jsonb =
         CASE
           WHEN it.jsonb->'effectiveCallNumberComponents' IS NULL THEN
             jsonb_set(it.jsonb, '{effectiveCallNumberComponents}',
-              jsonb_set('{"callNumber":null}', '{callNumber}', it.jsonb->'itemLevelCallNumber'))
+              jsonb_build_object('callNumber', it.jsonb->'itemLevelCallNumber'))
           ELSE
             jsonb_set(it.jsonb, '{effectiveCallNumberComponents,callNumber}', it.jsonb->'itemLevelCallNumber')
         END
@@ -15,7 +15,7 @@ SET jsonb =
         CASE
           WHEN it.jsonb->'effectiveCallNumberComponents' IS NULL THEN
             jsonb_set(it.jsonb, '{effectiveCallNumberComponents}',
-              jsonb_set('{"callNumber":null}', '{callNumber}',hr.jsonb->'callNumber'))
+              jsonb_build_object('callNumber', hr.jsonb->'callNumber'))
           ELSE
             jsonb_set(it.jsonb, '{effectiveCallNumberComponents,callNumber}', hr.jsonb->'callNumber')
         END

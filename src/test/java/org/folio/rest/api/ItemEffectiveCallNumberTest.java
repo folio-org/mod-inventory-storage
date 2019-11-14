@@ -29,7 +29,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
   private static Vertx vertx = Vertx.vertx();
   private static UUID instanceId = UUID.randomUUID();
   private static final String POPULATE_EFFECTIVE_CALL_NUMBER_SQL = ResourceUtil
-      .asString("templates/db_scripts/populateEffectiveCallNumberForExistingItems.sql")
+      .asString("templates/db_scripts/populateEffectiveCallNumberComponentsForExistingItems.sql")
       .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
 
   private ObjectMapper mapper = new ObjectMapper();
