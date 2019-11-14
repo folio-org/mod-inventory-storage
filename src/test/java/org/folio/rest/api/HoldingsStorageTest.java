@@ -716,7 +716,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstUpdatedItemFromGet.containsKey("effectiveCallNumber"), is(false));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("callNumber"), is(false));
   }
 
   @Test
@@ -780,6 +780,212 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(updatedItemFromGet.getString("id"), is(itemId));
     assertThat(updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"), is("itemLevelCallNumber"));
+  }
+
+  @Test
+  public void updatingHoldingsUpdatesItemEffectiveCallNumberSuffix()
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withCallNumberSuffix("testCallNumberSuffix")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("holdingsRecordId", holdingId.toString());
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+
+    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
+    Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
+
+    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
+    JsonObject secondItemFromPost = postSecondItemResponse.getJson();
+
+    String firstItemId = firstItemFromPost.getString("id");
+    String secondItemId = secondItemFromPost.getString("id");
+
+    assertThat(firstItemId, is(notNullValue()));
+    assertThat(secondItemId, is(notNullValue()));
+
+    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
+    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
+
+    Response getFirstItemResponse = get(getFirstItemUrl);
+    Response getSecondItemResponse = get(getSecondItemUrl);
+
+    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
+    JsonObject secondItemFromGet = getSecondItemResponse.getJson();
+
+    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("testCallNumberSuffix"));
+    assertThat(secondItemFromGet.getString("id"), is(secondItemId));
+    assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("testCallNumberSuffix"));
+
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    holding.remove("callNumberSuffix");
+    holding.put("callNumberSuffix", "updatedCallNumberSuffix");
+
+    Response putResponse = update(holdingsUrl, holding);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(holding.getString("callNumberSuffix"), is("updatedCallNumberSuffix"));
+
+    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
+    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
+
+    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
+    JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
+
+    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("updatedCallNumberSuffix"));
+    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
+    assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("updatedCallNumberSuffix"));
+  }
+
+  @Test
+  public void clearingHoldingsCallNumberSuffixUpdatesItemEffectiveCallNumberSuffix()
+      throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withCallNumberSuffix("testCallNumberSuffix")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("holdingsRecordId", holdingId.toString());
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+
+    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
+
+    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
+
+    String firstItemId = firstItemFromPost.getString("id");
+
+    assertThat(firstItemId, is(notNullValue()));
+
+    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
+
+    Response getFirstItemResponse = get(getFirstItemUrl);
+
+    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
+
+    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("testCallNumberSuffix"));
+
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    holding.remove("callNumberSuffix");
+
+    Response putResponse = update(holdingsUrl, holding);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(holding.containsKey("callNumberSuffix"), is(false));
+
+    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
+
+    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
+
+    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("callNumberSuffix"), is(false));
+  }
+
+  @Test
+  public void holdingsCallNumberSuffixDoesNotUpdateItemWithItemLevelCallNumberSuffix()
+      throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withCallNumberSuffix("holdingsCallNumberSuffix")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("holdingsRecordId", holdingId.toString());
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("itemLevelCallNumberSuffix", "itemLevelCallNumberSuffix");
+
+    Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
+
+    assertThat(postItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postItemResponse.getJson();
+
+    String itemId = itemFromPost.getString("id");
+
+    assertThat(itemId, is(notNullValue()));
+
+    URL getItemUrl = itemsStorageUrl(String.format("/%s", itemId));
+
+    Response getItemResponse = get(getItemUrl);
+
+    JsonObject itemFromGet = getItemResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(itemId));
+    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("itemLevelCallNumberSuffix"));
+
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    holding.remove("callNumberSuffix");
+    holding.put("callNumberSuffix", "updatedHoldingCallNumberSuffix");
+
+    Response putResponse = update(holdingsUrl, holding);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getUpdatedItemResponse = get(getItemUrl);
+
+    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
+
+    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(updatedItemFromGet.getString("id"), is(itemId));
+    assertThat(updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("itemLevelCallNumberSuffix"));
   }
 
   public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
