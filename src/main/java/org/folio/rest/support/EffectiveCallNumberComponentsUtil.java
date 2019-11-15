@@ -18,7 +18,9 @@ public final class EffectiveCallNumberComponentsUtil {
     return updateComponents(new EffectiveCallNumberComponents(), holdings, item);
   }
 
-  public static EffectiveCallNumberComponents updateComponents(EffectiveCallNumberComponents components, HoldingsRecord holdings, Item item) {
+  private static EffectiveCallNumberComponents updateComponents(
+    EffectiveCallNumberComponents components, HoldingsRecord holdings, Item item) {
+
     String updatedCallNumber = null;
     if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
       updatedCallNumber = item.getItemLevelCallNumber();

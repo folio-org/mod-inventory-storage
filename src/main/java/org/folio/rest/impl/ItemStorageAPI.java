@@ -11,7 +11,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
@@ -145,7 +144,7 @@ public class ItemStorageAPI implements ItemStorage {
 
   private CompletableFuture<Item> setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
     CompletableFuture<Item> completableFuture = null;
-    if (StringUtils.isNotBlank(item.getItemLevelCallNumber()) && StringUtils.isNotBlank(item.getItemLevelCallNumberSuffix())) {
+    if (shouldRetreiveHoldingsRecord(item)) {
       item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(null, item));
       completableFuture = CompletableFuture.supplyAsync(() -> item);
     } else {
@@ -179,5 +178,10 @@ public class ItemStorageAPI implements ItemStorage {
       );
 
     return readItemFuture;
+  }
+
+  private boolean shouldRetreiveHoldingsRecord(Item item) {
+    return StringUtils.isNotBlank(item.getItemLevelCallNumber())
+      && StringUtils.isNotBlank(item.getItemLevelCallNumberSuffix());
   }
 }
