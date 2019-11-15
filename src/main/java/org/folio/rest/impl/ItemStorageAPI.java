@@ -144,14 +144,14 @@ public class ItemStorageAPI implements ItemStorage {
 
   private CompletableFuture<Item> setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
     CompletableFuture<Item> completableFuture = null;
-    if (shouldNotRetreiveHoldingsRecord(item)) {
+    if (shouldNotRetrieveHoldingsRecord(item)) {
       item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(null, item));
       completableFuture = CompletableFuture.supplyAsync(() -> item);
     } else {
-      completableFuture = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).thenCombineAsync(CompletableFuture.supplyAsync(() -> item), (hr, i) ->
+      completableFuture = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).thenApplyAsync(hr ->
       {
-        i.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(hr, item));
-        return i;
+        item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(hr, item));
+        return item;
       });
     }
 
@@ -180,7 +180,7 @@ public class ItemStorageAPI implements ItemStorage {
     return readItemFuture;
   }
 
-  private boolean shouldNotRetreiveHoldingsRecord(Item item) {
+  private boolean shouldNotRetrieveHoldingsRecord(Item item) {
     return StringUtils.isNotBlank(item.getItemLevelCallNumber())
       && StringUtils.isNotBlank(item.getItemLevelCallNumberSuffix());
   }
