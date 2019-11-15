@@ -162,4 +162,12 @@ public class InterfaceUrls {
   public static URL locLibraryStorageUrl(String subPath) {
     return StorageTestSuite.storageUrl("/location-units/libraries" + subPath);
   }
+
+  public static URL instancesStorageBatchInstancesUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/instance-storage/batch/instances" + subPath);
+  }
+
+  public static URL hridSettingsStorageUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/hrid-settings-storage/hrid-settings" + subPath);
+  }
 }
