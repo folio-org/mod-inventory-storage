@@ -1,0 +1,40 @@
+#%RAML 1.0
+title: Inventory Storage Holdings Batch Synchronous API
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: "Inventory Storage Holdings Batch Sync API"
+    content: <b>Batch API for synchronously uploading holdings records into the inventory</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  holdingsrecords_post: !include holdingsrecords_post.json
+/holdings-storage/batch/synchronous:
+  displayName: Holdings Batch Upload Sync API
+  post:
+    description: "Create a collection of holdings in a single synchronous request"
+    body:
+      application/json:
+        type: holdingsrecords_post
+        example: !include examples/holdingsrecords_post.json
+    responses:
+      201:
+        description: "All holdings have been successfully created"
+      413:
+        description: "Payload Too Large"
+        body:
+          text/plain:
+            example: "Payload Too Large"
+      422:
+        description: "Unprocessable Entity"
+        body:
+          application/json:
+            type: errors
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+

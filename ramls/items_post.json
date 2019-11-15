@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of item records",
+  "type": "object",
+  "properties": {
+    "items": {
+      "description": "List of item records",
+      "id": "items",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "item.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "items"
+  ]
+}
