@@ -43,7 +43,7 @@ public class JsonObjectMatchers {
     };
   }
 
-  public static Matcher<List<JsonObject>> hasSoleMessgeContaining(String message) {
+  public static Matcher<List<JsonObject>> hasSoleMessageContaining(String message) {
     return new TypeSafeMatcher<List<JsonObject>>() {
       @Override
       public void describeTo(Description description) {

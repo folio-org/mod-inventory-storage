@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
@@ -120,7 +120,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     JsonErrorResponse response = createMaterialType.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+    assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
 
   @Test
