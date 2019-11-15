@@ -144,7 +144,7 @@ public class ItemStorageAPI implements ItemStorage {
 
   private CompletableFuture<Item> setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
     CompletableFuture<Item> completableFuture = null;
-    if (shouldRetreiveHoldingsRecord(item)) {
+    if (shouldNotRetreiveHoldingsRecord(item)) {
       item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(null, item));
       completableFuture = CompletableFuture.supplyAsync(() -> item);
     } else {
@@ -180,7 +180,7 @@ public class ItemStorageAPI implements ItemStorage {
     return readItemFuture;
   }
 
-  private boolean shouldRetreiveHoldingsRecord(Item item) {
+  private boolean shouldNotRetreiveHoldingsRecord(Item item) {
     return StringUtils.isNotBlank(item.getItemLevelCallNumber())
       && StringUtils.isNotBlank(item.getItemLevelCallNumberSuffix());
   }
