@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of holdings records",
+  "type": "object",
+  "properties": {
+    "holdingsRecords": {
+      "description": "List of holdings records",
+      "id": "holdingsRecord",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "holdingsrecord.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "holdingsRecords"
+  ]
+}

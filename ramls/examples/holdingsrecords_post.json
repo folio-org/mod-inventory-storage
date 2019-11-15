@@ -1,0 +1,44 @@
+{
+  "holdingsRecords": [
+    {
+      "id": "65cb2bf0-d4c2-4886-8ad0-b76f1ba75d61",
+      "instanceId": "cd28da0f-a3e4-465c-82f1-acade4e8e170",
+      "permanentLocationId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
+      "holdingsStatements": [
+        {
+          "statement": "Line 1",
+          "note": "Note to line 1"
+        },
+        {
+          "statement": "Line 2",
+          "note": "Note to line2"
+        }
+      ],
+      "tags" : {
+        "tagList" : [
+          "important"
+        ]
+      }
+    },
+    {
+      "id": "807084d2-1b6c-4448-a566-d3d9ebfd1c08",
+      "instanceId": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+      "permanentLocationId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
+      "holdingsStatements": [
+        {
+          "statement": "Line 1",
+          "note": "Note to line 1"
+        },
+        {
+          "statement": "Line 2",
+          "note": "Note to line2"
+        }
+      ],"tags" : {
+      "tagList" : [
+        "important"
+        ]
+      }
+    }
+  ]
+}
+

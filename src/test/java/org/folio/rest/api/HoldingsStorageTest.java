@@ -1,9 +1,17 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
+import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
+import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -22,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang.StringUtils;
+import org.folio.HttpStatus;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -232,7 +241,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+    assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
 
   @Test
@@ -804,6 +813,62 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       is("permanentLocationId"));
   }
 
+  /**
+   * Create three instances, and for each of them return a JsonObject of a new holding belonging to it.
+   * The holdings are not created.
+   */
+  private JsonArray threeHoldings() {
+    JsonArray holdingsArray = new JsonArray();
+    for (int i=0; i<3; i++) {
+      UUID instanceId = UUID.randomUUID();
+      try {
+        instancesClient.create(smallAngryPlanet(instanceId));
+      } catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
+        throw new RuntimeException(e);
+      }
+      holdingsArray.add(new JsonObject()
+          .put("id", UUID.randomUUID().toString())
+          .put("instanceId", instanceId.toString())
+          .put("permanentLocationId", mainLibraryLocationId.toString()));
+    }
+    return holdingsArray;
+  }
+
+  private Response postSynchronousBatch(JsonArray holdingsArray) {
+    JsonObject holdingsCollection = new JsonObject().put("holdingsRecords", holdingsArray);
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(holdingsStorageSyncUrl(""), holdingsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
+    try {
+      return createCompleted.get(5, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  public void canPostSynchronousBatch() {
+    JsonArray holdingsArray = threeHoldings();
+    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+    for (Object holding : holdingsArray) {
+      assertExists((JsonObject) holding);
+    }
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithDuplicateId() {
+    JsonArray holdingsArray = threeHoldings();
+    String duplicateId = holdingsArray.getJsonObject(0).getString("id");
+    holdingsArray.getJsonObject(1).put("id", duplicateId);
+    assertThat(postSynchronousBatch(holdingsArray), allOf(
+        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        errorMessageContains("duplicate key"),
+        errorParametersValueIs(duplicateId)));
+
+    for (int i=0; i<holdingsArray.size(); i++) {
+      assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
+    }
+  }
+
   private JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
@@ -846,6 +911,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   private Predicate<JsonObject> filterById(UUID holdingId) {
     return holding -> StringUtils.equals(holding.getString("id"), holdingId.toString());
+  }
+
+  private Response getById(String id) {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(holdingsStorageUrl("/" + id), TENANT_ID, json(getCompleted));
+    try {
+      return getCompleted.get(5, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void assertExists(JsonObject expectedHolding) {
+    Response response = getById(expectedHolding.getString("id"));
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
+    assertThat(response.getBody(), containsString(expectedHolding.getString("instanceId")));
   }
 
   private Response create(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {

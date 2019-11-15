@@ -1,12 +1,20 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessgeContaining;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
+import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
+import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -33,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.LastCheckIn;
@@ -643,7 +652,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+    assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
 
   @Test
@@ -668,11 +677,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+    assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
 
-  //Test invalid due to data format change
-  /*
   @Test
   public void cannotProvideAdditionalPropertiesInItemLocation()
     throws InterruptedException,
@@ -680,22 +687,70 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     TimeoutException,
     ExecutionException {
 
-    JsonObject requestWithAdditionalProperty = nod();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID(),holdingsRecordId);
 
     requestWithAdditionalProperty
       .put("location", new JsonObject().put("somethingAdditional", "foo"));
 
     CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
 
-    client.post(itemsUrl(), requestWithAdditionalProperty,
+    client.post(itemsStorageUrl(""), requestWithAdditionalProperty,
       StorageTestSuite.TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
     JsonErrorResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
-    assertThat(response.getErrors(), hasSoleMessgeContaining("Unrecognized field"));
+    assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
-*/
+
+  private JsonArray threeItems() {
+    try {
+      UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+      JsonArray jsonArray = new JsonArray()
+          .add(nod(holdingsRecordId))
+          .add(smallAngryPlanet(holdingsRecordId))
+          .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+      return jsonArray;
+    } catch (MalformedURLException | ExecutionException | InterruptedException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Response postSynchronousBatch(JsonArray itemsArray) {
+    JsonObject itemsCollection = new JsonObject().put("items", itemsArray);
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(itemsStorageSyncUrl(""), itemsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
+    try {
+      return createCompleted.get(5, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Test
+  public void canPostSynchronousBatch() {
+    JsonArray itemsArray = threeItems();
+    assertThat(postSynchronousBatch(itemsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+    for (Object item : itemsArray) {
+      assertExists((JsonObject) item);
+    }
+  }
+
+  @Test
+  public void cannotSyncPostWithDuplicateId() {
+    JsonArray itemsArray = threeItems();
+    String duplicateId = itemsArray.getJsonObject(0).getString("id");
+    itemsArray.getJsonObject(1).put("id", duplicateId);
+    assertThat(postSynchronousBatch(itemsArray), allOf(
+        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        errorMessageContains("duplicate key"),
+        errorParametersValueIs(duplicateId)));
+    for (int i=0; i<itemsArray.size(); i++) {
+      assertGetNotFound(itemsStorageUrl("/" + itemsArray.getJsonObject(i).getString("id")));
+    }
+  }
 
   @Test
   public void canReplaceAnItemAtSpecificLocation()
@@ -1477,6 +1532,22 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     return searchCompleted.get(5, TimeUnit.SECONDS).getJson()
       .mapTo(Items.class);
+  }
+
+  private Response getById(String id) {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(itemsStorageUrl("/" + id), TENANT_ID, json(getCompleted));
+    try {
+      return getCompleted.get(5, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void assertExists(JsonObject expectedItem) {
+    Response response = getById(expectedItem.getString("id"));
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
+    assertThat(response.getBody(), containsString(expectedItem.getString("holdingsRecordId")));
   }
 
   private JsonObject addTags(String tagValue, UUID holdingsRecordId) {

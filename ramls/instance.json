@@ -5,7 +5,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "The system assigned unique ID of the instance record; a UUID",
+      "description": "The unique ID of the instance record; a UUID",
       "$ref": "uuid.json"
     },
     "hrid": {

@@ -1,0 +1,40 @@
+#%RAML 1.0
+title: Inventory Storage Instance Batch Sync API
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: "Inventory Storage Instance Batch Sync API"
+    content: <b>Batch API for synchronously uploading instances into the inventory</b>
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+  instances_post: !include instances_post.json
+/instance-storage/batch/synchronous:
+  displayName: Instances Batch Upload Sync API
+  post:
+    description: "Create a collection of instances in a single synchronous request"
+    body:
+      application/json:
+        type: instances_post
+        example: !include examples/instances_post.json
+    responses:
+      201:
+        description: "All instances have been successfully created"
+      413:
+        description: "Payload Too Large"
+        body:
+          text/plain:
+            example: "Payload Too Large"
+      422:
+        description: "Unprocessable Entity"
+        body:
+          application/json:
+            type: errors
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+
