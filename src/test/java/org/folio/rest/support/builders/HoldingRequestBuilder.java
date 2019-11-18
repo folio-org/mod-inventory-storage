@@ -12,6 +12,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private final UUID temporaryLocationId;
   private JsonObject tags;
   private String callNumber;
+  private String callNumberPrefix;
   private String callNumberSuffix;
 
   public HoldingRequestBuilder() {
@@ -19,6 +20,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       null,
       null,
       UUID.randomUUID(),
+      null,
       null,
       null,
       null,
@@ -32,6 +34,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     UUID temporaryLocationId,
     JsonObject tags,
     String callNumber,
+    String callNumberPrefix,
     String callNumberSuffix) {
 
     this.id = id;
@@ -40,6 +43,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     this.temporaryLocationId = temporaryLocationId;
     this.tags = tags;
     this.callNumber = callNumber;
+    this.callNumberPrefix = callNumberPrefix;
     this.callNumberSuffix = callNumberSuffix;
   }
 
@@ -53,6 +57,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "temporaryLocationId", temporaryLocationId);
     put(request, "tags", tags);
     put(request, "callNumber", callNumber);
+    put(request, "callNumberPrefix", callNumberPrefix);
     put(request, "callNumberSuffix", callNumberSuffix);
 
     return request;
@@ -66,6 +71,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.temporaryLocationId,
       this.tags,
       this.callNumber,
+      this.callNumberPrefix,
       this.callNumberSuffix);
   }
 
@@ -77,6 +83,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       temporaryLocationId,
       this.tags,
       this.callNumber,
+      this.callNumberPrefix,
       this.callNumberSuffix);
   }
 
@@ -88,6 +95,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.temporaryLocationId,
       this.tags,
       this.callNumber,
+      this.callNumberPrefix,
       this.callNumberSuffix);
   }
 
@@ -99,6 +107,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.temporaryLocationId,
       this.tags,
       this.callNumber,
+      this.callNumberPrefix,
       this.callNumberSuffix);
   }
 
@@ -110,6 +119,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.temporaryLocationId,
       tags,
       this.callNumber,
+      this.callNumberPrefix,
       this.callNumberSuffix);
   }
 
@@ -121,6 +131,19 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.temporaryLocationId,
       this.tags,
       callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix);
+  }
+
+  public HoldingRequestBuilder withCallNumberPrefix(String callNumberPrefix) {
+    return new HoldingRequestBuilder(
+      this.id,
+      this.instanceId,
+      this.permanentLocationId,
+      this.temporaryLocationId,
+      this.tags,
+      this.callNumber,
+      callNumberPrefix,
       this.callNumberSuffix);
   }
 
@@ -132,6 +155,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.temporaryLocationId,
       this.tags,
       this.callNumber,
+      this.callNumberPrefix,
       callNumberSuffix);
   }
 }
