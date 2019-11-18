@@ -28,6 +28,14 @@ public final class EffectiveCallNumberComponentsUtil {
       updatedCallNumber = holdings.getCallNumber();
     }
 
+
+    String updatedCallNumberPrefix = null;
+    if (StringUtils.isNotBlank(item.getItemLevelCallNumberPrefix())) {
+      updatedCallNumberPrefix = item.getItemLevelCallNumberPrefix();
+    } else if (StringUtils.isNotBlank(holdings.getCallNumberPrefix())) {
+      updatedCallNumberPrefix = holdings.getCallNumberPrefix();
+    }
+
     String updatedCallNumberSuffix = null;
     if (StringUtils.isNotBlank(item.getItemLevelCallNumberSuffix())) {
       updatedCallNumberSuffix = item.getItemLevelCallNumberSuffix();
@@ -36,6 +44,7 @@ public final class EffectiveCallNumberComponentsUtil {
     }
 
     components.setCallNumber(updatedCallNumber);
+    components.setCallNumberPrefix(updatedCallNumberPrefix);
     components.setCallNumberSuffix(updatedCallNumberSuffix);
     return components;
   }
