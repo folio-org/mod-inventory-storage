@@ -110,6 +110,142 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumber(), is("updatedCallNumber"));
   }
 
+  @Test
+  public void canInitializeEffectiveCallNumberPrefix() throws Exception {
+
+    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
+    Item item = buildItem(holding, null, null);
+    EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
+    item.setEffectiveCallNumberComponents(components);
+
+    String query = String.format("INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
+        item.getId(), mapper.writeValueAsString(item));
+    runSql(query);
+
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is(nullValue()));
+
+    runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
+
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+  }
+
+  @Test
+  public void canInitializeEffectiveCallNumberPrefixAfterHoldingsChange() throws Exception {
+
+    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
+    Item item = buildItem(holding, null, null);
+    createItem(item);
+
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+
+    // Update holdings directly without updating item
+    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb_set(jsonb, '{callNumberPrefix}', '\"%s\"') WHERE id = '%s';";
+    String query = String.format(template, "updatedCallNumberPrefix", holding.toString());
+    runSql(query);
+
+    assertThat(getHoldings(holding).getCallNumberPrefix(), is("updatedCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+
+    runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
+
+    assertThat(getHoldings(holding).getCallNumberPrefix(), is("updatedCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("updatedCallNumberPrefix"));
+  }
+
+  @Test
+  public void canInitializeEffectiveCallNumberPrefixAfterItemChange() throws Exception {
+    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
+    Item item = buildItem(holding, null, null);
+    createItem(item);
+
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+
+    // Update item directly without updating item effective call number prefix
+    String template = "UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberPrefix}', '\"%s\"') WHERE id = '%s';";
+    String query = String.format(template, "updatedCallNumberPrefix", item.getId());
+    runSql(query);
+
+    Item updatedItem = getItem(item.getId());
+
+    assertThat(updatedItem.getItemLevelCallNumberPrefix(), is("updatedCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+
+    runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
+
+    Item populatedItem = getItem(item.getId());
+
+    assertThat(populatedItem.getItemLevelCallNumberPrefix(), is("updatedCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("updatedCallNumberPrefix"));
+  }
+
+  @Test
+  public void canInitializeEffectiveCallNumberSuffix() throws Exception {
+
+    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
+    Item item = buildItem(holding, null, null);
+    EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
+    item.setEffectiveCallNumberComponents(components);
+
+    String query = String.format("INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
+        item.getId(), mapper.writeValueAsString(item));
+    runSql(query);
+
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is(nullValue()));
+
+    runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
+
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+  }
+
+  @Test
+  public void canInitializeEffectiveCallNumberSuffixAfterHoldingsChange() throws Exception {
+
+    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
+    Item item = buildItem(holding, null, null);
+    createItem(item);
+
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+
+    // Update holdings directly without updating item
+    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb_set(jsonb, '{callNumberSuffix}', '\"%s\"') WHERE id = '%s';";
+    String query = String.format(template, "updatedCallNumberSuffix", holding.toString());
+    runSql(query);
+
+    assertThat(getHoldings(holding).getCallNumberSuffix(), is("updatedCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+
+    runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
+
+    assertThat(getHoldings(holding).getCallNumberSuffix(), is("updatedCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("updatedCallNumberSuffix"));
+  }
+
+  @Test
+  public void canInitializeEffectiveCallNumberSuffixAfterItemChange() throws Exception {
+    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
+    Item item = buildItem(holding, null, null);
+    createItem(item);
+
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+
+    // Update item directly without updating item effective call number suffix
+    String template = "UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberSuffix}', '\"%s\"') WHERE id = '%s';";
+    String query = String.format(template, "updatedCallNumberSuffix", item.getId());
+    runSql(query);
+
+    Item updatedItem = getItem(item.getId());
+
+    assertThat(updatedItem.getItemLevelCallNumberSuffix(), is("updatedCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+
+    runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
+
+    Item populatedItem = getItem(item.getId());
+
+    assertThat(populatedItem.getItemLevelCallNumberSuffix(), is("updatedCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("updatedCallNumberSuffix"));
+  }
+
   private Item getItem(String id) throws Exception {
     return itemsClient.getById(UUID.fromString(id)).getJson().mapTo(Item.class);
   }
