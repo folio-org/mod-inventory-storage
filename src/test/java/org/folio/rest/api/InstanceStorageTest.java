@@ -2216,6 +2216,42 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     log.info("Finished cannotCreateACollectionOfInstancesWithDuplicatedHRIDs");
   }
 
+  @Test
+  public void cannotCreateACollectionOfInstancesWithHRIDFailure() throws Exception {
+    log.info("Starting cannotCreateACollectionOfInstancesWithHRIDFailure");
+
+    final JsonArray instancesArray = new JsonArray();
+    final int numberOfInstances = 2;
+    final UUID [] uuids = new UUID[numberOfInstances];
+
+    instancesArray.add(uprooted(uuids[0] = UUID.randomUUID()));
+
+    final JsonObject t = temeraire(uuids[1] = UUID.randomUUID());
+    t.put("hrid", "");
+    instancesArray.add(t);
+
+    final JsonObject instanceCollection = new JsonObject()
+        .put(INSTANCES_KEY, instancesArray)
+        .put(TOTAL_RECORDS_KEY, numberOfInstances);
+
+    setInstanceSequence(99999999);
+
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
+        json(createCompleted));
+
+    final Response response = createCompleted.get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(201));
+
+    final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
+
+    assertThat(ibr.getErrorMessages(), notNullValue());
+    assertThat(ibr.getErrorMessages().get(0), is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+
+    log.info("Finished cannotCreateACollectionOfInstancesWithHRIDFailure");
+  }
+
   private void setInstanceSequence(int sequenceNumber) {
     final Vertx vertx = StorageTestSuite.getVertx();
     final PostgresClient postgresClient =
