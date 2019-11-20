@@ -38,6 +38,7 @@ import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
+import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -787,6 +788,111 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(updatedItemFromGet.getString("id"), is(itemId));
     assertThat(updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"), is("itemLevelCallNumber"));
+  }
+
+  @Test
+  public void updatingHoldingsDoesNotUpdateItemsOnAnotherHoldings()
+      throws MalformedURLException, ExecutionException,
+      InterruptedException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID firstHoldings = UUID.randomUUID();
+    UUID secondHoldings = UUID.randomUUID();
+
+    JsonObject firstHolding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(firstHoldings)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withCallNumber("firstTestCallNumber")
+      .withCallNumberPrefix("firstTestCallNumberPrefix")
+      .withCallNumberSuffix("firstTestCallNumberSuffix")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    holdingsClient.create(new HoldingRequestBuilder()
+      .withId(secondHoldings)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withCallNumber("secondTestCallNumber")
+      .withCallNumberPrefix("secondTestCallNumberPrefix")
+      .withCallNumberSuffix("secondTestCallNumberSuffix")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    Response firstItemResponse = create(itemsStorageUrl(""), new ItemRequestBuilder()
+      .forHolding(firstHoldings)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create());
+    Response secondItemResponse = create(itemsStorageUrl(""), new ItemRequestBuilder()
+      .forHolding(secondHoldings)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create());
+
+    assertThat(firstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(secondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject firstItem = firstItemResponse.getJson();
+    JsonObject secondItem = secondItemResponse.getJson();
+
+    assertThat(firstItem.getJsonObject("effectiveCallNumberComponents")
+        .getString("callNumber"), is("firstTestCallNumber"));
+    assertThat(firstItem.getJsonObject("effectiveCallNumberComponents")
+        .getString("callNumberPrefix"), is("firstTestCallNumberPrefix"));
+    assertThat(firstItem.getJsonObject("effectiveCallNumberComponents")
+        .getString("callNumberSuffix"), is("firstTestCallNumberSuffix"));
+    assertThat(secondItem.getJsonObject("effectiveCallNumberComponents")
+        .getString("callNumber"), is("secondTestCallNumber"));
+    assertThat(secondItem.getJsonObject("effectiveCallNumberComponents")
+      .getString("callNumberPrefix"), is("secondTestCallNumberPrefix"));
+    assertThat(secondItem.getJsonObject("effectiveCallNumberComponents")
+      .getString("callNumberSuffix"), is("secondTestCallNumberSuffix"));
+
+    URL firstHoldingsUrl = holdingsStorageUrl(String.format("/%s", firstHoldings));
+
+    firstHolding.put("callNumber", "updatedFirstCallNumber");
+    firstHolding.put("callNumberPrefix", "updatedFirstCallNumberPrefix");
+    firstHolding.put("callNumberSuffix", "updatedFirstCallNumberSuffix");
+
+    Response putResponse = update(firstHoldingsUrl, firstHolding);
+
+    Response updatedFirstHoldingResponse = get(firstHoldingsUrl);
+
+    JsonObject updatedFirstHolding = updatedFirstHoldingResponse.getJson();
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(updatedFirstHolding.getString("callNumber"), is("updatedFirstCallNumber"));
+
+    String firstItemId = firstItem.getString("id");
+    String secondItemId = secondItem.getString("id");
+
+    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
+    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
+
+    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
+    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
+
+    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
+    JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
+
+    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
+      .getString("callNumber"), is("updatedFirstCallNumber"));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
+      .getString("callNumberPrefix"), is("updatedFirstCallNumberPrefix"));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
+      .getString("callNumberSuffix"), is("updatedFirstCallNumberSuffix"));
+    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
+    assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
+      .getString("callNumber"), is("secondTestCallNumber"));
+    assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
+      .getString("callNumberPrefix"), is("secondTestCallNumberPrefix"));
+    assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
+      .getString("callNumberSuffix"), is("secondTestCallNumberSuffix"));
   }
 
   @Test
