@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
@@ -121,7 +123,7 @@ public class InstanceStorageAPI implements InstanceStorage {
           }
 
           final Future<String> hridFuture;
-          if (entity.getHrid() == null || entity.getHrid().trim().length() == 0) {
+          if (isBlank(entity.getHrid())) {
             final HridManager hridManager = new HridManager(vertxContext, postgresClient);
             hridFuture = hridManager.getNextInstanceHrid();
           } else {

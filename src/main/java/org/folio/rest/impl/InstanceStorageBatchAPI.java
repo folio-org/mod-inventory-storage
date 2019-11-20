@@ -11,6 +11,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.rest.RestVerticle.OKAPI_USERID_HEADER;
@@ -130,7 +132,7 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
     Future<Instance> future = Future.future();
 
     final Future<String> hridFuture;
-    if (instance.getHrid() == null || instance.getHrid().trim().length() == 0) {
+    if (isBlank(instance.getHrid())) {
       final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
       hridFuture = hridManager.getNextInstanceHrid();
     } else {

@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
@@ -55,7 +57,7 @@ public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
   private Future<Void> setHrid(Instance instance, HridManager hridManager) {
     final Future<String> hridFuture;
 
-    if (instance.getHrid() == null || instance.getHrid().trim().length() == 0) {
+    if (isBlank(instance.getHrid())) {
       hridFuture = hridManager.getNextInstanceHrid();
     } else {
       hridFuture = Promise.succeededPromise(instance.getHrid()).future();
