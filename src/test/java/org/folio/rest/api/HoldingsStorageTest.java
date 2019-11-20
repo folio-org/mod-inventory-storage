@@ -617,11 +617,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
-    JsonObject secondItemFromPost = postSecondItemResponse.getJson();
+    JsonObject firstItem = postFirstItemResponse.getJson();
+    JsonObject secondItem = postSecondItemResponse.getJson();
 
-    String firstItemId = firstItemFromPost.getString("id");
-    String secondItemId = secondItemFromPost.getString("id");
+    String firstItemId = firstItem.getString("id");
+    String secondItemId = secondItem.getString("id");
 
     assertThat(firstItemId, is(notNullValue()));
     assertThat(secondItemId, is(notNullValue()));
@@ -644,7 +644,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
-    holding.remove("callNumber");
     holding.put("callNumber", "updatedCallNumber");
 
     Response putResponse = update(holdingsUrl, holding);
@@ -667,7 +666,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void clearingHoldingsCallNumberUpdatesItemEffectiveCallNumber()
+  public void removingHoldingsCallNumberUpdatesItemEffectiveCallNumber()
       throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     UUID instanceId = UUID.randomUUID();
 
@@ -729,7 +728,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void holdingsCallNumberDoesNotUpdateItemWithItemLevelCallNumber()
+  public void holdingsCallNumberDoesNotSupersedeItemLevelCallNumber()
       throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
 
@@ -775,7 +774,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
-    holding.remove("callNumber");
     holding.put("callNumber", "updatedHoldingCallNumber");
 
     Response putResponse = update(holdingsUrl, holding);
@@ -823,11 +821,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
-    JsonObject secondItemFromPost = postSecondItemResponse.getJson();
+    JsonObject firstItem = postFirstItemResponse.getJson();
+    JsonObject secondItem = postSecondItemResponse.getJson();
 
-    String firstItemId = firstItemFromPost.getString("id");
-    String secondItemId = secondItemFromPost.getString("id");
+    String firstItemId = firstItem.getString("id");
+    String secondItemId = secondItem.getString("id");
 
     assertThat(firstItemId, is(notNullValue()));
     assertThat(secondItemId, is(notNullValue()));
@@ -850,7 +848,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
-    holding.remove("callNumberSuffix");
     holding.put("callNumberSuffix", "updatedCallNumberSuffix");
 
     Response putResponse = update(holdingsUrl, holding);
@@ -873,7 +870,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void clearingHoldingsCallNumberSuffixUpdatesItemEffectiveCallNumberSuffix()
+  public void removingHoldingsCallNumberSuffixUpdatesItemEffectiveCallNumberSuffix()
       throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     UUID instanceId = UUID.randomUUID();
 
@@ -935,7 +932,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void holdingsCallNumberSuffixDoesNotUpdateItemWithItemLevelCallNumberSuffix()
+  public void holdingsCallNumberSuffixDoesNotSupersedeItemLevelCallNumberSuffix()
       throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
 
@@ -1029,11 +1026,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
-    JsonObject secondItemFromPost = postSecondItemResponse.getJson();
+    JsonObject firstItem = postFirstItemResponse.getJson();
+    JsonObject secondItem = postSecondItemResponse.getJson();
 
-    String firstItemId = firstItemFromPost.getString("id");
-    String secondItemId = secondItemFromPost.getString("id");
+    String firstItemId = firstItem.getString("id");
+    String secondItemId = secondItem.getString("id");
 
     assertThat(firstItemId, is(notNullValue()));
     assertThat(secondItemId, is(notNullValue()));
@@ -1079,7 +1076,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void clearingHoldingsCallNumberPrefixUpdatesItemEffectiveCallNumberPrefix()
+  public void removingHoldingsCallNumberPrefixUpdatesItemEffectiveCallNumberPrefix()
       throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     UUID instanceId = UUID.randomUUID();
 
@@ -1141,7 +1138,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void holdingsCallNumberPrefixDoesNotUpdateItemWithItemLevelCallNumberPrefix()
+  public void holdingsCallNumberPrefixDoesNotSupersedeItemLevelCallNumberPrefix()
       throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
 
