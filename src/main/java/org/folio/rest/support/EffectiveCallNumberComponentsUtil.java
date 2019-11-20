@@ -44,8 +44,8 @@ public final class EffectiveCallNumberComponentsUtil {
     }
 
     components.setCallNumber(updatedCallNumber);
-    components.setCallNumberPrefix(updatedCallNumberPrefix);
-    components.setCallNumberSuffix(updatedCallNumberSuffix);
+    components.setPrefix(updatedCallNumberPrefix);
+    components.setSuffix(updatedCallNumberSuffix);
     return components;
   }
 }

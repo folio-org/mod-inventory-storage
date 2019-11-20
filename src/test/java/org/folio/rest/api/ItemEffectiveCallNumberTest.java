@@ -122,11 +122,11 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
         item.getId(), mapper.writeValueAsString(item));
     runSql(query);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is(nullValue()));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getPrefix(), is(nullValue()));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getPrefix(), is("testCallNumberPrefix"));
   }
 
   @Test
@@ -136,7 +136,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item item = buildItem(holding, null, null);
     createItem(item);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getPrefix(), is("testCallNumberPrefix"));
 
     // Update holdings directly without updating item
     String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb_set(jsonb, '{callNumberPrefix}', '\"%s\"') WHERE id = '%s';";
@@ -144,12 +144,12 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     runSql(query);
 
     assertThat(getHoldings(holding).getCallNumberPrefix(), is("updatedCallNumberPrefix"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getPrefix(), is("testCallNumberPrefix"));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
     assertThat(getHoldings(holding).getCallNumberPrefix(), is("updatedCallNumberPrefix"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("updatedCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getPrefix(), is("updatedCallNumberPrefix"));
   }
 
   @Test
@@ -158,7 +158,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item item = buildItem(holding, null, null);
     createItem(item);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getPrefix(), is("testCallNumberPrefix"));
 
     // Update item directly without updating item effective call number prefix
     String template = "UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberPrefix}', '\"%s\"') WHERE id = '%s';";
@@ -168,14 +168,14 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item updatedItem = getItem(item.getId());
 
     assertThat(updatedItem.getItemLevelCallNumberPrefix(), is("updatedCallNumberPrefix"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("testCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getPrefix(), is("testCallNumberPrefix"));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
     Item populatedItem = getItem(item.getId());
 
     assertThat(populatedItem.getItemLevelCallNumberPrefix(), is("updatedCallNumberPrefix"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberPrefix(), is("updatedCallNumberPrefix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getPrefix(), is("updatedCallNumberPrefix"));
   }
 
   @Test
@@ -190,11 +190,11 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
         item.getId(), mapper.writeValueAsString(item));
     runSql(query);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is(nullValue()));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(), is(nullValue()));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(), is("testCallNumberSuffix"));
   }
 
   @Test
@@ -204,7 +204,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item item = buildItem(holding, null, null);
     createItem(item);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(), is("testCallNumberSuffix"));
 
     // Update holdings directly without updating item
     String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb_set(jsonb, '{callNumberSuffix}', '\"%s\"') WHERE id = '%s';";
@@ -212,12 +212,12 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     runSql(query);
 
     assertThat(getHoldings(holding).getCallNumberSuffix(), is("updatedCallNumberSuffix"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(), is("testCallNumberSuffix"));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
     assertThat(getHoldings(holding).getCallNumberSuffix(), is("updatedCallNumberSuffix"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("updatedCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(), is("updatedCallNumberSuffix"));
   }
 
   @Test
@@ -226,7 +226,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item item = buildItem(holding, null, null);
     createItem(item);
 
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(), is("testCallNumberSuffix"));
 
     // Update item directly without updating item effective call number suffix
     String template = "UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberSuffix}', '\"%s\"') WHERE id = '%s';";
@@ -236,14 +236,14 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     Item updatedItem = getItem(item.getId());
 
     assertThat(updatedItem.getItemLevelCallNumberSuffix(), is("updatedCallNumberSuffix"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("testCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(), is("testCallNumberSuffix"));
 
     runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
 
     Item populatedItem = getItem(item.getId());
 
     assertThat(populatedItem.getItemLevelCallNumberSuffix(), is("updatedCallNumberSuffix"));
-    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getCallNumberSuffix(), is("updatedCallNumberSuffix"));
+    assertThat(getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(), is("updatedCallNumberSuffix"));
   }
 
   private Item getItem(String id) throws Exception {

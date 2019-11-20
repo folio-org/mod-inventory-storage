@@ -840,15 +840,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(firstItem.getJsonObject("effectiveCallNumberComponents")
         .getString("callNumber"), is("firstTestCallNumber"));
     assertThat(firstItem.getJsonObject("effectiveCallNumberComponents")
-        .getString("callNumberPrefix"), is("firstTestCallNumberPrefix"));
+        .getString("prefix"), is("firstTestCallNumberPrefix"));
     assertThat(firstItem.getJsonObject("effectiveCallNumberComponents")
-        .getString("callNumberSuffix"), is("firstTestCallNumberSuffix"));
+        .getString("suffix"), is("firstTestCallNumberSuffix"));
     assertThat(secondItem.getJsonObject("effectiveCallNumberComponents")
         .getString("callNumber"), is("secondTestCallNumber"));
     assertThat(secondItem.getJsonObject("effectiveCallNumberComponents")
-      .getString("callNumberPrefix"), is("secondTestCallNumberPrefix"));
+      .getString("prefix"), is("secondTestCallNumberPrefix"));
     assertThat(secondItem.getJsonObject("effectiveCallNumberComponents")
-      .getString("callNumberSuffix"), is("secondTestCallNumberSuffix"));
+      .getString("suffix"), is("secondTestCallNumberSuffix"));
 
     URL firstHoldingsUrl = holdingsStorageUrl(String.format("/%s", firstHoldings));
 
@@ -882,17 +882,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
       .getString("callNumber"), is("updatedFirstCallNumber"));
     assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
-      .getString("callNumberPrefix"), is("updatedFirstCallNumberPrefix"));
+      .getString("prefix"), is("updatedFirstCallNumberPrefix"));
     assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
-      .getString("callNumberSuffix"), is("updatedFirstCallNumberSuffix"));
+      .getString("suffix"), is("updatedFirstCallNumberSuffix"));
     assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
     assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
       .getString("callNumber"), is("secondTestCallNumber"));
     assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
-      .getString("callNumberPrefix"), is("secondTestCallNumberPrefix"));
+      .getString("prefix"), is("secondTestCallNumberPrefix"));
     assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents")
-      .getString("callNumberSuffix"), is("secondTestCallNumberSuffix"));
+      .getString("suffix"), is("secondTestCallNumberSuffix"));
   }
 
   @Test
@@ -947,10 +947,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(firstItemFromGet.getString("id"), is(firstItemId));
     assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("testCallNumberSuffix"));
+    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"), is("testCallNumberSuffix"));
     assertThat(secondItemFromGet.getString("id"), is(secondItemId));
     assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("testCallNumberSuffix"));
+    assertThat(secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"), is("testCallNumberSuffix"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
@@ -969,10 +969,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("updatedCallNumberSuffix"));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"), is("updatedCallNumberSuffix"));
     assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
-    assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("updatedCallNumberSuffix"));
+    assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"), is("updatedCallNumberSuffix"));
   }
 
   @Test
@@ -1017,7 +1017,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(firstItemFromGet.getString("id"), is(firstItemId));
     assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("testCallNumberSuffix"));
+    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"), is("testCallNumberSuffix"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
@@ -1034,7 +1034,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("callNumberSuffix"), is(false));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("suffix"), is(false));
   }
 
   @Test
@@ -1080,11 +1080,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(itemFromGet.getString("id"), is(itemId));
     assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("itemLevelCallNumberSuffix"));
+    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"), is("itemLevelCallNumberSuffix"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
-    holding.remove("callNumberSuffix");
     holding.put("callNumberSuffix", "updatedHoldingCallNumberSuffix");
 
     Response putResponse = update(holdingsUrl, holding);
@@ -1097,7 +1096,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(updatedItemFromGet.getString("id"), is(itemId));
-    assertThat(updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberSuffix"), is("itemLevelCallNumberSuffix"));
+    assertThat(updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"), is("itemLevelCallNumberSuffix"));
   }
 
   @Test
@@ -1152,10 +1151,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(firstItemFromGet.getString("id"), is(firstItemId));
     assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberPrefix"), is("testCallNumberPrefix"));
+    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"), is("testCallNumberPrefix"));
     assertThat(secondItemFromGet.getString("id"), is(secondItemId));
     assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberPrefix"), is("testCallNumberPrefix"));
+    assertThat(secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"), is("testCallNumberPrefix"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
@@ -1175,10 +1174,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberPrefix"), is("updatedCallNumberPrefix"));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"), is("updatedCallNumberPrefix"));
     assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
-    assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberPrefix"), is("updatedCallNumberPrefix"));
+    assertThat(secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"), is("updatedCallNumberPrefix"));
   }
 
   @Test
@@ -1223,7 +1222,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(firstItemFromGet.getString("id"), is(firstItemId));
     assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberPrefix"), is("testCallNumberPrefix"));
+    assertThat(firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"), is("testCallNumberPrefix"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
@@ -1240,7 +1239,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("callNumberPrefix"), is(false));
+    assertThat(firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("prefix"), is(false));
   }
 
   @Test
@@ -1286,7 +1285,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(itemFromGet.getString("id"), is(itemId));
     assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberPrefix"), is("itemLevelCallNumberPrefix"));
+    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"), is("itemLevelCallNumberPrefix"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
@@ -1303,7 +1302,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(updatedItemFromGet.getString("id"), is(itemId));
-    assertThat(updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumberPrefix"), is("itemLevelCallNumberPrefix"));
+    assertThat(updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"), is("itemLevelCallNumberPrefix"));
   }
 
   public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {

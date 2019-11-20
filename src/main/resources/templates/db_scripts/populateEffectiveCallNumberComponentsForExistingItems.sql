@@ -4,8 +4,8 @@ SET jsonb = jsonb_set(
   '{effectiveCallNumberComponents}',
   jsonb_build_object(
     'callNumber', COALESCE(it.jsonb->'itemLevelCallNumber', hr.jsonb->'callNumber'),
-    'callNumberPrefix', COALESCE(it.jsonb->'itemLevelCallNumberPrefix', hr.jsonb->'callNumberPrefix'),
-    'callNumberSuffix', COALESCE(it.jsonb->'itemLevelCallNumberSuffix', hr.jsonb->'callNumberSuffix')
+    'prefix', COALESCE(it.jsonb->'itemLevelCallNumberPrefix', hr.jsonb->'callNumberPrefix'),
+    'suffix', COALESCE(it.jsonb->'itemLevelCallNumberSuffix', hr.jsonb->'callNumberSuffix')
   )
 )
 FROM ${myuniversity}_${mymodule}.holdings_record AS hr
