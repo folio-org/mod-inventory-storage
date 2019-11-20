@@ -108,6 +108,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @After
+  public void resetInstanceHRID() {
+    setInstanceSequence(1);
+  }
+
+  @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("instance");
   }
