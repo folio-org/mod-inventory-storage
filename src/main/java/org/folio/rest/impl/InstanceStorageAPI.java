@@ -24,6 +24,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -32,6 +33,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -118,29 +120,56 @@ public class InstanceStorageAPI implements InstanceStorage {
             }
           }
 
-          postgresClient.save(INSTANCE_TABLE, entity.getId(), entity,
-            reply -> {
-              try {
-                if(reply.succeeded()) {
+          final Future<String> hridFuture;
+          if (entity.getHrid() == null || entity.getHrid().trim().length() == 0) {
+            final HridManager hridManager = new HridManager(vertxContext, postgresClient);
+            hridFuture = hridManager.getNextInstanceHrid();
+          } else {
+            hridFuture = Promise.succeededPromise(entity.getHrid()).future();
+          }
+
+          hridFuture.map(hrid -> {
+            entity.setHrid(hrid);
+            postgresClient.save(INSTANCE_TABLE, entity.getId(), entity,
+              reply -> {
+                try {
+                  if(reply.succeeded()) {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(
+                        PostInstanceStorageInstancesResponse
+                          .respond201WithApplicationJson(entity,
+                              PostInstanceStorageInstancesResponse.headersFor201().withLocation(reply.result()))));
+                  }
+                  else {
+                    if (PgExceptionUtil.isUniqueViolation(reply.cause())) {
+                      asyncResultHandler.handle(
+                          io.vertx.core.Future.succeededFuture(
+                            PostInstanceStorageInstancesResponse
+                              .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(reply.cause()))));
+                    } else {
+                      asyncResultHandler.handle(
+                        io.vertx.core.Future.succeededFuture(
+                          PostInstanceStorageInstancesResponse
+                            .respond400WithTextPlain(reply.cause().getMessage())));
+                    }
+                  }
+                } catch (Exception e) {
+                  log.error(e.getMessage(), e);
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       PostInstanceStorageInstancesResponse
-                        .respond201WithApplicationJson(entity,PostInstanceStorageInstancesResponse.headersFor201().withLocation(reply.result()))));
+                        .respond500WithTextPlain(e.getMessage())));
                 }
-                else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      PostInstanceStorageInstancesResponse
-                        .respond400WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(
-                    PostInstanceStorageInstancesResponse
-                      .respond500WithTextPlain(e.getMessage())));
-              }
-            });
+              });
+            return null;
+          }).otherwise(error -> {
+            log.error(error.getMessage(), error);
+            asyncResultHandler.handle(
+              io.vertx.core.Future.succeededFuture(
+                PostInstanceStorageInstancesResponse
+                  .respond500WithTextPlain(error.getMessage())));
+            return null;
+          });
         } catch (Exception e) {
           log.error(e.getMessage(), e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -327,8 +356,30 @@ public class InstanceStorageAPI implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    PgUtil.put(INSTANCE_TABLE, entity, instanceId, okapiHeaders, vertxContext,
-        PutInstanceStorageInstancesByInstanceIdResponse.class, asyncResultHandler);
+    PgUtil.getById(INSTANCE_TABLE, Instance.class, instanceId, okapiHeaders, vertxContext,
+        GetInstanceStorageInstancesByInstanceIdResponse.class, response -> {
+          if (response.succeeded()) {
+            if (response.result().getStatus() == 404) {
+              asyncResultHandler.handle(Future.succeededFuture(
+                  PutInstanceStorageInstancesByInstanceIdResponse
+                  .respond404WithTextPlain(response.result().getEntity())));
+            } else if (response.result().getStatus() == 500) {
+              asyncResultHandler.handle(Future.succeededFuture(
+                  PutInstanceStorageInstancesByInstanceIdResponse
+                  .respond500WithTextPlain(response.result().getEntity())));
+            } else {
+              final Instance existingInstance = (Instance) response.result().getEntity();
+              entity.setHrid(existingInstance.getHrid());
+
+              PgUtil.put(INSTANCE_TABLE, entity, instanceId, okapiHeaders, vertxContext,
+                  PutInstanceStorageInstancesByInstanceIdResponse.class, asyncResultHandler);
+            }
+          } else {
+            asyncResultHandler.handle(Future.succeededFuture(
+                PutInstanceStorageInstancesByInstanceIdResponse
+                .respond500WithTextPlain(response.cause().getMessage())));
+          }
+        });
   }
 
   private boolean isUUID(String id) {
