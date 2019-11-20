@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -1876,36 +1877,35 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateInstanceWithDuplicateHRIDCaseInsensitive() throws Exception {
-    log.info("Starting cannotCreateInstanceWithDuplicateHRIDCaseInsensitive");
+  public void cannotCreateInstanceWithHRIDFailure() throws Exception {
+    log.info("Starting cannotCreateInstanceWithHRIDFailure");
 
     final UUID id = UUID.randomUUID();
     final JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.remove("hrid");
 
-    setInstanceSequence(1);
+    setInstanceSequence(99999999);
 
     createInstance(instanceToCreate);
 
     final Response createdInstance = getById(id);
 
-    assertThat(createdInstance.getJson().getString("hrid"), is("in00000001"));
+    assertThat(createdInstance.getJson().getString("hrid"), is("in99999999"));
 
-    final JsonObject instanceToCreateWithSameHRID = nod(UUID.randomUUID());
-    instanceToCreateWithSameHRID.put("hrid", "IN00000001");
+    final JsonObject instanceToFail = nod(UUID.randomUUID());
+    instanceToFail.remove("hrid");
 
     final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    client.post(instancesStorageUrl(""), instanceToCreateWithSameHRID, TENANT_ID,
-      text(createCompleted));
+    client.post(instancesStorageUrl(""), instanceToFail, TENANT_ID, text(createCompleted));
 
     final Response response = createCompleted.get(5, SECONDS);
 
-    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getStatusCode(), is(500));
     assertThat(response.getBody(),
-        is("duplicate key value violates unique constraint \"instance_hrid_idx_unique\": Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000001) already exists."));
+        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
 
-    log.info("Finished cannotCreateInstanceWithDuplicateHRIDCaseInsensitive");
+    log.info("Finished cannotCreateInstanceWithHRIDFailure");
   }
 
   @Test
@@ -2081,6 +2081,35 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         is("in00000001"));
 
     log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithHRIDFailure() throws Exception {
+    log.info("Starting cannotPostSynchronousBatchWithHRIDFailure");
+
+    final JsonArray instancesArray = new JsonArray();
+    final int numberOfInstances = 2;
+    final UUID [] uuids = new UUID[numberOfInstances];
+
+    instancesArray.add(uprooted(uuids[0] = UUID.randomUUID()));
+
+    final JsonObject t = temeraire(uuids[1] = UUID.randomUUID());
+    t.put("hrid", "");
+    instancesArray.add(t);
+
+    final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+
+    setInstanceSequence(99999999);
+
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, text(createCompleted));
+
+    final Response response = createCompleted.get(5, SECONDS);
+
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
+    assertThat(response.getBody(), is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+
+    log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
   }
 
   @Test
