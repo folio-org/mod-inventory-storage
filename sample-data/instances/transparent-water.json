@@ -1,6 +1,6 @@
 {
   "id": "e54b1f4d-7d05-4b1a-9368-3c36b75d8ac6",
-  "source": "MARC",
+  "source": "FOLIO",
   "title": "Transparent water",
   "identifiers": [
     {
@@ -37,7 +37,8 @@
     }
   ],
   "subjects": [
-    "World music.", "Jazz"
+    "World music.",
+    "Jazz"
   ],
   "classifications": [
     {

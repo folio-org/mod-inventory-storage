@@ -1,6 +1,6 @@
 {
   "id": "69640328-788e-43fc-9c3c-af39e243f3b7",
-  "source": "MARC",
+  "source": "FOLIO",
   "title": "ABA Journal",
   "publication": [
     {
@@ -20,7 +20,7 @@
     }
   ],
   "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
-  "natureOfContentTermIds" : [
+  "natureOfContentTermIds": [
     "0abeee3d-8ad2-4b04-92ff-221b4fce1075"
   ]
 }
