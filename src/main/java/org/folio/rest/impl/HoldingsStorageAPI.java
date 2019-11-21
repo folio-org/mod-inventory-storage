@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.buildComponents;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,7 +23,6 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.AsyncResult;
@@ -470,7 +471,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   }
 
   private Item updateItemEffectiveCallNumber(Item item, HoldingsRecord holdingsRecord) {
-    item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(holdingsRecord, item));
+    item.setEffectiveCallNumberComponents(buildComponents(holdingsRecord, item));
     return item;
   }
 

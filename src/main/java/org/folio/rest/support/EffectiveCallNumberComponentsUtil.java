@@ -1,18 +1,12 @@
 package org.folio.rest.support;
 
-import org.apache.commons.lang.StringUtils;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 
-/**
- * Utility methods for Effective Call Number Components object.
- */
 public final class EffectiveCallNumberComponentsUtil {
-
-  private EffectiveCallNumberComponentsUtil() {
-    throw new UnsupportedOperationException("Do not instantiate");
-  }
 
   public static EffectiveCallNumberComponents buildComponents(HoldingsRecord holdings, Item item) {
     return updateComponents(new EffectiveCallNumberComponents(), holdings, item);
@@ -22,24 +16,23 @@ public final class EffectiveCallNumberComponentsUtil {
     EffectiveCallNumberComponents components, HoldingsRecord holdings, Item item) {
 
     String updatedCallNumber = null;
-    if (StringUtils.isNotBlank(item.getItemLevelCallNumber())) {
+    if (isNotBlank(item.getItemLevelCallNumber())) {
       updatedCallNumber = item.getItemLevelCallNumber();
-    } else if (StringUtils.isNotBlank(holdings.getCallNumber())) {
+    } else if (isNotBlank(holdings.getCallNumber())) {
       updatedCallNumber = holdings.getCallNumber();
     }
 
-
     String updatedCallNumberPrefix = null;
-    if (StringUtils.isNotBlank(item.getItemLevelCallNumberPrefix())) {
+    if (isNotBlank(item.getItemLevelCallNumberPrefix())) {
       updatedCallNumberPrefix = item.getItemLevelCallNumberPrefix();
-    } else if (StringUtils.isNotBlank(holdings.getCallNumberPrefix())) {
+    } else if (isNotBlank(holdings.getCallNumberPrefix())) {
       updatedCallNumberPrefix = holdings.getCallNumberPrefix();
     }
 
     String updatedCallNumberSuffix = null;
-    if (StringUtils.isNotBlank(item.getItemLevelCallNumberSuffix())) {
+    if (isNotBlank(item.getItemLevelCallNumberSuffix())) {
       updatedCallNumberSuffix = item.getItemLevelCallNumberSuffix();
-    } else if (StringUtils.isNotBlank(holdings.getCallNumberSuffix())) {
+    } else if (isNotBlank(holdings.getCallNumberSuffix())) {
       updatedCallNumberSuffix = holdings.getCallNumberSuffix();
     }
 

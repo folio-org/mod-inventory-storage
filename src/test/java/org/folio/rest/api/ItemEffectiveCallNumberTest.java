@@ -44,7 +44,6 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canInitializeEffectiveCallNumber() throws Exception {
-
     UUID holding = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
@@ -63,7 +62,6 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canInitializeEffectiveCallNumberAfterHoldingsChange() throws Exception {
-
     UUID holding = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     createItem(item);
@@ -85,7 +83,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canInitializeEffectiveCallNumberAfterItemChange() throws Exception {
+  public void canInitializeEffectiveCallNumberToItemLevelWhenPresent() throws Exception {
     UUID holding = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     createItem(item);
@@ -112,7 +110,6 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canInitializeEffectiveCallNumberPrefix() throws Exception {
-
     UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
@@ -131,7 +128,6 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canInitializeEffectiveCallNumberPrefixAfterHoldingsChange() throws Exception {
-
     UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     createItem(item);
@@ -153,7 +149,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canInitializeEffectiveCallNumberPrefixAfterItemChange() throws Exception {
+  public void canInitializeEffectiveCallNumberPrefixToItemLevelWhenPresent() throws Exception {
     UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     createItem(item);
@@ -180,7 +176,6 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canInitializeEffectiveCallNumberSuffix() throws Exception {
-
     UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
@@ -199,7 +194,6 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canInitializeEffectiveCallNumberSuffixAfterHoldingsChange() throws Exception {
-
     UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     createItem(item);
@@ -221,7 +215,7 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canInitializeEffectiveCallNumberSuffixAfterItemChange() throws Exception {
+  public void canInitializeEffectiveCallNumberSuffixToItemLevelWhenPresent() throws Exception {
     UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
     Item item = buildItem(holding, null, null);
     createItem(item);
