@@ -1,6 +1,6 @@
 {
   "id": "81825729-e824-4d52-9d15-1695e9bf1831",
-  "source": "MARC",
+  "source": "FOLIO",
   "title": "Dissent, protest and dispute in Africa edited by Emmanuel M. Mbah and Toyin Falola",
   "series": [
     "Global Africa 1"
@@ -73,7 +73,7 @@
       "uri": "https://external.dandelon.com/download/attachments/dandelon/ids/DE0069AE502CCFE91E537C1258123001D0DCA.pdf",
       "linkText": "Electronic resource (PDF)",
       "publicNote": "Address for accessing the table of content. PDF file"
-    } 
+    }
   ],
   "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
   "physicalDescriptions": [

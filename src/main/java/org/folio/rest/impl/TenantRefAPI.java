@@ -1,20 +1,5 @@
 package org.folio.rest.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.io.IOUtils;
-import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.tools.utils.TenantLoading;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -23,6 +8,19 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.commons.io.IOUtils;
+import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.tools.utils.TenantLoading;
+
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -113,8 +111,6 @@ public class TenantRefAPI extends TenantAPI {
       }
       tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
       tl.add("instances", "instance-storage/instances");
-      tl.withIdBasename().add("instance-storages/instances/%d/source-record/marc-json",
-        "instance-source-records");
       tl.withIdContent();
       tl.add("holdingsrecords", "holdings-storage/holdings");
       tl.add("items", "item-storage/items");
