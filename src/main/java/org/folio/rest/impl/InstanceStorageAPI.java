@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -371,10 +372,18 @@ public class InstanceStorageAPI implements InstanceStorage {
                   .respond500WithTextPlain(response.result().getEntity())));
             } else {
               final Instance existingInstance = (Instance) response.result().getEntity();
-              entity.setHrid(existingInstance.getHrid());
-
-              PgUtil.put(INSTANCE_TABLE, entity, instanceId, okapiHeaders, vertxContext,
-                  PutInstanceStorageInstancesByInstanceIdResponse.class, asyncResultHandler);
+              if (Objects.equals(entity.getHrid(), existingInstance.getHrid())) { 
+                PgUtil.put(INSTANCE_TABLE, entity, instanceId, okapiHeaders, vertxContext,
+                    PutInstanceStorageInstancesByInstanceIdResponse.class, asyncResultHandler);
+              } else {
+                asyncResultHandler.handle(Future.succeededFuture(
+                    PutInstanceStorageInstancesByInstanceIdResponse
+                    .respond400WithTextPlain(
+                        "The hrid field cannot be changed: new="
+                            + entity.getHrid()
+                            + ", old="
+                            + existingInstance.getHrid())));
+              }
             }
           } else {
             asyncResultHandler.handle(Future.succeededFuture(

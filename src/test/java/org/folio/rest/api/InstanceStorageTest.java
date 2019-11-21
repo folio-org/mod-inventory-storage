@@ -347,7 +347,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createInstance(instanceToCreate);
 
+    Response getResponse = getById(id);
+
     JsonObject replacement = instanceToCreate.copy();
+    replacement.put("hrid", getResponse.getJson().getString("hrid"));
     replacement.put("title", "A Long Way to a Small Angry Planet");
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
@@ -360,7 +363,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     //PUT currently cannot return a response
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    Response getResponse = getById(id);
+    getResponse = getById(id);
 
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
 
@@ -1643,6 +1646,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       nullValue());
 
     JsonObject replacement = instanceToCreate.copy()
+      .put("hrid", createdInstance.getJson().getString("hrid"))
       .put("statusId", getCatalogedInstanceType().getId().toString());
 
     JsonObject updatedInstance = updateInstance(replacement).getJson();
@@ -1667,6 +1671,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       nullValue());
 
     JsonObject instanceWithCatStatus = instanceToCreate.copy()
+      .put("hrid", createdInstance.getJson().getString("hrid"))
       .put("statusId", getCatalogedInstanceType().getId().toString());
     JsonObject updatedInstanceWithCatStatus = updateInstance(instanceWithCatStatus)
       .getJson();
@@ -1702,6 +1707,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       nullValue());
 
     JsonObject instanceWithCatStatus = instanceToCreate.copy()
+      .put("hrid", createdInstance.getJson().getString("hrid"))
       .put("statusId", getCatalogedInstanceType().getId().toString());
     JsonObject updatedInstanceWithCatStatus = updateInstance(instanceWithCatStatus)
       .getJson();
@@ -1926,9 +1932,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     instance.put("hrid", "testHRID");
 
-    final JsonObject updatedInstance = updateInstance(instance).getJson();
+    final CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
-    assertThat(updatedInstance.getString("hrid"), is(expectedHRID));
+    client.put(instancesStorageUrl(String.format("/%s", id)), instance,
+        TENANT_ID, ResponseHandler.text(replaceCompleted));
+
+    final Response putResponse = replaceCompleted.get(5, SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(400));
+    assertThat(putResponse.getBody(),
+        is("The hrid field cannot be changed: new=testHRID, old=in00000001"));
 
     log.info("Finished cannotChageHRIDAfterCreation");
   }
@@ -1952,9 +1965,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     instance.remove("hrid");
 
-    final JsonObject updatedInstance = updateInstance(instance).getJson();
+    final CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
-    assertThat(updatedInstance.getString("hrid"), is(expectedHRID));
+    client.put(instancesStorageUrl(String.format("/%s", id)), instance,
+        TENANT_ID, ResponseHandler.text(replaceCompleted));
+
+    final Response putResponse = replaceCompleted.get(5, SECONDS);
+
+    assertThat(putResponse.getStatusCode(), is(400));
+    assertThat(putResponse.getBody(),
+        is("The hrid field cannot be changed: new=null, old=in00000001"));
 
     log.info("Finished cannotRemoveHRIDAfterCreation");
   }
