@@ -296,7 +296,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
-    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"), is("testCallNumber"));
+    assertThat(
+      itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+      is("testCallNumber"));
   }
 
   @Test
@@ -461,7 +463,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
-    assertThat(itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
+    assertThat(
+      itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
       is("testCallNumberPrefix"));
   }
 
