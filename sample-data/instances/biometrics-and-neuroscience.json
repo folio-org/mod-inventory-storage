@@ -1,6 +1,6 @@
 {
   "id": "1640f178-f243-4e4a-bf1c-9e1e62b3171d",
-  "source": "MARC",
+  "source": "FOLIO",
   "title": "Futures, biometrics and neuroscience research Luiz Moutinho, Mladen Sokele, editors",
   "alternativeTitles": [],
   "series": [
@@ -65,7 +65,7 @@
       "uri": "http://www.gbv.de/dms/zbw/101073931X.pdf",
       "linkText": "Electronic resource (PDF)",
       "publicNote": "Address for accessing the table of content. PDF file"
-    }  
+    }
   ],
   "instanceTypeId": "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
   "physicalDescriptions": [
