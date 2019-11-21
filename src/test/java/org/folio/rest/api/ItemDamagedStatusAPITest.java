@@ -5,6 +5,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemDamagedStatusesUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
 import java.util.UUID;
@@ -27,7 +28,8 @@ public class ItemDamagedStatusAPITest extends TestBase {
 
   @Before
   public void beforeEach() {
-    StorageTestSuite.deleteAll(TEST_TENANT, ItemDamagedStatusAPI.REFERENCE_TABLE);
+    assertTrue(StorageTestSuite.deleteAll(TEST_TENANT,
+        ItemDamagedStatusAPI.REFERENCE_TABLE));
   }
 
   @Test

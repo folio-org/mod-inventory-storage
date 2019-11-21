@@ -26,7 +26,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -187,16 +187,25 @@ public class StorageTestSuite {
   }
 
   protected static Boolean deleteAll(String tenantId, String tableName) {
+    CompletableFuture<Boolean> cf = new CompletableFuture<>();
 
-    PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
+    try {
+      PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
 
-    Future<UpdateResult> future = Future.future();
-    String sql = String.format("DELETE FROM %s_%s.%s", tenantId, "mod_inventory_storage", tableName);
-    postgresClient.execute(sql, future.completer());
+      Promise<UpdateResult> promise = Promise.promise();
+      String sql = String.format("DELETE FROM %s_%s.%s", tenantId, "mod_inventory_storage", tableName);
+      postgresClient.execute(sql, promise);
 
-    return future.map(updateResult -> updateResult.getUpdated() > 0)
-      .otherwise(false)
-      .result();
+      promise.future()
+        .map(deleteResult -> cf.complete(deleteResult.getUpdated() >= 0))
+        .otherwise(error -> cf.complete(false));
+
+      return cf.get(5, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      Assert.fail("WARNING!!!!! Unable to delete all: " + e.getMessage());
+    }
+
+    return false;
   }
 
   private static ResultSet getRecordsWithUnmatchedIds(String tenantId,
