@@ -6,9 +6,12 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -16,6 +19,7 @@ import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.resource.InstanceStorageBatchInstances;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.JwtUtils;
 
 import javax.ws.rs.core.Response;
@@ -27,6 +31,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
 import static org.folio.rest.RestVerticle.OKAPI_USERID_HEADER;
@@ -126,14 +131,32 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
   private Future<Instance> saveInstance(Instance instance, PostgresClient postgresClient) {
     Future<Instance> future = Future.future();
 
-    postgresClient.save(INSTANCE_TABLE, instance.getId(), instance, save -> {
-      if (save.failed()) {
-        log.error("Failed to create Instances", save.cause());
-        future.fail(save.cause());
-        return;
-      }
-      instance.setId(save.result());
-      future.complete(instance);
+    final Future<String> hridFuture;
+    if (isBlank(instance.getHrid())) {
+      final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
+      hridFuture = hridManager.getNextInstanceHrid();
+    } else {
+      hridFuture = Promise.succeededPromise(instance.getHrid()).future();
+    }
+
+    hridFuture.map(hrid -> {
+      instance.setHrid(hrid);
+
+      postgresClient.save(INSTANCE_TABLE, instance.getId(), instance, save -> {
+        if (save.failed()) {
+          log.error("Failed to create Instances", save.cause());
+          future.fail(save.cause());
+          return;
+        }
+        instance.setId(save.result());
+        future.complete(instance);
+      });
+      return null;
+    })
+    .otherwise(error -> {
+      log.error("Failed to generate an instance HRID", error);
+      future.fail(error);
+      return null;
     });
 
     return future;
