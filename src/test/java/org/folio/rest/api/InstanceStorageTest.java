@@ -1914,7 +1914,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotChageHRIDAfterCreation() throws Exception {
+  public void cannotChangeHRIDAfterCreation() throws Exception {
     log.info("Starting cannotChageHRIDAfterCreation");
 
     final UUID id = UUID.randomUUID();
