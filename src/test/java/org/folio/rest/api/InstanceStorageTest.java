@@ -16,6 +16,7 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
+import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -1651,6 +1652,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject updatedInstance = updateInstance(replacement).getJson();
 
+    assertThat(updatedInstance.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
     assertThat(updatedInstance
         .getString(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
   }
@@ -1685,6 +1687,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY),
       not(updatedInstanceWithOthStatus.getString(STATUS_UPDATED_DATE_PROPERTY)));
 
+    assertThat(updatedInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
+    assertThat(updatedInstanceWithOthStatus.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
+
     assertThat(updatedInstanceWithCatStatus
         .getString(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
     assertThat(updatedInstanceWithOthStatus
@@ -1717,6 +1722,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedAnotherInstanceWithCatStatus =
       updateInstance(anotherInstanceWithCatStatus)
         .getJson();
+
+    assertThat(updatedInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertThat(updatedInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY),
       is(updatedAnotherInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY)));
