@@ -146,7 +146,7 @@ public class ItemStorageAPI implements ItemStorage {
     CompletableFuture<Item> completableFuture = null;
     if (shouldNotRetrieveHoldingsRecord(item)) {
       item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(null, item));
-      completableFuture = CompletableFuture.supplyAsync(() -> item);
+      completableFuture = CompletableFuture.completedFuture(item);
     } else {
       completableFuture = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).thenApplyAsync(hr ->
       {
