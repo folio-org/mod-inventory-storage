@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.folio.rest.support.ResponseUtil.copyResponseWithNewEntity;
 import static org.folio.rest.support.ResponseUtil.hasCreatedStatus;
 
@@ -9,7 +10,6 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
@@ -181,8 +181,8 @@ public class ItemStorageAPI implements ItemStorage {
   }
 
   private boolean shouldNotRetrieveHoldingsRecord(Item item) {
-    return StringUtils.isNotBlank(item.getItemLevelCallNumber())
-      && StringUtils.isNotBlank(item.getItemLevelCallNumberPrefix())
-      && StringUtils.isNotBlank(item.getItemLevelCallNumberSuffix());
+    return isNoneBlank(item.getItemLevelCallNumber(),
+      item.getItemLevelCallNumberPrefix(),
+      item.getItemLevelCallNumberSuffix());
   }
 }
