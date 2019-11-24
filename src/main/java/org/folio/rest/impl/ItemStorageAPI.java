@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.folio.rest.support.ResponseUtil.copyResponseWithNewEntity;
 import static org.folio.rest.support.ResponseUtil.hasCreatedStatus;
 
@@ -10,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.folio.rest.tools.utils.TenantTool;
 
 import io.vertx.core.AsyncResult;
@@ -143,22 +144,15 @@ public class ItemStorageAPI implements ItemStorage {
 
   private CompletableFuture<Item> setEffectiveCallNumber(Map<String, String> okapiHeaders, Context vertxContext, Item item) {
     CompletableFuture<Item> completableFuture = null;
-    EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
-    if (item.getItemLevelCallNumber() != null && !item.getItemLevelCallNumber().isEmpty()) {
-      components.setCallNumber(item.getItemLevelCallNumber());
-      item.setEffectiveCallNumberComponents(components);
-      completableFuture = CompletableFuture.supplyAsync(() -> item);
+    if (shouldNotRetrieveHoldingsRecord(item)) {
+      item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(null, item));
+      completableFuture = CompletableFuture.completedFuture(item);
     } else {
-      if (item.getHoldingsRecordId() != null && !item.getHoldingsRecordId().isEmpty()) {
-        completableFuture = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).thenCombineAsync(CompletableFuture.supplyAsync(() -> item), (hr, i) ->
-        {
-          components.setCallNumber(hr.getCallNumber());
-          i.setEffectiveCallNumberComponents(components);
-          return i;
-        });
-      } else {
-        completableFuture = CompletableFuture.supplyAsync(() -> item);
-      }
+      completableFuture = getHoldingsRecordById(okapiHeaders, vertxContext, item.getHoldingsRecordId()).thenApplyAsync(hr ->
+      {
+        item.setEffectiveCallNumberComponents(EffectiveCallNumberComponentsUtil.buildComponents(hr, item));
+        return item;
+      });
     }
 
     return completableFuture;
@@ -184,5 +178,11 @@ public class ItemStorageAPI implements ItemStorage {
       );
 
     return readItemFuture;
+  }
+
+  private boolean shouldNotRetrieveHoldingsRecord(Item item) {
+    return isNoneBlank(item.getItemLevelCallNumber(),
+      item.getItemLevelCallNumberPrefix(),
+      item.getItemLevelCallNumberSuffix());
   }
 }

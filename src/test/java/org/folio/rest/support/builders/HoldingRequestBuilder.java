@@ -12,12 +12,16 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private final UUID temporaryLocationId;
   private JsonObject tags;
   private String callNumber;
+  private String callNumberPrefix;
+  private String callNumberSuffix;
 
   public HoldingRequestBuilder() {
     this(
       null,
       null,
       UUID.randomUUID(),
+      null,
+      null,
       null,
       null,
       null);
@@ -29,7 +33,9 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     UUID permanentLocationId,
     UUID temporaryLocationId,
     JsonObject tags,
-    String callNumber) {
+    String callNumber,
+    String callNumberPrefix,
+    String callNumberSuffix) {
 
     this.id = id;
     this.instanceId = instanceId;
@@ -37,6 +43,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     this.temporaryLocationId = temporaryLocationId;
     this.tags = tags;
     this.callNumber = callNumber;
+    this.callNumberPrefix = callNumberPrefix;
+    this.callNumberSuffix = callNumberSuffix;
   }
 
   @Override
@@ -49,6 +57,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "temporaryLocationId", temporaryLocationId);
     put(request, "tags", tags);
     put(request, "callNumber", callNumber);
+    put(request, "callNumberPrefix", callNumberPrefix);
+    put(request, "callNumberSuffix", callNumberSuffix);
 
     return request;
   }
@@ -60,7 +70,9 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       permanentLocationId,
       this.temporaryLocationId,
       this.tags,
-      this.callNumber);
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix);
   }
 
   public HoldingRequestBuilder withTemporaryLocation(UUID temporaryLocationId) {
@@ -70,7 +82,9 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.permanentLocationId,
       temporaryLocationId,
       this.tags,
-      this.callNumber);
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix);
   }
 
   public HoldingRequestBuilder forInstance(UUID instanceId) {
@@ -80,7 +94,9 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.permanentLocationId,
       this.temporaryLocationId,
       this.tags,
-      this.callNumber);
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix);
   }
 
   public HoldingRequestBuilder withId(UUID id) {
@@ -90,7 +106,9 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.permanentLocationId,
       this.temporaryLocationId,
       this.tags,
-      this.callNumber);
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix);
   }
 
   public HoldingRequestBuilder withTags(JsonObject tags) {
@@ -100,7 +118,9 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.permanentLocationId,
       this.temporaryLocationId,
       tags,
-      this.callNumber);
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix);
   }
 
   public HoldingRequestBuilder withCallNumber(String callNumber) {
@@ -110,6 +130,32 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.permanentLocationId,
       this.temporaryLocationId,
       this.tags,
-      callNumber);
+      callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix);
+  }
+
+  public HoldingRequestBuilder withCallNumberPrefix(String callNumberPrefix) {
+    return new HoldingRequestBuilder(
+      this.id,
+      this.instanceId,
+      this.permanentLocationId,
+      this.temporaryLocationId,
+      this.tags,
+      this.callNumber,
+      callNumberPrefix,
+      this.callNumberSuffix);
+  }
+
+  public HoldingRequestBuilder withCallNumberSuffix(String callNumberSuffix) {
+    return new HoldingRequestBuilder(
+      this.id,
+      this.instanceId,
+      this.permanentLocationId,
+      this.temporaryLocationId,
+      this.tags,
+      this.callNumber,
+      this.callNumberPrefix,
+      callNumberSuffix);
   }
 }
