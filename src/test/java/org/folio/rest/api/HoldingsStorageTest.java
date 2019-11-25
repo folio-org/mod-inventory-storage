@@ -1702,7 +1702,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     Response response = getById(holdingsArray.getJsonObject(0).getString("id"));
     assertExists(response, holdingsArray.getJsonObject(0));
-    assertThat(response.getJson().getString("hrid"), is("ho00000001"));
+    assertHRIDRange(response, "ho00000001", "ho00000002");
 
     response = getById(holdingsArray.getJsonObject(1).getString("id"));
     assertExists(response, holdingsArray.getJsonObject(1));
@@ -1710,7 +1710,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     response = getById(holdingsArray.getJsonObject(2).getString("id"));
     assertExists(response, holdingsArray.getJsonObject(2));
-    assertThat(response.getJson().getString("hrid"), is("ho00000002"));
+    assertHRIDRange(response, "ho00000001", "ho00000002");
 
     log.info("Finished canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
   }
