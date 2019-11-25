@@ -3,10 +3,10 @@ RETURNS trigger
 AS $function$
 	BEGIN
 		IF (OLD.jsonb->'statusId' IS DISTINCT FROM NEW.jsonb->'statusId') THEN
-			-- Date time in "yyyy-MM-dd'T'HH:mm:ss.SSS'+0000'" format at UTC (00:00) time zone
+			-- Date time in "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" format at UTC (00:00) time zone
 			NEW.jsonb = jsonb_set(
 		    NEW.jsonb, '{statusUpdatedDate}',
-			  to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.ms"+0000"'))
+			  to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"'))
 		  );
 		END IF;
 		RETURN NEW;
