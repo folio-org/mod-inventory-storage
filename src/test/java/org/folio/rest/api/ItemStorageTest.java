@@ -12,6 +12,7 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -1230,6 +1231,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is("Checked out"));
 
     assertThat(item.getStatus().getDate(), withinSecondsBeforeNow(seconds(2)));
+
+    assertThat(item.getStatus().getDate(), hasIsoFormat());
   }
 
   @Test
@@ -1303,6 +1306,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     String itemStatusDate = resultItem.getStatus().getDate();
 
     assertThat(itemStatusDate, withinSecondsBeforeNow(seconds(2)));
+
+    assertThat(itemStatusDate, hasIsoFormat());
 
     assertThat(itemStatusDate, not(changedStatusDate));
   }

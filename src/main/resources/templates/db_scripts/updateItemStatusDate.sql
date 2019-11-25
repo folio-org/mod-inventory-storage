@@ -8,8 +8,9 @@ AS $$
   BEGIN
   	newStatus = NEW.jsonb->'status'->>'name';
 	  IF (newStatus IS DISTINCT FROM OLD.jsonb->'status'->>'name') THEN
-	    -- Date time in "yyyy-MM-dd'T'HH:mm:ss.SSS" format at UTC (00:00) time zone
-      NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}', to_jsonb(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC'), true);
+	    -- Date time in "YYYY-MM-DD"T"HH24:MI:SS.ms'Z'" format at UTC (00:00) time zone
+      NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}',
+       to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"')), true);
 	  END IF;
 	RETURN NEW;
   END;
