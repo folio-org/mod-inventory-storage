@@ -91,6 +91,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
+    setHoldingsSequence(1);
+
     UUID holdingId = UUID.randomUUID();
 
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
@@ -102,6 +104,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holding.getString("id"), is(holdingId.toString()));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+    assertThat(holding.getString("hrid"), is("ho00000001"));
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -112,6 +115,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -207,6 +211,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
+    setHoldingsSequence(1);
+
     UUID holdingId = UUID.randomUUID();
 
     holdingsClient.replace(holdingId, new HoldingRequestBuilder()
@@ -224,6 +230,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -271,6 +278,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
+    setHoldingsSequence(1);
+
     IndividualResource holdingResource = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
@@ -293,6 +302,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(annexLibraryLocationId.toString()));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -830,41 +840,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateAHoldingsWhenHRIDNotSupplied()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
-    log.info("Starting canCreateAHoldingsWhenHRIDNotSupplied");
-
-    final UUID instanceId = UUID.randomUUID();
-
-    instancesClient.create(smallAngryPlanet(instanceId));
-
-    final UUID holdingsId = UUID.randomUUID();
-
-    setHoldingsSequence(1);
-
-    final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
-      .withId(holdingsId)
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
-
-    assertThat(holdings.getString("hrid"), is("ho00000001"));
-
-    final Response getResponse = holdingsClient.getById(holdingsId);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    final JsonObject holdingsFromGet = getResponse.getJson();
-
-    assertThat(holdingsFromGet.getString("hrid"), is("ho00000001"));
-
-    log.info("Finished canCreateAHoldingsWhenHRIDNotSupplied");
-  }
-
-  @Test
   public void canCreateAHoldingsWhenHRIDIsSupplied()
       throws MalformedURLException,
       InterruptedException,
@@ -1084,39 +1059,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUsePutToCreateAHoldingsWhenHRIDNotSupplied()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
-    log.info("Starting canUsePutToCreateAHoldingsWhenHRIDNotSupplied");
-
-    final UUID instanceId = UUID.randomUUID();
-
-    instancesClient.create(smallAngryPlanet(instanceId));
-
-    final UUID holdingsId = UUID.randomUUID();
-
-    setHoldingsSequence(1);
-
-    holdingsClient.replace(holdingsId, new HoldingRequestBuilder()
-      .withId(holdingsId)
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))));
-
-    final Response getResponse = holdingsClient.getById(holdingsId);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    final JsonObject holdingsFromGet = getResponse.getJson();
-
-    assertThat(holdingsFromGet.getString("hrid"), is("ho00000001"));
-
-    log.info("Finished canUsePutToCreateAHoldingsWhenHRIDNotSupplied");
-  }
-
-  @Test
   public void canUsePutToCreateAHoldingsWhenHRIDIsSupplied()
       throws MalformedURLException,
       InterruptedException,
@@ -1172,8 +1114,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithSuppliedAndHRID() {
-    log.info("Starting canPostSynchronousBatchWithSuppliedAndHRID");
+  public void canPostSynchronousBatchWithSuppliedAndGeneratedHRID() {
+    log.info("Starting canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
 
     setHoldingsSequence(1);
 
@@ -1196,7 +1138,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertExists(response, holdingsArray.getJsonObject(2));
     assertThat(response.getJson().getString("hrid"), is("ho00000002"));
 
-    log.info("Finished canPostSynchronousBatchWithSuppliedAndHRID");
+    log.info("Finished canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
   }
 
   @Test

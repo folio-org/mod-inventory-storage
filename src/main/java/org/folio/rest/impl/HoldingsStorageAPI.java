@@ -181,13 +181,8 @@ public class HoldingsStorageAPI implements HoldingsStorage {
             }
           }
 
-          final Future<String> hridFuture;
-          if (isBlank(entity.getHrid())) {
-            final HridManager hridManager = new HridManager(vertxContext, postgresClient);
-            hridFuture = hridManager.getNextHoldingsHrid();
-          } else {
-            hridFuture = Promise.succeededPromise(entity.getHrid()).future();
-          }
+          final Future<String> hridFuture =
+              setHoldingsHrid(entity, vertxContext, postgresClient);
 
           hridFuture.map(hrid -> {
             entity.setHrid(hrid);
@@ -361,10 +356,10 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                 List<HoldingsRecord> holdingsList = reply.result().getResults();
 
                 if (holdingsList.size() == 1) {
-                  try {
-                    postgresClient.startTx(connection -> {
-                      final HoldingsRecord existingHoldings = holdingsList.get(0);
-                      if (Objects.equals(entity.getHrid(), existingHoldings.getHrid())) { 
+                  final HoldingsRecord existingHoldings = holdingsList.get(0);
+                  if (Objects.equals(entity.getHrid(), existingHoldings.getHrid())) { 
+                    try {
+                      postgresClient.startTx(connection -> {
                         updateItemEffectiveCallNumbersByHoldings(connection, postgresClient, entity).setHandler(updateResult -> {
                           if (updateResult.succeeded()) {
                             postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity,
@@ -397,42 +392,36 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                                   });
                                 }
                               });
-                          } else {
-                            postgresClient.rollbackTx(connection, rollback ->
-                              asyncResultHandler.handle(
-                                Future.succeededFuture(
-                                  PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                    .respond500WithTextPlain(
-                                      updateResult.cause().getMessage()))));
-                          }
-                        });
-                      } else {
-                        postgresClient.rollbackTx(connection, rollback ->
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                .respond400WithTextPlain(
-                                    "The hrid field cannot be changed: new="
-                                      + entity.getHrid()
-                                      + ", old="
-                                      + existingHoldings.getHrid()))));
-                      }
-                    });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                        .respond500WithTextPlain(e.getMessage())));
+                            } else {
+                              postgresClient.rollbackTx(connection, rollback ->
+                                asyncResultHandler.handle(
+                                  Future.succeededFuture(
+                                    PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                      .respond500WithTextPlain(
+                                        updateResult.cause().getMessage()))));
+                            }
+                          });
+                      });
+                    } catch (Exception e) {
+                      asyncResultHandler.handle(Future.succeededFuture(
+                        PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                          .respond500WithTextPlain(e.getMessage())));
+                    }
+                  } else {
+                    asyncResultHandler.handle(
+                      Future.succeededFuture(
+                        PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                          .respond400WithTextPlain(
+                              "The hrid field cannot be changed: new="
+                                + entity.getHrid()
+                                + ", old="
+                                + existingHoldings.getHrid())));
                   }
               }
               else {
                 try {
-                  final Future<String> hridFuture;
-                  if (isBlank(entity.getHrid())) {
-                    final HridManager hridManager = new HridManager(vertxContext, postgresClient);
-                    hridFuture = hridManager.getNextHoldingsHrid();
-                  } else {
-                    hridFuture = Promise.succeededPromise(entity.getHrid()).future();
-                  }
+                  final Future<String> hridFuture =
+                      setHoldingsHrid(entity, vertxContext, postgresClient);
 
                   hridFuture.map(hrid -> {
                     entity.setHrid(hrid);
@@ -494,6 +483,20 @@ public class HoldingsStorageAPI implements HoldingsStorage {
         PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
           .respond500WithTextPlain(e.getMessage())));
     }
+  }
+
+  private Future<String> setHoldingsHrid(HoldingsRecord entity, Context vertxContext,
+      PostgresClient postgresClient) {
+    final Future<String> hridFuture;
+
+    if (isBlank(entity.getHrid())) {
+      final HridManager hridManager = new HridManager(vertxContext, postgresClient);
+      hridFuture = hridManager.getNextHoldingsHrid();
+    } else {
+      hridFuture = Promise.succeededPromise(entity.getHrid()).future();
+    }
+
+    return hridFuture;
   }
 
   private boolean isUUID(String id) {
