@@ -6,6 +6,7 @@ import org.hamcrest.TypeSafeMatcher;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Seconds;
+import org.joda.time.format.DateTimeFormat;
 
 public final class DateTimeMatchers {
 
@@ -37,5 +38,30 @@ public final class DateTimeMatchers {
 
   public static Matcher<String> withinSecondsBeforeNow(Seconds seconds) {
     return withinSecondsBefore(seconds, DateTime.now(DateTimeZone.UTC));
+  }
+
+  public static Matcher<String> hasIsoFormat() {
+    String acceptableFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+
+    return new TypeSafeMatcher<String>() {
+      @Override
+      protected boolean matchesSafely(String dateTimeAsString) {
+        try {
+          DateTimeFormat.forPattern(acceptableFormat)
+            .parseDateTime(dateTimeAsString);
+        } catch (IllegalArgumentException ex) {
+          return false;
+        }
+
+        return true;
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description
+          .appendText("Has ISO-8601 format:")
+          .appendValue(acceptableFormat);
+      }
+    };
   }
 }
