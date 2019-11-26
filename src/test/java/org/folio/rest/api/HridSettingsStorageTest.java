@@ -308,7 +308,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
-    hridManager.getNextHoldingHrid()
+    hridManager.getNextHoldingsHrid()
       .compose(hrid -> validateHrid(hrid, "ho00000001", testContext))
       .setHandler(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextHoldingHrid()")));
@@ -331,7 +331,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.updateHridSettings(newHridSettings).setHandler(
         testContext.asyncAssertSuccess(
-            hridSettings -> hridManager.getNextHoldingHrid().compose(
+            hridSettings -> hridManager.getNextHoldingsHrid().compose(
                 hrid -> validateHrid(hrid, "ho00007890", testContext))
               .setHandler(testContext.asyncAssertSuccess(
                   v -> log.info("Finished canGetNextHoldingHridAfterSettingStartNumber()")))));

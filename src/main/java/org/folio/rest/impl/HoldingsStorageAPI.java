@@ -1,9 +1,11 @@
 package org.folio.rest.impl;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.buildComponents;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,6 +18,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -23,7 +26,9 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.tools.utils.ValidationHelper;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -175,30 +180,49 @@ public class HoldingsStorageAPI implements HoldingsStorage {
             }
           }
 
-          postgresClient.save(HOLDINGS_RECORD_TABLE, entity.getId(), entity,
-            reply -> {
-              try {
-                if(reply.succeeded()) {
-                  String ret = reply.result();
+          final Future<String> hridFuture =
+              setHoldingsHrid(entity, vertxContext, postgresClient);
+
+          hridFuture.map(hrid -> {
+            entity.setHrid(hrid);
+            postgresClient.save(HOLDINGS_RECORD_TABLE, entity.getId(), entity,
+              reply -> {
+                try {
+                  if(reply.succeeded()) {
+                    String ret = reply.result();
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(
+                        PostHoldingsStorageHoldingsResponse
+                          .respond201WithApplicationJson(entity, PostHoldingsStorageHoldingsResponse.headersFor201().withLocation(ret))));
+                  }
+                  else {
+                    if (PgExceptionUtil.isUniqueViolation(reply.cause())) {
+                      ValidationHelper.handleError(reply.cause(), asyncResultHandler);
+                    } else {
+                      asyncResultHandler.handle(
+                        io.vertx.core.Future.succeededFuture(
+                          PostHoldingsStorageHoldingsResponse
+                            .respond400WithTextPlain(reply.cause().getMessage())));
+                    }
+                  }
+                } catch (Exception e) {
+                  log.error(e.getMessage());
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       PostHoldingsStorageHoldingsResponse
-                        .respond201WithApplicationJson(entity, PostHoldingsStorageHoldingsResponse.headersFor201().withLocation(ret))));
+                        .respond500WithTextPlain(e.getMessage())));
                 }
-                else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(
-                      PostHoldingsStorageHoldingsResponse
-                        .respond400WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                log.error(e.getMessage());
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(
-                    PostHoldingsStorageHoldingsResponse
-                      .respond500WithTextPlain(e.getMessage())));
-              }
-            });
+              });
+            return null;
+          })
+          .otherwise(error -> {
+            log.error(error.getMessage(), error);
+            asyncResultHandler.handle(
+              io.vertx.core.Future.succeededFuture(
+                PostHoldingsStorageHoldingsResponse
+                  .respond500WithTextPlain(error.getMessage())));
+            return null;
+          });
         } catch (Exception e) {
           log.error(e.getMessage());
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -331,81 +355,110 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                 List<HoldingsRecord> holdingsList = reply.result().getResults();
 
                 if (holdingsList.size() == 1) {
-                  try {
-                    postgresClient.startTx(connection -> {
-                      updateItemEffectiveCallNumbersByHoldings(connection, postgresClient, entity).setHandler(updateResult -> {
-                        if (updateResult.succeeded()) {
-                          postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity,
-                            "jsonb", String.format(WHERE_CLAUSE, holdingsRecordId), false,
-                            update -> {
-                              try {
-                                if (update.succeeded()) {
-                                  postgresClient.endTx(connection, done -> {
-                                    asyncResultHandler.handle(
-                                      Future.succeededFuture(
-                                        PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                          .respond204()));
-                                  });
-                                }
-                                else {
+                  final HoldingsRecord existingHoldings = holdingsList.get(0);
+                  if (Objects.equals(entity.getHrid(), existingHoldings.getHrid())) { 
+                    try {
+                      postgresClient.startTx(connection -> {
+                        updateItemEffectiveCallNumbersByHoldings(connection, postgresClient, entity).setHandler(updateResult -> {
+                          if (updateResult.succeeded()) {
+                            postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity,
+                              "jsonb", String.format(WHERE_CLAUSE, holdingsRecordId), false,
+                              update -> {
+                                try {
+                                  if (update.succeeded()) {
+                                    postgresClient.endTx(connection, done -> {
+                                      asyncResultHandler.handle(
+                                        Future.succeededFuture(
+                                          PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                            .respond204()));
+                                    });
+                                  }
+                                  else {
+                                    postgresClient.rollbackTx(connection, rollback -> {
+                                      asyncResultHandler.handle(
+                                        Future.succeededFuture(
+                                          PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                            .respond500WithTextPlain(
+                                              update.cause().getMessage())));
+                                    });
+                                  }
+                                } catch (Exception e) {
                                   postgresClient.rollbackTx(connection, rollback -> {
                                     asyncResultHandler.handle(
                                       Future.succeededFuture(
                                         PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                          .respond500WithTextPlain(
-                                            update.cause().getMessage())));
+                                          .respond500WithTextPlain(e.getMessage())));
                                   });
                                 }
-                              } catch (Exception e) {
-                                postgresClient.rollbackTx(connection, rollback -> {
-                                  asyncResultHandler.handle(
-                                    Future.succeededFuture(
-                                      PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                        .respond500WithTextPlain(e.getMessage())));
-                                });
-                              }
-                            });
-                        } else {
-                          postgresClient.rollbackTx(connection, rollback -> {
-                            Future.succeededFuture(
-                              PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                .respond500WithTextPlain(
-                                  updateResult.cause().getMessage()));
+                              });
+                            } else {
+                              postgresClient.rollbackTx(connection, rollback ->
+                                asyncResultHandler.handle(
+                                  Future.succeededFuture(
+                                    PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                      .respond500WithTextPlain(
+                                        updateResult.cause().getMessage()))));
+                            }
                           });
-                        }
                       });
-                    });
-                  } catch (Exception e) {
-                    asyncResultHandler.handle(Future.succeededFuture(
-                      PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                        .respond500WithTextPlain(e.getMessage())));
+                    } catch (Exception e) {
+                      asyncResultHandler.handle(Future.succeededFuture(
+                        PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                          .respond500WithTextPlain(e.getMessage())));
+                    }
+                  } else {
+                    asyncResultHandler.handle(
+                      Future.succeededFuture(
+                        PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                          .respond400WithTextPlain(
+                              "The hrid field cannot be changed: new="
+                                + entity.getHrid()
+                                + ", old="
+                                + existingHoldings.getHrid())));
                   }
               }
               else {
                 try {
-                  postgresClient.save(HOLDINGS_RECORD_TABLE, entity.getId(), entity,
-                    save -> {
-                      try {
-                        if(save.succeeded()) {
+                  final Future<String> hridFuture =
+                      setHoldingsHrid(entity, vertxContext, postgresClient);
+
+                  hridFuture.map(hrid -> {
+                    entity.setHrid(hrid);
+                    postgresClient.save(HOLDINGS_RECORD_TABLE, entity.getId(), entity,
+                      save -> {
+                        try {
+                          if(save.succeeded()) {
+                            asyncResultHandler.handle(
+                              Future.succeededFuture(
+                                PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                  .respond204()));
+                          }
+                          else {
+                            if (PgExceptionUtil.isUniqueViolation(save.cause())) {
+                              asyncResultHandler.handle(
+                                Future.succeededFuture(
+                                  PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                    .respond400WithTextPlain(PgExceptionUtil.badRequestMessage(save.cause()))));
+                            } else {
+                              asyncResultHandler.handle(
+                                Future.succeededFuture(
+                                  PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
+                                    .respond500WithTextPlain(
+                                      save.cause().getMessage())));
+                            }
+                          }
+                        } catch (Exception e) {
                           asyncResultHandler.handle(
                             Future.succeededFuture(
                               PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                .respond204()));
+                                .respond500WithTextPlain(e.getMessage())));
                         }
-                        else {
-                          asyncResultHandler.handle(
-                            Future.succeededFuture(
-                              PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                                .respond500WithTextPlain(
-                                  save.cause().getMessage())));
-                        }
-                      } catch (Exception e) {
-                        asyncResultHandler.handle(
-                          Future.succeededFuture(
-                            PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
-                              .respond500WithTextPlain(e.getMessage())));
-                      }
-                    });
+                      });
+                    return null;
+                  })
+                  .otherwise(error -> {
+                    return null;
+                  });
                 } catch (Exception e) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
@@ -429,6 +482,20 @@ public class HoldingsStorageAPI implements HoldingsStorage {
         PutHoldingsStorageHoldingsByHoldingsRecordIdResponse
           .respond500WithTextPlain(e.getMessage())));
     }
+  }
+
+  private Future<String> setHoldingsHrid(HoldingsRecord entity, Context vertxContext,
+      PostgresClient postgresClient) {
+    final Future<String> hridFuture;
+
+    if (isBlank(entity.getHrid())) {
+      final HridManager hridManager = new HridManager(vertxContext, postgresClient);
+      hridFuture = hridManager.getNextHoldingsHrid();
+    } else {
+      hridFuture = Promise.succeededPromise(entity.getHrid()).future();
+    }
+
+    return hridFuture;
   }
 
   private boolean isUUID(String id) {

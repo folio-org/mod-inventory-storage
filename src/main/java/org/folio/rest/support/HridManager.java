@@ -36,7 +36,7 @@ public class HridManager {
     return getNextHrid(hridSettings -> getNextHrid(hridSettings.getInstances(), "instances"));
   }
 
-  public Future<String> getNextHoldingHrid() {
+  public Future<String> getNextHoldingsHrid() {
     return getNextHrid(hridSettings -> getNextHrid(hridSettings.getHoldings(), "holdings"));
   }
 

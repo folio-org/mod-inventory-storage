@@ -7,6 +7,7 @@ import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -15,8 +16,12 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -31,6 +36,8 @@ import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -43,11 +50,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
+  private static final Logger log = LoggerFactory.getLogger(HoldingsStorageTest.class);
   private static final String TAG_VALUE = "test-tag";
   public static final String NEW_TEST_TAG = "new test tag";
 
@@ -65,6 +76,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.checkForMismatchedIDs("holdings_record");
   }
 
+  @After
+  public void resetHoldingsHRID() {
+    setHoldingsSequence(1);
+  }
+
   @Test
   public void canCreateAHolding()
     throws MalformedURLException,
@@ -75,6 +91,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
+
+    setHoldingsSequence(1);
 
     UUID holdingId = UUID.randomUUID();
 
@@ -87,6 +105,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holding.getString("id"), is(holdingId.toString()));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+    assertThat(holding.getString("hrid"), is("ho00000001"));
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -97,6 +116,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -192,6 +212,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
+    setHoldingsSequence(1);
+
     UUID holdingId = UUID.randomUUID();
 
     holdingsClient.replace(holdingId, new HoldingRequestBuilder()
@@ -209,6 +231,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -256,6 +279,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
+    setHoldingsSequence(1);
+
     IndividualResource holdingResource = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
@@ -278,6 +303,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(annexLibraryLocationId.toString()));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -1387,6 +1413,375 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       is("permanentLocationId"));
   }
 
+  @Test
+  public void canCreateAHoldingsWhenHRIDIsSupplied()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+    log.info("Starting canCreateAHoldingsWhenHRIDIsSupplied");
+
+    final UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    final UUID holdingsId = UUID.randomUUID();
+
+    final String hrid = "TEST1001";
+
+    final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingsId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withHrid(hrid)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    assertThat(holdings.getString("hrid"), is(hrid));
+
+    final Response getResponse = holdingsClient.getById(holdingsId);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    final JsonObject holdingsFromGet = getResponse.getJson();
+
+    assertThat(holdingsFromGet.getString("hrid"), is(hrid));
+
+    log.info("Finished canCreateAHoldingsWhenHRIDIsSupplied");
+  }
+
+  @Test
+  public void cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+    log.info("Starting cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
+
+    final UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    final UUID holdingsId = UUID.randomUUID();
+
+    setHoldingsSequence(1);
+
+    final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingsId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    assertThat(holdings.getString("hrid"), is("ho00000001"));
+
+    final Response getResponse = holdingsClient.getById(holdingsId);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    final JsonObject holdingsFromGet = getResponse.getJson();
+
+    assertThat(holdingsFromGet.getString("hrid"), is("ho00000001"));
+
+    final JsonObject duplicateHoldings = new HoldingRequestBuilder()
+        .withId(UUID.randomUUID())
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+        .withHrid("ho00000001")
+        .create();
+
+    final Response duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
+
+    assertThat(duplicateResponse.getStatusCode(), is(422));
+
+    final Errors errors = duplicateResponse.getJson().mapTo(Errors.class);
+
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    assertThat(errors.getErrors().size(), is(1));
+    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getMessage(),
+        is("duplicate key value violates unique constraint \"holdings_record_hrid_idx_unique\""));
+    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().size(), is(1));
+    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
+        is("lower(f_unaccent(jsonb ->> 'hrid'::text"));
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
+        is("ho00000001"));
+
+    log.info("Finished cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
+  }
+
+  @Test
+  public void cannotCreateAHoldingsWithHRIDFailure()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+    log.info("Starting cannotCreateAHoldingsWithHRIDFailure");
+
+    final UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    setHoldingsSequence(99999999);
+
+    final JsonObject goodHholdings = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(UUID.randomUUID())
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    assertThat(goodHholdings.getString("hrid"), is("ho99999999"));
+
+    final JsonObject badHoldings = new HoldingRequestBuilder()
+      .withId(UUID.randomUUID())
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .create();
+
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(holdingsStorageUrl(""), badHoldings, TENANT_ID, text(createCompleted));
+
+    final Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+    assertThat(response.getBody(),
+        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_holdings_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+
+    log.info("Finished cannotCreateAHoldingsWithHRIDFailure");
+  }
+
+  @Test
+  public void cannotChangeHRIDAfterCreation()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+    log.info("Starting cannotChangeHRIDAfterCreation");
+
+    final UUID instanceId = UUID.randomUUID();
+    final UUID holdingsId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    setHoldingsSequence(1);
+
+    final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingsId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    assertThat(holdings.getString("hrid"), is("ho00000001"));
+
+    holdings.put("hrid", "ABC123");
+
+    final CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
+
+    client.put(holdingsStorageUrl(String.format("/%s", holdingsId)), holdings, TENANT_ID,
+        text(updateCompleted));
+
+    final Response response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(),
+        is("The hrid field cannot be changed: new=ABC123, old=ho00000001"));
+
+    log.info("Finished cannotChangeHRIDAfterCreation");
+  }
+
+  @Test
+  public void cannotRemoveHRIDAfterCreation()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+    log.info("Starting cannotRemoveHRIDAfterCreation");
+
+    final UUID instanceId = UUID.randomUUID();
+    final UUID holdingsId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    setHoldingsSequence(1);
+
+    final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingsId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    assertThat(holdings.getString("hrid"), is("ho00000001"));
+
+    holdings.remove("hrid");
+
+    final CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
+
+    client.put(holdingsStorageUrl(String.format("/%s", holdingsId)), holdings, TENANT_ID,
+        text(updateCompleted));
+
+    final Response response = updateCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(),
+        is("The hrid field cannot be changed: new=null, old=ho00000001"));
+
+    log.info("Finished cannotRemoveHRIDAfterCreation");
+  }
+
+  @Test
+  public void canUsePutToCreateAHoldingsWhenHRIDIsSupplied()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+    log.info("Starting canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
+
+    final UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    final UUID holdingsId = UUID.randomUUID();
+
+    final String hrid = "TEST1001";
+
+    holdingsClient.replace(holdingsId, new HoldingRequestBuilder()
+      .withId(holdingsId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withHrid(hrid)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))));
+
+    final Response getResponse = holdingsClient.getById(holdingsId);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    final JsonObject holdingsFromGet = getResponse.getJson();
+
+    assertThat(holdingsFromGet.getString("hrid"), is(hrid));
+
+    log.info("Finished canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithGeneratedHRID() {
+    log.info("Starting canPostSynchronousBatchWithGeneratedHRID");
+
+    setHoldingsSequence(1);
+
+    final JsonArray holdingsArray = threeHoldings();
+
+    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    holdingsArray.stream()
+        .map(o -> (JsonObject) o)
+        .forEach(holdings -> {
+          final Response response = getById(holdings.getString("id"));
+          assertExists(response, holdings);
+          assertHRIDRange(response, "ho00000001", "ho00000003");
+        });
+
+    log.info("Finished canPostSynchronousBatchWithGeneratedHRID");
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithSuppliedAndGeneratedHRID() {
+    log.info("Starting canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
+
+    setHoldingsSequence(1);
+
+    final String hrid = "ABC123";
+    final JsonArray holdingsArray = threeHoldings();
+
+    holdingsArray.getJsonObject(1).put("hrid", hrid);
+
+    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    Response response = getById(holdingsArray.getJsonObject(0).getString("id"));
+    assertExists(response, holdingsArray.getJsonObject(0));
+    assertHRIDRange(response, "ho00000001", "ho00000002");
+
+    response = getById(holdingsArray.getJsonObject(1).getString("id"));
+    assertExists(response, holdingsArray.getJsonObject(1));
+    assertThat(response.getJson().getString("hrid"), is(hrid));
+
+    response = getById(holdingsArray.getJsonObject(2).getString("id"));
+    assertExists(response, holdingsArray.getJsonObject(2));
+    assertHRIDRange(response, "ho00000001", "ho00000002");
+
+    log.info("Finished canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithDuplicateHRIDs() {
+    log.info("Starting cannotPostSynchronousBatchWithDuplicateHRIDs");
+
+    setHoldingsSequence(1);
+
+    final JsonArray holdingsArray = threeHoldings();
+    final String duplicateHRID = "ho00000001";
+    holdingsArray.getJsonObject(1).put("hrid", duplicateHRID);
+
+    assertThat(postSynchronousBatch(holdingsArray), allOf(
+        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        errorMessageContains("duplicate key"),
+        errorParametersValueIs(duplicateHRID)));
+
+    for (int i = 0; i < holdingsArray.size(); i++) {
+      assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
+    }
+
+    log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithHRIDFailure() {
+    log.info("Starting cannotPostSynchronousBatchWithHRIDFailure");
+
+    setHoldingsSequence(99999999);
+
+    final JsonArray holdingsArray = threeHoldings();
+
+    final Response response = postSynchronousBatch(holdingsArray);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+    assertThat(response.getBody(),
+        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_holdings_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+
+    for (int i = 0; i < holdingsArray.size(); i++) {
+      assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
+    }
+
+    log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
+  }
+
+  private void setHoldingsSequence(int sequenceNumber) {
+    final Vertx vertx = StorageTestSuite.getVertx();
+    final PostgresClient postgresClient =
+        PostgresClient.getInstance(vertx, TENANT_ID);
+    final CompletableFuture<Void> sequenceSet = new CompletableFuture<>();
+
+    vertx.runOnContext(v -> {
+      postgresClient.selectSingle("select setval('hrid_holdings_seq',"
+          + sequenceNumber + ",FALSE)", r -> {
+            if (r.succeeded()) {
+              sequenceSet.complete(null);
+            } else {
+              sequenceSet.completeExceptionally(r.cause());
+            }
+          });
+    });
+
+    try {
+      sequenceSet.get(2, SECONDS);
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
+  }
+
   /**
    * Create three instances, and for each of them return a JsonObject of a new holding belonging to it.
    * The holdings are not created.
@@ -1501,6 +1896,16 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     Response response = getById(expectedHolding.getString("id"));
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
     assertThat(response.getBody(), containsString(expectedHolding.getString("instanceId")));
+  }
+
+  private void assertExists(Response response, JsonObject expectedHolding) {
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
+    assertThat(response.getBody(), containsString(expectedHolding.getString("instanceId")));
+  }
+
+  private void assertHRIDRange(Response response, String minHRID, String maxHRID) {
+    assertThat(response.getJson().getString("hrid"),
+        is(both(greaterThanOrEqualTo(minHRID)).and(lessThanOrEqualTo(maxHRID))));
   }
 
   private Response create(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {
