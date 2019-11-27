@@ -1,13 +1,18 @@
 package org.folio.rest.api;
 
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
@@ -21,11 +26,15 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -43,9 +52,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.LastCheckIn;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -55,12 +66,15 @@ import org.folio.rest.support.ResponseHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
-
+  private static final Logger log = LoggerFactory.getLogger(ItemStorageTest.class);
   private static final String TAG_VALUE = "test-tag";
 
   // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
@@ -70,6 +84,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+  }
+
+  @After
+  public void resetItemHRID() {
+    setItemSequence(1);
   }
 
   @After
@@ -103,6 +122,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     //TODO: Replace with real service point when validated
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
 
+    setItemSequence(1);
+
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
@@ -126,7 +147,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromPost.getString("temporaryLocationId"),
       is(annexLibraryLocationId.toString()));
     assertThat(itemFromPost.getString("inTransitDestinationServicePointId"),
-      is(inTransitServicePointId));
+        is(inTransitServicePointId));
+    assertThat(itemFromPost.getString("hrid"), is("it00000001"));
 
     Response getResponse = getById(id);
 
@@ -145,8 +167,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(canCirculateLoanTypeID));
     assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLibraryLocationId.toString()));
-    assertThat(itemFromPost.getString("inTransitDestinationServicePointId"),
+    assertThat(itemFromGet.getString("inTransitDestinationServicePointId"),
       is(inTransitServicePointId));
+    assertThat(itemFromGet.getString("hrid"), is("it00000001"));
 
     List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -355,6 +378,43 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(
       itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
        is("testItemCallNumber"));
+  }
+
+  @Test
+  public void canCreateAnItemWithHRIDSupplied()
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+    log.info("Starting canCreateAnItemWithHRIDSupplied");
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final UUID id = UUID.randomUUID();
+
+    final JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("hrid", "ITEM12345")
+      .put("tags", new JsonObject().put("tagList",new JsonArray().add(TAG_VALUE)));
+
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    final Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create item: %s", postResponse.getBody()),
+      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(postResponse.getJson().getString("hrid"), is("ITEM12345"));
+
+    final Response getResponse = getById(id);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(getResponse.getJson().getString("hrid"), is("ITEM12345"));
+
+    log.info("Finished canCreateAnItemWithHRIDSupplied");
   }
 
   @Test
@@ -750,6 +810,38 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canUpdateAnItemHRIDDoesNotChange()
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+    log.info("Starting canUpdateAnItemHRIDDoesNotChange");
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final JsonObject itemToCreate = new JsonObject();
+    final String itemId = UUID.randomUUID().toString();
+
+    itemToCreate.put("id", itemId);
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+
+    setItemSequence(1);
+
+    createItem(itemToCreate);
+
+    final CompletableFuture<Response> completed = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl("/" + itemId), itemToCreate, StorageTestSuite.TENANT_ID,
+        ResponseHandler.text(completed));
+
+    final Response getResponse = getById(UUID.fromString(itemId));
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(getResponse.getJson().getString("hrid"), is("it00000001"));
+
+    log.info("Finished canUpdateAnItemHRIDDoesNotChange");
+  }
+
+  @Test
   public void cannotAddANonExistentPermanentLocation()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
@@ -894,6 +986,97 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotCreateAnItemWithDuplicateHRID()
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+    log.info("Starting cannotCreateAnItemWithDuplicateHRID");
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final JsonObject itemToCreate = new JsonObject()
+        .put("id", UUID.randomUUID().toString())
+        .put("holdingsRecordId", holdingsRecordId.toString())
+        .put("permanentLoanTypeId", canCirculateLoanTypeID)
+        .put("materialTypeId", journalMaterialTypeID);
+
+    setItemSequence(1);
+
+    createItem(itemToCreate);
+
+    final Response response = getById(itemToCreate.getString("id"));
+
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    assertThat(response.getJson().getString("hrid"), is("it00000001"));
+
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    itemToCreate.put("id", UUID.randomUUID().toString());
+    itemToCreate.put("hrid", "it00000001");
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+        json(createCompleted));
+
+    final Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+
+    final Errors errors = postResponse.getJson().mapTo(Errors.class);
+
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getMessage(),
+        is("lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table item: it00000001"));
+    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
+        is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
+        is("it00000001"));
+
+    log.info("Finished cannotCreateAnItemWithDuplicateHRID");
+  }
+
+  @Test
+  public void cannotCreateAnItemWithHRIDFailure()
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+    log.info("Starting cannotCreateAnItemWithHRIDFailure");
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final JsonObject itemToCreate = new JsonObject()
+        .put("id", UUID.randomUUID().toString())
+        .put("holdingsRecordId", holdingsRecordId.toString())
+        .put("permanentLoanTypeId", canCirculateLoanTypeID)
+        .put("materialTypeId", journalMaterialTypeID);
+
+    setItemSequence(99999999);
+
+    createItem(itemToCreate);
+
+    final Response response = getById(itemToCreate.getString("id"));
+
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    assertThat(response.getJson().getString("hrid"), is("it99999999"));
+
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    itemToCreate.put("id", UUID.randomUUID().toString());
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+        text(createCompleted));
+
+    final Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HTTP_INTERNAL_ERROR));
+    assertThat(postResponse.getBody(),
+        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_items_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+
+    log.info("Finished cannotCreateAnItemWithHRIDFailure");
+  }
+
+  @Test
   public void cannotUpdateAnItemWithNonexistingMaterialType()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
@@ -905,6 +1088,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    itemToCreate.put("hrid", "testHRID");
     createItem(itemToCreate);
 
     itemToCreate.put("materialTypeId", UUID.randomUUID().toString());
@@ -917,6 +1101,74 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
         containsString("Cannot set item.materialtypeid"));
+  }
+
+  @Test
+  public void cannotUpdateAnItemWithChangedHRID()
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+    log.info("Starting cannotUpdateAnItemWithChangedHRID");
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final String itemId = UUID.randomUUID().toString();
+    final JsonObject itemToCreate = new JsonObject()
+        .put("id", itemId)
+        .put("holdingsRecordId", holdingsRecordId.toString())
+        .put("permanentLoanTypeId", canCirculateLoanTypeID)
+        .put("materialTypeId", bookMaterialTypeID);
+
+    setItemSequence(1);
+
+    createItem(itemToCreate);
+
+    itemToCreate.put("hrid", "ABC123");
+
+    final CompletableFuture<Response> completed = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl("/" + itemId), itemToCreate, StorageTestSuite.TENANT_ID,
+        ResponseHandler.text(completed));
+
+    final Response response = completed.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(),
+        is("The hrid field cannot be changed: new=ABC123, old=it00000001"));
+
+    log.info("Finished cannotUpdateAnItemWithChangedHRID");
+  }
+
+  @Test
+  public void cannotUpdateAnItemWithRemovedHRID()
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
+    log.info("Starting cannotUpdateAnItemWithRemovedHRID");
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final String itemId = UUID.randomUUID().toString();
+    final JsonObject itemToCreate = new JsonObject()
+        .put("id", itemId)
+        .put("holdingsRecordId", holdingsRecordId.toString())
+        .put("permanentLoanTypeId", canCirculateLoanTypeID)
+        .put("materialTypeId", bookMaterialTypeID);
+
+    setItemSequence(1);
+
+    createItem(itemToCreate);
+
+    itemToCreate.remove("hrid");
+
+    final CompletableFuture<Response> completed = new CompletableFuture<>();
+
+    client.put(itemsStorageUrl("/" + itemId), itemToCreate, StorageTestSuite.TENANT_ID,
+        ResponseHandler.text(completed));
+
+    final Response response = completed.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(),
+        is("The hrid field cannot be changed: new=null, old=it00000001"));
+
+    log.info("Finished cannotUpdateAnItemWithRemovedHRID");
   }
 
   @Test
@@ -1095,6 +1347,102 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canPostSynchronousBatchWithGeneratedHRID() {
+    log.info("Starting canPostSynchronousBatchWithGeneratedHRID");
+
+    setItemSequence(1);
+
+    final JsonArray itemsArray = threeItems();
+
+    assertThat(postSynchronousBatch(itemsArray), statusCodeIs(HTTP_CREATED));
+
+    for (Object item : itemsArray) {
+      assertExists((JsonObject) item);
+    }
+
+    itemsArray.stream()
+        .map(o -> (JsonObject) o)
+        .forEach(item -> {
+          final Response response = getById(item.getString("id"));
+          assertExists(response, item);
+          assertHRIDRange(response, "it00000001", "it00000003");
+        });
+
+    log.info("Finished canPostSynchronousBatchWithGeneratedHRID");
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithSuppliedAndGeneratedHRID() {
+    log.info("Starting canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
+
+    setItemSequence(1);
+
+    final String hrid = "ABC123";
+    final JsonArray itemsArray = threeItems();
+
+    itemsArray.getJsonObject(1).put("hrid", hrid);
+
+    assertThat(postSynchronousBatch(itemsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    Response response = getById(itemsArray.getJsonObject(0).getString("id"));
+    assertExists(response, itemsArray.getJsonObject(0));
+    assertHRIDRange(response, "it00000001", "it00000002");
+
+    response = getById(itemsArray.getJsonObject(1).getString("id"));
+    assertExists(response, itemsArray.getJsonObject(1));
+    assertThat(response.getJson().getString("hrid"), is(hrid));
+
+    response = getById(itemsArray.getJsonObject(2).getString("id"));
+    assertExists(response, itemsArray.getJsonObject(2));
+    assertHRIDRange(response, "it00000001", "it00000002");
+
+    log.info("Finished canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithDuplicateHRIDs() {
+    log.info("Starting cannotPostSynchronousBatchWithDuplicateHRIDs");
+
+    setItemSequence(1);
+
+    final JsonArray itemsArray = threeItems();
+    final String duplicateHRID = "it00000001";
+    itemsArray.getJsonObject(1).put("hrid", duplicateHRID);
+
+    assertThat(postSynchronousBatch(itemsArray), allOf(
+        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        errorMessageContains("duplicate key"),
+        errorParametersValueIs(duplicateHRID)));
+
+    for (int i = 0; i < itemsArray.size(); i++) {
+      assertGetNotFound(itemsStorageUrl("/" + itemsArray.getJsonObject(i).getString("id")));
+    }
+
+    log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithHRIDFailure() {
+    log.info("Starting cannotPostSynchronousBatchWithHRIDFailure");
+
+    setItemSequence(99999999);
+
+    final JsonArray itemArray = threeItems();
+
+    final Response response = postSynchronousBatch(itemArray);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+    assertThat(response.getBody(),
+        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_items_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+
+    for (int i = 0; i < itemArray.size(); i++) {
+      assertGetNotFound(itemsStorageUrl("/" + itemArray.getJsonObject(i).getString("id")));
+    }
+
+    log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
+  }
+
+  @Test
   public void canReplaceAnItemAtSpecificLocation()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
@@ -1102,7 +1450,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
-    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
+        .put("hrid", "testHRID");
 
     createItem(itemToCreate);
 
@@ -1151,7 +1500,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
-    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
+        .put("hrid", "testHRID");
 
     createItem(itemToCreate);
 
@@ -1201,7 +1551,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
-    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
+        .put("hrid", "testHRID");
 
     createItem(itemToCreate);
 
@@ -1243,7 +1594,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
-    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
+        .put("hrid", "testHRID");
 
     createItem(itemToCreate);
 
@@ -1777,7 +2129,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID userId = UUID.randomUUID();
     UUID servicePointId = UUID.randomUUID();
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
-    JsonObject itemData = smallAngryPlanet(itemId, holdingsRecordId);
+    JsonObject itemData = smallAngryPlanet(itemId, holdingsRecordId)
+        .put("hrid", "testHRID");
     createItem(itemData);
 
     LastCheckIn expected = new LastCheckIn();
@@ -1892,8 +2245,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   private void assertExists(JsonObject expectedItem) {
     Response response = getById(expectedItem.getString("id"));
+    assertExists(response, expectedItem);
+  }
+
+  private void assertExists(Response response, JsonObject expectedItem) {
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
     assertThat(response.getBody(), containsString(expectedItem.getString("holdingsRecordId")));
+  }
+
+  private void assertHRIDRange(Response response, String minHRID, String maxHRID) {
+    assertThat(response.getJson().getString("hrid"),
+        is(both(greaterThanOrEqualTo(minHRID)).and(lessThanOrEqualTo(maxHRID))));
   }
 
   private JsonObject addTags(String tagValue, UUID holdingsRecordId) {
@@ -1901,5 +2263,29 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("tags", new JsonObject()
         .put("tagList", new JsonArray()
           .add(tagValue)));
+  }
+
+  private void setItemSequence(int sequenceNumber) {
+    final Vertx vertx = StorageTestSuite.getVertx();
+    final PostgresClient postgresClient =
+        PostgresClient.getInstance(vertx, TENANT_ID);
+    final CompletableFuture<Void> sequenceSet = new CompletableFuture<>();
+
+    vertx.runOnContext(v -> {
+      postgresClient.selectSingle("select setval('hrid_items_seq',"
+          + sequenceNumber + ",FALSE)", r -> {
+            if (r.succeeded()) {
+              sequenceSet.complete(null);
+            } else {
+              sequenceSet.completeExceptionally(r.cause());
+            }
+          });
+    });
+
+    try {
+      sequenceSet.get(2, SECONDS);
+    } catch (Exception e) {
+      fail(e.getMessage());
+    }
   }
 }
