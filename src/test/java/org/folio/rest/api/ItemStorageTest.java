@@ -810,7 +810,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateAnItemHRIDDoesNotChange()
+  public void canUpdateAnItemWhenHRIDHasNotChanged()
       throws MalformedURLException, InterruptedException,
       ExecutionException, TimeoutException {
     log.info("Starting canUpdateAnItemHRIDDoesNotChange");
