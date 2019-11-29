@@ -1,3 +1,31 @@
+## 18.0.0 2019-11-29
+
+* Generates `HRID`s for `instance`, `holdings` and `item` records (MODINVSTOR-363, MODINVSTOR-373, MODINVSTOR-374, MODINVSTOR-375)
+* Derives `effective location` for `item` records (MODINVSTOR-348)
+* Derives `effective call number, suffix and prefix` for `item` records (MODINVSTOR-357, MODINVSTOR-358, MODINVSTOR-360, MODINVSTOR-391)
+* Introduces `keyword` CQL index for `instance` records (MODINVSTOR-349)
+* Introduces `last check in date` property  for `item` records (MODINVSTOR-386)
+* Introduces `preceding-succeeding` instance relationship (MODINVSTOR-343)
+* Introduces `Uniform title` alternative title type  (MODINVSTOR-350)
+* Introduces `LC (local)` and `SUDOC` classification types  (MODINVSTOR-351)
+* Sample `instance` records now use  `FOLIO` as the `source`  property (MODINVSTOR-337)
+* Makes `permanent location` a required property for `holdings` (MODINVSTOR-364)
+* Makes `code` a required properties for `institution`, `campus` and `library` location units (MODINVSTOR-315)
+* Applies stricter validation on UUID properties in `instance` and `holdings` records (MODINVSTOR-297, MODINVSTOR-370)
+* Introduces synchronous batch APIs for `items`, `holdings` and `instances` (MODINVSTOR-353)
+* Upgrades RAML Module Builder to version 27.0.0 (MODINVSTOR-368, MODINVSTOR-383, MODINVSTOR-385)
+* Generates  `metadata` property for instances created using batch API (MODINVSTOR-387)
+* Fixes bug with `item status date` being changed even when status has not changed (MODINVSTOR-376)
+* Fixes bug with `instance status date` not being set when status changes (MODINVSTOR-367)
+* Changes container memory management (MODINVSTOR-396, FOLIO-2358)
+* Provides `item-storage 7.8`
+* Provides `holdings-storage 4.0`
+* Provides `location-units 2.0`
+* Provides `hrid-settings-storage 1.0`
+* Provides `item-storage-batch-sync 0.1`
+* Provides `holdings-storage-batch-sync 0.1`
+* Provides `instance-storage-batch-sync 0.1`
+
 ## 17.0.0 2019-09-09
 
 * Adds tags to `items records` (MODINVSTOR-322)
