@@ -79,7 +79,7 @@ public class ItemStorageAPI implements ItemStorage {
           StorageHelper.postgresClient(vertxContext, okapiHeaders));
       hridFuture = hridManager.getNextItemHrid();
     } else {
-      hridFuture = Promise.succeededPromise(entity.getHrid()).future();
+      hridFuture = StorageHelper.completeFuture(entity.getHrid());
     }
 
     hridFuture.map(hrid -> {

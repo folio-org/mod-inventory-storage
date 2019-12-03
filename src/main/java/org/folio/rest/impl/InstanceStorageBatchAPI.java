@@ -136,7 +136,7 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
       final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
       hridFuture = hridManager.getNextInstanceHrid();
     } else {
-      hridFuture = Promise.succeededPromise(instance.getHrid()).future();
+      hridFuture = StorageHelper.completeFuture(instance.getHrid());
     }
 
     hridFuture.map(hrid -> {

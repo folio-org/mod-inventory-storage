@@ -60,7 +60,7 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     if (isBlank(item.getHrid())) {
       hridFuture = hridManager.getNextItemHrid();
     } else {
-      hridFuture = Promise.succeededPromise(item.getHrid()).future();
+      hridFuture = StorageHelper.completeFuture(item.getHrid());
     }
 
     return hridFuture.map(hrid -> {

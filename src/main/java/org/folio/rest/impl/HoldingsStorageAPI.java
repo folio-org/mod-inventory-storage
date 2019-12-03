@@ -492,7 +492,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
       final HridManager hridManager = new HridManager(vertxContext, postgresClient);
       hridFuture = hridManager.getNextHoldingsHrid();
     } else {
-      hridFuture = Promise.succeededPromise(entity.getHrid()).future();
+      hridFuture = StorageHelper.completeFuture(entity.getHrid());
     }
 
     return hridFuture;

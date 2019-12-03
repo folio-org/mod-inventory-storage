@@ -18,6 +18,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.sql.UpdateResult;
+import org.folio.rest.impl.StorageHelper;
 
 public class HridManager {
   private static final Logger log = LoggerFactory.getLogger(HridManager.class);
@@ -52,7 +53,7 @@ public class HridManager {
           if (res.succeeded()) {
             final SQLConnection conn = res.result();
             try {
-              getHridSettings(Promise.succeededPromise(conn).future())
+              getHridSettings(StorageHelper.completeFuture(conn))
                 .setHandler(hridSettingsResult -> {
                   conn.close();
                   if (hridSettingsResult.succeeded()) {

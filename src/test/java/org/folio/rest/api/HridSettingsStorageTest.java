@@ -35,6 +35,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.folio.rest.impl.StorageHelper;
 
 @RunWith(VertxUnitRunner.class)
 public class HridSettingsStorageTest extends TestBase {
@@ -456,7 +457,7 @@ public class HridSettingsStorageTest extends TestBase {
                       is(originalHridSettings.getItems().getPrefix()));
                   assertThat(currentHridSettings.getItems().getStartNumber(),
                       is(originalHridSettings.getItems().getStartNumber()));
-                  return Promise.succeededPromise(currentHridSettings).future();
+                  return StorageHelper.completeFuture(currentHridSettings);
                 })
                 .setHandler(promise);
           });
@@ -466,8 +467,8 @@ public class HridSettingsStorageTest extends TestBase {
             v1 -> log.info("Finished canRollbackFailedTransaction()")));
   }
 
-  private Future<Void> validateHrid(String hrid, String expectedValue, TestContext testContext) {
+  private Future<String> validateHrid(String hrid, String expectedValue, TestContext testContext) {
     testContext.assertEquals(expectedValue, hrid);
-    return Promise.<Void>succeededPromise().future();
+    return StorageHelper.completeFuture(hrid);
   }
 }
