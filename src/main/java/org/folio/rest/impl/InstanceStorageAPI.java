@@ -24,6 +24,8 @@ import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -420,35 +422,9 @@ public class InstanceStorageAPI implements InstanceStorage {
       String instanceId, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    PostgresClient postgresClient =
-        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-
-    String where = "WHERE id='" + instanceId + "'";
-    postgresClient.get(INSTANCE_SOURCE_MARC_TABLE, MarcJson.class, where, false, false, reply -> {
-      if (! reply.succeeded()) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-            .respond500WithTextPlain(reply.cause().getMessage())));
-        return;
-      }
-      List<MarcJson> results = reply.result().getResults();
-      if (results.isEmpty()) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-            .respond404WithTextPlain("No source record for instance " + instanceId)));
-        return;
-      }
-      MarcJson marcJson = results.get(0);
-      if (marcJson == null) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-            .respond404WithTextPlain("No MARC source record for instance " + instanceId)));
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond200WithApplicationJson(
-              marcJson)));
-    });
+    PgUtil.getById(INSTANCE_SOURCE_MARC_TABLE, MarcJson.class, instanceId,
+      okapiHeaders, vertxContext,
+      GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.class, asyncResultHandler);
   }
 
   @Override
