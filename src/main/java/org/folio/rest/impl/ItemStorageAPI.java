@@ -32,7 +32,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -79,7 +78,7 @@ public class ItemStorageAPI implements ItemStorage {
           StorageHelper.postgresClient(vertxContext, okapiHeaders));
       hridFuture = hridManager.getNextItemHrid();
     } else {
-      hridFuture = Promise.succeededPromise(entity.getHrid()).future();
+      hridFuture = StorageHelper.completeFuture(entity.getHrid());
     }
 
     hridFuture.map(hrid -> {

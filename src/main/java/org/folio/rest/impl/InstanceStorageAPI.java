@@ -36,7 +36,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -128,7 +127,7 @@ public class InstanceStorageAPI implements InstanceStorage {
             final HridManager hridManager = new HridManager(vertxContext, postgresClient);
             hridFuture = hridManager.getNextInstanceHrid();
           } else {
-            hridFuture = Promise.succeededPromise(entity.getHrid()).future();
+            hridFuture = StorageHelper.completeFuture(entity.getHrid());
           }
 
           hridFuture.map(hrid -> {
@@ -421,35 +420,9 @@ public class InstanceStorageAPI implements InstanceStorage {
       String instanceId, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    PostgresClient postgresClient =
-        PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-
-    String where = "WHERE id='" + instanceId + "'";
-    postgresClient.get(INSTANCE_SOURCE_MARC_TABLE, MarcJson.class, where, false, false, reply -> {
-      if (! reply.succeeded()) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-            .respond500WithTextPlain(reply.cause().getMessage())));
-        return;
-      }
-      List<MarcJson> results = reply.result().getResults();
-      if (results.isEmpty()) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-            .respond404WithTextPlain("No source record for instance " + instanceId)));
-        return;
-      }
-      MarcJson marcJson = results.get(0);
-      if (marcJson == null) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-            .respond404WithTextPlain("No MARC source record for instance " + instanceId)));
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(
-          GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond200WithApplicationJson(
-              marcJson)));
-    });
+    PgUtil.getById(INSTANCE_SOURCE_MARC_TABLE, MarcJson.class, instanceId,
+      okapiHeaders, vertxContext,
+      GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.class, asyncResultHandler);
   }
 
   @Override

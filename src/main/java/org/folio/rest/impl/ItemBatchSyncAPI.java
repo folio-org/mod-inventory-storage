@@ -8,7 +8,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 
 import org.folio.rest.annotations.Validate;
@@ -60,7 +59,7 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     if (isBlank(item.getHrid())) {
       hridFuture = hridManager.getNextItemHrid();
     } else {
-      hridFuture = Promise.succeededPromise(item.getHrid()).future();
+      hridFuture = StorageHelper.completeFuture(item.getHrid());
     }
 
     return hridFuture.map(hrid -> {

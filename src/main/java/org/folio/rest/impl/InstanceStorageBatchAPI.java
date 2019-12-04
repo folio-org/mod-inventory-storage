@@ -6,7 +6,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -136,7 +135,7 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
       final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
       hridFuture = hridManager.getNextInstanceHrid();
     } else {
-      hridFuture = Promise.succeededPromise(instance.getHrid()).future();
+      hridFuture = StorageHelper.completeFuture(instance.getHrid());
     }
 
     hridFuture.map(hrid -> {

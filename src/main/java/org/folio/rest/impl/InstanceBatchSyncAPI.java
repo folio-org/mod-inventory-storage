@@ -7,7 +7,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 
 import org.folio.rest.annotations.Validate;
@@ -60,7 +59,7 @@ public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
     if (isBlank(instance.getHrid())) {
       hridFuture = hridManager.getNextInstanceHrid();
     } else {
-      hridFuture = Promise.succeededPromise(instance.getHrid()).future();
+      hridFuture = StorageHelper.completeFuture(instance.getHrid());
     }
 
     return hridFuture.map(hrid -> {
