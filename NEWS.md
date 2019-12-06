@@ -1,3 +1,11 @@
+## 18.1.0 2019-12-06
+
+* Upgrades RAML Module Builder (RMB) to version [29.1.0](https://github.com/folio-org/raml-module-builder/blob/v29.1.0/NEWS.md) (was 28.1.0) ([MODINVSTOR-403](https://issues.folio.org/browse/MODINVSTOR-403))
+
+Most notable RAML Module Builder changes:
+* Estimate hit counts [(RMB-506](https://issues.folio.org/browse/RMB-506))
+* Bugfix that break clients that do not comply with the interface spec: POST /\_/tenant requires JSON body with module_to ([RMB-510](https://issues.folio.org/browse/RMB-510))
+
 ## 18.0.0 2019-11-29
 
 * Generates `HRID`s for `instance`, `holdings` and `item` records (MODINVSTOR-363, MODINVSTOR-373, MODINVSTOR-374, MODINVSTOR-375)
