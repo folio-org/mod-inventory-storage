@@ -20,12 +20,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.UnaryOperator;
 
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
+import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.BeforeClass;
@@ -125,6 +127,23 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
     return createHolding(instanceId, holdingsPermanentLocationId, holdingsTemporaryLocationId);
+  }
+
+  static UUID createInstanceAndHoldingWithBuilder(
+    UUID holdingsPermanentLocationId, UnaryOperator<HoldingRequestBuilder> holdingsBuilderProcessor)
+    throws ExecutionException, InterruptedException, MalformedURLException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(instance(instanceId));
+
+    HoldingRequestBuilder holdingsBuilder = new HoldingRequestBuilder()
+      .withId(UUID.randomUUID())
+      .forInstance(instanceId)
+      .withPermanentLocation(holdingsPermanentLocationId);
+
+    return holdingsClient
+      .create(holdingsBuilderProcessor.apply(holdingsBuilder))
+      .getId();
   }
 
   protected static UUID createHolding(UUID instanceId,
@@ -248,6 +267,10 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   protected IndividualResource createItem(Item item) throws Exception {
     return itemsClient.create(JsonObject.mapFrom(item));
+  }
+
+  protected IndividualResource createItem(ItemRequestBuilder item) throws Exception {
+    return itemsClient.create(item.create());
   }
 
   protected static JsonObject identifier(UUID identifierTypeId, String value) {

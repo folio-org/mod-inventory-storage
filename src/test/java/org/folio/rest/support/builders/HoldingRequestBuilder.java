@@ -15,12 +15,14 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private String callNumberPrefix;
   private String callNumberSuffix;
   private final String hrid;
+  private String callNumberTypeId;
 
   public HoldingRequestBuilder() {
     this(
       null,
       null,
       UUID.randomUUID(),
+      null,
       null,
       null,
       null,
@@ -38,7 +40,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     String callNumber,
     String callNumberPrefix,
     String callNumberSuffix,
-    String hrid) {
+    String hrid,
+    String callNumberTypeId) {
 
     this.id = id;
     this.instanceId = instanceId;
@@ -49,6 +52,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     this.callNumberPrefix = callNumberPrefix;
     this.callNumberSuffix = callNumberSuffix;
     this.hrid = hrid;
+    this.callNumberTypeId = callNumberTypeId;
   }
 
   @Override
@@ -64,6 +68,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "callNumberPrefix", callNumberPrefix);
     put(request, "callNumberSuffix", callNumberSuffix);
     put(request, "hrid", hrid);
+    put(request, "callNumberTypeId", callNumberTypeId);
 
     return request;
   }
@@ -78,7 +83,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumber,
       this.callNumberPrefix,
       this.callNumberSuffix,
-      this.hrid);
+      this.hrid,
+      this.callNumberTypeId);
   }
 
   public HoldingRequestBuilder withTemporaryLocation(UUID temporaryLocationId) {
@@ -91,7 +97,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumber,
       this.callNumberPrefix,
       this.callNumberSuffix,
-      this.hrid);
+      this.hrid,
+      this.callNumberTypeId);
   }
 
   public HoldingRequestBuilder forInstance(UUID instanceId) {
@@ -104,7 +111,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumber,
       this.callNumberPrefix,
       this.callNumberSuffix,
-      this.hrid);
+      this.hrid,
+      this.callNumberTypeId);
   }
 
   public HoldingRequestBuilder withId(UUID id) {
@@ -117,7 +125,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumber,
       this.callNumberPrefix,
       this.callNumberSuffix,
-      this.hrid);
+      this.hrid,
+      this.callNumberTypeId);
   }
 
   public HoldingRequestBuilder withTags(JsonObject tags) {
@@ -130,7 +139,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumber,
       this.callNumberPrefix,
       this.callNumberSuffix,
-      this.hrid);
+      this.hrid,
+      this.callNumberTypeId);
   }
 
   public HoldingRequestBuilder withCallNumber(String callNumber) {
@@ -143,7 +153,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       callNumber,
       this.callNumberPrefix,
       this.callNumberSuffix,
-      this.hrid);
+      this.hrid,
+      this.callNumberTypeId);
   }
 
   public HoldingRequestBuilder withCallNumberPrefix(String callNumberPrefix) {
@@ -156,7 +167,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumber,
       callNumberPrefix,
       this.callNumberSuffix,
-      this.hrid);
+      this.hrid,
+      this.callNumberTypeId);
   }
 
   public HoldingRequestBuilder withCallNumberSuffix(String callNumberSuffix) {
@@ -169,7 +181,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumber,
       this.callNumberPrefix,
       callNumberSuffix,
-      this.hrid);
+      this.hrid,
+      this.callNumberTypeId);
   }
 
   public HoldingRequestBuilder withHrid(String hrid) {
@@ -182,6 +195,21 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumber,
       this.callNumberPrefix,
       this.callNumberSuffix,
-      hrid);
+      hrid,
+      this.callNumberTypeId);
+  }
+
+  public HoldingRequestBuilder withCallNumberTypeId(String callNumberTypeId) {
+    return new HoldingRequestBuilder(
+      this.id,
+      this.instanceId,
+      this.permanentLocationId,
+      this.temporaryLocationId,
+      this.tags,
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix,
+      this.hrid,
+      callNumberTypeId);
   }
 }

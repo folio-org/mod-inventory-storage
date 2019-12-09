@@ -1,7 +1,10 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.ItemDamagedStatusAPITest.TEST_TENANT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import java.util.UUID;
@@ -10,22 +13,29 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.util.ResourceUtil;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
+  private static final String HOLDINGS_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
+  private static final String ITEM_LEVEL_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
+
   private static Vertx vertx = Vertx.vertx();
   private static UUID instanceId = UUID.randomUUID();
   private static final String POPULATE_EFFECTIVE_CALL_NUMBER_SQL = ResourceUtil
@@ -35,11 +45,19 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
   private ObjectMapper mapper = new ObjectMapper();
 
   @BeforeClass
-  public static void createInstance() throws Exception {
-    // Create once to be used by the many parameterized unit test in
-    // canCalculateEffectiveLocationOnIHoldingUpdate(PermTemp, PermTemp, PermTemp)
-    // canCalculateEffectiveLocationOnItemUpdate(PermTemp, PermTemp, PermTemp)
+  public static void createInstanceAndCallNumberTypes() throws Exception {
     instancesClient.create(instance(instanceId));
+
+    callNumberTypesClient.create(new JsonObject()
+      .put("id", HOLDINGS_CALL_NUMBER_TYPE)
+      .put("name", "Holdings call number type")
+      .put("source", "folio")
+    );
+    callNumberTypesClient.create(new JsonObject()
+      .put("id", ITEM_LEVEL_CALL_NUMBER_TYPE)
+      .put("name", "Item level call number type")
+      .put("source", "folio")
+    );
   }
 
   @Test
@@ -287,6 +305,56 @@ public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
     assertThat(
       getItem(item.getId()).getEffectiveCallNumberComponents().getSuffix(),
       is("updatedCallNumberSuffix"));
+  }
+
+  @Test
+  @Parameters(method = "initializeCallNumberTypeParams")
+  public void canInitializeEffectiveCallNumberTypeId(
+    String itemLevelCallNumberType, String holdingsRecordCallNumberType) throws Exception {
+
+    String expectedTypeId = StringUtils
+      .firstNonBlank(itemLevelCallNumberType, holdingsRecordCallNumberType);
+
+    UUID holding = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
+      builder -> builder.withCallNumberTypeId(holdingsRecordCallNumberType));
+
+    String itemId = createItem(new ItemRequestBuilder()
+      .forHolding(holding)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .withItemLevelCallNumberTypeId(itemLevelCallNumberType)
+    ).getId().toString();
+
+    removeEffectiveCallNumberComponents(itemId);
+
+    runSql(POPULATE_EFFECTIVE_CALL_NUMBER_SQL);
+
+    Item populatedItem = getItem(itemId);
+
+    assertNotNull(populatedItem.getEffectiveCallNumberComponents());
+    assertThat(populatedItem
+        .getEffectiveCallNumberComponents().getTypeId(), is(expectedTypeId)
+    );
+  }
+
+  @SuppressWarnings("unused")
+  private String[][] initializeCallNumberTypeParams() {
+    return new String[][]{
+      {ITEM_LEVEL_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE},
+      {ITEM_LEVEL_CALL_NUMBER_TYPE, null},
+      {null, HOLDINGS_CALL_NUMBER_TYPE},
+      {null, null},
+    };
+  }
+
+  private void removeEffectiveCallNumberComponents(String itemId) throws Exception {
+    runSql(String.format(
+      "UPDATE %s_mod_inventory_storage.item SET jsonb = jsonb - 'effectiveCallNumberComponents' WHERE id = '%s'",
+      TEST_TENANT,
+      itemId
+    ));
+
+    assertNull(getItem(itemId).getEffectiveCallNumberComponents());
   }
 
   private Item getItem(String id) throws Exception {

@@ -1391,6 +1391,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       is("itemLevelCallNumberPrefix"));
   }
 
+  @Test
   public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));

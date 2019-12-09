@@ -65,6 +65,11 @@ public class ResourceClient {
       "instance types", "instanceTypes");
   }
 
+  public static ResourceClient forCallNumberTypes(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::callNumberTypesUrl,
+      "call number types", "callNumberTypes");
+  }
+
   private ResourceClient(
     HttpClient client,
     UrlMaker urlMaker, String resourceName,

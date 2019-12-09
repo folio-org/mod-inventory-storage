@@ -698,7 +698,7 @@
     {
       "run": "after",
       "snippetPath": "populateEffectiveCallNumberComponentsForExistingItems.sql",
-      "fromModuleVersion": "17.1.0"
+      "fromModuleVersion": "18.2.0"
     },
     {
       "run": "after",
