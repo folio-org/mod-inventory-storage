@@ -1,16 +1,12 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.ResultSet;
+import io.vertx.ext.sql.UpdateResult;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -25,13 +21,16 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.ResultSet;
-import io.vertx.ext.sql.UpdateResult;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 @RunWith(Suite.class)
 
@@ -251,8 +250,7 @@ public class StorageTestSuite {
   static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
 
@@ -272,7 +270,7 @@ public class StorageTestSuite {
     client.post(storageUrl("/_/tenant"), jo, tenantId,
       ResponseHandler.any(tenantPrepared));
 
-    Response response = tenantPrepared.get(30, TimeUnit.SECONDS);
+    Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant init failed: %s: %s",
       response.getStatusCode(), response.getBody());
