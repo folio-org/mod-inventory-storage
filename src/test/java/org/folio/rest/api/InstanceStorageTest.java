@@ -71,6 +71,8 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.hamcrest.Matcher;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1915,7 +1917,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(500));
     assertThat(response.getBody(),
-        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+      isMaximumSequenceValueError());
 
     log.info("Finished cannotCreateInstanceWithHRIDFailure");
   }
@@ -2133,7 +2135,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, SECONDS);
 
     assertThat(response, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
-    assertThat(response.getBody(), is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(response.getBody(), isMaximumSequenceValueError());
 
     log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
   }
@@ -2307,7 +2309,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
     assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().get(0), is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(ibr.getErrorMessages().get(0), isMaximumSequenceValueError());
 
     log.info("Finished cannotCreateACollectionOfInstancesWithHRIDFailure");
   }
@@ -2495,5 +2497,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     natureOfContentIdsToRemoveAfterTest.add(natureOfContentTerm.getId());
     return response.getJson().mapTo(NatureOfContentTerm.class);
+  }
+
+  @NotNull
+  private Matcher<String> isMaximumSequenceValueError() {
+    return is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])");
   }
 }
