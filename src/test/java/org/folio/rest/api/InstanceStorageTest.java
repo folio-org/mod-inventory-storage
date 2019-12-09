@@ -49,6 +49,8 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
+import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.rest.support.matchers.PostgresqlErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -1894,8 +1896,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, SECONDS);
 
     assertThat(response.getStatusCode(), is(500));
-    assertThat(response.getBody(),
-      PostgresErrorMessageMatchers.isMaximumSequenceValueError());
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotCreateInstanceWithHRIDFailure");
   }
@@ -2113,7 +2114,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, SECONDS);
 
     assertThat(response, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
-    assertThat(response.getBody(), PostgresErrorMessageMatchers.isMaximumSequenceValueError());
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
   }
@@ -2287,7 +2288,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
     assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().get(0), PostgresErrorMessageMatchers.isMaximumSequenceValueError());
+    assertThat(ibr.getErrorMessages().get(0), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotCreateACollectionOfInstancesWithHRIDFailure");
   }
