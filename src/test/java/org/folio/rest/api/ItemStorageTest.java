@@ -19,6 +19,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
+import static org.folio.rest.support.matchers.PostgresqlErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -63,6 +64,7 @@ import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.matchers.PostgresqlErrorMessageMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1070,8 +1072,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HTTP_INTERNAL_ERROR));
-    assertThat(postResponse.getBody(),
-        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_items_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(postResponse.getBody(), isMaximumSequenceValueError("hrid_items_seq"));
 
     log.info("Finished cannotCreateAnItemWithHRIDFailure");
   }
@@ -1432,8 +1433,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response response = postSynchronousBatch(itemArray);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-    assertThat(response.getBody(),
-        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_items_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_items_seq"));
 
     for (int i = 0; i < itemArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemArray.getJsonObject(i).getString("id")));
