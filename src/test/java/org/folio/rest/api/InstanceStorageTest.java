@@ -18,8 +18,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.hamcrest.Matcher;
-import org.jetbrains.annotations.NotNull;
+import org.folio.rest.support.matchers.PostgresErrorMessageMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1896,7 +1895,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(500));
     assertThat(response.getBody(),
-      isMaximumSequenceValueError());
+      PostgresErrorMessageMatchers.isMaximumSequenceValueError());
 
     log.info("Finished cannotCreateInstanceWithHRIDFailure");
   }
@@ -2114,7 +2113,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, SECONDS);
 
     assertThat(response, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
-    assertThat(response.getBody(), isMaximumSequenceValueError());
+    assertThat(response.getBody(), PostgresErrorMessageMatchers.isMaximumSequenceValueError());
 
     log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
   }
@@ -2288,7 +2287,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
     assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().get(0), isMaximumSequenceValueError());
+    assertThat(ibr.getErrorMessages().get(0), PostgresErrorMessageMatchers.isMaximumSequenceValueError());
 
     log.info("Finished cannotCreateACollectionOfInstancesWithHRIDFailure");
   }
@@ -2476,12 +2475,5 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     natureOfContentIdsToRemoveAfterTest.add(natureOfContentTerm.getId());
     return response.getJson().mapTo(NatureOfContentTerm.class);
-  }
-
-  @NotNull
-  private Matcher<String> isMaximumSequenceValueError() {
-    return containsString(
-      "ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), " +
-        "(Message, nextval: reached maximum value of sequence \"hrid_instances_seq\"");
   }
 }
