@@ -9,9 +9,10 @@ public class PostgresErrorMessageMatchers {
   private PostgresErrorMessageMatchers() { }
 
   @NotNull
-  public static Matcher<String> isMaximumSequenceValueError() {
+  public static Matcher<String> isMaximumSequenceValueError(final String sequenceName) {
     return containsString(
       "ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), " +
-        "(Message, nextval: reached maximum value of sequence \"hrid_instances_seq\"");
+        "(Message, nextval: reached maximum value of sequence \""
+        + sequenceName + "\"");
   }
 }
