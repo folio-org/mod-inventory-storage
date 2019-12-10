@@ -626,6 +626,11 @@
           "fieldName": "temporaryLocationId",
           "targetTable": "location",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "effectiveLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
         }
 
       ],
@@ -647,12 +652,6 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
-        },
-        {
-          "fieldName": "effectiveLocationId",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
         }
       ],
       "ginIndex": [
