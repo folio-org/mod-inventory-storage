@@ -149,8 +149,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     testCases.addAll(createPropertyTestCase("callNumber", "callNumber"));
     testCases.addAll(createPropertyTestCase("callNumberSuffix", "suffix"));
     testCases.addAll(createPropertyTestCase("callNumberPrefix", "prefix"));
-    testCases.addAll(createPropertyTestCase(
-      "callNumberTypeId", HOLDINGS_CALL_NUMBER_TYPE,
+    testCases.addAll(createPropertyTestCase("callNumberTypeId", HOLDINGS_CALL_NUMBER_TYPE,
       ITEM_LEVEL_CALL_NUMBER_TYPE, "typeId"
     ));
 

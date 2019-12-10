@@ -32,7 +32,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
-public class ItemEffectiveCallNumberTest extends TestBaseWithInventoryUtil {
+public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventoryUtil {
   private static final String HOLDINGS_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
   private static final String ITEM_LEVEL_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
 

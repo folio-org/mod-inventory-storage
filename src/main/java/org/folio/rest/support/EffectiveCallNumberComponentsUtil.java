@@ -2,8 +2,6 @@ package org.folio.rest.support;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.util.Optional;
-
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -41,8 +39,7 @@ public final class EffectiveCallNumberComponentsUtil {
 
     String updatedCallNumberTypeId = StringUtils.firstNonBlank(
       item.getItemLevelCallNumberTypeId(),
-      Optional.ofNullable(holdings).map(HoldingsRecord::getCallNumberTypeId)
-        .orElse(null)
+      holdings != null ? holdings.getCallNumberTypeId() : null
     );
 
     components.setCallNumber(updatedCallNumber);
