@@ -1,59 +1,11 @@
 package org.folio.rest.api;
 
-import static java.net.HttpURLConnection.HTTP_OK;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
-import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
-import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
-import static org.folio.rest.support.ResponseHandler.json;
-import static org.folio.rest.support.ResponseHandler.text;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
-import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
-import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
-import static org.folio.util.StringUtil.urlEncode;
-import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.either;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.joda.time.Seconds.seconds;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Stream;
-
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.HttpStatus;
@@ -63,12 +15,7 @@ import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonErrorResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.junit.After;
@@ -78,12 +25,45 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
+
+import static java.net.HttpURLConnection.HTTP_OK;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.HttpResponseMatchers.*;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
+import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
+import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.rest.support.ResponseHandler.text;
+import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
+import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
+import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.util.StringUtil.urlEncode;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.either;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.joda.time.Seconds.seconds;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
@@ -1914,8 +1894,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, SECONDS);
 
     assertThat(response.getStatusCode(), is(500));
-    assertThat(response.getBody(),
-        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotCreateInstanceWithHRIDFailure");
   }
@@ -2133,7 +2112,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, SECONDS);
 
     assertThat(response, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
-    assertThat(response.getBody(), is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
   }
@@ -2307,7 +2286,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
     assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().get(0), is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_instances_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(ibr.getErrorMessages().get(0), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotCreateACollectionOfInstancesWithHRIDFailure");
   }

@@ -1,24 +1,47 @@
 package org.folio.rest.api;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Items;
+import org.folio.rest.jaxrs.model.LastCheckIn;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
-import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.HttpResponseMatchers.*;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
+import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -27,51 +50,10 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
-
-import org.folio.HttpStatus;
-import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.model.LastCheckIn;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonErrorResponse;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import static org.junit.Assert.*;
 
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LoggerFactory.getLogger(ItemStorageTest.class);
@@ -570,8 +552,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HTTP_INTERNAL_ERROR));
-    assertThat(postResponse.getBody(),
-        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_items_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(postResponse.getBody(), isMaximumSequenceValueError("hrid_items_seq"));
 
     log.info("Finished cannotCreateAnItemWithHRIDFailure");
   }
@@ -932,8 +913,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response response = postSynchronousBatch(itemArray);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-    assertThat(response.getBody(),
-        is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 2200H), (Message, nextval: reached maximum value of sequence \"hrid_items_seq\" (99999999)), (File, sequence.c), (Line, 700), (Routine, nextval_internal)])"));
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_items_seq"));
 
     for (int i = 0; i < itemArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemArray.getJsonObject(i).getString("id")));
