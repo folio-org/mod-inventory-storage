@@ -130,7 +130,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(annexLibraryLocationId.toString()));
     assertThat(itemFromPost.getString("inTransitDestinationServicePointId"),
         is(inTransitServicePointId));
-    assertThat(itemFromPost.getString("hrid"), is("it00000001"));
+    assertThat(itemFromPost.getString("hrid"), is("it00000000001"));
 
     Response getResponse = getById(id);
 
@@ -151,7 +151,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(annexLibraryLocationId.toString()));
     assertThat(itemFromGet.getString("inTransitDestinationServicePointId"),
       is(inTransitServicePointId));
-    assertThat(itemFromGet.getString("hrid"), is("it00000001"));
+    assertThat(itemFromGet.getString("hrid"), is("it00000000001"));
 
     List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -818,7 +818,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response getResponse = getById(UUID.fromString(itemId));
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(getResponse.getJson().getString("hrid"), is("it00000001"));
+    assertThat(getResponse.getJson().getString("hrid"), is("it00000000001"));
 
     log.info("Finished canUpdateAnItemHRIDDoesNotChange");
   }
@@ -988,12 +988,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response response = getById(itemToCreate.getString("id"));
 
     assertThat(response.getStatusCode(), is(HTTP_OK));
-    assertThat(response.getJson().getString("hrid"), is("it00000001"));
+    assertThat(response.getJson().getString("hrid"), is("it00000000001"));
 
     final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     itemToCreate.put("id", UUID.randomUUID().toString());
-    itemToCreate.put("hrid", "it00000001");
+    itemToCreate.put("hrid", "it00000000001");
 
     client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
         json(createCompleted));
@@ -1008,13 +1008,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.getErrors(), notNullValue());
     assertThat(errors.getErrors().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getMessage(),
-        is("lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table item: it00000001"));
+        is("lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table item: it00000000001"));
     assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
         is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
-        is("it00000001"));
+        is("it00000000001"));
 
     log.info("Finished cannotCreateAnItemWithDuplicateHRID");
   }
@@ -1033,14 +1033,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         .put("permanentLoanTypeId", canCirculateLoanTypeID)
         .put("materialTypeId", journalMaterialTypeID);
 
-    setItemSequence(99999999);
+    setItemSequence(99_999_999_999L);
 
     createItem(itemToCreate);
 
     final Response response = getById(itemToCreate.getString("id"));
 
     assertThat(response.getStatusCode(), is(HTTP_OK));
-    assertThat(response.getJson().getString("hrid"), is("it99999999"));
+    assertThat(response.getJson().getString("hrid"), is("it99999999999"));
 
     final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1113,7 +1113,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-        is("The hrid field cannot be changed: new=ABC123, old=it00000001"));
+        is("The hrid field cannot be changed: new=ABC123, old=it00000000001"));
 
     log.info("Finished cannotUpdateAnItemWithChangedHRID");
   }
@@ -1147,7 +1147,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-        is("The hrid field cannot be changed: new=null, old=it00000001"));
+        is("The hrid field cannot be changed: new=null, old=it00000000001"));
 
     log.info("Finished cannotUpdateAnItemWithRemovedHRID");
   }
@@ -1346,7 +1346,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         .forEach(item -> {
           final Response response = getById(item.getString("id"));
           assertExists(response, item);
-          assertHRIDRange(response, "it00000001", "it00000003");
+          assertHRIDRange(response, "it00000000001", "it00000000003");
         });
 
     log.info("Finished canPostSynchronousBatchWithGeneratedHRID");
@@ -1367,7 +1367,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     Response response = getById(itemsArray.getJsonObject(0).getString("id"));
     assertExists(response, itemsArray.getJsonObject(0));
-    assertHRIDRange(response, "it00000001", "it00000002");
+    assertHRIDRange(response, "it00000000001", "it00000000002");
 
     response = getById(itemsArray.getJsonObject(1).getString("id"));
     assertExists(response, itemsArray.getJsonObject(1));
@@ -1375,7 +1375,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     response = getById(itemsArray.getJsonObject(2).getString("id"));
     assertExists(response, itemsArray.getJsonObject(2));
-    assertHRIDRange(response, "it00000001", "it00000002");
+    assertHRIDRange(response, "it00000000001", "it00000000002");
 
     log.info("Finished canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
   }
@@ -1387,7 +1387,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     setItemSequence(1);
 
     final JsonArray itemsArray = threeItems();
-    final String duplicateHRID = "it00000001";
+    final String duplicateHRID = "it00000000001";
     itemsArray.getJsonObject(1).put("hrid", duplicateHRID);
 
     assertThat(postSynchronousBatch(itemsArray), allOf(
@@ -1406,7 +1406,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void cannotPostSynchronousBatchWithHRIDFailure() {
     log.info("Starting cannotPostSynchronousBatchWithHRIDFailure");
 
-    setItemSequence(99999999);
+    setItemSequence(99_999_999_999L);
 
     final JsonArray itemArray = threeItems();
 
@@ -2245,7 +2245,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
           .add(tagValue)));
   }
 
-  private void setItemSequence(int sequenceNumber) {
+  private void setItemSequence(long sequenceNumber) {
     final Vertx vertx = StorageTestSuite.getVertx();
     final PostgresClient postgresClient =
         PostgresClient.getInstance(vertx, TENANT_ID);
