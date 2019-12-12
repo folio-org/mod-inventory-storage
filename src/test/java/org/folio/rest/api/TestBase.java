@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -19,6 +20,8 @@ import org.folio.rest.support.http.ResourceClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 
 /**
@@ -77,5 +80,37 @@ public abstract class TestBase {
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  Future<Void> executeSqlFile(String fileContent) {
+    final Promise<Void> result = Promise.promise();
+    final Vertx vertx = StorageTestSuite.getVertx();
+
+    PostgresClient.getInstance(vertx).runSQLFile(fileContent, true, handler -> {
+      if (handler.failed()) {
+        result.fail(handler.cause());
+      } else if (!handler.result().isEmpty()) {
+        result.fail("Failing SQL: " + handler.result().toString());
+      } else {
+        result.complete(null);
+      }
+    });
+
+    return result.future();
+  }
+
+  Future<Void> executeSql(String sql) {
+    final Promise<Void> result = Promise.promise();
+    final Vertx vertx = StorageTestSuite.getVertx();
+
+    PostgresClient.getInstance(vertx).execute(sql, updateResult -> {
+      if (updateResult.failed()) {
+        result.fail(updateResult.cause());
+      } else {
+        result.complete();
+      }
+    });
+
+    return result.future();
   }
 }

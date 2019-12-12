@@ -36,9 +36,9 @@ public class HridSettingsStorageParameterizedTest extends TestBase {
   @Parameters(name = "{index}: test validation failure {6}.{7} = {8}")
   public static Collection<Object[]> data() {
     return Arrays.asList(new Object[][] {
-      {"in", 999999999, "ho", 1, "it", 1, "instances", "startNumber", "999999999"},
-      {"in", 1, "ho", 999999999, "it", 1, "holdings", "startNumber", "999999999"},
-      {"in", 1, "ho", 1, "it", 999999999, "items", "startNumber", "999999999"},
+      {"in", 999_999_999_999L, "ho", 1, "it", 1, "instances", "startNumber", "999999999999"},
+      {"in", 1, "ho", 999_999_999_999L, "it", 1, "holdings", "startNumber", "999999999999"},
+      {"in", 1, "ho", 1, "it", 999_999_999_999L, "items", "startNumber", "999999999999"},
       {"in", 0, "ho", 1, "it", 1, "instances", "startNumber", "0"},
       {"in", 1, "ho", 0, "it", 1, "holdings", "startNumber", "0"},
       {"in", 1, "ho", 1, "it", 0, "items", "startNumber", "0"},
@@ -52,19 +52,19 @@ public class HridSettingsStorageParameterizedTest extends TestBase {
   }
 
   private final String instancePrefix;
-  private final int instanceStartNumber;
+  private final long instanceStartNumber;
   private final String holdingPrefix;
-  private final int holdingStartNumber;
+  private final long holdingStartNumber;
   private final String itemPrefix;
-  private final int itemStartNumber;
+  private final long itemStartNumber;
   private final String keyPart;
   private final String testField;
   private final String expectedValue;
 
   public HridSettingsStorageParameterizedTest(
-      String instancePrefix, int instanceStartNumber,
-      String holdingPrefix, int holdingStartNumber,
-      String itemPrefix, int itemStartNumber,
+      String instancePrefix, long instanceStartNumber,
+      String holdingPrefix, long holdingStartNumber,
+      String itemPrefix, long itemStartNumber,
       String keyPart, String testField, String expectedValue) {
     this.instancePrefix = instancePrefix;
     this.instanceStartNumber = instanceStartNumber;
