@@ -20,8 +20,6 @@ import org.folio.rest.support.http.ResourceClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 
 /**
@@ -82,35 +80,39 @@ public abstract class TestBase {
     }
   }
 
-  Future<Void> executeSqlFile(String fileContent) {
-    final Promise<Void> result = Promise.promise();
+  void executeSqlFile(String fileContent)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    final CompletableFuture<Void> result = new CompletableFuture<>();
     final Vertx vertx = StorageTestSuite.getVertx();
 
     PostgresClient.getInstance(vertx).runSQLFile(fileContent, true, handler -> {
       if (handler.failed()) {
-        result.fail(handler.cause());
+        result.completeExceptionally(handler.cause());
       } else if (!handler.result().isEmpty()) {
-        result.fail("Failing SQL: " + handler.result().toString());
+        result.completeExceptionally(new RuntimeException("Failing SQL: " + handler.result().toString()));
       } else {
         result.complete(null);
       }
     });
 
-    return result.future();
+    result.get(5, SECONDS);
   }
 
-  Future<Void> executeSql(String sql) {
-    final Promise<Void> result = Promise.promise();
+  void executeSql(String sql)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    final CompletableFuture<Void> result = new CompletableFuture<>();
     final Vertx vertx = StorageTestSuite.getVertx();
 
     PostgresClient.getInstance(vertx).execute(sql, updateResult -> {
       if (updateResult.failed()) {
-        result.fail(updateResult.cause());
+        result.completeExceptionally(updateResult.cause());
       } else {
-        result.complete();
+        result.complete(null);
       }
     });
 
-    return result.future();
+    result.get(5, SECONDS);
   }
 }
