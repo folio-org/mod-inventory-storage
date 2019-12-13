@@ -48,6 +48,9 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
   public static void createInstanceAndCallNumberTypes() throws Exception {
     instancesClient.create(instance(instanceId));
 
+    callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);
+    callNumberTypesClient.deleteIfPresent(ITEM_LEVEL_CALL_NUMBER_TYPE);
+
     callNumberTypesClient.create(new JsonObject()
       .put("id", HOLDINGS_CALL_NUMBER_TYPE)
       .put("name", "Holdings call number type")

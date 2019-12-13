@@ -41,6 +41,11 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
   @BeforeClass
   public static void createCallNumberTypes() throws Exception {
+    callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);
+    callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE_SECOND);
+    callNumberTypesClient.deleteIfPresent(ITEM_LEVEL_CALL_NUMBER_TYPE);
+    callNumberTypesClient.deleteIfPresent(ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND);
+
     callNumberTypesClient.create(new JsonObject()
       .put("id", HOLDINGS_CALL_NUMBER_TYPE)
       .put("name", "Test Holdings call number type")
