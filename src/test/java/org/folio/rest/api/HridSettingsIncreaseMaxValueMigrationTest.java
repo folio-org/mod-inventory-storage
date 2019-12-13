@@ -26,7 +26,7 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends TestBase {
   private static final String ITEMS_SEQ = "hrid_items_seq";
 
   @Test
-  public void canSaveCurrentValueOfSequences(TestContext testContext) {
+  public void retainsCurrentValueOfSequences(TestContext testContext) {
     reCreateSequences()
       // Increment sequences and and set a new value
       .compose(notUsed -> incrementSequence(INSTANCES_SEQ, 10))
