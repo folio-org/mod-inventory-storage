@@ -26,6 +26,11 @@
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
+      <artifactId>util</artifactId>
+      <version>${raml-module-builder-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
       <artifactId>testing</artifactId>
       <version>${raml-module-builder-version}</version>
       <scope>test</scope>

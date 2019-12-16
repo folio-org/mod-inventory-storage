@@ -713,6 +713,11 @@
       "run": "after",
       "snippetPath": "updateItemStatusDate.sql",
       "fromModuleVersion": "17.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "alterHridSequences.sql",
+      "fromModuleVersion": "18.2.0"
     }
   ]
 }
