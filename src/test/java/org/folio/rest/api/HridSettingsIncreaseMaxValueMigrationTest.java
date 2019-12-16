@@ -46,13 +46,13 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends TestBase {
     executeSql(dropSequenceSql(HOLDINGS_SEQ));
     executeSql(dropSequenceSql(ITEMS_SEQ));
 
-    executeSqlFile(CREATE_SEQUENCE_SQL);
+    executeMultipleSqlStatements(CREATE_SEQUENCE_SQL);
   }
 
   private void alterSequences() throws InterruptedException, ExecutionException,
     TimeoutException {
 
-    executeSqlFile(ALTER_SEQUENCE_SQL);
+    executeMultipleSqlStatements(ALTER_SEQUENCE_SQL);
   }
 
   private Long incrementSequence(String sequenceName)
