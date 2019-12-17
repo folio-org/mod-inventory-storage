@@ -1812,7 +1812,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     final Response createdInstance = getById(id);
 
-    assertThat(createdInstance.getJson().getString("hrid"), is("in00000001"));
+    assertThat(createdInstance.getJson().getString("hrid"), is("in00000000001"));
 
     log.info("Finished canGenerateInstanceHRIDWhenNotSupplied");
   }
@@ -1849,10 +1849,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     final Response createdInstance = getById(id);
 
-    assertThat(createdInstance.getJson().getString("hrid"), is("in00000001"));
+    assertThat(createdInstance.getJson().getString("hrid"), is("in00000000001"));
 
     final JsonObject instanceToCreateWithSameHRID = nod(UUID.randomUUID());
-    instanceToCreateWithSameHRID.put("hrid", "in00000001");
+    instanceToCreateWithSameHRID.put("hrid", "in00000000001");
 
     final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1863,7 +1863,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
-        is("duplicate key value violates unique constraint \"instance_hrid_idx_unique\": Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000001) already exists."));
+        is("duplicate key value violates unique constraint \"instance_hrid_idx_unique\": " +
+          "Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists."));
 
     log.info("Finished cannotCreateInstanceWithDuplicateHRID");
   }
@@ -1876,13 +1877,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.remove("hrid");
 
-    setInstanceSequence(99999999);
+    setInstanceSequence(99_999_999_999L);
 
     createInstance(instanceToCreate);
 
     final Response createdInstance = getById(id);
 
-    assertThat(createdInstance.getJson().getString("hrid"), is("in99999999"));
+    assertThat(createdInstance.getJson().getString("hrid"), is("in99999999999"));
 
     final JsonObject instanceToFail = nod(UUID.randomUUID());
     instanceToFail.remove("hrid");
@@ -1912,7 +1913,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(instanceToCreate);
 
     final JsonObject instance = getById(id).getJson();
-    final String expectedHRID = "in00000001";
+    final String expectedHRID = "in00000000001";
 
     assertThat(instance.getString("hrid"), is(expectedHRID));
 
@@ -1927,7 +1928,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(putResponse.getStatusCode(), is(400));
     assertThat(putResponse.getBody(),
-        is("The hrid field cannot be changed: new=testHRID, old=in00000001"));
+        is("The hrid field cannot be changed: new=testHRID, old=in00000000001"));
 
     log.info("Finished cannotChageHRIDAfterCreation");
   }
@@ -1945,7 +1946,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(instanceToCreate);
 
     final JsonObject instance = getById(id).getJson();
-    final String expectedHRID = "in00000001";
+    final String expectedHRID = "in00000000001";
 
     assertThat(instance.getString("hrid"), is(expectedHRID));
 
@@ -1960,7 +1961,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(putResponse.getStatusCode(), is(400));
     assertThat(putResponse.getBody(),
-        is("The hrid field cannot be changed: new=null, old=in00000001"));
+        is("The hrid field cannot be changed: new=null, old=in00000000001"));
 
     log.info("Finished cannotRemoveHRIDAfterCreation");
   }
@@ -1992,8 +1993,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       final Response response = getById(instance.getString("id"));
       assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
       assertThat(response.getJson().getString("hrid"),
-          is(both(greaterThanOrEqualTo("in00000001"))
-              .and(lessThanOrEqualTo("in00001000"))));
+          is(both(greaterThanOrEqualTo("in00000000001"))
+              .and(lessThanOrEqualTo("in00000001000"))));
     }
 
     log.info("Finished canPostSynchronousBatchWithGeneratedHRID");
@@ -2028,7 +2029,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instance = instancesArray.getJsonObject(0);
     Response response = getById(instance.getString("id"));
 
-    assertThat(response.getJson().getString("hrid"), either(is("in00000001")).or(is("in00000002")));
+    assertThat(response.getJson().getString("hrid"),
+      either(is("in00000000001")).or(is("in00000000002")));
 
     for (int i = 2; i < numberOfInstances; i++) {
       instance = instancesArray.getJsonObject(i);
@@ -2041,7 +2043,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instance = instancesArray.getJsonObject(1);
     response = getById(instance.getString("id"));
 
-    assertThat(response.getJson().getString("hrid"), either(is("in00000001")).or(is("in00000002")));
+    assertThat(response.getJson().getString("hrid"),
+      either(is("in00000000001")).or(is("in00000000002")));
 
     log.info("Finisted canPostSynchronousBatchWithExistingAndGeneratedHRID");
   }
@@ -2057,7 +2060,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instancesArray.add(uprooted(uuids[0] = UUID.randomUUID()));
 
     final JsonObject t = temeraire(uuids[1] = UUID.randomUUID());
-    t.put("hrid", "in00000001");
+    t.put("hrid", "in00000000001");
     instancesArray.add(t);
 
     final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
@@ -2083,7 +2086,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
         is("lower(f_unaccent(jsonb ->> 'hrid'::text"));
     assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
-        is("in00000001"));
+        is("in00000000001"));
 
     log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
   }
@@ -2104,7 +2107,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
 
-    setInstanceSequence(99999999);
+    setInstanceSequence(99_999_999_999L);
 
     final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, text(createCompleted));
@@ -2162,8 +2165,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       final Response instanceResponse = getById(instance.getString("id"));
       assertThat(instanceResponse, statusCodeIs(HttpStatus.HTTP_OK));
       assertThat(instanceResponse.getJson().getString("hrid"),
-          is(both(greaterThanOrEqualTo("in00000001"))
-              .and(lessThanOrEqualTo("in00001000"))));
+          is(both(greaterThanOrEqualTo("in00000000001"))
+              .and(lessThanOrEqualTo("in00000001000"))));
     }
 
     log.info("Finished canCreateACollectionOfInstancesWithGeneratedHRIDs");
@@ -2201,7 +2204,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instance = instancesArray.getJsonObject(0);
     Response response = getById(instance.getString("id"));
 
-    assertThat(response.getJson().getString("hrid"), either(is("in00000001")).or(is("in00000002")));
+    assertThat(response.getJson().getString("hrid"),
+      either(is("in00000000001")).or(is("in00000000002")));
 
     for (int i = 2; i < numberOfInstances; i++) {
       instance = instancesArray.getJsonObject(i);
@@ -2214,7 +2218,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instance = instancesArray.getJsonObject(1);
     response = getById(instance.getString("id"));
 
-    assertThat(response.getJson().getString("hrid"), either(is("in00000001")).or(is("in00000002")));
+    assertThat(response.getJson().getString("hrid"),
+      either(is("in00000000001")).or(is("in00000000002")));
 
     log.info("Finisted canCreateACollectionOfInstancesWithExistingAndGeneratedHRIDs");
   }
@@ -2230,7 +2235,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instancesArray.add(uprooted(uuids[0] = UUID.randomUUID()));
 
     final JsonObject t = temeraire(uuids[1] = UUID.randomUUID());
-    t.put("hrid", "in00000001");
+    t.put("hrid", "in00000000001");
     instancesArray.add(t);
 
     final JsonObject instanceCollection = new JsonObject()
@@ -2250,7 +2255,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
     assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().get(0), is("ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 23505), (Message, duplicate key value violates unique constraint \"instance_hrid_idx_unique\"), (Detail, Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000001) already exists.), (s, test_tenant_mod_inventory_storage), (t, instance), (n, instance_hrid_idx_unique), (File, nbtinsert.c), (Line, 434), (Routine, _bt_check_unique)])"));
+    assertThat(ibr.getErrorMessages().get(0), is(
+      "ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 23505), " +
+        "(Message, duplicate key value violates unique constraint \"instance_hrid_idx_unique\"), " +
+        "(Detail, Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists.), " +
+        "(s, test_tenant_mod_inventory_storage), (t, instance), (n, instance_hrid_idx_unique), " +
+        "(File, nbtinsert.c), (Line, 434), (Routine, _bt_check_unique)])"));
 
     log.info("Finished cannotCreateACollectionOfInstancesWithDuplicatedHRIDs");
   }
@@ -2273,7 +2283,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         .put(INSTANCES_KEY, instancesArray)
         .put(TOTAL_RECORDS_KEY, numberOfInstances);
 
-    setInstanceSequence(99999999);
+    setInstanceSequence(99_999_999_999L);
 
     final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     client.post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
@@ -2291,7 +2301,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     log.info("Finished cannotCreateACollectionOfInstancesWithHRIDFailure");
   }
 
-  private void setInstanceSequence(int sequenceNumber) {
+  private void setInstanceSequence(long sequenceNumber) {
     final Vertx vertx = StorageTestSuite.getVertx();
     final PostgresClient postgresClient =
         PostgresClient.getInstance(vertx, TENANT_ID);

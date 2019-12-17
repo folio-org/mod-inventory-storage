@@ -152,10 +152,9 @@ public class HridManager {
     final Promise<ResultSet> promise = Promise.promise();
 
     // Only update the sequence if the start number has changed
-    if (existingHridSetting.getStartNumber().intValue() !=
-        hridSetting.getStartNumber().intValue()) {
+    if (!Objects.equals(existingHridSetting.getStartNumber(), hridSetting.getStartNumber())) {
       final String sql = String.format("select setval('hrid_%s_seq',%d,FALSE)",
-          field, hridSetting.getStartNumber().intValue());
+          field, hridSetting.getStartNumber());
       try {
         postgresClient.select(conn, sql, promise);
       } catch (Exception e) {
@@ -193,7 +192,7 @@ public class HridManager {
     final String hridPrefix = hridSetting.getPrefix();
 
     return promise.future()
-        .map(sequence -> String.format("%s%08d", Objects.toString(hridPrefix, ""),
+        .map(sequence -> String.format("%s%011d", Objects.toString(hridPrefix, ""),
             sequence.getLong(0)));
   }
 
