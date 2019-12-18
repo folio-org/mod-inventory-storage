@@ -110,8 +110,8 @@ public class TenantRefAPI extends TenantAPI {
         tl.add(p);
       }
       tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+      tl.withPostOnly().withAcceptStatus(400);
       tl.add("instances", "instance-storage/instances");
-      tl.withIdContent();
       tl.add("holdingsrecords", "holdings-storage/holdings");
       tl.add("items", "item-storage/items");
       tl.add("instance-relationships", "instance-storage/instance-relationships");
