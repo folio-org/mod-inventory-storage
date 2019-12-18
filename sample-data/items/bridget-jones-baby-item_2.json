@@ -9,7 +9,7 @@
   "status": {
     "name": "Available"
   },
-  "copyNumbers": ["Copy 2"],
+  "copyNumber": "Copy 2",
   "numberOfPieces": "1",
   "notes": [
     {

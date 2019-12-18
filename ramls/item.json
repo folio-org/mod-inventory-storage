@@ -97,13 +97,9 @@
       "type": "string",
       "description": "Item identifier number, e.g. imported from the union catalogue (read only)."
     },
-    "copyNumbers": {
-      "type": "array",
-      "description": "Copy number is the piece identifier. The copy number reflects if the library has one (or more) copies of a single-volume monograph; one (or more) copies of a multi-volume, (e.g. Copy 1, or C.7.)",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+    "copyNumber": {
+      "type": "string",
+      "description": "Copy number is the piece identifier. The copy number reflects if the library has a copy of a single-volume monograph; one copy of a multi-volume, (e.g. Copy 1, or C.7.)"
     },
     "numberOfPieces": {
       "type": "string",
@@ -201,7 +197,7 @@
           },
           "staffOnly": {
             "type": "boolean",
-            "default": "Flag to restrict display of this note",
+            "description": "Flag to restrict display of this note",
             "default": false
           }
         },
@@ -218,7 +214,9 @@
         },
         "date": {
           "description": "Date and time when the status was last changed",
-          "type": "string"
+          "type": "string",
+          "format": "date-time",
+          "readonly": true
         }
       },
       "additionalProperties": false
