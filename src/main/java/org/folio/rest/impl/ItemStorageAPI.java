@@ -44,7 +44,7 @@ public class ItemStorageAPI implements ItemStorage {
   static final String HOLDINGS_RECORD_TABLE = "holdings_record";
 
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
-  private static final String DEFAULT_STATUS_NAME = "Available";
+  private static final Status.Name DEFAULT_STATUS_NAME = Status.Name.AVAILABLE;
 
   @Validate
   @Override
@@ -156,7 +156,7 @@ public class ItemStorageAPI implements ItemStorage {
               respond500WithTextPlain(response.result().getEntity())));
         } else {
           final Item existingItem = (Item) response.result().getEntity();
-          if (Objects.equals(entity.getHrid(), existingItem.getHrid())) { 
+          if (Objects.equals(entity.getHrid(), existingItem.getHrid())) {
             setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(
                 item -> PgUtil.put(ITEM_TABLE, item, itemId, okapiHeaders, vertxContext,
                   PutItemStorageItemsByItemIdResponse.class, asyncResultHandler));

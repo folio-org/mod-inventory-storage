@@ -210,7 +210,18 @@
       "properties": {
         "name": {
           "description": "Name of the status e.g. Available, Checked out, In transit",
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Available",
+            "Awaiting pickup",
+            "Checked out",
+            "In process",
+            "In transit",
+            "Missing",
+            "On order",
+            "Paged",
+            "Withdrawn"
+          ]
         },
         "date": {
           "description": "Date and time when the status was last changed",
