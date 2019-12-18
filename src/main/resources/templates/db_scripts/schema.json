@@ -696,6 +696,11 @@
     },
     {
       "run": "after",
+      "snippetPath": "populateEffectiveLocationForeignKey.sql",
+      "fromModuleVersion": "18.2.0"
+    },
+    {
+      "run": "after",
       "snippetPath": "populateEffectiveCallNumberComponentsForExistingItems.sql",
       "fromModuleVersion": "17.1.0"
     },
