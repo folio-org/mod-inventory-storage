@@ -16,7 +16,6 @@ AS $$
     ELSE
       NEW.jsonb = NEW.jsonb #- '{status, date}';
 	  END IF;
-
 	  RETURN NEW;
   END;
   $$ LANGUAGE 'plpgsql';

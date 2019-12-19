@@ -1702,6 +1702,31 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotSetStatusDate() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+    createItem(itemToCreate);
+
+    JsonObject createdItem = getById(id).getJson();
+    JsonObject initialStatus = createdItem.getJsonObject("status");
+
+    assertThat(initialStatus.getString("name"), is(Status.Name.AVAILABLE.value()));
+    assertThat(initialStatus.getString("date"), nullValue());
+
+    itemsClient.replace(id,
+      createdItem.copy()
+        .put("status", initialStatus.put("date", DateTime.now().toString()))
+    );
+
+    Response updatedItemResponse = itemsClient.getById(id);
+    JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
+
+    assertThat(updatedStatus.getString("name"), is(Status.Name.AVAILABLE.value()));
+    assertThat(updatedStatus.getString("date"), nullValue());
+  }
+
+  @Test
   public void statusUpdatedDateRemainsAfterUpdate() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     UUID id = UUID.randomUUID();
