@@ -2255,12 +2255,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
     assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().get(0), is(
-      "ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 23505), " +
-        "(Message, duplicate key value violates unique constraint \"instance_hrid_idx_unique\"), " +
-        "(Detail, Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists.), " +
-        "(s, test_tenant_mod_inventory_storage), (t, instance), (n, instance_hrid_idx_unique), " +
-        "(File, nbtinsert.c), (Line, 434), (Routine, _bt_check_unique)])"));
+    assertThat(ibr.getErrorMessages().get(0), allOf(
+      containsString("(SQLSTATE, 23505)"), containsString("instance_hrid_idx_unique")));
 
     log.info("Finished cannotCreateACollectionOfInstancesWithDuplicatedHRIDs");
   }
