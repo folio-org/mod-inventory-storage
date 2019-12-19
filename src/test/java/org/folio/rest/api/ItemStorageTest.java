@@ -32,6 +32,7 @@ import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -2282,8 +2283,24 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(expected.getStaffMemberId(), is(actual.getStaffMemberId()));
   }
 
-   private Response getById(UUID id)
-    throws MalformedURLException, InterruptedException,
+  @Test
+  public void cannotCreateItemWithWrongStatus() throws Exception {
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("status", new JsonObject().put("name", "Wrong status name"));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(postResponse.getStatusCode(), is(400));
+    assertThat(postResponse.getBody(),
+      matchesPattern("(?s)Json content error Cannot construct instance of `.+`, problem: Wrong status name.+")
+    );
+  }
+
+  private Response getById(UUID id) throws InterruptedException,
     ExecutionException, TimeoutException {
 
     URL getItemUrl = itemsStorageUrl(String.format("/%s", id));
