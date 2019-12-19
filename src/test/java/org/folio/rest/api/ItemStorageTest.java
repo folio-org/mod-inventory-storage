@@ -2300,6 +2300,31 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     );
   }
 
+  @Test
+  public void canRemoveItemStatus() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
+      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("hrid", "testHRID");
+
+    createItem(itemToCreate);
+
+    JsonObject createdItem = getById(id).getJson();
+    assertThat(createdItem.getJsonObject("status").getString("name"),
+      is(Status.Name.AVAILABLE.value())
+    );
+
+    JsonObject replacement = itemToCreate.copy();
+    replacement.getJsonObject("status").remove("name");
+
+    itemsClient.replace(id, replacement);
+
+    JsonObject updatedItem = getById(id).getJson();
+    assertThat(updatedItem.getJsonObject("status").getString("name"), nullValue());
+  }
+
   private Response getById(UUID id) throws InterruptedException,
     ExecutionException, TimeoutException {
 
