@@ -220,7 +220,8 @@
             "Missing",
             "On order",
             "Paged",
-            "Withdrawn"
+            "Withdrawn",
+            "Declared lost"
           ]
         },
         "date": {
