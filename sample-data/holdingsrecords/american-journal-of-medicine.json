@@ -1,11 +1,12 @@
 {
   "id" : "133a7916-f05e-4df4-8f7f-09eb2a7076d1",
+  "hrid" : "hold000000000003",
   "instanceId" : "30fcc8e7-a019-43f4-b642-2edc389f4501",
   "permanentLocationId" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
   "callNumber" : "R11.A38",
-  "holdingsStatements" : [ 
+  "holdingsStatements" : [
     {
       "statement": "v1-128, July 1946-December 2016"
-    } 
+    }
   ]
 }

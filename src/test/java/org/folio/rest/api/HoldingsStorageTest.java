@@ -94,7 +94,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holding.getString("id"), is(holdingId.toString()));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
-    assertThat(holding.getString("hrid"), is("ho00000001"));
+    assertThat(holding.getString("hrid"), is("ho00000000001"));
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -105,7 +105,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
-    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -220,7 +220,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
-    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -292,7 +292,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(annexLibraryLocationId.toString()));
-    assertThat(holdingFromGet.getString("hrid"), is("ho00000001"));
+    assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
 
     List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -1461,7 +1461,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(mainLibraryLocationId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
-    assertThat(holdings.getString("hrid"), is("ho00000001"));
+    assertThat(holdings.getString("hrid"), is("ho00000000001"));
 
     final Response getResponse = holdingsClient.getById(holdingsId);
 
@@ -1469,14 +1469,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final JsonObject holdingsFromGet = getResponse.getJson();
 
-    assertThat(holdingsFromGet.getString("hrid"), is("ho00000001"));
+    assertThat(holdingsFromGet.getString("hrid"), is("ho00000000001"));
 
     final JsonObject duplicateHoldings = new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
         .forInstance(instanceId)
         .withPermanentLocation(mainLibraryLocationId)
         .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
-        .withHrid("ho00000001")
+        .withHrid("ho00000000001")
         .create();
 
     final Response duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
@@ -1497,7 +1497,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
         is("lower(f_unaccent(jsonb ->> 'hrid'::text"));
     assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
-        is("ho00000001"));
+        is("ho00000000001"));
 
     log.info("Finished cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
   }
@@ -1514,7 +1514,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
-    setHoldingsSequence(99999999);
+    setHoldingsSequence(99_999_999_999L);
 
     final JsonObject goodHholdings = holdingsClient.create(new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
@@ -1522,7 +1522,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(mainLibraryLocationId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
-    assertThat(goodHholdings.getString("hrid"), is("ho99999999"));
+    assertThat(goodHholdings.getString("hrid"), is("ho99999999999"));
 
     final JsonObject badHoldings = new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
@@ -1564,7 +1564,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(mainLibraryLocationId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
-    assertThat(holdings.getString("hrid"), is("ho00000001"));
+    assertThat(holdings.getString("hrid"), is("ho00000000001"));
 
     holdings.put("hrid", "ABC123");
 
@@ -1577,7 +1577,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-        is("The hrid field cannot be changed: new=ABC123, old=ho00000001"));
+        is("The hrid field cannot be changed: new=ABC123, old=ho00000000001"));
 
     log.info("Finished cannotChangeHRIDAfterCreation");
   }
@@ -1603,7 +1603,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(mainLibraryLocationId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
-    assertThat(holdings.getString("hrid"), is("ho00000001"));
+    assertThat(holdings.getString("hrid"), is("ho00000000001"));
 
     holdings.remove("hrid");
 
@@ -1616,7 +1616,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-        is("The hrid field cannot be changed: new=null, old=ho00000001"));
+        is("The hrid field cannot be changed: new=null, old=ho00000000001"));
 
     log.info("Finished cannotRemoveHRIDAfterCreation");
   }
@@ -1670,7 +1670,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         .forEach(holdings -> {
           final Response response = getById(holdings.getString("id"));
           assertExists(response, holdings);
-          assertHRIDRange(response, "ho00000001", "ho00000003");
+          assertHRIDRange(response, "ho00000000001", "ho00000000003");
         });
 
     log.info("Finished canPostSynchronousBatchWithGeneratedHRID");
@@ -1691,7 +1691,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     Response response = getById(holdingsArray.getJsonObject(0).getString("id"));
     assertExists(response, holdingsArray.getJsonObject(0));
-    assertHRIDRange(response, "ho00000001", "ho00000002");
+    assertHRIDRange(response, "ho00000000001", "ho00000000002");
 
     response = getById(holdingsArray.getJsonObject(1).getString("id"));
     assertExists(response, holdingsArray.getJsonObject(1));
@@ -1699,7 +1699,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     response = getById(holdingsArray.getJsonObject(2).getString("id"));
     assertExists(response, holdingsArray.getJsonObject(2));
-    assertHRIDRange(response, "ho00000001", "ho00000002");
+    assertHRIDRange(response, "ho00000000001", "ho00000000002");
 
     log.info("Finished canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
   }
@@ -1711,7 +1711,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     setHoldingsSequence(1);
 
     final JsonArray holdingsArray = threeHoldings();
-    final String duplicateHRID = "ho00000001";
+    final String duplicateHRID = "ho00000000001";
     holdingsArray.getJsonObject(1).put("hrid", duplicateHRID);
 
     assertThat(postSynchronousBatch(holdingsArray), allOf(
@@ -1730,7 +1730,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void cannotPostSynchronousBatchWithHRIDFailure() {
     log.info("Starting cannotPostSynchronousBatchWithHRIDFailure");
 
-    setHoldingsSequence(99999999);
+    setHoldingsSequence(99999999999L);
 
     final JsonArray holdingsArray = threeHoldings();
 
@@ -1746,7 +1746,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
   }
 
-  private void setHoldingsSequence(int sequenceNumber) {
+  private void setHoldingsSequence(long sequenceNumber) {
     final Vertx vertx = StorageTestSuite.getVertx();
     final PostgresClient postgresClient =
         PostgresClient.getInstance(vertx, TENANT_ID);

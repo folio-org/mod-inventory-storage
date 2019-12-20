@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import org.folio.rest.impl.StorageHelper;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
 import org.folio.rest.persist.PostgresClient;
@@ -35,19 +36,18 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.folio.rest.impl.StorageHelper;
 
 @RunWith(VertxUnitRunner.class)
 public class HridSettingsStorageTest extends TestBase {
   private static final Logger log = LoggerFactory.getLogger(HridSettingsStorageTest.class);
 
   private final HridSettings initialHridSettings = new HridSettings()
-      .withInstances(new HridSetting().withPrefix("in").withStartNumber(1))
-      .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1))
-      .withItems(new HridSetting().withPrefix("it").withStartNumber(1));
+      .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
+      .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
+      .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
 
   @Before
-  public void setUp(TestContext testContext) throws Exception {
+  public void setUp(TestContext testContext) {
     log.info("Initializing values");
     final Async async = testContext.async();
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -96,15 +96,15 @@ public class HridSettingsStorageTest extends TestBase {
 
     assertThat(actualHridSettings.getInstances(), is(notNullValue()));
     assertThat(actualHridSettings.getInstances().getPrefix(), is("in"));
-    assertThat(actualHridSettings.getInstances().getStartNumber(), is(1));
+    assertThat(actualHridSettings.getInstances().getStartNumber(), is(1L));
 
     assertThat(actualHridSettings.getHoldings(), is(notNullValue()));
     assertThat(actualHridSettings.getHoldings().getPrefix(), is("ho"));
-    assertThat(actualHridSettings.getHoldings().getStartNumber(), is(1));
+    assertThat(actualHridSettings.getHoldings().getStartNumber(), is(1L));
 
     assertThat(actualHridSettings.getItems(), is(notNullValue()));
     assertThat(actualHridSettings.getItems().getPrefix(), is("it"));
-    assertThat(actualHridSettings.getItems().getStartNumber(), is(1));
+    assertThat(actualHridSettings.getItems().getStartNumber(), is(1L));
 
     log.info("Finished canRetrieveHridSettings()");
   }
@@ -132,9 +132,9 @@ public class HridSettingsStorageTest extends TestBase {
     final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstances(new HridSetting().withPrefix("inst").withStartNumber(100))
-        .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200))
-        .withItems(new HridSetting().withPrefix("item").withStartNumber(500));
+        .withInstances(new HridSetting().withPrefix("inst").withStartNumber(100L))
+        .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200L))
+        .withItems(new HridSetting().withPrefix("item").withStartNumber(500L));
 
     client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
         empty(putCompleted));
@@ -180,9 +180,9 @@ public class HridSettingsStorageTest extends TestBase {
     final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstances(new HridSetting().withPrefix("inst").withStartNumber(100))
-        .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200))
-        .withItems(new HridSetting().withPrefix("item").withStartNumber(500));
+        .withInstances(new HridSetting().withPrefix("inst").withStartNumber(100L))
+        .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200L))
+        .withItems(new HridSetting().withPrefix("item").withStartNumber(500L));
 
     client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, "BAD",
         text(putCompleted));
@@ -214,9 +214,9 @@ public class HridSettingsStorageTest extends TestBase {
 
     final HridSettings newHridSettings = new HridSettings()
         .withId(uuid)
-        .withInstances(new HridSetting().withPrefix("inst").withStartNumber(100))
-        .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200))
-        .withItems(new HridSetting().withPrefix("item").withStartNumber(500));
+        .withInstances(new HridSetting().withPrefix("inst").withStartNumber(100L))
+        .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200L))
+        .withItems(new HridSetting().withPrefix("item").withStartNumber(500L));
 
     final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
@@ -261,8 +261,7 @@ public class HridSettingsStorageTest extends TestBase {
   }
 
   @Test
-  public void canGetNextInstanceHrid(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetNextInstanceHrid(TestContext testContext) {
     log.info("Starting canGetNextInstanceHrid()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -271,14 +270,13 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     hridManager.getNextInstanceHrid()
-      .compose(hrid -> validateHrid(hrid, "in00000001", testContext))
+      .compose(hrid -> validateHrid(hrid, "in00000000001", testContext))
       .setHandler(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextInstanceHrid()")));
   }
 
   @Test
-  public void canGetNextInstanceHridAfterSettingStartNumber(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetNextInstanceHridAfterSettingStartNumber(TestContext testContext) {
     log.info("Starting canGetNextInstanceHridAfterSettingStartNumber()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -287,21 +285,20 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstances(new HridSetting().withPrefix("in").withStartNumber(250))
-        .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1))
-        .withItems(new HridSetting().withPrefix("it").withStartNumber(1));
+        .withInstances(new HridSetting().withPrefix("in").withStartNumber(250L))
+        .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
+        .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
 
     hridManager.updateHridSettings(newHridSettings).setHandler(
         testContext.asyncAssertSuccess(
             hridSettingsResult -> hridManager.getNextInstanceHrid().compose(
-                hrid -> validateHrid(hrid, "in00000250", testContext))
+                hrid -> validateHrid(hrid, "in00000000250", testContext))
               .setHandler(testContext.asyncAssertSuccess(
                   v -> log.info("Finished canGetNextInstanceHridAfterSettingStartNumber()")))));
   }
 
   @Test
-  public void canGetNextHoldingHrid(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetNextHoldingHrid(TestContext testContext) {
     log.info("Starting canGetNextHoldingHrid()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -310,14 +307,13 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     hridManager.getNextHoldingsHrid()
-      .compose(hrid -> validateHrid(hrid, "ho00000001", testContext))
+      .compose(hrid -> validateHrid(hrid, "ho00000000001", testContext))
       .setHandler(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextHoldingHrid()")));
   }
 
   @Test
-  public void canGetNextHoldingHridAfterSettingStartNumber(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetNextHoldingHridAfterSettingStartNumber(TestContext testContext) {
     log.info("Starting canGetNextHoldingHridAfterSettingStartNumber()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -326,21 +322,20 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstances(new HridSetting().withPrefix("in").withStartNumber(1))
-        .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890))
-        .withItems(new HridSetting().withPrefix("it").withStartNumber(1));
+        .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
+        .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890L))
+        .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
 
     hridManager.updateHridSettings(newHridSettings).setHandler(
         testContext.asyncAssertSuccess(
             hridSettings -> hridManager.getNextHoldingsHrid().compose(
-                hrid -> validateHrid(hrid, "ho00007890", testContext))
+                hrid -> validateHrid(hrid, "ho00000007890", testContext))
               .setHandler(testContext.asyncAssertSuccess(
                   v -> log.info("Finished canGetNextHoldingHridAfterSettingStartNumber()")))));
   }
 
   @Test
-  public void canGetNextItemHrid(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetNextItemHrid(TestContext testContext) {
     log.info("Starting canGetNextItemHrid()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -349,13 +344,12 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     hridManager.getNextItemHrid()
-      .compose(hrid -> validateHrid(hrid, "it00000001", testContext))
+      .compose(hrid -> validateHrid(hrid, "it00000000001", testContext))
       .setHandler(testContext.asyncAssertSuccess(v -> log.info("Finished canGetNextItemHrid()")));
   }
 
   @Test
-  public void canGetNextItemHridAfterSettingStartNumber(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetNextItemHridAfterSettingStartNumber(TestContext testContext) {
     log.info("Starting canGetNextItemHridAfterSettingStartNumber()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -364,21 +358,20 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstances(new HridSetting().withPrefix("in").withStartNumber(1))
-        .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1))
-        .withItems(new HridSetting().withPrefix("it").withStartNumber(87654321));
+        .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
+        .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
+        .withItems(new HridSetting().withPrefix("it").withStartNumber(87654321L));
 
     hridManager.updateHridSettings(newHridSettings).setHandler(
         testContext.asyncAssertSuccess(
             hridSettings -> hridManager.getNextItemHrid().compose(
-                hrid -> validateHrid(hrid, "it87654321", testContext))
+                hrid -> validateHrid(hrid, "it00087654321", testContext))
               .setHandler(testContext.asyncAssertSuccess(
                   v -> log.info("Finished canGetNextItemHridAfterSettingStartNumber()")))));
   }
 
   @Test
-  public void canGetNextItemHridMultipleTimes(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetNextItemHridMultipleTimes(TestContext testContext) {
     log.info("Starting canGetNextItemHridMultipleTimes()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -386,22 +379,21 @@ public class HridSettingsStorageTest extends TestBase {
 
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
-    hridManager.getNextItemHrid().compose(hrid -> validateHrid(hrid, "it00000001", testContext))
+    hridManager.getNextItemHrid().compose(hrid -> validateHrid(hrid, "it00000000001", testContext))
       .compose(v -> hridManager.getNextItemHrid())
-      .compose(hrid -> validateHrid(hrid, "it00000002", testContext))
+      .compose(hrid -> validateHrid(hrid, "it00000000002", testContext))
       .compose(v -> hridManager.getNextItemHrid())
-      .compose(hrid -> validateHrid(hrid, "it00000003", testContext))
+      .compose(hrid -> validateHrid(hrid, "it00000000003", testContext))
       .compose(v -> hridManager.getNextItemHrid())
-      .compose(hrid -> validateHrid(hrid, "it00000004", testContext))
+      .compose(hrid -> validateHrid(hrid, "it00000000004", testContext))
       .compose(v -> hridManager.getNextItemHrid())
-      .compose(hrid -> validateHrid(hrid, "it00000005", testContext))
+      .compose(hrid -> validateHrid(hrid, "it00000000005", testContext))
       .setHandler(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextItemHridMultipleTimes()")));
   }
 
   @Test
-  public void canGetNextItemHridWithNoPrefix(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetNextItemHridWithNoPrefix(TestContext testContext) {
     log.info("Starting canGetNextItemHridWithNoPrefix()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -410,21 +402,20 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstances(new HridSetting().withStartNumber(100))
-        .withHoldings(new HridSetting().withStartNumber(200))
-        .withItems(new HridSetting().withStartNumber(300));
+        .withInstances(new HridSetting().withStartNumber(100L))
+        .withHoldings(new HridSetting().withStartNumber(200L))
+        .withItems(new HridSetting().withStartNumber(300L));
 
     hridManager.updateHridSettings(newHridSettings)
       .setHandler(testContext.asyncAssertSuccess(
           hridSettings -> hridManager.getNextItemHrid().compose(
-              hrid -> validateHrid(hrid, "00000300", testContext))
+              hrid -> validateHrid(hrid, "00000000300", testContext))
             .setHandler(testContext.asyncAssertSuccess(
               v -> log.info("Finished canGetNextItemHridWithNoPrefix()")))));
   }
 
   @Test
-  public void canRollbackFailedTransaction(TestContext testContext)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRollbackFailedTransaction(TestContext testContext) {
     log.info("Starting canRollbackFailedTransaction()");
 
     final Vertx vertx = StorageTestSuite.getVertx();
@@ -433,9 +424,9 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstances(new HridSetting().withStartNumber(999999999))
-        .withHoldings(new HridSetting().withStartNumber(200))
-        .withItems(new HridSetting().withStartNumber(300));
+        .withInstances(new HridSetting().withStartNumber(999_999_999_999L))
+        .withHoldings(new HridSetting().withStartNumber(200L))
+        .withItems(new HridSetting().withStartNumber(300L));
 
     hridManager.getHridSettings()
         .compose(originalHridSettings -> {
@@ -465,6 +456,27 @@ public class HridSettingsStorageTest extends TestBase {
         })
         .setHandler(testContext.asyncAssertSuccess(
             v1 -> log.info("Finished canRollbackFailedTransaction()")));
+  }
+
+  @Test
+  public void canGetNextHridWhenStartNumberIsLong(TestContext testContext) {
+    final Vertx vertx = StorageTestSuite.getVertx();
+    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+
+    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
+    final HridSettings newHridSettings = new HridSettings()
+      .withInstances(new HridSetting().withStartNumber(9_999_999_997L))
+      .withHoldings(new HridSetting().withStartNumber(9_999_999_998L))
+      .withItems(new HridSetting().withStartNumber(9_999_999_999L));
+
+    hridManager.updateHridSettings(newHridSettings)
+      .compose(v -> hridManager.getNextInstanceHrid())
+      .compose(hrid -> validateHrid(hrid, "09999999997", testContext))
+      .compose(v -> hridManager.getNextHoldingsHrid())
+      .compose(hrid -> validateHrid(hrid, "09999999998", testContext))
+      .compose(v -> hridManager.getNextItemHrid())
+      .compose(hrid -> validateHrid(hrid, "09999999999", testContext))
+      .setHandler(testContext.asyncAssertSuccess());
   }
 
   private Future<String> validateHrid(String hrid, String expectedValue, TestContext testContext) {
