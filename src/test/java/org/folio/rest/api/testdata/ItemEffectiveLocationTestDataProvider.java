@@ -1,4 +1,4 @@
-package org.folio.rest.api;
+package org.folio.rest.api.testdata;
 
 import static org.folio.rest.api.TestBaseWithInventoryUtil.ANNEX_LIBRARY_LOCATION;
 import static org.folio.rest.api.TestBaseWithInventoryUtil.FOURTH_FLOOR_LOCATION;
@@ -110,11 +110,11 @@ public class ItemEffectiveLocationTestDataProvider {
     /**
      * permanent location UUID
      */
-    UUID perm;
+    public UUID perm;
     /**
      * temporary location UUID
      */
-    UUID temp;
+    public UUID temp;
 
     /**
      * @param perm permanent location UUID

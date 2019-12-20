@@ -44,12 +44,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final String TEMPORARY_LOCATION_ID_KEY = "temporaryLocationId";
   protected static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
 
-  protected static final String MAIN_LIBRARY_LOCATION = "Main Library";
-  protected static final String SECOND_FLOOR_LOCATION = "Second Floor";
-  protected static final String ANNEX_LIBRARY_LOCATION = "Annex Library";
-  protected static final String ONLINE_LOCATION = "Online";
-  protected static final String THIRD_FLOOR_LOCATION = "Third Floor";
-  protected static final String FOURTH_FLOOR_LOCATION = "Fourth Floor";
+  public static final String MAIN_LIBRARY_LOCATION = "Main Library";
+  public static final String SECOND_FLOOR_LOCATION = "Second Floor";
+  public static final String ANNEX_LIBRARY_LOCATION = "Annex Library";
+  public static final String ONLINE_LOCATION = "Online";
+  public static final String THIRD_FLOOR_LOCATION = "Third Floor";
+  public static final String FOURTH_FLOOR_LOCATION = "Fourth Floor";
 
   protected static UUID   journalMaterialTypeId;
   protected static String journalMaterialTypeID;
@@ -60,12 +60,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
   // that JUnit calls *before* the @BeforeClass beforeAny() method.
-  protected static UUID mainLibraryLocationId = UUID.randomUUID();
-  protected static UUID annexLibraryLocationId = UUID.randomUUID();
-  protected static UUID onlineLocationId = UUID.randomUUID();
-  protected static UUID secondFloorLocationId = UUID.randomUUID();
-  protected static UUID thirdFloorLocationId = UUID.randomUUID();
-  protected static UUID fourthFloorLocationId = UUID.randomUUID();
+  public static UUID mainLibraryLocationId = UUID.randomUUID();
+  public static UUID annexLibraryLocationId = UUID.randomUUID();
+  public static UUID onlineLocationId = UUID.randomUUID();
+  public static UUID secondFloorLocationId = UUID.randomUUID();
+  public static UUID thirdFloorLocationId = UUID.randomUUID();
+  public static UUID fourthFloorLocationId = UUID.randomUUID();
 
   // These UUIDs were taken from reference-data folder.
   // When the vertical gets started the data from the reference-data folder are loaded to the DB.
