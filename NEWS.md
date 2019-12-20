@@ -1,3 +1,10 @@
+## 18.2.0 2019-12-20
+
+* Increase maximum number of digits for human readable IDs (HRID) (MODINVSTOR-410, MODINVSTOR-411, MODINVSTOR-412)
+* Include HRID in sample records for instances, items and holdings (MODINVSTOR-397)
+* Improve performance of searching by effective location (MODINVSTOR-407, MODINVSTOR-409)
+
+
 ## 18.1.0 2019-12-06
 
 * Upgrades RAML Module Builder (RMB) to version [29.1.0](https://github.com/folio-org/raml-module-builder/blob/v29.1.0/NEWS.md) (was 28.1.0) ([MODINVSTOR-403](https://issues.folio.org/browse/MODINVSTOR-403))
