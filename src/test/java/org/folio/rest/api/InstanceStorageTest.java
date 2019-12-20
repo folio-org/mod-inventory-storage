@@ -2256,6 +2256,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(ibr.getErrorMessages(), notNullValue());
     assertThat(ibr.getErrorMessages().get(0), allOf(
+      // 23505 = unique_violation https://www.postgresql.org/docs/current/errcodes-appendix.html
       containsString("(SQLSTATE, 23505)"), containsString("instance_hrid_idx_unique")));
 
     log.info("Finished cannotCreateACollectionOfInstancesWithDuplicatedHRIDs");
