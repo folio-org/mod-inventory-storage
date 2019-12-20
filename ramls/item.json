@@ -72,7 +72,7 @@
         },
         "typeId": {
           "type": "string",
-          "description": "Effective Call Number Type Id is the call number type id assigned to the item or associated holding.",
+          "description": "Effective Call Number Type Id is the call number type id of the item, if available, otherwise that of the holding.",
           "$ref": "uuid.json",
           "readonly": true
         }
