@@ -81,8 +81,8 @@ public class InstanceStorageAPI implements InstanceStorage {
 
     try {
       PreparedCQL preparedCql = handleCQL(query, limit, offset);
-      PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
-        "title", query, offset, limit,
+      PgUtil.get(preparedCql.getTableName(), Instance.class, Instances.class,
+        query, offset, limit,
         okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
