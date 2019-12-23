@@ -1,9 +1,14 @@
+## 18.2.1 2019-12-23
+
+* Improve performance of searching by keyword index (MODINVSTOR-424)
+* Truncate b-tree indexes to avoid buffer or index size problems (MODINVSTOR-390, MODINVSTOR-395, MODINVSTOR-379, MODINVSTOR-139)
+* Upgrades to RAML Module Builder 29.1.5 (MODINVSTOR-418)
+
 ## 18.2.0 2019-12-20
 
 * Increase maximum number of digits for human readable IDs (HRID) (MODINVSTOR-410, MODINVSTOR-411, MODINVSTOR-412)
 * Include HRID in sample records for instances, items and holdings (MODINVSTOR-397)
 * Improve performance of searching by effective location (MODINVSTOR-407, MODINVSTOR-409)
-
 
 ## 18.1.0 2019-12-06
 
