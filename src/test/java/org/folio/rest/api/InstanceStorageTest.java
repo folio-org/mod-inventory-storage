@@ -49,6 +49,7 @@ import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -2077,8 +2078,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Errors errors = response.getJson().mapTo(Errors.class);
 
     assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), notNullValue());
-    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors(), hasSize(1));
     assertThat(errors.getErrors().get(0).getMessage(),
         is("duplicate key value violates unique constraint \"instance_hrid_idx_unique\""));
     assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
@@ -2254,13 +2254,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
-    assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().get(0), is(
-      "ErrorMessage(fields=[(Severity, ERROR), (V, ERROR), (SQLSTATE, 23505), " +
-        "(Message, duplicate key value violates unique constraint \"instance_hrid_idx_unique\"), " +
-        "(Detail, Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists.), " +
-        "(s, test_tenant_mod_inventory_storage), (t, instance), (n, instance_hrid_idx_unique), " +
-        "(File, nbtinsert.c), (Line, 434), (Routine, _bt_check_unique)])"));
+    assertThat(ibr.getErrorMessages(), hasSize(1));
+    assertThat(ibr.getErrorMessages().get(0), isUniqueViolation("instance_hrid_idx_unique"));
 
     log.info("Finished cannotCreateACollectionOfInstancesWithDuplicatedHRIDs");
   }
