@@ -188,8 +188,7 @@ public class ResourceClient {
 
     assertThat(String.format(
       "Failed to delete %s %s: %s", resourceName, id, response.getBody()),
-      response.getStatusCode(),
-      is(204));
+      response.getStatusCode(), is(204));
   }
 
   public void deleteAll()
