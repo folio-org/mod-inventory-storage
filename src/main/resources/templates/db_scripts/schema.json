@@ -727,7 +727,7 @@
     {
       "run": "after",
       "snippetPath": "migrateItemCopyNumberToSingleValue.sql",
-      "fromModuleVersion": "18.2.0"
+      "fromModuleVersion": "19.0.0"
     }
   ]
 }
