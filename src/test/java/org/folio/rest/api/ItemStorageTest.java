@@ -20,6 +20,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNowAsString;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -2405,6 +2406,21 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(error.getString("message"), is("may not be null"));
     assertThat(error.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("status.name"));
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithoutStatus() {
+    final JsonArray itemArray = threeItems();
+    itemArray.getJsonObject(1).remove("status");
+
+    final Response response = postSynchronousBatch(itemArray);
+    assertThat(response,
+      hasValidationError("may not be null", "items[1].status", "null")
+    );
+
+    for (int i = 0; i < itemArray.size(); i++) {
+      assertGetNotFound(itemsStorageUrl("/" + itemArray.getJsonObject(i).getString("id")));
+    }
   }
 
   private Response getById(UUID id) throws InterruptedException,
