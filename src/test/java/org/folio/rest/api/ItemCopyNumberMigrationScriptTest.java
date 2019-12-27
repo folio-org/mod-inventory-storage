@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.support.IndividualResource;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,6 +96,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", UUID.randomUUID().toString())
+      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("barcode", new Random().nextLong())
       .put("materialTypeId", journalMaterialTypeID)

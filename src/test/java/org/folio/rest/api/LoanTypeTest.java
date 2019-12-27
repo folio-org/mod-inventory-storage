@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -334,6 +335,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
   private static String createItem(UUID holdingsRecordId, String permanentLoanTypeId, String temporaryLoanTypeId) {
     JsonObject item = new JsonObject();
 
+    item.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
     item.put("holdingsRecordId", holdingsRecordId.toString());
     item.put("barcode", "12345");
     item.put("materialTypeId", materialTypeID);
