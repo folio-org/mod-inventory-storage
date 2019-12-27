@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -344,6 +345,8 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
 
   private JsonObject createItemRequest(String holdingsRecordId, String temporaryLocationId) {
     JsonObject item = new JsonObject();
+
+    item.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
     item.put("holdingsRecordId", holdingsRecordId);
     item.put("barcode", "12345");
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);
