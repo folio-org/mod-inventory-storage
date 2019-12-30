@@ -8,7 +8,6 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
-import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.support.*;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.junit.Assert;

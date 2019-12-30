@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.support.IndividualResource;
 import org.junit.Before;
 import org.junit.Test;

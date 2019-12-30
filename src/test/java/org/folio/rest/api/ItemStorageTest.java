@@ -61,7 +61,6 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.LastCheckIn;
-import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
@@ -1609,7 +1608,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject replacement = itemToCreate.copy();
 
     replacement
-      .put("status", new JsonObject().put("name", Status.Name.CHECKED_OUT.value()));
+      .put("status", new JsonObject().put("name", "Checked out"));
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
@@ -1629,7 +1628,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getId(), is(id.toString()));
 
     assertThat(item.getStatus().getName(),
-      is(Status.Name.CHECKED_OUT));
+      is("Checked out"));
 
     assertThat(item.getStatus().getDate().toInstant(), withinSecondsBeforeNow(seconds(2)));
   }
@@ -1650,7 +1649,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject replacement = itemToCreate.copy();
 
     replacement
-      .put("status", new JsonObject().put("name", Status.Name.CHECKED_OUT.value()));
+      .put("status", new JsonObject().put("name", "Checked out"));
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
@@ -1671,7 +1670,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getId(), is(id.toString()));
 
     assertThat(item.getStatus().getName(),
-      is(Status.Name.CHECKED_OUT));
+      is("Checked out"));
 
     assertThat(item.getStatus().getDate(),
       notNullValue());
@@ -1701,7 +1700,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(resultItem.getId(), is(id.toString()));
 
     assertThat(resultItem.getStatus().getName(),
-      is(Status.Name.AVAILABLE));
+      is("Available"));
 
     Instant itemStatusDate = resultItem.getStatus().getDate().toInstant();
 
@@ -1718,14 +1717,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(itemToCreate);
 
     JsonObject itemWithUpdatedStatus = getById(id).getJson().copy()
-      .put("status", new JsonObject().put("name", Status.Name.CHECKED_OUT.value()));
+      .put("status", new JsonObject().put("name", "Checked out"));
 
     itemsClient.replace(id, itemWithUpdatedStatus);
 
     Response updatedItemResponse = itemsClient.getById(id);
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
-    assertThat(updatedStatus.getString("name"), is(Status.Name.CHECKED_OUT.value()));
+    assertThat(updatedStatus.getString("name"), is("Checked out"));
     assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(2)));
 
     JsonObject itemWithUpdatedStatusDate = updatedItemResponse.getJson().copy();
@@ -1774,14 +1773,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(itemToCreate);
 
     JsonObject itemWithUpdatedStatus = getById(id).getJson().copy()
-      .put("status", new JsonObject().put("name", Status.Name.CHECKED_OUT.value()));
+      .put("status", new JsonObject().put("name", "Checked out"));
 
     itemsClient.replace(id, itemWithUpdatedStatus);
 
     Response updatedItemResponse = itemsClient.getById(id);
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
-    assertThat(updatedStatus.getString("name"), is(Status.Name.CHECKED_OUT.value()));
+    assertThat(updatedStatus.getString("name"), is("Checked out"));
     assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(2)));
 
     JsonObject itemWithUpdatedCallNumber = updatedItemResponse.getJson().copy()
