@@ -218,7 +218,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     itemToCreate.put("id", UUID.randomUUID().toString());
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("barcode", Long.toString(new Random().nextLong()));
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     if (tempLocation != null) {

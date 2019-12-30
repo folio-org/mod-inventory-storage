@@ -96,7 +96,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", UUID.randomUUID().toString())
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("barcode", new Random().nextLong())
       .put("materialTypeId", journalMaterialTypeID)

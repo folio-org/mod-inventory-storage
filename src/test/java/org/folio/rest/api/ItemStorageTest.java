@@ -121,7 +121,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("id", id.toString());
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("barcode", "565578437802");
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
@@ -170,7 +170,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
-      is(Status.Name.AVAILABLE.value()));
+      is("Available"));
     assertThat(itemFromGet.getString("materialTypeId"),
       is(journalMaterialTypeID));
     assertThat(itemFromGet.getString("permanentLoanTypeId"),
@@ -199,7 +199,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
@@ -227,7 +227,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
-      is(Status.Name.AVAILABLE.value()));
+      is("Available"));
 
     List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
@@ -426,7 +426,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     final JsonObject itemToCreate = new JsonObject()
       .put("id", id.toString())
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
@@ -461,7 +461,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = new JsonObject();
     String itemId = UUID.randomUUID().toString();
     itemToCreate.put("id", itemId);
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
@@ -491,7 +491,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = new JsonObject();
     String itemId = UUID.randomUUID().toString();
     itemToCreate.put("id", itemId);
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
@@ -630,7 +630,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = new JsonObject();
     String itemId = UUID.randomUUID().toString();
     itemToCreate.put("id", itemId);
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
@@ -661,7 +661,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     String itemId = UUID.randomUUID().toString();
     itemToCreate.put("id", itemId);
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
     itemToCreate.put("itemLevelCallNumberPrefix", "testItemCallNumberPrefix");
@@ -798,7 +798,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = new JsonObject();
     String itemId = UUID.randomUUID().toString();
     itemToCreate.put("id", itemId);
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
@@ -828,7 +828,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = new JsonObject();
     String itemId = UUID.randomUUID().toString();
     itemToCreate.put("id", itemId);
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
@@ -861,7 +861,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final String itemId = UUID.randomUUID().toString();
 
     itemToCreate.put("id", itemId);
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
@@ -894,7 +894,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id)
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
@@ -925,7 +925,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", id)
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
@@ -985,7 +985,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     UUID id = UUID.randomUUID();
     itemToCreate.put("id", id.toString());
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
@@ -1014,7 +1014,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     JsonObject itemToCreate = new JsonObject();
     itemToCreate.put("id", UUID.randomUUID().toString());
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", UUID.randomUUID().toString());
@@ -1041,7 +1041,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     final JsonObject itemToCreate = new JsonObject()
       .put("id", UUID.randomUUID().toString())
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("materialTypeId", journalMaterialTypeID);
@@ -1094,7 +1094,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     final JsonObject itemToCreate = new JsonObject()
       .put("id", UUID.randomUUID().toString())
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("materialTypeId", journalMaterialTypeID);
@@ -1132,7 +1132,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = new JsonObject();
     String itemId = UUID.randomUUID().toString();
     itemToCreate.put("id", itemId);
-    itemToCreate.put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
@@ -1162,7 +1162,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject itemToCreate = new JsonObject()
       .put("id", itemId)
       .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("materialTypeId", bookMaterialTypeID);
 
@@ -1196,7 +1196,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final String itemId = UUID.randomUUID().toString();
     final JsonObject itemToCreate = new JsonObject()
       .put("id", itemId)
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()))
+      .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("materialTypeId", bookMaterialTypeID);
@@ -1751,7 +1751,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject createdItem = getById(id).getJson();
     JsonObject initialStatus = createdItem.getJsonObject("status");
 
-    assertThat(initialStatus.getString("name"), is(Status.Name.AVAILABLE.value()));
+    assertThat(initialStatus.getString("name"), is("Available"));
     assertThat(initialStatus.getString("date"), nullValue());
 
     itemsClient.replace(id,
@@ -1762,7 +1762,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response updatedItemResponse = itemsClient.getById(id);
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
-    assertThat(updatedStatus.getString("name"), is(Status.Name.AVAILABLE.value()));
+    assertThat(updatedStatus.getString("name"), is("Available"));
     assertThat(updatedStatus.getString("date"), nullValue());
   }
 
@@ -2350,13 +2350,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
 
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+      .put("status", new JsonObject().put("name", "Available"));
 
     createItem(itemToCreate);
 
     JsonObject createdItem = getById(id).getJson();
     assertThat(createdItem.getJsonObject("status").getString("name"),
-      is(Status.Name.AVAILABLE.value())
+      is("Available")
     );
 
     JsonObject replacement = itemToCreate.copy();
@@ -2382,13 +2382,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
 
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
-      .put("status", new JsonObject().put("name", Status.Name.AVAILABLE.value()));
+      .put("status", new JsonObject().put("name", "Available"));
 
     createItem(itemToCreate);
 
     JsonObject createdItem = getById(id).getJson();
     assertThat(createdItem.getJsonObject("status").getString("name"),
-      is(Status.Name.AVAILABLE.value())
+      is("Available")
     );
 
     JsonObject replacement = itemToCreate.copy();
