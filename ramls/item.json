@@ -214,6 +214,7 @@
           "enum": [
             "Available",
             "Awaiting pickup",
+            "Awaiting delivery",
             "Checked out",
             "In process",
             "In transit",
