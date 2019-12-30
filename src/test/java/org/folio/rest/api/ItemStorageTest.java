@@ -1627,8 +1627,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(item.getId(), is(id.toString()));
 
-    assertThat(item.getStatus().getName(),
-      is("Checked out"));
+    assertThat(item.getStatus().getName().value(), is("Checked out"));
 
     assertThat(item.getStatus().getDate().toInstant(), withinSecondsBeforeNow(seconds(2)));
   }
@@ -1669,8 +1668,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(item.getId(), is(id.toString()));
 
-    assertThat(item.getStatus().getName(),
-      is("Checked out"));
+    assertThat(item.getStatus().getName().value(), is("Checked out"));
 
     assertThat(item.getStatus().getDate(),
       notNullValue());
@@ -1699,8 +1697,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(resultItem.getId(), is(id.toString()));
 
-    assertThat(resultItem.getStatus().getName(),
-      is("Available"));
+    assertThat(resultItem.getStatus().getName().value(), is("Available"));
 
     Instant itemStatusDate = resultItem.getStatus().getDate().toInstant();
 
