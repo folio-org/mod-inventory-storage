@@ -1,9 +1,7 @@
 package org.folio.rest.support.http;
 
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.api.StorageTestSuite;
-import org.folio.rest.support.*;
-import org.folio.rest.support.builders.Builder;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -15,8 +13,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import org.folio.rest.api.StorageTestSuite;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.builders.Builder;
+
+import io.vertx.core.json.JsonObject;
 
 public class ResourceClient {
 
@@ -63,6 +68,11 @@ public class ResourceClient {
   public static ResourceClient forInstanceTypes(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::instanceTypesStorageUrl,
       "instance types", "instanceTypes");
+  }
+
+  public static ResourceClient forCallNumberTypes(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::callNumberTypesUrl,
+      "call number types", "callNumberTypes");
   }
 
   private ResourceClient(
@@ -160,18 +170,21 @@ public class ResourceClient {
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
-  public void delete(UUID id)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public Response deleteIfPresent(String id) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
 
     client.delete(urlMaker.combine(String.format("/%s", id)),
       StorageTestSuite.TENANT_ID, ResponseHandler.any(deleteFinished));
 
-    Response response = deleteFinished.get(5, TimeUnit.SECONDS);
+    return deleteFinished.get(5, TimeUnit.SECONDS);
+  }
+
+  public void delete(UUID id) throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    Response response = deleteIfPresent(id != null ? id.toString() : null);
 
     assertThat(String.format(
       "Failed to delete %s %s: %s", resourceName, id, response.getBody()),

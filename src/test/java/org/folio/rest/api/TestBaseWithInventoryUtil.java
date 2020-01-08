@@ -20,12 +20,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.UnaryOperator;
 
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
+import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.BeforeClass;
@@ -42,12 +44,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final String TEMPORARY_LOCATION_ID_KEY = "temporaryLocationId";
   protected static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
 
-  protected static final String MAIN_LIBRARY_LOCATION = "Main Library";
-  protected static final String SECOND_FLOOR_LOCATION = "Second Floor";
-  protected static final String ANNEX_LIBRARY_LOCATION = "Annex Library";
-  protected static final String ONLINE_LOCATION = "Online";
-  protected static final String THIRD_FLOOR_LOCATION = "Third Floor";
-  protected static final String FOURTH_FLOOR_LOCATION = "Fourth Floor";
+  public static final String MAIN_LIBRARY_LOCATION = "Main Library";
+  public static final String SECOND_FLOOR_LOCATION = "Second Floor";
+  public static final String ANNEX_LIBRARY_LOCATION = "Annex Library";
+  public static final String ONLINE_LOCATION = "Online";
+  public static final String THIRD_FLOOR_LOCATION = "Third Floor";
+  public static final String FOURTH_FLOOR_LOCATION = "Fourth Floor";
 
   protected static UUID   journalMaterialTypeId;
   protected static String journalMaterialTypeID;
@@ -58,12 +60,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
   // that JUnit calls *before* the @BeforeClass beforeAny() method.
-  protected static UUID mainLibraryLocationId = UUID.randomUUID();
-  protected static UUID annexLibraryLocationId = UUID.randomUUID();
-  protected static UUID onlineLocationId = UUID.randomUUID();
-  protected static UUID secondFloorLocationId = UUID.randomUUID();
-  protected static UUID thirdFloorLocationId = UUID.randomUUID();
-  protected static UUID fourthFloorLocationId = UUID.randomUUID();
+  public static UUID mainLibraryLocationId = UUID.randomUUID();
+  public static UUID annexLibraryLocationId = UUID.randomUUID();
+  public static UUID onlineLocationId = UUID.randomUUID();
+  public static UUID secondFloorLocationId = UUID.randomUUID();
+  public static UUID thirdFloorLocationId = UUID.randomUUID();
+  public static UUID fourthFloorLocationId = UUID.randomUUID();
 
   // These UUIDs were taken from reference-data folder.
   // When the vertical gets started the data from the reference-data folder are loaded to the DB.
@@ -125,6 +127,23 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
     return createHolding(instanceId, holdingsPermanentLocationId, holdingsTemporaryLocationId);
+  }
+
+  static UUID createInstanceAndHoldingWithBuilder(
+    UUID holdingsPermanentLocationId, UnaryOperator<HoldingRequestBuilder> holdingsBuilderProcessor)
+    throws ExecutionException, InterruptedException, MalformedURLException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(instance(instanceId));
+
+    HoldingRequestBuilder holdingsBuilder = new HoldingRequestBuilder()
+      .withId(UUID.randomUUID())
+      .forInstance(instanceId)
+      .withPermanentLocation(holdingsPermanentLocationId);
+
+    return holdingsClient
+      .create(holdingsBuilderProcessor.apply(holdingsBuilder))
+      .getId();
   }
 
   protected static UUID createHolding(UUID instanceId,
@@ -248,6 +267,10 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   protected IndividualResource createItem(Item item) throws Exception {
     return itemsClient.create(JsonObject.mapFrom(item));
+  }
+
+  protected IndividualResource createItem(ItemRequestBuilder item) throws Exception {
+    return itemsClient.create(item.create());
   }
 
   protected static JsonObject identifier(UUID identifierTypeId, String value) {

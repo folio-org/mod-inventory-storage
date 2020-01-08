@@ -1,8 +1,8 @@
 package org.folio.rest.support.builders;
 
-import io.vertx.core.json.JsonObject;
-
 import java.util.UUID;
+
+import io.vertx.core.json.JsonObject;
 
 public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
 
@@ -17,10 +17,11 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
   private final UUID temporaryLocationId;
   private final UUID permanentLoanTypeId;
   private final UUID temporaryLoanTypeId;
+  private final String itemLevelCallNumberTypeId;
 
   public ItemRequestBuilder() {
     this(UUID.randomUUID(), null, "565578437802", AVAILABLE_STATUS,
-      null, null, null, null);
+      null, null, null, null, null);
   }
 
   private ItemRequestBuilder(
@@ -31,7 +32,8 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     UUID temporaryLocationId,
     UUID materialTypeId,
     UUID permanentLoanTypeId,
-    UUID temporaryLoanTypeId) {
+    UUID temporaryLoanTypeId,
+    String itemLevelCallNumberTypeId) {
 
     this.id = id;
     this.holdingId = holdingId;
@@ -41,6 +43,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     this.materialTypeId = materialTypeId;
     this.permanentLoanTypeId = permanentLoanTypeId;
     this.temporaryLoanTypeId = temporaryLoanTypeId;
+    this.itemLevelCallNumberTypeId = itemLevelCallNumberTypeId;
   }
 
   public JsonObject create() {
@@ -59,6 +62,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     put(itemRequest, "temporaryLoanTypeId", temporaryLoanTypeId);
 
     put(itemRequest, "temporaryLocationId", temporaryLocationId);
+    put(itemRequest, "itemLevelCallNumberTypeId", itemLevelCallNumberTypeId);
 
     return itemRequest;
   }
@@ -80,7 +84,8 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.temporaryLocationId,
       this.materialTypeId,
       this.permanentLoanTypeId,
-      this.temporaryLoanTypeId);
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberTypeId);
   }
 
   public ItemRequestBuilder withBarcode(String barcode) {
@@ -92,7 +97,8 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.temporaryLocationId,
       this.materialTypeId,
       this.permanentLoanTypeId,
-      this.temporaryLoanTypeId);
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberTypeId);
   }
 
   public ItemRequestBuilder withNoBarcode() {
@@ -112,7 +118,8 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       temporaryLocationId,
       this.materialTypeId,
       this.permanentLoanTypeId,
-      this.temporaryLoanTypeId);
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberTypeId);
   }
 
   public ItemRequestBuilder forHolding(UUID holdingId) {
@@ -124,7 +131,8 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.temporaryLocationId,
       this.materialTypeId,
       this.permanentLoanTypeId,
-      this.temporaryLoanTypeId);
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberTypeId);
   }
 
   public ItemRequestBuilder withMaterialType(UUID materialTypeId) {
@@ -136,7 +144,8 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.temporaryLocationId,
       materialTypeId,
       this.permanentLoanTypeId,
-      this.temporaryLoanTypeId);
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberTypeId);
   }
 
   public ItemRequestBuilder withTemporaryLoanType(UUID loanTypeId) {
@@ -148,7 +157,8 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.temporaryLocationId,
       this.materialTypeId,
       this.permanentLoanTypeId,
-      loanTypeId);
+      loanTypeId,
+      this.itemLevelCallNumberTypeId);
   }
 
   public ItemRequestBuilder withPermanentLoanType(UUID loanTypeId) {
@@ -160,6 +170,20 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.temporaryLocationId,
       this.materialTypeId,
       loanTypeId,
-      this.temporaryLoanTypeId);
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberTypeId);
+  }
+
+  public ItemRequestBuilder withItemLevelCallNumberTypeId(String itemLevelCallNumberTypeId) {
+    return new ItemRequestBuilder(
+      this.id,
+      this.holdingId,
+      this.barcode,
+      this.status,
+      this.temporaryLocationId,
+      this.materialTypeId,
+      this.permanentLoanTypeId,
+      this.temporaryLoanTypeId,
+      itemLevelCallNumberTypeId);
   }
 }

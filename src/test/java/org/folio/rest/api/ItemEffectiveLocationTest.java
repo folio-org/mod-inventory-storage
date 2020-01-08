@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
@@ -30,7 +31,7 @@ import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import static org.folio.rest.api.ItemEffectiveLocationTestDataProvider.PermTemp;
+import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
 
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented

@@ -54,7 +54,8 @@ import static org.junit.Assert.assertThat;
   ItemEffectiveLocationTest.class,
   SampleDataTest.class,
   HridSettingsStorageTest.class,
-  HridSettingsStorageParameterizedTest.class
+  HridSettingsStorageParameterizedTest.class,
+  ItemEffectiveCallNumberComponentsTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

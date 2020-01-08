@@ -156,7 +156,7 @@ public class ItemStorageAPI implements ItemStorage {
               respond500WithTextPlain(response.result().getEntity())));
         } else {
           final Item existingItem = (Item) response.result().getEntity();
-          if (Objects.equals(entity.getHrid(), existingItem.getHrid())) { 
+          if (Objects.equals(entity.getHrid(), existingItem.getHrid())) {
             setEffectiveCallNumber(okapiHeaders, vertxContext, entity).thenAccept(
                 item -> PgUtil.put(ITEM_TABLE, item, itemId, okapiHeaders, vertxContext,
                   PutItemStorageItemsByItemIdResponse.class, asyncResultHandler));
@@ -227,6 +227,8 @@ public class ItemStorageAPI implements ItemStorage {
   private boolean shouldNotRetrieveHoldingsRecord(Item item) {
     return isNoneBlank(item.getItemLevelCallNumber(),
       item.getItemLevelCallNumberPrefix(),
-      item.getItemLevelCallNumberSuffix());
+      item.getItemLevelCallNumberSuffix(),
+      item.getItemLevelCallNumberTypeId()
+    );
   }
 }
