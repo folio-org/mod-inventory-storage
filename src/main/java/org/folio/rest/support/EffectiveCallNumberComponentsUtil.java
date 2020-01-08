@@ -2,6 +2,7 @@ package org.folio.rest.support;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
@@ -36,9 +37,16 @@ public final class EffectiveCallNumberComponentsUtil {
       updatedCallNumberSuffix = holdings.getCallNumberSuffix();
     }
 
+    String updatedCallNumberTypeId = StringUtils.firstNonBlank(
+      item.getItemLevelCallNumberTypeId(),
+      holdings != null ? holdings.getCallNumberTypeId() : null
+    );
+
     components.setCallNumber(updatedCallNumber);
     components.setPrefix(updatedCallNumberPrefix);
     components.setSuffix(updatedCallNumberSuffix);
+    components.setTypeId(updatedCallNumberTypeId);
+
     return components;
   }
 }

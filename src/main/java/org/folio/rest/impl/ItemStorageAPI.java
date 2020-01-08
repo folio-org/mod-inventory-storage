@@ -221,6 +221,8 @@ public class ItemStorageAPI implements ItemStorage {
   private boolean shouldNotRetrieveHoldingsRecord(Item item) {
     return isNoneBlank(item.getItemLevelCallNumber(),
       item.getItemLevelCallNumberPrefix(),
-      item.getItemLevelCallNumberSuffix());
+      item.getItemLevelCallNumberSuffix(),
+      item.getItemLevelCallNumberTypeId()
+    );
   }
 }

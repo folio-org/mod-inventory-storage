@@ -34,6 +34,7 @@ public abstract class TestBase {
   static ResourceClient holdingsClient;
   static ResourceClient itemsClient;
   static ResourceClient locationsClient;
+  static ResourceClient callNumberTypesClient;
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -49,6 +50,7 @@ public abstract class TestBase {
     holdingsClient = ResourceClient.forHoldings(client);
     itemsClient = ResourceClient.forItems(client);
     locationsClient = ResourceClient.forLocations(client);
+    callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
   }
 
   @AfterClass
