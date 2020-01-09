@@ -228,7 +228,9 @@
             "On order",
             "Paged",
             "Withdrawn",
-            "Declared lost"
+            "Declared lost",
+            "Received",
+            "Order closed"
           ]
         },
         "date": {
