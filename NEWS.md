@@ -1,3 +1,7 @@
+## 18.2.2 2020-01-09
+
+* Upgrades to RAML Module Builder 29.2.1 (MODINVSTOR-429, RMB-549)
+
 ## 18.2.1 2019-12-23
 
 * Improve performance of searching by keyword index (MODINVSTOR-424)
