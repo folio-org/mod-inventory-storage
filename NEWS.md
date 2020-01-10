@@ -1,3 +1,7 @@
+## 18.2.3 2020-01-10
+
+* Upgrades to RAML Module Builder 29.2.2 to upgrade indexes on module upgrade ([MODINVSTOR-430](https://issues.folio.org/browse/MODINVSTOR-430), [RMB-550](https://issues.folio.org/browse/RMB-550))
+
 ## 18.2.2 2020-01-09
 
 * Upgrades to RAML Module Builder 29.2.1 (MODINVSTOR-429, RMB-549)
