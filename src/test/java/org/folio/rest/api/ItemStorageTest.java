@@ -1455,6 +1455,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
     }
 
+    // This checks that the two triggers update_effective_location and
+    // update_item_references (assigning item.effectiveLocationId = item.jsonb->>'effectiveLocationId')
+    // run in correct order.
     Items mainLibraryItems = findItems("effectiveLocationId=" + mainLibraryLocationId);
     Items annexLibraryItems = findItems("effectiveLocationId=" + annexLibraryLocationId);
     Items onlineLibraryItems = findItems("effectiveLocationId=" + onlineLocationId);
