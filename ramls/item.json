@@ -112,6 +112,7 @@
       "description": "Number of pieces. Used when an item is checked out or returned to verify that all parts are present (e.g. 7 CDs in a set)."
     },
     "descriptionOfPieces": {
+      "description": "Description of item pieces.",
       "type": "string"
     },
     "numberOfMissingPieces": {
@@ -127,9 +128,11 @@
       "description": "Date when the piece(s) went missing."
     },
     "itemDamagedStatusId": {
+      "description": "Item dame status id identifier.",
       "type": "string"
     },
     "itemDamagedStatusDate": {
+      "description": "Date and time when the item was damaged.",
       "type": "string"
     },
     "notes": {
@@ -269,6 +272,7 @@
     },
     "electronicAccess": {
       "type": "array",
+      "description": "References for accessing the item by URL.",
       "items": {
         "type": "object",
         "properties": {
@@ -329,6 +333,7 @@
     },
     "holdingsRecord2": {
       "type": "object",
+      "description": "Item associated holdings record object.",
       "folio:$ref": "holdingsrecord.json",
       "readonly": true,
       "folio:isVirtual": true,
