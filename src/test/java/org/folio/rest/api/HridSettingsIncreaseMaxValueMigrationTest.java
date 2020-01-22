@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -12,14 +11,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.persist.PostgresClient;
-import org.folio.util.ResourceUtil;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonArray;
 
-public class HridSettingsIncreaseMaxValueMigrationTest extends TestBase {
+public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase {
   private static final String CREATE_SEQUENCE_SQL = loadCreateSequenceSqlFile();
-  private static final String ALTER_SEQUENCE_SQL = loadAlterSequenceSqlFile();
+  private static final String ALTER_SEQUENCE_SQL = loadScript("alterHridSequences.sql");
   private static final String INSTANCES_SEQ = "hrid_instances_seq";
   private static final String HOLDINGS_SEQ = "hrid_holdings_seq";
   private static final String ITEMS_SEQ = "hrid_items_seq";
@@ -104,17 +102,9 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends TestBase {
   }
 
   private static String loadCreateSequenceSqlFile() {
-    return ResourceUtil.asString("/templates/db_scripts/hridSettings.sql")
-      .replace("${myuniversity}_${mymodule}", getSchemaName())
-      .replace("${table.tableName}", "hrid_settings");
-  }
-
-  private static String loadAlterSequenceSqlFile() {
-    return ResourceUtil.asString("/templates/db_scripts/alterHridSequences.sql")
-      .replace("${myuniversity}_${mymodule}", getSchemaName());
-  }
-
-  private static String getSchemaName() {
-    return String.format("%s_mod_inventory_storage", TENANT_ID);
+    return loadScript("hridSettings.sql",
+      MigrationTestBase::replaceSchema,
+      resource -> resource.replace("${table.tableName}", "hrid_settings")
+    );
   }
 }

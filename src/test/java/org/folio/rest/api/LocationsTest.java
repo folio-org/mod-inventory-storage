@@ -344,6 +344,8 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
 
   private JsonObject createItemRequest(String holdingsRecordId, String temporaryLocationId) {
     JsonObject item = new JsonObject();
+
+    item.put("status", new JsonObject().put("name", "Available"));
     item.put("holdingsRecordId", holdingsRecordId);
     item.put("barcode", "12345");
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);

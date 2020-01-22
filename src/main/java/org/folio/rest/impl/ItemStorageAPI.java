@@ -20,7 +20,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -44,7 +43,6 @@ public class ItemStorageAPI implements ItemStorage {
   static final String HOLDINGS_RECORD_TABLE = "holdings_record";
 
   private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
-  private static final String DEFAULT_STATUS_NAME = "Available";
 
   @Validate
   @Override
@@ -67,10 +65,6 @@ public class ItemStorageAPI implements ItemStorage {
       String lang, Item entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
-    if (entity.getStatus() == null) {
-      entity.setStatus(new Status().withName(DEFAULT_STATUS_NAME));
-    }
 
     final Future<String> hridFuture;
     if (isBlank(entity.getHrid())) {

@@ -334,6 +334,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
   private static String createItem(UUID holdingsRecordId, String permanentLoanTypeId, String temporaryLoanTypeId) {
     JsonObject item = new JsonObject();
 
+    item.put("status", new JsonObject().put("name", "Available"));
     item.put("holdingsRecordId", holdingsRecordId.toString());
     item.put("barcode", "12345");
     item.put("materialTypeId", materialTypeID);

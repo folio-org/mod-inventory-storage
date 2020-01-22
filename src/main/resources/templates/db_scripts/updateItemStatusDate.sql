@@ -11,8 +11,12 @@ AS $$
 	    -- Date time in "YYYY-MM-DD"T"HH24:MI:SS.ms'Z'" format at UTC (00:00) time zone
       NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}',
        to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"')), true);
+    ELSIF (OLD.jsonb->'status'->'date' IS NOT NULL) THEN
+      NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}', OLD.jsonb->'status'->'date', true);
+    ELSE
+      NEW.jsonb = NEW.jsonb #- '{status, date}';
 	  END IF;
-	RETURN NEW;
+	  RETURN NEW;
   END;
   $$ LANGUAGE 'plpgsql';
 

@@ -10,7 +10,7 @@
   "barcode" : "A14837334306",
   "enumeration" : "v.70:no.1-6",
   "chronology" : "1984:Jan.-June",
-  "copyNumbers" : [ "1" ],
+  "copyNumber" : "1",
   "notes" : [ ],
   "circulationNotes" : [ ],
   "yearCaption" : [ ],

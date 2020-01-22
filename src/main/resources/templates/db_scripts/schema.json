@@ -723,6 +723,11 @@
       "run": "after",
       "snippetPath": "alterHridSequences.sql",
       "fromModuleVersion": "18.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "migrateItemCopyNumberToSingleValue.sql",
+      "fromModuleVersion": "19.0.0"
     }
   ]
 }
