@@ -231,7 +231,8 @@
             "On order",
             "Paged",
             "Declared lost",
-            "Order closed"
+            "Order closed",
+            "Claim returned"
           ]
         },
         "date": {
