@@ -55,6 +55,11 @@ public class ResourceClient {
       "material types", "mtypes");
   }
 
+  public static ResourceClient forModesOfIssuance(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::modesOfIssuanceUrl,
+      "modes of issuance", "issuanceModes");
+  }
+
   public static ResourceClient forLoanTypes(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::loanTypesStorageUrl,
       "loan types", "loantypes");
