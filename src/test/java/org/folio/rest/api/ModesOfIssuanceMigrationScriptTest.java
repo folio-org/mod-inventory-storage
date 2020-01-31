@@ -23,7 +23,7 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
   }
 
   @Test
-  public void canMigrateCopyNumbersToSingleValue() throws Exception {
+  public void canMigrateModeOfIssuance() throws Exception {
     createModeOfIssuance("Integrating Resource", "rdamodeissue");
     createModeOfIssuance("Monograph", "rdamodeissue");
     createModeOfIssuance("Other", "rdamodeissue");
