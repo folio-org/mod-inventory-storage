@@ -2,6 +2,8 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
+import static java.nio.file.Files.readAllBytes;
+import static java.nio.file.Paths.get;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -40,15 +42,18 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -1921,27 +1926,37 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @Parameters(method = "getAllowedItemStatuses")
-  public void canCreateItemWithAllAllowedStatuses(Status.Name status) throws Exception {
+  public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     final ItemRequestBuilder itemToCreate = new ItemRequestBuilder()
       .forHolding(holdingsRecordId)
       .withMaterialType(journalMaterialTypeId)
       .withPermanentLoanType(canCirculateLoanTypeId)
-      .withStatus(status.value());
+      .withStatus(status);
 
     final IndividualResource createdItem = itemsClient.create(itemToCreate);
-    assertThat(createdItem.getJson().getJsonObject("status").getString("name"),
-      is(status.value()));
+    assertThat(createdItem.getJson().getJsonObject("status")
+      .getString("name"), is(status));
 
     JsonObject itemInStorage = itemsClient.getById(createdItem.getId()).getJson();
-    assertThat(itemInStorage.getJsonObject("status").getString("name"),
-      is(status.value()));
+    assertThat(itemInStorage.getJsonObject("status").getString("name"), is(status));
   }
 
   @SuppressWarnings("unused")
-  private Status.Name[] getAllowedItemStatuses() {
-    return Status.Name.values();
+  private Set<String> getAllowedItemStatuses() throws IOException {
+    final String itemJson = new String(readAllBytes(get("ramls/item.json")),
+      StandardCharsets.UTF_8);
+
+    final JsonObject itemSchema = new JsonObject(itemJson);
+
+    JsonArray allowedStatuses = itemSchema.getJsonObject("properties")
+      .getJsonObject("status").getJsonObject("properties")
+      .getJsonObject("name").getJsonArray("enum");
+
+    return allowedStatuses.stream()
+      .map(element -> (String) element)
+      .collect(Collectors.toSet());
   }
 
   private Response getById(UUID id) throws InterruptedException,
