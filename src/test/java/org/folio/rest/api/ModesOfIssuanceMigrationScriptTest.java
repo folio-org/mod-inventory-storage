@@ -46,12 +46,11 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
     Assert.assertThat(modeOfIssuance.getString("source"), is(source));
   }
 
-  private static void createModeOfIssuance(String name, String source)
+  private void createModeOfIssuance(String name, String source)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     modesOfIssuanceClient.create(new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("name", name)
-      .put("source", source)
-    );
+      .put("source", source));
   }
 }
