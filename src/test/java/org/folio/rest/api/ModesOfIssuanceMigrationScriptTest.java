@@ -4,6 +4,7 @@ import static org.folio.rest.support.http.InterfaceUrls.modesOfIssuanceUrl;
 import static org.hamcrest.CoreMatchers.is;
 
 import io.vertx.core.json.JsonObject;
+import org.folio.rest.support.IndividualResource;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,32 +25,39 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
 
   @Test
   public void canMigrateModeOfIssuance() throws Exception {
-    createModeOfIssuance("Integrating Resource", "rdamodeissue");
-    createModeOfIssuance("Monograph", "rdamodeissue");
-    createModeOfIssuance("Other", "rdamodeissue");
-    createModeOfIssuance("Sequential Monograph", "rdamodeissue");
-    createModeOfIssuance("Serial", "rdamodeissue");
+    IndividualResource integratingResource = createModeOfIssuance("4fc0f4fe-06fd-490a-a078-c4da1754e03a",
+      "Integrating Resource", "rdamodeissue");
+    IndividualResource singleUnitResource = createModeOfIssuance("9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
+      "Monograph", "rdamodeissue");
+    IndividualResource unspecifiedResource = createModeOfIssuance("612bbd3d-c16b-4bfb-8517-2afafc60204a",
+      "Other", "rdamodeissue");
+    IndividualResource multipartMonographResource = createModeOfIssuance("f5cc2ab6-bb92-4cab-b83f-5a3d09261a41",
+      "Sequential Monograph", "rdamodeissue");
+    IndividualResource serialResource = createModeOfIssuance("068b5344-e2a6-40df-9186-1829e13cd344",
+      "Serial", "rdamodeissue");
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 
     List<JsonObject> modesOfIssuance = modesOfIssuanceClient.getAll();
 
-    expectModeOfIssuance(modesOfIssuance.get(0), "integrating resource", "rdamodeissue");
-    expectModeOfIssuance(modesOfIssuance.get(1), "multipart monograph", "rdamodeissue");
-    expectModeOfIssuance(modesOfIssuance.get(2), "serial", "rdamodeissue");
-    expectModeOfIssuance(modesOfIssuance.get(3), "single unit", "rdamodeissue");
-    expectModeOfIssuance(modesOfIssuance.get(4), "unspecified", "folio");
+    expectModeOfIssuance(modesOfIssuance.get(0), integratingResource.getId(), "integrating resource", "rdamodeissue");
+    expectModeOfIssuance(modesOfIssuance.get(1), multipartMonographResource.getId(), "multipart monograph",
+      "rdamodeissue");
+    expectModeOfIssuance(modesOfIssuance.get(2), serialResource.getId(), "serial", "rdamodeissue");
+    expectModeOfIssuance(modesOfIssuance.get(3), singleUnitResource.getId(), "single unit", "rdamodeissue");
+    expectModeOfIssuance(modesOfIssuance.get(4), unspecifiedResource.getId(), "unspecified", "folio");
   }
 
-  private void expectModeOfIssuance(JsonObject modeOfIssuance, String name, String source) {
+  private void expectModeOfIssuance(JsonObject modeOfIssuance, UUID id, String name, String source) {
+    Assert.assertThat(modeOfIssuance.getString("id"), is(id.toString()));
     Assert.assertThat(modeOfIssuance.getString("name"), is(name));
     Assert.assertThat(modeOfIssuance.getString("source"), is(source));
   }
 
-  private void createModeOfIssuance(String name, String source)
+  private IndividualResource createModeOfIssuance(String id, String name, String source)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-    modesOfIssuanceClient.create(new JsonObject()
-      .put("id", UUID.randomUUID().toString())
+    return modesOfIssuanceClient.create(new JsonObject()
+      .put("id", id)
       .put("name", name)
       .put("source", source));
   }
