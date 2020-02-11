@@ -742,6 +742,11 @@
       "run": "after",
       "snippetPath": "migrateItemCopyNumberToSingleValue.sql",
       "fromModuleVersion": "19.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "renameModesOfIssuance.sql",
+      "fromModuleVersion": "19.0.0"
     }
   ]
 }
