@@ -30,13 +30,9 @@ public class TenantRefAPI extends TenantAPI {
   private static final String REFERENCE_LEAD = "ref-data";
 
   private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
-  final String[] refPaths = new String[]{
+  static final String[] refPaths = new String[]{
     "material-types",
     "loan-types",
-    "location-units/institutions",
-    "location-units/campuses",
-    "location-units/libraries",
-    "locations",
     "identifier-types",
     "contributor-types",
     "service-points",
@@ -47,7 +43,8 @@ public class TenantRefAPI extends TenantAPI {
     "nature-of-content-terms",
     "classification-types",
     "instance-statuses",
-    "statistical-code-types", "statistical-codes",
+    "statistical-code-types",
+    "statistical-codes",
     "modes-of-issuance",
     "alternative-title-types",
     "electronic-access-relationships",
@@ -59,7 +56,16 @@ public class TenantRefAPI extends TenantAPI {
     "item-note-types",
     "item-damaged-statuses"
   };
-
+  static final String[] samplePaths = new String[] {
+      "location-units/institutions",
+      "location-units/campuses",
+      "location-units/libraries",
+      "locations",
+      "instance-storage/instances",
+      "holdings-storage/holdings",
+      "item-storage/items",
+      "instance-storage/instance-relationships",
+  };
   List<JsonObject> servicePoints = null;
 
   String servicePointUserFilter(String s) {
@@ -104,17 +110,16 @@ public class TenantRefAPI extends TenantAPI {
       }
       TenantLoading tl = new TenantLoading();
 
-      tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
       tl.withIdContent();
+
+      tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
       for (String p : refPaths) {
         tl.add(p);
       }
       tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
-      tl.add("instances", "instance-storage/instances");
-      tl.withIdContent();
-      tl.add("holdingsrecords", "holdings-storage/holdings");
-      tl.add("items", "item-storage/items");
-      tl.add("instance-relationships", "instance-storage/instance-relationships");
+      for (String p : samplePaths) {
+        tl.add(p);
+      }
       if (servicePoints != null) {
         tl.withFilter(this::servicePointUserFilter)
           .withPostOnly()

@@ -17,6 +17,11 @@ curl -w '\n' -X DELETE -D - \
      -H "X-Okapi-Tenant: ${tenant}" \
      "${instance_storage_address}"
 
+curl -w '\n' -X DELETE -D - -H "X-Okapi-Tenant: ${tenant}" http://localhost:9130/locations
+curl -w '\n' -X DELETE -D - -H "X-Okapi-Tenant: ${tenant}" http://localhost:9130/location-units/libraries
+curl -w '\n' -X DELETE -D - -H "X-Okapi-Tenant: ${tenant}" http://localhost:9130/location-units/campuses
+curl -w '\n' -X DELETE -D - -H "X-Okapi-Tenant: ${tenant}" http://localhost:9130/location-units/institutions
+
 
 
 

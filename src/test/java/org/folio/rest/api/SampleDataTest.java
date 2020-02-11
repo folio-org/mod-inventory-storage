@@ -8,6 +8,10 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -50,6 +54,26 @@ public class SampleDataTest extends TestBase {
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Test
+  public void institutionCount() {
+    assertCount(locInstitutionStorageUrl("?limit=100"), "locinsts", 1);
+  }
+
+  @Test
+  public void campusCount() {
+    assertCount(locCampusStorageUrl("?limit=100"), "loccamps", 2);
+  }
+
+  @Test
+  public void libraryCount() {
+    assertCount(locLibraryStorageUrl("?limit=100"), "loclibs", 2);
+  }
+
+  @Test
+  public void locationCount() {
+    assertCount(locationsStorageUrl("?limit=100"), "locations", 6);
   }
 
   @Test
