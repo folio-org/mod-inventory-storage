@@ -35,6 +35,7 @@ public abstract class TestBase {
   static ResourceClient itemsClient;
   static ResourceClient locationsClient;
   static ResourceClient callNumberTypesClient;
+  static ResourceClient modesOfIssuanceClient;
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -51,6 +52,7 @@ public abstract class TestBase {
     itemsClient = ResourceClient.forItems(client);
     locationsClient = ResourceClient.forLocations(client);
     callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
+    modesOfIssuanceClient = ResourceClient.forModesOfIssuance(client);
   }
 
   @AfterClass
@@ -80,49 +82,5 @@ public abstract class TestBase {
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  /**
-   * Executes multiply SQL statements separated by a line separator (either CRLF|CR|LF).
-   *
-   * @param allStatements - Statements to execute (separated by a line separator).
-   * @throws InterruptedException
-   * @throws ExecutionException
-   * @throws TimeoutException
-   */
-  void executeMultipleSqlStatements(String allStatements)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    final CompletableFuture<Void> result = new CompletableFuture<>();
-    final Vertx vertx = StorageTestSuite.getVertx();
-
-    PostgresClient.getInstance(vertx).runSQLFile(allStatements, true, handler -> {
-      if (handler.failed()) {
-        result.completeExceptionally(handler.cause());
-      } else if (!handler.result().isEmpty()) {
-        result.completeExceptionally(new RuntimeException("Failing SQL: " + handler.result().toString()));
-      } else {
-        result.complete(null);
-      }
-    });
-
-    result.get(5, SECONDS);
-  }
-
-  void executeSql(String sql)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    final CompletableFuture<Void> result = new CompletableFuture<>();
-    final Vertx vertx = StorageTestSuite.getVertx();
-
-    PostgresClient.getInstance(vertx).execute(sql, updateResult -> {
-      if (updateResult.failed()) {
-        result.completeExceptionally(updateResult.cause());
-      } else {
-        result.complete(null);
-      }
-    });
-
-    result.get(5, SECONDS);
   }
 }

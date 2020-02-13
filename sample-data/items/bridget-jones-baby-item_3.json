@@ -9,6 +9,6 @@
   "status": {
     "name": "Available"
   },
-  "copyNumbers": ["Copy 3"],
+  "copyNumber": "Copy 3",
   "numberOfPieces": "1"
 }

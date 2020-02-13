@@ -1,5 +1,8 @@
 package org.folio.rest.support.matchers;
 
+import java.time.Instant;
+import java.util.function.Function;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -14,10 +17,11 @@ public final class DateTimeMatchers {
     throw new UnsupportedOperationException("Do no instantiate");
   }
 
-  private static Matcher<String> withinSecondsBefore(
-    Seconds seconds, DateTime beforeDateTime) {
+  private static <T> Matcher<T> withinSecondsBefore(
+    Seconds seconds, DateTime beforeDateTime,
+    Function<T, DateTime> jsonToDateTimeConverter) {
 
-    return new TypeSafeMatcher<String>() {
+    return new TypeSafeMatcher<T>() {
 
       @Override
       public void describeTo(Description description) {
@@ -27,17 +31,24 @@ public final class DateTimeMatchers {
       }
 
       @Override
-      protected boolean matchesSafely(String textRepresentation) {
-        DateTime actual = DateTime.parse(textRepresentation);
+      protected boolean matchesSafely(T actualValue) {
+        DateTime actualDateTime = jsonToDateTimeConverter.apply(actualValue);
 
-        return actual.isBefore(beforeDateTime)
-          && Seconds.secondsBetween(beforeDateTime, actual).isLessThan(seconds);
+        return actualDateTime.isBefore(beforeDateTime)
+          && Seconds.secondsBetween(beforeDateTime, actualDateTime).isLessThan(seconds);
       }
     };
   }
 
-  public static Matcher<String> withinSecondsBeforeNow(Seconds seconds) {
-    return withinSecondsBefore(seconds, DateTime.now(DateTimeZone.UTC));
+  public static Matcher<Instant> withinSecondsBeforeNow(Seconds seconds) {
+    return withinSecondsBefore(seconds,
+      DateTime.now(DateTimeZone.UTC),
+      (Instant instant) -> new DateTime(instant.toEpochMilli(), DateTimeZone.UTC)
+    );
+  }
+
+  public static Matcher<String> withinSecondsBeforeNowAsString(Seconds seconds) {
+    return withinSecondsBefore(seconds, DateTime.now(DateTimeZone.UTC), DateTime::parse);
   }
 
   public static Matcher<String> hasIsoFormat() {

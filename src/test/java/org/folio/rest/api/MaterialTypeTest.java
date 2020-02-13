@@ -7,6 +7,7 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+
 import org.folio.rest.support.*;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.junit.Assert;
@@ -357,6 +358,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     JsonObject item = new JsonObject();
 
     item.put("barcode", "12345");
+    item.put("status", new JsonObject().put("name", "Available"));
     item.put("holdingsRecordId", holdingsRecordId);
     item.put("materialTypeId", materialTypeId);
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);

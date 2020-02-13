@@ -582,6 +582,14 @@
           "fieldName": "hrid",
           "tOps": "ADD"
         }
+      ],
+      "index": [
+        {
+          "fieldName": "callNumber",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
       ]
     },
     {
@@ -641,6 +649,12 @@
         }
       ],
       "index": [
+        {
+          "fieldName": "accessionNumber",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
         {
           "fieldName": "barcode",
           "tOps": "ADD",
@@ -723,6 +737,16 @@
       "run": "after",
       "snippetPath": "alterHridSequences.sql",
       "fromModuleVersion": "18.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "migrateItemCopyNumberToSingleValue.sql",
+      "fromModuleVersion": "19.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "renameModesOfIssuance.sql",
+      "fromModuleVersion": "19.0.0"
     }
   ]
 }
