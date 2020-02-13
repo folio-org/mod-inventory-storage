@@ -41,6 +41,7 @@ import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static Vertx vertx = Vertx.vertx();
   private static UUID instanceId = UUID.randomUUID();
+  /** The upgrading script that runs on mod-inventory-storage version upgrade.  */
   private static final String POPULATE_EFFECTIVE_LOCATION_SQL =
       ResourceUtil.asString("templates/db_scripts/populateEffectiveLocationForExistingItems.sql")
       .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
@@ -142,7 +143,12 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * Test that updating an item correctly sets the effectiveLocationId.
+   * Test that creating an item and updating an item correctly sets the effectiveLocationId.
+   *
+   * This only succeeds if the two triggers update_effective_location and
+   * update_item_references (assigning item.effectiveLocationId = item.jsonb->>'effectiveLocationId')
+   * run in correct order.
+   *
    * @param holdingLoc permanent and temporary location of the holding
    * @param itemStartLoc permanent and temporary location of the item before the update
    * @param itemEndLoc permanent and temporary location of the item after the update
