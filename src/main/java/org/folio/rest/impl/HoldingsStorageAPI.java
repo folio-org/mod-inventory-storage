@@ -15,7 +15,6 @@ import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.model.HoldingsRecords;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -39,6 +38,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.sql.UpdateResult;
+import io.vertx.ext.web.RoutingContext;
 
 /**
  *
@@ -58,7 +58,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   @Validate
   @Override
   public void deleteHoldingsStorageHoldings(String lang,
-    Map<String, String> okapiHeaders,
+    RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -90,71 +90,19 @@ public class HoldingsStorageAPI implements HoldingsStorage {
   @Override
   public void getHoldingsStorageHoldings(
     int offset, int limit, String query, String lang,
-    Map<String, String> okapiHeaders,
+    RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      vertxContext.runOnContext(v -> {
-        try {
-          PostgresClient postgresClient = PostgresClient.getInstance(
-            vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-          String[] fieldList = {"*"};
-
-          CQL2PgJSON cql2pgJson = new CQL2PgJSON(HOLDINGS_RECORD_TABLE+".jsonb");
-          CQLWrapper cql = new CQLWrapper(cql2pgJson, query)
-            .setLimit(new Limit(limit))
-            .setOffset(new Offset(offset));
-
-          postgresClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cql,
-            true, false, reply -> {
-              try {
-                if(reply.succeeded()) {
-                  List<HoldingsRecord> holdingsRecords = reply.result().getResults();
-
-                  HoldingsRecords holdingsList = new HoldingsRecords();
-                  holdingsList.setHoldingsRecords(holdingsRecords);
-                  holdingsList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetHoldingsStorageHoldingsResponse.
-                      respond200WithApplicationJson(holdingsList)));
-                }
-                else {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetHoldingsStorageHoldingsResponse.
-                      respond500WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                  log.error(e.getMessage());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  GetHoldingsStorageHoldingsResponse.
-                    respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e.getMessage());
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            GetHoldingsStorageHoldingsResponse.
-              respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e.getMessage());
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        GetHoldingsStorageHoldingsResponse.
-          respond500WithTextPlain(e.getMessage())));
-    }
+    PgUtil.streamGet(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, query, offset,
+      limit, null, "holdingsRecords", routingContext, okapiHeaders, vertxContext);
   }
 
   @Validate
   @Override
   public void postHoldingsStorageHoldings(String lang,
     HoldingsRecord entity,
-    Map<String, String> okapiHeaders,
+    RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
