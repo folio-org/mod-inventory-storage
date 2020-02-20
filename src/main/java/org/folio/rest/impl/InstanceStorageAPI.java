@@ -92,6 +92,7 @@ public class InstanceStorageAPI implements InstanceStorage {
           GetInstanceStorageInstancesResponse.
             respond500WithTextPlain(e.getMessage())));
       }
+      return;
     }
     PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
       "instances", routingContext, okapiHeaders, vertxContext);
