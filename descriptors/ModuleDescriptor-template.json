@@ -154,6 +154,33 @@
       ]
     },
     {
+      "id": "instance-preceding-succeeding-titles",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/preceding-succeeding-titles",
+          "permissionsRequired": ["inventory-storage.preceding-succeeding-titles.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/preceding-succeeding-titles/{id}",
+          "permissionsRequired": ["inventory-storage.preceding-succeeding-titles.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/preceding-succeeding-titles",
+          "permissionsRequired": ["inventory-storage.preceding-succeeding-titles.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/preceding-succeeding-titles/{id}",
+          "permissionsRequired": ["inventory-storage.preceding-succeeding-titles.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/preceding-succeeding-titles/{id}",
+          "permissionsRequired": ["inventory-storage.preceding-succeeding-titles.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "instance-storage-batch",
       "version": "0.2",
       "handlers": [
@@ -1342,6 +1369,31 @@
       "permissionName": "inventory-storage.instance-relationship-types.item.delete",
       "displayName": "inventory storage - delete individual instance-relationship-type",
       "description": "delete individual instance-relationship-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.preceding-succeeding-titles.collection.get",
+      "displayName": "inventory storage - get preceding-succeeding-title collection",
+      "description": "get preceding-succeeding-title collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.preceding-succeeding-titles.item.get",
+      "displayName": "inventory storage - get individual preceding-succeeding-title",
+      "description": "get individual preceding-succeeding-title from storage"
+    },
+    {
+      "permissionName": "inventory-storage.preceding-succeeding-titles.item.post",
+      "displayName": "inventory storage - create individual preceding-succeeding-title",
+      "description": "create individual preceding-succeeding-title in storage"
+    },
+    {
+      "permissionName": "inventory-storage.preceding-succeeding-titles.item.put",
+      "displayName": "inventory storage - modify preceding-succeeding-title",
+      "description": "modify preceding-succeeding-title in storage"
+    },
+    {
+      "permissionName": "inventory-storage.preceding-succeeding-titles.item.delete",
+      "displayName": "inventory storage - delete individual preceding-succeeding-title",
+      "description": "delete individual preceding-succeeding-title from storage"
     },
     {
       "permissionName": "inventory-storage.identifier-types.collection.get",

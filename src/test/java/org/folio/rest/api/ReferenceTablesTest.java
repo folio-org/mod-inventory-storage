@@ -55,7 +55,6 @@ import org.folio.rest.api.entities.InstanceRelationshipType;
 import org.folio.rest.api.entities.InstanceStatus;
 import org.folio.rest.api.entities.InstanceType;
 import org.folio.rest.api.entities.ItemNoteType;
-import org.folio.rest.api.entities.JsonEntity;
 import org.folio.rest.api.entities.ModeOfIssuance;
 import org.folio.rest.api.entities.NatureOfContentTerm;
 import org.folio.rest.api.entities.StatisticalCode;
@@ -68,7 +67,7 @@ import org.junit.Test;
  *
  * @author ne
  */
-public class ReferenceTablesTest extends TestBase {
+public class ReferenceTablesTest extends ResourceTestBase {
 
   @Test
   public void alternativeTitleTypesLoaded()
@@ -748,137 +747,5 @@ public class ReferenceTablesTest extends TestBase {
     assertTrue(String.format("Could not retrieve record count for %s", dataDescription), totalRecords != null);
     assertTrue(String.format("Expected <=%s \"%s\", found %s", max, dataDescription, totalRecords), max >= totalRecords);
     assertTrue(String.format("Expected >=%s \"%s\", found %s", min, dataDescription, totalRecords), min <= totalRecords);
-  }
-
-  private Response createReferenceRecord(String path, JsonEntity referenceObject)
-    throws ExecutionException, InterruptedException, TimeoutException {
-
-    URL referenceUrl = StorageTestSuite.storageUrl(path);
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(
-            referenceUrl,
-            referenceObject.getJson(),
-      TENANT_ID,
-            ResponseHandler.any(createCompleted)
-    );
-    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
-    return postResponse;
-  }
-
-  private Response getById(URL getByIdUrl)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(getByIdUrl, TENANT_ID,
-      ResponseHandler.any(getCompleted));
-
-    Response getByIdResponse = getCompleted.get(5, TimeUnit.SECONDS);
-
-    return getByIdResponse;
-  }
-
-  private Response getByQuery(URL getByQueryUrl)
-          throws MalformedURLException, InterruptedException,
-          ExecutionException, TimeoutException {
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(getByQueryUrl, TENANT_ID,
-      ResponseHandler.any(getCompleted));
-
-    Response getByQueryResponse = getCompleted.get(5, TimeUnit.SECONDS);
-
-    return getByQueryResponse;
-
-  }
-
-  private Response deleteReferenceRecordById (URL entityUrl)
-  throws ExecutionException, InterruptedException, TimeoutException {
-
-    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    client.delete(
-            entityUrl,
-      TENANT_ID,
-            ResponseHandler.any(deleteCompleted)
-    );
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
-    return deleteResponse;
-  }
-
-  private Response updateRecord (URL entityUrl, JsonEntity referenceObject)
-  throws ExecutionException, InterruptedException, TimeoutException {
-    CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
-    client.put(
-            entityUrl,
-            referenceObject.getJson(),
-      TENANT_ID,
-            ResponseHandler.any(updateCompleted)
-    );
-    Response putResponse = updateCompleted.get(5, TimeUnit.SECONDS);
-    return putResponse;
-  }
-
-  private void testGetPutDeletePost (String path, String entityId, JsonEntity entity, String updateProperty)
-          throws ExecutionException,
-          InterruptedException,
-          MalformedURLException,
-          TimeoutException {
-
-    entity.put(updateProperty, entity.getString(updateProperty)+" UPDATED");
-
-    URL url = StorageTestSuite.storageUrl(path + "/" + entityId);
-    URL urlWithBadUUID = StorageTestSuite.storageUrl(path + "/baduuid");
-    URL urlWithBadParameter = StorageTestSuite.storageUrl(path+"?offset=-3");
-    URL urlWithBadCql = StorageTestSuite.storageUrl(path + "?query=badcql");
-
-    Response putResponse = updateRecord(url, entity);
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getResponse = getById(url);
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(getResponse.getJson().getString(updateProperty), is(entity.getString(updateProperty)));
-
-    entity.put("id", entityId);
-    Response postResponse1 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/electronic-access-relationships", "/instance-statuses",
-      "/modes-of-issuance", "/statistical-code-types", "/holdings-types").contains(path)) {
-      assertThat(postResponse1.getStatusCode(), is(422));
-    } else {
-      assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    }
-
-    Response badParameterResponse = getByQuery(urlWithBadParameter);
-    assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    Response badQueryResponse = getByQuery(urlWithBadCql);
-    assertThat(badQueryResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    Response putResponse2 = updateRecord(urlWithBadUUID, entity);
-    assertThat(putResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    Response deleteResponse = deleteReferenceRecordById (url);
-
-    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getResponse2 = getById(url);
-
-    assertThat(getResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-
-    Response deleteResponse2 = deleteReferenceRecordById (url);
-
-    assertThat(deleteResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-
-    Response deleteResponse3 = deleteReferenceRecordById (urlWithBadUUID);
-
-    assertThat(deleteResponse3.getStatusCode(), (is(HttpURLConnection.HTTP_BAD_REQUEST)));
-
-    entity.put("id", "baduuid");
-    Response postResponse2 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/instance-note-types", "/nature-of-content-terms").contains(path)) {
-      assertThat(postResponse2.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
-    } else {
-      assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    }
   }
 }
