@@ -2,7 +2,9 @@ package org.folio.rest.api;
 
 import static org.folio.rest.api.TestBaseWithInventoryUtil.UUID_ISBN;
 import static org.folio.rest.api.TestBaseWithInventoryUtil.identifier;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.precedingSucceedingTitleUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -14,6 +16,7 @@ import org.folio.rest.api.entities.PrecedingSucceedingTitle;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.support.Response;
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
@@ -27,8 +30,10 @@ public class PrecedingSucceedingTitleTest extends ResourceTestBase {
   private final static String HRID = "inst000000000022";
   private final static String TITLE = "A web primer";
 
-  @AfterClass
-  public static void afterAll() {
+  @BeforeClass
+  public static void beforeAll() {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
@@ -152,7 +157,7 @@ public class PrecedingSucceedingTitleTest extends ResourceTestBase {
   }
 
   @Test
-  public void canUpdateConnectedPrecedingTitle() throws MalformedURLException,
+  public void canUpdateUnConnectedPrecedingSucceedingTitle() throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
