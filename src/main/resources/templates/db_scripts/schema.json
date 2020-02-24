@@ -595,14 +595,14 @@
           "multiFieldNames": "callNumber, callNumberSuffix",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         },
         {
           "fieldName": "fullCallNumber",
           "multiFieldNames": "callNumberPrefix, callNumber, callNumberSuffix",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         }
       ]
     },
@@ -686,14 +686,14 @@
           "multiFieldNames": "effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         },
         {
           "fieldName": "fullCallNumber",
           "multiFieldNames": "effectiveCallNumberComponents.prefix, effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
           "tOps": "ADD",
           "caseSensitive": false,
-          "removeAccents": true
+          "removeAccents": false
         }
       ],
       "ginIndex": [
