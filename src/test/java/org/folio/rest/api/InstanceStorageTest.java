@@ -2350,7 +2350,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource instance = createInstance(smallAngryPlanet(UUID.randomUUID())
       .put(DISCOVERY_SUPPRESS, true));
 
-    assertThat(instance.getJson().getBoolean(DISCOVERY_SUPPRESS), is(false));
+    assertThat(instance.getJson().getBoolean(DISCOVERY_SUPPRESS), is(true));
     assertSuppressedFromDiscovery(instance.getId().toString());
   }
 
