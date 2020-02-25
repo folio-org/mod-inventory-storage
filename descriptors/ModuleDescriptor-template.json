@@ -88,7 +88,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "7.2",
+      "version": "7.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -155,7 +155,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "0.2",
+      "version": "0.3",
       "handlers": [
         {
           "methods": ["POST"],
@@ -166,7 +166,7 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [
         {
           "methods": ["POST"],
