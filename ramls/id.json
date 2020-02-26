@@ -1,0 +1,5 @@
+{
+  "description": "A string representing the id, such as UUID or HRID",
+  "type": "string"
+}
+
