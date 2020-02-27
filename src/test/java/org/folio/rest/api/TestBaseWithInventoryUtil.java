@@ -286,41 +286,18 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static JsonObject createInstanceRequest(
-      UUID id,
-      String source,
-      String title,
-      JsonArray identifiers,
-      JsonArray contributors,
-      UUID instanceTypeId,
-      JsonArray tags) {
-
-    return createInstanceRequest(id, source, title, identifiers,
-      contributors, instanceTypeId, tags, null, null);
-  }
-
-  protected static JsonObject createInstanceRequest(
-      UUID id,
-      String source,
-      String title,
-      JsonArray identifiers,
-      JsonArray contributors,
-      UUID instanceTypeId,
-      JsonArray tags,
-      String hrid,
-      JsonArray languages) {
+    UUID id,
+    String source,
+    String title,
+    JsonArray identifiers,
+    JsonArray contributors,
+    UUID instanceTypeId,
+    JsonArray tags) {
 
     JsonObject instanceToCreate = new JsonObject();
 
-    if (id != null) {
+    if(id != null) {
       instanceToCreate.put("id", id.toString());
-    }
-
-    if (hrid != null) {
-      instanceToCreate.put("hrid", hrid);
-    }
-
-    if (languages != null) {
-      instanceToCreate.put("languages", languages);
     }
 
     instanceToCreate.put("title", title);

@@ -430,4 +430,29 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
 
     return res;
   }
+
+  private static JsonObject createInstanceRequest(
+      UUID id,
+      String source,
+      String title,
+      JsonArray identifiers,
+      JsonArray contributors,
+      UUID instanceTypeId,
+      JsonArray tags,
+      String hrid,
+      JsonArray languages) {
+
+    JsonObject instanceToCreate = createInstanceRequest(
+      id, source, title, identifiers, contributors, instanceTypeId, tags);
+
+    if (hrid != null) {
+      instanceToCreate.put("hrid", hrid);
+    }
+
+    if (languages != null) {
+      instanceToCreate.put("languages", languages);
+    }
+
+    return instanceToCreate;
+  }
 }
