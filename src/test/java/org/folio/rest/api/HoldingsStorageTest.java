@@ -21,12 +21,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -38,6 +40,7 @@ import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.both;
@@ -1744,6 +1747,79 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     }
 
     log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
+  }
+
+  @Test
+  public void canFilterByFullCallNumber() throws Exception {
+    IndividualResource instance = instancesClient
+      .create(smallAngryPlanet(UUID.randomUUID()));
+
+    IndividualResource wholeCallNumberHolding = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId)
+        .withCallNumberPrefix("prefix")
+        .withCallNumber("callNumber")
+        .withCallNumberSuffix("suffix"));
+
+    holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId)
+        .withCallNumberPrefix("prefix")
+        .withCallNumber("callNumber"));
+
+    holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId)
+        .withCallNumberPrefix("prefix")
+        .withCallNumber("differentCallNumber")
+        .withCallNumberSuffix("suffix"));
+
+    final List<IndividualResource> foundHoldings = holdingsClient
+      .getMany("fullCallNumber == \"%s\"", "prefix callNumber suffix");
+
+    assertThat(foundHoldings.size(), is(1));
+    assertThat(foundHoldings.get(0).getId(), is(wholeCallNumberHolding.getId()));
+  }
+
+  @Test
+  public void canFilterByCallNumberAndSuffix() throws Exception {
+    IndividualResource instance = instancesClient
+      .create(smallAngryPlanet(UUID.randomUUID()));
+
+    IndividualResource wholeCallNumberHolding = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId)
+        .withCallNumberPrefix("prefix")
+        .withCallNumber("callNumber")
+        .withCallNumberSuffix("suffix"));
+
+    holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId)
+        .withCallNumberPrefix("prefix")
+        .withCallNumber("callNumber"));
+
+    IndividualResource noPrefixHolding = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId)
+        .withCallNumber("callNumber")
+        .withCallNumberSuffix("suffix"));
+
+    final List<IndividualResource> foundHoldings = holdingsClient
+      .getMany("callNumberAndSuffix == \"%s\"", "callNumber suffix");
+
+    assertThat(foundHoldings.size(), is(2));
+
+    final Set<UUID> allFoundIds = foundHoldings.stream()
+      .map(IndividualResource::getId)
+      .collect(Collectors.toSet());
+    assertThat(allFoundIds, hasItems(wholeCallNumberHolding.getId(), noPrefixHolding.getId()));
   }
 
   private void setHoldingsSequence(long sequenceNumber) {

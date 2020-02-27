@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
@@ -20,6 +21,7 @@ import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.Builder;
+import org.folio.util.StringUtil;
 
 import io.vertx.core.json.JsonObject;
 
@@ -282,6 +284,28 @@ public class ResourceClient {
 
     return JsonArrayHelper.toList(response.getJson()
       .getJsonArray(collectionArrayPropertyName));
+  }
+
+  public List<IndividualResource> getMany(String query, Object... queryParams)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<Response> getFinished = new CompletableFuture<>();
+
+    final String encodedQuery = StringUtil
+      .urlEncode(String.format(query, queryParams));
+
+    client.get(urlMaker.combine("?query=" + encodedQuery),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getFinished));
+
+    Response response = getFinished.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Get all records failed: %s", response.getBody()),
+      response.getStatusCode(), is(200));
+
+    return JsonArrayHelper.toList(response.getJson()
+      .getJsonArray(collectionArrayPropertyName)).stream()
+      .map(IndividualResource::new)
+      .collect(Collectors.toList());
   }
 
   @FunctionalInterface
