@@ -45,8 +45,8 @@ import static org.junit.Assert.fail;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceBulkTest extends TestBaseWithInventoryUtil {
-  private static final Logger log = LoggerFactory.getLogger(InstanceBulkTest.class);
-
+  private static final Logger log =
+    LoggerFactory.getLogger(InstanceBulkTest.class);
 
   private Set<String> instanceIdsToRemoveAfterTest = new HashSet<>();
 
@@ -87,29 +87,17 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       TimeoutException {
 
     int totalMoons = 2;
+    int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons);
-
     createManyMoons(moons);
 
-    URL getInstanceUrl = instanceBulkUrl("/ids");
-
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    URL getInstanceUrl = instanceBulkUrl("/ids");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-
-    assertThat(response.getStatusCode(), is(HTTP_OK));
-
-    JsonObject collection = response.getJson();
-    
-    JsonArray ids = collection.getJsonArray("ids");
-    assertThat(ids.size(), is(totalMoons));
-
-    for (int i = 0; i < totalMoons; i++) {
-      JsonObject idObject = ids.getJsonObject(i);
-      assertThat(moons.containsKey(idObject.getString("id")), is(true));
-    }
+    validateMoonsResponse(response, expectedMatches, moons);
   }
 
   @Test
@@ -120,31 +108,19 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       TimeoutException {
 
     int totalMoons = 2;
+    int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
       InstanceBulkIdsGetField.ID,
       InstanceBulkIdsGetFormat.RAW);
-
     createManyMoons(moons);
 
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw");
-
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-
-    assertThat(response.getStatusCode(), is(HTTP_OK));
-
-    JsonObject collection = response.getJson();
-    
-    JsonArray ids = collection.getJsonArray("ids");
-    assertThat(ids.size(), is(totalMoons));
-
-    for (int i = 0; i < totalMoons; i++) {
-      JsonObject idObject = ids.getJsonObject(i);
-      assertThat(moons.containsKey(idObject.getString("id")), is(true));
-    }
+    validateMoonsResponse(response, expectedMatches, moons);
   }
 
   @Test
@@ -155,31 +131,19 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       TimeoutException {
 
     int totalMoons = 2;
+    int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
       InstanceBulkIdsGetField.ID,
       InstanceBulkIdsGetFormat.BASE64);
-
     createManyMoons(moons);
 
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=base64");
-
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=base64");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-
-    assertThat(response.getStatusCode(), is(HTTP_OK));
-
-    JsonObject collection = response.getJson();
-
-    JsonArray ids = collection.getJsonArray("ids");
-    assertThat(ids.size(), is(totalMoons));
-
-    for (int i = 0; i < totalMoons; i++) {
-      JsonObject idObject = ids.getJsonObject(i);
-      assertThat(moons.containsKey(idObject.getString("id")), is(true));
-    }
+    validateMoonsResponse(response, expectedMatches, moons);
   }
 
   @Test
@@ -190,8 +154,8 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       TimeoutException {
 
     int totalMoons = 500;
+    int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons);
-
     createManyMoons(moons);
 
     URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw");
@@ -199,15 +163,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     Buffer buffer = bufferedCheckURLs(context, getInstanceUrl, 200);
 
     JsonObject collection = new JsonObject(buffer);
-    context.assertEquals(totalMoons, collection.getInteger("totalRecords"));
-
-    JsonArray ids = collection.getJsonArray("ids");
-    assertThat(ids.size(), is(totalMoons));
-
-    for (int i = 0; i < totalMoons; i++) {
-      JsonObject idObject = ids.getJsonObject(i);
-      assertThat(moons.containsKey(idObject.getString("id")), is(true));
-    }
+    validateMoonsResponse(collection, expectedMatches, moons);
   }
 
   @Test
@@ -218,10 +174,10 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       TimeoutException {
 
     int totalMoons = 500;
+    int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
       InstanceBulkIdsGetField.ID,
       InstanceBulkIdsGetFormat.BASE64);
-
     createManyMoons(moons);
 
     URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=base64");
@@ -229,12 +185,70 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     Buffer buffer = bufferedCheckURLs(context, getInstanceUrl, 200);
 
     JsonObject collection = new JsonObject(buffer);
-    context.assertEquals(totalMoons, collection.getInteger("totalRecords"));
+    validateMoonsResponse(collection, expectedMatches, moons);
+  }
 
+  @Test
+  public void canGetInstanceBulkOfRawIdWithQueryExact()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+
+    int totalMoons = 10;
+    int expectedMatches = 1;
+    Map<String, JsonObject> moons = manyMoons(totalMoons,
+      InstanceBulkIdsGetField.ID,
+      InstanceBulkIdsGetFormat.RAW);
+    createManyMoons(moons);
+
+    String query = "query=keyword%20all%20%22Moon%20%233%22";
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&" + query);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+
+    Response response = getCompleted.get(5, SECONDS);
+    validateMoonsResponse(response, expectedMatches, moons);
+  }
+
+  @Test
+  public void canGetInstanceBulkOfRawIdWithQueryWildcard()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+
+    int totalMoons = 20;
+    int expectedMatches = 11;
+    Map<String, JsonObject> moons = manyMoons(totalMoons,
+      InstanceBulkIdsGetField.ID,
+      InstanceBulkIdsGetFormat.RAW);
+    createManyMoons(moons);
+
+    String query = "query=keyword%20all%20%22Moon%20%231%2A%22";
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&" + query);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+
+    Response response = getCompleted.get(5, SECONDS);
+    validateMoonsResponse(response, expectedMatches, moons);
+  }
+
+  private void validateMoonsResponse(Response response, int expectedMatches,
+      Map<String, JsonObject> moons) {
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    validateMoonsResponse(response.getJson(), expectedMatches, moons);
+  }
+
+  private void validateMoonsResponse(JsonObject collection,
+      int expectedMatches, Map<String, JsonObject> moons) {
     JsonArray ids = collection.getJsonArray("ids");
-    assertThat(ids.size(), is(totalMoons));
+    assertThat(ids.size(), is(expectedMatches));
+    assertThat(collection.getInteger("totalRecords"), is (expectedMatches));
 
-    for (int i = 0; i < totalMoons; i++) {
+    for (int i = 0; i < ids.size(); i++) {
       JsonObject idObject = ids.getJsonObject(i);
       assertThat(moons.containsKey(idObject.getString("id")), is(true));
     }
@@ -293,11 +307,12 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private Map<String, JsonObject> manyMoons(int total) {
-    return manyMoons(total, InstanceBulkIdsGetField.ID, InstanceBulkIdsGetFormat.RAW);
+    return manyMoons(total, InstanceBulkIdsGetField.ID,
+      InstanceBulkIdsGetFormat.RAW);
   }
 
-  private Map<String, JsonObject> manyMoons(int total, InstanceBulkIdsGetField field,
-      InstanceBulkIdsGetFormat format) {
+  private Map<String, JsonObject> manyMoons(int total,
+      InstanceBulkIdsGetField field, InstanceBulkIdsGetFormat format) {
       Map<String, JsonObject> moons = new HashMap<String, JsonObject>();
       Base64.Encoder encoder = Base64.getEncoder();
 
@@ -330,23 +345,28 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     return moons;
   }
 
-  public Buffer bufferedCheckURLs(TestContext context, URL url, int codeExpected) {
+  public Buffer bufferedCheckURLs(TestContext context, URL url,
+      int codeExpected) {
     String accept = "application/json";
     return bufferedCheckURLs(context, url, codeExpected, accept);
   }
 
-  private Buffer bufferedCheckURLs(TestContext context, URL url, int codeExpected, String accept) {
+  private Buffer bufferedCheckURLs(TestContext context, URL url,
+      int codeExpected, String accept) {
     Buffer res = Buffer.buffer();
     final Vertx vertx = StorageTestSuite.getVertx();
 
     try {
       Async async = context.async();
       io.vertx.core.http.HttpClient client = vertx.createHttpClient();
-      HttpClientRequest request = client.getAbs(url.toString(), httpClientResponse -> {
+      HttpClientRequest request = client.getAbs(url.toString(),
+          httpClientResponse -> {
         httpClientResponse.handler(res::appendBuffer);
         httpClientResponse.endHandler(x -> {
-          log.info(httpClientResponse.statusCode() + ", " + codeExpected + " status expected: " + url);
-          context.assertEquals(codeExpected, httpClientResponse.statusCode(), url.toString());
+          log.info(httpClientResponse.statusCode() + ", "
+            + codeExpected + " status expected: " + url);
+          context.assertEquals(codeExpected, httpClientResponse.statusCode(),
+            url.toString());
           log.info(res.toString());
           async.complete();
         });
