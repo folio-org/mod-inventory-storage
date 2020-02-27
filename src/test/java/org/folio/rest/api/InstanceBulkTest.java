@@ -72,7 +72,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     final Async async = context.async();
     List<CompletableFuture<Response>> cfs =
       new ArrayList<CompletableFuture<Response>>();
-    
+
     instanceIdsToRemoveAfterTest.forEach(id -> cfs.add(client
       .delete(instancesStorageUrl("/" + id), TENANT_ID)));
     CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
@@ -336,7 +336,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
       JsonArray tags = new JsonArray();
       tags.add("test-tag");
- 
+
       JsonObject jsonb = createInstanceRequest(uuid, "TEST", "Moon #" + i,
         identifiers, contributors, UUID_INSTANCE_TYPE, tags, hrid);
       moons.put(id, jsonb);

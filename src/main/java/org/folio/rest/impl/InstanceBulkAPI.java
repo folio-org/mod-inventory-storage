@@ -58,7 +58,7 @@ public class InstanceBulkAPI implements org.folio.rest.jaxrs.resource.InstanceBu
   }
 
   private <T> Class<?> getItemClass(InstanceBulkIdsGetFormat format) {
-    if (format.compareTo(InstanceBulkIdsGetFormat.BASE64) == 0) {  
+    if (format.compareTo(InstanceBulkIdsGetFormat.BASE64) == 0) {
       return InstanceIDBase64.class;
     }
     return InstanceIDRaw.class;
