@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -236,6 +237,30 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     validateMoonsResponse(response, expectedMatches, moons);
   }
 
+  @Test
+  public void canGetInstanceBulkOfRawIdWithLanguageGer()
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
+
+    int totalMoons = 10;
+    int expectedMatches = 7;
+    Map<String, JsonObject> moons = manyMoons(totalMoons,
+      InstanceBulkIdsGetField.ID,
+      InstanceBulkIdsGetFormat.RAW);
+    createManyMoons(moons);
+
+    String query = "query=languages%3D%22ger%22";
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&" + query);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+
+    Response response = getCompleted.get(5, SECONDS);
+    validateMoonsResponse(response, expectedMatches, moons);
+  }
+
   private void validateMoonsResponse(Response response, int expectedMatches,
       Map<String, JsonObject> moons) {
     assertThat(response.getStatusCode(), is(HTTP_OK));
@@ -316,6 +341,12 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       Map<String, JsonObject> moons = new HashMap<String, JsonObject>();
       Base64.Encoder encoder = Base64.getEncoder();
 
+    List<String[]> languages = Arrays.asList(new String[][] {
+      new String[] {"eng"},
+      new String[] {"ger"},
+      new String[] {"por", "ger"}
+    });
+
     for (int i = 0; i < total; i++) {
       UUID uuid = UUID.randomUUID();
       String hrid = String.format("in%011d", i + 1);
@@ -337,8 +368,20 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       JsonArray tags = new JsonArray();
       tags.add("test-tag");
 
+      JsonArray langs = new JsonArray();
+      int l = 0;
+      if (i % 3 == 0) {
+        l = 2;
+      }
+      else if (i % 2 == 0) {
+        l = 1;
+      }
+      for (int j = 0; j < languages.get(l).length; j++) {
+        langs.add(languages.get(l)[j]);
+      }
+
       JsonObject jsonb = createInstanceRequest(uuid, "TEST", "Moon #" + i,
-        identifiers, contributors, UUID_INSTANCE_TYPE, tags, hrid);
+        identifiers, contributors, UUID_INSTANCE_TYPE, tags, hrid, langs);
       moons.put(id, jsonb);
     }
 
