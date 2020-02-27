@@ -695,6 +695,22 @@
       "withMetadata": false,
       "withAuditing": false,
       "customSnippetPath": "hridSettings.sql"
+    },
+    {
+      "tableName": "preceding_succeeding_title",
+      "fromModuleVersion": "19.0.0",
+      "withMetadata": true,
+      "foreignKeys": [
+        {
+          "fieldName": "precedingInstanceId",
+          "targetTable": "instance"
+        },
+        {
+          "fieldName": "succeedingInstanceId",
+          "targetTable": "instance"
+        }
+      ],
+      "customSnippetPath": "alterPrecedingSucceedingTitle.sql"
     }
   ],
   "scripts": [
