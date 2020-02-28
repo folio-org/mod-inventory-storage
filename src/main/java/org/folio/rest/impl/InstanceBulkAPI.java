@@ -47,7 +47,7 @@ public class InstanceBulkAPI implements org.folio.rest.jaxrs.resource.InstanceBu
 
     try {
       CQLWrapper wrapper = getCQL(query);
-      PgUtil.streamGet(INSTANCE_TABLE, getItemClass(format), wrapper, null,
+      PgUtil.streamGet(INSTANCE_TABLE, getIDClass(format), wrapper, null,
         "ids", routingContext, okapiHeaders, vertxContext);
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
@@ -57,7 +57,7 @@ public class InstanceBulkAPI implements org.folio.rest.jaxrs.resource.InstanceBu
     }
   }
 
-  private Class<?> getItemClass(InstanceBulkIdsGetFormat format) {
+  private Class<?> getIDClass(InstanceBulkIdsGetFormat format) {
     if (format.compareTo(InstanceBulkIdsGetFormat.BASE64) == 0) {
       return InstanceIDBase64.class;
     }
