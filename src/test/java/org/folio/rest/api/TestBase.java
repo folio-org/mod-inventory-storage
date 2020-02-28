@@ -36,6 +36,7 @@ public abstract class TestBase {
   static ResourceClient locationsClient;
   static ResourceClient callNumberTypesClient;
   static ResourceClient modesOfIssuanceClient;
+  static ResourceClient precedingSucceedingTitleClient;
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -53,6 +54,7 @@ public abstract class TestBase {
     locationsClient = ResourceClient.forLocations(client);
     callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
     modesOfIssuanceClient = ResourceClient.forModesOfIssuance(client);
+    precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(client);
   }
 
   @AfterClass

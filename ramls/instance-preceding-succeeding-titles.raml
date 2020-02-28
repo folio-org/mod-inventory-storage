@@ -1,0 +1,118 @@
+#%RAML 1.0
+title: Preceding/succeeding Titles API
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Preceding/succeeding Titles API
+    content: <b>Storage for preceding/succeeding titles in the inventory</b>
+
+types:
+  precedingSucceedingTitle: !include instanceprecedingsucceedingtitle.json
+  precedingSucceedingTitles: !include instanceprecedingsucceedingtitles.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/preceding-succeeding-titles:
+    displayName: Preceding/Succeeding titles
+    type:
+      collection:
+        exampleCollection: !include  examples/precedingsucceedingtitles_get.json
+        schemaCollection: precedingSucceedingTitles
+        schemaItem: precedingSucceedingTitle
+        exampleItem: !include  examples/precedingsucceedingtitle_get.json
+    get:
+      is: [pageable,
+          searchable: {description: "by preceding instance ID or by succeeding instance ID (using CQL))",
+                       example: "precedingInstanceId==83a50dc6-b887-43d9-93ee-28b2c4cd11f8
+                                 succeedingInstanceId==30fcc8e7-a019-43f4-b642-2edc389f4501"},
+          ]
+      description: Return a list of preceding succeeding titles
+      responses:
+        200:
+          description: "The new preceding/succeeding title has been successfully returned"
+        422:
+          description: "Unprocessable Entity"
+          body:
+            application/json:
+              type: errors
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+    post:
+      description: Create a new preceding/succeeding title
+      is: [validate]
+      responses:
+        201:
+          description: "The new preceding/succeeding title has been successfully created"
+        422:
+          description: "Unprocessable Entity"
+          body:
+            application/json:
+              type: errors
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "Internal server error, contact administrator"
+    /{precedingSucceedingTitleId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/precedingsucceedingtitle_get.json
+          schema: precedingSucceedingTitle
+      get:
+        description: Get a preceding/succeeding title by id
+        responses:
+          200:
+            description: "The preceding/succeeding title has been returned"
+          422:
+            description: "Unprocessable Entity"
+            body:
+              application/json:
+                type: errors
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error, contact administrator"
+      put:
+        description: Update a preceding/succeeding title by id
+        is: [validate]
+        responses:
+          204:
+            description: "The preceding/succeeding title has been updated"
+          422:
+            description: "Unprocessable Entity"
+            body:
+              application/json:
+                type: errors
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error, contact administrator"
+      delete:
+        description: Delete a preceding/succeeding title by id
+        is: [language]
+        responses:
+          204:
+            description: "The preceding/succeeding title has been deleted"
+          400:
+            description: "Bad request"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "Internal server error, contact administrator"

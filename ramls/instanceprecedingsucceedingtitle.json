@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A relationship of a given type between a super-instance and a sub-instance",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "unique ID of the preceding-succeeding title",
+      "type": "string",
+      "$ref": "uuid.json"
+    },
+    "precedingInstanceId": {
+      "description": "ID (a UUID) of the preceding instance",
+      "type": "string",
+      "$ref": "uuid.json"
+    },
+    "succeedingInstanceId": {
+      "description": "ID (a UUID) of the succeeding instance",
+      "type": "string",
+      "$ref": "uuid.json"
+    },
+    "title": {
+      "type": "string",
+      "description": "The primary title (or label) associated with the resource"
+    },
+    "hrid": {
+      "type": "string",
+      "description": "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+    },
+    "identifiers": {
+      "type": "array",
+      "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Resource identifier value"
+          },
+          "identifierTypeId": {
+            "type": "string",
+            "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
+            "$ref": "uuid.json"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "identifierTypeId"
+        ]
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false
+}
