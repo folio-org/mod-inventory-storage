@@ -8,21 +8,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 /**
- * Helper class for getting a raw ID.
+ * Helper class for getting an ID.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public final class InstanceIDRaw {
+public final class InstanceID {
   @JsonProperty("id")
   @JsonPropertyDescription("identifier")
   @NotNull
   private String id;
 
-  public InstanceIDRaw() {
+  public InstanceID() {
     id = "";
   }
 
-  public InstanceIDRaw(String id) {
+  public InstanceID(String id) {
     this.id = id;
   }
 

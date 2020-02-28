@@ -10,7 +10,6 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import org.folio.rest.jaxrs.model.InstanceBulkIdsGetField;
-import org.folio.rest.jaxrs.model.InstanceBulkIdsGetFormat;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.junit.After;
@@ -24,7 +23,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -102,7 +100,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkOfRawId()
+  public void canGetInstanceBulkOfId()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -111,12 +109,11 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     int totalMoons = 2;
     int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID,
-      InstanceBulkIdsGetFormat.RAW);
+      InstanceBulkIdsGetField.ID);
     createManyMoons(moons);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw");
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
@@ -125,30 +122,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkOfBase64Id()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
-
-    int totalMoons = 2;
-    int expectedMatches = totalMoons;
-    Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID,
-      InstanceBulkIdsGetFormat.BASE64);
-    createManyMoons(moons);
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=base64");
-
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
-
-    Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponse(response, expectedMatches, moons);
-  }
-
-  @Test
-  public void canGetInstanceBulkOfRawIdStream(TestContext context)
+  public void canGetInstanceBulkOfIdStream(TestContext context)
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -159,7 +133,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     Map<String, JsonObject> moons = manyMoons(totalMoons);
     createManyMoons(moons);
 
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw");
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id");
 
     Buffer buffer = bufferedCheckURLs(context, getInstanceUrl, 200);
 
@@ -168,29 +142,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkOfBase64IdStream(TestContext context)
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
-
-    int totalMoons = 500;
-    int expectedMatches = totalMoons;
-    Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID,
-      InstanceBulkIdsGetFormat.BASE64);
-    createManyMoons(moons);
-
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=base64");
-
-    Buffer buffer = bufferedCheckURLs(context, getInstanceUrl, 200);
-
-    JsonObject collection = new JsonObject(buffer);
-    validateMoonsResponse(collection, expectedMatches, moons);
-  }
-
-  @Test
-  public void canGetInstanceBulkOfRawIdWithQueryExact()
+  public void canGetInstanceBulkOfIdWithQueryExact()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -199,12 +151,11 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     int totalMoons = 10;
     int expectedMatches = 1;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID,
-      InstanceBulkIdsGetFormat.RAW);
+      InstanceBulkIdsGetField.ID);
     createManyMoons(moons);
 
     String query = urlEncode("keyword all \"Moon #3\"");
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&query=" + query);
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -214,7 +165,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkOfRawIdWithQueryWildcard()
+  public void canGetInstanceBulkOfIdWithQueryWildcard()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -223,12 +174,11 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     int totalMoons = 20;
     int expectedMatches = 11;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID,
-      InstanceBulkIdsGetFormat.RAW);
+      InstanceBulkIdsGetField.ID);
     createManyMoons(moons);
 
     String query = urlEncode("keyword all \"Moon #1*\"");
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&query=" + query);
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -238,7 +188,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkOfRawIdWithLanguageGer()
+  public void canGetInstanceBulkOfIdWithLanguageGer()
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -247,12 +197,11 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     int totalMoons = 10;
     int expectedMatches = 7;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID,
-      InstanceBulkIdsGetFormat.RAW);
+      InstanceBulkIdsGetField.ID);
     createManyMoons(moons);
 
     String query = urlEncode("languages=\"ger\"");
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&query=" + query);
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -332,14 +281,12 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private Map<String, JsonObject> manyMoons(int total) {
-    return manyMoons(total, InstanceBulkIdsGetField.ID,
-      InstanceBulkIdsGetFormat.RAW);
+    return manyMoons(total, InstanceBulkIdsGetField.ID);
   }
 
   private Map<String, JsonObject> manyMoons(int total,
-      InstanceBulkIdsGetField field, InstanceBulkIdsGetFormat format) {
+      InstanceBulkIdsGetField field) {
     Map<String, JsonObject> moons = new HashMap<String, JsonObject>();
-    Base64.Encoder encoder = Base64.getEncoder();
 
     List<String[]> languages = Arrays.asList(new String[][] {
       new String[] {"eng"},
@@ -351,14 +298,9 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       UUID uuid = UUID.randomUUID();
       String hrid = String.format("in%011d", i + 1);
 
-      String raw = "";
+      String id = "";
       if (field.compareTo(InstanceBulkIdsGetField.ID) == 0) {
-        raw = uuid.toString();
-      }
-
-      String id = raw;
-      if (format.compareTo(InstanceBulkIdsGetFormat.BASE64) == 0) {
-        id = encoder.encodeToString(raw.getBytes());
+        id = uuid.toString();
       }
 
       JsonArray identifiers = new JsonArray();

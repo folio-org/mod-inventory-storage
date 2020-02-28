@@ -9,7 +9,6 @@ documentation:
     content: <b>API for downloading a bulk set of Instance IDs</b>
 
 types:
-  id: !include id.json
   ids: !include ids.json
   errors: !include raml-util/schemas/errors.schema
 
@@ -41,10 +40,4 @@ resourceTypes:
           type: string
           enum: [id]
           default: id
-          required: false
-        format:
-          description: Format
-          type: string
-          enum: [raw, base64]
-          default: raw
           required: false
