@@ -542,7 +542,7 @@
     },
     {
       "tableName": "holdings_record",
-      "fromModuleVersion": "17.1.0",
+      "fromModuleVersion": "19.0.0",
       "withMetadata": true,
       "foreignKeys": [
         {
@@ -589,13 +589,27 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "callNumberAndSuffix",
+          "multiFieldNames": "callNumber, callNumberSuffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "fullCallNumber",
+          "multiFieldNames": "callNumberPrefix, callNumber, callNumberSuffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ]
     },
     {
       "tableName": "item",
       "withMetadata": true,
-      "fromModuleVersion": "17.1.0",
+      "fromModuleVersion": "19.0.0",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
@@ -666,6 +680,20 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "callNumberAndSuffix",
+          "multiFieldNames": "effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "fullCallNumber",
+          "multiFieldNames": "effectiveCallNumberComponents.prefix, effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "ginIndex": [
