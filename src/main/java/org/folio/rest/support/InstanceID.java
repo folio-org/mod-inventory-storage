@@ -22,10 +22,6 @@ public final class InstanceID {
     id = "";
   }
 
-  public InstanceID(String id) {
-    this.id = id;
-  }
-
   public String getId() {
     return id;
   }
