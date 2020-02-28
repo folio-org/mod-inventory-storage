@@ -54,6 +54,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/instance-storage/instance-relationships" + subPath);
   }
 
+  public static URL precedingSucceedingTitleUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/preceding-succeeding-titles" + subPath);
+  }
+
   public static URL instanceRelationshipTypesUrl(String subPath) {
     return StorageTestSuite.storageUrl("/instance-relationship-types" + subPath);
   }

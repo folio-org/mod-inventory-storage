@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
@@ -20,6 +21,7 @@ import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.Builder;
+import org.folio.util.StringUtil;
 
 import io.vertx.core.json.JsonObject;
 
@@ -58,6 +60,11 @@ public class ResourceClient {
   public static ResourceClient forModesOfIssuance(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::modesOfIssuanceUrl,
       "modes of issuance", "issuanceModes");
+  }
+
+  public static ResourceClient forPrecedingSucceedingTitles(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::precedingSucceedingTitleUrl,
+      "preceding succeeding titles", "precedingSucceedingTitles");
   }
 
   public static ResourceClient forLoanTypes(HttpClient client) {
@@ -111,18 +118,10 @@ public class ResourceClient {
     return create(builder.create());
   }
 
-  public IndividualResource create(JsonObject request)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public IndividualResource create(JsonObject request) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    client.post(urlMaker.combine(""), request, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    Response response = createCompleted.get(5, TimeUnit.SECONDS);
+    Response response = attemptToCreate(request);
 
     assertThat(
       String.format("Failed to create %s: %s", resourceName, response.getBody()),
@@ -134,6 +133,17 @@ public class ResourceClient {
     return new IndividualResource(response);
   }
 
+  public Response attemptToCreate(JsonObject request) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(urlMaker.combine(""), request, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    return createCompleted.get(5, TimeUnit.SECONDS);
+  }
+
   public void replace(UUID id, Builder builder)
     throws MalformedURLException,
     InterruptedException,
@@ -143,29 +153,35 @@ public class ResourceClient {
     replace(id, builder.create());
   }
 
-  public void replace(UUID id, JsonObject request)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public void replace(UUID id, JsonObject request) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
-    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-
-    client.put(urlMaker.combine(String.format("/%s", id)), request,
-      StorageTestSuite.TENANT_ID, ResponseHandler.any(putCompleted));
-
-    Response putResponse = putCompleted.get(5, TimeUnit.SECONDS);
+    Response putResponse = attemptToReplace(id != null ? id.toString() : null, request);
 
     assertThat(
       String.format("Failed to update %s %s: %s", resourceName, id, putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
-  public Response getById(UUID id)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public Response attemptToReplace(String id, JsonObject request) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+
+    client.put(urlMaker.combine(String.format("/%s", id)), request,
+      StorageTestSuite.TENANT_ID, ResponseHandler.any(putCompleted));
+
+    return putCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  public Response getById(UUID id) throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    return getByIdIfPresent(id != null ? id.toString() : null);
+  }
+
+  public Response getByIdIfPresent(String id) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -250,9 +266,15 @@ public class ResourceClient {
     ExecutionException,
     TimeoutException {
 
+    return getByQuery("");
+  }
+
+  public List<JsonObject> getByQuery(String query) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
     CompletableFuture<Response> getFinished = new CompletableFuture<>();
 
-    client.get(urlMaker.combine(""), StorageTestSuite.TENANT_ID,
+    client.get(urlMaker.combine(query), StorageTestSuite.TENANT_ID,
       ResponseHandler.any(getFinished));
 
     Response response = getFinished.get(5, TimeUnit.SECONDS);
@@ -262,6 +284,28 @@ public class ResourceClient {
 
     return JsonArrayHelper.toList(response.getJson()
       .getJsonArray(collectionArrayPropertyName));
+  }
+
+  public List<IndividualResource> getMany(String query, Object... queryParams)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<Response> getFinished = new CompletableFuture<>();
+
+    final String encodedQuery = StringUtil
+      .urlEncode(String.format(query, queryParams));
+
+    client.get(urlMaker.combine("?query=" + encodedQuery),
+      StorageTestSuite.TENANT_ID, ResponseHandler.json(getFinished));
+
+    Response response = getFinished.get(5, TimeUnit.SECONDS);
+
+    assertThat(String.format("Get all records failed: %s", response.getBody()),
+      response.getStatusCode(), is(200));
+
+    return JsonArrayHelper.toList(response.getJson()
+      .getJsonArray(collectionArrayPropertyName)).stream()
+      .map(IndividualResource::new)
+      .collect(Collectors.toList());
   }
 
   @FunctionalInterface

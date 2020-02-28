@@ -1,0 +1,18 @@
+{
+  "precedingSucceedingTitles": [
+    {
+      "id": "4b8093b8-8de9-41be-ad9a-0fbccb99052b",
+      "precedingInstanceId": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+      "succeedingInstanceId": "83a50dc6-b887-43d9-93ee-28b2c4cd11f8",
+      "title": "A semantic web primer",
+      "hrid": "inst000000000022",
+      "identifiers": [
+        {
+          "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
+          "value": "0262012103"
+        }
+      ]
+    }
+  ],
+  "totalRecords": 1
+}
