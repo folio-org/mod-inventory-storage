@@ -40,9 +40,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceBulkTest extends TestBaseWithInventoryUtil {
@@ -203,8 +203,8 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       InstanceBulkIdsGetFormat.RAW);
     createManyMoons(moons);
 
-    String query = "query=keyword%20all%20%22Moon%20%233%22";
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&" + query);
+    String query = urlEncode("keyword all \"Moon #3\"");
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -227,8 +227,8 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       InstanceBulkIdsGetFormat.RAW);
     createManyMoons(moons);
 
-    String query = "query=keyword%20all%20%22Moon%20%231%2A%22";
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&" + query);
+    String query = urlEncode("keyword all \"Moon #1*\"");
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -251,8 +251,8 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       InstanceBulkIdsGetFormat.RAW);
     createManyMoons(moons);
 
-    String query = "query=languages%3D%22ger%22";
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&" + query);
+    String query = urlEncode("languages=\"ger\"");
+    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&format=raw&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -299,7 +299,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     try {
       sequenceSet.get(2, SECONDS);
     } catch (Exception e) {
-      fail(e.getMessage());
+      throw new RuntimeException(e);
     }
   }
 
@@ -338,8 +338,8 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
 
   private Map<String, JsonObject> manyMoons(int total,
       InstanceBulkIdsGetField field, InstanceBulkIdsGetFormat format) {
-      Map<String, JsonObject> moons = new HashMap<String, JsonObject>();
-      Base64.Encoder encoder = Base64.getEncoder();
+    Map<String, JsonObject> moons = new HashMap<String, JsonObject>();
+    Base64.Encoder encoder = Base64.getEncoder();
 
     List<String[]> languages = Arrays.asList(new String[][] {
       new String[] {"eng"},
@@ -415,7 +415,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
         });
       });
       request.exceptionHandler(error -> {
-        context.fail(url + " - " + error.getMessage());
+        context.fail(new RuntimeException(url.toString() + " - " + error.getMessage(), error));
         async.complete();
       });
       request.headers().add("x-okapi-tenant", TENANT_ID);
