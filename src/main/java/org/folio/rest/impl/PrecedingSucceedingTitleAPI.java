@@ -30,6 +30,7 @@ public class PrecedingSucceedingTitleAPI implements org.folio.rest.jaxrs.resourc
   @Override
   public void postPrecedingSucceedingTitles(String lang, PrecedingSucceedingTitle entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (precedingAndSucceedingInstanceEmpty(entity)) {
       handlePrecedingAndSucceedingEmptyError(asyncResultHandler);
       return;
@@ -58,6 +59,7 @@ public class PrecedingSucceedingTitleAPI implements org.folio.rest.jaxrs.resourc
   @Override
   public void putPrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId, String lang,
     PrecedingSucceedingTitle entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     if (precedingAndSucceedingInstanceEmpty(entity)) {
       handlePrecedingAndSucceedingEmptyError(asyncResultHandler);
       return;
