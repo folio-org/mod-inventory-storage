@@ -62,6 +62,11 @@ public class ResourceClient {
       "modes of issuance", "issuanceModes");
   }
 
+  public static ResourceClient forInstanceRelationships(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::instanceRelationshipsUrl,
+      "instance relationships", "instanceRelationships");
+  }
+
   public static ResourceClient forPrecedingSucceedingTitles(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::precedingSucceedingTitleUrl,
       "preceding succeeding titles", "precedingSucceedingTitles");
