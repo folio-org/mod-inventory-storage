@@ -1746,9 +1746,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instancesArray.add(temeraire(UUID.randomUUID()));
     JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
-    assertThat(createCompleted.get(5, SECONDS), allOf(
+    Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
+    assertThat(response, allOf(
         statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("Unrecognized field \"invalidPropertyName\"")));
 
@@ -1768,9 +1767,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createInstance(instancesArray.getJsonObject(1));
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
-    assertThat(createCompleted.get(5, SECONDS), allOf(
+    Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
+    assertThat(response, allOf(
         statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate")));
 
@@ -1788,9 +1786,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instancesArray.add(temeraire(duplicateId));
     JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
-    assertThat(createCompleted.get(5, SECONDS), allOf(
+    Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
+    assertThat(response, allOf(
         statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate"),
         errorParametersValueIs(duplicateId.toString())));
@@ -2023,10 +2020,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     setInstanceSequence(1);
 
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.empty(createCompleted));
-
-    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
+    instancesStorageSyncClient.createNoResponse(instanceCollection);
 
     JsonObject instance = instancesArray.getJsonObject(0);
     Response response = getById(instance.getString("id"));
@@ -2069,10 +2063,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     setInstanceSequence(1);
 
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, json(createCompleted));
-
-    final Response response = createCompleted.get(5, SECONDS);
+    Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
 
     assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
 
@@ -2110,10 +2101,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     setInstanceSequence(99_999_999_999L);
 
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, text(createCompleted));
-
-    final Response response = createCompleted.get(5, SECONDS);
+    Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
 
     assertThat(response, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
     assertThat(response.getBody(), isMaximumSequenceValueError("hrid_instances_seq"));
@@ -2310,11 +2298,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY,
       instancesArray);
 
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID,
-      ResponseHandler.empty(createCompleted));
+    Response createResponse = instancesStorageSyncClient
+      .attemptToCreate(instanceCollection);
 
-    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(createResponse.getStatusCode(), is(201));
 
     assertSuppressedFromDiscovery(smallAngryPlanetId.toString());
     assertNotSuppressedFromDiscovery(uprootedId.toString());
@@ -2334,13 +2321,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .put(INSTANCES_KEY, instancesArray)
       .put(TOTAL_RECORDS_KEY, 2);
 
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY),
-      instanceCollection, TENANT_ID, json(createCompleted));
+    instancesStorageBatchInstancesClient.create(instanceCollection);
 
-    final Response response = createCompleted.get(5, SECONDS);
-
-    assertThat(response.getStatusCode(), is(201));
     assertSuppressedFromDiscovery(smallAngryPlanetId.toString());
     assertNotSuppressedFromDiscovery(uprootedId.toString());
   }
@@ -2355,7 +2337,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canMakeInstanceDiscoverySuppressed() throws Exception {
+  public void canUpdateInstanceWithDiscoverySuppressProperty() throws Exception {
     IndividualResource instance = createInstance(smallAngryPlanet(UUID.randomUUID()));
     assertThat(instance.getJson().getBoolean(DISCOVERY_SUPPRESS), is(false));
 

@@ -87,6 +87,16 @@ public class ResourceClient {
       "call number types", "callNumberTypes");
   }
 
+  public static ResourceClient forInstancesStorageSync(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::instancesStorageSyncUrl,
+      "Instances batch sync", "instances");
+  }
+
+  public static ResourceClient forInstancesStorageBatchInstances(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::instancesStorageBatchInstancesUrl,
+      "Instances batch (Deprecated)", "instances");
+  }
+
   private ResourceClient(
     HttpClient client,
     UrlMaker urlMaker, String resourceName,
@@ -133,13 +143,23 @@ public class ResourceClient {
     return new IndividualResource(response);
   }
 
+  public void createNoResponse(JsonObject request) throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
+
+    Response response = attemptToCreate(request);
+
+    assertThat(
+      String.format("Failed to create %s: %s", resourceName, response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
   public Response attemptToCreate(JsonObject request) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(urlMaker.combine(""), request, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(createCompleted));
+      ResponseHandler.any(createCompleted));
 
     return createCompleted.get(5, TimeUnit.SECONDS);
   }
