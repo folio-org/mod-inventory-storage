@@ -19,7 +19,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -33,6 +32,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.RoutingContext;
 
 /**
  * CRUD for Item.
@@ -47,22 +47,20 @@ public class ItemStorageAPI implements ItemStorage {
   @Validate
   @Override
   public void getItemStorageItems(
-    int offset,
-    int limit,
-    String query,
-    String lang,
-    Map<String, String> okapiHeaders,
+    int offset, int limit, String query, String lang,
+    RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    PgUtil.get(ITEM_TABLE, Item.class, Items.class, query, offset, limit,
-      okapiHeaders, vertxContext, GetItemStorageItemsResponse.class, asyncResultHandler);
+    PgUtil.streamGet(ITEM_TABLE, Item.class, query, offset, limit, null, "items",
+      routingContext, okapiHeaders, vertxContext);
   }
 
   @Validate
   @Override
   public void postItemStorageItems(
-      String lang, Item entity, Map<String, String> okapiHeaders,
+      String lang, Item entity,
+      RoutingContext routingContext, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
@@ -113,8 +111,8 @@ public class ItemStorageAPI implements ItemStorage {
 
   @Validate
   @Override
-  public void deleteItemStorageItems(
-    String lang, Map<String, String> okapiHeaders,
+  public void deleteItemStorageItems(String lang,
+    RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = TenantTool.tenantId(okapiHeaders);

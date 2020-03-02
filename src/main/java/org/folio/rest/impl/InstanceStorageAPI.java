@@ -38,6 +38,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.RoutingContext;
 
 public class InstanceStorageAPI implements InstanceStorage {
 
@@ -75,28 +76,33 @@ public class InstanceStorageAPI implements InstanceStorage {
     @DefaultValue("10") @Min(1L) @Max(100L) int limit,
     String query,
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-    Map<String, String> okapiHeaders,
+    RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    try {
-      PreparedCQL preparedCql = handleCQL(query, limit, offset);
-      PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
-        "title", query, offset, limit,
-        okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        GetInstanceStorageInstancesResponse.
-          respond500WithTextPlain(e.getMessage())));
+    if (PgUtil.checkOptimizedCQL(query, "title") != null) { // Until RMB-573 is fixed
+      try {
+        PreparedCQL preparedCql = handleCQL(query, limit, offset);
+        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
+          "title", query, offset, limit,
+          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          GetInstanceStorageInstancesResponse.
+            respond500WithTextPlain(e.getMessage())));
+      }
+      return;
     }
+    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
+      "instances", routingContext, okapiHeaders, vertxContext);
   }
 
   @Override
   public void postInstanceStorageInstances(
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
     Instance entity,
-    Map<String, String> okapiHeaders,
+    RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -190,7 +196,7 @@ public class InstanceStorageAPI implements InstanceStorage {
   @Override
   public void deleteInstanceStorageInstances(
     @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
-    Map<String, String> okapiHeaders,
+    RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 

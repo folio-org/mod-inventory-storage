@@ -36,6 +36,7 @@ public abstract class TestBase {
   static ResourceClient callNumberTypesClient;
   static ResourceClient modesOfIssuanceClient;
   static ResourceClient precedingSucceedingTitleClient;
+  static ResourceClient instanceRelationshipsClient;
   static ResourceClient instancesStorageSyncClient;
   static ResourceClient instancesStorageBatchInstancesClient;
 
@@ -55,6 +56,7 @@ public abstract class TestBase {
     locationsClient = ResourceClient.forLocations(client);
     callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
     modesOfIssuanceClient = ResourceClient.forModesOfIssuance(client);
+    instanceRelationshipsClient = ResourceClient.forInstanceRelationships(client);
     precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(client);
     instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(client);
     instancesStorageBatchInstancesClient = ResourceClient

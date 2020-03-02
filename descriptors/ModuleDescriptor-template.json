@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "8.1",
+      "version": "8.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -46,7 +46,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "4.0",
+      "version": "4.1",
       "handlers": [
         {
           "methods": ["GET"],
