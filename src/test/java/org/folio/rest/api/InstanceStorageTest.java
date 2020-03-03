@@ -1269,6 +1269,31 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canSearchByIsbn1() {
+    canSort("isbn = 0-552-16754-1",      "Interesting Times");
+  }
+
+  @Test
+  public void canSearchByIsbn2() {
+    canSort("isbn = 05-5*",              "Interesting Times");
+  }
+
+  @Test
+  public void canSearchByIsbn3() {
+    canSort("isbn = 9780552167543",      "Interesting Times");
+  }
+
+  @Test
+  public void canSearchByIsbn4() {
+    canSort("isbn = 9780* sortBy title", "Interesting Times", "Temeraire");
+  }
+
+  @Test
+  public void canSearchByIsbn5() {
+    canSort("isbn = 9-7-8-055-2167-543", "Interesting Times");
+  }
+
+  @Test
   public void canSortAscending() {
     canSort("cql.allRecords=1 sortBy title",
         "Interesting Times", "Long Way to a Small Angry Planet", "Nod", "Temeraire", "Uprooted");
@@ -2500,7 +2525,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private JsonObject interestingTimes(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "0552167541"));
-    identifiers.add(identifier(UUID_ISBN, "9780552167541"));
+    identifiers.add(identifier(UUID_ISBN, "978-0-552-16754-3"));
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Pratchett, Terry"));
