@@ -169,29 +169,12 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       int expectedMatches, Map<String, JsonObject> moons) {
     JsonArray ids = collection.getJsonArray("ids");
     assertThat(ids.size(), is(expectedMatches));
-    assertThat(collection.getInteger("totalRecords"), is (expectedMatches));
+    assertThat(collection.getInteger("totalRecords"), is(expectedMatches));
 
     for (int i = 0; i < ids.size(); i++) {
       JsonObject idObject = ids.getJsonObject(i);
       assertThat(moons.containsKey(idObject.getString("id")), is(true));
     }
-  }
-
-  private void createInstance(JsonObject instanceToCreate)
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.post(instancesStorageUrl(""), instanceToCreate,
-      TENANT_ID, json(getCompleted));
-
-    Response response = getCompleted.get(2, SECONDS);
-
-    assertThat(String.format("Create instance failed: %s", response.getBody()),
-      response.getStatusCode(), is(201));
   }
 
   private void createManyMoons(Map<String, JsonObject> instancesToCreate)
@@ -201,7 +184,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       TimeoutException {
 
     for (String id : instancesToCreate.keySet()) {
-      createInstance(instancesToCreate.get(id));
+      instancesClient.create(instancesToCreate.get(id));
     }
   }
 
