@@ -66,7 +66,6 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.LastCheckIn;
-import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
@@ -1941,6 +1940,86 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject itemInStorage = itemsClient.getById(createdItem.getId()).getJson();
     assertThat(itemInStorage.getJsonObject("status").getString("name"), is(status));
+  }
+
+  @Test
+  public void canFilterByFullCallNumber() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final IndividualResource itemWithWholeCallNumber = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumberPrefix("prefix")
+        .withItemLevelCallNumber("callNumber")
+        .withItemLevelCallNumberSuffix("suffix")
+        .available());
+
+    itemsClient.create(new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withItemLevelCallNumberPrefix("prefix")
+      .withItemLevelCallNumber("callNumber")
+      .available());
+
+    itemsClient.create(new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withItemLevelCallNumberPrefix("prefix")
+      .withItemLevelCallNumber("differentCallNumber")
+      .withItemLevelCallNumberSuffix("suffix")
+      .available());
+
+    final List<IndividualResource> foundItems = itemsClient
+      .getMany("fullCallNumber == \"%s\"", "prefix callNumber suffix");
+
+    assertThat(foundItems.size(), is(1));
+    assertThat(foundItems.get(0).getId(), is(itemWithWholeCallNumber.getId()));
+  }
+
+  @Test
+  public void canFilterByCallNumberAndSuffix() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final IndividualResource itemWithWholeCallNumber = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumberPrefix("prefix")
+        .withItemLevelCallNumber("callNumber")
+        .withItemLevelCallNumberSuffix("suffix")
+        .available());
+
+    itemsClient.create(new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withItemLevelCallNumberPrefix("prefix")
+      .withItemLevelCallNumber("callNumber")
+      .available());
+
+    final IndividualResource itemNoPrefix = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("callNumber")
+        .withItemLevelCallNumberSuffix("suffix")
+        .available());
+
+    final List<IndividualResource> foundItems = itemsClient
+      .getMany("callNumberAndSuffix == \"%s\"", "callNumber suffix");
+
+    assertThat(foundItems.size(), is(2));
+
+    final Set<UUID> allFoundIds = foundItems.stream()
+      .map(IndividualResource::getId)
+      .collect(Collectors.toSet());
+    assertThat(allFoundIds, hasItems(itemWithWholeCallNumber.getId(), itemNoPrefix.getId()));
   }
 
   @SuppressWarnings("unused")

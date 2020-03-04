@@ -12,7 +12,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -36,6 +35,10 @@ public abstract class TestBase {
   static ResourceClient locationsClient;
   static ResourceClient callNumberTypesClient;
   static ResourceClient modesOfIssuanceClient;
+  static ResourceClient precedingSucceedingTitleClient;
+  static ResourceClient instanceRelationshipsClient;
+  static ResourceClient instancesStorageSyncClient;
+  static ResourceClient instancesStorageBatchInstancesClient;
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -53,6 +56,11 @@ public abstract class TestBase {
     locationsClient = ResourceClient.forLocations(client);
     callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
     modesOfIssuanceClient = ResourceClient.forModesOfIssuance(client);
+    instanceRelationshipsClient = ResourceClient.forInstanceRelationships(client);
+    precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(client);
+    instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(client);
+    instancesStorageBatchInstancesClient = ResourceClient
+      .forInstancesStorageBatchInstances(client);
   }
 
   @AfterClass

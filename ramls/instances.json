@@ -14,7 +14,12 @@
     },
     "totalRecords": {
       "type": "integer"
+    },
+    "resultInfo": {
+      "$ref": "raml-util/schemas/resultInfo.schema",
+      "readonly": true
     }
+
   },
   "required": [
     "instances",

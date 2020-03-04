@@ -17,11 +17,14 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
   private final UUID temporaryLocationId;
   private final UUID permanentLoanTypeId;
   private final UUID temporaryLoanTypeId;
+  private final String itemLevelCallNumberPrefix;
+  private final String itemLevelCallNumber;
+  private final String itemLevelCallNumberSuffix;
   private final String itemLevelCallNumberTypeId;
 
   public ItemRequestBuilder() {
     this(UUID.randomUUID(), null, "565578437802", AVAILABLE_STATUS,
-      null, null, null, null, null);
+      null, null, null, null, null, null, null, null);
   }
 
   private ItemRequestBuilder(
@@ -33,6 +36,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     UUID materialTypeId,
     UUID permanentLoanTypeId,
     UUID temporaryLoanTypeId,
+    String itemLevelCallNumberSuffix,
+    String itemLevelCallNumber,
+    String itemLevelCallNumberPrefix,
     String itemLevelCallNumberTypeId) {
 
     this.id = id;
@@ -43,6 +49,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     this.materialTypeId = materialTypeId;
     this.permanentLoanTypeId = permanentLoanTypeId;
     this.temporaryLoanTypeId = temporaryLoanTypeId;
+    this.itemLevelCallNumberPrefix = itemLevelCallNumberPrefix;
+    this.itemLevelCallNumber = itemLevelCallNumber;
+    this.itemLevelCallNumberSuffix = itemLevelCallNumberSuffix;
     this.itemLevelCallNumberTypeId = itemLevelCallNumberTypeId;
   }
 
@@ -62,6 +71,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     put(itemRequest, "temporaryLoanTypeId", temporaryLoanTypeId);
 
     put(itemRequest, "temporaryLocationId", temporaryLocationId);
+    put(itemRequest, "itemLevelCallNumberPrefix", itemLevelCallNumberPrefix);
+    put(itemRequest, "itemLevelCallNumber", itemLevelCallNumber);
+    put(itemRequest, "itemLevelCallNumberSuffix", itemLevelCallNumberSuffix);
     put(itemRequest, "itemLevelCallNumberTypeId", itemLevelCallNumberTypeId);
 
     return itemRequest;
@@ -85,6 +97,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.materialTypeId,
       this.permanentLoanTypeId,
       this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId);
   }
 
@@ -98,6 +113,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.materialTypeId,
       this.permanentLoanTypeId,
       this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId);
   }
 
@@ -119,6 +137,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.materialTypeId,
       this.permanentLoanTypeId,
       this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId);
   }
 
@@ -132,6 +153,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.materialTypeId,
       this.permanentLoanTypeId,
       this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId);
   }
 
@@ -145,6 +169,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       materialTypeId,
       this.permanentLoanTypeId,
       this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId);
   }
 
@@ -158,6 +185,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.materialTypeId,
       this.permanentLoanTypeId,
       loanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId);
   }
 
@@ -171,6 +201,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.materialTypeId,
       loanTypeId,
       this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId);
   }
 
@@ -184,6 +217,57 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.materialTypeId,
       this.permanentLoanTypeId,
       this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
       itemLevelCallNumberTypeId);
+  }
+
+  public ItemRequestBuilder withItemLevelCallNumberPrefix(String prefix) {
+    return new ItemRequestBuilder(
+      this.id,
+      this.holdingId,
+      this.barcode,
+      this.status,
+      this.temporaryLocationId,
+      this.materialTypeId,
+      this.permanentLoanTypeId,
+      this.temporaryLoanTypeId,
+      prefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
+      this.itemLevelCallNumberTypeId);
+  }
+
+  public ItemRequestBuilder withItemLevelCallNumber(String callNumber) {
+    return new ItemRequestBuilder(
+      this.id,
+      this.holdingId,
+      this.barcode,
+      this.status,
+      this.temporaryLocationId,
+      this.materialTypeId,
+      this.permanentLoanTypeId,
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      callNumber,
+      this.itemLevelCallNumberSuffix,
+      this.itemLevelCallNumberTypeId);
+  }
+
+  public ItemRequestBuilder withItemLevelCallNumberSuffix(String suffix) {
+    return new ItemRequestBuilder(
+      this.id,
+      this.holdingId,
+      this.barcode,
+      this.status,
+      this.temporaryLocationId,
+      this.materialTypeId,
+      this.permanentLoanTypeId,
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      suffix,
+      this.itemLevelCallNumberTypeId);
   }
 }

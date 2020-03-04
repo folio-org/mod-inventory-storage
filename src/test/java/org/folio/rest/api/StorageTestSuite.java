@@ -38,6 +38,7 @@ import static org.junit.Assert.assertThat;
   InstanceStorageTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
+  HoldingsTypeTest.class,
   LoanTypeTest.class,
   MaterialTypeTest.class,
   ContributorTypesTest.class,
@@ -55,7 +56,11 @@ import static org.junit.Assert.assertThat;
   SampleDataTest.class,
   HridSettingsStorageTest.class,
   HridSettingsStorageParameterizedTest.class,
-  ItemEffectiveCallNumberComponentsTest.class
+  ItemCopyNumberMigrationScriptTest.class,
+  ItemEffectiveCallNumberComponentsTest.class,
+  ItemEffectiveCallNumberDataUpgradeTest.class,
+  ModesOfIssuanceMigrationScriptTest.class,
+  PrecedingSucceedingTitleTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
