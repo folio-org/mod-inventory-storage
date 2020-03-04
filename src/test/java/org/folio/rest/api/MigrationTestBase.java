@@ -14,6 +14,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.util.ResourceUtil;
 
 import io.vertx.core.Vertx;
+import io.vertx.ext.sql.UpdateResult;
 
 abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
   static String loadScript(String scriptName) {
@@ -66,21 +67,21 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     result.get(5, SECONDS);
   }
 
-  void executeSql(String sql)
+  UpdateResult executeSql(String sql)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    final CompletableFuture<Void> result = new CompletableFuture<>();
+    final CompletableFuture<UpdateResult> result = new CompletableFuture<>();
     final Vertx vertx = StorageTestSuite.getVertx();
 
     PostgresClient.getInstance(vertx).execute(sql, updateResult -> {
       if (updateResult.failed()) {
         result.completeExceptionally(updateResult.cause());
       } else {
-        result.complete(null);
+        result.complete(updateResult.result());
       }
     });
 
-    result.get(5, SECONDS);
+    return result.get(5, SECONDS);
   }
 
   void updateJsonbProperty(
@@ -95,5 +96,13 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
       postgresPropertyValue,
       id.toString()
     ));
+  }
+
+  UpdateResult unsetJsonbProperty(String tableName, UUID id, String propertyName)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    return executeSql(String.format(
+      "UPDATE %s.%s as tbl SET jsonb = tbl.jsonb - '%s' WHERE id::text = '%s'",
+      getSchemaName(), tableName, propertyName, id.toString()));
   }
 }
