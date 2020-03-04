@@ -30,7 +30,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.UpdateResult;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
@@ -264,7 +263,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   public void canSetTableFieldOnInsert() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
     UUID itemId = UUID.randomUUID();
-    JsonArray result = runSelectSingle(String.format(
+    JsonArray result = runSql(String.format(
         "INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) "
             + "VALUES ('%s', '{\"holdingsRecordId\": \"%s\"}') RETURNING jsonb, effectiveLocationId",
             itemId.toString(), holdingsRecordId.toString()
