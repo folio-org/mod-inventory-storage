@@ -3,9 +3,9 @@ package org.folio.rest.api;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.text.IsEmptyString.isEmptyString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
@@ -28,6 +28,7 @@ import org.junit.runner.RunWith;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -41,6 +42,7 @@ import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static Vertx vertx = Vertx.vertx();
   private static UUID instanceId = UUID.randomUUID();
+  /** The upgrading script that runs on mod-inventory-storage version upgrade.  */
   private static final String POPULATE_EFFECTIVE_LOCATION_SQL =
       ResourceUtil.asString("templates/db_scripts/populateEffectiveLocationForExistingItems.sql")
       .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
@@ -142,7 +144,12 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * Test that updating an item correctly sets the effectiveLocationId.
+   * Test that creating an item and updating an item correctly sets the effectiveLocationId.
+   *
+   * This only succeeds if the two triggers update_effective_location and
+   * update_item_references (assigning item.effectiveLocationId = item.jsonb->>'effectiveLocationId')
+   * run in correct order.
+   *
    * @param holdingLoc permanent and temporary location of the holding
    * @param itemStartLoc permanent and temporary location of the item before the update
    * @param itemEndLoc permanent and temporary location of the item after the update
@@ -208,7 +215,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     HttpClientResponse response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.statusCode(), is(201));
-    assertThat(response.getHeader("location"), not(isEmptyString()));
+    assertThat(response.getHeader("location"), not(is(emptyString())));
   }
 
   @Test
@@ -249,19 +256,60 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertEquals(getItem(item.getId()).getEffectiveLocationId(), onlineLocationId.toString());
   }
 
-  private void runSql(String sql) {
-    CompletableFuture<Void> future = new CompletableFuture<>();
+  /**
+   * Does "INSERT INFO item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?
+   */
+  @Test
+  public void canSetTableFieldOnInsert() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+    UUID itemId = UUID.randomUUID();
+    JsonArray result = runSql(String.format(
+        "INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) "
+            + "VALUES ('%s', '{\"holdingsRecordId\": \"%s\"}') RETURNING jsonb, effectiveLocationId",
+            itemId.toString(), holdingsRecordId.toString()
+        ));
+    JsonObject jsonb = new JsonObject(result.getString(0));
+    String effectiveLocationId = result.getString(1);
+    assertThat(jsonb.getString("effectiveLocationId"), is(annexLibraryLocationId.toString()));
+    assertThat(effectiveLocationId, is(annexLibraryLocationId.toString()));
+  }
 
-    PostgresClient.getInstance(vertx).execute(sql, handler -> {
+  /**
+   * Does "UPDATE item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?
+   */
+  @Test
+  public void canSetTableFieldOnItemUpdate() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+    Item item = buildItem(holdingsRecordId, onlineLocationId, null);
+    createItem(item);
+    item = getItem(item.getId());
+
+    item.setTemporaryLocationId(secondFloorLocationId.toString());
+    itemsClient.replace(UUID.fromString(item.getId()), JsonObject.mapFrom(item));
+
+    JsonArray result = runSql(
+          "SELECT jsonb, effectiveLocationId "
+        + "FROM test_tenant_mod_inventory_storage.item "
+        + "WHERE id='" + item.getId() + "'");
+    JsonObject jsonb = new JsonObject(result.getString(0));
+    String effectiveLocationId = result.getString(1);
+    assertThat(jsonb.getString("effectiveLocationId"), is(secondFloorLocationId.toString()));
+    assertThat(effectiveLocationId, is(secondFloorLocationId.toString()));
+  }
+
+  private JsonArray runSql(String sql) {
+    CompletableFuture<JsonArray> future = new CompletableFuture<>();
+
+    PostgresClient.getInstance(vertx).selectSingle(sql, handler -> {
       if (handler.failed()) {
         future.completeExceptionally(handler.cause());
         return;
       }
-      future.complete(null);
+      future.complete(handler.result());
     });
 
     try {
-      future.get(1, TimeUnit.SECONDS);
+      return future.get(1, TimeUnit.SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
