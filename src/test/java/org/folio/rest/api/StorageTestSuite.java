@@ -36,6 +36,7 @@ import static org.junit.Assert.assertThat;
 
 @Suite.SuiteClasses({
   InstanceStorageTest.class,
+  InstanceBulkTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
   HoldingsTypeTest.class,
