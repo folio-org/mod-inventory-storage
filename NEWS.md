@@ -1,3 +1,30 @@
+## 19.0.0 2020-03-09
+
+* Restricts item statuses (MODINVSTOR-283, MODINVSTOR-416)
+* Introduces `Claimed returned` item status (MODINVSTOR-433)
+* Makes item status required (MODINVSTOR-425, MODINVSTOR-416)
+* Makes item status date read-only (MODINVSTOR-392, MODINVSTOR-416)
+* Allows only one copy number for an item (MODINVSTOR-332, MODINVSTOR-416)
+* Stores effective call number type for item (MODINVSTOR-361)
+* Introduces preceding and succeeding titles (MODINVSTOR-441, MODINVSTOR-447)
+* Changes reference mode of issuances (MODINVSTOR-431)
+* Streams responses when getting items, holdings and instances (MODINVSTOR-438)
+* Provides an API to get only `id` property of all records matching a CQL query (MODINVSTOR-439)
+* Provides access to the JSON schemas used by the module (MODINVSTOR-404)
+* Defaults suppress from discovery to false (MODINVSTOR-447)
+* Adds foreign key constraint for effective location (MODINVSTOR-407)
+* Adds indexes for `call number` and `accession number`  (MODINVSTOR-435, MODINVSTOR-444)
+* Ensures update triggers run in the correct order (MODINVSTOR-415)
+* Upgrades to RAML Module Builder 29.3.0 (MODINVSTOR-139, MODINVSTOR-379, MODINVSTOR-405. MODINVSTOR-418. MODINVSTOR-429, MODINVSTOR-430)
+* Provides `item-storage 8.2`
+* Provides `item-storage-batch-sync 0.3`
+* Provides `holdings-storage 4.1`
+* Provides `instance-storage 7.4`
+* Provides `instance-storage-batch-sync 0.2`
+* Provides `instance-bulk 0.1`
+* Provides `instance-preceeding-succeeding-titles 0.1`
+* Provides `_jsonSchemas 1.0`
+
 ## 18.2.0 2019-12-20
 
 * Increase maximum number of digits for human readable IDs (HRID) (MODINVSTOR-410, MODINVSTOR-411, MODINVSTOR-412)
