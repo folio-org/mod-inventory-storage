@@ -3,7 +3,8 @@ START TRANSACTION;
 UPDATE pg_trigger
   SET tgenabled = 'D'
 WHERE tgrelid IN (SELECT oid FROM pg_class WHERE relname = 'item')
-  AND tgisinternal IS FALSE;
+  AND tgisinternal IS FALSE
+  AND tgenabled = 'O';
 
 UPDATE ${myuniversity}_${mymodule}.item AS it
   SET jsonb = JSONB_SET(
@@ -22,6 +23,7 @@ WHERE hr.id = it.holdingsrecordid;
 UPDATE pg_trigger
   SET tgenabled = 'O'
 WHERE tgrelid IN (SELECT oid FROM pg_class WHERE relname = 'item')
-  AND tgisinternal IS FALSE;
+  AND tgisinternal IS FALSE
+  AND tgenabled = 'D';
 
 END TRANSACTION;
