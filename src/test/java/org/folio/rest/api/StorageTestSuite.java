@@ -61,7 +61,9 @@ import static org.junit.Assert.assertThat;
   ItemEffectiveCallNumberComponentsTest.class,
   ItemEffectiveCallNumberDataUpgradeTest.class,
   ModesOfIssuanceMigrationScriptTest.class,
-  PrecedingSucceedingTitleTest.class
+  PrecedingSucceedingTitleTest.class,
+  InstanceDiscoverySuppressMigrationScriptTest.class,
+  InstanceStaffSuppressMigrationScriptTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

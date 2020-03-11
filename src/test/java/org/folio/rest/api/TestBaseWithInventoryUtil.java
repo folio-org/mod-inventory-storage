@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.ItemDamagedStatusAPITest.TEST_TENANT;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -83,6 +84,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     ExecutionException,
     TimeoutException {
 
+    StorageTestSuite.deleteAll(TEST_TENANT, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
