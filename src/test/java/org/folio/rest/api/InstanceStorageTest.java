@@ -75,6 +75,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
   private static final Logger log = LoggerFactory.getLogger(InstanceStorageTest.class);
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
+  private static final String STAFF_SUPPRESS = "staffSuppress";
 
   private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
@@ -145,6 +146,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instance.getJsonArray("natureOfContentTermIds"),
       containsInAnyOrder(natureOfContentIds));
     assertThat(instance.getBoolean(DISCOVERY_SUPPRESS), is(false));
+    assertThat(instance.getBoolean(STAFF_SUPPRESS), is(false));
 
     Response getResponse = getById(id);
 
@@ -168,6 +170,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(
       instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
+    assertThat(instanceFromGet.getBoolean(STAFF_SUPPRESS), is(false));
   }
 
   @Test
@@ -355,6 +358,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString(STATUS_UPDATED_DATE_PROPERTY),
       is(replacement.getString(STATUS_UPDATED_DATE_PROPERTY)));
     assertThat(itemFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
+    assertThat(itemFromGet.getBoolean(STAFF_SUPPRESS), is(false));
   }
 
   @Test
@@ -1536,7 +1540,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instances.size(), is(numberOfInstances));
     assertThat(instances.getJsonObject(1).getJsonObject(METADATA_KEY), notNullValue());
 
-    assertNotSuppressedFromDiscovery(instances);
+    assertDefaultFieldValues(instances);
   }
 
   @Test
@@ -1571,7 +1575,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
     assertThat(instances.size(), is(2));
 
-    assertNotSuppressedFromDiscovery(instances);
+    assertDefaultFieldValues(instances);
   }
 
   @Test
@@ -1735,7 +1739,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertExists(smallAngryPlanet);
     assertExists(temeraire);
 
-    assertNotSuppressedFromDiscovery(instancesArray);
+    assertDefaultFieldValues(instancesArray);
   }
 
   @Test
@@ -2287,13 +2291,52 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canPostSynchronousBatchWithDiscoverySuppressedInstances() throws Exception {
+    canPostSynchronousBatchWithProperty(DISCOVERY_SUPPRESS);
+  }
+
+  @Test
+  public void canPostInstanceStorageBatchWithDiscoverySuppressedInstances() throws Exception {
+    canPostInstanceStorageBatchWithPropery(DISCOVERY_SUPPRESS);
+  }
+
+  @Test
+  public void canPostDiscoverySuppressedInstance() throws Exception {
+    canPostInstanceWithProperty(DISCOVERY_SUPPRESS);
+  }
+
+  @Test
+  public void canUpdateInstanceWithDiscoverySuppressProperty() throws Exception {
+    canUpdateInstanceWithProperty(DISCOVERY_SUPPRESS);
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithStaffSuppressedInstances() throws Exception {
+    canPostSynchronousBatchWithProperty(STAFF_SUPPRESS);
+  }
+
+  @Test
+  public void canPostInstanceStorageBatchWithStaffSuppressedInstances() throws Exception {
+    canPostInstanceStorageBatchWithPropery(STAFF_SUPPRESS);
+  }
+
+  @Test
+  public void canPostStaffSuppressedInstance() throws Exception {
+    canPostInstanceWithProperty(STAFF_SUPPRESS);
+  }
+
+  @Test
+  public void canUpdateInstanceWithStaffSuppressProperty() throws Exception {
+    canUpdateInstanceWithProperty(STAFF_SUPPRESS);
+  }
+
+  private void canPostSynchronousBatchWithProperty(String fieldName) throws Exception {
     final JsonArray instancesArray = new JsonArray();
     final UUID smallAngryPlanetId = UUID.randomUUID();
     final UUID uprootedId = UUID.randomUUID();
 
     instancesArray.add(uprooted(uprootedId));
     instancesArray.add(smallAngryPlanet(smallAngryPlanetId)
-      .put(DISCOVERY_SUPPRESS, true));
+      .put(fieldName, true));
 
     final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY,
       instancesArray);
@@ -2303,19 +2346,18 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(createResponse.getStatusCode(), is(201));
 
-    assertSuppressedFromDiscovery(smallAngryPlanetId.toString());
-    assertNotSuppressedFromDiscovery(uprootedId.toString());
+    assertFieldValue(smallAngryPlanetId.toString(), fieldName);
+    assertDefaultValue(uprootedId.toString(), fieldName);
   }
 
-  @Test
-  public void canPostInstanceStorageBatchWithDiscoverySuppressedInstances() throws Exception {
+  private void canPostInstanceStorageBatchWithPropery(String fieldName) throws Exception {
     final JsonArray instancesArray = new JsonArray();
     final UUID smallAngryPlanetId = UUID.randomUUID();
     final UUID uprootedId = UUID.randomUUID();
 
     instancesArray.add(uprooted(uprootedId));
     instancesArray.add(smallAngryPlanet(smallAngryPlanetId)
-      .put(DISCOVERY_SUPPRESS, true));
+      .put(fieldName, true));
 
     final JsonObject instanceCollection = new JsonObject()
       .put(INSTANCES_KEY, instancesArray)
@@ -2323,28 +2365,26 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     instancesStorageBatchInstancesClient.create(instanceCollection);
 
-    assertSuppressedFromDiscovery(smallAngryPlanetId.toString());
-    assertNotSuppressedFromDiscovery(uprootedId.toString());
+    assertFieldValue(smallAngryPlanetId.toString(), fieldName);
+    assertDefaultValue(uprootedId.toString(), fieldName);
   }
 
-  @Test
-  public void canPostDiscoverySuppressedInstance() throws Exception {
+  private void canPostInstanceWithProperty(String fieldName) throws Exception {
     IndividualResource instance = createInstance(smallAngryPlanet(UUID.randomUUID())
-      .put(DISCOVERY_SUPPRESS, true));
+      .put(fieldName, true));
 
-    assertThat(instance.getJson().getBoolean(DISCOVERY_SUPPRESS), is(true));
-    assertSuppressedFromDiscovery(instance.getId().toString());
+    assertThat(instance.getJson().getBoolean(fieldName), is(true));
+    assertFieldValue(instance.getId().toString(), fieldName);
   }
 
-  @Test
-  public void canUpdateInstanceWithDiscoverySuppressProperty() throws Exception {
+  private void canUpdateInstanceWithProperty(String fieldName) throws Exception {
     IndividualResource instance = createInstance(smallAngryPlanet(UUID.randomUUID()));
-    assertThat(instance.getJson().getBoolean(DISCOVERY_SUPPRESS), is(false));
+    assertThat(instance.getJson().getBoolean(fieldName), is(false));
 
     updateInstance(getById(instance.getId()).getJson().copy()
-      .put(DISCOVERY_SUPPRESS, true));
+      .put(fieldName, true));
 
-    assertSuppressedFromDiscovery(instance.getId().toString());
+    assertFieldValue(instance.getId().toString(), fieldName);
   }
 
   private void setInstanceSequence(long sequenceNumber) {
@@ -2531,18 +2571,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     return response.getJson().mapTo(NatureOfContentTerm.class);
   }
 
-  private void assertNotSuppressedFromDiscovery(JsonArray array) {
+  private void assertDefaultFieldValues(JsonArray array) {
     array.stream()
       .map(obj -> (JsonObject) obj)
       .map(instance -> instance.getString("id"))
-      .forEach(this::assertNotSuppressedFromDiscovery);
+      .forEach(this::assertDefaultFields);
   }
 
-  private void assertSuppressedFromDiscovery(String id) {
-    assertThat(getById(id).getJson().getBoolean(DISCOVERY_SUPPRESS), is(true));
+  private void assertFieldValue(String id, String fieldValue) {
+    assertThat(getById(id).getJson().getBoolean(fieldValue), is(true));
   }
 
-  private void assertNotSuppressedFromDiscovery(String id) {
-    assertThat(getById(id).getJson().getBoolean(DISCOVERY_SUPPRESS), is(false));
+  private void assertDefaultValue(String id, String fieldValue) {
+    assertThat(getById(id).getJson().getBoolean(fieldValue), is(false));
+  }
+
+  private void assertDefaultFields(String id) {
+    JsonObject instance = getById(id).getJson();
+    assertThat(instance.getBoolean(DISCOVERY_SUPPRESS), is(false));
+    assertThat(instance.getBoolean(STAFF_SUPPRESS), is(false));
   }
 }

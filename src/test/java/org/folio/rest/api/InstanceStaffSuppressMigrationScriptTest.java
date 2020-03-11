@@ -2,21 +2,20 @@ package org.folio.rest.api;
 
 import org.folio.rest.jaxrs.model.Instance;
 
-public class InstanceDiscoverySuppressMigrationScriptTest
+public class InstanceStaffSuppressMigrationScriptTest
   extends InstanceDefaultValueMigrationScriptTest {
-
-  private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
+  private static final String STAFF_SUPPRESS = "staffSuppress";
   private static final String MIGRATION_SCRIPT
-    = loadScript("populateDiscoverySuppressIfNotSet.sql");
+    = loadScript("populateStaffSuppressIfNotSet.sql");
 
   @Override
   public Boolean getFieldValue(Instance instanceInStorage) {
-    return instanceInStorage.getDiscoverySuppress();
+    return instanceInStorage.getStaffSuppress();
   }
 
   @Override
   public String getFieldName() {
-    return DISCOVERY_SUPPRESS;
+    return STAFF_SUPPRESS;
   }
 
   @Override

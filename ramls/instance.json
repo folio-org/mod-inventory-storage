@@ -292,7 +292,8 @@
     },
     "staffSuppress": {
       "type": "boolean",
-      "description": "Records the fact that the record should not be displayed for others than catalogers"
+      "description": "Records the fact that the record should not be displayed for others than catalogers",
+      "default": false
     },
     "discoverySuppress": {
       "type": "boolean",
