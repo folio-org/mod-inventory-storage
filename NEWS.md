@@ -1,3 +1,8 @@
+## 19.1.0 2020-03-14
+
+* Improves performance of `keyword` search (MODINVSTOR-455)
+* Upgrdades to RAML Module Builder 29.3.1
+
 ## 19.0.0 2020-03-09
 
 * Restricts item statuses (MODINVSTOR-283, MODINVSTOR-416)
