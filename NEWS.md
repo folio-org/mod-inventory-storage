@@ -1,7 +1,7 @@
 ## 19.1.0 2020-03-14
 
 * Improves performance of `keyword` search (MODINVSTOR-455)
-* Upgrdades to RAML Module Builder 29.3.1
+* Upgrades to RAML Module Builder 29.3.1
 
 ## 19.0.0 2020-03-09
 
