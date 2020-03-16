@@ -2,7 +2,7 @@ START TRANSACTION;
 
 UPDATE pg_trigger
   SET tgenabled = 'D'
-WHERE tgrelid IN (SELECT oid FROM pg_class WHERE relname = 'instance')
+WHERE tgrelid = '${myuniversity}_${mymodule}.instance'::regclass::oid
   AND tgisinternal IS FALSE
   AND tgenabled = 'O';
 
@@ -12,7 +12,7 @@ WHERE jsonb->>'discoverySuppress' IS NULL;
 
 UPDATE pg_trigger
   SET tgenabled = 'O'
-WHERE tgrelid IN (SELECT oid FROM pg_class WHERE relname = 'instance')
+WHERE tgrelid = '${myuniversity}_${mymodule}.instance'::regclass::oid
   AND tgisinternal IS FALSE
   AND tgenabled = 'D';
 
