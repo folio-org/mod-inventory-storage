@@ -31,6 +31,7 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -38,7 +39,6 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -2020,6 +2020,23 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .map(IndividualResource::getId)
       .collect(Collectors.toSet());
     assertThat(allFoundIds, hasItems(itemWithWholeCallNumber.getId(), itemNoPrefix.getId()));
+  }
+
+  @Test
+  public void cannotCreateItemWithNonExistentHoldingsRecordId() throws Exception {
+    final UUID nonExistentHoldingsRecordId = UUID.randomUUID();
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(nonExistentHoldingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .create();
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    assertThat(createdItem, hasValidationError(
+      "Holdings record does not exist", "holdingsRecordId",
+      nonExistentHoldingsRecordId.toString()));
   }
 
   @SuppressWarnings("unused")
