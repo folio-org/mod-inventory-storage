@@ -97,6 +97,11 @@ public class ResourceClient {
       "Instances batch sync", "instances");
   }
 
+  public static ResourceClient forItemsStorageSync(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::itemsStorageSyncUrl,
+      "Items batch sync", "items");
+  }
+
   public static ResourceClient forInstancesStorageBatchInstances(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::instancesStorageBatchInstancesUrl,
       "Instances batch (Deprecated)", "instances");

@@ -3,7 +3,7 @@ package org.folio.rest.api;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -38,6 +38,7 @@ public abstract class TestBase {
   static ResourceClient precedingSucceedingTitleClient;
   static ResourceClient instanceRelationshipsClient;
   static ResourceClient instancesStorageSyncClient;
+  static ResourceClient itemsStorageSyncClient;
   static ResourceClient instancesStorageBatchInstancesClient;
 
   @BeforeClass
@@ -59,6 +60,7 @@ public abstract class TestBase {
     instanceRelationshipsClient = ResourceClient.forInstanceRelationships(client);
     precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(client);
     instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(client);
+    itemsStorageSyncClient = ResourceClient.forItemsStorageSync(client);
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(client);
   }

@@ -2,9 +2,15 @@ package org.folio.rest.api;
 
 
 import static org.folio.rest.api.ItemStorageTest.nod;
+import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
+import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
+import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;
+import static org.folio.rest.support.matchers.ItemMatchers.hasSuffix;
+import static org.folio.rest.support.matchers.ItemMatchers.hasTypeId;
+import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -22,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -101,6 +108,103 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   }
 
   @Test
+  public void canCalculateEffectiveCallNumberPropertyOnBatchCreate() throws Exception {
+    final UUID firstHoldingsId = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
+      builder -> builder.withCallNumber("firstHRCallNumber")
+        .withCallNumberPrefix("firstHRPrefix")
+        .withCallNumberSuffix("firstHRSuffix")
+        .withCallNumberTypeId(HOLDINGS_CALL_NUMBER_TYPE));
+
+    final UUID secondHoldingsId = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
+      builder -> builder.withCallNumber("secondHRCallNumber")
+        .withCallNumberPrefix("secondHRPrefix")
+        .withCallNumberSuffix("secondHRSuffix")
+        .withCallNumberTypeId(HOLDINGS_CALL_NUMBER_TYPE_SECOND));
+
+    final UUID thirdHoldingsId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final JsonObject useFirstHoldingsComponents = nod(firstHoldingsId);
+    final JsonObject useOwnCallNumber = nod(secondHoldingsId)
+      .put("itemLevelCallNumber", "ownCallNumber");
+    final JsonObject useFirstHoldingsAndOwnSuffix = nod(firstHoldingsId)
+      .put("itemLevelCallNumberSuffix", "ownSuffix");
+    final JsonObject useAllOwnComponentsSharedHoldings = nod(firstHoldingsId)
+      .put("itemLevelCallNumber", "allOwnComponentsCN")
+      .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
+      .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP")
+      .put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+    final JsonObject useAllOwnComponents = nod(thirdHoldingsId)
+      .put("itemLevelCallNumber", "allOwnComponentsCN2")
+      .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS2")
+      .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP2")
+      .put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND);
+
+    itemsStorageSyncClient.createNoResponse(new JsonObject()
+      .put("items", new JsonArray()
+        .add(useFirstHoldingsComponents)
+        .add(useOwnCallNumber)
+        .add(useFirstHoldingsAndOwnSuffix)
+        .add(useAllOwnComponentsSharedHoldings)
+        .add(useAllOwnComponents)));
+
+    assertThat(getById(useFirstHoldingsComponents), effectiveCallNumberComponents(allOf(
+      hasCallNumber("firstHRCallNumber"),
+      hasSuffix("firstHRSuffix"),
+      hasPrefix("firstHRPrefix"),
+      hasTypeId(HOLDINGS_CALL_NUMBER_TYPE)
+    )));
+
+    assertThat(getById(useOwnCallNumber), effectiveCallNumberComponents(allOf(
+      hasCallNumber("ownCallNumber"),
+      hasSuffix("secondHRSuffix"),
+      hasPrefix("secondHRPrefix"),
+      hasTypeId(HOLDINGS_CALL_NUMBER_TYPE_SECOND)
+    )));
+
+    assertThat(getById(useFirstHoldingsAndOwnSuffix), effectiveCallNumberComponents(allOf(
+      hasCallNumber("firstHRCallNumber"),
+      hasSuffix("ownSuffix"),
+      hasPrefix("firstHRPrefix"),
+      hasTypeId(HOLDINGS_CALL_NUMBER_TYPE)
+    )));
+
+    assertThat(getById(useAllOwnComponentsSharedHoldings), effectiveCallNumberComponents(allOf(
+      hasCallNumber("allOwnComponentsCN"),
+      hasSuffix("allOwnComponentsCNS"),
+      hasPrefix("allOwnComponentsCNP"),
+      hasTypeId(ITEM_LEVEL_CALL_NUMBER_TYPE)
+    )));
+
+    assertThat(getById(useAllOwnComponents), effectiveCallNumberComponents(allOf(
+      hasCallNumber("allOwnComponentsCN2"),
+      hasSuffix("allOwnComponentsCNS2"),
+      hasPrefix("allOwnComponentsCNP2"),
+      hasTypeId(ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND)
+    )));
+  }
+
+  @Test
+  public void shouldCalculatePropertyWhenHoldingsIsNotRetrieved() throws Exception {
+    final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
+    final JsonObject useAllOwnComponents = nod(holdingsId)
+      .put("itemLevelCallNumber", "allOwnComponentsCN")
+      .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
+      .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP")
+      .put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+
+    itemsStorageSyncClient.createNoResponse(new JsonObject()
+      .put("items", new JsonArray()
+        .add(useAllOwnComponents)));
+
+    assertThat(getById(useAllOwnComponents), effectiveCallNumberComponents(allOf(
+      hasCallNumber("allOwnComponentsCN"),
+      hasSuffix("allOwnComponentsCNS"),
+      hasPrefix("allOwnComponentsCNP"),
+      hasTypeId(ITEM_LEVEL_CALL_NUMBER_TYPE)
+    )));
+  }
+
+  @Test
   @Parameters(
     source = ItemEffectiveCallNumberComponentsTestData.class,
     method = "updatePropertiesParams"
@@ -169,5 +273,11 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     assertThat(holdings.getJson().getString(propertyName), is(propertyValue));
 
     return holdings;
+  }
+
+  private JsonObject getById(JsonObject origin) throws InterruptedException,
+    MalformedURLException, TimeoutException, ExecutionException {
+
+    return itemsClient.getByIdIfPresent(origin.getString("id")).getJson();
   }
 }
