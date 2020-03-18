@@ -67,6 +67,11 @@ public class ResourceClient {
       "instance relationships", "instanceRelationships");
   }
 
+  public static ResourceClient forInstanceRelationshipTypes(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::instanceRelationshipTypesUrl,
+      "instance relationship types", "instanceRelationshipTypes");
+  }
+
   public static ResourceClient forPrecedingSucceedingTitles(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::precedingSucceedingTitleUrl,
       "preceding succeeding titles", "precedingSucceedingTitles");
