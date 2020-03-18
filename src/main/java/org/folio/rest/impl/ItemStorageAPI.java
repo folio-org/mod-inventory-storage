@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.folio.rest.jaxrs.resource.ItemStorage.PostItemStorageItemsResponse.respond422WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PutItemStorageItemsByItemIdResponse.respond400WithTextPlain;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PutItemStorageItemsByItemIdResponse.respond404WithTextPlain;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PutItemStorageItemsByItemIdResponse.respond500WithTextPlain;
@@ -13,11 +12,11 @@ import java.util.Objects;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.ItemEffectiveCallNumberComponentsService;
@@ -76,21 +75,10 @@ public class ItemStorageAPI implements ItemStorage {
         PgUtil.post(ITEM_TABLE, item, okapiHeaders, vertxContext,
           PostItemStorageItemsResponse.class, asyncResultHandler);
         return item;
-      }).otherwise(error -> {
-      log.error(error.getMessage(), error);
-
-      if (error instanceof ValidationException) {
-        final ValidationException validationError = (ValidationException) error;
-
-        asyncResultHandler.handle(Future.succeededFuture(
-          respond422WithApplicationJson(validationError.getErrors())));
-      } else {
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostItemStorageItemsResponse.respond500WithTextPlain(error.getMessage())));
-      }
-
-      return null;
-    });
+      }).otherwise(EndpointFailureHandler.handleFailure(asyncResultHandler,
+      PostItemStorageItemsResponse::respond422WithApplicationJson,
+      PostItemStorageItemsResponse::respond500WithTextPlain
+    ));
   }
 
   @Validate
