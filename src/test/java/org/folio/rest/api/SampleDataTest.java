@@ -69,7 +69,7 @@ public class SampleDataTest extends TestBase {
 
   @Test
   public void instanceRelationshipsCount() {
-    assertCount(instanceRelationshipsUrl("?limit=100"), "instanceRelationships", 6);
+    assertCount(instanceRelationshipsUrl("?limit=100"), "instanceRelationships", 5);
   }
 
   private JsonObject get(URL url) {
