@@ -710,7 +710,7 @@ public class ReferenceTablesTest extends TestBase {
   public void instanceRelationshipTypesLoaded() throws Exception {
     Response searchResponse = getReferenceRecords(instanceRelationshipTypesUrl(""));
     validateNumberOfReferenceRecords("instance-relationship types",
-      searchResponse, 4, 200);
+      searchResponse, 3, 200);
   }
 
   @Test

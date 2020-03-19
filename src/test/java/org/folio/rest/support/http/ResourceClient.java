@@ -67,6 +67,11 @@ public class ResourceClient {
       "instance relationships", "instanceRelationships");
   }
 
+  public static ResourceClient forInstanceRelationshipTypes(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::instanceRelationshipTypesUrl,
+      "instance relationship types", "instanceRelationshipTypes");
+  }
+
   public static ResourceClient forPrecedingSucceedingTitles(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::precedingSucceedingTitleUrl,
       "preceding succeeding titles", "precedingSucceedingTitles");
@@ -95,6 +100,11 @@ public class ResourceClient {
   public static ResourceClient forInstancesStorageSync(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::instancesStorageSyncUrl,
       "Instances batch sync", "instances");
+  }
+
+  public static ResourceClient forItemsStorageSync(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::itemsStorageSyncUrl,
+      "Items batch sync", "items");
   }
 
   public static ResourceClient forInstancesStorageBatchInstances(HttpClient client) {
