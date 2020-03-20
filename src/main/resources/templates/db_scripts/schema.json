@@ -743,6 +743,11 @@
   ],
   "scripts": [
     {
+      "run": "before",
+      "snippetPath": "populateRmbInternalIndex.sql",
+      "fromModuleVersion": "19.0.0"
+    },
+    {
       "run": "after",
       "snippetPath": "itemEffectiveLocation.sql",
       "fromModuleVersion": "17.1.0"
