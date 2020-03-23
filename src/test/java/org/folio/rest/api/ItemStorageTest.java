@@ -2,8 +2,6 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
-import static java.nio.file.Files.readAllBytes;
-import static java.nio.file.Paths.get;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -42,12 +40,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -1925,7 +1921,21 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  @Parameters(method = "getAllowedItemStatuses")
+  @Parameters({
+    "Available",
+    "Awaiting pickup",
+    "Awaiting delivery",
+    "Checked out",
+    "In process",
+    "In transit",
+    "Missing",
+    "On order",
+    "Paged",
+    "Declared lost",
+    "Order closed",
+    "Claimed returned",
+    "Withdrawn"
+  })
   public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -2054,22 +2064,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response, hasValidationError(
       "Holdings record does not exist", "holdingsRecordId",
       nonExistentHoldingsRecordId));
-  }
-
-  @SuppressWarnings("unused")
-  private Set<String> getAllowedItemStatuses() throws IOException {
-    final String itemJson = new String(readAllBytes(get("ramls/item.json")),
-      StandardCharsets.UTF_8);
-
-    final JsonObject itemSchema = new JsonObject(itemJson);
-
-    JsonArray allowedStatuses = itemSchema.getJsonObject("properties")
-      .getJsonObject("status").getJsonObject("properties")
-      .getJsonObject("name").getJsonArray("enum");
-
-    return allowedStatuses.stream()
-      .map(element -> (String) element)
-      .collect(Collectors.toSet());
   }
 
   private Response getById(UUID id) throws InterruptedException,
