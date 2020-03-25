@@ -745,7 +745,7 @@
     {
       "run": "before",
       "snippetPath": "populateRmbInternalIndex.sql",
-      "fromModuleVersion": "19.0.0"
+      "fromModuleVersion": "19.1.1"
     },
     {
       "run": "after",
