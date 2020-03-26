@@ -1,3 +1,9 @@
+## 19.1.1 2020-03-26
+
+* Smart index recreation for upgrades from 18.2.3 ([MODINVSTOR-459](https://issues.folio.org/browse/MODINVSTOR-459))
+* Smart index recreation for upgrades from 19.0.0 and 19.1.0 ([MODINVSTOR-463](https://issues.folio.org/browse/MODINVSTOR-463))
+* Smart index recreation for upgrades from >= 19.1.1, [RMB v29.3.2](https://github.com/folio-org/raml-module-builder/releases/tag/v29.3.2) ([MODINVSTOR-460](https://issues.folio.org/browse/MODINVSTOR-460))
+
 ## 19.1.0 2020-03-14
 
 * Improves performance of `keyword` search (MODINVSTOR-455)
