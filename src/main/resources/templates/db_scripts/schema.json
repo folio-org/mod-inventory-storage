@@ -749,8 +749,13 @@
   "scripts": [
     {
       "run": "before",
+      "snippetPath": "populateRmbInternalIndex.sql",
+      "fromModuleVersion": "19.1.1"
+    },
+    {
+      "run": "before",
       "snippetPath": "isbn.sql",
-      "fromModuleVersion": "19.0.0"
+      "fromModuleVersion": "19.2.0"
     },
     {
       "run": "after",
@@ -811,6 +816,11 @@
       "run": "after",
       "snippetPath": "populateDiscoverySuppressIfNotSet.sql",
       "fromModuleVersion": "19.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "removeOldPrecedingSucceedingTitles.sql",
+      "fromModuleVersion": "19.2.0"
     }
   ]
 }

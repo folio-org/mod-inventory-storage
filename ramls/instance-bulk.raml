@@ -1,0 +1,43 @@
+#%RAML 1.0
+title: Inventory Storage Instance Bulk API
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Inventory Storage Instance Bulk Download API
+    content: <b>API for downloading a bulk set of Instance IDs</b>
+
+types:
+  ids: !include ids.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  orderable: !include raml-util/traits/orderable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection-get: !include raml-util/rtypes/collection-get.raml
+
+/instance-bulk:
+  /ids:
+    displayName: Instance ID Bulk Download API
+    type:
+      collection-get:
+        schemaCollection: ids
+        exampleCollection: !include examples/ids.json
+    get:
+      description: Retrieve a list of Instance IDs.
+      is: [
+        searchable: {description: "with valid searchable fields", example: "name=aaa"},
+        validate
+      ]
+      queryParameters:
+        field:
+          description: Field
+          type: string
+          enum: [id]
+          default: id
+          required: false

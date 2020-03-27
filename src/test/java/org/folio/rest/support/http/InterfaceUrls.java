@@ -103,6 +103,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/ill-policies" + subPath);
   }
 
+  public static URL instanceBulkUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/instance-bulk" + subPath);
+  }
+
   public static URL instanceFormatsUrl(String subPath) {
     return StorageTestSuite.storageUrl("/instance-formats" + subPath);
   }
