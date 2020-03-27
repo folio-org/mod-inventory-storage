@@ -811,6 +811,11 @@
       "run": "after",
       "snippetPath": "removeOldPrecedingSucceedingTitles.sql",
       "fromModuleVersion": "19.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "views/creteViewsForHoldings_items_instances.sql",
+      "fromModuleVersion": "19.2.0-SNAPSHOT"
     }
   ]
 }
