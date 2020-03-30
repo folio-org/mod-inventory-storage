@@ -754,7 +754,7 @@
     },
     {
       "run": "before",
-      "snippetPath": "isbn.sql",
+      "snippetPath": "create-normalize_isbns-function.sql",
       "fromModuleVersion": "19.2.0"
     },
     {
