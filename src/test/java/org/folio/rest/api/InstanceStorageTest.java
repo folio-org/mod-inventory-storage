@@ -1268,29 +1268,41 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       secondInstance.isPresent(), is(true));
   }
 
+  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
+
   @Test
-  public void canSearchByIsbn1() {
+  public void canSearchForFirstIsbnWithAdditionalHyphens() {
     canSort("isbn = 0-552-16754-1",      "Interesting Times");
   }
 
   @Test
-  public void canSearchByIsbn2() {
+  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
     canSort("isbn = 05-5*",              "Interesting Times");
   }
 
   @Test
-  public void canSearchByIsbn3() {
+  public void canSearchForSecondIsbnWithMissingHyphens() {
     canSort("isbn = 9780552167543",      "Interesting Times");
   }
 
   @Test
-  public void canSearchByIsbn4() {
+  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
     canSort("isbn = 9780* sortBy title", "Interesting Times", "Temeraire");
   }
 
   @Test
-  public void canSearchByIsbn5() {
+  public void canSearchForSecondIsbnWithAlteredHyphens() {
     canSort("isbn = 9-7-8-055-2167-543", "Interesting Times");
+  }
+
+  @Test
+  public void cannotFindIsbnWithTailString() {
+    canSort("isbn = 552-16754-3");
+  }
+
+  @Test
+  public void cannotFindIsbnWithInnerStringAndTruncation() {
+    canSort("isbn = 552*");
   }
 
   @Test
