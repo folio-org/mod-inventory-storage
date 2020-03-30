@@ -15,7 +15,7 @@ AS $$
       RETURN NEW;
     end if;
 
-    UPDATE ${myuniversity}_${mymodule}.item
+    UPDATE ${myuniversity}_${mymodule}.item_log
       SET jsonb = jsonb_set(jsonb, '{effectiveLocationId}', new_effective_location_id)
       WHERE holdingsRecordId = new.id
             -- if item's either temp or perm location is not null then we don't need to update it's effective location
@@ -66,7 +66,7 @@ AS $$
     -- If item has holdingsRecordId then use location from holdings_record
     SELECT coalesce(jsonb->'temporaryLocationId', jsonb->'permanentLocationId')
       INTO effective_location_id
-      FROM ${myuniversity}_${mymodule}.holdings_record
+      FROM ${myuniversity}_${mymodule}.holdings_record_log
       WHERE id = (NEW.jsonb->>'holdingsRecordId')::uuid
       LIMIT 1;
 
@@ -76,15 +76,15 @@ AS $$
   END;
 $$ LANGUAGE 'plpgsql';
 
-DROP TRIGGER IF EXISTS update_effective_location_for_items ON ${myuniversity}_${mymodule}.holdings_record;
+DROP TRIGGER IF EXISTS update_effective_location_for_items ON ${myuniversity}_${mymodule}.holdings_record_log;
 -- should be after update trigger, will allow item trigger to fetch up-to-date locations from holding
 create trigger update_effective_location_for_items after update
-on ${myuniversity}_${mymodule}.holdings_record for each row execute procedure ${myuniversity}_${mymodule}.update_effective_location_on_holding_update();
+on ${myuniversity}_${mymodule}.holdings_record_log for each row execute procedure ${myuniversity}_${mymodule}.update_effective_location_on_holding_update();
 
 -- This trigger must run before the trigger update_item_references that
 -- copies item.jsonb->>'effectiveLocationId' into item.effectiveLocationId.
 -- This is true because they run in alphabetical order of trigger name, see
 -- https://www.postgresql.org/docs/current/trigger-definition.html
-DROP TRIGGER IF EXISTS update_effective_location ON ${myuniversity}_${mymodule}.item;
+DROP TRIGGER IF EXISTS update_effective_location ON ${myuniversity}_${mymodule}.item_log;
 create trigger update_effective_location before insert or update
-on ${myuniversity}_${mymodule}.item for each row execute procedure ${myuniversity}_${mymodule}.update_effective_location_on_item_update();
+on ${myuniversity}_${mymodule}.item_log for each row execute procedure ${myuniversity}_${mymodule}.update_effective_location_on_item_update();

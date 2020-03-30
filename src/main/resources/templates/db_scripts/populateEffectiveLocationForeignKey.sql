@@ -1,1 +1,1 @@
-UPDATE ${myuniversity}_${mymodule}.item SET effectiveLocationId = (jsonb->>'effectiveLocationId')::uuid;
+UPDATE ${myuniversity}_${mymodule}.item_log SET effectiveLocationId = (jsonb->>'effectiveLocationId')::uuid;

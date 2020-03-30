@@ -312,8 +312,8 @@
       ]
     },
     {
-      "tableName": "instance",
-      "fromModuleVersion": "17.1.0",
+      "tableName": "instance_log",
+      "fromModuleVersion": "19.2.0-SNAPSHOT",
       "withMetadata": true,
       "foreignKeys": [
         {
@@ -443,12 +443,12 @@
       "foreignKeys": [
         {
           "fieldName": "superInstanceId",
-          "targetTable": "instance",
+          "targetTable": "instance_log",
           "tOps": "ADD"
         },
         {
           "fieldName": "subInstanceId",
-          "targetTable": "instance",
+          "targetTable": "instance_log",
           "tOps": "ADD"
         },
         {
@@ -541,13 +541,13 @@
       ]
     },
     {
-      "tableName": "holdings_record",
-      "fromModuleVersion": "19.0.0",
+      "tableName": "holdings_record_log",
+      "fromModuleVersion": "19.2.0-SNAPSHOT",
       "withMetadata": true,
       "foreignKeys": [
         {
           "fieldName": "instanceId",
-          "targetTable": "instance",
+          "targetTable": "instance_log",
           "tableAlias" : "holdingsRecords",
           "tOps": "ADD"
         },
@@ -607,22 +607,22 @@
       ]
     },
     {
-      "tableName": "item",
+      "tableName": "item_log",
       "withMetadata": true,
-      "fromModuleVersion": "19.0.0",
+      "fromModuleVersion": "19.2.0-SNAPSHOT",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
-          "targetTable": "holdings_record",
+          "targetTable": "holdings_record_log",
           "targetTableAlias" : "holdingsRecords",
-          "tableAlias": "item",
+          "tableAlias": "item_log",
           "tOps": "ADD"
         },
         {
           "targetPath": ["holdingsRecordId", "instanceId"],
-          "targetTable":      "instance",
-          "targetTableAlias": "instance",
-          "tableAlias": "item"
+          "targetTable":      "instance_log",
+          "targetTableAlias": "instance_log",
+          "tableAlias": "item_log"
         },
         {
           "fieldName": "permanentLoanTypeId",
@@ -731,11 +731,11 @@
       "foreignKeys": [
         {
           "fieldName": "precedingInstanceId",
-          "targetTable": "instance"
+          "targetTable": "instance_log"
         },
         {
           "fieldName": "succeedingInstanceId",
-          "targetTable": "instance"
+          "targetTable": "instance_log"
         }
       ],
       "customSnippetPath": "alterPrecedingSucceedingTitle.sql"

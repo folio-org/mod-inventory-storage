@@ -13,8 +13,8 @@ AS $function$
 	END;
 $function$  LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS set_instance_status_updated_date ON ${myuniversity}_${mymodule}.instance;
+DROP TRIGGER IF EXISTS set_instance_status_updated_date ON ${myuniversity}_${mymodule}.instance_log;
 
 CREATE TRIGGER set_instance_status_updated_date BEFORE
-UPDATE ON ${myuniversity}_${mymodule}.instance
+UPDATE ON ${myuniversity}_${mymodule}.instance_log
 FOR EACH ROW EXECUTE PROCEDURE ${myuniversity}_${mymodule}.set_instance_status_updated_date();

@@ -1,4 +1,4 @@
-UPDATE ${myuniversity}_${mymodule}.item AS it
+UPDATE ${myuniversity}_${mymodule}.item_log AS it
 SET jsonb = jsonb_set(
   it.jsonb,
   '{effectiveCallNumberComponents}',
@@ -9,5 +9,5 @@ SET jsonb = jsonb_set(
     'typeId', COALESCE(it.jsonb->'itemLevelCallNumberTypeId', hr.jsonb->'callNumberTypeId')
   )
 )
-FROM ${myuniversity}_${mymodule}.holdings_record AS hr
+FROM ${myuniversity}_${mymodule}.holdings_record_log AS hr
 WHERE hr.id = it.holdingsrecordid;

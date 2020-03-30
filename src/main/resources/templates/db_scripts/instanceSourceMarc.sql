@@ -1,5 +1,5 @@
 ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
-  ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance;
+  ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance_log;
 
 -- Trigger: If instance changes then enforce a correct value in instance.jsonb->sourceRecordFormat
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.set_instance_sourceRecordFormat()
@@ -18,9 +18,9 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.set_instance_sourceRecord
     RETURN NEW;
   END;
   $$ language 'plpgsql';
-DROP TRIGGER IF EXISTS set_instance_sourceRecordFormat ON ${myuniversity}_${mymodule}.instance CASCADE;
+DROP TRIGGER IF EXISTS set_instance_sourceRecordFormat ON ${myuniversity}_${mymodule}.instance_log CASCADE;
 CREATE TRIGGER set_instance_sourceRecordFormat
-  BEFORE INSERT OR UPDATE ON ${myuniversity}_${mymodule}.instance
+  BEFORE INSERT OR UPDATE ON ${myuniversity}_${mymodule}.instance_log
   FOR EACH ROW EXECUTE PROCEDURE ${myuniversity}_${mymodule}.set_instance_sourceRecordFormat();
 
 -- Trigger: If instance_source_marc changes then update instance.jsonb->sourceRecordFormat
@@ -28,11 +28,11 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.update_${table.tableName}
   RETURNS TRIGGER AS $$
   BEGIN
     IF (TG_OP = 'DELETE') THEN
-      UPDATE ${myuniversity}_${mymodule}.instance
+      UPDATE ${myuniversity}_${mymodule}.instance_log
         SET jsonb = jsonb - 'sourceRecordFormat'
         WHERE id = OLD.id;
     ELSE
-      UPDATE ${myuniversity}_${mymodule}.instance
+      UPDATE ${myuniversity}_${mymodule}.instance_log
         SET jsonb = jsonb_set(jsonb, '{sourceRecordFormat}', '"MARC-JSON"')
         WHERE id = NEW.id;
     END IF;

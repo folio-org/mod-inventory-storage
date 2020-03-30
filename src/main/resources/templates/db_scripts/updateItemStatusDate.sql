@@ -20,6 +20,6 @@ AS $$
   END;
   $$ LANGUAGE 'plpgsql';
 
-DROP TRIGGER IF EXISTS update_item_status_date ON ${myuniversity}_${mymodule}.item;
+DROP TRIGGER IF EXISTS update_item_status_date ON ${myuniversity}_${mymodule}.item_log;
 CREATE TRIGGER update_item_status_date BEFORE UPDATE
-ON ${myuniversity}_${mymodule}.item FOR EACH ROW EXECUTE PROCEDURE ${myuniversity}_${mymodule}.update_item_status_date();
+ON ${myuniversity}_${mymodule}.item_log FOR EACH ROW EXECUTE PROCEDURE ${myuniversity}_${mymodule}.update_item_status_date();
