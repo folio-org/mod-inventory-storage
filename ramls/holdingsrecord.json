@@ -132,6 +132,7 @@
     },
     "illPolicy": {
       "type": "object",
+      "id": "holdingsIllPolicy",
       "description": "expanded ILL Policy object corresponding to illPolicyId",
       "folio:$ref": "illpolicy.json",
       "readonly": true,
