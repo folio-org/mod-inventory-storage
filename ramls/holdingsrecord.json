@@ -130,6 +130,18 @@
       "description": "unique ID for an ILL policy, a UUID",
       "$ref" : "uuid.json"
     },
+    "illPolicy": {
+      "type": "object",
+      "id": "holdingsIllPolicy",
+      "description": "expanded ILL Policy object corresponding to illPolicyId",
+      "folio:$ref": "illpolicy.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "ill-policies",
+      "folio:linkFromField": "illPolicyId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "illPolicies.0"
+    },
     "retentionPolicy": {
       "type": "string",
       "description": "Records information regarding how long we have agreed to keep something."
