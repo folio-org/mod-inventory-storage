@@ -7,8 +7,11 @@ BEGIN
   IF n > 0 THEN
     RETURN;
   END IF;
-  -- Edelweiss versions: 18.*.* (18.0.0 - 18.2.3)
-  IF regexp_match('${version}', '^(?:mod-inventory-storage-)?18\.') IS NOT NULL THEN
+  CASE '${version}'  -- previous module version taken from the /_/tenant POST module_from variable
+  WHEN '18.2.3', 'mod-inventory-storage-18.2.3',
+       '18.2.2', 'mod-inventory-storage-18.2.2',
+       '18.2.1', 'mod-inventory-storage-18.2.1' THEN
+    -- Edelweiss versions 18.2.1 - 18.2.3; earlier versions don't have left(..., 600) index truncation
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('alternative_title_type_name_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS alternative_title_type_name_idx_unique ON ${myuniversity}_${mymodule}.alternative_title_type (lower(f_unaccent(jsonb->>''name'')))', false);
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('call_number_type_name_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS call_number_type_name_idx_unique ON ${myuniversity}_${mymodule}.call_number_type (lower(f_unaccent(jsonb->>''name'')))', false);
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('classification_type_name_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS classification_type_name_idx_unique ON ${myuniversity}_${mymodule}.classification_type (lower(f_unaccent(jsonb->>''name'')))', false);
@@ -69,10 +72,8 @@ BEGIN
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('service_point_user_userId_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS service_point_user_userId_idx_unique ON ${myuniversity}_${mymodule}.service_point_user (lower(f_unaccent(jsonb->>''userId'')))', false);
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('statistical_code_code_statisticalCodeTypeId_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS statistical_code_code_statisticalCodeTypeId_idx_unique ON ${myuniversity}_${mymodule}.statistical_code (lower(f_unaccent(jsonb->>''code'')) , lower(f_unaccent(jsonb->>''statisticalCodeTypeId'')))', false);
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('statistical_code_type_code_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS statistical_code_type_code_idx_unique ON ${myuniversity}_${mymodule}.statistical_code_type (lower(f_unaccent(jsonb->>''code'')))', false);
-    RETURN;
-  END IF;
-  -- 19.0.* or 19.1.0
-  IF regexp_match('${version}', '^(?:mod-inventory-storage-)?(?:19\.0\.|19\.1\.0)') IS NOT NULL THEN
+  WHEN '19.0.0', 'mod-inventory-storage-19.0.0',
+       '19.1.0', 'mod-inventory-storage-19.1.0' THEN
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('alternative_title_type_name_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS alternative_title_type_name_idx_unique ON ${myuniversity}_${mymodule}.alternative_title_type (lower(f_unaccent(jsonb->>''name'')))', false);
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('call_number_type_name_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS call_number_type_name_idx_unique ON ${myuniversity}_${mymodule}.call_number_type (lower(f_unaccent(jsonb->>''name'')))', false);
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('classification_type_name_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS classification_type_name_idx_unique ON ${myuniversity}_${mymodule}.classification_type (lower(f_unaccent(jsonb->>''name'')))', false);
@@ -134,6 +135,7 @@ BEGIN
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('service_point_user_userId_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS service_point_user_userId_idx_unique ON ${myuniversity}_${mymodule}.service_point_user (lower(f_unaccent(jsonb->>''userId'')))', false);
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('statistical_code_code_statisticalCodeTypeId_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS statistical_code_code_statisticalCodeTypeId_idx_unique ON ${myuniversity}_${mymodule}.statistical_code (lower(f_unaccent(jsonb->>''code'')) , lower(f_unaccent(jsonb->>''statisticalCodeTypeId'')))', false);
     INSERT INTO ${myuniversity}_${mymodule}.rmb_internal_index VALUES ('statistical_code_type_code_idx_unique', 'CREATE UNIQUE INDEX IF NOT EXISTS statistical_code_type_code_idx_unique ON ${myuniversity}_${mymodule}.statistical_code_type (lower(f_unaccent(jsonb->>''code'')))', false);
-    RETURN;
-  END IF;
+  ELSE
+    -- nothing to do, this results in rebuilding all indexes because we haven't investigated which indexes are exactly the same
+  END CASE;
 END $$;
