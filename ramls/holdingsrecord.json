@@ -138,7 +138,7 @@
       "folio:linkBase": "ill-policies",
       "folio:linkFromField": "illPolicyId",
       "folio:linkToField": "id",
-      "folio:includedElement": "."
+      "folio:includedElement": "illPolicies.0"
     },
     "retentionPolicy": {
       "type": "string",
