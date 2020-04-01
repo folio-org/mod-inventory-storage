@@ -434,6 +434,11 @@
           "fieldName": "identifiers",
           "arraySubfield" : "value",
           "arrayModifiers": ["identifierTypeId"]
+        },
+        {
+          "fieldName": "isbn",
+          "sqlExpression" : "normalize_isbns(jsonb->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
         }
       ]
     },
@@ -742,6 +747,16 @@
     }
   ],
   "scripts": [
+    {
+      "run": "before",
+      "snippetPath": "populateRmbInternalIndex.sql",
+      "fromModuleVersion": "19.1.1"
+    },
+    {
+      "run": "before",
+      "snippetPath": "create-normalize_isbns-function.sql",
+      "fromModuleVersion": "19.2.0"
+    },
     {
       "run": "after",
       "snippetPath": "itemEffectiveLocation.sql",
