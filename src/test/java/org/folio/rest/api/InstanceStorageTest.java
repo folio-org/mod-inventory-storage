@@ -1268,6 +1268,43 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       secondInstance.isPresent(), is(true));
   }
 
+  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
+
+  @Test
+  public void canSearchForFirstIsbnWithAdditionalHyphens() {
+    canSort("isbn = 0-552-16754-1",      "Interesting Times");
+  }
+
+  @Test
+  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
+    canSort("isbn = 05-5*",              "Interesting Times");
+  }
+
+  @Test
+  public void canSearchForSecondIsbnWithMissingHyphens() {
+    canSort("isbn = 9780552167543",      "Interesting Times");
+  }
+
+  @Test
+  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
+    canSort("isbn = 9780* sortBy title", "Interesting Times", "Temeraire");
+  }
+
+  @Test
+  public void canSearchForSecondIsbnWithAlteredHyphens() {
+    canSort("isbn = 9-7-8-055-2167-543", "Interesting Times");
+  }
+
+  @Test
+  public void cannotFindIsbnWithTailString() {
+    canSort("isbn = 552-16754-3");
+  }
+
+  @Test
+  public void cannotFindIsbnWithInnerStringAndTruncation() {
+    canSort("isbn = 552*");
+  }
+
   @Test
   public void canSortAscending() {
     canSort("cql.allRecords=1 sortBy title",
@@ -2500,7 +2537,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private JsonObject interestingTimes(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "0552167541"));
-    identifiers.add(identifier(UUID_ISBN, "9780552167541"));
+    identifiers.add(identifier(UUID_ISBN, "978-0-552-16754-3"));
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Pratchett, Terry"));
