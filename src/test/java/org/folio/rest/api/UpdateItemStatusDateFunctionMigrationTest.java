@@ -26,7 +26,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
-public class UpdateItemStatusDateMigrationTest extends MigrationTestBase {
+public class UpdateItemStatusDateFunctionMigrationTest extends MigrationTestBase {
   @Parameters({
     "18.2.3, 19.1.1",
     "18.2.3, 19.2.0",
@@ -54,7 +54,7 @@ public class UpdateItemStatusDateMigrationTest extends MigrationTestBase {
     // The new function won't add the 'OLD ' prefix, and will work as expected.
     assertThat(updatedStatus.getString("name"), is("Checked out"));
     assertThat(updatedStatus.getString("date"), not(startsWith("OLD")));
-    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(2)));
+    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(1)));
   }
 
   private void upgradeTenant(String fromVersion, String toVersion) throws InterruptedException,
