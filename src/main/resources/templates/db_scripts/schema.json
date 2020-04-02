@@ -780,7 +780,7 @@
     {
       "run": "after",
       "snippetPath": "updateItemStatusDate.sql",
-      "fromModuleVersion": "17.1.0"
+      "fromModuleVersion": "19.1.2"
     },
     {
       "run": "after",

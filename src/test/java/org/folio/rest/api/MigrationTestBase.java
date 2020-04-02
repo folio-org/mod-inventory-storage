@@ -4,6 +4,7 @@ package org.folio.rest.api;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -13,7 +14,7 @@ import java.util.function.UnaryOperator;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.util.ResourceUtil;
 
-import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.UpdateResult;
 
 abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
@@ -52,9 +53,8 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     final CompletableFuture<Void> result = new CompletableFuture<>();
-    final Vertx vertx = StorageTestSuite.getVertx();
 
-    PostgresClient.getInstance(vertx).runSQLFile(allStatements, true, handler -> {
+    getPostgresClient().runSQLFile(allStatements, true, handler -> {
       if (handler.failed()) {
         result.completeExceptionally(handler.cause());
       } else if (!handler.result().isEmpty()) {
@@ -71,9 +71,8 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     final CompletableFuture<UpdateResult> result = new CompletableFuture<>();
-    final Vertx vertx = StorageTestSuite.getVertx();
 
-    PostgresClient.getInstance(vertx).execute(sql, updateResult -> {
+    getPostgresClient().execute(sql, updateResult -> {
       if (updateResult.failed()) {
         result.completeExceptionally(updateResult.cause());
       } else {
@@ -104,5 +103,25 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     return executeSql(String.format(
       "UPDATE %s.%s as tbl SET jsonb = tbl.jsonb - '%s' WHERE id::text = '%s'",
       getSchemaName(), tableName, propertyName, id.toString()));
+  }
+
+  List<JsonArray> executeSelect(String selectQuery, Object... args)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    final CompletableFuture<List<JsonArray>> result = new CompletableFuture<>();
+    getPostgresClient().select(String.format(replaceSchema(selectQuery), args),
+      resultSet -> {
+        if (resultSet.failed()) {
+          result.completeExceptionally(resultSet.cause());
+        } else {
+          result.complete(resultSet.result().getResults());
+        }
+      });
+
+    return result.get(5, SECONDS);
+  }
+
+  private PostgresClient getPostgresClient() {
+    return PostgresClient.getInstance(StorageTestSuite.getVertx());
   }
 }
