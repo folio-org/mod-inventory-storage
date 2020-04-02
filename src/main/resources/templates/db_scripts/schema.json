@@ -412,6 +412,18 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "staffSuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "discoverySuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "fullTextIndex": [
@@ -608,6 +620,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "discoverySuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ]
     },
@@ -696,6 +714,12 @@
         {
           "fieldName": "fullCallNumber",
           "multiFieldNames": "effectiveCallNumberComponents.prefix, effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "discoverySuppress",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
