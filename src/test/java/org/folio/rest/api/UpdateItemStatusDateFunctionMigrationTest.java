@@ -31,8 +31,8 @@ public class UpdateItemStatusDateFunctionMigrationTest extends MigrationTestBase
     // Here only the "from" version is in play, since 18.2.3 < 19.2.0 (fromModuleVersion of the script)
     // then the upgrade will be executed and new version of the function will be deployed.
     "18.2.3, 19.1.1",
-    "18.2.3, 19.2.0",
-    "19.1.1, 19.2.0",
+    "18.2.3, 19.1.2",
+    "19.1.1, 19.1.2",
     "19.1.1, 20.0.0",
   })
   @Test
