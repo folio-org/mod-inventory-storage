@@ -45,8 +45,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.core.IsCollectionContaining.hasItem;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.hamcrest.core.IsIterableContaining.hasItem;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
@@ -1900,6 +1901,43 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     for (int i=0; i<holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
     }
+  }
+
+  @Test
+  public void canSearchByDiscoverySuppressProperty() throws Exception {
+    final IndividualResource instance = instancesClient
+      .create(smallAngryPlanet(UUID.randomUUID()));
+
+    final IndividualResource suppressedHolding = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId)
+        .withDiscoverySuppress(true));
+
+    final IndividualResource notSuppressedHolding = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId)
+        .withDiscoverySuppress(false));
+
+    final IndividualResource notSuppressedHoldingDefault = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withPermanentLocation(mainLibraryLocationId));
+
+    final List<IndividualResource> suppressedHoldings = holdingsClient
+      .getMany("discoverySuppress==true");
+    final List<IndividualResource> notSuppressedHoldings = holdingsClient
+      .getMany("cql.allRecords=1 not discoverySuppress==true");
+
+    assertThat(suppressedHoldings.size(), is(1));
+    assertThat(suppressedHoldings.get(0).getId(), is(suppressedHolding.getId()));
+
+    assertThat(notSuppressedHoldings.size(), is(2));
+    assertThat(notSuppressedHoldings.stream()
+        .map(IndividualResource::getId)
+        .collect(Collectors.toList()),
+      containsInAnyOrder(notSuppressedHolding.getId(), notSuppressedHoldingDefault.getId()));
   }
 
   private JsonObject smallAngryPlanet(UUID id) {
