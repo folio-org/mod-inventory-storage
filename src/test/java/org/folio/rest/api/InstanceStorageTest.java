@@ -35,6 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -63,7 +64,7 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 @RunWith(VertxUnitRunner.class)
@@ -75,6 +76,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
   private static final Logger log = LoggerFactory.getLogger(InstanceStorageTest.class);
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
+  private static final String STAFF_SUPPRESS = "staffSuppress";
 
   private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
@@ -2345,6 +2347,50 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .put(DISCOVERY_SUPPRESS, true));
 
     assertSuppressedFromDiscovery(instance.getId().toString());
+  }
+
+  @Test
+  public void canSearchByDiscoverySuppressProperty() throws Exception {
+    final IndividualResource suppressedInstance = createInstance(smallAngryPlanet(UUID.randomUUID())
+      .put(DISCOVERY_SUPPRESS, true));
+    final IndividualResource notSuppressedInstance = createInstance(
+      smallAngryPlanet(UUID.randomUUID()));
+
+    final List<IndividualResource> suppressedInstances = instancesClient
+      .getMany("%s==true", DISCOVERY_SUPPRESS);
+    final List<IndividualResource> notSuppressedInstances = instancesClient
+      .getMany("%s==false", DISCOVERY_SUPPRESS);
+
+    assertThat(suppressedInstances.size(), is(1));
+    assertThat(suppressedInstances.get(0).getId(), is(suppressedInstance.getId()));
+
+    assertThat(notSuppressedInstances.size(), is(1));
+    assertThat(notSuppressedInstances.get(0).getId(), is(notSuppressedInstance.getId()));
+  }
+
+  @Test
+  public void canSearchByStaffSuppressProperty() throws Exception {
+    final IndividualResource suppressedInstance = createInstance(smallAngryPlanet(UUID.randomUUID())
+      .put(STAFF_SUPPRESS, true));
+    final IndividualResource notSuppressedInstance = createInstance(
+      smallAngryPlanet(UUID.randomUUID())
+        .put(STAFF_SUPPRESS, false));
+    final IndividualResource notSuppressedInstanceDefault = createInstance(
+      smallAngryPlanet(UUID.randomUUID()));
+
+    final List<IndividualResource> suppressedInstances = instancesClient
+      .getMany("%s==true", STAFF_SUPPRESS);
+    final List<IndividualResource> notSuppressedInstances = instancesClient
+      .getMany("cql.allRecords=1 not %s==true", STAFF_SUPPRESS);
+
+    assertThat(suppressedInstances.size(), is(1));
+    assertThat(suppressedInstances.get(0).getId(), is(suppressedInstance.getId()));
+
+    assertThat(notSuppressedInstances.size(), is(2));
+    assertThat(notSuppressedInstances.stream()
+        .map(IndividualResource::getId)
+        .collect(Collectors.toList()),
+      containsInAnyOrder(notSuppressedInstance.getId(), notSuppressedInstanceDefault.getId()));
   }
 
   private void setInstanceSequence(long sequenceNumber) {
