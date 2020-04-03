@@ -1307,6 +1307,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     canSort("isbn = 552*");
   }
 
+  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
+  // and an invalid ISBNs: 1-2-3-4-5
+
+  @Test
+  public void canFindFirstInvalidIsbn() {
+    canSort("invalidIsbn = 12345", "Interesting Times");
+  }
+
+  @Test
+  public void cannotFindIsbnInInvalidIsbn() {
+    canSort("invalidIsbn = 0552167541");
+  }
+
+  @Test
+  public void cannotFindInvalidIsbnInIsbn() {
+    canSort("isbn = 12345");
+  }
+
   @Test
   public void canSortAscending() {
     canSort("cql.allRecords=1 sortBy title",
@@ -2584,6 +2602,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "0552167541"));
     identifiers.add(identifier(UUID_ISBN, "978-0-552-16754-3"));
+    identifiers.add(identifier(UUID_INVALID_ISBN, "1-2-3-4-5"));
 
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Pratchett, Terry"));
