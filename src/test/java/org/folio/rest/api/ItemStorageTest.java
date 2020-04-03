@@ -2094,22 +2094,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       containsInAnyOrder(notSuppressedItem.getId(), notSuppressedItemDefault.getId()));
   }
 
-  @SuppressWarnings("unused")
-  private Set<String> getAllowedItemStatuses() throws IOException {
-    final String itemJson = new String(readAllBytes(get("ramls/item.json")),
-      StandardCharsets.UTF_8);
-
-    final JsonObject itemSchema = new JsonObject(itemJson);
-
-    JsonArray allowedStatuses = itemSchema.getJsonObject("properties")
-      .getJsonObject("status").getJsonObject("properties")
-      .getJsonObject("name").getJsonArray("enum");
-
-    return allowedStatuses.stream()
-      .map(element -> (String) element)
-      .collect(Collectors.toSet());
-  }
-
   private Response getById(UUID id) throws InterruptedException,
     ExecutionException, TimeoutException {
 
