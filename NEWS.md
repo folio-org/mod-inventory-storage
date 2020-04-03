@@ -1,3 +1,8 @@
+## 19.1.2 2020-04-03
+
+* Upgrades function for updating item status changed date (MODINVSTOR-470)
+* Adds b-tree indexes for `staffSuppress` and `discoverySuppress` properties (MODINVSTOR-473)
+
 ## 19.1.1 2020-03-26
 
 * Smart index recreation for upgrades from 18.2.3 ([MODINVSTOR-459](https://issues.folio.org/browse/MODINVSTOR-459))
