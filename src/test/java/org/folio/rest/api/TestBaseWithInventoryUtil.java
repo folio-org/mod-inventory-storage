@@ -70,6 +70,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   // These UUIDs were taken from reference-data folder.
   // When the vertical gets started the data from the reference-data folder are loaded to the DB.
   // see org.folio.rest.impl.TenantRefAPI.refPaths
+  protected static final UUID UUID_INVALID_ISBN = UUID.fromString("fcca2643-406a-482a-b760-7a7f8aec640e");
   protected static final UUID UUID_ISBN = UUID.fromString("8261054f-be78-422d-bd51-4ed9f33c3422");
   protected static final UUID UUID_ASIN = UUID.fromString("7f907515-a1bf-4513-8a38-92e1a07c539d");
   protected static final UUID UUID_PERSONAL_NAME = UUID.fromString("2b94c631-fca9-4892-a730-03ee529ffe2a");
