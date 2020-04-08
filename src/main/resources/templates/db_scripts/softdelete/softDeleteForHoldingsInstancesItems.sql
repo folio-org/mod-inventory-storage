@@ -1,18 +1,20 @@
--- add deleted_date field to the tables
+-- ADD deleted_date field to the tables
+-- create indexes on deleted date
 -- rename instance, holdings and item tables
--- create index on deleted date (?)
--- Create views ith the name of the corresponding tables to filter rows with no deleted date
+-- create views with the name of the corresponding tables
 
-alter table ${myuniversity}_${mymodule}.instance add "deleted_date" timestamp;
-alter table ${myuniversity}_${mymodule}.item add "deleted_date" timestamp;
-alter table ${myuniversity}_${mymodule}.holdings_record add "deleted_date" timestamp;
+ALTER TABLE ${myuniversity}_${mymodule}.instance ADD "deleted_date" TIMESTAMP;
+ALTER TABLE ${myuniversity}_${mymodule}.item ADD "deleted_date" TIMESTAMP;
+ALTER TABLE ${myuniversity}_${mymodule}.holdings_record ADD "deleted_date" TIMESTAMP;
 --
---create index instance_log__index on ${myuniversity}_${mymodule}.instance (deleted_date);
+create index instance_deleted_date__index on ${myuniversity}_${mymodule}.instance (deleted_date);
+create index item_deleted_date__index on ${myuniversity}_${mymodule}.item (deleted_date);
+create index holdings_record_deleted_date__index on ${myuniversity}_${mymodule}.holdings_record (deleted_date);
 --
-alter table ${myuniversity}_${mymodule}.instance rename to instance_log;
-alter table ${myuniversity}_${mymodule}.item rename to item_log;
-alter table ${myuniversity}_${mymodule}.holdings_record rename to holdings_record_log;
+ALTER TABLE ${myuniversity}_${mymodule}.instance RENAME TO instance_log;
+ALTER TABLE ${myuniversity}_${mymodule}.item RENAME TO item_log;
+ALTER TABLE ${myuniversity}_${mymodule}.holdings_record RENAME TO holdings_record_log;
 --
-CREATE OR REPLACE VIEW instance AS SELECT * from instance_log where deleted_date IS NULL;
-CREATE OR REPLACE VIEW holdings_record AS SELECT * from holdings_record_log where deleted_date IS NULL;
-CREATE OR REPLACE VIEW item AS SELECT * from item_log where deleted_date IS NULL;
+CREATE OR REPLACE VIEW instance AS SELECT * FROM instance_log WHERE deleted_date IS NULL;
+CREATE OR REPLACE VIEW holdings_record AS SELECT * FROM holdings_record_log WHERE deleted_date IS NULL;
+CREATE OR REPLACE VIEW item AS SELECT * FROM item_log WHERE deleted_date IS NULL;

@@ -338,14 +338,14 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   private void disableTriggers() {
-    runSql("DROP TRIGGER IF EXISTS update_effective_location_for_items ON test_tenant_mod_inventory_storage.holdings_record");
-    runSql("DROP TRIGGER IF EXISTS update_effective_location           ON test_tenant_mod_inventory_storage.item");
+    runSql("DROP TRIGGER IF EXISTS update_effective_location_for_items ON test_tenant_mod_inventory_storage.holdings_record_log");
+    runSql("DROP TRIGGER IF EXISTS update_effective_location           ON test_tenant_mod_inventory_storage.item_log");
   }
 
   private void enableTriggers() {
-    runSql("create trigger update_effective_location_for_items after update on test_tenant_mod_inventory_storage.holdings_record "
+    runSql("create trigger update_effective_location_for_items after update on test_tenant_mod_inventory_storage.holdings_record_log "
         + "for each row execute procedure test_tenant_mod_inventory_storage.update_effective_location_on_holding_update()");
-    runSql("create trigger update_effective_location before insert or update on test_tenant_mod_inventory_storage.item "
+    runSql("create trigger update_effective_location before insert or update on test_tenant_mod_inventory_storage.item_log "
         + "for each row execute procedure test_tenant_mod_inventory_storage.update_effective_location_on_item_update()");
   }
 

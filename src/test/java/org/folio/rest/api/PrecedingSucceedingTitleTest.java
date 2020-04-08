@@ -199,7 +199,7 @@ public class PrecedingSucceedingTitleTest extends TestBase {
 
     assertThat(response.getStatusCode(), is(HttpResponseStatus.UNPROCESSABLE_ENTITY.code()));
     assertErrors(response, "Cannot set preceding_succeeding_title.precedinginstanceid = " +
-      "14b65645-2e49-4a85-8dc1-43d444710570 because it does not exist in instance.id.");
+      "14b65645-2e49-4a85-8dc1-43d444710570 because it does not exist in instance_log.id.");
   }
 
   @Test
@@ -219,7 +219,7 @@ public class PrecedingSucceedingTitleTest extends TestBase {
 
     assertThat(response.getStatusCode(), is(HttpResponseStatus.UNPROCESSABLE_ENTITY.code()));
     assertErrors(response, "Cannot set preceding_succeeding_title.succeedinginstanceid = " +
-      "14b65645-2e49-4a85-8dc1-43d444710570 because it does not exist in instance.id.");
+      "14b65645-2e49-4a85-8dc1-43d444710570 because it does not exist in instance_log.id.");
   }
 
   @Test
