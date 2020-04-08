@@ -1,5 +1,5 @@
--- ADD deleted_date field to the tables
--- create indexes on deleted date
+-- add deleted_date field to the tables
+-- create indexees on deleted date
 -- rename instance, holdings and item tables
 -- create views with the name of the corresponding tables
 
@@ -7,9 +7,9 @@ ALTER TABLE ${myuniversity}_${mymodule}.instance ADD "deleted_date" TIMESTAMP;
 ALTER TABLE ${myuniversity}_${mymodule}.item ADD "deleted_date" TIMESTAMP;
 ALTER TABLE ${myuniversity}_${mymodule}.holdings_record ADD "deleted_date" TIMESTAMP;
 --
-create index instance_deleted_date__index on ${myuniversity}_${mymodule}.instance (deleted_date);
-create index item_deleted_date__index on ${myuniversity}_${mymodule}.item (deleted_date);
-create index holdings_record_deleted_date__index on ${myuniversity}_${mymodule}.holdings_record (deleted_date);
+CREATE INDEX instance_deleted_date__index ON ${myuniversity}_${mymodule}.instance (deleted_date);
+CREATE INDEX item_deleted_date__index ON ${myuniversity}_${mymodule}.item (deleted_date);
+CREATE INDEX holdings_record_deleted_date__index ON ${myuniversity}_${mymodule}.holdings_record (deleted_date);
 --
 ALTER TABLE ${myuniversity}_${mymodule}.instance RENAME TO instance_log;
 ALTER TABLE ${myuniversity}_${mymodule}.item RENAME TO item_log;
