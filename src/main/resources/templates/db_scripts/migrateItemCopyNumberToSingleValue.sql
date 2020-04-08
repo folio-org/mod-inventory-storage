@@ -1,10 +1,10 @@
 START TRANSACTION;
 
-UPDATE pg_trigger
-  SET tgenabled = 'D'
-WHERE tgrelid = '${myuniversity}_${mymodule}.item'::regclass::oid
-  AND tgisinternal IS FALSE
-  AND tgenabled = 'O';
+--UPDATE pg_trigger
+--  SET tgenabled = 'D'
+--WHERE tgrelid = '${myuniversity}_${mymodule}.item'::regclass::oid
+--  AND tgisinternal IS FALSE
+--  AND tgenabled = 'O';
 
 UPDATE ${myuniversity}_${mymodule}.item
 SET jsonb = CASE WHEN
@@ -15,10 +15,10 @@ SET jsonb = CASE WHEN
 END
 WHERE jsonb->'copyNumbers' IS NOT NULL;
 
-UPDATE pg_trigger
-  SET tgenabled = 'O'
-WHERE tgrelid = '${myuniversity}_${mymodule}.item'::regclass::oid
-  AND tgisinternal IS FALSE
-  AND tgenabled = 'D';
+--UPDATE pg_trigger
+--  SET tgenabled = 'O'
+--WHERE tgrelid = '${myuniversity}_${mymodule}.item'::regclass::oid
+--  AND tgisinternal IS FALSE
+--  AND tgenabled = 'D';
 
 END TRANSACTION;
