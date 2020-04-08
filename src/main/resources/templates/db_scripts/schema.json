@@ -313,7 +313,7 @@
     },
     {
       "tableName": "instance",
-      "fromModuleVersion": "17.1.0",
+      "fromModuleVersion": "19.2.0",
       "withMetadata": true,
       "foreignKeys": [
         {
@@ -564,7 +564,7 @@
     },
     {
       "tableName": "holdings_record",
-      "fromModuleVersion": "19.0.0",
+      "fromModuleVersion": "19.2.0",
       "withMetadata": true,
       "foreignKeys": [
         {
@@ -637,7 +637,7 @@
     {
       "tableName": "item",
       "withMetadata": true,
-      "fromModuleVersion": "19.0.0",
+      "fromModuleVersion": "19.2.0",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
@@ -849,6 +849,11 @@
     {
       "run": "after",
       "snippetPath": "removeOldPrecedingSucceedingTitles.sql",
+      "fromModuleVersion": "19.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "softdelete/softDeleteForHoldingsInstancesItems.sql",
       "fromModuleVersion": "19.2.0"
     }
   ]
