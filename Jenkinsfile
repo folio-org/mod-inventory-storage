@@ -6,11 +6,11 @@ buildMvn {
   mvnDeploy = 'yes'
   runLintRamlCop = 'yes'
   doKubeDeploy = true
-  publishPreview = true
+  publishPreview = false
 
   doDocker = {
     buildJavaDocker {
-      publishPreview = true
+      publishPreview = false
       publishMaster = 'yes'
       healthChk = 'yes'
       healthChkCmd = 'curl -sS --fail -o /dev/null  http://localhost:8081/apidocs/ || exit 1'
