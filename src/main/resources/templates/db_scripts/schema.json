@@ -317,18 +317,8 @@
       "withMetadata": true,
       "withAuditing": true,
       "auditingTableName": "audit_instance",
-      "auditingFieldName": "instance",
-      "auditingSnippet": {
-        "delete": {
-          "statement": "jsonb = jsonb_build_object('id', uuid, 'operation', to_jsonb(left(TG_OP, 1)), 'deletedDate', to_jsonb(current_timestamp::text));"
-        },
-        "insert": {
-          "statement" : "return null;"
-        },
-        "update": {
-          "statement" : "return null;"
-        }
-      },
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
       "foreignKeys": [
         {
           "fieldName": "instanceStatusId",
@@ -582,18 +572,8 @@
       "withMetadata": true,
       "withAuditing": true,
       "auditingTableName": "audit_holdings_record",
-      "auditingFieldName": "holding",
-      "auditingSnippet": {
-        "delete": {
-          "statement": "jsonb = jsonb_build_object('id', uuid, 'operation', to_jsonb(left(TG_OP, 1)), 'deletedDate', to_jsonb(current_timestamp::text));"
-        },
-        "insert": {
-          "statement" : "return null;"
-        },
-        "update": {
-          "statement" : "return null;"
-        }
-      },
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
       "foreignKeys": [
         {
           "fieldName": "instanceId",
@@ -668,18 +648,8 @@
       "fromModuleVersion": "19.2.0",
       "withAuditing": true,
       "auditingTableName": "audit_item",
-      "auditingFieldName": "item",
-      "auditingSnippet": {
-        "delete": {
-          "statement": "jsonb = jsonb_build_object('id', uuid, 'operation', to_jsonb(left(TG_OP, 1)), 'deletedDate', to_jsonb(current_timestamp::text));"
-        },
-        "insert": {
-          "statement" : "return null;"
-        },
-        "update": {
-          "statement" : "return null;"
-        }
-      },
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
