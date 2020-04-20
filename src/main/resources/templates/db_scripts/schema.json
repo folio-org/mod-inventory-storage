@@ -313,8 +313,12 @@
     },
     {
       "tableName": "instance",
-      "fromModuleVersion": "17.1.0",
+      "fromModuleVersion": "19.2.0",
       "withMetadata": true,
+      "withAuditing": true,
+      "auditingTableName": "audit_instance",
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
       "foreignKeys": [
         {
           "fieldName": "instanceStatusId",
@@ -412,6 +416,18 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
+        },
+        {
+          "fieldName": "staffSuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "discoverySuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "fullTextIndex": [
@@ -434,6 +450,16 @@
           "fieldName": "identifiers",
           "arraySubfield" : "value",
           "arrayModifiers": ["identifierTypeId"]
+        },
+        {
+          "fieldName": "invalidIsbn",
+          "sqlExpression" : "normalize_invalid_isbns(jsonb->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
+        },
+        {
+          "fieldName": "isbn",
+          "sqlExpression" : "normalize_isbns(jsonb->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
         }
       ]
     },
@@ -542,8 +568,12 @@
     },
     {
       "tableName": "holdings_record",
-      "fromModuleVersion": "19.0.0",
+      "fromModuleVersion": "19.2.0",
       "withMetadata": true,
+      "withAuditing": true,
+      "auditingTableName": "audit_holdings_record",
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
       "foreignKeys": [
         {
           "fieldName": "instanceId",
@@ -603,13 +633,23 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "discoverySuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ]
     },
     {
       "tableName": "item",
       "withMetadata": true,
-      "fromModuleVersion": "19.0.0",
+      "fromModuleVersion": "19.2.0",
+      "withAuditing": true,
+      "auditingTableName": "audit_item",
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
@@ -694,6 +734,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "discoverySuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "ginIndex": [
@@ -748,6 +794,11 @@
       "fromModuleVersion": "19.1.1"
     },
     {
+      "run": "before",
+      "snippetPath": "createIsbnFunctions.sql",
+      "fromModuleVersion": "19.2.0"
+    },
+    {
       "run": "after",
       "snippetPath": "itemEffectiveLocation.sql",
       "fromModuleVersion": "17.1.0"
@@ -780,7 +831,7 @@
     {
       "run": "after",
       "snippetPath": "updateItemStatusDate.sql",
-      "fromModuleVersion": "17.1.0"
+      "fromModuleVersion": "19.2.0"
     },
     {
       "run": "after",

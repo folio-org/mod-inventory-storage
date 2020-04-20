@@ -2,8 +2,6 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
-import static java.nio.file.Files.readAllBytes;
-import static java.nio.file.Paths.get;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -35,6 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.joda.time.Seconds.seconds;
@@ -42,12 +41,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -93,6 +90,7 @@ import junitparams.Parameters;
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LoggerFactory.getLogger(ItemStorageTest.class);
   private static final String TAG_VALUE = "test-tag";
+  private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
 
   // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
@@ -1925,7 +1923,21 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  @Parameters(method = "getAllowedItemStatuses")
+  @Parameters({
+    "Available",
+    "Awaiting pickup",
+    "Awaiting delivery",
+    "Checked out",
+    "In process",
+    "In transit",
+    "Missing",
+    "On order",
+    "Paged",
+    "Declared lost",
+    "Order closed",
+    "Claimed returned",
+    "Withdrawn"
+  })
   public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -2056,20 +2068,30 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       nonExistentHoldingsRecordId));
   }
 
-  @SuppressWarnings("unused")
-  private Set<String> getAllowedItemStatuses() throws IOException {
-    final String itemJson = new String(readAllBytes(get("ramls/item.json")),
-      StandardCharsets.UTF_8);
+  @Test
+  public void canSearchByDiscoverySuppressProperty() throws Exception {
+    final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
 
-    final JsonObject itemSchema = new JsonObject(itemJson);
+    final IndividualResource suppressedItem = itemsClient.create(
+      smallAngryPlanet(holdingsId).put(DISCOVERY_SUPPRESS, true));
+    final IndividualResource notSuppressedItem = itemsClient.create(
+      smallAngryPlanet(holdingsId).put(DISCOVERY_SUPPRESS, false));
+    final IndividualResource notSuppressedItemDefault = itemsClient.create(
+      smallAngryPlanet(holdingsId));
 
-    JsonArray allowedStatuses = itemSchema.getJsonObject("properties")
-      .getJsonObject("status").getJsonObject("properties")
-      .getJsonObject("name").getJsonArray("enum");
+    final List<IndividualResource> suppressedItems = itemsClient
+      .getMany("%s==true", DISCOVERY_SUPPRESS);
+    final List<IndividualResource> notSuppressedItems = itemsClient
+      .getMany("cql.allRecords=1 not %s==true", DISCOVERY_SUPPRESS);
 
-    return allowedStatuses.stream()
-      .map(element -> (String) element)
-      .collect(Collectors.toSet());
+    assertThat(suppressedItems.size(), is(1));
+    assertThat(suppressedItems.get(0).getId(), is(suppressedItem.getId()));
+
+    assertThat(notSuppressedItems.size(), is(2));
+    assertThat(notSuppressedItems.stream()
+        .map(IndividualResource::getId)
+        .collect(Collectors.toList()),
+      containsInAnyOrder(notSuppressedItem.getId(), notSuppressedItemDefault.getId()));
   }
 
   private Response getById(UUID id) throws InterruptedException,

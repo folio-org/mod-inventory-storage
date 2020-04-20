@@ -11,6 +11,12 @@ public class JsonRequestBuilder {
     }
   }
 
+  protected void put(JsonObject request, String property, Boolean value) {
+    if(value != null) {
+      request.put(property, value);
+    }
+  }
+
   protected void put(JsonObject request, String property, UUID value) {
     if(value != null) {
       request.put(property, value.toString());
