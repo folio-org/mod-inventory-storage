@@ -74,6 +74,17 @@
             "type": "string",
             "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
             "$ref": "uuid.json"
+          },
+          "identifierTypeObject": {
+            "type": "object",
+            "description": "Information about identifier type, looked up from identifierTypeId",
+            "folio:$ref": "illpolicy.json",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "identifier-types",
+            "folio:linkFromField": "identifierTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "identifierTypes.0"
           }
         },
         "additionalProperties": false,
