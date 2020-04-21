@@ -709,7 +709,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     json = searchForInstances("title=foo sortBy title/sort.descending", 1, 3);
     allInstances = json.getJsonArray(INSTANCES_KEY);
     assertThat(allInstances.size(), is(3));
-    assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(999999999));
+    assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(10));
     for (int i=0; i<3; i++) {
       JsonObject instance = allInstances.getJsonObject(i);
       assertThat(instance.getString("title"), is("d foo " + (4 - i)));
