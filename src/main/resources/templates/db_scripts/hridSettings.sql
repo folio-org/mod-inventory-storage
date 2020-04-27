@@ -1,9 +1,11 @@
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- ensure that there will be one row only
+-- Ensure that there will be one row only.
 ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
   ADD COLUMN IF NOT EXISTS
     lock boolean DEFAULT true UNIQUE CHECK(lock=true);
+-- Derive id from tenant, module and table, setting UUID version to 4 and
+-- UUID variant byte to 8.
+-- Don't use pgcrypto gen_random_uuid() because pg-pool cannot replicate
+-- random numbers: https://www.pgpool.net/docs/latest/en/html/restrictions.html
 INSERT INTO ${myuniversity}_${mymodule}.${table.tableName}
   SELECT id, jsonb_build_object(
     'id', id,
@@ -11,7 +13,8 @@ INSERT INTO ${myuniversity}_${mymodule}.${table.tableName}
     'holdings', jsonb_build_object('prefix', 'ho', 'startNumber', 1),
     'items', jsonb_build_object('prefix', 'it', 'startNumber', 1)
   )
-  FROM (SELECT gen_random_uuid() AS id) AS alias
+  FROM (SELECT overlay(overlay(md5('${myuniversity}_${mymodule}.${table.tableName}')
+                 placing '4' from 13) placing '8' from 17)::uuid AS id) AS alias
   ON CONFLICT DO NOTHING;
 
 -- create initial sequences for HRID generation
