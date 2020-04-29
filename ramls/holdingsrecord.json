@@ -34,6 +34,16 @@
       "description": "The permanent shelving location in which an item resides.",
       "$ref" : "uuid.json"
     },
+    "permanentLocation": {
+      "type": "object",
+      "folio:$ref": "location.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "locations",
+      "folio:linkFromField": "permanentLocationId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "locations.0"
+    },
     "temporaryLocationId": {
       "type": "string",
       "description": "Temporary location is the temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
@@ -257,6 +267,19 @@
       "readonly": true,
       "folio:isVirtual": true,
       "folio:linkBase": "inventory/items",
+      "folio:linkFromField": "id",
+      "folio:linkToField": "holdingsRecordId",
+      "folio:includedElement": "items"
+    },
+    "bareHoldingsItems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "item.json"
+      },
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "item-storage/items",
       "folio:linkFromField": "id",
       "folio:linkToField": "holdingsRecordId",
       "folio:includedElement": "items"
