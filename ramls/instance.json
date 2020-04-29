@@ -122,6 +122,7 @@
           "contributorNameType": {
             "type": "object",
             "description": "Dereferenced contributor-name type",
+            "javaType": "org.folio.rest.jaxrs.model.contributorNameTypeVirtual",
             "readonly": true,
             "folio:$ref": "contributornametype.json",
             "readonly": true,
