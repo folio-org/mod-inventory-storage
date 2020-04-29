@@ -148,6 +148,7 @@
           "itemNoteType": {
             "type": "object",
             "folio:$ref": "itemnotetype.json",
+            "javaType": "org.folio.rest.jaxrs.model.itemNoteTypeVirtual",
             "readonly": true,
             "folio:isVirtual": true,
             "folio:linkBase": "item-note-types",
