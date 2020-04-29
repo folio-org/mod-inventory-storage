@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -79,11 +80,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   @BeforeClass
   public static void beforeAny()
-    throws MalformedURLException,
-    InterruptedException,
+    throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
+    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -258,7 +260,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+    client.post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
         ResponseHandler.json(createCompleted));
 
     Response response = createCompleted.get(2, TimeUnit.SECONDS);
@@ -322,7 +324,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     client.get(instanceStatusesUrl("?query=code=" + code),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getCompleted));
+      TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonObject instanceStatus = getCompleted.get(5, TimeUnit.SECONDS)
       .getJson()
