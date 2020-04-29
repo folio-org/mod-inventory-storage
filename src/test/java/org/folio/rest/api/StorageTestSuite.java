@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(Suite.class)
 
@@ -61,7 +61,8 @@ import static org.junit.Assert.assertThat;
   ItemEffectiveCallNumberComponentsTest.class,
   ItemEffectiveCallNumberDataUpgradeTest.class,
   ModesOfIssuanceMigrationScriptTest.class,
-  PrecedingSucceedingTitleTest.class
+  PrecedingSucceedingTitleTest.class,
+  HoldingsCallNumberNormalizedTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
@@ -138,8 +139,7 @@ public class StorageTestSuite {
   public static void after()
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     removeTenant(TENANT_ID);
 
@@ -289,16 +289,14 @@ public class StorageTestSuite {
   static void prepareTenant(String tenantId, boolean loadSample)
       throws InterruptedException,
       ExecutionException,
-      TimeoutException,
-      MalformedURLException {
+      TimeoutException {
     prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
   static void removeTenant(String tenantId)
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     CompletableFuture<Response> tenantDeleted = new CompletableFuture<>();
 

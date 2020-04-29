@@ -1,0 +1,27 @@
+-- this function is used for call number string and call number search value normalization.
+-- It removes all non-alphanumeric symbols.
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_call_number_string(callNumberString text)
+RETURNS text AS $$
+    SELECT regexp_replace(lower(callNumberString), '[^a-z0-9]', '', 'g');
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
+
+-- Holdings call number normalization functions
+
+-- Suffix + call number + prefix normalization. Nulls are omitted.
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_holdings_full_call_number(holdingsRecord jsonb)
+RETURNS text AS $$
+  SELECT ${myuniversity}_${mymodule}.normalize_call_number_string(
+    concat_ws('', holdingsRecord->>'callNumberPrefix',
+      holdingsRecord->>'callNumber',
+      holdingsRecord->>'callNumberSuffix'
+  ));
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
+
+-- call number + prefix normalization. Nulls are omitted.
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_holdings_call_number_and_suffix(holdingsRecord jsonb)
+RETURNS text AS $$
+  SELECT ${myuniversity}_${mymodule}.normalize_call_number_string(
+    concat_ws('', holdingsRecord->>'callNumber',
+      holdingsRecord->>'callNumberSuffix'
+  ));
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;

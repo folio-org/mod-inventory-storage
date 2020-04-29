@@ -640,6 +640,18 @@
           "caseSensitive": false,
           "removeAccents": false
         }
+      ],
+      "fullTextIndex": [
+        {
+          "fieldName": "callNumberAndSuffixNormalized",
+          "sqlExpression" : "normalize_holdings_call_number_and_suffix(jsonb)",
+          "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
+        },
+        {
+          "fieldName": "fullCallNumberNormalized",
+          "sqlExpression" : "normalize_holdings_full_call_number(jsonb)",
+          "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
+        }
       ]
     },
     {
@@ -796,6 +808,11 @@
     {
       "run": "before",
       "snippetPath": "createIsbnFunctions.sql",
+      "fromModuleVersion": "19.2.0"
+    },
+    {
+      "run": "before",
+      "snippetPath": "createCallNumberNormalizationFunctions.sql",
       "fromModuleVersion": "19.2.0"
     },
     {

@@ -2543,7 +2543,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getBody(), containsString(expectedInstance.getString("title")));
   }
 
-  private JsonObject smallAngryPlanet(UUID id) {
+  public static JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
