@@ -12,8 +12,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.RestVerticle;
-import org.folio.rest.api.callnumber.normalized.HoldingsCallNumberNormalizedTest;
-import org.folio.rest.api.callnumber.normalized.ItemCallNumberNormalizedTest;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;

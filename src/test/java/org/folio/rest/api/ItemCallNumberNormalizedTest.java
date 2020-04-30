@@ -1,4 +1,4 @@
-package org.folio.rest.api.callnumber.normalized;
+package org.folio.rest.api;
 
 import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 

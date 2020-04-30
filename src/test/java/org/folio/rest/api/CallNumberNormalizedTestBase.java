@@ -1,4 +1,4 @@
-package org.folio.rest.api.callnumber.normalized;
+package org.folio.rest.api;
 
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.hasSize;
 
 import java.util.List;
 
-import org.folio.rest.api.TestBaseWithInventoryUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
