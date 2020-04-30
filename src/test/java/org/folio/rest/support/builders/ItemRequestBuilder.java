@@ -36,9 +36,9 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     UUID materialTypeId,
     UUID permanentLoanTypeId,
     UUID temporaryLoanTypeId,
-    String itemLevelCallNumberSuffix,
-    String itemLevelCallNumber,
     String itemLevelCallNumberPrefix,
+    String itemLevelCallNumber,
+    String itemLevelCallNumberSuffix,
     String itemLevelCallNumberTypeId) {
 
     this.id = id;

@@ -1,20 +1,13 @@
-package org.folio.rest.api;
+package org.folio.rest.api.callnumber.normalized;
 
-import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.builders.HoldingRequestBuilder;
-import org.junit.BeforeClass;
+import org.folio.rest.api.TestBaseWithInventoryUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -22,22 +15,9 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
-public class HoldingsCallNumberNormalizedTest extends TestBaseWithInventoryUtil {
+public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventoryUtil {
 
-  @BeforeClass
-  public static void createHoldingsRecords() throws Exception {
-    final IndividualResource instance = instancesClient
-      .create(smallAngryPlanet(UUID.randomUUID()));
-
-    for (String[] callNumberComponents : callNumberData()) {
-      holdingsClient.create(new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withPermanentLocation(mainLibraryLocationId)
-        .withCallNumberPrefix(callNumberComponents[0])
-        .withCallNumber(callNumberComponents[1])
-        .withCallNumberSuffix(callNumberComponents[2]));
-    }
-  }
+  protected abstract List<String> searchByCallNumberNormalized(String callNumber) throws Exception;
 
   @Parameters({
     "germ 350",
@@ -146,23 +126,8 @@ public class HoldingsCallNumberNormalizedTest extends TestBaseWithInventoryUtil 
     assertThat(searchByCallNumberNormalized(searchQuery), hasSize(0));
   }
 
-  private List<String> searchByCallNumberNormalized(String callNumber) throws Exception {
-    // Ex: fullCallNumberNormalized="foo" OR callNumberAndSuffixNormalized="foo"
-    final List<IndividualResource> holdings = holdingsClient.getMany(
-      "fullCallNumberNormalized=\"%1$s\" OR callNumberAndSuffixNormalized=\"%1$s\"",
-      callNumber);
-
-    return holdings.stream()
-      .map(IndividualResource::getJson)
-      .map(json -> Stream.of(json.getString("callNumberPrefix"),
-        json.getString("callNumber"), json.getString("callNumberSuffix"))
-        .filter(Objects::nonNull)
-        .collect(Collectors.joining(" ")))
-      .collect(Collectors.toList());
-  }
-
-  private static String[][] callNumberData() {
-    // Suffix, call number, prefix
+  protected static String[][] callNumberData() {
+    // Prefix, call number, suffix
     return new String[][]{
       {null, "AD 12", null},
       {null, "AD 120", null},

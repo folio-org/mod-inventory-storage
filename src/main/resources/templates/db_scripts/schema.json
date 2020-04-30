@@ -772,6 +772,16 @@
         {
           "fieldName": "barcode",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "callNumberAndSuffixNormalized",
+          "sqlExpression" : "normalize_item_call_number_and_suffix(jsonb)",
+          "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
+        },
+        {
+          "fieldName": "fullCallNumberNormalized",
+          "sqlExpression" : "normalize_item_full_call_number(jsonb)",
+          "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
         }
       ]
     },

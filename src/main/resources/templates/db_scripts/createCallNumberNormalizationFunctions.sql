@@ -25,3 +25,24 @@ RETURNS text AS $$
       holdingsRecord->>'callNumberSuffix'
   ));
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
+
+-- Item call number normalization functions
+
+-- Suffix + call number + prefix normalization. Nulls are omitted.
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_item_full_call_number(item jsonb)
+RETURNS text AS $$
+  SELECT ${myuniversity}_${mymodule}.normalize_call_number_string(
+    concat_ws('', item->'effectiveCallNumberComponents'->>'prefix',
+      item->'effectiveCallNumberComponents'->>'callNumber',
+      item->'effectiveCallNumberComponents'->>'suffix'
+  ));
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
+
+-- call number + prefix normalization. Nulls are omitted.
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_item_call_number_and_suffix(item jsonb)
+RETURNS text AS $$
+  SELECT ${myuniversity}_${mymodule}.normalize_call_number_string(
+    concat_ws('', item->'effectiveCallNumberComponents'->>'callNumber',
+      item->'effectiveCallNumberComponents'->>'suffix'
+  ));
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
