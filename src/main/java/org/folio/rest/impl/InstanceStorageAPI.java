@@ -62,7 +62,7 @@ public class InstanceStorageAPI implements InstanceStorage {
     int limit,
     int offset,
     String tableName) throws FieldException {
-    
+
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
 
     return new CQLWrapper(cql2pgJson, query)
@@ -377,7 +377,7 @@ public class InstanceStorageAPI implements InstanceStorage {
                   .respond500WithTextPlain(response.result().getEntity())));
             } else {
               final Instance existingInstance = (Instance) response.result().getEntity();
-              if (Objects.equals(entity.getHrid(), existingInstance.getHrid())) { 
+              if (Objects.equals(entity.getHrid(), existingInstance.getHrid())) {
                 PgUtil.put(INSTANCE_TABLE, entity, instanceId, okapiHeaders, vertxContext,
                     PutInstanceStorageInstancesByInstanceIdResponse.class, asyncResultHandler);
               } else {
@@ -596,7 +596,7 @@ public class InstanceStorageAPI implements InstanceStorage {
         reply -> {
           try {
             if (reply.succeeded()) {
-              if (reply.result().getUpdated() == 0) {
+              if (reply.result().rowCount() == 0) {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
                     .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
               } else{

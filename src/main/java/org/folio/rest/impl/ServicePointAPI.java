@@ -244,7 +244,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
                         DeleteServicePointsByServicepointIdResponse
                         .respond500WithTextPlain(getErrorResponse(message))));
               } else {
-                if(deleteReply.result().getUpdated() == 0) {
+                if(deleteReply.result().rowCount() == 0) {
                   asyncResultHandler.handle(Future.succeededFuture(
                           DeleteServicePointsByServicepointIdResponse
                           .respond404WithTextPlain("Not found")));

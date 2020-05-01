@@ -177,13 +177,13 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
                 reply -> {
                   try {
                     if (reply.succeeded()) {
-                      if (reply.result().getUpdated() == 1) {
+                      if (reply.result().rowCount() == 1) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
                                 .respond204()));
                       } else {
-                        LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                        LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                                .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                                .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
                       }
                     } else {
                       LOG.error(reply.cause().getMessage(), reply.cause());
@@ -216,7 +216,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
                 reply -> {
                   try {
                     if (reply.succeeded()) {
-                      if (reply.result().getUpdated() == 0) {
+                      if (reply.result().rowCount() == 0) {
                         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
                                 .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                       } else {

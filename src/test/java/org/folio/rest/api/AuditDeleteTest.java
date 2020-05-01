@@ -11,6 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -20,10 +21,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowIterator;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -127,7 +129,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
     final JsonArray objects = getRecordsFromAuditTable(tableName).get(0);
     final JsonPointer jsonPointer = JsonPointer.from(RECORD_ID_JSON_PATH);
-    return jsonPointer.queryJson(new JsonObject(objects.getString(1)));
+    return jsonPointer.queryJson(new JsonObject(objects.getValue(1).toString()));
   }
 
   private List<JsonArray> getRecordsFromAuditTable(String tableName)
@@ -135,12 +137,26 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
     final CompletableFuture<List<JsonArray>> result = new CompletableFuture<>();
     postgresClient.select(getAuditSQL(tableName), h -> {
-      result.complete(h.result().getResults());
+      RowIterator<Row> iterator = h.result().iterator();
+      List<JsonArray> list = new LinkedList<>();
+      while (iterator.hasNext()) {
+        Row row = iterator.next();
+        JsonArray ar = new JsonArray();
+        for (int i = 0; i < row.size(); i++) {
+          Object obj = row.getValue(i);
+          if (obj instanceof java.util.UUID) {
+            ar.add(obj.toString());
+          } else {
+            ar.add(obj);
+          }
+        }
+        list.add(ar);
+      }
+      result.complete(list);
     });
     return result.get(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
   }
 
-  @NotNull
   private String getAuditSQL(String table) {
     return "SELECT * FROM " + table;
   }

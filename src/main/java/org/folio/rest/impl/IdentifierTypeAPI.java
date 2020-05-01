@@ -176,7 +176,7 @@ public class IdentifierTypeAPI implements org.folio.rest.jaxrs.resource.Identifi
                       .respond400WithTextPlain(msg)));
                   return;
                 }
-                int updated = reply.result().getUpdated();
+                int updated = reply.result().rowCount();
                 if (updated != 1) {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
@@ -219,7 +219,7 @@ public class IdentifierTypeAPI implements org.folio.rest.jaxrs.resource.Identifi
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  if (reply.result().getUpdated() == 0) {
+                  if (reply.result().rowCount() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutIdentifierTypesByIdentifierTypeIdResponse
                         .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{

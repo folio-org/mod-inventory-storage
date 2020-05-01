@@ -5,8 +5,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.ResultSet;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -180,10 +180,10 @@ public class StorageTestSuite {
 
   static void checkForMismatchedIDs(String table) {
     try {
-      ResultSet results = getRecordsWithUnmatchedIds(
+      RowSet<Row> results = getRecordsWithUnmatchedIds(
         TENANT_ID, table);
 
-      Integer mismatchedRowCount = results.getNumRows();
+      Integer mismatchedRowCount = results.rowCount();
 
       assertThat(mismatchedRowCount, is(0));
     } catch (Exception e) {
@@ -198,12 +198,12 @@ public class StorageTestSuite {
     try {
       PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
 
-      Promise<UpdateResult> promise = Promise.promise();
+      Promise<RowSet<Row>> promise = Promise.promise();
       String sql = String.format("DELETE FROM %s_%s.%s", tenantId, "mod_inventory_storage", tableName);
       postgresClient.execute(sql, promise);
 
       promise.future()
-        .map(deleteResult -> cf.complete(deleteResult.getUpdated() >= 0))
+        .map(deleteResult -> cf.complete(deleteResult.rowCount() >= 0))
         .otherwise(error -> cf.complete(false));
 
       return cf.get(5, TimeUnit.SECONDS);
@@ -214,14 +214,14 @@ public class StorageTestSuite {
     return false;
   }
 
-  private static ResultSet getRecordsWithUnmatchedIds(String tenantId,
+  private static RowSet<Row> getRecordsWithUnmatchedIds(String tenantId,
                                                       String tableName)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     PostgresClient dbClient = PostgresClient.getInstance(
       getVertx(), tenantId);
 
-    CompletableFuture<ResultSet> selectCompleted = new CompletableFuture<>();
+    CompletableFuture<RowSet<Row>> selectCompleted = new CompletableFuture<>();
 
     String sql = String.format("SELECT null FROM %s_%s.%s" +
         " WHERE CAST(id AS VARCHAR(50)) != jsonb->>'id'",

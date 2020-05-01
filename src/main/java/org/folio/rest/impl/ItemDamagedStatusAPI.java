@@ -15,6 +15,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
 import org.folio.rest.jaxrs.model.ItemDamageStatuses;
@@ -31,7 +33,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.UpdateResult;
 
 public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
   private static final Logger LOGGER = LoggerFactory.getLogger(ItemDamagedStatusAPI.class);
@@ -227,10 +228,10 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Map<String, String> okapiHeaders,
     Context vertxContext) {
 
-    Future<UpdateResult> future = Future.future();
+    Future<RowSet<Row>> future = Future.future();
     pgClientFactory.getInstance(vertxContext, okapiHeaders)
       .delete(REFERENCE_TABLE, id, future.completer());
-    return future.map(UpdateResult::getUpdated);
+    return future.map(RowSet<Row>::rowCount);
   }
 
   @Override
@@ -289,13 +290,13 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Map<String, String> okapiHeaders,
     Context vertxContext) {
 
-    Future<UpdateResult> future = Future.future();
+    Future<RowSet<Row>> future = Future.future();
     if (isNull(entity.getId())) {
       entity.setId(id);
     }
     pgClientFactory.getInstance(vertxContext, okapiHeaders)
       .update(REFERENCE_TABLE, entity, id, future.completer());
 
-    return future.map(UpdateResult::getUpdated);
+    return future.map(RowSet<Row>::rowCount);
   }
 }
