@@ -74,6 +74,17 @@
             "type": "string",
             "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
             "$ref": "uuid.json"
+          },
+          "identifierTypeObject": {
+            "type": "object",
+            "description": "Information about identifier type, looked up from identifierTypeId",
+            "folio:$ref": "illpolicy.json",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "identifier-types",
+            "folio:linkFromField": "identifierTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "identifierTypes.0"
           }
         },
         "additionalProperties": false,
@@ -107,6 +118,19 @@
             "type": "string",
             "description": "UUID of contributor name type term defined by the MARC code list for relators",
             "$ref": "uuid.json"
+          },
+          "contributorNameType": {
+            "type": "object",
+            "description": "Dereferenced contributor-name type",
+            "javaType": "org.folio.rest.jaxrs.model.contributorNameTypeVirtual",
+            "readonly": true,
+            "folio:$ref": "contributornametype.json",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "contributor-name-types",
+            "folio:linkFromField": "contributorNameTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "contributorNameTypes.0"
           },
           "primary": {
             "type": "boolean",
@@ -143,6 +167,19 @@
             "type": "string",
             "description": "UUID of classification schema (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)",
             "$ref": "uuid.json"
+          },
+          "classificationType": {
+            "type": "object",
+            "description": "Dereferenced classification schema",
+            "javaType": "org.folio.rest.jaxrs.model.classificationTypeVirtual",
+            "readonly": true,
+            "folio:$ref": "classificationtype.json",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "classification-types",
+            "folio:linkFromField": "classificationTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "classificationTypes.0"
           }
         },
         "additionalProperties": false,
@@ -239,6 +276,20 @@
         "type": "string",
         "$ref": "uuid.json"
       }
+    },
+    "instanceFormats": {
+      "type": "array",
+      "description": "List of dereferenced instance formats",
+      "items": {
+        "type": "object",
+        "$ref": "instanceformat.json"
+      },
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "instance-formats",
+      "folio:linkFromField": "instanceFormatIds",
+      "folio:linkToField": "id",
+      "folio:includedElement": "instanceFormats"
     },
     "physicalDescriptions": {
       "type": "array",
