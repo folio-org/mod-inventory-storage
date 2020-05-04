@@ -21,6 +21,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.vertx.core.json.Json;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowIterator;
 import org.folio.rest.persist.PostgresClient;
@@ -129,7 +130,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
     final JsonArray objects = getRecordsFromAuditTable(tableName).get(0);
     final JsonPointer jsonPointer = JsonPointer.from(RECORD_ID_JSON_PATH);
-    return jsonPointer.queryJson(new JsonObject(objects.getValue(1).toString()));
+    return jsonPointer.queryJson((JsonObject) objects.getValue(1));
   }
 
   private List<JsonArray> getRecordsFromAuditTable(String tableName)

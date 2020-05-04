@@ -268,7 +268,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
             + "VALUES ('%s', '{\"holdingsRecordId\": \"%s\"}') RETURNING jsonb, effectiveLocationId",
             itemId.toString(), holdingsRecordId.toString()
         ));
-    JsonObject jsonb = new JsonObject(result.getString(0));
+    JsonObject jsonb = (JsonObject) result.getValue(0);
     String effectiveLocationId = result.getString(1);
     assertThat(jsonb.getString("effectiveLocationId"), is(annexLibraryLocationId.toString()));
     assertThat(effectiveLocationId, is(annexLibraryLocationId.toString()));
@@ -291,7 +291,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
           "SELECT jsonb, effectiveLocationId "
         + "FROM test_tenant_mod_inventory_storage.item "
         + "WHERE id='" + item.getId() + "'");
-    JsonObject jsonb = new JsonObject(result.getString(0));
+    JsonObject jsonb = (JsonObject) result.getValue(0);
     String effectiveLocationId = result.getString(1);
     assertThat(jsonb.getString("effectiveLocationId"), is(secondFloorLocationId.toString()));
     assertThat(effectiveLocationId, is(secondFloorLocationId.toString()));
