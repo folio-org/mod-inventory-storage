@@ -24,7 +24,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
     "Germ 350/"
   })
   @Test
-  public void canApplyRightTruncationForCallNumber(String searchQuery) throws Exception {
+  public void appliesRightTruncationToSearchQuery(String searchQuery) throws Exception {
     final List<String> callNumbersFound = searchByCallNumberNormalized(searchQuery);
 
     assertThat(callNumbersFound, hasSize(3));
@@ -127,7 +127,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
 
   protected static String[][] callNumberData() {
     // Prefix, call number, suffix
-    return new String[][]{
+    return new String[][] {
       {null, "AD 12", null},
       {null, "AD 120", null},
       {null, "AD 10: 1/27", null},

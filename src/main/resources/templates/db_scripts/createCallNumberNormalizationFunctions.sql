@@ -7,7 +7,7 @@ $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
 -- Holdings call number normalization functions
 
--- Suffix + call number + prefix normalization. Nulls are omitted.
+-- Prefix + call number + suffix normalization. Nulls are omitted.
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_holdings_full_call_number(holdingsRecord jsonb)
 RETURNS text AS $$
   SELECT ${myuniversity}_${mymodule}.normalize_call_number_string(
@@ -17,7 +17,7 @@ RETURNS text AS $$
   ));
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
--- call number + prefix normalization. Nulls are omitted.
+-- call number + suffix normalization. Nulls are omitted.
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_holdings_call_number_and_suffix(holdingsRecord jsonb)
 RETURNS text AS $$
   SELECT ${myuniversity}_${mymodule}.normalize_call_number_string(
@@ -28,7 +28,7 @@ $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
 -- Item call number normalization functions
 
--- Suffix + call number + prefix normalization. Nulls are omitted.
+-- Prefix + call number + suffix normalization. Nulls are omitted.
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_item_full_call_number(item jsonb)
 RETURNS text AS $$
   SELECT ${myuniversity}_${mymodule}.normalize_call_number_string(
@@ -38,7 +38,7 @@ RETURNS text AS $$
   ));
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
--- call number + prefix normalization. Nulls are omitted.
+-- call number + suffix normalization. Nulls are omitted.
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.normalize_item_call_number_and_suffix(item jsonb)
 RETURNS text AS $$
   SELECT ${myuniversity}_${mymodule}.normalize_call_number_string(
