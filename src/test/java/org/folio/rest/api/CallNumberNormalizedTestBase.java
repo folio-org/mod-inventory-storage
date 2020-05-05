@@ -24,7 +24,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
     "Germ 350/"
   })
   @Test
-  public void appliesRightTruncationToSearchQuery(String searchQuery) throws Exception {
+  public void canSearchByPrefixAndPartOfCallNumber(String searchQuery) throws Exception {
     final List<String> callNumbersFound = searchByCallNumberNormalized(searchQuery);
 
     assertThat(callNumbersFound, hasSize(3));
@@ -36,7 +36,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
   }
 
   @Test
-  public void canApplyRightTruncationForSuffix() throws Exception {
+  public void canSearchByCallNumberAndPartOfSuffix() throws Exception {
     final List<String> callNumbersFound = searchByCallNumberNormalized("GE77 .F73 2014 Curriculum");
 
     assertThat(callNumbersFound, hasSize(1));
@@ -44,7 +44,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
   }
 
   @Test
-  public void canIgnoreNonAlphanumericCharacters() throws Exception {
+  public void searchIgnoresNonAlphanumericCharactersInCallNumber() throws Exception {
     final List<String> callNumbersFound = searchByCallNumberNormalized("12");
 
     assertThat(callNumbersFound, hasSize(4));
@@ -57,7 +57,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
   }
 
   @Test
-  public void canSkipPrefix() throws Exception {
+  public void canSearchByCallNumberWithoutPrefix() throws Exception {
     final List<String> callNumbersFound = searchByCallNumberNormalized("ABC123.1 R15 2018");
 
     assertThat(callNumbersFound, hasSize(1));
@@ -65,7 +65,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
   }
 
   @Test
-  public void canSkipNonAlphanumericCharactersInPrefix() throws Exception {
+  public void searchIgnoresNonAlphanumericCharactersInPrefix() throws Exception {
     final List<String> callNumbersFound = searchByCallNumberNormalized("Oversize BX1935.A23 1959");
 
     assertThat(callNumbersFound, hasSize(1));
@@ -73,7 +73,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
   }
 
   @Test
-  public void canSearchByCallNumberAndIgnorePrefixAndSuffix() throws Exception {
+  public void canSearchByCallNumberWithoutPrefixAndSuffix() throws Exception {
     final List<String> callNumbersFound = searchByCallNumberNormalized("S537.N56 C82");
 
     assertThat(callNumbersFound, hasSize(2));
