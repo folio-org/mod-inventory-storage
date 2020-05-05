@@ -94,7 +94,7 @@ public abstract class CallNumberNormalizedTestBase extends TestBaseWithInventory
     "rarebookss537n56c82",
   })
   @Test
-  public void canSearchByPrefixAndCallNumber(String searchQuery) throws Exception {
+  public void canSearchByPrefixAndCallNumberEvenWhenMatchesHaveSuffixes(String searchQuery) throws Exception {
     final List<String> callNumbersFound = searchByCallNumberNormalized(searchQuery);
 
     assertThat(callNumbersFound, hasSize(2));
