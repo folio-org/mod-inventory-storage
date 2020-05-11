@@ -3,6 +3,7 @@ package org.folio.rest.support;
 import java.util.Objects;
 import java.util.function.Function;
 
+import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
@@ -107,7 +108,7 @@ public class HridManager {
 
   private Future<HridSettings> getHridSettings(AsyncResult<SQLConnection> conn) {
     final String sql = "SELECT jsonb FROM " + HRID_SETTINGS_TABLE;
-    final Promise<JsonArray> promise = Promise.promise();
+    final Promise<Row> promise = Promise.promise();
 
     try {
       postgresClient.selectSingle(conn, sql, promise);
@@ -119,7 +120,9 @@ public class HridManager {
       results -> {
         try {
           // TODO check that this exception doesn't occur
-          HridSettings settings = Json.decodeValue(results.getJsonObject(0).encode(), HridSettings.class);
+          JsonObject o = (JsonObject) results.getValue(0);
+          HridSettings settings = Json.decodeValue(o.encode(), HridSettings.class);
+
           return settings;
         } catch (Exception e) {
           log.fatal(e.getMessage(), e);
@@ -189,7 +192,7 @@ public class HridManager {
 
   private Future<String> getNextHrid(HridSetting hridSetting, String type) {
     final String sql = "SELECT nextval('hrid_" + type + "_seq')";
-    final Promise<JsonArray> promise = Promise.promise();
+    final Promise<Row> promise = Promise.promise();
 
     try {
       postgresClient.selectSingle(sql, promise);

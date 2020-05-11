@@ -163,7 +163,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   private void clearAuditTables() {
-    CompletableFuture<JsonArray> future = new CompletableFuture<>();
+    CompletableFuture<Row> future = new CompletableFuture<>();
     final String sql = Stream.of(AUDIT_INSTANCE, AUDIT_HOLDINGS_RECORD, AUDIT_ITEM).
       map(s-> "DELETE FROM "+s).collect(Collectors.joining(";"));
 
