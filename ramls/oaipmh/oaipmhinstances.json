@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Response schema for oai-pmh view",
+  "type": "object",
+  "properties": {
+    "instance": {
+      "description": "OAI-PMH instances",
+      "type": "array",
+      "items": {
+        "lastUpdatedDate": {
+          "description": "The last updated date or deleted date of an instance or it's items and holdings",
+          "format": "date-time"
+        },
+        "deleted": {
+          "description": "Indicates if an instance was deleted in inventory",
+          "type": "boolean"
+        },
+        "itemAndHoldingFields": {
+          "description": "Aggregated item and holding fields",
+          "type": "array",
+          "items":{
+            "type": "object",
+            "$ref": "oaipmhinstance.json"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
