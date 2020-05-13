@@ -22,7 +22,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.streams.Pump;
-import io.vertx.ext.sql.SQLRowStream;
 import io.vertx.ext.web.RoutingContext;
 
 public class OaiPmhViewInstancesAPI implements OaiPmhView {
@@ -31,8 +30,8 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
     .lookupClass());
 
   private final static int MAX_QUEUE_SIZE = 100;
-  private static final String sql = "select * from pmh_view_function(?,?,?,?);";
-  private static final String RESPONSE_ENDING = "[]]";
+  private static final String SQL = "select * from pmh_view_function(?,?,?,?);";
+  private static final String RESPONSE_ENDING = "{}]";
 
   @Override
   public void getOaiPmhViewInstances(String startDate, String endDate, boolean deletedRecordSupport,
@@ -46,26 +45,31 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
 
     JsonArray params = createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords);
 
-    final HttpServerResponse response = routingContext.response();
-    response.setChunked(true);
+    final HttpServerResponse response = getResponse(routingContext);
 
-    postgresClient.selectStream(sql, params, h -> {
-      if (h.failed()) {
-        log.error("Error in selecting from oai pmh view", h.cause());
-        OaiPmhView.GetOaiPmhViewInstancesResponse.respond500WithTextPlain(h.cause()
+    postgresClient.selectStream(SQL, params, handler -> {
+      if (handler.failed()) {
+        log.error("Error in selecting from oai pmh view", handler.cause());
+        OaiPmhView.GetOaiPmhViewInstancesResponse.respond500WithTextPlain(handler.cause()
           .getMessage());
       } else {
-        final SQLRowStream result = h.result();
-        final SQLRowStreamToBufferAdapter rs = new SQLRowStreamToBufferAdapter(result);
+        final SQLRowStreamToBufferAdapter rs = new SQLRowStreamToBufferAdapter(handler.result());
         Pump pump = Pump.pump(rs, response, MAX_QUEUE_SIZE);
         pump.start();
         rs.endHandler(event -> {
           log.info("Select from oai pmh view completed successfully");
           response.end(RESPONSE_ENDING);
-        }).
-        exceptionHandler(t-> log.error("Error connecting to the database", t));
+        })
+          .exceptionHandler(t -> log.error("Error connecting to the database", t));
       }
     });
+  }
+
+  private HttpServerResponse getResponse(RoutingContext routingContext) {
+    final HttpServerResponse response = routingContext.response();
+    response.setChunked(true);
+    response.putHeader("Content-Type", "application/json");
+    return response;
   }
 
   private JsonArray createPostgresParams(String startDate, String endDate, boolean deletedRecordSupport,
