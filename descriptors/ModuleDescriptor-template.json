@@ -1051,9 +1051,7 @@
         {
           "methods" : [ "GET" ],
           "pathPattern" : "/_/jsonSchemas",
-          "permissionsRequired": [
-            "inventory-storage.json-schemas.get"
-          ]
+          "permissionsRequired": []
         }
       ]
     }
@@ -1982,11 +1980,6 @@
       "description": "modify the HRID settings in storage"
     },
     {
-      "permissionName": "inventory-storage.json-schemas.get",
-      "displayName": "inventory storage - get json schemas provided by module",
-      "description": "Get json schemas"
-    },
-    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2173,8 +2166,7 @@
         "inventory-storage.preceding-succeeding-titles.item.get",
         "inventory-storage.preceding-succeeding-titles.item.post",
         "inventory-storage.preceding-succeeding-titles.item.put",
-        "inventory-storage.preceding-succeeding-titles.item.delete",
-        "inventory-storage.json-schemas.get"
+        "inventory-storage.preceding-succeeding-titles.item.delete"
       ]
     }
   ],
