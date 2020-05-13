@@ -29,9 +29,9 @@ import io.vertx.core.Vertx;
 public abstract class TestBase {
   private static boolean invokeStorageTestSuiteAfter = false;
   static HttpClient client;
-  static ResourceClient instancesClient;
-  static ResourceClient holdingsClient;
-  static ResourceClient itemsClient;
+  protected static ResourceClient instancesClient;
+  protected static ResourceClient holdingsClient;
+  protected static ResourceClient itemsClient;
   static ResourceClient locationsClient;
   static ResourceClient callNumberTypesClient;
   static ResourceClient modesOfIssuanceClient;
@@ -71,8 +71,7 @@ public abstract class TestBase {
   public static void testBaseAfterClass()
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     if (invokeStorageTestSuiteAfter) {
       StorageTestSuite.after();

@@ -7,6 +7,17 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -20,17 +31,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 
 @RunWith(Suite.class)
 
@@ -61,7 +61,9 @@ import static org.junit.Assert.assertThat;
   ItemEffectiveCallNumberComponentsTest.class,
   ItemEffectiveCallNumberDataUpgradeTest.class,
   ModesOfIssuanceMigrationScriptTest.class,
-  PrecedingSucceedingTitleTest.class
+  PrecedingSucceedingTitleTest.class,
+  HoldingsCallNumberNormalizedTest.class,
+  ItemCallNumberNormalizedTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
@@ -138,8 +140,7 @@ public class StorageTestSuite {
   public static void after()
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     removeTenant(TENANT_ID);
 
@@ -289,16 +290,14 @@ public class StorageTestSuite {
   static void prepareTenant(String tenantId, boolean loadSample)
       throws InterruptedException,
       ExecutionException,
-      TimeoutException,
-      MalformedURLException {
+      TimeoutException {
     prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
   static void removeTenant(String tenantId)
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     CompletableFuture<Response> tenantDeleted = new CompletableFuture<>();
 
