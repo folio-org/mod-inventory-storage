@@ -68,7 +68,7 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-unit</artifactId>
-      <version>3.9.0</version>
+      <version>${vertx.version}</version>
       <scope>test</scope>
     </dependency>
     <!-- This dependency is required until https://issues.folio.org/browse/RMB-503 is fixed -->
@@ -82,9 +82,20 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.9</version>
     </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-pg-client</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-reactive-streams</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
   </dependencies>
 
   <properties>
+    <vertx.version>3.9.0</vertx.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
