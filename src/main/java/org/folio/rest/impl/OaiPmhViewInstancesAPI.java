@@ -29,7 +29,7 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup()
     .lookupClass());
 
-  private final static int MAX_QUEUE_SIZE = 100;
+  private static final int MAX_QUEUE_SIZE = 100;
   private static final String SQL = "select * from pmh_view_function(?,?,?,?);";
   private static final String RESPONSE_ENDING = "{}]";
 
@@ -92,6 +92,8 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
       params.add(skipSuppressedFromDiscoveryRecords);
     } catch (Exception e) {
       log.error(e);
+      OaiPmhView.GetOaiPmhViewInstancesResponse.respond400WithTextPlain(e
+        .getMessage());
     }
     return params;
   }

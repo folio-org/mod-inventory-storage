@@ -10,8 +10,9 @@ import io.vertx.core.streams.ReadStream;
 import io.vertx.ext.sql.SQLRowStream;
 
 /**
- * Converts between SQLRowStream, which is ReadStream[JsonObject], to ReadStream[Buffer] Adds commas and opening brackets to the
- * response
+ * Converts between SQLRowStream, which is ReadStream[JsonArray], to ReadStream[Buffer]
+ * Adds commas and opening brackets to the response.
+ *
  */
 public class SQLRowStreamToBufferAdapter implements ReadStream<Buffer> {
 
