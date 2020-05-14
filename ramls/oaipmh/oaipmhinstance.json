@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "description": "Oai pmh view response schema",
   "properties": {
     "items": {
       "type": "array",
@@ -23,6 +24,7 @@
               "properties": {
                 "location": {
                   "type": "object",
+                  "description": "location",
                   "properties": {
                     "campusId": {
                       "description": "campus Id",
@@ -92,6 +94,7 @@
               ]
             },
             "enumeration": {
+              "description": "item enumeration",
               "type": "string"
             },
             "materialType": {
@@ -156,6 +159,7 @@
       ]
     },
     "instanceid": {
+      "description": "Folio instance identifier",
       "type": "string"
     }
   },
