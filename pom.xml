@@ -88,7 +88,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>29.5.0-SNAPSHOT</raml-module-builder-version>
+    <raml-module-builder-version>30.0.0-SNAPSHOT</raml-module-builder-version>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/instance-bulk/ids</generate_routing_context>
     <argLine />
   </properties>
