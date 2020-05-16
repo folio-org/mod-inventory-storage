@@ -68,7 +68,7 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-unit</artifactId>
-      <version>3.8.4</version>
+      <version>3.9.0</version>
       <scope>test</scope>
     </dependency>
     <!-- This dependency is required until https://issues.folio.org/browse/RMB-503 is fixed -->

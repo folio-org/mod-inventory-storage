@@ -1,10 +1,15 @@
 {
-  "id": "de14ac4e-f705-404a-8027-4a69d9dc8075",
-  "name": "Note",
-  "source": "folio"
-},
-{
-  "id": "cb595931-68a6-4179-9422-eaab77c25908",
-  "name": "Action note",
-  "source": "folio"
+  "holdingsNoteTypes": [
+    {
+      "id": "de14ac4e-f705-404a-8027-4a69d9dc8075",
+      "name": "Note",
+      "source": "folio"
+    },
+    {
+      "id": "cb595931-68a6-4179-9422-eaab77c25908",
+      "name": "Action note",
+      "source": "folio"
+    }
+  ],
+  "totalRecords": 2
 }
