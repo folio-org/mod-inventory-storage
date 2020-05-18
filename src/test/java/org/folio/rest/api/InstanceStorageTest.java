@@ -564,8 +564,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject metadata = secondInstanceToCreate.getJsonObject("metadata");
 
-    client.get(instancesStorageUrl("?query=" + urlEncode("metadata.updatedDate>=\""+ metadata.getString("updatedDate") +"\"")), StorageTestSuite.TENANT_ID,
-        ResponseHandler.json(getCompleted));
+    String query = urlEncode(String.format("%s.updatedDate>=\"%s\"", METADATA_KEY, metadata.getString("updatedDate")));
+
+    client.get(instancesStorageUrl(String.format("query=%s", query), ResponseHandler.json(getCompleted)));
 
     Response response = getCompleted.get(5, TimeUnit.SECONDS);
 
