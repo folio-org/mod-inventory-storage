@@ -292,7 +292,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
       entity.setId(id);
     }
     pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .update(REFERENCE_TABLE, entity, id, promise.future().completer());
+      .update(REFERENCE_TABLE, entity, id, promise.future());
 
     return promise.future().map(RowSet<Row>::rowCount);
   }
