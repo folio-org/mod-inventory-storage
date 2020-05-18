@@ -106,7 +106,7 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
         entity, PostHoldingsTypesResponse.headersFor201()))
       .otherwise(this::handleSaveHoldingsTypeException)
       .map(Response.class::cast)
-      .setHandler(asyncResultHandler);
+      .onComplete(asyncResultHandler);
   }
 
   @Override

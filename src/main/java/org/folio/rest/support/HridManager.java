@@ -6,7 +6,6 @@ import java.util.function.Function;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.SqlConnection;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
 import org.folio.rest.persist.SQLConnection;
@@ -17,10 +16,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.folio.rest.impl.StorageHelper;
 
 public class HridManager {
   private static final Logger log = LoggerFactory.getLogger(HridManager.class);
@@ -55,15 +52,15 @@ public class HridManager {
         if (res.succeeded()) {
           try {
             getHridSettings(res)
-              .setHandler(hridSettingsResult -> {
+              .onComplete(hridSettingsResult ->
                 postgresClient.endTx(res, done -> {
                   if (hridSettingsResult.succeeded()) {
                     promise.complete(hridSettingsResult.result());
                   } else {
                     fail(promise, "Failed to retrieve the HRID settings",
                       hridSettingsResult.cause());
-                  }});
-              });
+                  }})
+              );
           } catch (Exception e) {
             postgresClient.rollbackTx(res, done -> fail(promise, "Failed retrieving the HRID settings", e));
           }
@@ -119,11 +116,8 @@ public class HridManager {
     return promise.future().map(
       results -> {
         try {
-          // TODO check that this exception doesn't occur
           JsonObject o = (JsonObject) results.getValue(0);
-          HridSettings settings = Json.decodeValue(o.encode(), HridSettings.class);
-
-          return settings;
+          return Json.decodeValue(o.encode(), HridSettings.class);
         } catch (Exception e) {
           log.fatal(e.getMessage(), e);
         }
@@ -182,7 +176,7 @@ public class HridManager {
     final Promise<String> promise = Promise.promise();
 
     try {
-      context.runOnContext(v -> getHridSettings().compose(mapper::apply).setHandler(promise));
+      context.runOnContext(v -> getHridSettings().compose(mapper::apply).onComplete(promise));
     } catch (Exception e) {
       fail(promise, "Failed to get the next HRID", e);
     }
