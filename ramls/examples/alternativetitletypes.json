@@ -1,10 +1,15 @@
 {
-  "id": "5c364ce4-c8fd-4891-a28d-bb91c9bcdbfb",
-  "name": "Cover title",
-  "source": "folio"
-},
-{
-  "id": "2584943f-36ad-4037-a7fa-3bdebb09f452",
-  "name": "Other title",
-  "source": "folio"
+  "alternativeTitleTypes": [
+    {
+      "id": "5c364ce4-c8fd-4891-a28d-bb91c9bcdbfb",
+      "name": "Cover title",
+      "source": "folio"
+    },
+    {
+      "id": "2584943f-36ad-4037-a7fa-3bdebb09f452",
+      "name": "Other title",
+      "source": "folio"
+    }
+  ],
+  "totalRecords": 2
 }

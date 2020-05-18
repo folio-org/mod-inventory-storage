@@ -107,7 +107,7 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        asyncResultHandler.handle(Future.succeededFuture(PostNatureOfContentTermsResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
+        asyncResultHandler.handle(Future.succeededFuture(PostNatureOfContentTermsResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -134,7 +134,7 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
                     .respond400WithTextPlain((msg))));
                 return;
               }
-              int updated = reply.result().getUpdated();
+              int updated = reply.result().rowCount();
               if (updated != 1) {
                 String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
@@ -147,7 +147,7 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
+        asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -163,7 +163,7 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
         PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
             reply -> {
               if (reply.succeeded()) {
-                if (reply.result().getUpdated() == 0) {
+                if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutNatureOfContentTermsByIdResponse
                       .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                 } else{
@@ -185,7 +185,7 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
 
     });
   }
-  
+
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(REFERENCE_TABLE+".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));

@@ -11,7 +11,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -20,16 +19,16 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.pointer.JsonPointer;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -80,7 +79,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     record.remove("yearCaption");
     itemsClient.replace(UUID.fromString(itemId), record);
     //then
-    assertThat(getRecordsFromAuditTable(AUDIT_ITEM), is(Collections.emptyList()));
+    assertThat(getRecordsFromAuditTable(AUDIT_ITEM).size(), is(0));
     //when
     itemsClient.delete(UUID.fromString(itemId));
     //then
@@ -97,7 +96,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     record.remove("notes");
     instancesClient.replace(instanceId, record);
     //then
-    assertThat(getRecordsFromAuditTable(AUDIT_INSTANCE), is(Collections.emptyList()));
+    assertThat(getRecordsFromAuditTable(AUDIT_INSTANCE).size(), is(0));
     //when
     holdingsClient.deleteAll();
     instancesClient.delete(instanceId);
@@ -125,28 +124,26 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   private Object getRecordIdFromAuditTable(String tableName)
     throws InterruptedException, TimeoutException, ExecutionException {
 
-    final JsonArray objects = getRecordsFromAuditTable(tableName).get(0);
+    final Row row = getRecordsFromAuditTable(tableName).iterator().next();
     final JsonPointer jsonPointer = JsonPointer.from(RECORD_ID_JSON_PATH);
-    return jsonPointer.queryJson(new JsonObject(objects.getString(1)));
+    return jsonPointer.queryJson((JsonObject) row.getValue(1));
   }
 
-  private List<JsonArray> getRecordsFromAuditTable(String tableName)
+  private RowSet<Row> getRecordsFromAuditTable(String tableName)
     throws InterruptedException, TimeoutException, ExecutionException {
 
-    final CompletableFuture<List<JsonArray>> result = new CompletableFuture<>();
-    postgresClient.select(getAuditSQL(tableName), h -> {
-      result.complete(h.result().getResults());
-    });
+    final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
+    postgresClient.select(getAuditSQL(tableName), h ->
+        result.complete(h.result()));
     return result.get(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
   }
 
-  @NotNull
   private String getAuditSQL(String table) {
     return "SELECT * FROM " + table;
   }
 
   private void clearAuditTables() {
-    CompletableFuture<JsonArray> future = new CompletableFuture<>();
+    CompletableFuture<Row> future = new CompletableFuture<>();
     final String sql = Stream.of(AUDIT_INSTANCE, AUDIT_HOLDINGS_RECORD, AUDIT_ITEM).
       map(s-> "DELETE FROM "+s).collect(Collectors.joining(";"));
 

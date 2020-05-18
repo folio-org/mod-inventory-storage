@@ -1,14 +1,19 @@
 {
-  "id": "f5f97be7-4803-496b-807e-ca013433953f",
-  "code": "ASER",
-  "name": "Active serial",
-  "statisticalCodeTypeId": "3abd6fc2-b3e4-4879-b1e1-78be41769fe3",
-  "source": "example"
-},
-{
-  "id": "2be68aea-b147-473a-b6c2-19e5cbb01194",
-  "code": "books",
-  "name": "Books, prints (books)",
-  "statisticalCodeTypeId": "39511666-83a8-4206-96a8-9c5823248e10",
-  "source": "example"
+  "statisticalCode": [
+    {
+      "id": "f5f97be7-4803-496b-807e-ca013433953f",
+      "code": "ASER",
+      "name": "Active serial",
+      "statisticalCodeTypeId": "3abd6fc2-b3e4-4879-b1e1-78be41769fe3",
+      "source": "example"
+    },
+    {
+      "id": "2be68aea-b147-473a-b6c2-19e5cbb01194",
+      "code": "books",
+      "name": "Books, prints (books)",
+      "statisticalCodeTypeId": "39511666-83a8-4206-96a8-9c5823248e10",
+      "source": "example"
+    }
+  ],
+  "totalRecords": 2
 }

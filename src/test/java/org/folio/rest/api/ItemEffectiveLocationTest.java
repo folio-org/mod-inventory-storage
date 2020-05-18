@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.vertx.sqlclient.Row;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
 import org.folio.rest.jaxrs.model.Item;
@@ -263,13 +264,13 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   public void canSetTableFieldOnInsert() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
     UUID itemId = UUID.randomUUID();
-    JsonArray result = runSql(String.format(
+    Row result = runSql(String.format(
         "INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) "
             + "VALUES ('%s', '{\"holdingsRecordId\": \"%s\"}') RETURNING jsonb, effectiveLocationId",
             itemId.toString(), holdingsRecordId.toString()
         ));
-    JsonObject jsonb = new JsonObject(result.getString(0));
-    String effectiveLocationId = result.getString(1);
+    JsonObject jsonb = (JsonObject) result.getValue(0);
+    String effectiveLocationId = result.getUUID(1).toString();
     assertThat(jsonb.getString("effectiveLocationId"), is(annexLibraryLocationId.toString()));
     assertThat(effectiveLocationId, is(annexLibraryLocationId.toString()));
   }
@@ -287,18 +288,18 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     item.setTemporaryLocationId(secondFloorLocationId.toString());
     itemsClient.replace(UUID.fromString(item.getId()), JsonObject.mapFrom(item));
 
-    JsonArray result = runSql(
+    Row result = runSql(
           "SELECT jsonb, effectiveLocationId "
         + "FROM test_tenant_mod_inventory_storage.item "
         + "WHERE id='" + item.getId() + "'");
-    JsonObject jsonb = new JsonObject(result.getString(0));
-    String effectiveLocationId = result.getString(1);
+    JsonObject jsonb = (JsonObject) result.getValue(0);
+    String effectiveLocationId = result.getUUID(1).toString();
     assertThat(jsonb.getString("effectiveLocationId"), is(secondFloorLocationId.toString()));
     assertThat(effectiveLocationId, is(secondFloorLocationId.toString()));
   }
 
-  private JsonArray runSql(String sql) {
-    CompletableFuture<JsonArray> future = new CompletableFuture<>();
+  private Row runSql(String sql) {
+    CompletableFuture<Row> future = new CompletableFuture<>();
 
     PostgresClient.getInstance(vertx).selectSingle(sql, handler -> {
       if (handler.failed()) {

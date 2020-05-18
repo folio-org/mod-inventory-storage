@@ -18,6 +18,7 @@ import org.folio.rest.jaxrs.model.Servicepointsusers;
 import org.folio.rest.jaxrs.resource.ServicePointsUsers;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -57,14 +58,6 @@ public class ServicePointsUserAPI implements ServicePointsUsers {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit))
             .setOffset(new Offset(offset));
-  }
-
-  private boolean isDuplicate(String errorMessage){
-    if(errorMessage != null && errorMessage.contains(
-            "duplicate key value violates unique constraint")){
-      return true;
-    }
-    return false;
   }
 
   private boolean isNotPresent(String errorMessage) {
@@ -162,7 +155,7 @@ public class ServicePointsUserAPI implements ServicePointsUsers {
       pgClient.save(SERVICE_POINT_USER_TABLE, id, entity, saveReply -> {
         if(saveReply.failed()) {
           String message = logAndSaveError(saveReply.cause());
-          if(isDuplicate(message)) {
+          if (PgExceptionUtil.isForeignKeyViolation(saveReply.cause())) {
             asyncResultHandler.handle(Future.succeededFuture(
                 PostServicePointsUsersResponse.respond422WithApplicationJson(
                 ValidationHelper.createValidationErrorMessage("userId",
