@@ -152,7 +152,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                       asyncResultHandler.handle(
                         io.vertx.core.Future.succeededFuture(
                           PostHoldingsStorageHoldingsResponse
-                            .respond400WithTextPlain(reply.cause().getMessage())));
+                            .respond400WithTextPlain(PgExceptionUtil.getMessage(reply.cause()))));
                     }
                   }
                 } catch (Exception e) {
@@ -160,7 +160,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(
                       PostHoldingsStorageHoldingsResponse
-                        .respond500WithTextPlain(e.getMessage())));
+                        .respond500WithTextPlain(PgExceptionUtil.getMessage(e))));
                 }
               });
             return null;
@@ -170,7 +170,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
             asyncResultHandler.handle(
               io.vertx.core.Future.succeededFuture(
                 PostHoldingsStorageHoldingsResponse
-                  .respond500WithTextPlain(error.getMessage())));
+                  .respond500WithTextPlain(PgExceptionUtil.getMessage(error))));
             return null;
           });
         } catch (Exception e) {

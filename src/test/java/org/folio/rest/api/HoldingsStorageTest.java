@@ -1542,8 +1542,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-    // vertx-pg-client does not return code in message (ONLY message)
-    assertThat(response.getBody(), containsString("hrid_holdings_seq"));
+    // Using PgExceptionUtil.getMessage because vertx-pg-client does not return code in message
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_holdings_seq"));
 
     log.info("Finished cannotCreateAHoldingsWithHRIDFailure");
   }
