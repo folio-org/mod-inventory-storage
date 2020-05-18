@@ -227,7 +227,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
 
     Promise<RowSet<Row>> promise = Promise.promise();
     pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .delete(REFERENCE_TABLE, id, promise.future().completer());
+      .delete(REFERENCE_TABLE, id, promise.future());
     return promise.future().map(RowSet<Row>::rowCount);
   }
 
