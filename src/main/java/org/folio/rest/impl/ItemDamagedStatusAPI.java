@@ -225,10 +225,10 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Map<String, String> okapiHeaders,
     Context vertxContext) {
 
-    Future<RowSet<Row>> future = Future.future();
+    Promise<RowSet<Row>> promise = Promise.promise();
     pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .delete(REFERENCE_TABLE, id, future.completer());
-    return future.map(RowSet<Row>::rowCount);
+      .delete(REFERENCE_TABLE, id, promise.future().completer());
+    return promise.future().map(RowSet<Row>::rowCount);
   }
 
   @Override
@@ -287,13 +287,13 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Map<String, String> okapiHeaders,
     Context vertxContext) {
 
-    Promise<RowSet<Row>> future = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     if (isNull(entity.getId())) {
       entity.setId(id);
     }
     pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .update(REFERENCE_TABLE, entity, id, future.future().completer());
+      .update(REFERENCE_TABLE, entity, id, promise.future().completer());
 
-    return future.future().map(RowSet<Row>::rowCount);
+    return promise.future().map(RowSet<Row>::rowCount);
   }
 }
