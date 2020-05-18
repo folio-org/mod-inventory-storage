@@ -17,6 +17,7 @@ import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.core.json.JsonArray;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.db.RowSetUtil;
 import org.folio.util.ResourceUtil;
 
 
@@ -118,7 +119,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
           result.completeExceptionally(resultSet.cause());
           return;
         }
-        result.complete(rowSetToJsonArrays(resultSet.result()));
+        result.complete(RowSetUtil.rowSetToJsonArrays(resultSet.result()));
       });
 
     return result.get(5, SECONDS);

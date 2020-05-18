@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import io.vertx.sqlclient.Row;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.db.RowSetUtil;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -134,7 +135,8 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     throws InterruptedException, TimeoutException, ExecutionException {
 
     final CompletableFuture<List<JsonArray>> result = new CompletableFuture<>();
-    postgresClient.select(getAuditSQL(tableName), h -> result.complete(rowSetToJsonArrays(h.result())));
+    postgresClient.select(getAuditSQL(tableName), h ->
+        result.complete(RowSetUtil.rowSetToJsonArrays(h.result())));
     return result.get(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
   }
 

@@ -101,27 +101,4 @@ public abstract class TestBase {
     }
   }
 
-  /**
-   * Map RowSet to JsonArray(s). One array per row.
-   * @param rowSet
-   * @return
-   */
-  List<JsonArray> rowSetToJsonArrays(RowSet<Row> rowSet) {
-    RowIterator<Row> iterator = rowSet.iterator();
-    List<JsonArray> list = new LinkedList<>();
-    while (iterator.hasNext()) {
-      Row row = iterator.next();
-      JsonArray ar = new JsonArray();
-      for (int i = 0; i < row.size(); i++) {
-        Object obj = row.getValue(i);
-        if (obj instanceof UUID) {
-          ar.add(obj.toString());
-        } else {
-          ar.add(obj);
-        }
-      }
-      list.add(ar);
-    }
-    return list;
-  }
 }
