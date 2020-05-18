@@ -542,6 +542,41 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canSearchUsingMetadataDateUpdatedIndexAll()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID firstInstanceId = UUID.randomUUID();
+
+    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
+
+    createInstance(firstInstanceToCreate);
+
+    UUID secondInstanceId = UUID.randomUUID();
+
+    JsonObject secondInstanceToCreate = nod(secondInstanceId);
+
+    createInstance(secondInstanceToCreate);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    JsonObject metadata = secondInstanceToCreate.getJsonObject("metadata");
+
+    client.get(instancesStorageUrl("?query=" + urlEncode("metadata.updatedDate>=\""+ metadata.getString("updatedDate") +"\"")), StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject responseBody = response.getJson();
+
+    JsonArray allInstances = responseBody.getJsonArray("instances");
+
+    assertThat(allInstances.size(), is(1));
+  }
+
+  @Test
   public void canPageAllInstances()
     throws MalformedURLException,
     InterruptedException,
