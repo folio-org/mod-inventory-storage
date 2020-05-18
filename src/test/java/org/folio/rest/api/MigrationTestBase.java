@@ -118,22 +118,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
           result.completeExceptionally(resultSet.cause());
           return;
         }
-        RowIterator<Row> iterator = resultSet.result().iterator();
-        List<JsonArray> list = new LinkedList<>();
-        while (iterator.hasNext()) {
-          Row row = iterator.next();
-          JsonArray ar = new JsonArray();
-          for (int i = 0; i < row.size(); i++) {
-            Object obj = row.getValue(i);
-            if (obj instanceof java.util.UUID) {
-              ar.add(obj.toString());
-            } else {
-              ar.add(obj);
-            }
-          }
-          list.add(ar);
-        }
-        result.complete(list);
+        result.complete(rowSetToJsonArrays(resultSet.result()));
       });
 
     return result.get(5, SECONDS);

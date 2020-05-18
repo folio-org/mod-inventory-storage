@@ -6,12 +6,18 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowIterator;
+import io.vertx.sqlclient.RowSet;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -93,5 +99,29 @@ public abstract class TestBase {
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Map RowSet to JsonArray(s). One array per row.
+   * @param rowSet
+   * @return
+   */
+  List<JsonArray> rowSetToJsonArrays(RowSet<Row> rowSet) {
+    RowIterator<Row> iterator = rowSet.iterator();
+    List<JsonArray> list = new LinkedList<>();
+    while (iterator.hasNext()) {
+      Row row = iterator.next();
+      JsonArray ar = new JsonArray();
+      for (int i = 0; i < row.size(); i++) {
+        Object obj = row.getValue(i);
+        if (obj instanceof UUID) {
+          ar.add(obj.toString());
+        } else {
+          ar.add(obj);
+        }
+      }
+      list.add(ar);
+    }
+    return list;
   }
 }
