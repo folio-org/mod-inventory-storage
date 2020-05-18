@@ -226,7 +226,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
       try {
         String tenantId = getTenant(okapiHeaders);
         PostgresClient pgClient = getPGClient(vertxContext, tenantId);
-        checkServicepointInUse().setHandler(inUseRes -> {
+        checkServicepointInUse().onComplete(inUseRes -> {
           if(inUseRes.failed()) {
             String message = logAndSaveError(inUseRes.cause());
             asyncResultHandler.handle(Future.succeededFuture(
