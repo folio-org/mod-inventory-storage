@@ -1951,7 +1951,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, SECONDS);
 
     assertThat(response.getStatusCode(), is(500));
-    assertThat(response.getBody(), containsString("hrid_instances_seq"));
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotCreateInstanceWithHRIDFailure");
   }
@@ -2161,7 +2161,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
 
     assertThat(response, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
-    assertThat(response.getBody(), containsString("hrid_instances_seq"));
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotPostSynchronousBatchWithHRIDFailure");
   }
@@ -2301,7 +2301,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
     assertThat(ibr.getErrorMessages(), hasSize(1));
-    assertThat(ibr.getErrorMessages().get(0), containsString("instance_hrid_idx_unique"));
+    assertThat(ibr.getErrorMessages().get(0), isUniqueViolation("instance_hrid_idx_unique"));
 
     log.info("Finished cannotCreateACollectionOfInstancesWithDuplicatedHRIDs");
   }
@@ -2337,7 +2337,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
 
     assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().get(0), containsString("hrid_instances_seq"));
+    assertThat(ibr.getErrorMessages().get(0), isMaximumSequenceValueError("hrid_instances_seq"));
 
     log.info("Finished cannotCreateACollectionOfInstancesWithHRIDFailure");
   }

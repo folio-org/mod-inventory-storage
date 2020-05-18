@@ -619,7 +619,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HTTP_INTERNAL_ERROR));
-    assertThat(postResponse.getBody(), containsString("hrid_items_seq"));
+    assertThat(postResponse.getBody(), isMaximumSequenceValueError("hrid_items_seq"));
 
     log.info("Finished cannotCreateAnItemWithHRIDFailure");
   }
@@ -985,7 +985,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response response = postSynchronousBatch(itemArray);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-    assertThat(response.getBody(), containsString("hrid_items_seq"));
+    assertThat(response.getBody(), isMaximumSequenceValueError("hrid_items_seq"));
 
     for (int i = 0; i < itemArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemArray.getJsonObject(i).getString("id")));
