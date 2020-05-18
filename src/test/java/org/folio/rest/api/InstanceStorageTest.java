@@ -558,11 +558,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject secondInstanceToCreate = nod(secondInstanceId);
 
-    createInstance(secondInstanceToCreate);
+    IndividualResource ir = createInstance(secondInstanceToCreate);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    JsonObject metadata = secondInstanceToCreate.getJsonObject("metadata");
+    JsonObject metadata = ir.getJson().getJsonObject("metadata");
 
     String query = urlEncode(String.format("%s.updatedDate>=\"%s\"", METADATA_KEY, metadata.getString("updatedDate")));
 
