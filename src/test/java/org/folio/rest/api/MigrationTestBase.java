@@ -4,8 +4,6 @@ package org.folio.rest.api;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -13,11 +11,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.UnaryOperator;
 
 import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.core.json.JsonArray;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.db.RowSetUtil;
 import org.folio.util.ResourceUtil;
 
 
@@ -109,17 +104,17 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
       getSchemaName(), tableName, propertyName, id.toString()));
   }
 
-  List<JsonArray> executeSelect(String selectQuery, Object... args)
+  RowSet<Row> executeSelect(String selectQuery, Object... args)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    final CompletableFuture<List<JsonArray>> result = new CompletableFuture<>();
+    final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
     getPostgresClient().select(String.format(replaceSchema(selectQuery), args),
       resultSet -> {
         if (resultSet.failed()) {
           result.completeExceptionally(resultSet.cause());
           return;
         }
-        result.complete(RowSetUtil.rowSetToJsonArrays(resultSet.result()));
+        result.complete(resultSet.result());
       });
 
     return result.get(5, SECONDS);
