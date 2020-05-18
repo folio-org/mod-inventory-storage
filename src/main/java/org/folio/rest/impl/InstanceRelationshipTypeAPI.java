@@ -179,7 +179,7 @@ public class InstanceRelationshipTypeAPI implements org.folio.rest.jaxrs.resourc
                       .respond400WithTextPlain(msg)));
                   return;
                 }
-                int updated = reply.result().getUpdated();
+                int updated = reply.result().rowCount();
                 if (updated != 1) {
                   String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                   log.error(msg);
@@ -221,7 +221,7 @@ public class InstanceRelationshipTypeAPI implements org.folio.rest.jaxrs.resourc
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  if (reply.result().getUpdated() == 0) {
+                  if (reply.result().rowCount() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
                         .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                   } else{

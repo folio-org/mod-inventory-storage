@@ -1,11 +1,15 @@
 {
-  "id": "b989fb41-cf5b-4ae0-8373-297beffa3d77",
-  "name": "Note",
-  "source": "folio"
-},
-{
-  "id": "ae67d1e3-0eb1-495b-b461-c2b77b46c650",
-  "name": "Action note",
-  "source": "folio"
+  "itemNoteTypes": [
+    {
+      "id": "b989fb41-cf5b-4ae0-8373-297beffa3d77",
+      "name": "Note",
+      "source": "folio"
+    },
+    {
+      "id": "ae67d1e3-0eb1-495b-b461-c2b77b46c650",
+      "name": "Action note",
+      "source": "folio"
+    }
+  ],
+  "totalRecords": 2
 }
-

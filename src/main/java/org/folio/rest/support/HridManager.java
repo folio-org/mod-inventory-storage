@@ -3,8 +3,12 @@ package org.folio.rest.support;
 import java.util.Objects;
 import java.util.function.Function;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
+import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.PostgresClient;
 
 import io.vertx.core.AsyncResult;
@@ -12,13 +16,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.ResultSet;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.ext.sql.UpdateResult;
-import org.folio.rest.impl.StorageHelper;
 
 public class HridManager {
   private static final Logger log = LoggerFactory.getLogger(HridManager.class);
@@ -49,28 +48,26 @@ public class HridManager {
     final Promise<HridSettings> promise = Promise.promise();
 
     try {
-      context.runOnContext(v -> postgresClient.getClient().getConnection(res -> {
-          if (res.succeeded()) {
-            final SQLConnection conn = res.result();
-            try {
-              getHridSettings(StorageHelper.completeFuture(conn))
-                .setHandler(hridSettingsResult -> {
-                  conn.close();
+      context.runOnContext(v -> postgresClient.startTx(res -> {
+        if (res.succeeded()) {
+          try {
+            getHridSettings(res)
+              .onComplete(hridSettingsResult ->
+                postgresClient.endTx(res, done -> {
                   if (hridSettingsResult.succeeded()) {
                     promise.complete(hridSettingsResult.result());
                   } else {
                     fail(promise, "Failed to retrieve the HRID settings",
-                        hridSettingsResult.cause());
-                  }
-                });
-            } catch (Exception e) {
-              conn.close();
-              fail(promise, "Failed retrieving the HRID settings", e);
-            }
-          } else {
-            fail(promise, "Failed to obtain a database connection", res.cause());
+                      hridSettingsResult.cause());
+                  }})
+              );
+          } catch (Exception e) {
+            postgresClient.rollbackTx(res, done -> fail(promise, "Failed retrieving the HRID settings", e));
           }
-        }));
+        } else {
+          fail(promise, "Failed to obtain a database connection", res.cause());
+        }
+      }));
     } catch (Exception e) {
       fail(promise, "Failed to execute getting the HRID settings on a context", e);
     }
@@ -108,7 +105,7 @@ public class HridManager {
 
   private Future<HridSettings> getHridSettings(AsyncResult<SQLConnection> conn) {
     final String sql = "SELECT jsonb FROM " + HRID_SETTINGS_TABLE;
-    final Promise<JsonArray> promise = Promise.promise();
+    final Promise<Row> promise = Promise.promise();
 
     try {
       postgresClient.selectSingle(conn, sql, promise);
@@ -117,14 +114,22 @@ public class HridManager {
     }
 
     return promise.future().map(
-        results -> Json.decodeValue(results.getString(0), HridSettings.class));
+      results -> {
+        try {
+          JsonObject o = (JsonObject) results.getValue(0);
+          return Json.decodeValue(o.encode(), HridSettings.class);
+        } catch (Exception e) {
+          log.fatal(e.getMessage(), e);
+        }
+        return null;
+      });
   }
 
   private Future<Void> updateHridSettings(AsyncResult<SQLConnection> conn,
       HridSettings existingHridSettings, HridSettings hridSettings) {
     hridSettings.setId(existingHridSettings.getId());
 
-    final Promise<UpdateResult> promise = Promise.promise();
+    final Promise<RowSet<Row>> promise = Promise.promise();
 
     try {
       postgresClient.update(conn, HRID_SETTINGS_TABLE, hridSettings, null, false, promise);
@@ -149,7 +154,7 @@ public class HridManager {
 
   private Future<Void> updateSequence(AsyncResult<SQLConnection> conn, String field,
       HridSetting existingHridSetting, HridSetting hridSetting) {
-    final Promise<ResultSet> promise = Promise.promise();
+    final Promise<RowSet<Row>> promise = Promise.promise();
 
     // Only update the sequence if the start number has changed
     if (!Objects.equals(existingHridSetting.getStartNumber(), hridSetting.getStartNumber())) {
@@ -171,7 +176,7 @@ public class HridManager {
     final Promise<String> promise = Promise.promise();
 
     try {
-      context.runOnContext(v -> getHridSettings().compose(mapper::apply).setHandler(promise));
+      context.runOnContext(v -> getHridSettings().compose(mapper::apply).onComplete(promise));
     } catch (Exception e) {
       fail(promise, "Failed to get the next HRID", e);
     }
@@ -181,7 +186,7 @@ public class HridManager {
 
   private Future<String> getNextHrid(HridSetting hridSetting, String type) {
     final String sql = "SELECT nextval('hrid_" + type + "_seq')";
-    final Promise<JsonArray> promise = Promise.promise();
+    final Promise<Row> promise = Promise.promise();
 
     try {
       postgresClient.selectSingle(sql, promise);
@@ -207,7 +212,7 @@ public class HridManager {
   }
 
   private Void rollback(AsyncResult<SQLConnection> conn, Promise<Void> promise,
-      Throwable error) {
+                        Throwable error) {
     log.error("Error updating HRID settings, rolling back transaction", error);
 
     try {

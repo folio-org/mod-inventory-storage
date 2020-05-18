@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import io.vertx.sqlclient.Row;
 import org.folio.rest.impl.StorageHelper;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
@@ -60,9 +61,9 @@ public class HridSettingsStorageTest extends TestBase {
       // has not changed. Since tests are executed in a non-deterministic order, we need to
       // ensure that the sequences are reset to 1 on start and that the next HRID value will be
       // use 1 as the number component.
-      Promise<JsonArray> instancePromise = Promise.promise();
-      Promise<JsonArray> holdingPromise = Promise.promise();
-      Promise<JsonArray> itemPromise = Promise.promise();
+      Promise<Row> instancePromise = Promise.promise();
+      Promise<Row> holdingPromise = Promise.promise();
+      Promise<Row> itemPromise = Promise.promise();
       postgresClient.selectSingle("select setval('hrid_instances_seq',1,FALSE)", instancePromise);
       instancePromise.future().map(v -> {
         postgresClient.selectSingle("select setval('hrid_holdings_seq',1,FALSE)", holdingPromise);

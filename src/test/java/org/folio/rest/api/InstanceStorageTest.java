@@ -664,7 +664,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         "      ) AS tmp2";
 
     pg.execute(sql, testContext.asyncAssertSuccess(updated -> {
-        testContext.assertEquals(n, updated.getUpdated());
+        testContext.assertEquals(n, updated.rowCount());
         async.complete();
       }));
     async.await(10000 /* ms */);

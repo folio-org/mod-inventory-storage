@@ -45,7 +45,7 @@ public class UpdateItemStatusDateFunctionMigrationTest extends MigrationTestBase
     // The 'old' function should add 'OLD ' prefix for datetime, verify it
     assertThat(executeSelect(
       "select jsonb->'status'->>'date' from %s.item where id = '%s'",
-      getSchemaName(), firstItem).get(0).getString(0), startsWith("OLD "));
+      getSchemaName(), firstItem).iterator().next().getString(0), startsWith("OLD "));
 
     upgradeTenant(fromVersion, toVersion);
 

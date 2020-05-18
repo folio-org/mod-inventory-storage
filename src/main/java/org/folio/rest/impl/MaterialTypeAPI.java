@@ -183,7 +183,7 @@ public class MaterialTypeAPI implements MaterialTypes {
           reply -> {
             try {
               if(reply.succeeded()){
-                if(reply.result().getUpdated() == 0){
+                if(reply.result().rowCount() == 0){
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutMaterialTypesByMaterialtypeIdResponse
                     .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                 }

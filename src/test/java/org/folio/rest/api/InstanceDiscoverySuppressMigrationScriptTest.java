@@ -35,7 +35,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
 
     for (IndividualResource instance : allInstances) {
       assertThat(unsetJsonbProperty("instance", instance.getId(),
-        DISCOVERY_SUPPRESS).getUpdated(), is(1));
+        DISCOVERY_SUPPRESS).rowCount(), is(1));
     }
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
@@ -55,7 +55,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
 
     for (IndividualResource instance : notSuppressedInstances) {
       assertThat(unsetJsonbProperty("instance", instance.getId(),
-        DISCOVERY_SUPPRESS).getUpdated(), is(1));
+        DISCOVERY_SUPPRESS).rowCount(), is(1));
     }
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);

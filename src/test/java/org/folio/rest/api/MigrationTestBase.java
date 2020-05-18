@@ -4,18 +4,17 @@ package org.folio.rest.api;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.UnaryOperator;
 
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.util.ResourceUtil;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.ext.sql.UpdateResult;
 
 abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
   static String loadScript(String scriptName) {
@@ -67,10 +66,10 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     result.get(5, SECONDS);
   }
 
-  UpdateResult executeSql(String sql)
+  RowSet<Row> executeSql(String sql)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    final CompletableFuture<UpdateResult> result = new CompletableFuture<>();
+    final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
 
     getPostgresClient().execute(sql, updateResult -> {
       if (updateResult.failed()) {
@@ -97,7 +96,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     ));
   }
 
-  UpdateResult unsetJsonbProperty(String tableName, UUID id, String propertyName)
+  RowSet<Row> unsetJsonbProperty(String tableName, UUID id, String propertyName)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     return executeSql(String.format(
@@ -105,17 +104,17 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
       getSchemaName(), tableName, propertyName, id.toString()));
   }
 
-  List<JsonArray> executeSelect(String selectQuery, Object... args)
+  RowSet<Row> executeSelect(String selectQuery, Object... args)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    final CompletableFuture<List<JsonArray>> result = new CompletableFuture<>();
+    final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
     getPostgresClient().select(String.format(replaceSchema(selectQuery), args),
       resultSet -> {
         if (resultSet.failed()) {
           result.completeExceptionally(resultSet.cause());
-        } else {
-          result.complete(resultSet.result().getResults());
+          return;
         }
+        result.complete(resultSet.result());
       });
 
     return result.get(5, SECONDS);

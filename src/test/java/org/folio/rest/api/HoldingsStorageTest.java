@@ -1741,6 +1741,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final Response response = postSynchronousBatch(holdingsArray);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
+    // vertx-pg-client only returns message in message (not code)
     assertThat(response.getBody(), isMaximumSequenceValueError("hrid_holdings_seq"));
 
     for (int i = 0; i < holdingsArray.size(); i++) {

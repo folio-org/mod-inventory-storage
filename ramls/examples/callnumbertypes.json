@@ -1,10 +1,15 @@
 {
-  "id": "03dd64d0-5626-4ecd-8ece-4531e0069f35",
-  "name": "Dewey Decimal classification",
-  "source": "folio"
-},
-{
-  "id": "512173a7-bd09-490e-b773-17d83f2b63fe",
-  "name": "LC Modified",
-  "source": "folio"
+  "callNumberTypes": [
+    {
+      "id": "03dd64d0-5626-4ecd-8ece-4531e0069f35",
+      "name": "Dewey Decimal classification",
+      "source": "folio"
+    },
+    {
+      "id": "512173a7-bd09-490e-b773-17d83f2b63fe",
+      "name": "LC Modified",
+      "source": "folio"
+    }
+  ],
+  "totalRecords": 2
 }
