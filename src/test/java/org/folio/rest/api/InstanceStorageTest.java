@@ -542,7 +542,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchUsingMetadataDateUpdatedIndexAll()
+  public void canSearchUsingMetadataDateUpdatedIndex()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
@@ -576,6 +576,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray allInstances = responseBody.getJsonArray("instances");
 
     assertThat(allInstances.size(), is(1));
+
+    JsonObject instance = allInstances.getJsonObject(0);
+
+    assertThat(instance.getString("title"), is(ir.getJson().getString("title")));
   }
 
   @Test
