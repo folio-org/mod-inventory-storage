@@ -57,6 +57,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.not;
@@ -64,7 +65,6 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 @RunWith(VertxUnitRunner.class)
@@ -1814,7 +1814,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingId() throws Exception {
+  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() throws Exception {
+    cannotPostSynchronousBatchWithExistingId("");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithExistingIdUpsertFalse() throws Exception {
+    cannotPostSynchronousBatchWithExistingId("?upsert=false");
+  }
+
+  private void cannotPostSynchronousBatchWithExistingId(String subPath) throws Exception {
     UUID duplicateId = UUID.randomUUID();
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(UUID.randomUUID()));
@@ -1824,7 +1833,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createInstance(instancesArray.getJsonObject(1));
 
-    Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
+    Response response = instancesStorageSyncClient.attemptToCreate(subPath, instanceCollection);
     assertThat(response, allOf(
         statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate")));
@@ -1832,6 +1841,30 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(0).getString("id")));
     assertExists(instancesArray.getJsonObject(1));
     assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(2).getString("id")));
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithExistingIdUpsertTrue() throws Exception {
+    UUID duplicateId = UUID.randomUUID();
+    createInstance(nod(duplicateId));
+
+    JsonArray instancesArray = new JsonArray();
+    instancesArray.add(uprooted(UUID.randomUUID()));
+    instancesArray.add(smallAngryPlanet(duplicateId));
+    instancesArray.add(temeraire(UUID.randomUUID()));
+    JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+
+    Response response = instancesStorageSyncClient.attemptToCreate("?upsert=true", instanceCollection);
+    assertThat(response, statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    assertExists(instancesArray.getJsonObject(0));
+    assertExists(instancesArray.getJsonObject(1));
+    assertExists(instancesArray.getJsonObject(2));
+
+    Response getResponse = getById(duplicateId);
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+    JsonObject updatedInstance = getResponse.getJson();
+    assertThat(updatedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
   }
 
   @Test

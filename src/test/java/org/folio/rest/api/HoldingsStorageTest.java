@@ -1870,9 +1870,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private Response postSynchronousBatch(JsonArray holdingsArray) {
+    return postSynchronousBatch("", holdingsArray);
+  }
+
+  private Response postSynchronousBatch(String subPath, JsonArray holdingsArray) {
     JsonObject holdingsCollection = new JsonObject().put("holdingsRecords", holdingsArray);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(holdingsStorageSyncUrl(""), holdingsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
+    client.post(holdingsStorageSyncUrl(subPath), holdingsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
     try {
       return createCompleted.get(5, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -1902,6 +1906,30 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     for (int i=0; i<holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
     }
+  }
+
+  public Response postSynchronousBatchWithExistingId(String subPath) {
+    JsonArray holdingsArray1 = threeHoldings();
+    JsonArray holdingsArray2 = threeHoldings();
+    String existingId = holdingsArray1.getJsonObject(1).getString("id");
+    holdingsArray2.getJsonObject(1).put("id", existingId);
+    assertThat(postSynchronousBatch(subPath, holdingsArray1), statusCodeIs(HttpStatus.HTTP_CREATED));
+    return postSynchronousBatch(subPath, holdingsArray2);
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() throws Exception {
+    assertThat(postSynchronousBatchWithExistingId(""), statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithExistingIdWithUpsertFalse() throws Exception {
+    assertThat(postSynchronousBatchWithExistingId("?upsert=false"), statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithExistingIdWithUpsertTrue() throws Exception {
+    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HttpStatus.HTTP_CREATED));
   }
 
   @Test

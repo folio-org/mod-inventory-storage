@@ -169,11 +169,16 @@ public class ResourceClient {
   }
 
   public Response attemptToCreate(JsonObject request) throws MalformedURLException,
+      InterruptedException, ExecutionException, TimeoutException {
+    return attemptToCreate("", request);
+  }
+
+  public Response attemptToCreate(String subPath, JsonObject request) throws MalformedURLException,
     InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    client.post(urlMaker.combine(""), request, StorageTestSuite.TENANT_ID,
+    client.post(urlMaker.combine(subPath), request, StorageTestSuite.TENANT_ID,
       ResponseHandler.any(createCompleted));
 
     return createCompleted.get(5, TimeUnit.SECONDS);

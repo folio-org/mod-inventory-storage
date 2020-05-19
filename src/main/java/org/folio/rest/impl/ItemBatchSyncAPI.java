@@ -17,9 +17,6 @@ import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.ItemEffectiveCallNumberComponentsService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
@@ -28,11 +25,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 
 public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
-  private static final Logger log = LoggerFactory.getLogger(ItemBatchSyncAPI.class);
-
   @Validate
   @Override
-  public void postItemStorageBatchSynchronous(ItemsPost entity, Map<String, String> okapiHeaders,
+  public void postItemStorageBatchSynchronous(boolean upsert, ItemsPost entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     final List<Item> items = entity.getItems();
     final PostgresClient postgresClient = PostgresClient.getInstance(
@@ -53,7 +48,7 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
       .compose(result -> effectiveCallNumberService.populateEffectiveCallNumberComponents(items))
       .map(result -> {
         StorageHelper.postSync(ItemStorageAPI.ITEM_TABLE, entity.getItems(),
-          okapiHeaders, asyncResultHandler, vertxContext,
+          okapiHeaders, upsert, asyncResultHandler, vertxContext,
           PostItemStorageBatchSynchronousResponse::respond201);
         return result;
       }).otherwise(EndpointFailureHandler.handleFailure(asyncResultHandler,

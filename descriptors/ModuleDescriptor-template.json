@@ -35,7 +35,7 @@
     },
     {
       "id": "item-storage-batch-sync",
-      "version": "0.3",
+      "version": "0.4",
       "handlers": [
         {
           "methods": ["POST"],
@@ -77,7 +77,7 @@
     },
     {
       "id": "holdings-storage-batch-sync",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [
         {
           "methods": ["POST"],
@@ -193,7 +193,7 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "0.2",
+      "version": "0.3",
       "handlers": [
         {
           "methods": ["POST"],
