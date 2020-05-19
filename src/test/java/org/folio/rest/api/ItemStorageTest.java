@@ -1487,12 +1487,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchForItemsByTags()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+  public void canSearchForItemsByTags() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -1527,12 +1523,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchForItemsByStatus()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+  public void canSearchForItemsByStatus() throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -1763,8 +1755,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void tenantIsRequiredForGettingAnItem()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     URL getInstanceUrl = itemsStorageUrl(String.format("/%s",
       UUID.randomUUID().toString()));
@@ -1781,8 +1772,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void tenantIsRequiredForGettingAllItems()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -1936,7 +1926,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     "Declared lost",
     "Order closed",
     "Claimed returned",
-    "Withdrawn"
+    "Withdrawn",
+    "Lost and paid"
   })
   public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
@@ -2215,16 +2206,15 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         PostgresClient.getInstance(vertx, TENANT_ID);
     final CompletableFuture<Void> sequenceSet = new CompletableFuture<>();
 
-    vertx.runOnContext(v -> {
+    vertx.runOnContext(v ->
       postgresClient.selectSingle("select setval('hrid_items_seq',"
-          + sequenceNumber + ",FALSE)", r -> {
-            if (r.succeeded()) {
-              sequenceSet.complete(null);
-            } else {
-              sequenceSet.completeExceptionally(r.cause());
-            }
-          });
-    });
+        + sequenceNumber + ",FALSE)", r -> {
+        if (r.succeeded()) {
+          sequenceSet.complete(null);
+        } else {
+          sequenceSet.completeExceptionally(r.cause());
+        }
+      }));
 
     try {
       sequenceSet.get(2, SECONDS);
