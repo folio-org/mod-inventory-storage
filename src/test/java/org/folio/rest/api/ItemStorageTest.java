@@ -9,6 +9,7 @@ import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENT
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.ResponseHandler.json;
@@ -41,14 +42,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -66,7 +64,6 @@ import org.folio.rest.jaxrs.model.LastCheckIn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -188,7 +185,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(inTransitServicePointId));
     assertThat(itemFromGet.getString("hrid"), is("it00000000001"));
 
-    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(itemFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -236,7 +233,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
 
-    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(itemFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -307,7 +304,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLibraryLocationId.toString()));
 
-    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(itemFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -499,7 +496,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
-    List<JsonObject> errors = JsonArrayHelper.toList(
+    List<JsonObject> errors = toList(
       postResponse.getJson().getJsonArray("errors"));
 
     assertThat(errors.size(), is(1));
@@ -762,7 +759,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
-    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(item);
 
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
@@ -1029,7 +1026,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
-    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(item);
 
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
@@ -1082,7 +1079,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
-    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(item);
 
     assertThat(item.getString("id"), is(id.toString()));
 
@@ -1516,10 +1513,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertTrue(searchResponse.getBody().contains(TAG_VALUE));
 
-    LinkedHashMap item = (LinkedHashMap) foundItems.getList().get(0);
-    LinkedHashMap<String, ArrayList<String>> itemTags = (LinkedHashMap<String, ArrayList<String>>) item.get("tags");
+    List<String> itemTags = getTags(foundItems.getJsonObject(0));
 
-    assertThat(itemTags.get("tagList"), hasItem(TAG_VALUE));
+    assertThat(itemTags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -1617,10 +1613,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(searchBody.getInteger("totalRecords"), is(1));
     assertThat(foundItems.getJsonObject(0).getString("barcode"), is("673274826203"));
 
-    LinkedHashMap item = (LinkedHashMap) foundItems.getList().get(0);
-    LinkedHashMap<String, ArrayList<String>> itemTags = (LinkedHashMap<String, ArrayList<String>>) item.get("tags");
+    List<String> itemTags = getTags(foundItems.getJsonObject(0));
 
-    assertThat(itemTags.get("tagList"), hasItem(TAG_VALUE));
+    assertThat(itemTags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -2221,5 +2216,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     } catch (Exception e) {
       fail(e.getMessage());
     }
+  }
+
+  private List<String> getTags(JsonObject item) {
+    return item.getJsonObject("tags").getJsonArray("tagList").stream()
+      .map(Object::toString)
+      .collect(Collectors.toList());
   }
 }
