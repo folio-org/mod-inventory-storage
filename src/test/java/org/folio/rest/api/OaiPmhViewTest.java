@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.deleteAll;
+import static org.folio.rest.api.StorageTestSuite.*;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.*;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -21,11 +20,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import io.vertx.sqlclient.Row;
 import org.apache.commons.lang.StringUtils;
 import org.folio.rest.jaxrs.model.InstanceType;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,6 +44,10 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 @RunWith(VertxUnitRunner.class)
 public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LoggerFactory.getLogger(OaiPmhViewTest.class);
+
+  private static final PostgresClient postgresClient =
+    PostgresClient.getInstance(
+      getVertx(), TenantTool.calculateTenantId(TENANT_ID));
 
   private UUID holdingsRecordId1;
   private Map<String, String> params;
@@ -310,4 +317,19 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     log.debug("response from oai pmh view:", objects);
     return objects;
   }
+
+  void clearAuditTables() {
+    CompletableFuture<Row> future = new CompletableFuture<>();
+    final String sql = Stream.of("audit_instance", "audit_holdings_record", "audit_item").
+      map(s-> "DELETE FROM "+s).collect(Collectors.joining(";"));
+
+    postgresClient.selectSingle(sql, handler -> {
+      if (handler.failed()) {
+        future.completeExceptionally(handler.cause());
+        return;
+      }
+      future.complete(handler.result());
+    });
+  }
+
 }
