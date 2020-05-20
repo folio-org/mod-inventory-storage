@@ -49,7 +49,11 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   @Before
   public void setUp() throws InterruptedException, ExecutionException, MalformedURLException, TimeoutException {
 
+    deleteAll(itemsStorageUrl(""));
+    deleteAll(holdingsStorageUrl(""));
+    deleteAll(instancesStorageUrl(""));
     clearAuditTables();
+
     params = new HashMap<>();
 
     holdingsRecordId1 = createInstanceAndHolding(mainLibraryLocationId);
@@ -92,9 +96,9 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   public void canRequestOaiPmhViewWhenEmptyDB()
       throws InterruptedException, TimeoutException, ExecutionException, MalformedURLException {
     // given
-    itemsClient.deleteAll();
-    holdingsClient.deleteAll();
-    instancesClient.deleteAll();
+    deleteAll(itemsStorageUrl(""));
+    deleteAll(holdingsStorageUrl(""));
+    deleteAll(instancesStorageUrl(""));
     clearAuditTables();
     // when
     final JsonArray data = requestOaiPmhView(params);
