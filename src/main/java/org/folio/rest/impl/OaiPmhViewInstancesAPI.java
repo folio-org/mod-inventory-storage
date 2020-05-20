@@ -1,7 +1,12 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewInstancesResponse.respond400WithTextPlain;
+import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewInstancesResponse.respond500WithTextPlain;
+
 import java.lang.invoke.MethodHandles;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -15,9 +20,7 @@ import com.google.common.collect.Iterables;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -31,6 +34,7 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
 
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup()
     .lookupClass());
+  private static final DateTimeFormatter ISO_UTC_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
   private static final String SQL = "select * from pmh_view_function($1,$2,$3,$4);";
   private static final String RESPONSE_START = "[";
@@ -52,47 +56,49 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
 
       final HttpServerResponse response = getResponse(routingContext);
 
-      postgresClient.startTx(trans -> postgresClient.selectStream(trans, SQL, params, ar -> {
+      postgresClient.startTx(tx -> postgresClient.selectStream(tx, SQL, params, ar -> {
         if (ar.failed()) {
           respondWithError(ar.cause(), asyncResultHandler);
+          return;
         }
         response.write(RESPONSE_START);
         ar.result()
           .handler(row -> {
-            response.write(mapToBuffer(row));
+            response.write(createJsonFromRow(row));
             response.write(",");
           })
           .endHandler(event -> {
             log.info("Select from oai pmh view completed successfully");
             response.end(RESPONSE_END);
-            postgresClient.endTx(trans, h -> {
+            postgresClient.endTx(tx, h -> {
               if (h.failed()) {
                 respondWithError(h.cause(), asyncResultHandler);
               }
             });
           });
       }));
+    } catch (IllegalArgumentException e) {
+      log.error(e);
+      asyncResultHandler
+        .handle(succeededFuture(respond400WithTextPlain(e.getMessage())));
     } catch (Exception e) {
-      if (e instanceof IllegalArgumentException) {
-        log.error(e);
-        asyncResultHandler
-          .handle(Future.succeededFuture(OaiPmhView.GetOaiPmhViewInstancesResponse.respond400WithTextPlain(e.getMessage())));
-      } else {
-        respondWithError(e, asyncResultHandler);
-      }
+      respondWithError(e, asyncResultHandler);
     }
   }
 
-  private Buffer mapToBuffer(Row row) {
-
-    final JsonObject entries = new JsonObject();
+  private String createJsonFromRow(Row row) {
+    JsonObject json = new JsonObject();
     for (int i = 0; i < row.size(); i++) {
-      entries.put(row.getColumnName(i), row.getValue(i) == null ? ""
-          : row.getValue(i)
-            .toString());
+      json.put(row.getColumnName(i), convertRowValue(row.getValue(i)));
     }
+    return json.toString();
+  }
 
-    return entries.toBuffer();
+  private Object convertRowValue(Object value) {
+    if (value == null) {
+      return "";
+    }
+    return value instanceof JsonObject ? value : value.toString();
   }
 
   private HttpServerResponse getResponse(RoutingContext routingContext) {
@@ -105,7 +111,7 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   private void respondWithError(Throwable t, Handler<AsyncResult<Response>> asyncResultHandler) {
     log.error(t);
     asyncResultHandler
-      .handle(Future.succeededFuture(OaiPmhView.GetOaiPmhViewInstancesResponse.respond500WithTextPlain(t.getMessage())));
+      .handle(succeededFuture(respond500WithTextPlain(t.getMessage())));
   }
 
   private Tuple createPostgresParams(String startDate, String endDate, boolean deletedRecordSupport,
