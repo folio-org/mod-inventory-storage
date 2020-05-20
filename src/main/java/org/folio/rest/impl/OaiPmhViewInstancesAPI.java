@@ -6,7 +6,6 @@ import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewInstancesRes
 
 import java.lang.invoke.MethodHandles;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
