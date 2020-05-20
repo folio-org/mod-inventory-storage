@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -22,8 +23,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import io.vertx.sqlclient.Row;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -31,6 +36,7 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
+import org.folio.rest.tools.utils.TenantTool;
 import org.junit.BeforeClass;
 
 import io.vertx.core.json.JsonArray;
@@ -58,6 +64,10 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static String bookMaterialTypeID;
   protected static UUID   canCirculateLoanTypeId;
   protected static String canCirculateLoanTypeID;
+
+  protected static PostgresClient postgresClient =
+    PostgresClient.getInstance(
+      getVertx(), TenantTool.calculateTenantId(TENANT_ID));
 
   // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
   // that JUnit calls *before* the @BeforeClass beforeAny() method.
@@ -331,5 +341,19 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .getJsonArray("instanceStatuses").getJsonObject(0);
 
     return new IndividualResource(instanceStatus);
+  }
+
+  void clearAuditTables() {
+    CompletableFuture<Row> future = new CompletableFuture<>();
+    final String sql = Stream.of("audit_instance", "audit_holdings_record", "audit_item").
+      map(s-> "DELETE FROM "+s).collect(Collectors.joining(";"));
+
+    postgresClient.selectSingle(sql, handler -> {
+      if (handler.failed()) {
+        future.completeExceptionally(handler.cause());
+        return;
+      }
+      future.complete(handler.result());
+    });
   }
 }

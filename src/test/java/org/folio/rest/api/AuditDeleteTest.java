@@ -1,11 +1,7 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
-import static org.folio.rest.api.StorageTestSuite.getVertx;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -16,14 +12,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,6 +22,8 @@ import org.junit.runner.RunWith;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.pointer.JsonPointer;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 @RunWith(VertxUnitRunner.class)
 public class AuditDeleteTest extends TestBaseWithInventoryUtil {
@@ -42,10 +34,6 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   private static final String RECORD_ID_JSON_PATH = "/record/id";
 
   private static final int TIMEOUT_MILLIS = 1000;
-
-  private static PostgresClient postgresClient =
-    PostgresClient.getInstance(
-      getVertx(), TenantTool.calculateTenantId(TENANT_ID));
 
   private UUID holdingsRecordId;
 
@@ -134,7 +122,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
     final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
     postgresClient.select(getAuditSQL(tableName), h ->
-        result.complete(h.result()));
+      result.complete(h.result()));
     return result.get(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
   }
 
@@ -142,17 +130,4 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     return "SELECT * FROM " + table;
   }
 
-  private void clearAuditTables() {
-    CompletableFuture<Row> future = new CompletableFuture<>();
-    final String sql = Stream.of(AUDIT_INSTANCE, AUDIT_HOLDINGS_RECORD, AUDIT_ITEM).
-      map(s-> "DELETE FROM "+s).collect(Collectors.joining(";"));
-
-    postgresClient.selectSingle(sql, handler -> {
-      if (handler.failed()) {
-        future.completeExceptionally(handler.cause());
-        return;
-      }
-      future.complete(handler.result());
-    });
-  }
 }

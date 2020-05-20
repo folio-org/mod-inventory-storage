@@ -47,6 +47,8 @@ public abstract class TestBase {
   static ResourceClient instancesStorageSyncClient;
   static ResourceClient itemsStorageSyncClient;
   static ResourceClient instancesStorageBatchInstancesClient;
+  static ResourceClient instanceTypesClient;
+
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -71,6 +73,8 @@ public abstract class TestBase {
     itemsStorageSyncClient = ResourceClient.forItemsStorageSync(client);
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(client);
+    instanceTypesClient = ResourceClient
+      .forInstanceTypes(client);
   }
 
   @AfterClass

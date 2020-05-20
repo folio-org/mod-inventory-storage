@@ -34,7 +34,6 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
 
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup()
     .lookupClass());
-  private static final DateTimeFormatter ISO_UTC_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
   private static final String SQL = "select * from pmh_view_function($1,$2,$3,$4);";
   private static final String RESPONSE_START = "[";
