@@ -1054,6 +1054,17 @@
           "permissionsRequired": []
         }
       ]
+    },
+    {
+      "id": "oaipmhview",
+      "version": "1.0",
+      "handlers" : [
+        {
+          "methods" : [ "GET" ],
+          "pathPattern" : "/oai-pmh-view/instances",
+          "permissionsRequired": ["inventory-storage.oai-pmh-view.instances.collection.get"]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -2168,6 +2179,11 @@
         "inventory-storage.preceding-succeeding-titles.item.put",
         "inventory-storage.preceding-succeeding-titles.item.delete"
       ]
+    },
+    {
+      "permissionName": "inventory-storage.oai-pmh-view.instances.collection.get",
+      "displayName": "inventory storage - get instances for oai pmh",
+      "description": "get instances for oai pmh"
     }
   ],
   "launchDescriptor": {

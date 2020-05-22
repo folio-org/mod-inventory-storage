@@ -1,0 +1,52 @@
+#%RAML 1.0
+title: Inventory Storage OAI-PMH view API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: OAI-PMH view API
+    content: This documents the streaming API for the data needed for OAI-PMH
+
+types:
+  oaipmhInstances: !include oaipmh/oaipmhinstances.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection-get: !include raml-util/rtypes/collection-get.raml
+
+/oai-pmh-view:
+  /instances:
+    displayName: Stream API to get data for OAI-PMH
+    type:
+      collection-get:
+       schemaCollection: oaipmhInstances
+       exampleCollection: !include examples/oaipmhinstances.json
+    get:
+      description: Stream data for oai-pmh
+      is:
+        [validate]
+      queryParameters:
+        startDate:
+          description: start date
+          type: string
+          required: false
+        endDate:
+          description: start date
+          type: string
+          required: false
+        deletedRecordSupport:
+          description: return deleted records
+          type: boolean
+          required: false
+          default: true
+        skipSuppressedFromDiscoveryRecords:
+          description: skip discovery suppressed records
+          type: boolean
+          required: false
+          default: true
+

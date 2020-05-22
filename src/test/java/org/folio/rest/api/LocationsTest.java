@@ -390,6 +390,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     putIfNotNull(request, "libraryId", lib);
     putIfNotNull(request, "code", code);
     putIfNotNull(request, "primaryServicePoint", servicePoints.get(0));
+    putIfNotNull(request, "isActive", "true");
     UUID spID = UUID.randomUUID();
     servicePointIDs.add(spID);
     putIfNotNull(request, "servicePointIds", new JsonArray(servicePoints));
