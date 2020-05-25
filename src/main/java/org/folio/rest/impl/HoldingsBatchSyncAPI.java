@@ -26,7 +26,7 @@ import java.util.Map;
 public class HoldingsBatchSyncAPI implements HoldingsStorageBatchSynchronous {
   @Validate
   @Override
-  public void postHoldingsStorageBatchSynchronous(HoldingsrecordsPost entity, Map<String, String> okapiHeaders,
+  public void postHoldingsStorageBatchSynchronous(boolean upsert, HoldingsrecordsPost entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     final List<HoldingsRecord> holdingsRecords = entity.getHoldingsRecords();
     final PostgresClient postgresClient = PostgresClient.getInstance(
@@ -43,7 +43,7 @@ public class HoldingsBatchSyncAPI implements HoldingsStorageBatchSynchronous {
     CompositeFuture.all(futures).setHandler(ar -> {
       if (ar.succeeded()) {
         StorageHelper.postSync(HoldingsStorageAPI.HOLDINGS_RECORD_TABLE, holdingsRecords,
-            okapiHeaders, asyncResultHandler, vertxContext,
+            okapiHeaders, upsert, asyncResultHandler, vertxContext,
             HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse::respond201);
       } else {
         asyncResultHandler.handle(
