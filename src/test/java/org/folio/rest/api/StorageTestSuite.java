@@ -63,7 +63,8 @@ import org.junit.runners.Suite;
   ModesOfIssuanceMigrationScriptTest.class,
   PrecedingSucceedingTitleTest.class,
   HoldingsCallNumberNormalizedTest.class,
-  ItemCallNumberNormalizedTest.class
+  ItemCallNumberNormalizedTest.class,
+  OaiPmhViewTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

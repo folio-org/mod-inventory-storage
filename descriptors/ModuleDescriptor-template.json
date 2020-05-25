@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "8.3",
+      "version": "8.4",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1052,6 +1052,17 @@
           "methods" : [ "GET" ],
           "pathPattern" : "/_/jsonSchemas",
           "permissionsRequired": []
+        }
+      ]
+    },
+    {
+      "id": "oaipmhview",
+      "version": "1.0",
+      "handlers" : [
+        {
+          "methods" : [ "GET" ],
+          "pathPattern" : "/oai-pmh-view/instances",
+          "permissionsRequired": ["inventory-storage.oai-pmh-view.instances.collection.get"]
         }
       ]
     }
@@ -2168,6 +2179,11 @@
         "inventory-storage.preceding-succeeding-titles.item.put",
         "inventory-storage.preceding-succeeding-titles.item.delete"
       ]
+    },
+    {
+      "permissionName": "inventory-storage.oai-pmh-view.instances.collection.get",
+      "displayName": "inventory storage - get instances for oai pmh",
+      "description": "get instances for oai pmh"
     }
   ],
   "launchDescriptor": {

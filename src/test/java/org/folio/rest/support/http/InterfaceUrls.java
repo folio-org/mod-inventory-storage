@@ -174,4 +174,8 @@ public class InterfaceUrls {
   public static URL hridSettingsStorageUrl(String subPath) {
     return StorageTestSuite.storageUrl("/hrid-settings-storage/hrid-settings" + subPath);
   }
+
+  public static URL oaiPmhView(String subPath) {
+    return StorageTestSuite.storageUrl("/oai-pmh-view/instances" + subPath);
+  }
 }

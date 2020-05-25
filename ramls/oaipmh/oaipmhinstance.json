@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "Oai pmh view response schema",
+  "properties": {
+    "items": {
+      "type": "array",
+      "description": "item fields",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "itemId",
+              "type": "string"
+            },
+            "volume": {
+              "description": "Item volume",
+              "type": "string"
+            },
+            "location": {
+              "description": "Item effective location",
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "object",
+                  "description": "location",
+                  "properties": {
+                    "campusId": {
+                      "description": "campus Id",
+                      "type": "string"
+                    },
+                    "libraryId": {
+                      "description": "library Id",
+                      "type": "string"
+                    },
+                    "campusName": {
+                      "description": "campus name",
+                      "type": "string"
+                    },
+                    "libraryName": {
+                      "description": "library name",
+                      "type": "string"
+                    },
+                    "institutionId": {
+                      "description": "institution id",
+                      "type": "string"
+                    },
+                    "institutionName": {
+                      "description": "institution name",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "campusId",
+                    "libraryId",
+                    "campusName",
+                    "libraryName",
+                    "institutionId",
+                    "institutionName"
+                  ]
+                }
+              },
+              "required": [
+                "location"
+              ]
+            },
+            "callNumber": {
+              "description": "Item call number components",
+              "type": "object",
+              "properties": {
+                "prefix": {
+                  "description": "prefix",
+                  "type": "string"
+                },
+                "suffix": {
+                  "description": "suffix",
+                  "type": "string"
+                },
+                "typeId": {
+                  "description": "type id",
+                  "type": "string"
+                },
+                "callNumber": {
+                  "description": "item call number",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "prefix",
+                "suffix",
+                "typeId",
+                "callNumber"
+              ]
+            },
+            "enumeration": {
+              "description": "item enumeration",
+              "type": "string"
+            },
+            "materialType": {
+              "description": "item material type name",
+              "type": "string"
+            },
+            "electronicAccess": {
+              "description": "Aggregated electronic access from items and holdings",
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "uri": {
+                      "description": "electronic access URI",
+                      "type": "string"
+                    },
+                    "name":
+                    {
+                      "description": "electronic access name",
+                      "type": "string"
+                    },
+                    "linkText": {
+                      "description": "electronic access link text",
+                      "type": "string"
+                    },
+                    "publicNote": {
+                      "description": "electronic access public note",
+                      "type": "string"
+                    },
+                    "relationshipId": {
+                      "description": "electronic access relationship id",
+                      "type": "string"
+                    },
+                    "materialsSpecification": {
+                      "description": "electronic access materials specification",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "uri",
+                    "name",
+                    "linkText",
+                    "publicNote",
+                    "relationshipId",
+                    "materialsSpecification"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "volume",
+            "location",
+            "callNumber",
+            "enumeration",
+            "materialType",
+            "electronicAccess"
+          ]
+        }
+      ]
+    },
+    "instanceid": {
+      "description": "Folio instance identifier",
+      "type": "string"
+    }
+  },
+  "required": [
+    "items",
+    "instanceid"
+  ],
+  "additionalProperties": false
+}
+

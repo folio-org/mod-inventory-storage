@@ -1,11 +1,7 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.deleteAll;
-import static org.folio.rest.api.StorageTestSuite.getVertx;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.api.StorageTestSuite.*;
+import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -19,8 +15,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
@@ -32,6 +26,8 @@ import org.junit.runner.RunWith;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.pointer.JsonPointer;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 @RunWith(VertxUnitRunner.class)
 public class AuditDeleteTest extends TestBaseWithInventoryUtil {
@@ -43,7 +39,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
   private static final int TIMEOUT_MILLIS = 1000;
 
-  private static PostgresClient postgresClient =
+  private final static PostgresClient postgresClient =
     PostgresClient.getInstance(
       getVertx(), TenantTool.calculateTenantId(TENANT_ID));
 
@@ -114,7 +110,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     record.put("permanentLocationId", annexLibraryLocationId.toString());
     holdingsClient.replace(holdingsRecordId, record);
     //then
-    assertThat(getRecordsFromAuditTable(AUDIT_HOLDINGS_RECORD), is(Collections.emptyList()));
+    assertThat(getRecordsFromAuditTable(AUDIT_HOLDINGS_RECORD).size(), is(0));
     //when
     holdingsClient.delete(holdingsRecordId);
     //then
@@ -126,7 +122,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
     final Row row = getRecordsFromAuditTable(tableName).iterator().next();
     final JsonPointer jsonPointer = JsonPointer.from(RECORD_ID_JSON_PATH);
-    return jsonPointer.queryJson((JsonObject) row.getValue(1));
+    return jsonPointer.queryJson(row.getValue(1));
   }
 
   private RowSet<Row> getRecordsFromAuditTable(String tableName)
@@ -134,7 +130,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
     final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
     postgresClient.select(getAuditSQL(tableName), h ->
-        result.complete(h.result()));
+      result.complete(h.result()));
     return result.get(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
   }
 

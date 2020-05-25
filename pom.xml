@@ -68,7 +68,7 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-unit</artifactId>
-      <version>3.9.0</version>
+      <version>${vertx.version}</version>
       <scope>test</scope>
     </dependency>
     <!-- This dependency is required until https://issues.folio.org/browse/RMB-503 is fixed -->
@@ -85,11 +85,12 @@
   </dependencies>
 
   <properties>
+    <vertx.version>3.9.0</vertx.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
     <raml-module-builder-version>30.0.0</raml-module-builder-version>
-    <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/instance-bulk/ids</generate_routing_context>
+    <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/instance-bulk/ids,/oai-pmh-view/instances</generate_routing_context>
     <argLine />
   </properties>
 
