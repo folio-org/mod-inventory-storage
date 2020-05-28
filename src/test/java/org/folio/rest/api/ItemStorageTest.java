@@ -857,12 +857,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   private JsonArray threeItems() {
     try {
-      UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
-      JsonArray jsonArray = new JsonArray()
+      UUID holdingsRecordId = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
+        holdingRequestBuilder -> holdingRequestBuilder.withCallNumber("hrCallNumber"));
+
+      return new JsonArray()
           .add(nod(holdingsRecordId))
           .add(smallAngryPlanet(holdingsRecordId))
           .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
-      return jsonArray;
     } catch (MalformedURLException | ExecutionException | InterruptedException | TimeoutException e) {
       throw new RuntimeException(e);
     }
@@ -2024,6 +2025,39 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .collect(Collectors.toSet());
     assertThat(allFoundIds, hasItems(itemWithWholeCallNumber.getId(), itemNoPrefix.getId()));
   }
+  
+  @Test
+  public void cannotCreateItemWithNonExistentHoldingsRecordId() throws Exception {
+    final UUID nonExistentHoldingsRecordId = UUID.randomUUID();
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(nonExistentHoldingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .create();
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    assertThat(createdItem, hasValidationError(
+      "Holdings record does not exist", "holdingsRecordId",
+      nonExistentHoldingsRecordId.toString()));
+  }
+
+  @Test
+  public void cannotBatchCreateItemsWithNonExistentHoldingsRecordId() throws Exception {
+    final String nonExistentHoldingsRecordId = UUID.randomUUID().toString();
+    final JsonArray items = threeItems();
+
+    items.getJsonObject(2)
+      .put("holdingsRecordId", nonExistentHoldingsRecordId);
+
+    final Response response = itemsStorageSyncClient
+      .attemptToCreate(new JsonObject().put("items", items));
+
+    assertThat(response, hasValidationError(
+      "Holdings record does not exist", "holdingsRecordId",
+      nonExistentHoldingsRecordId));
+  }
 
   @SuppressWarnings("unused")
   private Set<String> getAllowedItemStatuses() throws IOException {
@@ -2166,6 +2200,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private void assertExists(Response response, JsonObject expectedItem) {
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
     assertThat(response.getBody(), containsString(expectedItem.getString("holdingsRecordId")));
+    assertThat(response.getJson().getJsonObject("effectiveCallNumberComponents"),
+      notNullValue());
   }
 
   private void assertHRIDRange(Response response, String minHRID, String maxHRID) {
