@@ -1,3 +1,7 @@
+## 19.1.3 2020-05-29
+
+* Derives effective call number components during batch updates (MODINVSTOR-458)
+
 ## 19.1.2 2020-04-03
 
 * Upgrades function for updating item status changed date (MODINVSTOR-470)
