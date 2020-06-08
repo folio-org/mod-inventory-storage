@@ -1,3 +1,24 @@
+## 19.2.0 2020-06-08
+
+* Introduces normalised ISBN and invalid ISBN indexes (MODINVSTOR-413, MODINVSTOR-474)
+* Introduces normalised call number indexes (MODINVSTOR-485, MODINVSTOR-488)
+* Introduces `Withdrawn` and `Lost and paid`  item statuses (MODINVSTOR-461, MODINVSTOR-494)
+* Uses consistent record count estimation irrespective of sorting (MODINVSTOR-468, MODINVSTOR-513)
+* Introduces API to support OAI-PMH integration (MODINVSTOR-477, MODINVSTOR-486, MODINVSTOR-492)
+* Adds `upsert` support in batch APIs (MODINVSTOR- 478)
+* Removes instance relationships replaced by preceding / succeeding titles records (MODINVSTOR-451)
+* Adds indexes for `staffSuppress` ,  `suppressFromDiscovery`  and `createdDate` properties (MODINVSTOR-473, MODINVSTOR-479)
+* Sets derived effective call number  components in item batch API (MODINVSTOR-458)
+* provides `item-storage 8.4`
+* provides `item-storage-batch-sync 0.4`
+* provides `holdings-storage 4.2`
+* provides `holdings-storage-batch-sync 0.2`
+* provides `instance-storage-batch-sync 0.3`
+* provides `oaipmhview 1.0`
+* Upgrades to RAML Module Builder 30.0.2 (MODINVSTOR-468, MODINVSTOR-487, MODINVSTOR-513)
+  * Rebuilds many database indexes during upgrade
+  * Rebuilds database statistics during upgrade
+
 ## 19.1.0 2020-03-14
 
 * Improves performance of `keyword` search (MODINVSTOR-455)
