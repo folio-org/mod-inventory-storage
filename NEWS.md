@@ -1,3 +1,9 @@
+## 19.2.1 2020-06-15
+
+* Upgrade to RAML Module Builder 30.0.3 (MODINVSTOR-519):
+  * Use where-only clause for the "count query" for consistent hit count estimations (RMB-645)
+  * Fix sorby title and limit=0 gives zero hits (RMB-640)
+
 ## 19.2.0 2020-06-08
 
 * Introduces normalised ISBN and invalid ISBN indexes (MODINVSTOR-413, MODINVSTOR-474)
