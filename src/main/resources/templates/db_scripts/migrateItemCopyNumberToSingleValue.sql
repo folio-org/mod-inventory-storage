@@ -1,10 +1,6 @@
 START TRANSACTION;
 
-UPDATE pg_trigger
-  SET tgenabled = 'D'
-WHERE tgrelid = '${myuniversity}_${mymodule}.item'::regclass::oid
-  AND tgisinternal IS FALSE
-  AND tgenabled = 'O';
+ALTER TABLE ${myuniversity}_${mymodule}.item DISABLE TRIGGER USER;
 
 UPDATE ${myuniversity}_${mymodule}.item
 SET jsonb = CASE WHEN
@@ -15,10 +11,6 @@ SET jsonb = CASE WHEN
 END
 WHERE jsonb->'copyNumbers' IS NOT NULL;
 
-UPDATE pg_trigger
-  SET tgenabled = 'O'
-WHERE tgrelid = '${myuniversity}_${mymodule}.item'::regclass::oid
-  AND tgisinternal IS FALSE
-  AND tgenabled = 'D';
+ALTER TABLE ${myuniversity}_${mymodule}.item ENABLE TRIGGER USER;
 
 END TRANSACTION;
