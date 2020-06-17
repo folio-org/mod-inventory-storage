@@ -1,3 +1,7 @@
+## 19.2.2 2020-06-17
+
+* Disable triggers for migrations without requiring special permissions (MODINVSTOR-476)
+
 ## 19.2.1 2020-06-15
 
 * Upgrade to RAML Module Builder 30.0.3 (MODINVSTOR-519):
