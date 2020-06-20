@@ -1402,7 +1402,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.size(), is(1));
 
     JsonObject firstError = errors.getJsonObject(0);
-    assertThat(firstError.getString("message"), is("may not be null"));
+    assertThat(firstError.getString("message"), anyOf(is("may not be null"), is("must not be null")));
     assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("permanentLocationId"));
   }
