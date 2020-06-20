@@ -24,6 +24,7 @@ import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMax
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -500,8 +501,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       postResponse.getJson().getJsonArray("errors"));
 
     assertThat(errors.size(), is(1));
-    assertThat(errors, hasItem(
-      validationErrorMatches("may not be null", "materialTypeId")));
+    assertThat(errors, anyOf(
+        hasItem(validationErrorMatches("may not be null", "materialTypeId")),
+        hasItem(validationErrorMatches("must not be null", "materialTypeId"))));
   }
 
   @Test
@@ -1883,7 +1885,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updateResponse.getErrors().size(), is(1));
 
     JsonObject error = updateResponse.getErrors().get(0);
-    assertThat(error.getString("message"), is("may not be null"));
+    assertThat(error.getString("message"), anyOf(is("may not be null"), is("must not be null")));
     assertThat(error.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("status"));
   }
@@ -1915,7 +1917,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updateResponse.getErrors().size(), is(1));
 
     JsonObject error = updateResponse.getErrors().get(0);
-    assertThat(error.getString("message"), is("may not be null"));
+    assertThat(error.getString("message"), anyOf(is("may not be null"), is("must not be null")));
     assertThat(error.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("status.name"));
   }
@@ -1926,9 +1928,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemArray.getJsonObject(1).remove("status");
 
     final Response response = postSynchronousBatch(itemArray);
-    assertThat(response,
-      hasValidationError("may not be null", "items[1].status", "null")
-    );
+    assertThat(response, anyOf(
+        hasValidationError("may not be null", "items[1].status", "null"),
+        hasValidationError("must not be null", "items[1].status", "null")
+    ));
 
     for (int i = 0; i < itemArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemArray.getJsonObject(i).getString("id")));
