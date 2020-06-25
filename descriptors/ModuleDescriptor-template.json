@@ -1991,6 +1991,11 @@
       "description": "modify the HRID settings in storage"
     },
     {
+      "permissionName": "inventory-storage.oai-pmh-view.instances.collection.get",
+      "displayName": "inventory storage - get instances for oai pmh",
+      "description": "get instances for oai pmh"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2177,13 +2182,9 @@
         "inventory-storage.preceding-succeeding-titles.item.get",
         "inventory-storage.preceding-succeeding-titles.item.post",
         "inventory-storage.preceding-succeeding-titles.item.put",
-        "inventory-storage.preceding-succeeding-titles.item.delete"
+        "inventory-storage.preceding-succeeding-titles.item.delete",
+        "inventory-storage.oai-pmh-view.instances.collection.get"
       ]
-    },
-    {
-      "permissionName": "inventory-storage.oai-pmh-view.instances.collection.get",
-      "displayName": "inventory storage - get instances for oai pmh",
-      "description": "get instances for oai pmh"
     }
   ],
   "launchDescriptor": {
