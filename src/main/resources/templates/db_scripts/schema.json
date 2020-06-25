@@ -716,6 +716,12 @@
       ],
       "uniqueIndex": [
         {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
           "fieldName": "hrid",
           "tOps": "ADD"
         }
@@ -729,7 +735,7 @@
         },
         {
           "fieldName": "barcode",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
@@ -763,7 +769,7 @@
       "ginIndex": [
         {
           "fieldName": "barcode",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
@@ -777,7 +783,7 @@
       "fullTextIndex": [
         {
           "fieldName": "barcode",
-          "tOps": "ADD"
+          "tOps": "DELETE"
         },
         {
           "fieldName": "callNumberAndSuffixNormalized",

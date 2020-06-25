@@ -66,7 +66,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       .get(0);
     instanceId1 = UUID.fromString(instanceObj.getString("id"));
 
-    createItem(mainLibraryLocationId, "item barcode", "item effective call number 1", journalMaterialTypeId);
+    createItem(mainLibraryLocationId, "item barcode 1", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
   }
 
@@ -199,7 +199,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   public void canGetFromOaiPmhViewShowingSuppressedRecords() throws Exception {
     // given
     // one instance, 1 holding, 2 not suppressed items, 1 suppressed item
-    super.createItem(createItemRequest(thirdFloorLocationId, "item barcode 2", "item effective call number 3", bookMaterialTypeId)
+    super.createItem(createItemRequest(thirdFloorLocationId, "item barcode 3", "item effective call number 3", bookMaterialTypeId)
       .withDiscoverySuppress(true));
     // when
     params.put("skipSuppressedFromDiscoveryRecords", "true");

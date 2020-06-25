@@ -14,6 +14,39 @@ import io.vertx.core.json.DecodeException;
 
 public class ResponseMatcher {
 
+  public static Matcher<Response> hasValidationError(String expectedValue) {
+
+    return new TypeSafeMatcher<Response>() {
+      @Override
+      protected boolean matchesSafely(Response response) {
+        try {
+          if (response.getStatusCode() != 422) {
+            return false;
+          }
+
+          Errors errors = response.getJson().mapTo(Errors.class);
+          if (errors.getErrors().size() != 1) {
+            return false;
+          }
+          final Error error = errors.getErrors().get(0);
+          if (error.getParameters() == null || error.getParameters().size() != 1) {
+            return false;
+          }
+          final Parameter parameter = error.getParameters().get(0);
+          return Objects.equals(expectedValue, parameter.getValue());
+        } catch (DecodeException ex) {
+          return false;
+        }
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description
+        .appendText("Response has 422 status and error message parameter 'value' - ").appendValue(expectedValue);
+      }
+    };
+  }
+
   public static Matcher<Response> hasValidationError(
     String expectedMessage, String expectedKey, String expectedValue) {
 

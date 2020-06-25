@@ -24,7 +24,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
   private final boolean discoverySuppress;
 
   public ItemRequestBuilder() {
-    this(UUID.randomUUID(), null, "565578437802", AVAILABLE_STATUS,
+    this(UUID.randomUUID(), null, null, AVAILABLE_STATUS,
       null, null, null, null, null, null, null, null, false);
   }
 

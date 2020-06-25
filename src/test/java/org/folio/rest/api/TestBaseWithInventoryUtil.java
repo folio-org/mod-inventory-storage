@@ -12,7 +12,7 @@ import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.util.Random;
@@ -252,7 +252,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return itemToCreate.mapTo(Item.class);
   }
 
-  protected void createItem(JsonObject itemToCreate)
+  protected JsonObject createItem(JsonObject itemToCreate)
       throws MalformedURLException,
       InterruptedException,
       ExecutionException,
@@ -266,6 +266,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     Response response = createCompleted.get(2, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(201));
+
+    return response.getJson();
   }
 
   protected IndividualResource createItem(Item item) throws Exception {
