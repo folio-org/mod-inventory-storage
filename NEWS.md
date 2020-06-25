@@ -1,3 +1,7 @@
+## 19.2.3 2020-06-25
+
+* Change permissions location for oai-pmh view (MODINVSTOR-524)
+
 ## 19.2.2 2020-06-17
 
 * Disable triggers for migrations without requiring special permissions (MODINVSTOR-476)
