@@ -1133,6 +1133,37 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canSearchBySubjects() throws Exception {
+    JsonObject first = new JsonObject()
+        .put("title", "first")
+        .put("subjects", new JsonArray().add("foo").add("bar").add("baz"));
+    JsonObject second = new JsonObject()
+        .put("title", "second")
+        .put("subjects", new JsonArray().add("abc def ghi").add("uvw xyz"));
+
+    JsonObject [] instances = { first, second };
+    for (JsonObject instance : instances) {
+      instance.put("source", "test");
+      instance.put("instanceTypeId", UUID_INSTANCE_TYPE.toString());
+      createInstance(instance);
+    }
+
+    matchInstanceTitles(searchForInstances("subjects=foo"), "first");
+    matchInstanceTitles(searchForInstances("subjects=bar"), "first");
+    matchInstanceTitles(searchForInstances("subjects=baz"), "first");
+    matchInstanceTitles(searchForInstances("subjects=abc"), "second");
+    matchInstanceTitles(searchForInstances("subjects=def"), "second");
+    matchInstanceTitles(searchForInstances("subjects=ghi"), "second");
+    matchInstanceTitles(searchForInstances("subjects=uvw"), "second");
+    matchInstanceTitles(searchForInstances("subjects=xyz"), "second");
+    // phrase search
+    matchInstanceTitles(searchForInstances("subjects=\"def ghi\""), "second");
+    matchInstanceTitles(searchForInstances("subjects=\"uvw xyz\""), "second");
+    matchInstanceTitles(searchForInstances("subjects=\"baz bar\""));
+    matchInstanceTitles(searchForInstances("subjects=\"abc xyz\""));
+  }
+
+  @Test
   public void canSearchByBarcode()
     throws InterruptedException,
     MalformedURLException,
