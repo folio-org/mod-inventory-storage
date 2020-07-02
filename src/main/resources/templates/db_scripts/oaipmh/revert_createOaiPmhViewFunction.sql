@@ -1,6 +1,12 @@
+drop index if exists ${myuniversity}_${mymodule}.item_metadata_updateddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.holdings_record_metadata_updateddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.audit_instance_createddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.audit_holdings_record_createddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.audit_item_createddate_idx;
+
 drop index if exists ${myuniversity}_${mymodule}.instance_pmh_metadata_updateddate_idx;
 drop index if exists ${myuniversity}_${mymodule}.item_pmh_metadata_updateddate_idx;
-drop index if exists ${myuniversity}_${mymodule}.holdings_pmh_record_metadata_updateddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.holdings_record_pmh_metadata_updateddate_idx;
 drop index if exists ${myuniversity}_${mymodule}.audit_instance_pmh_createddate_idx;
 drop index if exists ${myuniversity}_${mymodule}.audit_holdings_record_pmh_createddate_idx;
 drop index if exists ${myuniversity}_${mymodule}.audit_item_pmh_createddate_idx;
