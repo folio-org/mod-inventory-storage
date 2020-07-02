@@ -27,7 +27,7 @@ create index if not exists instance_pmh_metadata_updateddate_idx on ${myuniversi
 
 create index if not exists item_pmh_metadata_updateddate_idx on ${myuniversity}_${mymodule}.item ((strToTimestamp(jsonb -> 'metadata' ->> 'updatedDate')));
 
-create index if not exists holdings_pmh_record_metadata_updateddate_idx on ${myuniversity}_${mymodule}.holdings_record ((strToTimestamp(jsonb -> 'metadata' ->> 'updatedDate')));
+create index if not exists holdings_record_pmh_metadata_updateddate_idx on ${myuniversity}_${mymodule}.holdings_record ((strToTimestamp(jsonb -> 'metadata' ->> 'updatedDate')));
 
 create index if not exists audit_instance_pmh_createddate_idx on ${myuniversity}_${mymodule}.audit_instance ((strToTimestamp(jsonb ->> 'createdDate')));
 
