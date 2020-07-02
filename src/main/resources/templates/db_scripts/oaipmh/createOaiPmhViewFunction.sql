@@ -18,7 +18,7 @@ create or replace function ${myuniversity}_${mymodule}.getElectronicAccessName(v
 $$
 select jsonb_agg(distinct e)
 from ( select e || jsonb_build_object('name', ( select jsonb ->> 'name'
-                                                from electronic_access_relationship ear
+                                                from ${myuniversity}_${mymodule}.electronic_access_relationship ear
                                                 where id = (e ->> 'relationshipId')::uuid )) e
        from jsonb_array_elements($1) as e ) e1
 $$ language sql strict;
