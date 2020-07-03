@@ -30,6 +30,15 @@ from ( select e || jsonb_build_object('name', ( select jsonb ->> 'name'
        from jsonb_array_elements($1) as e ) e1
 $$ language sql strict;
 
+create or replace function ${myuniversity}_${mymodule}.getItemNoteTypeName(val jsonb) returns jsonb as
+$$
+select jsonb_agg(distinct e)
+from ( select e || jsonb_build_object('noteTypeName', ( select jsonb ->> 'name'
+                                                        from item_note_type
+                                                        where id = (e ->> 'itemNoteTypeId')::uuid )) e
+       from jsonb_array_elements($1) as e ) e1
+$$ language sql strict;
+
 drop index if exists ${myuniversity}_${mymodule}.item_pmh_metadata_updateddate_idx;
 drop index if exists ${myuniversity}_${mymodule}.holdings_record_pmh_metadata_updateddate_idx;
 drop index if exists ${myuniversity}_${mymodule}.audit_instance_pmh_createddate_idx;
@@ -95,8 +104,11 @@ select instanceIdsAndDatesInRange.instanceId,
        false as deleted,
        ( select to_jsonb(itemAndHoldingsAttrs) as instanceFields
          from ( select hr.instanceid,
+                       (inst.jsonb ->> 'discoverySuppress')::bool as suppressDiscovery,
                        jsonb_agg(jsonb_build_object('id', item.id, 'callNumber',
-                                                    item.jsonb -> 'effectiveCallNumberComponents', 'location',
+                                                    item.jsonb -> 'effectiveCallNumberComponents'
+                                                        || jsonb_build_object('typeName',cnt.jsonb ->> 'name'),
+                                                    'location',
                                                     json_build_object('location', jsonb_build_object('institutionId',
                                                                                                      itemLocInst.id,
                                                                                                      'institutionName',
@@ -108,7 +120,9 @@ select instanceIdsAndDatesInRange.instanceId,
                                                                                                      'libraryId',
                                                                                                      itemLocLib.id,
                                                                                                      'libraryName',
-                                                                                                     itemLocLib.jsonb ->> 'name')),
+                                                                                                     itemLocLib.jsonb ->> 'name'),
+                                                                                                     'name',
+                                                                                                     coalesce(loc.jsonb ->> 'discoveryDisplayName', loc.jsonb ->> 'name')),
                                                     'volume',
                                                     item.jsonb -> 'volume',
                                                     'enumeration',
@@ -118,23 +132,44 @@ select instanceIdsAndDatesInRange.instanceId,
                                                     'electronicAccess',
                                                     getElectronicAccessName(
                                                                 coalesce(item.jsonb #> '{electronicAccess}', '[]'::jsonb) ||
-                                                                coalesce(hr.jsonb #> '{electronicAccess}', '[]'::jsonb)))) items
+                                                                coalesce(hr.jsonb #> '{electronicAccess}', '[]'::jsonb)),
+												    'suppressDiscovery',
+													case
+													when (inst.jsonb->>'discoverySuppress')::bool
+												        then true
+													else
+													    coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false) or
+														coalesce((item.jsonb ->> 'discoverySuppress')::bool, false)
+													end,
+													'notes',
+                                                    getItemNoteTypeName(item.jsonb-> 'notes'),
+													'barcode',
+													item.jsonb->>'barcode',
+													'chronology',
+													item.jsonb->>'chronology',
+													'copyNumber',
+													item.jsonb->>'copyNumber',
+													'holdingsRecordId',
+													hr.id
+												   )) items
                 from holdings_record hr
-                         join ${myuniversity}_${mymodule}.item item on item.holdingsrecordid = hr.id
-                         join ${myuniversity}_${mymodule}.location loc
-                              on (item.jsonb ->> 'effectiveLocationId')::uuid = loc.id and
+                    join ${myuniversity}_${mymodule}.instance inst on hr.instanceid = inst.id
+                    join ${myuniversity}_${mymodule}.item item on item.holdingsrecordid = hr.id
+                    join ${myuniversity}_${mymodule}.location loc
+                       on (item.jsonb ->> 'effectiveLocationId')::uuid = loc.id and
                                  (loc.jsonb ->> 'isActive')::bool = true
-                         join ${myuniversity}_${mymodule}.locinstitution itemLocInst
+                    join ${myuniversity}_${mymodule}.locinstitution itemLocInst
                               on (loc.jsonb ->> 'institutionId')::uuid = itemLocInst.id
-                         join ${myuniversity}_${mymodule}.loccampus itemLocCamp
+                    join ${myuniversity}_${mymodule}.loccampus itemLocCamp
                               on (loc.jsonb ->> 'campusId')::uuid = itemLocCamp.id
-                         join ${myuniversity}_${mymodule}.loclibrary itemLocLib
+                    join ${myuniversity}_${mymodule}.loclibrary itemLocLib
                               on (loc.jsonb ->> 'libraryId')::uuid = itemLocLib.id
-                         left join material_type mt on item.materialtypeid = mt.id
+                    left join ${myuniversity}_${mymodule}.material_type mt on item.materialtypeid = mt.id
+					left join ${myuniversity}_${mymodule}.call_number_type cnt on (item.jsonb #>> '{effectiveCallNumberComponents, typeId}')::uuid = cnt.id
                 where instanceId = instanceIdsAndDatesInRange.instanceId
                   and not ($4 and coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false))
                   and not ($4 and coalesce((item.jsonb ->> 'discoverySuppress')::bool, false))
-                group by 1 ) itemAndHoldingsAttrs )
+                group by 1, 2) itemAndHoldingsAttrs )
 from instanceIdsAndDatesInRange
 union all
 select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
