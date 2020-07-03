@@ -899,18 +899,13 @@
     },
     {
       "run": "after",
-      "snippetPath": "oaipmh/revert_createOaiPmhViewFunction.sql",
-      "fromModuleVersion": "19.2.4"
-    },
-    {
-      "run": "after",
       "snippetPath": "oaipmh/createOaiPmhViewFunction.sql",
-      "fromModuleVersion": "19.2.4"
+      "fromModuleVersion": "19.2.2"
     },
     {
       "run": "after",
       "snippetPath": "removeOldPrecedingSucceedingTitles.sql",
-      "fromModuleVersion": "19.2.0"
+      "fromModuleVersion": "19.2.2"
     }
   ]
 }
