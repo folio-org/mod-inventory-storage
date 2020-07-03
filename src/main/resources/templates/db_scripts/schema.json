@@ -900,12 +900,12 @@
     {
       "run": "after",
       "snippetPath": "oaipmh/createOaiPmhViewFunction.sql",
-      "fromModuleVersion": "19.2.2"
+      "fromModuleVersion": "19.2.4"
     },
     {
       "run": "after",
       "snippetPath": "removeOldPrecedingSucceedingTitles.sql",
-      "fromModuleVersion": "19.2.2"
+      "fromModuleVersion": "19.2.0"
     }
   ]
 }
