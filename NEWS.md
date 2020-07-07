@@ -1,3 +1,9 @@
+## 19.2.4 2020-07-07
+
+* Expand oai-pmh view with additional fields (MODINVSTOR-498)
+* OAI-PMH view doesn't respond in Bug Fest (MODINVSTOR-527)
+* Upgrade to RMB 30.2.2 (MODINVSTOR-528)
+
 ## 19.2.3 2020-06-25
 
 * Change permissions location for oai-pmh view (MODINVSTOR-524)
