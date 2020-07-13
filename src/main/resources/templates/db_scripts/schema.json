@@ -99,6 +99,14 @@
           "targetTable": "loclibrary",
           "tOps": "ADD"
         }
+      ],
+      "index": [
+        {
+          "fieldName": "primaryServicePoint",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
       ]
     },
     {
@@ -113,6 +121,14 @@
         {
           "fieldName": "code",
           "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "pickupLocation",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ]
     },
@@ -761,6 +777,12 @@
         },
         {
           "fieldName": "discoverySuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "purchaseOrderLineIdentifier",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false

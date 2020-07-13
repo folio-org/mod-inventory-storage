@@ -1,34 +1,30 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,12 +46,12 @@ import io.vertx.core.logging.LoggerFactory;
 
 
 public class LocationsTest extends TestBaseWithInventoryUtil {
-  private static Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private static UUID instID;
   private static UUID campID;
   private static UUID libID;
-  private static List<UUID> servicePointIDs = new ArrayList<UUID>();
+  private static final List<UUID> servicePointIDs = new ArrayList<>();
 
   protected static void createLocUnits(boolean force) {
     try {
@@ -76,35 +72,14 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
-
   @Before
-  public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+  public void beforeEach() {
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-
-    canCirculateLoanTypeID = new LoanTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
-      loanTypesStorageUrl("")).create("Can Circulate");
-
-    journalMaterialTypeID = new MaterialTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
-      materialTypesStorageUrl("")).create("Journal");
 
     createLocUnits(true);
-
   }
 
   @Test
@@ -306,6 +281,23 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
+  @Test
+  public void canSearchByPrimaryServicePoint() throws Exception {
+    final UUID firstServicePointId = UUID.randomUUID();
+    final UUID secondServicePointId = UUID.randomUUID();
+    final UUID expectedLocationId = UUID.randomUUID();
+
+    createLocation(expectedLocationId, "Main", instID, campID, libID, "main",
+      Collections.singletonList(firstServicePointId));
+    createLocation(null, "Main two", instID, campID, libID, "main/tw",
+      Collections.singletonList(secondServicePointId));
+
+    final List<JsonObject> locations = getMany("primaryServicePoint==\"%s\"", firstServicePointId);
+
+    assertThat(locations.size(), is(1));
+    assertThat(locations.get(0).getString("id"), is(expectedLocationId.toString()));
+  }
+
   ///////////////////////////// helpers
   private static void send(URL url, HttpMethod method, String content,
                            String contentType, Handler<HttpClientResponse> handler) {
@@ -340,6 +332,21 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     request.putHeader("Accept", "application/json,text/plain");
     request.putHeader("Content-type", contentType);
     request.end(buffer);
+  }
+
+  private List<JsonObject> getMany(String cql, Object... args) throws InterruptedException,
+    ExecutionException, TimeoutException {
+
+    final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    send(locationsStorageUrl("?query=" + String.format(cql, args)),
+      HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS).getJson()
+      .getJsonArray("locations").stream()
+      .map(obj -> (JsonObject) obj)
+      .collect(Collectors.toList());
   }
 
   private JsonObject createItemRequest(String holdingsRecordId, String temporaryLocationId) {

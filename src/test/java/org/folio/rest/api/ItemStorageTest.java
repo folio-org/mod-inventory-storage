@@ -2111,6 +2111,23 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       containsInAnyOrder(notSuppressedItem.getId(), notSuppressedItemDefault.getId()));
   }
 
+  @Test
+  public void canSearchByPurchaseOrderLineIdentifierProperty() throws Exception {
+    final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final IndividualResource firstItem = itemsClient.create(
+      smallAngryPlanet(holdingsId).put("purchaseOrderLineIdentifier", "poli-1"));
+
+    itemsClient.create(smallAngryPlanet(holdingsId)
+      .put("purchaseOrderLineIdentifier", "poli-2"));
+
+    final List<IndividualResource> poli1Items = itemsClient
+      .getMany("purchaseOrderLineIdentifier==\"poli-1\"");
+
+    assertThat(poli1Items.size(), is(1));
+    assertThat(poli1Items.get(0).getId(), is(firstItem.getId()));
+  }
+
   private Response getById(UUID id) throws InterruptedException,
     ExecutionException, TimeoutException {
 
