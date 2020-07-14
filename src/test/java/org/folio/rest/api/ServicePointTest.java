@@ -2,11 +2,12 @@ package org.folio.rest.api;
 
 import static org.folio.rest.impl.ServicePointAPI.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
 import static org.folio.rest.impl.ServicePointAPI.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -38,8 +40,6 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
 
 /**
@@ -47,20 +47,13 @@ import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
  * @author kurt
  */
 public class ServicePointTest extends TestBase{
-  private static Logger logger = LoggerFactory.getLogger(ServicePointTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
   @Before
-  public void beforeEach()
-          throws InterruptedException,
-          ExecutionException,
-          TimeoutException,
-          MalformedURLException {
-             StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
-             StorageTestSuite.deleteAll(servicePointsUrl(""));
-      }
-
-  // --- BEGIN TESTS --- //
+  public void beforeEach() {
+    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUrl(""));
+  }
 
   @Test
   public void canCreateServicePoint()
@@ -688,7 +681,35 @@ public class ServicePointTest extends TestBase{
     assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getBoolean("printByDefault"), is(Boolean.FALSE));
   }
 
-  // --- END TESTS --- //
+  @Test
+  public void canFilterByPickupLocation() throws Exception {
+    final UUID pickupLocationServicePointId = UUID.randomUUID();
+    createServicePoint(pickupLocationServicePointId, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
+    createServicePoint(null, "Circ Desk 2", "cd2",
+      "Circulation Desk -- Basement", null, 20, false, createHoldShelfExpiryPeriod());
+
+    final List<JsonObject> servicePoints = getMany("pickupLocation==true");
+
+    assertThat(servicePoints.size(), is(1));
+    assertThat(servicePoints.get(0).getString("id"),
+      is(pickupLocationServicePointId.toString()));
+  }
+
+  private List<JsonObject> getMany(String cql, Object... args) throws InterruptedException,
+    ExecutionException, TimeoutException {
+
+    final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    send(servicePointsUrl("?query=" + String.format(cql, args)),
+      HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.json(getCompleted));
+
+    return getCompleted.get(5, TimeUnit.SECONDS).getJson()
+      .getJsonArray("servicepoints").stream()
+      .map(obj -> (JsonObject) obj)
+      .collect(Collectors.toList());
+  }
 
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
