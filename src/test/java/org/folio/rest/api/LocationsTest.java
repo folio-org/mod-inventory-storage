@@ -1,10 +1,14 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -25,6 +29,8 @@ import java.util.stream.Collectors;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,11 +79,26 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Before
-  public void beforeEach() {
+  public void beforeEach() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+
+    canCirculateLoanTypeID = new LoanTypesClient(
+      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      loanTypesStorageUrl("")).create("Can Circulate");
+
+    journalMaterialTypeID = new MaterialTypesClient(
+      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      materialTypesStorageUrl("")).create("Journal");
 
     createLocUnits(true);
   }
