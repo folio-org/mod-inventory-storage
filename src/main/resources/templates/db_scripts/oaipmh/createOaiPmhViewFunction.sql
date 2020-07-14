@@ -53,7 +53,7 @@ create index if not exists audit_instance_pmh_createddate_idx on ${myuniversity}
 create index if not exists audit_holdings_record_pmh_createddate_idx on ${myuniversity}_${mymodule}.audit_holdings_record ((strToTimestamp(jsonb -> 'record' ->> 'updatedDate')));
 create index if not exists audit_item_pmh_createddate_idx on ${myuniversity}_${mymodule}.audit_item ((strToTimestamp(jsonb -> 'record' ->> 'updatedDate')));
 
-create or replace function ${myuniversity}_${mymodule}.pmh_view_function(startDate timestamptz,
+create or replace function ${myuniversity}_${mymodule}.pmh_get_updated_instances_ids(startDate timestamptz,
                                                                          endDate timestamptz,
                                                                          deletedRecordSupport bool default true,
                                                                          skipSuppressedFromDiscoveryRecords bool default true)
@@ -61,8 +61,8 @@ create or replace function ${myuniversity}_${mymodule}.pmh_view_function(startDa
             (
                 instanceId             uuid,
                 instanceUpdatedDate    timestamptz,
-                deleted                boolean,
-                itemsAndHoldingsFields jsonb
+                suppressDiscovery      boolean,
+                deleted                boolean
             )
 as
 $body$
@@ -89,22 +89,45 @@ with instanceIdsInRange as ( select inst.id                                     
                                            on (audit_item.jsonb ->> '{record,holdingsRecordId}')::uuid =
                                               audit_holdings_record.id
                              where ((strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate')) between dateOrMin($1) and dateOrMax($2) or
-                                    (strToTimestamp(audit_item.jsonb #>> '{record,updatedDate}')) between dateOrMin($1) and dateOrMax($2)) ),
-     instanceIdsAndDatesInRange as ( select instanceId, max(instanceIdsInRange.maxDate) as maxDate,
-                                            (instance.jsonb ->> 'discoverySuppress')::bool as suppressDiscovery
+                                    (strToTimestamp(audit_item.jsonb #>> '{record,updatedDate}')) between dateOrMin($1) and dateOrMax($2)) )
+
+select instanceId,
+                    max(instanceIdsInRange.maxDate)    as maxDate,
+        (instance.jsonb ->> 'discoverySuppress')::bool as suppressDiscovery,
+                                                 false as deleted
                                      from instanceIdsInRange,
                                           instance
                                      where instanceIdsInRange.maxDate between dateOrMin($1) and dateOrMax($2)
                                        and instance.id = instanceIdsInRange.instanceId
                                        and not ($4 and coalesce((instance.jsonb ->> 'discoverySuppress')::bool, false))
-                                     group by 1, 3)
 
-select instanceIdsAndDatesInRange.instanceId,
-       instanceIdsAndDatesInRange.maxDate,
-       false as deleted,
-       ( select to_jsonb(itemAndHoldingsAttrs) as instanceFields
+                                     group by 1, 3
+union all
+select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
+       strToTimestamp(jsonb ->> 'createdDate')        as maxDate,
+       false                                          as suppressDiscovery,
+       true                                           as deleted
+from ${myuniversity}_${mymodule}.audit_instance
+where $3
+  and strToTimestamp(jsonb ->> 'createdDate') between dateOrMin($1) and dateOrMax($2)
+
+$body$ language sql;
+
+
+
+
+create or replace function ${myuniversity}_${mymodule}.pmh_instance_view_function(instanceIds text[],
+                                                                         skipSuppressedFromDiscoveryRecords bool default true)
+    returns table
+            (
+                instanceId             uuid,
+                itemsAndHoldingsFields jsonb
+            )
+as
+$body$
+     select instId,
+(select to_jsonb(itemAndHoldingsAttrs) as itemsAndHoldingsFields
          from ( select hr.instanceid,
-                       instanceIdsAndDatesInRange.suppressDiscovery as suppressDiscovery,
                        jsonb_agg(jsonb_build_object('id', item.id, 'callNumber',
                                                     item.jsonb -> 'effectiveCallNumberComponents'
                                                         || jsonb_build_object('typeName',cnt.jsonb ->> 'name'),
@@ -134,13 +157,8 @@ select instanceIdsAndDatesInRange.instanceId,
                                                                 coalesce(item.jsonb #> '{electronicAccess}', '[]'::jsonb) ||
                                                                 coalesce(hr.jsonb #> '{electronicAccess}', '[]'::jsonb)),
                                                     'suppressDiscovery',
-                                                    case
-                                                        when instanceIdsAndDatesInRange.suppressDiscovery
-                                                            then true
-                                                        else
                                                                 coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false) or
                                                                 coalesce((item.jsonb ->> 'discoverySuppress')::bool, false)
-                                                        end,
                                                     'notes',
                                                     getItemNoteTypeName(item.jsonb-> 'notes'),
                                                     'barcode',
@@ -165,18 +183,10 @@ select instanceIdsAndDatesInRange.instanceId,
                               on (loc.jsonb ->> 'libraryId')::uuid = itemLocLib.id
                          left join ${myuniversity}_${mymodule}.material_type mt on item.materialtypeid = mt.id
                          left join ${myuniversity}_${mymodule}.call_number_type cnt on (item.jsonb #>> '{effectiveCallNumberComponents, typeId}')::uuid = cnt.id
-                where instanceId = instanceIdsAndDatesInRange.instanceId
-                  and not ($4 and coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false))
-                  and not ($4 and coalesce((item.jsonb ->> 'discoverySuppress')::bool, false))
-                group by 1) itemAndHoldingsAttrs )
-from instanceIdsAndDatesInRange
-union all
-select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
-       strToTimestamp(jsonb ->> 'createdDate')         as maxDate,
-       true                                           as deleted,
-       null                                           as itemFields
-from ${myuniversity}_${mymodule}.audit_instance
-where $3
-  and strToTimestamp(jsonb ->> 'createdDate') between dateOrMin($1) and dateOrMax($2)
+                where instanceId = instId
+                  and not ($2 and coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false))
+                  and not ($2 and coalesce((item.jsonb ->> 'discoverySuppress')::bool, false))
+                group by 1) itemAndHoldingsAttrs)
+FROM unnest( $1 ) AS instId;
 
 $body$ language sql;
