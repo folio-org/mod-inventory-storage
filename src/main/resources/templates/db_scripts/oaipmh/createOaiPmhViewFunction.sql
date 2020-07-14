@@ -66,7 +66,7 @@ create or replace function ${myuniversity}_${mymodule}.pmh_get_updated_instances
             )
 as
 $body$
-with instanceIdsInRange as ( select inst.id                                                      as instanceId,
+with instanceIdsInRange as ( select inst.id                                                       as instanceId,
                                     (strToTimestamp(inst.jsonb -> 'metadata' ->> 'updatedDate')) as maxDate
                              from ${myuniversity}_${mymodule}.instance inst
                              where (strToTimestamp(inst.jsonb -> 'metadata' ->> 'updatedDate')) between dateOrMin($1) and dateOrMax($2)
@@ -100,7 +100,6 @@ select instanceId,
                                      where instanceIdsInRange.maxDate between dateOrMin($1) and dateOrMax($2)
                                        and instance.id = instanceIdsInRange.instanceId
                                        and not ($4 and coalesce((instance.jsonb ->> 'discoverySuppress')::bool, false))
-
                                      group by 1, 3
 union all
 select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
@@ -113,9 +112,6 @@ where $3
 
 $body$ language sql;
 
-
-
-
 create or replace function ${myuniversity}_${mymodule}.pmh_instance_view_function(instanceIds text[],
                                                                          skipSuppressedFromDiscoveryRecords bool default true)
     returns table
@@ -125,7 +121,7 @@ create or replace function ${myuniversity}_${mymodule}.pmh_instance_view_functio
             )
 as
 $body$
-     select instId,
+select instId,
 (select to_jsonb(itemAndHoldingsAttrs) as itemsAndHoldingsFields
          from ( select hr.instanceid,
                        jsonb_agg(jsonb_build_object('id', item.id, 'callNumber',
@@ -158,7 +154,7 @@ $body$
                                                                 coalesce(hr.jsonb #> '{electronicAccess}', '[]'::jsonb)),
                                                     'suppressDiscovery',
                                                                 coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false) or
-                                                                coalesce((item.jsonb ->> 'discoverySuppress')::bool, false)
+                                                                coalesce((item.jsonb ->> 'discoverySuppress')::bool, false),
                                                     'notes',
                                                     getItemNoteTypeName(item.jsonb-> 'notes'),
                                                     'barcode',
