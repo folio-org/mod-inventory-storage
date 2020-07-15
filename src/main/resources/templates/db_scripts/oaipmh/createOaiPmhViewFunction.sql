@@ -54,9 +54,9 @@ create index if not exists audit_holdings_record_pmh_createddate_idx on ${myuniv
 create index if not exists audit_item_pmh_createddate_idx on ${myuniversity}_${mymodule}.audit_item ((strToTimestamp(jsonb -> 'record' ->> 'updatedDate')));
 
 create or replace function ${myuniversity}_${mymodule}.pmh_get_updated_instances_ids(startDate timestamptz,
-                                                                         endDate timestamptz,
-                                                                         deletedRecordSupport bool default true,
-                                                                         skipSuppressedFromDiscoveryRecords bool default true)
+                                                                                     endDate timestamptz,
+                                                                                     deletedRecordSupport bool default true,
+                                                                                     skipSuppressedFromDiscoveryRecords bool default true)
     returns table
             (
                 instanceId             uuid,
@@ -112,8 +112,8 @@ where $3
 
 $body$ language sql;
 
-create or replace function ${myuniversity}_${mymodule}.pmh_instance_view_function(instanceIds text[],
-                                                                         skipSuppressedFromDiscoveryRecords bool default true)
+create or replace function ${myuniversity}_${mymodule}./(instanceIds uuid[],
+                                                                                  skipSuppressedFromDiscoveryRecords bool default true)
     returns table
             (
                 instanceId             uuid,

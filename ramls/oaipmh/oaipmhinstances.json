@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Response schema for oai-pmh view",
+  "description": "Response schema for oai-pmh instances view",
   "type": "object",
   "properties": {
     "instance": {
