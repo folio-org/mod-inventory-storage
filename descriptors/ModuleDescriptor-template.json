@@ -1057,10 +1057,14 @@
     },
     {
       "id": "oaipmhview",
-      "version": "1.0",
+      "version": "2.0",
       "handlers" : [
         {
           "methods" : [ "GET" ],
+          "pathPattern" : "/oai-pmh-view/updatedInstanceIds",
+          "permissionsRequired": ["inventory-storage.oai-pmh-view.updatedinstanceids.collection.get"]
+        }, {
+          "methods" : [ "POST" ],
           "pathPattern" : "/oai-pmh-view/instances",
           "permissionsRequired": ["inventory-storage.oai-pmh-view.instances.collection.get"]
         }
