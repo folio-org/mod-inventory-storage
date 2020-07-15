@@ -112,7 +112,7 @@ where $3
 
 $body$ language sql;
 
-create or replace function ${myuniversity}_${mymodule}./(instanceIds uuid[],
+create or replace function ${myuniversity}_${mymodule}.pmh_instance_view_function(instanceIds uuid[],
                                                                                   skipSuppressedFromDiscoveryRecords bool default true)
     returns table
             (

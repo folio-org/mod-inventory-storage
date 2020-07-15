@@ -34,6 +34,7 @@ import org.junit.runner.RunWith;
 
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -46,6 +47,8 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
   private static final PostgresClient postgresClient = PostgresClient.getInstance(getVertx(),
       TenantTool.calculateTenantId(TENANT_ID));
+
+  private static final String QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS = "skipSuppressedFromDiscoveryRecords";
 
   private UUID holdingsRecordId1;
   private Map<String, String> params;
@@ -91,7 +94,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     // given
     // one instance, 1 holding, 2 items
     // when
-    final List<JsonObject> data = requestOaiPmhView(params);
+    final List<JsonObject> data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
@@ -105,7 +108,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     deleteAll(instancesStorageUrl(""));
     clearAuditTables();
     // when
-    final List<JsonObject> data = requestOaiPmhView(params);
+    final List<JsonObject> data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.size(), is(0));
   }
@@ -118,13 +121,13 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     instancesClient.deleteAll();
     // when
     params.put("deletedRecordSupport", "true");
-    List<JsonObject> data = requestOaiPmhView(params);
+    List<JsonObject> data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.get(0), isDeleted());
 
     // when
     params.put("deletedRecordSupport", "false");
-    data = requestOaiPmhView(params);
+    data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.size(), is(0));
   }
@@ -137,7 +140,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     LocalDateTime startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
     params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
       .toString());
-    List<JsonObject> data = requestOaiPmhView(params);
+    List<JsonObject> data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
@@ -146,7 +149,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     LocalDateTime endDate = LocalDateTime.of(2500, 1, 1, 0, 0, 0);
     params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
       .toString());
-    data = requestOaiPmhView(params);
+    data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
@@ -155,7 +158,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     startDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
     params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
       .toString());
-    data = requestOaiPmhView(params);
+    data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.size(), is(0));
 
@@ -163,7 +166,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     endDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
     params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
       .toString());
-    data = requestOaiPmhView(params);
+    data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.size(), is(0));
 
@@ -174,7 +177,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       .toString());
     params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
       .toString());
-    data = requestOaiPmhView(params);
+    data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
@@ -186,7 +189,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       .toString());
     params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
       .toString());
-    data = requestOaiPmhView(params);
+    data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.size(), is(0));
 
@@ -202,15 +205,15 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     super.createItem(createItemRequest(thirdFloorLocationId, "item barcode 2", "item effective call number 3", bookMaterialTypeId)
       .withDiscoverySuppress(true));
     // when
-    params.put("skipSuppressedFromDiscoveryRecords", "true");
-    List<JsonObject> data = requestOaiPmhView(params);
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
+    List<JsonObject> data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
     // when
-    params.put("skipSuppressedFromDiscoveryRecords", "false");
-    data = requestOaiPmhView(params);
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.get(0),
         allOf(hasCallNumber("item effective call number 1", "item effective call number 2", "item effective call number 3"),
@@ -234,7 +237,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put("startDate", "invalidDate");
     // then
-    requestOaiPmhView(params, response -> {
+    requestOaiPmhViewUpdatedInstanceIds(params, response -> {
       assertThat(response.getStatusCode(), is(400));
     });
   }
@@ -252,7 +255,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put("endDate", "invalidDate");
     // then
-    requestOaiPmhView(params, response -> {
+    requestOaiPmhViewUpdatedInstanceIds(params, response -> {
       assertThat(response.getStatusCode(), is(400));
     });
   }
@@ -271,18 +274,18 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       .withMaterialType(materialTypeId);
   }
 
-  private List<JsonObject> requestOaiPmhView(Map<String, String> params)
+  private List<JsonObject> requestOaiPmhViewInstance(List<String> instanceIds, Map<String, String> queryParamsMap)
       throws InterruptedException, ExecutionException, TimeoutException {
 
-    return requestOaiPmhView(params, response -> {
+    return requestOaiPmhViewInstance(instanceIds, queryParamsMap, response -> {
       assertThat(response.getStatusCode(), is(200));
     });
   }
 
-  private List<JsonObject> requestOaiPmhView(Map<String, String> params, Handler<Response> responseMatcher)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  private List<JsonObject> requestOaiPmhViewInstance(List<String> instanceIds, Map<String, String> queryParamsMap, Handler<Response> responseMatcher)
+    throws InterruptedException, ExecutionException, TimeoutException {
 
-    final String queryParams = params.entrySet()
+    final String queryParams = queryParamsMap.entrySet()
       .stream()
       .map(e -> e.getKey() + "=" + e.getValue())
       .collect(Collectors.joining("&"));
@@ -290,11 +293,44 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> future = new CompletableFuture<>();
     final List<JsonObject> results = new ArrayList<>();
 
-    client.get(oaiPmhView("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
+    client.post(oaiPmhViewInstance("?" + queryParams), instanceIds.toArray(new String[0]), TENANT_ID, ResponseHandler.any(future));
 
     final Response response = future.get(2, TimeUnit.SECONDS);
     responseMatcher.handle(response);
-    log.info("response from oai pmh view:", response);
+    log.info("response from oai pmh instance ids view:", response);
+
+    final String body = response.getBody();
+    if (StringUtils.isNotEmpty(body)) {
+      results.add(new JsonObject(body));
+    }
+
+    return results;
+  }
+
+  private List<JsonObject> requestOaiPmhViewUpdatedInstanceIds(Map<String, String> queryParamsMap)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    return requestOaiPmhViewUpdatedInstanceIds(queryParamsMap, response -> {
+      assertThat(response.getStatusCode(), is(200));
+    });
+  }
+
+  private List<JsonObject> requestOaiPmhViewUpdatedInstanceIds(Map<String, String> queryParamsMap, Handler<Response> responseMatcher)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    final String queryParams = queryParamsMap.entrySet()
+      .stream()
+      .map(e -> e.getKey() + "=" + e.getValue())
+      .collect(Collectors.joining("&"));
+
+    CompletableFuture<Response> future = new CompletableFuture<>();
+    final List<JsonObject> results = new ArrayList<>();
+
+    client.get(oaiPmhViewUpdatedInstanceIds("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
+
+    final Response response = future.get(2, TimeUnit.SECONDS);
+    responseMatcher.handle(response);
+    log.info("response from oai pmh updated instances view:", response);
 
     final String body = response.getBody();
     if (StringUtils.isNotEmpty(body)) {
