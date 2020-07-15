@@ -9,6 +9,9 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.core.Response;
@@ -93,7 +96,8 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
       .params()));
 
     try {
-      Tuple params = createPostgresParams(entity.toArray(new String[0]), skipSuppressedFromDiscoveryRecords);
+      UUID[] ids = entity.stream().map(UUID::fromString).collect(Collectors.toList()).toArray(new UUID[0]);
+      Tuple params = createPostgresParams(ids, skipSuppressedFromDiscoveryRecords);
       log.debug("postgres params:", params);
 
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
@@ -166,12 +170,12 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
     return tuple;
   }
 
-  private Tuple createPostgresParams(String[] instancesIds, boolean skipSuppressedFromDiscoveryRecords) {
+  private Tuple createPostgresParams(UUID[] instancesIds, boolean skipSuppressedFromDiscoveryRecords) {
     Tuple tuple = new ArrayTuple(2);
 
     try {
       if (ArrayUtils.isNotEmpty(instancesIds)) {
-        tuple.addStringArray(instancesIds);
+        tuple.addUUIDArray(instancesIds);
       } else {
         tuple.addValue(new String[0]);
       }
