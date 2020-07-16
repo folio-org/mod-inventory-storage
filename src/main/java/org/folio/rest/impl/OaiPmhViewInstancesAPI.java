@@ -44,7 +44,8 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   private static final String SQL_INSTANCES_IDS = "select * from pmh_instance_view_function($1,$2);";
 
   private void getCommonInstanceProcessing(String sql, Tuple params, RoutingContext routingContext, Map<String, String> okapiHeaders,
-                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, String logMessage) {
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, String logMessage) {
+
     try {
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
       final HttpServerResponse response = getResponse(routingContext);
@@ -78,22 +79,8 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   }
 
   @Override
-  public void getOaiPmhViewUpdatedInstanceIds(String
-                                                startDate, String endDate, boolean deletedRecordSupport,
-                                              boolean skipSuppressedFromDiscoveryRecords, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext,
-                                              Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-    log.debug("request params:", Iterables.toString(routingContext.request()
-      .params()));
-
-    Tuple params = createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords);
-    log.debug("postgres params:", params);
-    getCommonInstanceProcessing(SQL_UPDATED_INSTANCES, params, routingContext, okapiHeaders, asyncResultHandler, vertxContext,
-      "Select from oai pmh updated instances view completed successfully");
-  }
-
-  @Override
-  public void postOaiPmhViewInstances(boolean skipSuppressedFromDiscoveryRecords, List<String> entity, RoutingContext routingContext, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postOaiPmhViewInstances(boolean skipSuppressedFromDiscoveryRecords, List<String> entity, RoutingContext routingContext,
+      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     log.debug("request params:", Iterables.toString(routingContext.request()
       .params()));
@@ -104,6 +91,19 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
 
     getCommonInstanceProcessing(SQL_INSTANCES_IDS, params, routingContext, okapiHeaders, asyncResultHandler, vertxContext,
       "Select from oai pmh instances view completed successfully");
+  }
+
+  @Override
+  public void getOaiPmhViewUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext,
+      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    log.debug("request params:", Iterables.toString(routingContext.request()
+      .params()));
+
+    Tuple params = createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords);
+    log.debug("postgres params:", params);
+    getCommonInstanceProcessing(SQL_UPDATED_INSTANCES, params, routingContext, okapiHeaders, asyncResultHandler, vertxContext,
+      "Select from oai pmh updated instances view completed successfully");
   }
 
   private HttpServerResponse getResponse(RoutingContext routingContext) {
@@ -119,7 +119,7 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   }
 
   private Tuple createPostgresParams(String startDate, String endDate, boolean deletedRecordSupport,
-                                     boolean skipSuppressedFromDiscoveryRecords) {
+      boolean skipSuppressedFromDiscoveryRecords) {
 
     Tuple tuple = new ArrayTuple(4);
 
