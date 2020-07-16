@@ -1066,7 +1066,7 @@
         }, {
           "methods" : [ "POST" ],
           "pathPattern" : "/oai-pmh-view/instances",
-          "permissionsRequired": ["inventory-storage.oai-pmh-view.instances.collection.get"]
+          "permissionsRequired": ["inventory-storage.oai-pmh-view.instances.collection.post"]
         }
       ]
     }
@@ -1995,7 +1995,12 @@
       "description": "modify the HRID settings in storage"
     },
     {
-      "permissionName": "inventory-storage.oai-pmh-view.instances.collection.get",
+      "permissionName": "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
+      "displayName": "inventory storage - get updated instances ids for oai pmh",
+      "description": "get updated instances ids for oai pmh"
+    },
+    {
+      "permissionName": "inventory-storage.oai-pmh-view.instances.collection.post",
       "displayName": "inventory storage - get instances for oai pmh",
       "description": "get instances for oai pmh"
     },
@@ -2187,7 +2192,8 @@
         "inventory-storage.preceding-succeeding-titles.item.post",
         "inventory-storage.preceding-succeeding-titles.item.put",
         "inventory-storage.preceding-succeeding-titles.item.delete",
-        "inventory-storage.oai-pmh-view.instances.collection.get"
+        "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
+        "inventory-storage.oai-pmh-view.instances.collection.post"
       ]
     }
   ],

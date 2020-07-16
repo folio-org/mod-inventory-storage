@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandles;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -147,20 +148,12 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
 
   private Tuple createPostgresParams(UUID[] instancesIds, boolean skipSuppressedFromDiscoveryRecords) {
     Tuple tuple = new ArrayTuple(2);
-
     try {
-      if (ArrayUtils.isNotEmpty(instancesIds)) {
-        tuple.addUUIDArray(instancesIds);
-      } else {
-        tuple.addValue(new String[0]);
-      }
-
+      tuple.addUUIDArray(Optional.ofNullable(instancesIds).orElse(new UUID[0]));
       tuple.addBoolean(skipSuppressedFromDiscoveryRecords);
-
     } catch (Exception e) {
       throw new IllegalArgumentException(e);
     }
-
     return tuple;
   }
 }

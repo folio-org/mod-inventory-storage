@@ -154,7 +154,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     // Extract instances ids
     UUID[] instanceIds = updatedInstanceData.stream()
-      .map(e -> UUID.fromString(e.getString("instanceid")))
+      .map(json -> UUID.fromString(json.getString("instanceid")))
       .collect(Collectors.toList())
       .toArray(new UUID[0]);
 

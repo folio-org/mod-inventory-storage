@@ -13,7 +13,7 @@
       "format": "date-time"
     },
     "suppressDiscovery": {
-        "description": "Indicates if instance should be suppressed from discovery",
+        "description": "Indicates if instance is suppressed from discovery",
         "type": "boolean"
     },
     "deleted": {
