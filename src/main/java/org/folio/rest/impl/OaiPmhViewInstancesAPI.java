@@ -6,11 +6,9 @@ import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewUpdatedInsta
 
 import java.lang.invoke.MethodHandles;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.Pattern;
@@ -45,23 +43,13 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   private static final String SQL_UPDATED_INSTANCES = "select * from pmh_get_updated_instances_ids($1,$2,$3,$4);";
   private static final String SQL_INSTANCES_IDS = "select * from pmh_instance_view_function($1,$2);";
 
-  @Override
-  public void getOaiPmhViewUpdatedInstanceIds(String
-                                                  startDate, String endDate, boolean deletedRecordSupport,
-      boolean skipSuppressedFromDiscoveryRecords, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext,
-      Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-    log.debug("request params:", Iterables.toString(routingContext.request()
-      .params()));
-
+  private void getCommonInstanceProcessing(String sql, Tuple params, RoutingContext routingContext, Map<String, String> okapiHeaders,
+                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, String logMessage) {
     try {
-      Tuple params = createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords);
-      log.debug("postgres params:", params);
-
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
       final HttpServerResponse response = getResponse(routingContext);
 
-      postgresClient.startTx(tx -> postgresClient.selectStream(tx, SQL_UPDATED_INSTANCES, params, ar -> {
+      postgresClient.startTx(tx -> postgresClient.selectStream(tx, sql, params, ar -> {
         if (ar.failed()) {
           respondWithError(ar.cause(), asyncResultHandler);
           return;
@@ -73,7 +61,7 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
             respondWithError(completed.cause(), asyncResultHandler);
             return;
           }
-          log.info("Select from oai pmh updated instances view completed successfully");
+          log.info(logMessage);
           postgresClient.endTx(tx, h -> {
             if (h.failed()) {
               respondWithError(h.cause(), asyncResultHandler);
@@ -90,45 +78,32 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   }
 
   @Override
+  public void getOaiPmhViewUpdatedInstanceIds(String
+                                                startDate, String endDate, boolean deletedRecordSupport,
+                                              boolean skipSuppressedFromDiscoveryRecords, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext,
+                                              Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    log.debug("request params:", Iterables.toString(routingContext.request()
+      .params()));
+
+    Tuple params = createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords);
+    log.debug("postgres params:", params);
+    getCommonInstanceProcessing(SQL_UPDATED_INSTANCES, params, routingContext, okapiHeaders, asyncResultHandler, vertxContext,
+      "Select from oai pmh updated instances view completed successfully");
+  }
+
+  @Override
   public void postOaiPmhViewInstances(boolean skipSuppressedFromDiscoveryRecords, List<String> entity, RoutingContext routingContext, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     log.debug("request params:", Iterables.toString(routingContext.request()
       .params()));
 
-    try {
-      UUID[] ids = entity.stream().map(UUID::fromString).collect(Collectors.toList()).toArray(new UUID[0]);
-      Tuple params = createPostgresParams(ids, skipSuppressedFromDiscoveryRecords);
-      log.debug("postgres params:", params);
+    UUID[] ids = entity.stream().map(UUID::fromString).collect(Collectors.toList()).toArray(new UUID[0]);
+    Tuple params = createPostgresParams(ids, skipSuppressedFromDiscoveryRecords);
+    log.debug("postgres params:", params);
 
-      PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-      final HttpServerResponse response = getResponse(routingContext);
-
-      postgresClient.startTx(tx -> postgresClient.selectStream(tx, SQL_INSTANCES_IDS, params, ar -> {
-        if (ar.failed()) {
-          respondWithError(ar.cause(), asyncResultHandler);
-          return;
-        }
-
-        Pipe<Buffer> pipe = new RowStreamToBufferAdapter(ar.result()).pipe();
-        pipe.to(response, completed -> {
-          if (completed.failed()) {
-            respondWithError(completed.cause(), asyncResultHandler);
-            return;
-          }
-          log.info("Select from oai pmh instances view completed successfully");
-          postgresClient.endTx(tx, h -> {
-            if (h.failed()) {
-              respondWithError(h.cause(), asyncResultHandler);
-            }
-          });
-        });
-      }));
-    } catch (IllegalArgumentException e) {
-      log.error(e);
-      asyncResultHandler.handle(succeededFuture(respond400WithTextPlain(e.getMessage())));
-    } catch (Exception e) {
-      respondWithError(e, asyncResultHandler);
-    }
+    getCommonInstanceProcessing(SQL_INSTANCES_IDS, params, routingContext, okapiHeaders, asyncResultHandler, vertxContext,
+      "Select from oai pmh instances view completed successfully");
   }
 
   private HttpServerResponse getResponse(RoutingContext routingContext) {
@@ -144,7 +119,7 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   }
 
   private Tuple createPostgresParams(String startDate, String endDate, boolean deletedRecordSupport,
-      boolean skipSuppressedFromDiscoveryRecords) {
+                                     boolean skipSuppressedFromDiscoveryRecords) {
 
     Tuple tuple = new ArrayTuple(4);
 
