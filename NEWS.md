@@ -1,3 +1,9 @@
+## 19.2.5 2020-07-16
+
+* Search queries without database index (MODINVSTOR-472)
+* Add Index for Instances Full-text Subjects Search (MODINVSTOR-499)
+* RMB 30.2.4: totalRecords for limit=0, requestId logging (MODINVSTOR-532, RMB-673, RMB-670)
+
 ## 19.2.4 2020-07-07
 
 * Expand oai-pmh view with additional fields (MODINVSTOR-498)
