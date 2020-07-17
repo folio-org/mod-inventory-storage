@@ -928,7 +928,7 @@
     {
       "run": "after",
       "snippetPath": "oaipmh/createOaiPmhViewFunction.sql",
-      "fromModuleVersion": "20.0.0"
+      "fromModuleVersion": "19.2.5"
     },
     {
       "run": "after",

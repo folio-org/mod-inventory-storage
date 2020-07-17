@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Inventory Storage OAI-PMH view API
-version: v2.0
+version: v1.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://github.com/org/folio/mod-inventory-storage
 
@@ -10,7 +10,8 @@ documentation:
 
 types:
   oaipmhInstances: !include oaipmh/oaipmhinstances.json
-  oaipmhInstanceIds: !include oaipmh/oaipmhinstanceids.json
+  oaipmhUpdatedInstanceIds: !include oaipmh/oaipmhupdatedinstanceids.json
+  oaipmhEnrichedInstances: !include oaipmh/oaipmhenrichedinstances.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -21,12 +22,41 @@ resourceTypes:
   collection-get: !include raml-util/rtypes/collection-get.raml
 
 /oai-pmh-view:
-  /updatedInstanceIds:
-    displayName: Stream API to get instances ids for OAI-PMH
+  /instances:
+    displayName: Stream API to get data for OAI-PMH
     type:
       collection-get:
        schemaCollection: oaipmhInstances
        exampleCollection: !include examples/oaipmhinstances.json
+    get:
+      description: Stream data for oai-pmh
+      is:
+        [validate]
+      queryParameters:
+        startDate:
+          description: start date
+          type: string
+          required: false
+        endDate:
+          description: start date
+          type: string
+          required: false
+        deletedRecordSupport:
+          description: return deleted records
+          type: boolean
+          required: false
+          default: true
+        skipSuppressedFromDiscoveryRecords:
+          description: skip discovery suppressed records
+          type: boolean
+          required: false
+          default: true
+  /updatedInstanceIds:
+    displayName: Stream API to get instances ids for OAI-PMH
+    type:
+      collection-get:
+       schemaCollection: oaipmhUpdatedInstanceIds
+       exampleCollection: !include examples/oaipmhinstanceids.json
     get:
       description: Stream updated instances ids for oai-pmh
       is:
@@ -50,7 +80,7 @@ resourceTypes:
           type: boolean
           required: false
           default: true
-  /instances:
+  /enrichedInstances:
     displayName: Stream API to get instances with items and holdings for OAI-PMH
     post:
       description: Stream instances view data for oai-pmh
@@ -70,5 +100,4 @@ resourceTypes:
         200:
           body:
             application/json:
-              type: oaipmhInstanceIds
-              example: !include examples/oaipmhinstanceids.json
+              type: oaipmhUpdatedInstanceIds
