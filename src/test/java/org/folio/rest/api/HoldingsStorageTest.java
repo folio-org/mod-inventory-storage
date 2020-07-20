@@ -31,6 +31,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.HttpResponseMatchers.*;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
@@ -111,7 +113,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
     assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
 
-    List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(holdingFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -152,7 +154,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
 
-    List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(holdingFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -226,7 +228,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
     assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
 
-    List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(holdingFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -298,7 +300,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("permanentLocationId"), is(annexLibraryLocationId.toString()));
     assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
 
-    List<String> tags = holdingFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(holdingFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(NEW_TEST_TAG));
@@ -591,8 +593,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void tenantIsRequiredForGettingAllHoldings()
-    throws MalformedURLException, InterruptedException,
+  public void tenantIsRequiredForGettingAllHoldings() throws InterruptedException,
     ExecutionException, TimeoutException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
@@ -629,7 +630,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
 
     Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
     Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
@@ -715,7 +716,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
 
     Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
 
@@ -781,7 +782,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
     itemToCreate.put("itemLevelCallNumber", "itemLevelCallNumber");
 
     Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
@@ -966,7 +967,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
 
     Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
     Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
@@ -1052,7 +1053,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
 
     Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
 
@@ -1118,7 +1119,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
     itemToCreate.put("itemLevelCallNumberSuffix", "itemLevelCallNumberSuffix");
 
     Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
@@ -1186,7 +1187,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
 
     Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
     Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
@@ -1273,7 +1274,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
 
     Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
 
@@ -1339,7 +1340,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
     itemToCreate.put("itemLevelCallNumberPrefix", "itemLevelCallNumberPrefix");
 
     Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
@@ -1667,7 +1668,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final JsonArray holdingsArray = threeHoldings();
 
-    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HTTP_CREATED));
 
     holdingsArray.stream()
         .map(o -> (JsonObject) o)
@@ -1691,7 +1692,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsArray.getJsonObject(1).put("hrid", hrid);
 
-    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HTTP_CREATED));
 
     Response response = getById(holdingsArray.getJsonObject(0).getString("id"));
     assertExists(response, holdingsArray.getJsonObject(0));
@@ -1719,7 +1720,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsArray.getJsonObject(1).put("hrid", duplicateHRID);
 
     assertThat(postSynchronousBatch(holdingsArray), allOf(
-        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate key"),
         errorParametersValueIs(duplicateHRID)));
 
@@ -1830,16 +1831,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         PostgresClient.getInstance(vertx, TENANT_ID);
     final CompletableFuture<Void> sequenceSet = new CompletableFuture<>();
 
-    vertx.runOnContext(v -> {
+    vertx.runOnContext(v ->
       postgresClient.selectSingle("select setval('hrid_holdings_seq',"
-          + sequenceNumber + ",FALSE)", r -> {
-            if (r.succeeded()) {
-              sequenceSet.complete(null);
-            } else {
-              sequenceSet.completeExceptionally(r.cause());
-            }
-          });
-    });
+        + sequenceNumber + ",FALSE)", r -> {
+        if (r.succeeded()) {
+          sequenceSet.complete(null);
+        } else {
+          sequenceSet.completeExceptionally(r.cause());
+        }
+      }));
 
     try {
       sequenceSet.get(2, SECONDS);
@@ -1887,7 +1887,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canPostSynchronousBatch() {
     JsonArray holdingsArray = threeHoldings();
-    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HTTP_CREATED));
     for (Object holding : holdingsArray) {
       assertExists((JsonObject) holding);
     }
@@ -1899,7 +1899,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     String duplicateId = holdingsArray.getJsonObject(0).getString("id");
     holdingsArray.getJsonObject(1).put("id", duplicateId);
     assertThat(postSynchronousBatch(holdingsArray), allOf(
-        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate key"),
         errorParametersValueIs(duplicateId)));
 
@@ -1913,23 +1913,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonArray holdingsArray2 = threeHoldings();
     String existingId = holdingsArray1.getJsonObject(1).getString("id");
     holdingsArray2.getJsonObject(1).put("id", existingId);
-    assertThat(postSynchronousBatch(subPath, holdingsArray1), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(postSynchronousBatch(subPath, holdingsArray1), statusCodeIs(HTTP_CREATED));
     return postSynchronousBatch(subPath, holdingsArray2);
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() throws Exception {
-    assertThat(postSynchronousBatchWithExistingId(""), statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() {
+    assertThat(postSynchronousBatchWithExistingId(""), statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingIdWithUpsertFalse() throws Exception {
-    assertThat(postSynchronousBatchWithExistingId("?upsert=false"), statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+  public void cannotPostSynchronousBatchWithExistingIdWithUpsertFalse() {
+    assertThat(postSynchronousBatchWithExistingId("?upsert=false"), statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdWithUpsertTrue() throws Exception {
-    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HttpStatus.HTTP_CREATED));
+  public void canPostSynchronousBatchWithExistingIdWithUpsertTrue() {
+    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HTTP_CREATED));
   }
 
   @Test
@@ -2146,5 +2146,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       ResponseHandler.empty(putCompleted));
 
     return putCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private List<String> getTags(JsonObject json) {
+    return json.getJsonObject("tags").getJsonArray("tagList")
+      .stream()
+      .map(obj -> (String) obj)
+      .collect(Collectors.toList());
   }
 }
