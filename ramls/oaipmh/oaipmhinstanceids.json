@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Define format of request data with instances ids",
+  "type": "object",
+  "properties": {
+    "instanceids": {
+      "description": "OAI-PMH instances identifiers",
+      "type": "array",
+      "items": {
+        "$ref": "../uuid.json"
+      }
+    },
+    "skipSuppressedFromDiscoveryRecords": {
+      "description": "Skip discovery suppressed records",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "instanceids",
+    "skipSuppressedFromDiscoveryRecords"
+  ],
+  "additionalProperties": false
+}

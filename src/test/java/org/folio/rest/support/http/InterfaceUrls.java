@@ -183,7 +183,7 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/oai-pmh-view/updatedInstanceIds" + subPath);
   }
 
-  public static URL oaiPmhViewEnrichedInstances(String subPath) {
-    return StorageTestSuite.storageUrl("/oai-pmh-view/enrichedInstances" + subPath);
+  public static URL oaiPmhViewEnrichedInstances() {
+    return StorageTestSuite.storageUrl("/oai-pmh-view/enrichedInstances");
   }
 }

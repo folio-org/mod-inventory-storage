@@ -12,6 +12,7 @@ types:
   oaipmhInstances: !include oaipmh/oaipmhinstances.json
   oaipmhUpdatedInstanceIds: !include oaipmh/oaipmhupdatedinstanceids.json
   oaipmhEnrichedInstances: !include oaipmh/oaipmhenrichedinstances.json
+  oaipmhInstanceIds: !include oaipmh/oaipmhinstanceids.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -88,16 +89,11 @@ resourceTypes:
         [validate]
       body:
         application/json:
-          description: List of instances Ids
-          type: string[]
-      queryParameters:
-        skipSuppressedFromDiscoveryRecords:
-          description: skip discovery suppressed records
-          type: boolean
-          required: false
-          default: true
+          description: List of instances Ids with skip discovery suppressed flag
+          type: oaipmhInstanceIds
       responses:
         200:
           body:
             application/json:
-              type: oaipmhUpdatedInstanceIds
+              type: oaipmhEnrichedInstances
+              example: !include examples/oaipmhenrichedinstances.json

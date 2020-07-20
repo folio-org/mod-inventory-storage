@@ -5,7 +5,8 @@
   "properties": {
     "instanceId": {
       "description": "OAI-PMH updated instances ids",
-      "type": "string"
+      "type": "string",
+      "$ref": "../uuid.json"
     },
     "instanceUpdatedDate": {
       "description": "The last updated date or deleted date of an instance or it's items and holdings",
