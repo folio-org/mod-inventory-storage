@@ -1997,7 +1997,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final List<UUID> foundHoldings = searchByCallNumberEyeReadable("GE77 .F73 2014");
 
     assertThat(foundHoldings.size(), is(2));
-    assertThat(foundHoldings, contains(firstHoldingsToMatch.getId(),
+    assertThat(foundHoldings, hasItems(firstHoldingsToMatch.getId(),
       secondHoldingsToMatch.getId()));
   }
 
@@ -2036,7 +2036,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final List<UUID> foundHoldings = searchByCallNumberEyeReadable("GE77 .F73*");
 
     assertThat(foundHoldings.size(), is(3));
-    assertThat(foundHoldings, contains(firstHoldingsToMatch.getId(),
+    assertThat(foundHoldings, hasItems(firstHoldingsToMatch.getId(),
       secondHoldingsToMatch.getId(), thirdHoldingsToMatch.getId()));
   }
 
