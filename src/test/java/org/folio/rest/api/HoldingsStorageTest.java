@@ -1969,6 +1969,77 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       containsInAnyOrder(notSuppressedHolding.getId(), notSuppressedHoldingDefault.getId()));
   }
 
+  @Test
+  public void shouldFindHoldingByCallNumberWhenThereIsSuffix() throws Exception {
+    final IndividualResource instance = instancesClient
+      .create(smallAngryPlanet(UUID.randomUUID()));
+
+    final IndividualResource firstHoldingsToMatch = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withCallNumber("GE77 .F73 2014")
+        .withPermanentLocation(mainLibraryLocationId));
+
+    final IndividualResource secondHoldingsToMatch = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withCallNumber("GE77 .F73 2014")
+        .withCallNumberSuffix("Curriculum Materials Collection")
+        .withPermanentLocation(mainLibraryLocationId));
+
+    holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withCallNumber("GE77 .F73 ")
+        .withCallNumberSuffix("2014 Curriculum Materials Collection")
+        .withPermanentLocation(mainLibraryLocationId));
+
+    final List<UUID> foundHoldings = searchByCallNumberEyeReadable("GE77 .F73 2014");
+
+    assertThat(foundHoldings.size(), is(2));
+    assertThat(foundHoldings, contains(firstHoldingsToMatch.getId(),
+      secondHoldingsToMatch.getId()));
+  }
+
+  @Test
+  public void explicitRightTruncationCanBeApplied() throws Exception {
+    final IndividualResource instance = instancesClient
+      .create(smallAngryPlanet(UUID.randomUUID()));
+
+    final IndividualResource firstHoldingsToMatch = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withCallNumber("GE77 .F73 2014")
+        .withPermanentLocation(mainLibraryLocationId));
+
+    final IndividualResource secondHoldingsToMatch = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withCallNumber("GE77 .F73 2014")
+        .withCallNumberSuffix("Curriculum Materials Collection")
+        .withPermanentLocation(mainLibraryLocationId));
+
+    final IndividualResource thirdHoldingsToMatch = holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withCallNumber("GE77 .F73 ")
+        .withCallNumberSuffix("2014 Curriculum Materials Collection")
+        .withPermanentLocation(mainLibraryLocationId));
+
+    holdingsClient.create(
+      new HoldingRequestBuilder()
+        .forInstance(instance.getId())
+        .withCallNumber("GE77 .F74 ")
+        .withCallNumberSuffix("2014 Curriculum Materials Collection")
+        .withPermanentLocation(mainLibraryLocationId));
+
+    final List<UUID> foundHoldings = searchByCallNumberEyeReadable("GE77 .F73*");
+
+    assertThat(foundHoldings.size(), is(3));
+    assertThat(foundHoldings, contains(firstHoldingsToMatch.getId(),
+      secondHoldingsToMatch.getId(), thirdHoldingsToMatch.getId()));
+  }
+
   private JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
@@ -2055,6 +2126,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       ResponseHandler.json(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private List<UUID> searchByCallNumberEyeReadable(String searchTerm)
+    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
+
+    return holdingsClient
+      .getMany("fullCallNumber==\"%1$s\" OR callNumberAndSuffix==\"%1$s\" OR callNumber==\"%1$s\"",
+      searchTerm)
+      .stream()
+      .map(IndividualResource::getId)
+      .collect(Collectors.toList());
   }
 
   private Response update(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {
