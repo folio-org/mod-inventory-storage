@@ -61,7 +61,7 @@ create or replace function ${myuniversity}_${mymodule}.pmh_view_function(startDa
     returns table
             (
                 instanceId             uuid,
-                instanceUpdatedDate    timestamptz,
+                updatedDate    timestamptz,
                 deleted                boolean,
                 itemsAndHoldingsFields jsonb
             )
@@ -92,7 +92,7 @@ with instanceIdsInRange as ( select inst.id                                     
                              where ((strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate')) between dateOrMin($1) and dateOrMax($2) or
                                     (strToTimestamp(audit_item.jsonb #>> '{record,updatedDate}')) between dateOrMin($1) and dateOrMax($2)) ),
      instanceIdsAndDatesInRange as ( select instanceId, max(instanceIdsInRange.maxDate) as maxDate,
-                                            (instance.jsonb ->> 'discoverySuppress')::bool as suppressDiscovery
+                                            (instance.jsonb ->> 'discoverySuppress')::bool as suppressFromDiscovery
                                      from instanceIdsInRange,
                                           instance
                                      where instanceIdsInRange.maxDate between dateOrMin($1) and dateOrMax($2)
@@ -105,7 +105,7 @@ select instanceIdsAndDatesInRange.instanceId,
        false as deleted,
        ( select to_jsonb(itemAndHoldingsAttrs) as instanceFields
          from ( select hr.instanceid,
-                       instanceIdsAndDatesInRange.suppressDiscovery as suppressDiscovery,
+                       instanceIdsAndDatesInRange.suppressFromDiscovery as suppressFromDiscovery,
                        jsonb_agg(jsonb_build_object('id', item.id, 'callNumber',
                                                     item.jsonb -> 'effectiveCallNumberComponents'
                                                         || jsonb_build_object('typeName',cnt.jsonb ->> 'name'),
@@ -134,9 +134,9 @@ select instanceIdsAndDatesInRange.instanceId,
                                                     getElectronicAccessName(
                                                                 coalesce(item.jsonb #> '{electronicAccess}', '[]'::jsonb) ||
                                                                 coalesce(hr.jsonb #> '{electronicAccess}', '[]'::jsonb)),
-                                                    'suppressDiscovery',
+                                                    'suppressFromDiscovery',
                                                     case
-                                                        when instanceIdsAndDatesInRange.suppressDiscovery
+                                                        when instanceIdsAndDatesInRange.suppressFromDiscovery
                                                             then true
                                                         else
                                                                 coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false) or
@@ -189,8 +189,8 @@ create or replace function ${myuniversity}_${mymodule}.pmh_get_updated_instances
     returns table
             (
                 instanceId             uuid,
-                instanceUpdatedDate    timestamptz,
-                suppressDiscovery      boolean,
+                updatedDate    timestamptz,
+                suppressFromDiscovery      boolean,
                 deleted                boolean
             )
 as
@@ -222,7 +222,7 @@ with instanceIdsInRange as ( select inst.id                                     
 
 select instanceId,
                     max(instanceIdsInRange.maxDate)    as maxDate,
-        (instance.jsonb ->> 'discoverySuppress')::bool as suppressDiscovery,
+        (instance.jsonb ->> 'discoverySuppress')::bool as suppressFromDiscovery,
                                                  false as deleted
                                      from instanceIdsInRange,
                                           instance
@@ -233,7 +233,7 @@ select instanceId,
 union all
 select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
        strToTimestamp(jsonb ->> 'createdDate')        as maxDate,
-       false                                          as suppressDiscovery,
+       false                                          as suppressFromDiscovery,
        true                                           as deleted
 from ${myuniversity}_${mymodule}.audit_instance
 where $3
@@ -281,7 +281,7 @@ select instId,
                                                     getElectronicAccessName(
                                                                 coalesce(item.jsonb #> '{electronicAccess}', '[]'::jsonb) ||
                                                                 coalesce(hr.jsonb #> '{electronicAccess}', '[]'::jsonb)),
-                                                    'suppressDiscovery',
+                                                    'suppressFromDiscovery',
                                                                 coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false) or
                                                                 coalesce((item.jsonb ->> 'discoverySuppress')::bool, false),
                                                     'notes',

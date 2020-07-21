@@ -35,25 +35,25 @@ resourceTypes:
         [validate]
       queryParameters:
         startDate:
-          description: start date
+          description: Lower bound for filtering instances by instances, items and holdings metadata update date. Accepted format YYYY-MM-DD or YYYY-MM-DDThh:mm:ssZ
           type: string
           required: false
         endDate:
-          description: start date
+          description: Upper bound for filtering instances by instances, items and holdings metadata update date
           type: string
           required: false
         deletedRecordSupport:
-          description: return deleted records
+          description: Returns deleted records
           type: boolean
           required: false
           default: true
         skipSuppressedFromDiscoveryRecords:
-          description: skip discovery suppressed records
+          description: Configuration param which defines if discovery suppressed instance records should be skipped or not
           type: boolean
           required: false
           default: true
   /updatedInstanceIds:
-    displayName: Stream API to get instances ids for OAI-PMH
+    displayName: Stream API to get instances ids of updated oai records for OAI-PMH
     type:
       collection-get:
        schemaCollection: oaipmhUpdatedInstanceIds
@@ -64,11 +64,11 @@ resourceTypes:
         [validate]
       queryParameters:
         startDate:
-          description: start date
+          description: Lower bound for filtering instances by instances, items and holdings metadata update date
           type: string
           required: false
         endDate:
-          description: start date
+          description: Upper bound for filtering instances by instances, items and holdings metadata update date
           type: string
           required: false
         deletedRecordSupport:
@@ -77,7 +77,7 @@ resourceTypes:
           required: false
           default: true
         skipSuppressedFromDiscoveryRecords:
-          description: skip discovery suppressed records
+          description: Configuration param which defines if discovery suppressed instance records should be skipped or not
           type: boolean
           required: false
           default: true
@@ -89,7 +89,7 @@ resourceTypes:
         [validate]
       body:
         application/json:
-          description: List of instances Ids with skip discovery suppressed flag
+          description: List of instances Ids with skip suppressed from discovery configuration parameter
           type: oaipmhInstanceIds
       responses:
         200:

@@ -11,7 +11,7 @@
       }
     },
     "skipSuppressedFromDiscoveryRecords": {
-      "description": "Skip discovery suppressed records",
+      "description": "Configuration param which defines if discovery suppressed items and holdings records should be skipped or not",
       "type": "boolean"
     }
   },

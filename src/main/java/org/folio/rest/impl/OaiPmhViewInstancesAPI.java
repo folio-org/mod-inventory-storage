@@ -1,8 +1,8 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewUpdatedInstanceIdsResponse.respond400WithTextPlain;
-import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewUpdatedInstanceIdsResponse.respond500WithTextPlain;
+import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewInstancesResponse.respond400WithTextPlain;
+import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewInstancesResponse.respond500WithTextPlain;
 
 import java.lang.invoke.MethodHandles;
 import java.time.OffsetDateTime;
@@ -156,13 +156,18 @@ public class OaiPmhViewInstancesAPI implements OaiPmhView {
   }
 
   private Tuple createPostgresParams(UUID[] instancesIds, boolean skipSuppressedFromDiscoveryRecords) {
+
     Tuple tuple = new ArrayTuple(2);
+
     try {
       tuple.addUUIDArray(Optional.ofNullable(instancesIds).orElse(new UUID[0]));
       tuple.addBoolean(skipSuppressedFromDiscoveryRecords);
+
     } catch (Exception e) {
       throw new IllegalArgumentException(e);
     }
+
     return tuple;
   }
+
 }
