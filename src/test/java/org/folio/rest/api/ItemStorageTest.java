@@ -2112,6 +2112,88 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void shouldFindItemByCallNumberWhenThereIsSuffix() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final IndividualResource firstItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 2014")
+        .available());
+
+    final IndividualResource secondItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 2014")
+        .withItemLevelCallNumberSuffix("Curriculum Materials Collection")
+        .available());
+
+    itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 ")
+        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
+        .available());
+
+    final List<UUID> foundItems = searchByCallNumberEyeReadable("GE77 .F73 2014");
+
+    assertThat(foundItems.size(), is(2));
+    assertThat(foundItems, hasItems(firstItemToMatch.getId(), secondItemToMatch.getId()));
+  }
+
+  @Test
+  public void explicitRightTruncationCanBeApplied() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final IndividualResource firstItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 2014")
+        .available());
+
+    final IndividualResource secondItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 2014")
+        .withItemLevelCallNumberSuffix("Curriculum Materials Collection")
+        .available());
+
+    final IndividualResource thirdItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 ")
+        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
+        .available());
+
+    itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F74 ")
+        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
+        .available());
+
+    final List<UUID> foundItems = searchByCallNumberEyeReadable("GE77 .F73*");
+
+    assertThat(foundItems.size(), is(3));
+    assertThat(foundItems, hasItems(firstItemToMatch.getId(), secondItemToMatch.getId(),
+      thirdItemToMatch.getId()));
+  }
+
+  @Test
   public void canSearchByPurchaseOrderLineIdentifierProperty() throws Exception {
     final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -2269,6 +2351,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private List<String> getTags(JsonObject item) {
     return item.getJsonObject("tags").getJsonArray("tagList").stream()
       .map(Object::toString)
+      .collect(Collectors.toList());
+  }
+
+  private List<UUID> searchByCallNumberEyeReadable(String searchTerm)
+    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
+
+    return itemsClient
+      .getMany("fullCallNumber==\"%1$s\" OR callNumberAndSuffix==\"%1$s\" OR " +
+          "effectiveCallNumberComponents.callNumber==\"%1$s\"", searchTerm)
+      .stream()
+      .map(IndividualResource::getId)
       .collect(Collectors.toList());
   }
 }
