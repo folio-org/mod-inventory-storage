@@ -1,6 +1,6 @@
 {
-  "instanceid": "1b74ab75-9f41-4837-8662-a1d99118008d",
-  "itemsandholdingsfields": {
+  "instanceId": "1b74ab75-9f41-4837-8662-a1d99118008d",
+  "itemsAndHoldingsFields": {
     "items": [
       {
         "id": "0aaef1ea-69eb-4f6e-a077-cea159317ce3",
@@ -25,7 +25,7 @@
         "materialType": "sound recording",
         "electronicAccess": [
           {
-            "uri": "holdinguri",
+            "uri": "holding uri",
             "name": "No information provided",
             "linkText": "holding link text",
             "publicNote": "holding public note",
@@ -35,7 +35,7 @@
           {
             "uri": "item uri",
             "name": "Related resource",
-            "linkText": "item link textr",
+            "linkText": "item link text",
             "publicNote": "item public note",
             "relationshipId": "5bfe1b7b-f151-4501-8cfa-23b321d5cd1e",
             "materialsSpecification": "item mast"

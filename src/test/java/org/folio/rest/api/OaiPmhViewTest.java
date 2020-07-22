@@ -454,7 +454,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     final List<JsonObject> results = new ArrayList<>();
 
     OaipmhInstanceIds instanceIdsPayload = new OaipmhInstanceIds();
-    instanceIdsPayload.setInstanceids(Arrays.stream(instanceIds).map(UUID::toString).collect(Collectors.toList()));
+    instanceIdsPayload.setInstanceIds(Arrays.stream(instanceIds).map(UUID::toString).collect(Collectors.toList()));
     instanceIdsPayload.setSkipSuppressedFromDiscoveryRecords(skipSuppressedFromDiscoveryRecords);
 
     client.post(oaiPmhViewEnrichedInstances(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));

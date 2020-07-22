@@ -3,7 +3,7 @@
   "description": "Define format of request data with instances ids",
   "type": "object",
   "properties": {
-    "instanceids": {
+    "instanceIds": {
       "description": "OAI-PMH instances identifiers",
       "type": "array",
       "items": {
@@ -16,7 +16,7 @@
     }
   },
   "required": [
-    "instanceids",
+    "instanceIds",
     "skipSuppressedFromDiscoveryRecords"
   ],
   "additionalProperties": false

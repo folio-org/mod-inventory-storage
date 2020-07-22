@@ -57,7 +57,7 @@ resourceTypes:
     type:
       collection-get:
        schemaCollection: oaipmhUpdatedInstanceIds
-       exampleCollection: !include examples/oaipmhinstanceids.json
+       exampleCollection: !include examples/oaipmhupdatedinstanceids.json
     get:
       description: Stream updated instances ids for oai-pmh
       is:
@@ -91,6 +91,7 @@ resourceTypes:
         application/json:
           description: List of instances Ids with skip suppressed from discovery configuration parameter
           type: oaipmhInstanceIds
+          example: !include examples/oaipmhinstanceids.json
       responses:
         200:
           body:

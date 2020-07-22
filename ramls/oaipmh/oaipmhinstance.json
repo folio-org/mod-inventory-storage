@@ -112,7 +112,8 @@
                       "description": "electronic access URI",
                       "type": "string"
                     },
-                    "name": {
+                    "name":
+                    {
                       "description": "electronic access name",
                       "type": "string"
                     },
@@ -168,3 +169,4 @@
   ],
   "additionalProperties": false
 }
+

@@ -3,20 +3,20 @@
   "description": "Response schema for oai-pmh enriched instances view",
   "type": "object",
   "properties": {
-    "instanceid": {
+    "instanceId": {
       "description": "OAI-PMH enriched instance id",
       "type": "string",
       "$ref": "../uuid.json"
     },
-    "itemsandholdingsfields": {
+    "itemsAndHoldingsFields": {
       "description": "Aggregated item and holding fields",
       "type": "object",
       "$ref": "oaipmhinstance.json"
     }
   },
   "required": [
-    "instanceid",
-    "itemsandholdingsfields"
+    "instanceId",
+    "itemsAndHoldingsFields"
   ],
   "additionalProperties": false
 }
