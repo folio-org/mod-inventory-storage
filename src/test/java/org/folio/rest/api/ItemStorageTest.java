@@ -4,6 +4,7 @@ import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
@@ -893,7 +894,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     String duplicateId = itemsArray.getJsonObject(0).getString("id");
     itemsArray.getJsonObject(1).put("id", duplicateId);
     assertThat(postSynchronousBatch(itemsArray), allOf(
-        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate key"),
         errorParametersValueIs(duplicateId)));
     for (int i=0; i<itemsArray.size(); i++) {
@@ -911,18 +912,18 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() throws Exception {
-    assertThat(postSynchronousBatchWithExistingId(""), statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() {
+    assertThat(postSynchronousBatchWithExistingId(""), statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingIdUpsertFalse() throws Exception {
-    assertThat(postSynchronousBatchWithExistingId("?upsert=false"), statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+  public void cannotPostSynchronousBatchWithExistingIdUpsertFalse() {
+    assertThat(postSynchronousBatchWithExistingId("?upsert=false"), statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdUpsertTrue() throws Exception {
-    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HttpStatus.HTTP_CREATED));
+  public void canPostSynchronousBatchWithExistingIdUpsertTrue() {
+    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HTTP_CREATED));
   }
 
   @Test
@@ -990,7 +991,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray.getJsonObject(1).put("hrid", duplicateHRID);
 
     assertThat(postSynchronousBatch(itemsArray), allOf(
-        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate key"),
         errorParametersValueIs(duplicateHRID)));
 
