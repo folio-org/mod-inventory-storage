@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Inventory Storage OAI-PMH view API
-version: v1.0
+version: v1.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://github.com/org/folio/mod-inventory-storage
 
@@ -10,6 +10,9 @@ documentation:
 
 types:
   oaipmhInstances: !include oaipmh/oaipmhinstances.json
+  oaipmhUpdatedInstanceIds: !include oaipmh/oaipmhupdatedinstanceids.json
+  oaipmhEnrichedInstances: !include oaipmh/oaipmhenrichedinstances.json
+  oaipmhInstanceIds: !include oaipmh/oaipmhinstanceids.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -32,11 +35,40 @@ resourceTypes:
         [validate]
       queryParameters:
         startDate:
-          description: start date
+          description: Lower bound for filtering instances by instances, items and holdings metadata update date. Accepted format YYYY-MM-DD or YYYY-MM-DDThh:mm:ssZ
           type: string
           required: false
         endDate:
-          description: start date
+          description: Upper bound for filtering instances by instances, items and holdings metadata update date
+          type: string
+          required: false
+        deletedRecordSupport:
+          description: Returns deleted records
+          type: boolean
+          required: false
+          default: true
+        skipSuppressedFromDiscoveryRecords:
+          description: Configuration param which defines if discovery suppressed instance records should be skipped or not
+          type: boolean
+          required: false
+          default: true
+  /updatedInstanceIds:
+    displayName: Stream API to get instances ids of updated oai records for OAI-PMH
+    type:
+      collection-get:
+       schemaCollection: oaipmhUpdatedInstanceIds
+       exampleCollection: !include examples/oaipmhupdatedinstanceids.json
+    get:
+      description: Stream updated instances ids for oai-pmh
+      is:
+        [validate]
+      queryParameters:
+        startDate:
+          description: Lower bound for filtering instances by instances, items and holdings metadata update date
+          type: string
+          required: false
+        endDate:
+          description: Upper bound for filtering instances by instances, items and holdings metadata update date
           type: string
           required: false
         deletedRecordSupport:
@@ -45,8 +77,24 @@ resourceTypes:
           required: false
           default: true
         skipSuppressedFromDiscoveryRecords:
-          description: skip discovery suppressed records
+          description: Configuration param which defines if discovery suppressed instance records should be skipped or not
           type: boolean
           required: false
           default: true
-
+  /enrichedInstances:
+    displayName: Stream API to get instances with items and holdings for OAI-PMH
+    post:
+      description: Stream instances view data for oai-pmh
+      is:
+        [validate]
+      body:
+        application/json:
+          description: List of instances Ids with skip suppressed from discovery configuration parameter
+          type: oaipmhInstanceIds
+          example: !include examples/oaipmhinstanceids.json
+      responses:
+        200:
+          body:
+            application/json:
+              type: oaipmhEnrichedInstances
+              example: !include examples/oaipmhenrichedinstances.json

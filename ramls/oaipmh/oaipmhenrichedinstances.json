@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Response schema for oai-pmh enriched instances view",
+  "type": "object",
+  "properties": {
+    "instanceId": {
+      "description": "OAI-PMH enriched instance id",
+      "type": "string",
+      "$ref": "../uuid.json"
+    },
+    "itemsAndHoldingsFields": {
+      "description": "Aggregated item and holding fields",
+      "type": "object",
+      "$ref": "oaipmhinstance.json"
+    }
+  },
+  "required": [
+    "instanceId",
+    "itemsAndHoldingsFields"
+  ],
+  "additionalProperties": false
+}

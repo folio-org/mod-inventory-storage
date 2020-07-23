@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Response schema for oai-pmh updated instances ids view",
+  "type": "object",
+  "properties": {
+    "instanceId": {
+      "description": "OAI-PMH updated instances ids",
+      "type": "string",
+      "$ref": "../uuid.json"
+    },
+    "updatedDate": {
+      "description": "The last updated date or deleted date of an instance or it's items and holdings",
+      "type": "string",
+      "format": "date-time"
+    },
+    "suppressFromDiscovery": {
+        "description": "Indicates if instance is suppressed from discovery",
+        "type": "boolean"
+    },
+    "deleted": {
+        "description": "Indicates if an instance was deleted in inventory",
+        "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}
