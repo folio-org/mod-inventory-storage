@@ -1954,7 +1954,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     "Order closed",
     "Claimed returned",
     "Withdrawn",
-    "Lost and paid"
+    "Lost and paid",
+    "Aged to lost"
   })
   public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
