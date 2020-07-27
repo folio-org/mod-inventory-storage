@@ -245,7 +245,8 @@
             "Order closed",
             "Claimed returned",
             "Withdrawn",
-            "Lost and paid"
+            "Lost and paid",
+            "Aged to lost"
           ]
         },
         "date": {
