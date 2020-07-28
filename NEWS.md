@@ -1,7 +1,7 @@
 ## 19.3.0 2020-07-28
 
 * Add 'Aged to lost' status to allowed item statuses list (MODINVSTOR-503)
-* Make migratePrecedingSucceedingTitles.sql idempotent (MODINVSTOR-541)
+* Solving issue with GBV by making migration for preceeding and succeeding titles to be possible to run several times without failing (MODINVSTOR-541)
 * Separate filtering from response generation in oai-pmh view (MODINVSTOR-536)
 * Item record. Effective call number (item), eye readable. Search on exact data in Call number data element (MODINVSTOR-481)
 * Holdings record. Call number, eye readable. Search on exact data in Call number data element (MODINVSTOR-480)
