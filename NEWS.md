@@ -1,3 +1,23 @@
+## 19.3.0 2020-07-28
+
+* Add'Agedtolost'statustoalloweditemstatuseslist (MODINVSTOR-503)
+* MakemigratePrecedingSucceedingTitles.sqlidempotent (MODINVSTOR-541)
+* Separatefilteringfromresponsegenerationinoai-pmhview (MODINVSTOR-536)
+* Itemrecord.Effectivecallnumber(item),eyereadable.SearchonexactdatainCallnumberdataelement (MODINVSTOR-481)
+* Holdingsrecord.Callnumber,eyereadable.SearchonexactdatainCallnumberdataelement (MODINVSTOR-480)
+* Searchquerieswithoutdatabaseindex (MODINVSTOR-472)
+* Upgradetoraml-module-builder(RMB)30.2.4 (MODINVSTOR-532)
+* UpdatetoRMBv30.2.3 (MODINVSTOR-531)
+* Expandoai-pmhviewwithadditionalfields (MODINVSTOR-498)
+* OAI-PMHviewdoesn'trespondinBugFest (MODINVSTOR-527)
+* UpgradetoRMB30.2.2 (MODINVSTOR-528)
+* Changepermissionslocationforoai-pmhview (MODINVSTOR-524)
+* AddIndexforInstancesFull-textSubjectsSearch (MODINVSTOR-499)
+* UpgradeRMBtov30.2.0 (MODINVSTOR-522)
+* Postgresrequiresspecialpermissionstodisabletriggersformigrations (MODINVSTOR-476)
+* UpgradeRMBto30.0.3,fixinginconsistenthitcounts(totalRecords)estimation (MODINVSTOR-519)
+* BulkdownloadInstanceUUIDsOOM (MODINVSTOR-465)
+
 ## 19.2.2 2020-06-17
 
 * Disable triggers for migrations without requiring special permissions (MODINVSTOR-476)
