@@ -1,22 +1,23 @@
 ## 19.3.0 2020-07-28
 
-* Add'Agedtolost'statustoalloweditemstatuseslist (MODINVSTOR-503)
-* MakemigratePrecedingSucceedingTitles.sqlidempotent (MODINVSTOR-541)
-* Separatefilteringfromresponsegenerationinoai-pmhview (MODINVSTOR-536)
-* Itemrecord.Effectivecallnumber(item),eyereadable.SearchonexactdatainCallnumberdataelement (MODINVSTOR-481)
-* Holdingsrecord.Callnumber,eyereadable.SearchonexactdatainCallnumberdataelement (MODINVSTOR-480)
-* Searchquerieswithoutdatabaseindex (MODINVSTOR-472)
-* Upgradetoraml-module-builder(RMB)30.2.4 (MODINVSTOR-532)
-* UpdatetoRMBv30.2.3 (MODINVSTOR-531)
-* Expandoai-pmhviewwithadditionalfields (MODINVSTOR-498)
-* OAI-PMHviewdoesn'trespondinBugFest (MODINVSTOR-527)
-* UpgradetoRMB30.2.2 (MODINVSTOR-528)
-* Changepermissionslocationforoai-pmhview (MODINVSTOR-524)
-* AddIndexforInstancesFull-textSubjectsSearch (MODINVSTOR-499)
-* UpgradeRMBtov30.2.0 (MODINVSTOR-522)
-* Postgresrequiresspecialpermissionstodisabletriggersformigrations (MODINVSTOR-476)
-* UpgradeRMBto30.0.3,fixinginconsistenthitcounts(totalRecords)estimation (MODINVSTOR-519)
-* BulkdownloadInstanceUUIDsOOM (MODINVSTOR-465)
+* Add 'Aged to lost' status to allowed item statuses list (MODINVSTOR-503)
+* Make migratePrecedingSucceedingTitles.sql idempotent (MODINVSTOR-541)
+* Separate filtering from response generation in oai-pmh view (MODINVSTOR-536)
+* Item record. Effective call number (item), eye readable. Search on exact data in Call number data element (MODINVSTOR-481)
+* Holdings record. Call number, eye readable. Search on exact data in Call number data element (MODINVSTOR-480)
+* Search queries without database index (MODINVSTOR-472)
+* Upgrade to raml-module-builder (RMB) 30.2.4 (MODINVSTOR-532)
+* Expand oai-pmh view with additional fields (MODINVSTOR-498)
+* OAI-PMH view doesn't respond in Bug Fest (MODINVSTOR-527)
+* Change permissions location for oai-pmh view (MODINVSTOR-524)
+* Add Index for Instances Full-text Subjects Search (MODINVSTOR-499)
+* Postgres requires special permissions to disable triggers for migrations (MODINVSTOR-476)
+* Fixing inconsistent hit counts (totalRecords) estimation (MODINVSTOR-519)
+* Bulk download Instance UUIDs OOM (MODINVSTOR-465)
+* There were upgraded these interfaces:
+  * "item-storage" to version 8.5
+  * "item-storage-batch-sync" to version 0.5
+  * "oaipmhview" to version 1.1
 
 ## 19.2.2 2020-06-17
 
