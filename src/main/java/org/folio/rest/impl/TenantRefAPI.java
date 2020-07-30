@@ -78,13 +78,13 @@ public class TenantRefAPI extends TenantAPI {
   }
 
   @Override
-  public void postTenant(TenantAttributes ta, Map<String, String> headers,
-    Handler<AsyncResult<Response>> hndlr, Context cntxt) {
+  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
+    Handler<AsyncResult<Response>> handler, Context context) {
     log.info("postTenant");
-    Vertx vertx = cntxt.owner();
-    super.postTenant(ta, headers, res -> {
-      if (res.failed() || res.result().getStatus() >= 300) {
-        hndlr.handle(res);
+    Vertx vertx = context.owner();
+    super.postTenant(tenantAttributes, headers, databaseInitResult -> {
+      if (databaseInitResult.failed() || databaseInitResult.result().getStatus() >= 300) {
+        handler.handle(databaseInitResult);
         return;
       }
       try {
@@ -98,7 +98,7 @@ public class TenantRefAPI extends TenantAPI {
           servicePoints.add(new JsonObject(content));
         }
       } catch (URISyntaxException | IOException ex) {
-        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+        handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
           .respond500WithTextPlain(ex.getLocalizedMessage())));
         return;
       }
@@ -121,15 +121,16 @@ public class TenantRefAPI extends TenantAPI {
           .withAcceptStatus(422)
           .add("users", "service-points-users");
       }
-      tl.perform(ta, headers, vertx, res1 -> {
-        if (res1.failed()) {
-          hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
+      tl.perform(tenantAttributes, headers, vertx, dataLoadingResult -> {
+        if (dataLoadingResult.failed()) {
+          handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+            .respond500WithTextPlain(dataLoadingResult.cause().getLocalizedMessage())));
           return;
         }
-        hndlr.handle(res);  // HTTP status: 200 for upgrade, 201 for install
+        // pass on HTTP status returned by super.postTenant: 200 for upgrade, 201 for install
+        handler.handle(databaseInitResult);
       });
-    }, cntxt);
+    }, context);
   }
 
   @Override
