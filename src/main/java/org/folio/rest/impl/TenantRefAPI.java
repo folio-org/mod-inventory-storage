@@ -83,7 +83,7 @@ public class TenantRefAPI extends TenantAPI {
     log.info("postTenant");
     Vertx vertx = cntxt.owner();
     super.postTenant(ta, headers, res -> {
-      if (res.failed()) {
+      if (res.failed() || res.result().getStatus() >= 300) {
         hndlr.handle(res);
         return;
       }
@@ -127,8 +127,7 @@ public class TenantRefAPI extends TenantAPI {
             .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
           return;
         }
-        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-          .respond201WithApplicationJson("")));
+        hndlr.handle(res);  // HTTP status: 200 for upgrade, 201 for install
       });
     }, cntxt);
   }
