@@ -53,6 +53,8 @@ create index if not exists audit_instance_pmh_createddate_idx on ${myuniversity}
 create index if not exists audit_holdings_record_pmh_createddate_idx on ${myuniversity}_${mymodule}.audit_holdings_record ((strToTimestamp(jsonb -> 'record' ->> 'updatedDate')));
 create index if not exists audit_item_pmh_createddate_idx on ${myuniversity}_${mymodule}.audit_item ((strToTimestamp(jsonb -> 'record' ->> 'updatedDate')));
 
+drop function if exists ${myuniversity}_${mymodule}.pmh_view_function(timestamptz, timestamptz, bool, bool);
+
 -- Retained for backward compatibility only. Should be removed for 20.0.0.
 create or replace function ${myuniversity}_${mymodule}.pmh_view_function(startDate timestamptz,
                                                                          endDate timestamptz,
