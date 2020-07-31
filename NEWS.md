@@ -1,3 +1,7 @@
+## 19.3.1 2020-07-31
+
+* 19.3.0 upgrade error "cannot change return type of existing function" (MODINVSTOR-547)
+
 ## 19.3.0 2020-07-28
 
 * Add 'Aged to lost' status to allowed item statuses list (MODINVSTOR-503)
