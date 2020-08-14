@@ -89,7 +89,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>30.2.4</raml-module-builder-version>
+    <raml-module-builder-version>30.3.0-SNAPSHOT</raml-module-builder-version>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/instance-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances</generate_routing_context>
     <argLine />
   </properties>
@@ -123,10 +123,9 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
+        <version>3.8.1</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <release>11</release>
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
@@ -194,9 +193,9 @@
       </plugin>
 
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
+        <groupId>com.nickwongdev</groupId>
         <artifactId>aspectj-maven-plugin</artifactId>
-        <version>1.9</version>
+        <version>1.12.6</version>
         <configuration>
           <verbose>true</verbose>
           <showWeaveInfo>false</showWeaveInfo>
@@ -221,12 +220,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.8.9</version>
+            <version>1.9.5</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.8.9</version>
+            <version>1.9.5</version>
           </dependency>
         </dependencies>
       </plugin>
