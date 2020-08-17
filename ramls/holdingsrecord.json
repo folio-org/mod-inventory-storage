@@ -304,6 +304,11 @@
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
+    },
+    "sourceId": {
+      "description": "UUID of the holdings records source",
+      "type": "string",
+      "$ref": "uuid.json"
     }
   },
   "additionalProperties": false,
