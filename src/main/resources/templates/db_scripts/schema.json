@@ -633,6 +633,11 @@
           "fieldName": "illPolicyId",
           "targetTable": "ill_policy",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "holdingsRecordsSourceId",
+          "tableTable": "holdings_records_source",
+          "tOps": "ADD"
         }
       ],
       "uniqueIndex": [
@@ -847,6 +852,17 @@
         }
       ],
       "customSnippetPath": "alterPrecedingSucceedingTitle.sql"
+    },
+    {
+      "tableName": "holdings_records_source",
+      "withMetadata": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "scripts": [
