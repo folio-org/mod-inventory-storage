@@ -1,0 +1,13 @@
+{
+  "holdingsRecordsSources": [
+    {
+      "id": "8081d707-610f-4b50-a28b-c36a6d25191b",
+      "name": "FOLIO"
+    },
+    {
+      "id": "a779e45e-0e5e-4303-9c93-09dbbd215134",
+      "name": "MARC"
+    }
+  ],
+  "totalRecords": 2
+}

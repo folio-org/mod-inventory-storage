@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A holdings records source",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The system assigned unique ID of the holdings records source; UUID",
+      "$ref": "uuid.json"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the holdings records source"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
