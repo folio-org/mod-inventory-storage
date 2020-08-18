@@ -2040,6 +2040,110 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       secondHoldingsToMatch.getId(), thirdHoldingsToMatch.getId()));
   }
 
+  @Test
+  public void canSetHoldingStatementWithNotes() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holdingsStatement = new JsonObject();
+    holdingsStatement.put("statement", "Test statement");
+    holdingsStatement.put("note", "Test note");
+    holdingsStatement.put("staffNote", "Test staff note");
+
+    JsonArray holdingsStatements = new JsonArray().add(holdingsStatement);
+
+    IndividualResource holdingResponse = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .withHoldingsStatements(holdingsStatements));
+
+    JsonObject holding = holdingResponse.getJson();
+
+    assertThat(holding.getString("instanceId"), is(instanceId.toString()));
+    assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+
+    JsonObject responseStatement = holding.getJsonArray("holdingsStatements").getJsonObject(0);
+
+    assertThat(responseStatement.getString("statement"), is("Test statement"));
+    assertThat(responseStatement.getString("note"), is("Test note"));
+    assertThat(responseStatement.getString("staffNote"), is("Test staff note"));
+  }
+
+  @Test
+  public void canSetHoldingStatementForIndexesWithNotes() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holdingsStatement = new JsonObject();
+    holdingsStatement.put("statement", "Test statement");
+    holdingsStatement.put("note", "Test note");
+    holdingsStatement.put("staffNote", "Test staff note");
+
+    JsonArray holdingsStatements = new JsonArray().add(holdingsStatement);
+
+    IndividualResource holdingResponse = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .withHoldingsStatementsForIndexes(holdingsStatements));
+
+    JsonObject holding = holdingResponse.getJson();
+
+    assertThat(holding.getString("instanceId"), is(instanceId.toString()));
+    assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+
+    JsonObject responseStatement = holding.getJsonArray("holdingsStatementsForIndexes")
+      .getJsonObject(0);
+
+    assertThat(responseStatement.getString("statement"), is("Test statement"));
+    assertThat(responseStatement.getString("note"), is("Test note"));
+    assertThat(responseStatement.getString("staffNote"), is("Test staff note"));
+  }
+
+  @Test
+  public void canSetHoldingStatementForSupplementsWithNotes() throws Exception {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holdingsStatement = new JsonObject();
+    holdingsStatement.put("statement", "Test statement");
+    holdingsStatement.put("note", "Test note");
+    holdingsStatement.put("staffNote", "Test staff note");
+
+    JsonArray holdingsStatements = new JsonArray().add(holdingsStatement);
+
+    IndividualResource holdingResponse = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .withHoldingsStatementsForSupplements(holdingsStatements));
+
+    JsonObject holding = holdingResponse.getJson();
+
+    assertThat(holding.getString("instanceId"), is(instanceId.toString()));
+    assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
+
+    JsonObject responseStatement = holding.getJsonArray("holdingsStatementsForSupplements")
+      .getJsonObject(0);
+
+    assertThat(responseStatement.getString("statement"), is("Test statement"));
+    assertThat(responseStatement.getString("note"), is("Test note"));
+    assertThat(responseStatement.getString("staffNote"), is("Test staff note"));
+  }
+
   private JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
