@@ -88,6 +88,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "hrid", hrid);
     put(request, "discoverySuppress", discoverySuppress);
     put(request, "holdingsStatements", holdingsStatements);
+    put(request, "holdingsStatementsForIndexes", holdingsStatementsForIndexes);
+    put(request, "holdingsStatementsForSupplements", holdingsStatementsForSupplements);
 
     return request;
   }
