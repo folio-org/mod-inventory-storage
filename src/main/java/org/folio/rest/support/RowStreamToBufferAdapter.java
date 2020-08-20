@@ -19,9 +19,12 @@ public class RowStreamToBufferAdapter implements ReadStream<Buffer> {
     this.delegate = delegate;
   }
 
-  public ReadStream<Buffer> exceptionHandler(Handler<Throwable> handler) {
-    this.delegate.exceptionHandler(handler);
-    return null;
+  public ReadStream<Buffer> exceptionHandler(Handler<Throwable> exceptionHandler) {
+    this.delegate.exceptionHandler(handler -> {
+      exceptionHandler.handle(handler);
+      delegate.close();
+    });
+    return this;
   }
 
   public RowStreamToBufferAdapter handler(Handler<Buffer> handler) {
@@ -47,7 +50,10 @@ public class RowStreamToBufferAdapter implements ReadStream<Buffer> {
   }
 
   public ReadStream<Buffer> endHandler(Handler<Void> endHandler) {
-    this.delegate.endHandler(endHandler);
+    this.delegate.endHandler(handler -> {
+      endHandler.handle(handler);
+      delegate.close();
+    });
     return this;
   }
 
