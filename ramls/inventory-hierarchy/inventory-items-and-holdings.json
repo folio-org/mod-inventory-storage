@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Response schema for Inventory items and holdings view",
+  "type": "object",
+  "properties": {
+    "instanceId": {
+      "description": "Inventory updated instance id",
+      "type": "string",
+      "$ref": "../uuid.json"
+    },
+    "itemsAndHoldingsFields": {
+      "description": "Aggregated items and holdings fields",
+      "type": "object",
+      "$ref": "inventory-instance-records.json"
+    }
+  },
+  "required": [
+    "instanceId",
+    "itemsAndHoldingsFields"
+  ],
+  "additionalProperties": false
+}

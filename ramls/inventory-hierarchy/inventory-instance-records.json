@@ -1,0 +1,557 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "Inventory records view response schema",
+  "properties": {
+    "instanceId": {
+      "description": "Inventory instance identifier",
+      "type": "string",
+      "$ref": "../uuid.json"
+    },
+    "source": {
+      "description": "Source of metadata and format of the underlying record to the instance record",
+      "type": "string"
+    },
+    "holdings": {
+      "type": "array",
+      "description": "Holdings record fields",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "System assigned unique ID of the holdings record",
+              "type": "string",
+              "$ref": "../uuid.json"
+            },
+            "hrid": {
+              "description": "System-assigned sequential ID which maps to the Instance ID",
+              "type": "string"
+            },
+            "suppressFromDiscovery": {
+              "description": "Indicate if record should not be displayed in a discovery system",
+              "type": "boolean"
+            },
+            "holdingsType": {
+              "description": "Name of the holdings type",
+              "type": "string"
+            },
+            "formerIds": {
+              "type": "array",
+              "description": "Identifiers of previously assigned ID(s) to the holdings record",
+              "items": {
+                "type": "string"
+              }
+            },
+            "location": {
+              "description": "Holdings record effective location",
+              "type": "object",
+              "properties": {
+                "permanentLocation": {
+                  "type": "object",
+                  "description": "Permanent shelving location in which an item resides",
+                  "properties": {
+                    "name": {
+                      "description": "Name of the (shelf) location",
+                      "type": "string"
+                    },
+                    "campusName": {
+                      "description": "The name of the campus, the second-level location unit, this (shelf) location belongs to",
+                      "type": "string"
+                    },
+                    "libraryName": {
+                      "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                      "type": "string"
+                    },
+                    "institutionName": {
+                      "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "campusName",
+                    "libraryName",
+                    "institutionName"
+                  ]
+                },
+                "temporaryLocation": {
+                  "type": "object",
+                  "description": "Temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location",
+                  "properties": {
+                    "name": {
+                      "description": "Name of the (shelf) location",
+                      "type": "string"
+                    },
+                    "campusName": {
+                      "description": "The name of the campus, the second-level location unit, this (shelf) location belongs to",
+                      "type": "string"
+                    },
+                    "libraryName": {
+                      "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                      "type": "string"
+                    },
+                    "institutionName": {
+                      "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "campusName",
+                    "libraryName",
+                    "institutionName"
+                  ]
+                }
+              },
+              "required": [
+                "permanentLocation",
+                "temporaryLocation"
+              ]
+            },
+            "callNumber": {
+              "description": "Call Number is an identifier assigned to a holding",
+              "type": "object",
+              "properties": {
+                "prefix": {
+                  "description": "Prefix of the call number on the holding level",
+                  "type": "string"
+                },
+                "suffix": {
+                  "description": "Suffix of the call number on the holding level",
+                  "type": "string"
+                },
+                "typeId": {
+                  "description": "Unique ID for the type of call number on a holdings record",
+                  "type": "string",
+                  "$ref": "../uuid.json"
+                },
+                "typeName": {
+                  "description": "Name of the call number type",
+                  "type": "string"
+                },
+                "callNumber": {
+                  "description": "Call Number identifier assigned to a holding",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "prefix",
+                "suffix",
+                "typeId",
+                "typeName",
+                "callNumber"
+              ]
+            },
+            "shelvingTitle": {
+              "description": "Indicates the shelving form of title",
+              "type": "string"
+            },
+            "acquisitionFormat": {
+              "description": "Format of holdings record acquisition",
+              "type": "string"
+            },
+            "acquisitionMethod": {
+              "description": "Method of holdings record acquisition",
+              "type": "string"
+            },
+            "receiptStatus": {
+              "description": "Receipt status (e.g. pending, awaiting receipt, partially received, fully received, receipt not required, and cancelled)",
+              "type": "string"
+            },
+            "electronicAccess": {
+              "description": "Aggregated electronic access from holdings",
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "uri": {
+                      "description": "Electronic access URI",
+                      "type": "string",
+                      "$ref": "../url.json"
+                    },
+                    "name":
+                    {
+                      "description": "Electronic access name",
+                      "type": "string"
+                    },
+                    "linkText": {
+                      "description": "Electronic access link text",
+                      "type": "string"
+                    },
+                    "publicNote": {
+                      "description": "Electronic access public note",
+                      "type": "string"
+                    },
+                    "relationshipId": {
+                      "description": "Electronic access relationship id",
+                      "type": "string",
+                      "$ref": "../uuid.json"
+                    },
+                    "materialsSpecification": {
+                      "description": "Electronic access materials specification",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "uri",
+                    "name",
+                    "linkText",
+                    "publicNote",
+                    "relationshipId",
+                    "materialsSpecification"
+                  ]
+                }
+              ]
+            },
+            "notes": {
+              "description": "Notes about action, copy, binding etc.",
+              "type": "array",
+              "items": [
+                {
+                  "holdingsNoteTypeName": {
+                    "description": "Name of the holdings note type",
+                    "type": "string"
+                  },
+                  "note": {
+                    "description": "Text content of the note",
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "illPolicy": {
+              "description": "Name of the ILL policy",
+              "type": "string"
+            },
+            "retentionPolicy": {
+              "description": "Records information regarding how long we have agreed to keep something",
+              "type": "string"
+            },
+            "digitizationPolicy": {
+              "description": "Records information regarding digitization aspects",
+              "type": "string"
+            },
+            "holdingsStatements": {
+              "description": "Notes about action, copy, binding etc.",
+              "type": "array",
+              "items": [
+                {
+                  "holdingsNoteTypeName": {
+                    "description": "Name of the holdings note type",
+                    "type": "string"
+                  },
+                  "note": {
+                    "description": "Text content of the note",
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "holdingsStatementsForIndexes": {
+              "description": "Holdings record indexes statements",
+              "type": "array",
+              "items": [
+                {
+                  "statement": {
+                    "description": "Textual description of the holdings of indexes",
+                    "type": "string"
+                  },
+                  "note": {
+                    "description": "Note attached to a holdings statement",
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "holdingsStatementsForSupplements": {
+              "description": "Holdings record supplements statements",
+              "type": "array",
+              "items": [
+                {
+                  "statement": {
+                    "description": "Textual description of the holdings of supplementary material",
+                    "type": "string"
+                  },
+                  "note": {
+                    "description": "Note attached to a holdings statement",
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "copyNumber": {
+              "description": "Piece ID (usually barcode) for systems that do not use holdings record",
+              "type": "string"
+            },
+            "numberOfItems": {
+              "description": "Amount of items of holdings record",
+              "type": "string"
+            },
+            "receivingHistory": {
+              "description": "Receiving history of holdings record",
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "description": "Entries of receiving history",
+                  "type": "array",
+                  "items": [
+                      {
+                      "publicDisplay": {
+                        "description": "Defines if the receiving history should be visible to the public",
+                        "type": "boolean"
+                      },
+                      "enumeration": {
+                        "description": "This is the volume/issue number (e.g. v.71:no.6-2)",
+                        "type": "string"
+                      },
+                      "chronology": {
+                        "description": "Repeated element from Receiving history - Enumeration AND Receiving history - Chronology",
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "tags": {
+              "description": "Arbitrary tags associated with this holding",
+              "type": "object",
+              "properties": {
+                "tagList": {
+                  "description": "List of tags",
+                  "type": "array",
+                  "items": [
+                    {
+                      "important": {
+                        "description": "Indicate if tag is important",
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "statisticalCodes": {
+              "description": "Holdings record statistical codes",
+              "type": "array",
+              "items": [
+                {
+                  "id": {
+                    "description": "Unique ID of the statistical code",
+                    "type": "string",
+                    "$ref": "../uuid.json"
+                  },
+                  "code": {
+                    "description": "Statistical code, a distinct label",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Name or description of a statistical code",
+                    "type": "string"
+                  },
+                  "statisticalCodeType": {
+                      "description": "Name of a statistical code type",
+                    "type": "string"
+                  },
+                  "source": {
+                    "description": "Label indicating where the statistical code type entry originates from, i.e. 'folio' or 'local'",
+                    "type": "string"
+                  }
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "hrId",
+            "suppressFromDiscovery",
+            "holdingsType",
+            "formerIds",
+            "location",
+            "callNumber",
+            "shelvingTitle",
+            "acquisitionFormat",
+            "acquisitionMethod",
+            "receiptStatus",
+            "electronicAccess",
+            "notes",
+            "illPolicy",
+            "retentionPolicy",
+            "digitizationPolicy",
+            "holdingsStatements",
+            "holdingsStatementsForIndexes",
+            "holdingsStatementsForSupplements",
+            "copyNumber",
+            "numberOfItems",
+            "receivingHistory",
+            "tags",
+            "statisticalCodes"
+          ]
+        }
+      ]
+    },
+    "items": {
+      "type": "array",
+      "description": "item fields",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "itemId",
+              "type": "string"
+            },
+            "volume": {
+              "description": "Item volume",
+              "type": "string"
+            },
+            "location": {
+              "description": "Item effective location",
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "object",
+                  "description": "location",
+                  "properties": {
+                    "campusId": {
+                      "description": "campus Id",
+                      "type": "string"
+                    },
+                    "libraryId": {
+                      "description": "library Id",
+                      "type": "string"
+                    },
+                    "campusName": {
+                      "description": "campus name",
+                      "type": "string"
+                    },
+                    "libraryName": {
+                      "description": "library name",
+                      "type": "string"
+                    },
+                    "institutionId": {
+                      "description": "institution id",
+                      "type": "string"
+                    },
+                    "institutionName": {
+                      "description": "institution name",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "campusId",
+                    "libraryId",
+                    "campusName",
+                    "libraryName",
+                    "institutionId",
+                    "institutionName"
+                  ]
+                }
+              },
+              "required": [
+                "location"
+              ]
+            },
+            "callNumber": {
+              "description": "Item call number components",
+              "type": "object",
+              "properties": {
+                "prefix": {
+                  "description": "prefix",
+                  "type": "string"
+                },
+                "suffix": {
+                  "description": "suffix",
+                  "type": "string"
+                },
+                "typeId": {
+                  "description": "type id",
+                  "type": "string"
+                },
+                "callNumber": {
+                  "description": "item call number",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "prefix",
+                "suffix",
+                "typeId",
+                "callNumber"
+              ]
+            },
+            "enumeration": {
+              "description": "item enumeration",
+              "type": "string"
+            },
+            "materialType": {
+              "description": "item material type name",
+              "type": "string"
+            },
+            "electronicAccess": {
+              "description": "Aggregated electronic access from items and holdings",
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "uri": {
+                      "description": "electronic access URI",
+                      "type": "string"
+                    },
+                    "name":
+                    {
+                      "description": "electronic access name",
+                      "type": "string"
+                    },
+                    "linkText": {
+                      "description": "electronic access link text",
+                      "type": "string"
+                    },
+                    "publicNote": {
+                      "description": "electronic access public note",
+                      "type": "string"
+                    },
+                    "relationshipId": {
+                      "description": "electronic access relationship id",
+                      "type": "string"
+                    },
+                    "materialsSpecification": {
+                      "description": "electronic access materials specification",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "uri",
+                    "name",
+                    "linkText",
+                    "publicNote",
+                    "relationshipId",
+                    "materialsSpecification"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "volume",
+            "location",
+            "callNumber",
+            "enumeration",
+            "materialType",
+            "electronicAccess"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "items",
+    "instanceId"
+  ],
+  "additionalProperties": false
+}
+
