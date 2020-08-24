@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Holdings Records Sources API
-version: 1.0
+version: v1.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -9,8 +9,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage holdings records sources
 
 types:
-  holdingsrecordssource: !include holdingsrecordssource.json
-  holdingsrecordssources: !include holdingsrecordssources.json
+  holdingsRecordsSource: !include holdingsrecordssource.json
+  holdingsRecordsSources: !include holdingsrecordssources.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -39,7 +39,7 @@ resourceTypes:
   post:
     description: Create a new holdings records source
     is: [validate]
-  /{holdingsRecordsSourceId}:
+  /{id}:
     description: Pass in the holdings records source id
     type:
       collection-item:
