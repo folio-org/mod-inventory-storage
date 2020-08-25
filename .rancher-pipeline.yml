@@ -2,8 +2,11 @@ stages:
   - name: Build
     steps:
       - runScriptConfig:
-          image: adoptopenjdk/maven-openjdk11
-          shellScript: mvn clean install -DskipTests
+          image: alpine/git
+          shellScript: git submodule init
+      - runScriptConfig:
+          image: maven:3.6-adoptopenjdk-11
+          shellScript: mvn package -DskipTests
   - name: Build Docker
     steps:
       - publishImageConfig:
