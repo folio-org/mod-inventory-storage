@@ -2,9 +2,9 @@ stages:
   - name: Build
     steps:
       - runScriptConfig:
-          image: maven:3.6.3-jdk-11
-          shellScript: mvn package -DskipTests
-  - name: Build Docker with DIND
+          image: adoptopenjdk/maven-openjdk11
+          shellScript: mvn clean install -DskipTests
+  - name: Build Docker
     steps:
       - publishImageConfig:
           dockerfilePath: ./Dockerfile
