@@ -1,10 +1,15 @@
 stages:
+- name: Clone submodules
+  steps:
+  - runScriptConfig:
+       image: alpine/git
+       shellScript: git submodule update --init --recursive
 - name: Build
   steps:
   - runScriptConfig:
-      image: maven:3-openjdk-8
+      image: maven:3.6-adoptopenjdk-11
       shellScript: mvn package -DskipTests
-- name: Build Docker with DIND
+- name: Build Docker
   steps:
   - publishImageConfig:
       dockerfilePath: ./Dockerfile
