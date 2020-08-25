@@ -83,7 +83,7 @@ CREATE OR REPLACE function ${myuniversity}_${mymodule}.get_updated_instance_ids_
                                                                                      endDate                            timestamptz,
                                                                                      deletedRecordSupport               bool DEFAULT TRUE,
                                                                                      skipSuppressedFromDiscoveryRecords bool DEFAULT TRUE,
-                                                                                     allowTieredUpdateDate              bool DEFAULT TRUE)
+                                                                                     onlyInstanceUpdateDate             bool DEFAULT TRUE)
     RETURNS TABLE
             (
                 instanceId            uuid,
