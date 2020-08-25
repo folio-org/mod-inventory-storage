@@ -778,6 +778,7 @@
             "status",
             "formerIds",
             "location",
+            "callNumber",
             "accessionNumber",
             "barcode",
             "copyNumber",
@@ -805,9 +806,9 @@
     }
   },
   "required": [
-    "items",
-    "instanceId"
+    "instanceId",
+    "holdings",
+    "items"
   ],
   "additionalProperties": false
 }
-
