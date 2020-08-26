@@ -51,6 +51,11 @@ resourceTypes:
           type: boolean
           required: false
           default: true
+        onlyInstanceUpdateDate:
+          description: Configuration param which defines if discovery suppressed instance records should be skipped or not
+          type: boolean
+          required: false
+          default: true
   /items-and-holdings:
     displayName: Stream API to get instances with items and holdings for Inventory
     post:
