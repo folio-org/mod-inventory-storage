@@ -140,7 +140,8 @@ public class InventoryHierarchyAPI implements InventoryHierarchy {
 
   @Validate
   @Override
-  public void getInventoryHierarchyUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords, boolean onlyInstanceUpdateDate, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getInventoryHierarchyUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords,
+      boolean onlyInstanceUpdateDate, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     fetchRecordsByQuery(SQL_UPDATED_INSTANCES_IDS,
       () -> createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords, onlyInstanceUpdateDate),
       routingContext, okapiHeaders, asyncResultHandler, vertxContext,
@@ -149,7 +150,8 @@ public class InventoryHierarchyAPI implements InventoryHierarchy {
 
   @Validate
   @Override
-  public void postInventoryHierarchyItemsAndHoldings(InventoryInstanceIds entity, RoutingContext routingContext, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postInventoryHierarchyItemsAndHoldings(InventoryInstanceIds entity, RoutingContext routingContext, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     UUID[] ids = entity.getInstanceIds().stream().map(UUID::fromString).toArray(UUID[]::new);
 
     fetchRecordsByQuery(SQL_INSTANCES,

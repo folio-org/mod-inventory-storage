@@ -175,6 +175,7 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/hrid-settings-storage/hrid-settings" + subPath);
   }
 
+  /** TODO: These entries will be removed soon */
   public static URL oaiPmhView(String subPath) {
     return StorageTestSuite.storageUrl("/oai-pmh-view/instances" + subPath);
   }
@@ -185,5 +186,14 @@ public class InterfaceUrls {
 
   public static URL oaiPmhViewEnrichedInstances() {
     return StorageTestSuite.storageUrl("/oai-pmh-view/enrichedInstances");
+  }
+  /** EoF - these entries will be removed soon */
+
+  public static URL inventoryHierarchyUpdatedInstanceIds(String subPath) {
+    return StorageTestSuite.storageUrl("/inventory-hierarchy/updated-instance-ids" + subPath);
+  }
+
+  public static URL inventoryHierarchyItemsAndHoldings() {
+    return StorageTestSuite.storageUrl("/inventory-hierarchy/items-and-holdings");
   }
 }

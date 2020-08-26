@@ -1,3 +1,10 @@
+-- This is needed to drop indexes with "old" name
+drop index if exists ${myuniversity}_${mymodule}.item_metadata_updateddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.holdings_record_metadata_updateddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.audit_instance_createddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.audit_holdings_record_createddate_idx;
+drop index if exists ${myuniversity}_${mymodule}.audit_item_createddate_idx;
+
 -- Creates auxiliary functions
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.strToTimestamp(text) RETURNS timestamptz AS
 $$
@@ -59,7 +66,7 @@ $$
 							  jsonb_build_object('source', sc.statCodeTypeJsonb ->> 'source'))
 	FROM jsonb_array_elements( $1 ) AS e,
 	 	 stat_codes sc
-	WHERE sc.statCodeId = (e ->> 0)::uuid;
+	WHERE sc.statCodeId = (e ->> 0)::uuid
 $$ LANGUAGE sql strict;
 
 -- Drop additional indexes
@@ -79,7 +86,7 @@ CREATE INDEX IF NOT EXISTS audit_holdings_record_pmh_createddate_idx ON ${myuniv
 CREATE INDEX IF NOT EXISTS audit_item_pmh_createddate_idx ON ${myuniversity}_${mymodule}.audit_item ((strToTimestamp(jsonb -> 'record' ->> 'updatedDate')));
 
 -- Creates function returned instances with records updates/deleted/added in specified period o time
-CREATE OR REPLACE function ${myuniversity}_${mymodule}.get_updated_instance_ids_view(startDate                          timestamptz,
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_updated_instance_ids_view(startDate                          timestamptz,
                                                                                      endDate                            timestamptz,
                                                                                      deletedRecordSupport               bool DEFAULT TRUE,
                                                                                      skipSuppressedFromDiscoveryRecords bool DEFAULT TRUE,
@@ -87,6 +94,7 @@ CREATE OR REPLACE function ${myuniversity}_${mymodule}.get_updated_instance_ids_
     RETURNS TABLE
             (
                 instanceId            uuid,
+                source                text,
                 updatedDate           timestamptz,
                 suppressFromDiscovery boolean,
                 deleted               boolean
@@ -110,8 +118,8 @@ WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
 
                              UNION ALL
                              SELECT (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
-                                    greatest((strtotimestamp(audit_item.jsonb -> 'record' ->> 'updatedDate')),
-                                             (strtotimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate'))) AS maxDate
+                                    greatest((strToTimestamp(audit_item.jsonb -> 'record' ->> 'updatedDate')),
+                                             (strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate'))) AS maxDate
                              FROM ${myuniversity}_${mymodule}.audit_holdings_record audit_holdings_record
                                       JOIN ${myuniversity}_${mymodule}.audit_item audit_item
                                            ON (audit_item.jsonb ->> '{record,holdingsRecordId}')::uuid =
@@ -140,7 +148,7 @@ SELECT (ai.jsonb #>> '{record,id}')::uuid             AS instanceId,
 FROM ${myuniversity}_${mymodule}.audit_instance ai, ${myuniversity}_${mymodule}.instance i
 WHERE $3
       AND i.id = (ai.jsonb #>> '{record,id}')::uuid
-      AND strToTimestamp(ai.jsonb ->> 'createdDate') BETWEEN dateOrMin($1) AND dateOrMax($2);
+      AND strToTimestamp(ai.jsonb ->> 'createdDate') BETWEEN dateOrMin($1) AND dateOrMax($2)
 
 $BODY$ LANGUAGE sql;
 
@@ -150,6 +158,7 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_items_and_holdings_vi
     RETURNS TABLE
             (
                 instanceId             uuid,
+                source                 text,
                 itemsAndHoldingsFields jsonb
             )
 AS
@@ -319,6 +328,6 @@ i.jsonb ->> 'source' AS source,
 )
 FROM (SELECT DISTINCT * FROM UNNEST( $1 ) instId) instId
 	 JOIN ${myuniversity}_${mymodule}.instance i
-	       ON i.id = instid;
+	       ON i.id = instId
 
 $BODY$ LANGUAGE sql;
