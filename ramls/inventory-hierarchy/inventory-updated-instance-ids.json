@@ -8,6 +8,10 @@
       "type": "string",
       "$ref": "../uuid.json"
     },
+    "source": {
+      "description": "Source of metadata and format of the underlying record to the instance record",
+      "type": "string"
+    },
     "updatedDate": {
       "description": "The last updated date or deleted date of an instance or it's items and holdings",
       "type": "string",
