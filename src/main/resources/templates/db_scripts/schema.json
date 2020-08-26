@@ -680,6 +680,14 @@
           "sqlExpression" : "normalize_holdings_full_call_number(jsonb)",
           "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
         }
+      ],
+      "ginIndex": [
+        {
+          "fieldName": "electronicAccess",
+          "tOps": "ADD",
+          "arraySubfield": "uri",
+          "arrayModifiers": ["uri"]
+        }
       ]
     },
     {
