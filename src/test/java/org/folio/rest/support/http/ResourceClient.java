@@ -47,6 +47,11 @@ public class ResourceClient {
       "holdingsTypeRecords");
   }
 
+  public static ResourceClient forHoldingsSource(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::holdingsSourceUrl,
+      "holdingsRecordsSources");
+  }
+
   public static ResourceClient forInstances(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::instancesStorageUrl,
       "instances");
