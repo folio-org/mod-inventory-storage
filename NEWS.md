@@ -1,3 +1,19 @@
+## 19.3.2 2020-08-27
+
+* ERROR: prepared statement "XYZ" already exists (MODINVSTOR-540)
+* RowStreamToBufferAdapter should close RowStream<Row> delegate (MODINVSTOR-556)
+* Upgrade to RMB 30.2.5 (MODINVSTOR-557)
+  * GET query returns no records when offset value >= estimated totalRecords (RMB-684)
+  * Upgrade foreign key of a sub-field like "fieldName": "foo.bar" (RMB-694)
+  * Close prepared statements in PostgresClient stream get (RMB-693)
+  * ResponseException for TenantAPI, fix wrong postTenant HTTP status code (RMB-687)
+  * Drop obsolete rmb\_internal\_index
+  * Move pg\_trgm from wrong to public schema, don't drop & recreate (RMB-675)
+* Upgrade to RMB 30.2.6 (MODINVSTOR-562)
+  * Update to Vert.x 3.9.2, fixing WebClient request timeout races (RMB-701)
+  * NPE when RestVerticle calls LogUtil.formatStatsLogMessage (RMB-700)
+  * Close PostgreSQL connection after invalid CQL failure (RMB-677)
+
 ## 19.3.1 2020-07-31
 
 * Removes `pmh_view_function` function prior to replacement during upgrade (MODINVSTOR-547)
