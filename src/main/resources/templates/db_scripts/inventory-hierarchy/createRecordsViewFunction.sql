@@ -163,7 +163,8 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_items_and_holdings_vi
             (
                 "instanceId"             uuid,
                 "source"                 varchar,
-                "itemsAndHoldings"       jsonb
+                "holdings"               jsonb,
+                "items"                  jsonb
             )
 AS
 $BODY$
@@ -171,17 +172,17 @@ WITH
 	-- Locations
 	viewLocations(locId, locJsonb, locCampJsonb, locLibJsonb, locInstJsonb) AS (
 	SELECT loc.id AS locId,
-		   loc.jsonb AS locJsonb,
-		   locCamp.jsonb AS locCampJsonb,
-		   locLib.jsonb AS locLibJsonb,
-		   locInst.jsonb AS locInstJsonb
+		     loc.jsonb AS locJsonb,
+		     locCamp.jsonb AS locCampJsonb,
+		     locLib.jsonb AS locLibJsonb,
+		     locInst.jsonb AS locInstJsonb
 	FROM location loc
 		 LEFT JOIN locinstitution locInst
-			  ON (loc.jsonb ->> 'institutionId')::uuid = locInst.id
+			    ON (loc.jsonb ->> 'institutionId')::uuid = locInst.id
 		 LEFT JOIN loccampus locCamp
-			  ON (loc.jsonb ->> 'campusId')::uuid = locCamp.id
+			    ON (loc.jsonb ->> 'campusId')::uuid = locCamp.id
 		 LEFT JOIN loclibrary locLib
-			  ON (loc.jsonb ->> 'libraryId')::uuid = locLib.id
+			    ON (loc.jsonb ->> 'libraryId')::uuid = locLib.id
 	WHERE (loc.jsonb ->> 'isActive')::bool = true
 	),
 	-- Passed instances ids
@@ -194,10 +195,10 @@ WITH
 			        ON i.id = instId
 	),
 	-- Prepared items and holdings
-	viewItemsAndHoldings(instId, records) as (
+	viewItemsAndHoldings(instId, records) AS (
 	SELECT itemAndHoldingsAttrs.instanceId, jsonb_strip_nulls(itemAndHoldingsAttrs.itemsAndHoldings)
 		FROM (SELECT
-            i.id as instanceId,
+            i.id AS instanceId,
             jsonb_build_object('holdings',
                                jsonb_agg(DISTINCT
                                          jsonb_build_object('id', hr.id,
@@ -307,7 +308,7 @@ WITH
                  LEFT JOIN ${myuniversity}_${mymodule}.material_type mt
                       ON item.materialtypeid = mt.id
                  -- Item's Call number type relation
-                 LEFT JOIN${myuniversity}_${mymodule}.call_number_type cnt
+                 LEFT JOIN ${myuniversity}_${mymodule}.call_number_type cnt
                       ON (item.jsonb #>> '{effectiveCallNumberComponents, typeId}')::uuid = cnt.id
                  -- Item's Damaged status relation
                  LEFT JOIN ${myuniversity}_${mymodule}.item_damaged_status itemDmgStat
