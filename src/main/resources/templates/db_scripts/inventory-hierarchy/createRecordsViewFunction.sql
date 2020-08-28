@@ -186,13 +186,11 @@ WITH
 	)
 SELECT instId,
 i.jsonb ->> 'source' AS source,
-(SELECT jsonb_strip_nulls(to_jsonb(itemAndHoldingsAttrs)) AS itemsAndHoldingsFields
-         FROM ( SELECT hr.instanceid AS instanceid,
-                i.jsonb ->> 'source' AS "source",
-                jsonb_build_object(
+(SELECT *
+         FROM ( SELECT jsonb_strip_nulls(jsonb_build_object(
                        'holdings',
                        jsonb_agg(DISTINCT jsonb_build_object('id', hr.id,
-                                                             'hrid', hr.jsonb ->> 'hrid',
+                                                             'hrid', hr.jsonb ->> 'hrId',
                                                              'suppressFromDiscovery', COALESCE((i.jsonb ->> 'discoverySuppress')::bool, false) OR
                                                                                       COALESCE((hr.jsonb ->> 'discoverySuppress')::bool, false),
                                                              'holdingsType', ht.jsonb ->> 'name',
@@ -233,7 +231,7 @@ i.jsonb ->> 'source' AS source,
 								                ),
                        'items',
                        jsonb_agg(jsonb_build_object('id', item.id,
-                                                    'hrid', item.jsonb ->> 'hrid',
+                                                    'hrId', item.jsonb ->> 'hrId',
                                                     'holdingsRecordId', hr.id,
                                                     'suppressFromDiscovery', COALESCE((i.jsonb ->> 'discoverySuppress')::bool, false) OR
                                                                              COALESCE((hr.jsonb ->> 'discoverySuppress')::bool, false) OR
@@ -279,7 +277,7 @@ i.jsonb ->> 'source' AS source,
                                                     'statisticalCodes', COALESCE(getStatisticalCodes(item.jsonb -> 'statisticalCodeIds'), '[]'::jsonb)
                            							           )
 								                )
-			                            ) itemsAndHoldingsFields
+			                            )) itemsAndHoldingsFields
                 FROM ${myuniversity}_${mymodule}.holdings_record hr
                          JOIN ${myuniversity}_${mymodule}.item item
                               ON item.holdingsrecordid = hr.id
@@ -324,10 +322,9 @@ i.jsonb ->> 'source' AS source,
                          -- Holdings Ill policy relation
                          LEFT JOIN ${myuniversity}_${mymodule}.ill_policy ilp
                               ON hr.illpolicyid = ilp.id
-                WHERE instanceId = instId
+                WHERE i.id = instId
                       AND NOT ($2 AND COALESCE((hr.jsonb ->> 'discoverySuppress')::bool, false))
                       AND NOT ($2 AND COALESCE((item.jsonb ->> 'discoverySuppress')::bool, false))
-                GROUP BY 1, 2
               ) itemAndHoldingsAttrs
 )
 FROM (SELECT DISTINCT * FROM UNNEST( $1 ) instId) instId
