@@ -85,6 +85,10 @@ CREATE INDEX IF NOT EXISTS audit_instance_pmh_createddate_idx ON ${myuniversity}
 CREATE INDEX IF NOT EXISTS audit_holdings_record_pmh_createddate_idx ON ${myuniversity}_${mymodule}.audit_holdings_record ((strToTimestamp(jsonb -> 'record' ->> 'updatedDate')));
 CREATE INDEX IF NOT EXISTS audit_item_pmh_createddate_idx ON ${myuniversity}_${mymodule}.audit_item ((strToTimestamp(jsonb -> 'record' ->> 'updatedDate')));
 
+-- Drop existing functions, to avoid create/replace issues in case of changed signature
+drop function if exists ${myuniversity}_${mymodule}.get_updated_instance_ids_view;
+drop function if exists ${myuniversity}_${mymodule}.get_items_and_holdings_view;
+
 -- Creates function returned instances with records updates/deleted/added in specified period o time
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_updated_instance_ids_view(startDate                          timestamptz,
                                                                                      endDate                            timestamptz,
@@ -93,11 +97,11 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_updated_instance_ids_
                                                                                      onlyInstanceUpdateDate             bool DEFAULT TRUE)
     RETURNS TABLE
             (
-                instanceId            uuid,
-                source                text,
-                updatedDate           timestamptz,
-                suppressFromDiscovery boolean,
-                deleted               boolean
+                "instanceId"            uuid,
+                "source"                varchar,
+                "updatedDate"           timestamptz,
+                "suppressFromDiscovery" boolean,
+                "deleted"               boolean
             )
 AS
 $BODY$
@@ -157,9 +161,9 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_items_and_holdings_vi
                                                                                    skipSuppressedFromDiscoveryRecords bool DEFAULT TRUE)
     RETURNS TABLE
             (
-                instanceId             uuid,
-                source                 text,
-                itemsAndHoldingsFields jsonb
+                "instanceId"             uuid,
+                "source"                 varchar,
+                "itemsAndHoldings"       jsonb
             )
 AS
 $BODY$

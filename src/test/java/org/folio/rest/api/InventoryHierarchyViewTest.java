@@ -8,10 +8,10 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyItemsAndHoldings;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyUpdatedInstanceIds;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasAggregatedNumberOfItems;
-import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasCallNumber;
-import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasEffectiveLocationInstitutionName;
-import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.isDeleted;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasCallNumber4Items;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasEffectiveLocationInstitutionName4Items;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasAggregatedNumberOfItems;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.isDeleted;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -112,8 +112,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
+    assertThat(instancesData.get(0), allOf(hasCallNumber4Items("item effective call number 1", "item effective call number 2"),
+      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName4Items("Primary Institution")));
   }
 
   @Test
@@ -152,9 +152,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams)
     throws InterruptedException, ExecutionException, TimeoutException {
-    return getInventoryHierarchyInstances(queryParams, response -> {
-      assertThat(response.getStatusCode(), is(200));
-    });
+    return getInventoryHierarchyInstances(queryParams, response ->assertThat(response.getStatusCode(), is(200)));
   }
 
   private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams, Handler<Response> responseMatcher)
@@ -188,8 +186,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .toString());
     List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
+    assertThat(instancesData.get(0), allOf(hasCallNumber4Items("item effective call number 1", "item effective call number 2"),
+      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName4Items("Primary Institution")));
 
     // when
     LocalDateTime endDate = LocalDateTime.of(2500, 1, 1, 0, 0, 0);
@@ -197,8 +195,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .toString());
     instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
+    assertThat(instancesData.get(0), allOf(hasCallNumber4Items("item effective call number 1", "item effective call number 2"),
+      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName4Items("Primary Institution")));
 
     // when
     startDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
@@ -225,8 +223,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .toString());
     instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
+    assertThat(instancesData.get(0), allOf(hasCallNumber4Items("item effective call number 1", "item effective call number 2"),
+      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName4Items("Primary Institution")));
 
     // when
     startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
@@ -253,16 +251,16 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
     List<JsonObject> data = getInventoryHierarchyInstances(params);
     // then
-    assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
+    assertThat(data.get(0), allOf(hasCallNumber4Items("item effective call number 1", "item effective call number 2"),
+      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName4Items("Primary Institution")));
 
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     data = getInventoryHierarchyInstances(params);
     // then
     assertThat(data.get(0),
-      allOf(hasCallNumber("item effective call number 1", "item effective call number 2", "item effective call number 3"),
-        hasAggregatedNumberOfItems(3), hasEffectiveLocationInstitutionName("Primary Institution")));
+      allOf(hasCallNumber4Items("item effective call number 1", "item effective call number 2", "item effective call number 3"),
+        hasAggregatedNumberOfItems(3), hasEffectiveLocationInstitutionName4Items("Primary Institution")));
   }
 
   private Predicate<Object> instancePredicate() {
@@ -281,9 +279,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put("startDate", "invalidDate");
     // then
-    getInventoryHierarchyInstances(params, response -> {
-      assertThat(response.getStatusCode(), is(400));
-    });
+    getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
   }
 
   /**
@@ -298,9 +294,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put("endDate", "invalidDate");
     // then
-    getInventoryHierarchyInstances(params, response -> {
-      assertThat(response.getStatusCode(), is(400));
-    });
+    getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
   }
 
   private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId)
@@ -346,9 +340,10 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     final Response response = future.get(2, TimeUnit.SECONDS);
     responseMatcher.handle(response);
-    log.info("response from oai pmh instance ids view:", response);
+    log.info("response from inventory instance ids view: {}", response);
 
     final String body = response.getBody();
+    log.info("response body from inventory instance ids view: {}", body);
     if (StringUtils.isNotEmpty(body)) {
       results.add(new JsonObject(body));
     }
@@ -359,9 +354,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    return requestInventoryHierarchyViewUpdatedInstanceIds(queryParamsMap, response -> {
-      assertThat(response.getStatusCode(), is(200));
-    });
+    return requestInventoryHierarchyViewUpdatedInstanceIds(queryParamsMap, response -> assertThat(response.getStatusCode(), is(200)));
   }
 
   private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap, Handler<Response> responseMatcher)
@@ -377,7 +370,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     client.get(inventoryHierarchyUpdatedInstanceIds("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
 
-    final Response response = future.get(2, TimeUnit.SECONDS);
+    final Response response = future.get(60000, TimeUnit.SECONDS);
     responseMatcher.handle(response);
     log.info("response from oai pmh updated instances view:", response);
 

@@ -12,7 +12,7 @@
       "description": "Source of metadata and format of the underlying record to the instance record",
       "type": "string"
     },
-    "itemsAndHoldingsFields": {
+    "itemsAndHoldings": {
       "description": "Aggregated items and holdings fields",
       "type": "object",
       "$ref": "inventory-items-and-holdings.json"
@@ -21,7 +21,7 @@
   "required": [
     "instanceId",
     "source",
-    "itemsAndHoldingsFields"
+    "itemsAndHoldings"
   ],
   "additionalProperties": false
 }
