@@ -16,8 +16,8 @@ public final class InventoryHierarchyResponseMatchers {
 
 
   static JsonPointer itemsAndHoldingsFieldsPointer = JsonPointer.from("/itemsAndHoldings");
-  static JsonPointer itemsFieldsPointer = itemsAndHoldingsFieldsPointer.append("/items");
-  static JsonPointer holdingsFieldsPointer = itemsAndHoldingsFieldsPointer.append("/holdings");
+  static JsonPointer itemsFieldsPointer = JsonPointer.from(itemsAndHoldingsFieldsPointer.toString().concat("/items"));
+  static JsonPointer holdingsFieldsPointer = JsonPointer.from(itemsAndHoldingsFieldsPointer.toString().concat("/holdings"));
 
   private InventoryHierarchyResponseMatchers() {
   }
@@ -86,7 +86,7 @@ public final class InventoryHierarchyResponseMatchers {
     };
   }
 
-  public static Matcher<JsonObject> hasCallNumber4Items(String... callNumbers) {
+  public static Matcher<JsonObject> hasCallNumberForItems(String... callNumbers) {
     return hasElement(itemsFieldsPointer, JsonPointer.from("/callNumber/callNumber"), callNumbers);
   }
 
@@ -99,8 +99,8 @@ public final class InventoryHierarchyResponseMatchers {
     return hasItemsCount(size);
   }
 
-  public static Matcher<JsonObject> hasEffectiveLocationInstitutionName4Items(String... institutionNames) {
-    return hasElement(JsonPointer.from("/location/location/institutionName"), institutionNames);
+  public static Matcher<JsonObject> hasEffectiveLocationInstitutionNameForItems(String... institutionNames) {
+    return hasElement(itemsFieldsPointer, JsonPointer.from("/location/location/institutionName"), institutionNames);
   }
 
 }
