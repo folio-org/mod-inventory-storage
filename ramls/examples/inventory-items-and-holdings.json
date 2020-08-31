@@ -1,193 +1,191 @@
 {
   "instanceId": "2fd27465-e6ce-4143-9b7c-606860747f03",
   "source": "FOLIO",
-  "itemsAndHoldings": {
-    "holdings": [
-      {
-        "id": "7df791c5-e330-4cfe-bb0b-a5f0e555ac68",
-        "hrId": "hold000000000001",
-        "suppressFromDiscovery": false,
-        "holdingsType": "holdingsType name",
-        "formerIds": [
-          "ABW4508",
-          "442882"
-        ],
-        "location": {
-          "permanentLocation": {
-            "name": "Annex",
-            "campusName": "City Campus",
-            "libraryName": "Datalogisk Institut",
-            "institutionName": "Københavns Universitet"
-          },
-          "temporaryLocation": {
-            "name": "Annex",
-            "campusName": "City Campus",
-            "libraryName": "Datalogisk Institut",
-            "institutionName": "Københavns Universitet"
-          }
+  "holdings": [
+    {
+      "id": "7df791c5-e330-4cfe-bb0b-a5f0e555ac68",
+      "hrId": "hold000000000001",
+      "suppressFromDiscovery": false,
+      "holdingsType": "holdingsType name",
+      "formerIds": [
+        "ABW4508",
+        "442882"
+      ],
+      "location": {
+        "permanentLocation": {
+          "name": "Annex",
+          "campusName": "City Campus",
+          "libraryName": "Datalogisk Institut",
+          "institutionName": "Københavns Universitet"
         },
-        "callNumber": {
-          "prefix": "prefix",
-          "suffix": "suffix",
-          "typeId": "512173a7-bd09-490e-b773-17d83f2b63fe",
-          "typeName": "call number type name",
-          "callNumber": "TK5105.88815 . A58 2004 FT MEADE"
-        },
-        "shelvingTitle": "Title",
-        "acquisitionFormat": "Order format",
-        "acquisitionMethod": "Purchase",
-        "receiptStatus": "Not currently received",
-        "electronicAccess": [
+        "temporaryLocation": {
+          "name": "Annex",
+          "campusName": "City Campus",
+          "libraryName": "Datalogisk Institut",
+          "institutionName": "Københavns Universitet"
+        }
+      },
+      "callNumber": {
+        "prefix": "prefix",
+        "suffix": "suffix",
+        "typeId": "512173a7-bd09-490e-b773-17d83f2b63fe",
+        "typeName": "call number type name",
+        "callNumber": "TK5105.88815 . A58 2004 FT MEADE"
+      },
+      "shelvingTitle": "Title",
+      "acquisitionFormat": "Order format",
+      "acquisitionMethod": "Purchase",
+      "receiptStatus": "Not currently received",
+      "electronicAccess": [
+        {
+          "uri": "http://www.loc.gov/catdir/toc/ecip0718/2007020429.html",
+          "name": "Version of resource",
+          "linkText": "Links available",
+          "publicNote": "Table of contents only",
+          "relationshipId": "3b430592-2e09-4b48-9a0c-0636d66b9fb3",
+          "materialsSpecification": "Table of contents"
+        }
+      ],
+      "notes": [
+        {
+          "holdingsNoteTypeName": "Action note",
+          "note": "Note"
+        }
+      ],
+      "illPolicy": "illPolicy name",
+      "retentionPolicy": "Permanently retained.",
+      "digitizationPolicy": "Digitization policy",
+      "holdingsStatements": [
+        {
+          "statement": "Line 1",
+          "note": "Note to line 1"
+        }
+      ],
+      "holdingsStatementsForIndexes": [
+        {
+          "statement": "Line 1",
+          "note": "Note to line 1"
+        }
+      ],
+      "holdingsStatementsForSupplements": [
+        {
+          "statement": "Line 1",
+          "note": "Note to line 1"
+        }
+      ],
+      "copyNumber": "1",
+      "numberOfItems": "5",
+      "receivingHistory": {
+        "entries": [
           {
-            "uri": "http://www.loc.gov/catdir/toc/ecip0718/2007020429.html",
-            "name": "Version of resource",
-            "linkText": "Links available",
-            "publicNote": "Table of contents only",
-            "relationshipId": "3b430592-2e09-4b48-9a0c-0636d66b9fb3",
-            "materialsSpecification": "Table of contents"
-          }
-        ],
-        "notes": [
-          {
-            "holdingsNoteTypeName": "Action note",
-            "note": "Note"
-          }
-        ],
-        "illPolicy": "illPolicy name",
-        "retentionPolicy": "Permanently retained.",
-        "digitizationPolicy": "Digitization policy",
-        "holdingsStatements": [
-          {
-            "statement": "Line 1",
-            "note": "Note to line 1"
-          }
-        ],
-        "holdingsStatementsForIndexes": [
-          {
-            "statement": "Line 1",
-            "note": "Note to line 1"
-          }
-        ],
-        "holdingsStatementsForSupplements": [
-          {
-            "statement": "Line 1",
-            "note": "Note to line 1"
-          }
-        ],
-        "copyNumber": "1",
-        "numberOfItems": "5",
-        "receivingHistory": {
-          "entries": [
-            {
-              "publicDisplay": true,
-              "enumeration": "Enumeration",
-              "chronology": "Chronology"
-            }
-          ]
-        },
-        "tags": {
-          "tagList": [
-            "important"
-          ]
-        },
-        "statisticalCodes": [
-          {
-            "id": "775b6ad4-9c35-4d29-bf78-8775a9b42226",
-            "code": "ASER",
-            "name": "Active serial",
-            "statisticalCodeType": "SERM (Serial management)",
-            "source": "UC"
+            "publicDisplay": true,
+            "enumeration": "Enumeration",
+            "chronology": "Chronology"
           }
         ]
-      }
-    ],
-    "items": [
-      {
-        "id": "7df791c5-e330-4cfe-bb0b-a5f0e555ac69",
-        "hrId": "item000000000002",
-        "holdingsRecordId": "512173a7-bd09-490e-b773-17d83f2b63fe",
-        "suppressFromDiscovery": false,
-        "status": "Available",
-        "formerIds": [
-          "Former identifier"
-        ],
-        "location": {
-          "location": {
-            "name": "Annex",
-            "campusName": "City Campus",
-            "libraryName": "Datalogisk Institut",
-            "institutionName": "Københavns Universitet"
-          },
-          "permanentLocation": {
-            "name": "Annex",
-            "campusName": "City Campus",
-            "libraryName": "Datalogisk Institut",
-            "institutionName": "Københavns Universitet"
-          },
-          "temporaryLocation": {
-            "name": "Annex",
-            "campusName": "City Campus",
-            "libraryName": "Datalogisk Institut",
-            "institutionName": "Københavns Universitet"
-          }
-        },
-        "callNumber": {
-          "prefix": "prefix",
-          "suffix": "suffix",
-          "typeName": "call number type name",
-          "callNumber": "TK5105.88815 . A58 2004 FT MEADE"
-        },
-        "accessionNumber": "Accession number",
-        "barcode": "A1429864347",
-        "copyNumber": "copyNumber",
-        "volume": "volume",
-        "enumeration": "enumeration",
-        "chronology": "chronology",
-        "yearCaption": [
-          "Year, caption"
-        ],
-        "itemIdentifier": "Item identifier",
-        "numberOfPieces": "Number of pieces",
-        "descriptionOfPieces": "Description of pieces",
-        "numberOfMissingPieces": "Number of missing pieces",
-        "missingPieces": "Missing pieces",
-        "missingPiecesDate": "2020-07-28",
-        "itemDamagedStatus": "Not Damaged",
-        "itemDamagedStatusDate": "2020-07-28T09:34:40.562Z",
-        "materialType": "book",
-        "permanentLoanType": "Can circulate",
-        "temporaryLoanType": "Can circulate",
-        "electronicAccess": [
-          {
-            "uri": "http://www.loc.gov/catdir/toc/ecip0718/2007020429.html",
-            "name": "Version of resource",
-            "linkText": "Links available",
-            "publicNote": "Table of contents only",
-            "relationshipId": "3b430592-2e09-4b48-9a0c-0636d66b9fb3",
-            "materialsSpecification": "Table of contents"
-          }
-        ],
-        "notes": [
-          {
-            "itemNoteTypeName": "Action note",
-            "note": "Note"
-          }
-        ],
-        "tags": {
-          "tagList": [
-            "important"
-          ]
-        },
-        "statisticalCodes": [
-          {
-            "id": "775b6ad4-9c35-4d29-bf78-8775a9b42226",
-            "code": "ASER",
-            "name": "Active serial",
-            "statisticalCodeType": "SERM (Serial management)",
-            "source": "UC"
-          }
+      },
+      "tags": {
+        "tagList": [
+          "important"
         ]
-      }
-    ]
-  }
+      },
+      "statisticalCodes": [
+        {
+          "id": "775b6ad4-9c35-4d29-bf78-8775a9b42226",
+          "code": "ASER",
+          "name": "Active serial",
+          "statisticalCodeType": "SERM (Serial management)",
+          "source": "UC"
+        }
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "7df791c5-e330-4cfe-bb0b-a5f0e555ac69",
+      "hrId": "item000000000002",
+      "holdingsRecordId": "512173a7-bd09-490e-b773-17d83f2b63fe",
+      "suppressFromDiscovery": false,
+      "status": "Available",
+      "formerIds": [
+        "Former identifier"
+      ],
+      "location": {
+        "location": {
+          "name": "Annex",
+          "campusName": "City Campus",
+          "libraryName": "Datalogisk Institut",
+          "institutionName": "Københavns Universitet"
+        },
+        "permanentLocation": {
+          "name": "Annex",
+          "campusName": "City Campus",
+          "libraryName": "Datalogisk Institut",
+          "institutionName": "Københavns Universitet"
+        },
+        "temporaryLocation": {
+          "name": "Annex",
+          "campusName": "City Campus",
+          "libraryName": "Datalogisk Institut",
+          "institutionName": "Københavns Universitet"
+        }
+      },
+      "callNumber": {
+        "prefix": "prefix",
+        "suffix": "suffix",
+        "typeName": "call number type name",
+        "callNumber": "TK5105.88815 . A58 2004 FT MEADE"
+      },
+      "accessionNumber": "Accession number",
+      "barcode": "A1429864347",
+      "copyNumber": "copyNumber",
+      "volume": "volume",
+      "enumeration": "enumeration",
+      "chronology": "chronology",
+      "yearCaption": [
+        "Year, caption"
+      ],
+      "itemIdentifier": "Item identifier",
+      "numberOfPieces": "Number of pieces",
+      "descriptionOfPieces": "Description of pieces",
+      "numberOfMissingPieces": "Number of missing pieces",
+      "missingPieces": "Missing pieces",
+      "missingPiecesDate": "2020-07-28",
+      "itemDamagedStatus": "Not Damaged",
+      "itemDamagedStatusDate": "2020-07-28T09:34:40.562Z",
+      "materialType": "book",
+      "permanentLoanType": "Can circulate",
+      "temporaryLoanType": "Can circulate",
+      "electronicAccess": [
+        {
+          "uri": "http://www.loc.gov/catdir/toc/ecip0718/2007020429.html",
+          "name": "Version of resource",
+          "linkText": "Links available",
+          "publicNote": "Table of contents only",
+          "relationshipId": "3b430592-2e09-4b48-9a0c-0636d66b9fb3",
+          "materialsSpecification": "Table of contents"
+        }
+      ],
+      "notes": [
+        {
+          "itemNoteTypeName": "Action note",
+          "note": "Note"
+        }
+      ],
+      "tags": {
+        "tagList": [
+          "important"
+        ]
+      },
+      "statisticalCodes": [
+        {
+          "id": "775b6ad4-9c35-4d29-bf78-8775a9b42226",
+          "code": "ASER",
+          "name": "Active serial",
+          "statisticalCodeType": "SERM (Serial management)",
+          "source": "UC"
+        }
+      ]
+    }
+  ]
 }
