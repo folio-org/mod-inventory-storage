@@ -75,7 +75,7 @@
     <dependency>
       <groupId>org.glassfish.web</groupId>
       <artifactId>javax.el</artifactId>
-      <version>2.2.4</version>
+      <version>2.2.6</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -91,7 +91,7 @@
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
     <raml-module-builder-version>31.0.2</raml-module-builder-version>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/instance-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances</generate_routing_context>
-    <argLine />
+    <argLine/>
   </properties>
 
   <distributionManagement>
@@ -372,7 +372,7 @@
                   </manifestEntries>
                 </transformer>
               </transformers>
-              <artifactSet />
+              <artifactSet/>
               <outputFile>${project.build.directory}/${project.artifactId}-fat.jar</outputFile>
             </configuration>
           </execution>
