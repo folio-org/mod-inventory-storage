@@ -1,6 +1,6 @@
 ## 19.3.3 2020-09-02
 
-* Upgrade to RMB 30.2.6 (MODINVSTOR-562)
+* Upgrade to RMB 30.2.7 (MODINVSTOR-567)
   to fix matching on eAccess URI field (MODDICORE-80)
   * Full text search doesn't match URLs containing & (RMB-703)
 
