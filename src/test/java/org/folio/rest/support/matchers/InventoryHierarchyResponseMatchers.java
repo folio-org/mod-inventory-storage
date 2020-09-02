@@ -14,24 +14,27 @@ import io.vertx.core.json.pointer.JsonPointer;
 
 public final class InventoryHierarchyResponseMatchers {
 
-
-  static JsonPointer itemsAndHoldingsFieldsPointer = JsonPointer.from("/itemsAndHoldings");
-  static JsonPointer itemsFieldsPointer = JsonPointer.from(itemsAndHoldingsFieldsPointer.toString().concat("/items"));
-  static JsonPointer holdingsFieldsPointer = JsonPointer.from(itemsAndHoldingsFieldsPointer.toString().concat("/holdings"));
+  static JsonPointer holdingsFieldsPointer = JsonPointer.from("/holdings");
+  static JsonPointer itemsFieldsPointer = JsonPointer.from("/items");
 
   private InventoryHierarchyResponseMatchers() {
   }
-  private static <T> Matcher<JsonObject> hasElement(JsonPointer basePointer, JsonPointer jsonPointer, String[] expectedValue) {
-    return hasElement(basePointer.append(jsonPointer), expectedValue);
+
+  private static <T> Matcher<JsonObject> hasItemsElement(JsonPointer jsonPointer, String[] expectedValue) {
+    return hasElement(itemsFieldsPointer, jsonPointer, expectedValue);
   }
 
-  private static <T> Matcher<JsonObject> hasElement(JsonPointer jsonPointer, String[] expectedValue) {
+  private static <T> Matcher<JsonObject> hasHoldingsElement(JsonPointer rootJsonPointer, JsonPointer jsonPointer, String[] expectedValue) {
+    return hasElement(holdingsFieldsPointer, jsonPointer, expectedValue);
+  }
+
+  private static <T> Matcher<JsonObject> hasElement(JsonPointer rootJsonPointer, JsonPointer jsonPointer, String[] expectedValue) {
 
     return new TypeSafeMatcher<JsonObject>() {
       @Override
       protected boolean matchesSafely(JsonObject jsonObject) {
         // Items matching
-        final JsonArray items = (JsonArray) itemsFieldsPointer.queryJson(jsonObject);
+        final JsonArray items = (JsonArray) rootJsonPointer.queryJson(jsonObject);
         if (items == null) {
           return false;
         }
@@ -86,10 +89,6 @@ public final class InventoryHierarchyResponseMatchers {
     };
   }
 
-  public static Matcher<JsonObject> hasCallNumberForItems(String... callNumbers) {
-    return hasElement(itemsFieldsPointer, JsonPointer.from("/callNumber/callNumber"), callNumbers);
-  }
-
   /**
    * Verify the size of items. All that belong to one holding and one instance are grouped together.
    * @param size - size of expected aggregated items
@@ -100,7 +99,13 @@ public final class InventoryHierarchyResponseMatchers {
   }
 
   public static Matcher<JsonObject> hasEffectiveLocationInstitutionNameForItems(String... institutionNames) {
-    return hasElement(itemsFieldsPointer, JsonPointer.from("/location/location/institutionName"), institutionNames);
+    return hasItemsElement(JsonPointer.from("/location/location/institutionName"), institutionNames);
   }
+
+  public static Matcher<JsonObject> hasCallNumberForItems(String... callNumbers) {
+    return hasItemsElement(JsonPointer.from("/callNumber/callNumber"), callNumbers);
+  }
+
+
 
 }

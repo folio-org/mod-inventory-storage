@@ -144,15 +144,14 @@ WHERE instanceIdsInRange.maxDate BETWEEN dateOrMin($1) AND dateOrMax($2)
 GROUP BY 1, 2, 4
 
 UNION ALL
-SELECT (ai.jsonb #>> '{record,id}')::uuid             AS instanceId,
-       i.jsonb ->> 'source'                           AS source,
-       strToTimestamp(ai.jsonb ->> 'createdDate')     AS maxDate,
-       false                                          AS suppressFromDiscovery,
-       true                                           AS deleted
-FROM ${myuniversity}_${mymodule}.audit_instance ai, ${myuniversity}_${mymodule}.instance i
+SELECT (jsonb #>> '{record,id}')::uuid              AS instanceId,
+        jsonb #>> '{record,source}'                 AS source,
+        strToTimestamp(jsonb ->> 'createdDate')     AS maxDate,
+        false                                       AS suppressFromDiscovery,
+        true                                        AS deleted
+FROM ${myuniversity}_${mymodule}.audit_instance
 WHERE $3
-      AND i.id = (ai.jsonb #>> '{record,id}')::uuid
-      AND strToTimestamp(ai.jsonb ->> 'createdDate') BETWEEN dateOrMin($1) AND dateOrMax($2)
+      AND strToTimestamp(jsonb ->> 'createdDate') BETWEEN dateOrMin($1) AND dateOrMax($2)
 
 $BODY$ LANGUAGE sql;
 

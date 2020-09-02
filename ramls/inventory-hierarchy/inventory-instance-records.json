@@ -94,18 +94,11 @@
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   }
-                },
-                "required": [
-                  "name",
-                  "campusName",
-                  "libraryName",
-                  "institutionName"
-                ]
+                }
               }
             },
             "required": [
-              "permanentLocation",
-              "temporaryLocation"
+              "permanentLocation"
             ]
           },
           "callNumber": {
@@ -133,14 +126,7 @@
                 "description": "Call Number identifier assigned to a holding",
                 "type": "string"
               }
-            },
-            "required": [
-              "prefix",
-              "suffix",
-              "typeId",
-              "typeName",
-              "callNumber"
-            ]
+            }
           },
           "shelvingTitle": {
             "description": "Indicates the shelving form of title",
@@ -192,12 +178,7 @@
                 }
               },
               "required": [
-                "uri",
-                "name",
-                "linkText",
-                "publicNote",
-                "relationshipId",
-                "materialsSpecification"
+                "uri"
               ]
             }
           },
@@ -215,11 +196,7 @@
                   "description": "Text content of the note",
                   "type": "string"
                 }
-              },
-              "required": [
-                "holdingsNoteTypeName",
-                "note"
-              ]
+              }
             }
           },
           "illPolicy": {
@@ -248,11 +225,7 @@
                   "description": "Text content of the note",
                   "type": "string"
                 }
-              },
-              "required": [
-                "statement",
-                "note"
-              ]
+              }
             }
           },
           "holdingsStatementsForIndexes": {
@@ -269,11 +242,7 @@
                   "description": "Note attached to a holdings statement",
                   "type": "string"
                 }
-              },
-              "required": [
-                "statement",
-                "note"
-              ]
+              }
             }
           },
           "holdingsStatementsForSupplements": {
@@ -290,11 +259,7 @@
                   "description": "Note attached to a holdings statement",
                   "type": "string"
                 }
-              },
-              "required": [
-                "statement",
-                "note"
-              ]
+              }
             }
           },
           "copyNumber": {
@@ -327,12 +292,7 @@
                       "description": "Repeated element from Receiving history - Enumeration AND Receiving history - Chronology",
                       "type": "string"
                     }
-                  },
-                  "required": [
-                    "publicDisplay",
-                    "enumeration",
-                    "chronology"
-                  ]
+                  }
                 }
               }
             }
@@ -380,42 +340,13 @@
                   "description": "Label indicating where the statistical code type entry originates from, i.e. 'folio' or 'local'",
                   "type": "string"
                 }
-              },
-              "required": [
-                "id",
-                "code",
-                "name",
-                "statisticalCodeType",
-                "source"
-              ]
+              }
             }
           }
         },
         "required": [
           "id",
-          "hrId",
-          "suppressFromDiscovery",
-          "holdingsType",
-          "formerIds",
-          "location",
-          "callNumber",
-          "shelvingTitle",
-          "acquisitionFormat",
-          "acquisitionMethod",
-          "receiptStatus",
-          "electronicAccess",
-          "notes",
-          "illPolicy",
-          "retentionPolicy",
-          "digitizationPolicy",
-          "holdingsStatements",
-          "holdingsStatementsForIndexes",
-          "holdingsStatementsForSupplements",
-          "copyNumber",
-          "numberOfItems",
-          "receivingHistory",
-          "tags",
-          "statisticalCodes"
+          "location"
         ]
       }
     },
@@ -478,13 +409,7 @@
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   }
-                },
-                "required": [
-                  "name",
-                  "campusName",
-                  "libraryName",
-                  "institutionName"
-                ]
+                }
               },
               "permanentLocation": {
                 "type": "object",
@@ -506,13 +431,7 @@
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   }
-                },
-                "required": [
-                  "name",
-                  "campusName",
-                  "libraryName",
-                  "institutionName"
-                ]
+                }
               },
               "temporaryLocation": {
                 "type": "object",
@@ -534,20 +453,9 @@
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   }
-                },
-                "required": [
-                  "name",
-                  "campusName",
-                  "libraryName",
-                  "institutionName"
-                ]
+                }
               }
-            },
-            "required": [
-              "location",
-              "permanentLocation",
-              "temporaryLocation"
-            ]
+            }
           },
           "callNumber": {
             "description": "An identifier assigned to an item, usually printed on a label attached to the item",
@@ -569,13 +477,7 @@
                 "description": "Identifier assigned to an item, used to determine the items physical position in a shelving sequence",
                 "type": "string"
               }
-            },
-            "required": [
-              "prefix",
-              "suffix",
-              "typeName",
-              "callNumber"
-            ]
+            }
           },
           "accessionNumber": {
             "description": "Inventar number of item",
@@ -686,12 +588,7 @@
                 }
               },
               "required": [
-                "uri",
-                "name",
-                "linkText",
-                "publicNote",
-                "relationshipId",
-                "materialsSpecification"
+                "uri"
               ]
             }
           },
@@ -709,11 +606,7 @@
                   "description": "Text content of the note",
                   "type": "string"
                 }
-              },
-              "required": [
-                "itemNoteTypeName",
-                "note"
-              ]
+              }
             }
           },
           "tags": {
@@ -759,57 +652,23 @@
                   "description": "Label indicating where the statistical code type entry originates from, i.e. 'folio' or 'local'",
                   "type": "string"
                 }
-              },
-              "required": [
-                "id",
-                "code",
-                "name",
-                "statisticalCodeType",
-                "source"
-              ]
+              }
             }
           }
         },
         "required": [
           "id",
-          "hrId",
           "holdingsRecordId",
-          "suppressFromDiscovery",
           "status",
-          "formerIds",
-          "location",
-          "callNumber",
-          "accessionNumber",
-          "barcode",
-          "copyNumber",
-          "volume",
-          "enumeration",
-          "chronology",
-          "yearCaption",
-          "itemIdentifier",
-          "numberOfPieces",
-          "descriptionOfPieces",
-          "numberOfMissingPieces",
-          "missingPieces",
-          "missingPiecesDate",
-          "itemDamagedStatus",
-          "itemDamagedStatusDate",
           "materialType",
-          "permanentLoanType",
-          "temporaryLoanType",
-          "electronicAccess",
-          "notes",
-          "tags",
-          "statisticalCodes"
+          "permanentLoanType"
         ]
       }
     }
   },
   "required": [
     "instanceId",
-    "source",
-    "holdings",
-    "items"
+    "source"
   ],
   "additionalProperties": false
 }

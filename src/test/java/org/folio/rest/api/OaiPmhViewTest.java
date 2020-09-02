@@ -167,7 +167,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     // The same call using newly added API
     params.put("deletedRecordSupport", "false");
-    data = getOiaPmhViewInstances(params);
+    data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
     assertThat(data.size(), is(0));
   }
@@ -492,7 +492,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     client.get(oaiPmhViewUpdatedInstanceIds("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
 
-    final Response response = future.get(2, TimeUnit.SECONDS);
+    final Response response = future.get(6000, TimeUnit.SECONDS);
     responseMatcher.handle(response);
     log.info("response from oai pmh updated instances view:", response);
 
