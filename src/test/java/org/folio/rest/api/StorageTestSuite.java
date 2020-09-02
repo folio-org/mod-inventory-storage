@@ -64,7 +64,8 @@ import org.junit.runners.Suite;
   PrecedingSucceedingTitleTest.class,
   HoldingsCallNumberNormalizedTest.class,
   ItemCallNumberNormalizedTest.class,
-  OaiPmhViewTest.class
+  OaiPmhViewTest.class,
+  InventoryHierarchyViewTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
