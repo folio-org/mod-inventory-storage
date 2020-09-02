@@ -8,9 +8,14 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyItemsAndHoldings;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyUpdatedInstanceIds;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasAggregatedNumberOfHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasAggregatedNumberOfItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasCallNumberForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasEffectiveLocationInstitutionNameForItems;
-import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasAggregatedNumberOfItems;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasIdForHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasIdForInstance;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationForHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasSourceForInstance;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.isDeleted;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -68,6 +73,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private UUID holdingsRecordIdPredefined;
   private Map<String, String> params;
   private UUID instanceIdPreDefined;
+  private JsonObject predefinedInstance;
+  private JsonObject predefinedHoldings;
 
   @Before
   public void setUp() throws InterruptedException, ExecutionException, MalformedURLException, TimeoutException {
@@ -80,9 +87,10 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     params = new HashMap<>();
 
     holdingsRecordIdPredefined = createInstanceAndHolding(mainLibraryLocationId);
-    final JsonObject instanceObj = instancesClient.getAll()
-      .get(0);
-    instanceIdPreDefined = UUID.fromString(instanceObj.getString("id"));
+    predefinedHoldings = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
+
+    predefinedInstance = instancesClient.getAll().get(0);
+    instanceIdPreDefined = UUID.fromString(predefinedInstance.getString("id"));
 
     createItem(mainLibraryLocationId, "item barcode", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
@@ -105,15 +113,56 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestInventoryHierarchyWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRequestInventoryHierarchyInstanceWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+    assertThat(
+      instancesData.get(0),
+      allOf(
+        hasIdForInstance(predefinedInstance.getString("id")),
+        hasSourceForInstance(predefinedInstance.getString("source"))
+      )
+    );
+  }
+
+  @Test
+  public void canRequestInventoryHierarchyHoldingsWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
+    // given
+    // one instance, 1 holding, 2 items
+    // when
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
+    // then
+    assertThat(
+      instancesData.get(0),
+      allOf(
+        hasIdForHoldings(predefinedHoldings.getString("id")),
+        hasPermanentLocationForHoldings("d:Main Library"),
+        hasAggregatedNumberOfHoldings(1)
+      )
+    );
+  }
+
+  @Test
+  public void canRequestInventoryHierarchyItemsWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
+    // given
+    // one instance, 1 holding, 2 items
+    // when
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
+    // then
+    assertThat(
+      instancesData.get(0),
+      allOf(
+        hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+        hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
+        hasAggregatedNumberOfItems(2)
+      )
+    );
   }
 
   @Test
@@ -152,7 +201,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams)
     throws InterruptedException, ExecutionException, TimeoutException {
-    return getInventoryHierarchyInstances(queryParams, response ->assertThat(response.getStatusCode(), is(200)));
+    return getInventoryHierarchyInstances(queryParams, response -> assertThat(response.getStatusCode(), is(200)));
   }
 
   private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams, Handler<Response> responseMatcher)
@@ -255,7 +304,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
       hasAggregatedNumberOfItems(2),
       hasEffectiveLocationInstitutionNameForItems("Primary Institution"))
-      );
+    );
 
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
@@ -376,7 +425,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     client.get(inventoryHierarchyUpdatedInstanceIds("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
 
-    final Response response = future.get(60000, TimeUnit.SECONDS);
+    final Response response = future.get(2, TimeUnit.SECONDS);
     responseMatcher.handle(response);
     log.info("response from oai pmh updated instances view:", response);
 
