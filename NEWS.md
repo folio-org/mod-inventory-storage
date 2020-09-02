@@ -1,3 +1,9 @@
+## 19.3.3 2020-09-02
+
+* Upgrade to RMB 30.2.6 (MODINVSTOR-562)
+  to fix matching on eAccess URI field (MODDICORE-80)
+  * Full text search doesn't match URLs containing & (RMB-703)
+
 ## 19.3.2 2020-08-27
 
 * ERROR: prepared statement "XYZ" already exists (MODINVSTOR-540)
