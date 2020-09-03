@@ -2,6 +2,7 @@ package org.folio.rest.support;
 
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.Row;
@@ -72,6 +73,7 @@ public class RowStreamToBufferAdapter implements ReadStream<Buffer> {
     if (value == null) {
       return "";
     }
-    return value instanceof JsonObject ? value : value.toString();
+    return value instanceof JsonObject ||
+      value instanceof JsonArray ? value : value.toString();
   }
 }

@@ -1,0 +1,75 @@
+#%RAML 1.0
+title: Inventory Hierarchy API
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Inventory Hierarchy API
+    content: This documents the streaming API for the data needed for Inventory Storage, RTAC and other modules
+
+types:
+  inventoryUpdatedInstanceIds: !include inventory-hierarchy/inventory-updated-instance-ids.json
+  inventoryInstanceIds: !include inventory-hierarchy/inventory-instance-ids.json
+  inventoryItemsAndHoldings: !include inventory-hierarchy/inventory-instance-records.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection-get: !include raml-util/rtypes/collection-get.raml
+
+/inventory-hierarchy:
+  /updated-instance-ids:
+    displayName: Stream API to get instances ids of updated oai records in Inventory
+    type:
+      collection-get:
+       schemaCollection: inventoryUpdatedInstanceIds
+       exampleCollection: !include examples/inventory-updated-instance-ids.json
+    get:
+      description: Stream updated instances ids for Inventory
+      is:
+        [validate]
+      queryParameters:
+        startDate:
+          description: Lower bound for filtering instances by instances, items and holdings metadata update date
+          type: string
+          required: false
+        endDate:
+          description: Upper bound for filtering instances by instances, items and holdings metadata update date
+          type: string
+          required: false
+        deletedRecordSupport:
+          description: return deleted records
+          type: boolean
+          required: false
+          default: true
+        skipSuppressedFromDiscoveryRecords:
+          description: Configuration param which defines if discovery suppressed instance records should be skipped or not
+          type: boolean
+          required: false
+          default: true
+        onlyInstanceUpdateDate:
+          description: Configuration param which defines if discovery suppressed instance records should be skipped or not
+          type: boolean
+          required: false
+          default: true
+  /items-and-holdings:
+    displayName: Stream API to get instances with items and holdings for Inventory
+    post:
+      description: Stream instances view data for Inventory
+      is:
+        [validate]
+      body:
+        application/json:
+          description: List of instances Ids with skip suppressed from discovery configuration parameter
+          type: inventoryInstanceIds
+          example: !include examples/inventory-instance-ids.json
+      responses:
+        200:
+          body:
+            application/json:
+              type: inventoryItemsAndHoldings
+              example: !include examples/inventory-items-and-holdings.json
