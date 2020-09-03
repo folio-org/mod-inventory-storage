@@ -636,7 +636,7 @@
         },
         {
           "fieldName": "holdingsRecordsSourceId",
-          "tableName": "holdings_records_source",
+          "targetTable": "holdings_records_source",
           "tOps": "ADD"
         }
       ],
