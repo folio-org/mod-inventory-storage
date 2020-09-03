@@ -200,12 +200,12 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams)
-    throws InterruptedException, ExecutionException, TimeoutException {
+      throws InterruptedException, ExecutionException, TimeoutException {
     return getInventoryHierarchyInstances(queryParams, response -> assertThat(response.getStatusCode(), is(200)));
   }
 
   private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams, Handler<Response> responseMatcher)
-    throws InterruptedException, ExecutionException, TimeoutException {
+      throws InterruptedException, ExecutionException, TimeoutException {
 
     // Get updated instances ids
     List<JsonObject> updatedInstanceData = requestInventoryHierarchyViewUpdatedInstanceIds(queryParams, responseMatcher);
@@ -329,7 +329,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
    */
   @Test(expected = DecodeException.class)
   public void testResponseStatus400WhenRequestingWithInvalidDates()
-    throws InterruptedException, ExecutionException, TimeoutException {
+      throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -344,7 +344,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
    */
   @Test(expected = DecodeException.class)
   public void testResponseStatus400WhenRequestingWithInvalidUntilDate()
-    throws InterruptedException, ExecutionException, TimeoutException {
+      throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -354,7 +354,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+      throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     super.createItem(createItemRequest(mainLibraryLocationId, s, s2, journalMaterialTypeId).create());
   }
 
@@ -383,7 +383,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   private List<JsonObject> requestInventoryHierarchyItemsAndHoldingsViewInstance(UUID[] instanceIds, boolean skipSuppressedFromDiscoveryRecords,
-                                                                                 Handler<Response> responseMatcher) throws InterruptedException, ExecutionException, TimeoutException {
+      Handler<Response> responseMatcher) throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> future = new CompletableFuture<>();
     final List<JsonObject> results = new ArrayList<>();
@@ -407,13 +407,13 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap)
-    throws InterruptedException, ExecutionException, TimeoutException {
+      throws InterruptedException, ExecutionException, TimeoutException {
 
     return requestInventoryHierarchyViewUpdatedInstanceIds(queryParamsMap, response -> assertThat(response.getStatusCode(), is(200)));
   }
 
   private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap, Handler<Response> responseMatcher)
-    throws InterruptedException, ExecutionException, TimeoutException {
+      throws InterruptedException, ExecutionException, TimeoutException {
 
     final String queryParams = queryParamsMap.entrySet()
       .stream()
