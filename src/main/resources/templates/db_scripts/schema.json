@@ -595,6 +595,17 @@
       ]
     },
     {
+      "tableName": "holdings_records_source",
+      "withMetadata": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "holdings_record",
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
@@ -852,17 +863,6 @@
         }
       ],
       "customSnippetPath": "alterPrecedingSucceedingTitle.sql"
-    },
-    {
-      "tableName": "holdings_records_source",
-      "withMetadata": false,
-      "withAuditing": false,
-      "uniqueIndex": [
-        {
-          "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ]
     }
   ],
   "scripts": [
