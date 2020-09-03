@@ -66,13 +66,13 @@ public class HoldingsSourceTest extends TestBase {
 
     IndividualResource sourceResponse = holdingsSourceClient.create(
       new JsonObject()
-      .put("name", "test source")
+      .put("name", "test source without id")
     );
 
     JsonObject source = sourceResponse.getJson();
 
     assertThat(source.getString("id"), is(notNullValue()));
-    assertThat(source.getString("name"), is("test source"));
+    assertThat(source.getString("name"), is("test source without id"));
 
     UUID sourceId = sourceResponse.getId();
 
@@ -83,7 +83,7 @@ public class HoldingsSourceTest extends TestBase {
     JsonObject sourceFromGet = getResponse.getJson();
 
     assertThat(sourceFromGet.getString("id"), is(sourceId.toString()));
-    assertThat(sourceFromGet.getString("name"), is("test source"));
+    assertThat(sourceFromGet.getString("name"), is("test source without id"));
   }
 
   @Test
