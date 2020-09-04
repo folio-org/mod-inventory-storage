@@ -2282,16 +2282,13 @@
         "inventory-storage.oai-pmh-view.instances.collection.get",
         "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
         "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
-<<<<<<< HEAD
         "inventory-storage.holdings-records-source.collection.get",
         "inventory-storage.holdings-records-source.get",
         "inventory-storage.holdings-records-source.post",
         "inventory-storage.holdings-records-source.put",
-        "inventory-storage.holdings-records-source.delete"
-=======
+        "inventory-storage.holdings-records-source.delete",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
         "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"
->>>>>>> master
       ]
     }
   ],
