@@ -46,7 +46,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "4.2",
+      "version": "4.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -77,7 +77,7 @@
     },
     {
       "id": "holdings-storage-batch-sync",
-      "version": "0.2",
+      "version": "0.3",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1101,6 +1101,21 @@
           "permissionsRequired": ["inventory-storage.oai-pmh-view.enrichedinstances.collection.post"]
         }
       ]
+    },
+    {
+      "id": "inventory-hierarchy",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-hierarchy/updated-instance-ids",
+          "permissionsRequired": ["inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get"]
+        }, {
+          "methods" : [ "POST" ],
+          "pathPattern" : "/inventory-hierarchy/items-and-holdings",
+          "permissionsRequired": ["inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -2042,6 +2057,16 @@
       "description": "get enriched instances for oai pmh"
     },
     {
+      "permissionName": "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
+      "displayName": "inventory storage - get updated instances ids for inventory storage",
+      "description": "get updated instances ids for inventory storage"
+    },
+    {
+      "permissionName": "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
+      "displayName": "inventory storage - get instances holdings and items for inventory storage",
+      "description": "get instances holdings and items for inventory storage"
+	},
+	{
       "permissionName": "inventory-storage.holdings-records-source.collection.get",
       "displayName": "inventory storage - get holdings-records-source collection",
       "description": "get holdings-records-source collection from storage"
@@ -2257,11 +2282,16 @@
         "inventory-storage.oai-pmh-view.instances.collection.get",
         "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
         "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
+<<<<<<< HEAD
         "inventory-storage.holdings-records-source.collection.get",
         "inventory-storage.holdings-records-source.get",
         "inventory-storage.holdings-records-source.post",
         "inventory-storage.holdings-records-source.put",
         "inventory-storage.holdings-records-source.delete"
+=======
+        "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
+        "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"
+>>>>>>> master
       ]
     }
   ],

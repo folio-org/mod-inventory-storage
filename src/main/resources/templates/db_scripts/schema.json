@@ -950,6 +950,11 @@
       "run": "after",
       "snippetPath": "removeOldPrecedingSucceedingTitles.sql",
       "fromModuleVersion": "19.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/createRecordsViewFunction.sql",
+      "fromModuleVersion": "19.3.2"
     }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Define format of request data with instances ids",
+  "type": "object",
+  "properties": {
+    "instanceIds": {
+      "description": "Inventory instances identifiers",
+      "type": "array",
+      "items": {
+        "$ref": "../uuid.json"
+      }
+    },
+    "skipSuppressedFromDiscoveryRecords": {
+      "description": "Configuration param which defines if discovery suppressed items and holdings records should be skipped or not",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "instanceIds",
+    "skipSuppressedFromDiscoveryRecords"
+  ],
+  "additionalProperties": false
+}
