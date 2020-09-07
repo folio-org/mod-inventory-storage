@@ -338,22 +338,22 @@ WITH
                   LEFT JOIN viewLocations itemTempLoc
                        ON (item.jsonb ->> 'temporaryLocationId')::uuid = itemTempLoc.locId
                   -- Item's Material type relation
-                  LEFT JOIN {myuniversity}_${mymodule}.material_type mt
+                  LEFT JOIN ${myuniversity}_${mymodule}..material_type mt
                        ON item.materialtypeid = mt.id
                   -- Item's Call number type relation
                   LEFT JOIN ${myuniversity}_${mymodule}.call_number_type cnt
                        ON (item.jsonb #>> '{effectiveCallNumberComponents, typeId}')::uuid = cnt.id
                   -- Item's Damaged status relation
-                  LEFT JOIN {myuniversity}_${mymodule}.item_damaged_status itemDmgStat
+                  LEFT JOIN ${myuniversity}_${mymodule}.item_damaged_status itemDmgStat
                        ON (item.jsonb ->> 'itemDamagedStatusId')::uuid = itemDmgStat.id
                   -- Item's Permanent loan type relation
-                  LEFT JOIN {myuniversity}_${mymodule}.loan_type plt
+                  LEFT JOIN ${myuniversity}_${mymodule}.loan_type plt
                        ON (item.jsonb ->> 'permanentLoanTypeId')::uuid = plt.id
                   -- Item's Temporary loan type relation
-                  LEFT JOIN {myuniversity}_${mymodule}.loan_type tlt
+                  LEFT JOIN ${myuniversity}_${mymodule}.loan_type tlt
                        ON (item.jsonb ->> 'temporaryLoanTypeId')::uuid = tlt.id
                   -- Holdings type relation
-                  LEFT JOIN {myuniversity}_${mymodule}.holdings_type ht
+                  LEFT JOIN ${myuniversity}_${mymodule}.holdings_type ht
                        ON ht.id = hr.holdingstypeid
                   -- Holdings Permanent location relation
                   LEFT JOIN viewLocations holdPermLoc
@@ -362,10 +362,10 @@ WITH
                   LEFT JOIN viewLocations holdTempLoc
                        ON (hr.jsonb ->> 'temporaryLocationId')::uuid = holdTempLoc.locId
                   -- Holdings Call number type relation
-                  LEFT JOIN {myuniversity}_${mymodule}.call_number_type hrcnt
+                  LEFT JOIN ${myuniversity}_${mymodule}.call_number_type hrcnt
                        ON (hr.jsonb ->> 'callNumberTypeId')::uuid = hrcnt.id
                   -- Holdings Ill policy relation
-                  LEFT JOIN {myuniversity}_${mymodule}.ill_policy ilp
+                  LEFT JOIN ${myuniversity}_${mymodule}.ill_policy ilp
                        ON hr.illpolicyid = ilp.id
             WHERE true
                   AND NOT ($2 AND COALESCE((hr.jsonb ->> 'discoverySuppress')::bool, false))
