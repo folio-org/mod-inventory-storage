@@ -118,7 +118,7 @@ WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                                       JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
                              WHERE ((strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2) OR
                                     (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2))
-                                    AND NOT EXISTS (SELECT null WHERE $5)
+                                    AND NOT EXISTS (SELECT NULL WHERE $5)
 
                              UNION ALL
                              SELECT (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
@@ -130,7 +130,7 @@ WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                                               audit_holdings_record.id
                              WHERE ((strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2) OR
                                     (strToTimestamp(audit_item.jsonb #>> '{record,updatedDate}')) BETWEEN dateOrMin($1) AND dateOrMax($2))
-                                    AND NOT EXISTS (SELECT null WHERE $5) )
+                                    AND NOT EXISTS (SELECT NULL WHERE $5) )
 SELECT instanceId,
        instance.jsonb ->> 'source' AS source,
        MAX(instanceIdsInRange.maxDate) AS maxDate,
@@ -320,6 +320,7 @@ WITH
                                                ELSE NULL END ::jsonb))
                                  FILTER (WHERE item.id IS NOT NULL), '[]'::jsonb)
                               ) itemsAndHoldings
+
             FROM ${myuniversity}_${mymodule}.holdings_record hr
                   JOIN ${myuniversity}_${mymodule}.instance i
                        ON i.id = hr.instanceid
