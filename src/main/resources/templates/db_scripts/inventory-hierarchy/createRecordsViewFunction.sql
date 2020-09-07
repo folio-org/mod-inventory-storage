@@ -118,7 +118,7 @@ WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                                       JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
                              WHERE ((strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2) OR
                                     (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2))
-                                    AND EXISTS (SELECT null WHERE $5)
+                                    AND NOT EXISTS (SELECT null WHERE $5)
 
                              UNION ALL
                              SELECT (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
@@ -130,7 +130,7 @@ WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                                               audit_holdings_record.id
                              WHERE ((strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2) OR
                                     (strToTimestamp(audit_item.jsonb #>> '{record,updatedDate}')) BETWEEN dateOrMin($1) AND dateOrMax($2))
-                                    AND EXISTS (SELECT null WHERE $5) )
+                                    AND NOT EXISTS (SELECT null WHERE $5) )
 SELECT instanceId,
        instance.jsonb ->> 'source' AS source,
        MAX(instanceIdsInRange.maxDate) AS maxDate,
@@ -343,8 +343,8 @@ WITH
 SELECT
       pi.instId AS "instanceId",
       pi.source AS "source",
-      ihr.records -> 'holdings' AS "holdings",
-      ihr.records -> 'items' AS "items"
+      COALESCE(ihr.records -> 'holdings', '[]'::jsonb) AS "holdings",
+      COALESCE(ihr.records -> 'items', '[]'::jsonb) AS "items"
 FROM viewInstances pi
 	   LEFT JOIN viewItemsAndHoldings ihr
 		      ON ihr.instId = pi.instId
