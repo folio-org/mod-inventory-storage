@@ -34,7 +34,7 @@ public class HoldingsSourceTest extends TestBase {
   }
 
   @Test
-  public void canCreateHoldingSource()
+  public void canCreateHoldingsSource()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -60,7 +60,7 @@ public class HoldingsSourceTest extends TestBase {
   }
 
   @Test
-  public void canCreateHoldingSourcesWithoutProvidingAnId()
+  public void canCreateHoldingsSourcesWithoutProvidingAnId()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -87,7 +87,7 @@ public class HoldingsSourceTest extends TestBase {
   }
 
   @Test
-  public void cannotCreateAHoldingsSourcesWithIDThatIsNotUUID()
+  public void cannotCreateAHoldingsSourceWithIDThatIsNotUUID()
     throws InterruptedException,
     ExecutionException, TimeoutException {
 
