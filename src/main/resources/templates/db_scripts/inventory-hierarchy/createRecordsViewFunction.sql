@@ -338,7 +338,7 @@ WITH
                   LEFT JOIN viewLocations itemTempLoc
                        ON (item.jsonb ->> 'temporaryLocationId')::uuid = itemTempLoc.locId
                   -- Item's Material type relation
-                  LEFT JOIN ${myuniversity}_${mymodule}..material_type mt
+                  LEFT JOIN ${myuniversity}_${mymodule}.material_type mt
                        ON item.materialtypeid = mt.id
                   -- Item's Call number type relation
                   LEFT JOIN ${myuniversity}_${mymodule}.call_number_type cnt
