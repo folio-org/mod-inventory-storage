@@ -288,7 +288,7 @@ WITH
                                                             'statisticalCodes', COALESCE(getStatisticalCodes(item.jsonb -> 'statisticalCodeIds'), '[]'::jsonb)))
                               ) itemsAndHoldings
             FROM ${myuniversity}_${mymodule}.holdings_record hr
-                 JOIN ${myuniversity}_${mymodule}.item item
+                 LEFT JOIN ${myuniversity}_${mymodule}.item item
                       ON item.holdingsrecordid = hr.id
                  JOIN ${myuniversity}_${mymodule}.instance i
                       ON i.id = hr.instanceid
