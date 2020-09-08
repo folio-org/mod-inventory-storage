@@ -11,6 +11,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import org.folio.okapi.common.OkapiToken;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -19,7 +20,6 @@ import org.folio.rest.jaxrs.resource.InstanceStorageBatchInstances;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
-import org.folio.rest.tools.utils.JwtUtils;
 
 import javax.ws.rs.core.Response;
 import java.lang.invoke.MethodHandles;
@@ -198,10 +198,8 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
 
   private static String userIdFromToken(String token) {
     try {
-      String[] split = token.split("\\.");
-      String json = JwtUtils.getJson(split[1]);
-      JsonObject j = new JsonObject(json);
-      return j.getString("user_id");
+      OkapiToken okapiToken = new OkapiToken(token);
+      return okapiToken.getUserIdWithoutValidation();
     } catch (Exception e) {
       log.warn("Invalid x-okapi-token: " + token, e);
       return null;
