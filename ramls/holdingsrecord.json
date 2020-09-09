@@ -5,7 +5,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "the system assigned unique ID of the holdings record; UUID",
+      "description": "the unique ID of the holdings record; UUID",
       "$ref": "uuid.json"
     },
     "hrid": {
@@ -318,7 +318,7 @@
       "readonly": true
     },
     "sourceId": {
-      "description": "UUID of the holdings records source",
+      "description": "(A reference to) the source of a holdings record",
       "type": "string",
       "$ref": "uuid.json"
     }
