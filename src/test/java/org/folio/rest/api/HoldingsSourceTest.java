@@ -8,6 +8,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeoutException;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.http.ResourceClient;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,8 +26,7 @@ import org.junit.Test;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class HoldingsSourceTest extends TestBase {
-
+public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   private static ResourceClient holdingsSourceClient;
 
   @BeforeClass
@@ -57,6 +58,50 @@ public class HoldingsSourceTest extends TestBase {
 
     assertThat(sourceFromGet.getString("id"), is(sourceId.toString()));
     assertThat(sourceFromGet.getString("name"), is("test source"));
+  }
+
+  @Test
+  public void canNotCreateDuplicateHoldingsSource()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID sourceId = UUID.randomUUID();
+
+    JsonObject source = holdingsSourceClient.create(
+      new JsonObject()
+          .put("id", sourceId.toString())
+          .put("name", "original source")
+    ).getJson();
+
+    Response response = holdingsSourceClient.attemptToCreate(
+        new JsonObject()
+            .put("id", sourceId.toString())
+            .put("name", "new source with duplicate id")
+    	);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void canNotCreateDuplicateHoldingsSourceName()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID sourceId = UUID.randomUUID();
+
+    JsonObject source = holdingsSourceClient.create(
+      new JsonObject()
+      .put("id", sourceId.toString())
+      .put("name", "original source")
+    ).getJson();
+
+    assertThat(source.getString("id"), is(sourceId.toString()));
+    assertThat(source.getString("name"), is("original source"));
+
+    Response response = holdingsSourceClient.attemptToCreate(
+    	      new JsonObject()
+    	      .put("name", "original source")
+    	    );
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -112,5 +157,100 @@ public class HoldingsSourceTest extends TestBase {
     assertThat(firstError.getString("message"), containsString("must match"));
     assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("id"));
+  }
+
+  /*
+   *
+    SourceId is saved for a holdings record.
+*/
+  @Test
+  public void canReplaceAHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+    IndividualResource sourceResponse = holdingsSourceClient.create(
+    	      new JsonObject()
+    	      .put("name", "replaceable source")
+    	    );
+
+    JsonObject source = sourceResponse.getJson();
+
+    assertThat(source.getString("id"), is(notNullValue()));
+    assertThat(source.getString("name"), is("replaceable source"));
+
+    sourceResponse = holdingsSourceClient.create(
+  	      new JsonObject()
+  	      .put("name", "replacement source")
+  	    );
+
+    source = sourceResponse.getJson();
+
+    assertThat(source.getString("id"), is(notNullValue()));
+    assertThat(source.getString("name"), is("replacement source"));
+  }
+
+  @Test
+  public void canQueryForMultipleHoldingsSources() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+	holdingsSourceClient.create(
+			new JsonObject()
+				.put("name", "source 1")
+		    );
+
+	holdingsSourceClient.create(
+			new JsonObject()
+				.put("name", "source 2")
+	    );
+
+    final List<IndividualResource> sources = holdingsSourceClient
+    	      .getMany("name==\"source*\"");
+
+    assertThat(sources.size(), is(2));
+  }
+
+  @Test
+  public void cannotReplaceANonexistentHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+	  Response sourceResponse = holdingsSourceClient.attemptToReplace("nonexistentid", new JsonObject()
+		      .put("name", "updated source name"));
+	  assertThat(sourceResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void canRemoveAHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+	  IndividualResource holdingsSource = holdingsSourceClient.create(
+			  new JsonObject()
+			  	.put("name", "deleteable source")
+			  );
+	  UUID deleteableHoldingsSourceId = holdingsSource.getId();
+	  holdingsSourceClient.delete(deleteableHoldingsSourceId);
+
+	  Response deleteResponse = holdingsSourceClient.getById(deleteableHoldingsSourceId);
+	  assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+
+  }
+
+  @Test
+  public void canAssociateSourceWithHolding() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+	    UUID instanceId = UUID.randomUUID();
+	    UUID sourceId = UUID.randomUUID();
+
+	    JsonObject instanceToCreate = new JsonObject();
+
+	    instanceToCreate.put("id", instanceId.toString());
+	    instanceToCreate.put("source", "Test Source");
+	    instanceToCreate.put("title", "Test Instance");
+	    instanceToCreate.put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
+
+	    instancesClient.create(instanceToCreate);
+
+	    holdingsSourceClient.create(
+	    	      new JsonObject()
+	    	      .put("id", sourceId.toString())
+	    	      .put("name", "test source")
+	    	    ).getJson();
+
+	    IndividualResource holdingsResponse = holdingsClient.create(new HoldingRequestBuilder()
+	      .withId(UUID.randomUUID())
+	      .forInstance(instanceId)
+	      .withPermanentLocation(mainLibraryLocationId)
+	      .withSource(sourceId));
+
+	    assertThat(holdingsResponse.getJson().getString("sourceId"), is(sourceId.toString()));
   }
 }
