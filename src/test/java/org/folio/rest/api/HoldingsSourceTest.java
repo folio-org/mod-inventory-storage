@@ -208,7 +208,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   public void cannotReplaceANonexistentHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 	  Response sourceResponse = holdingsSourceClient.attemptToReplace(UUID.randomUUID().toString(), new JsonObject()
 		      .put("name", "updated source name"));
-	  assertThat(sourceResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+	  assertThat(sourceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   @Test
