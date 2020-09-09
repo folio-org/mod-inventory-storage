@@ -70,7 +70,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
     JsonObject source = holdingsSourceClient.create(
       new JsonObject()
           .put("id", sourceId.toString())
-          .put("name", "original source")
+          .put("name", "source with id")
     ).getJson();
 
     Response response = holdingsSourceClient.attemptToCreate(
@@ -91,15 +91,15 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
     JsonObject source = holdingsSourceClient.create(
       new JsonObject()
       .put("id", sourceId.toString())
-      .put("name", "original source")
+      .put("name", "original source name")
     ).getJson();
 
     assertThat(source.getString("id"), is(sourceId.toString()));
-    assertThat(source.getString("name"), is("original source"));
+    assertThat(source.getString("name"), is("original source name"));
 
     Response response = holdingsSourceClient.attemptToCreate(
     	      new JsonObject()
-    	      .put("name", "original source")
+    	      .put("name", "original source name")
     	    );
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
@@ -190,23 +190,23 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   public void canQueryForMultipleHoldingsSources() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 	holdingsSourceClient.create(
 			new JsonObject()
-				.put("name", "source 1")
+				.put("name", "multisource 1")
 		    );
 
 	holdingsSourceClient.create(
 			new JsonObject()
-				.put("name", "source 2")
+				.put("name", "multisource 2")
 	    );
 
     final List<IndividualResource> sources = holdingsSourceClient
-    	      .getMany("name==\"source*\"");
+    	      .getMany("name==\"multisource*\"");
 
     assertThat(sources.size(), is(2));
   }
 
   @Test
   public void cannotReplaceANonexistentHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-	  Response sourceResponse = holdingsSourceClient.attemptToReplace("nonexistentid", new JsonObject()
+	  Response sourceResponse = holdingsSourceClient.attemptToReplace(UUID.randomUUID().toString(), new JsonObject()
 		      .put("name", "updated source name"));
 	  assertThat(sourceResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
@@ -242,7 +242,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
 	    holdingsSourceClient.create(
 	    	      new JsonObject()
 	    	      .put("id", sourceId.toString())
-	    	      .put("name", "test source")
+	    	      .put("name", "associatable source")
 	    	    ).getJson();
 
 	    IndividualResource holdingsResponse = holdingsClient.create(new HoldingRequestBuilder()
