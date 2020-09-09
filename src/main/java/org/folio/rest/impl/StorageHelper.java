@@ -7,6 +7,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 import java.util.List;
 import java.util.Map;
@@ -73,16 +75,23 @@ public final class StorageHelper {
   }
 
   protected static <T> void postSync(String table, List<T> entities, Map<String, String> okapiHeaders,
+      boolean upsert,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, Supplier<Response> respond201) {
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-    postgresClient.saveBatch(table, entities, result -> {
+
+    Handler<AsyncResult<RowSet<Row>>> replyHandler = result -> {
       if (result.failed()) {
         logger.error("postSync: " + result.cause().getMessage(), result.cause());
         ValidationHelper.handleError(result.cause(), asyncResultHandler);
         return;
       }
       asyncResultHandler.handle(Future.succeededFuture(respond201.get()));
-    });
+    };
+    if (upsert) {
+      postgresClient.upsertBatch(table, entities, replyHandler);
+    } else {
+      postgresClient.saveBatch(table, entities, replyHandler);
+    }
   }
 
   public static <T> Future<T> completeFuture(T id) {

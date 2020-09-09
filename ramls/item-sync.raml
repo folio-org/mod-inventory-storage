@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Inventory Storage Item Batch Sync API
-version: v0.3
+version: v0.5
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -14,14 +14,20 @@ types:
 /item-storage/batch/synchronous:
   displayName: Item Batch Upload Sync API
   post:
-    description: "Create a collection of items in a single synchronous request"
+    description: "Create or update a collection of items in a single synchronous request"
+    queryParameters:
+      upsert:
+        description: When a record with the same id already exists upsert=true will update it, upsert=false will fail the complete batch.
+        type: boolean
+        required: false
+        default: false
     body:
       application/json:
         type: items_post
         example: !include examples/items_post.json
     responses:
       201:
-        description: "All items have been successfully created"
+        description: "All items have been successfully created or updated"
       413:
         description: "Payload Too Large"
         body:

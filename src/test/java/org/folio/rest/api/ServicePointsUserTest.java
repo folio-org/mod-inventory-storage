@@ -39,7 +39,7 @@ import io.vertx.core.logging.LoggerFactory;
  *
  * @author kurt
  */
-public class ServicePointsUserTest {
+public class ServicePointsUserTest extends TestBase {
   private static Logger logger = LoggerFactory.getLogger(ServicePointsUserTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 

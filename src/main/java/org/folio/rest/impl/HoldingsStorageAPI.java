@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -24,6 +26,7 @@ import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
@@ -36,8 +39,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.ext.sql.UpdateResult;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -193,7 +194,6 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
-
     try {
       PostgresClient postgresClient = PostgresClient.getInstance(
         vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
@@ -304,10 +304,10 @@ public class HoldingsStorageAPI implements HoldingsStorage {
 
                 if (holdingsList.size() == 1) {
                   final HoldingsRecord existingHoldings = holdingsList.get(0);
-                  if (Objects.equals(entity.getHrid(), existingHoldings.getHrid())) { 
+                  if (Objects.equals(entity.getHrid(), existingHoldings.getHrid())) {
                     try {
                       postgresClient.startTx(connection -> {
-                        updateItemEffectiveCallNumbersByHoldings(connection, postgresClient, entity).setHandler(updateResult -> {
+                        updateItemEffectiveCallNumbersByHoldings(connection, postgresClient, entity).onComplete(updateResult -> {
                           if (updateResult.succeeded()) {
                             postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity,
                               "jsonb", String.format(WHERE_CLAUSE, holdingsRecordId), false,
@@ -456,32 +456,32 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     }
   }
 
-  private Future<UpdateResult> updateItemEffectiveCallNumbersByHoldings(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, HoldingsRecord holdingsRecord) {
-    Future<UpdateResult> future = Future.future();
+  private Future<RowSet<Row>> updateItemEffectiveCallNumbersByHoldings(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, HoldingsRecord holdingsRecord) {
+    Promise<RowSet<Row>> promise = Promise.promise();
     Criterion criterion = new Criterion(
       new Criteria().addField("holdingsRecordId")
         .setJSONB(false).setOperation("=").setVal(holdingsRecord.getId()));
     postgresClient.get(ITEM_TABLE, Item.class, criterion, false, false, response -> {
-      updateEffectiveCallNumbers(connection, postgresClient, response.result().getResults(), holdingsRecord).future().setHandler(future);
+      updateEffectiveCallNumbers(connection, postgresClient, response.result().getResults(), holdingsRecord).future().onComplete(promise);
     });
-    return future;
+    return promise.future();
   }
 
-  private Promise<UpdateResult> updateEffectiveCallNumbers(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, List<Item> items, HoldingsRecord holdingsRecord) {
-    Promise<UpdateResult> allItemsUpdated = Promise.promise();
-    List<Function<SQLConnection, Future<UpdateResult>>> batchFactories = items
+  private Promise<RowSet<Row>> updateEffectiveCallNumbers(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, List<Item> items, HoldingsRecord holdingsRecord) {
+    Promise<RowSet<Row>> allItemsUpdated = Promise.promise();
+    List<Function<SQLConnection, Future<RowSet<Row>>>> batchFactories = items
       .stream()
       .map(item -> updateItemEffectiveCallNumber(item, holdingsRecord))
       .map(item -> updateSingleBatchFactory(ITEM_TABLE, item.getId(), item, postgresClient))
       .collect(Collectors.toList());
 
     SQLConnection connectionResult = connection.result();
-    Future<UpdateResult> lastUpdate = Future.succeededFuture();
-    for (Function<SQLConnection, Future<UpdateResult>> factory : batchFactories) {
+    Future<RowSet<Row>> lastUpdate = Future.succeededFuture();
+    for (Function<SQLConnection, Future<RowSet<Row>>> factory : batchFactories) {
       lastUpdate = lastUpdate.compose(prev -> factory.apply(connectionResult));
     }
 
-    lastUpdate.setHandler(allItemsUpdated);
+    lastUpdate.onComplete(allItemsUpdated);
     return allItemsUpdated;
   }
 
@@ -490,12 +490,12 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     return item;
   }
 
-  private <T> Function<SQLConnection, Future<UpdateResult>> updateSingleBatchFactory(String tableName, String id, T entity, PostgresClient postgresClient) {
+  private <T> Function<SQLConnection, Future<RowSet<Row>>> updateSingleBatchFactory(String tableName, String id, T entity, PostgresClient postgresClient) {
     return connection -> {
-      Future<UpdateResult> updateResultFuture = Future.future();
+      Promise<RowSet<Row>> updateResultFuture = Promise.promise();
       Future<SQLConnection> connectionResult = Future.succeededFuture(connection);
       postgresClient.update(connectionResult, tableName, entity, "jsonb", String.format(WHERE_CLAUSE, id), false, updateResultFuture);
-      return updateResultFuture;
+      return updateResultFuture.future();
     };
   }
 }

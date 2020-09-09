@@ -65,11 +65,10 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
       if (result.failed()) {
         nextValue.completeExceptionally(result.cause());
       } else {
-        List<JsonArray> results = result.result().getResults();
-        if (results.isEmpty()) {
+        if (result.result().size() == 0) {
           nextValue.completeExceptionally(new RuntimeException("Empty result set"));
         } else {
-          nextValue.complete(results.get(0).getLong(0));
+          nextValue.complete(result.result().iterator().next().getLong(0));
         }
       }
     });

@@ -6,12 +6,18 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowIterator;
+import io.vertx.sqlclient.RowSet;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -29,9 +35,9 @@ import io.vertx.core.Vertx;
 public abstract class TestBase {
   private static boolean invokeStorageTestSuiteAfter = false;
   static HttpClient client;
-  static ResourceClient instancesClient;
-  static ResourceClient holdingsClient;
-  static ResourceClient itemsClient;
+  protected static ResourceClient instancesClient;
+  protected static ResourceClient holdingsClient;
+  protected static ResourceClient itemsClient;
   static ResourceClient locationsClient;
   static ResourceClient callNumberTypesClient;
   static ResourceClient modesOfIssuanceClient;
@@ -41,6 +47,8 @@ public abstract class TestBase {
   static ResourceClient instancesStorageSyncClient;
   static ResourceClient itemsStorageSyncClient;
   static ResourceClient instancesStorageBatchInstancesClient;
+  static ResourceClient instanceTypesClient;
+
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -65,14 +73,15 @@ public abstract class TestBase {
     itemsStorageSyncClient = ResourceClient.forItemsStorageSync(client);
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(client);
+    instanceTypesClient = ResourceClient
+      .forInstanceTypes(client);
   }
 
   @AfterClass
   public static void testBaseAfterClass()
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     if (invokeStorageTestSuiteAfter) {
       StorageTestSuite.after();
@@ -95,4 +104,5 @@ public abstract class TestBase {
       throw new RuntimeException(e);
     }
   }
+
 }

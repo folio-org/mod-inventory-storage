@@ -15,6 +15,9 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import io.vertx.core.*;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
 import org.folio.rest.jaxrs.model.ItemDamageStatuses;
@@ -25,13 +28,8 @@ import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.UpdateResult;
 
 public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
   private static final Logger LOGGER = LoggerFactory.getLogger(ItemDamagedStatusAPI.class);
@@ -59,7 +57,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
             return GetItemDamagedStatusesResponse.respond400WithTextPlain(ex.getMessage());
           })
           .map(Response.class::cast)
-          .setHandler(asyncResultHandler);
+          .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
         String message = messages.getMessage(lang, InternalServerError);
@@ -114,7 +112,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
               .orElseGet(() -> respond500WithTextPlain(messages.getMessage(lang, InternalServerError)))
           )
           .map(Response.class::cast)
-          .setHandler(asyncResultHandler);
+          .onComplete(asyncResultHandler);
       } catch (Exception e) {
         LOGGER.error(e.getMessage(), e);
         String message = messages.getMessage(lang, InternalServerError);
@@ -152,7 +150,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
               .orElseGet(() -> GetItemDamagedStatusesByIdResponse.respond404WithTextPlain("Not found"))
           )
           .map(Response.class::cast)
-          .setHandler(asyncResultHandler);
+          .onComplete(asyncResultHandler);
       } catch (Exception e) {
         LOGGER.error(e.getMessage(), e);
         String message = messages.getMessage(lang, InternalServerError);
@@ -188,7 +186,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
           .map(updatedCount -> handleDeleteItemDamagedStatusResult(lang, updatedCount))
           .otherwise(ex -> handleDeleteDamagedStatusException(lang, ex))
           .map(Response.class::cast)
-          .setHandler(asyncResultHandler);
+          .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
         String message = messages.getMessage(lang, InternalServerError);
@@ -227,10 +225,10 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Map<String, String> okapiHeaders,
     Context vertxContext) {
 
-    Future<UpdateResult> future = Future.future();
+    Promise<RowSet<Row>> promise = Promise.promise();
     pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .delete(REFERENCE_TABLE, id, future.completer());
-    return future.map(UpdateResult::getUpdated);
+      .delete(REFERENCE_TABLE, id, promise.future());
+    return promise.future().map(RowSet<Row>::rowCount);
   }
 
   @Override
@@ -248,7 +246,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
           .map(updatedCount -> handleUpdateItemDamagedStatusResult(lang, updatedCount))
           .otherwise(ex -> handleUpdateItemDamagedStatusesException(lang, ex))
           .map(Response.class::cast)
-          .setHandler(asyncResultHandler);
+          .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
         String message = messages.getMessage(lang, InternalServerError);
@@ -289,13 +287,13 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Map<String, String> okapiHeaders,
     Context vertxContext) {
 
-    Future<UpdateResult> future = Future.future();
+    Promise<RowSet<Row>> promise = Promise.promise();
     if (isNull(entity.getId())) {
       entity.setId(id);
     }
     pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .update(REFERENCE_TABLE, entity, id, future.completer());
+      .update(REFERENCE_TABLE, entity, id, promise.future());
 
-    return future.map(UpdateResult::getUpdated);
+    return promise.future().map(RowSet<Row>::rowCount);
   }
 }

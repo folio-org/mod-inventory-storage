@@ -1,10 +1,6 @@
 START TRANSACTION;
 
-UPDATE pg_trigger
-  SET tgenabled = 'D'
-WHERE tgrelid = '${myuniversity}_${mymodule}.item'::regclass::oid
-  AND tgisinternal IS FALSE
-  AND tgenabled = 'O';
+ALTER TABLE ${myuniversity}_${mymodule}.item DISABLE TRIGGER USER;
 
 UPDATE ${myuniversity}_${mymodule}.item AS it
   SET jsonb = JSONB_SET(
@@ -20,10 +16,6 @@ UPDATE ${myuniversity}_${mymodule}.item AS it
 FROM ${myuniversity}_${mymodule}.holdings_record AS hr
 WHERE hr.id = it.holdingsrecordid;
 
-UPDATE pg_trigger
-  SET tgenabled = 'O'
-WHERE tgrelid = '${myuniversity}_${mymodule}.item'::regclass::oid
-  AND tgisinternal IS FALSE
-  AND tgenabled = 'D';
+ALTER TABLE ${myuniversity}_${mymodule}.item ENABLE TRIGGER USER;
 
 END TRANSACTION;

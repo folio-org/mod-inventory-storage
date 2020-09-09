@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "8.3",
+      "version": "8.5",
       "handlers": [
         {
           "methods": ["GET"],
@@ -35,7 +35,7 @@
     },
     {
       "id": "item-storage-batch-sync",
-      "version": "0.3",
+      "version": "0.5",
       "handlers": [
         {
           "methods": ["POST"],
@@ -46,7 +46,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "4.2",
+      "version": "4.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -77,7 +77,7 @@
     },
     {
       "id": "holdings-storage-batch-sync",
-      "version": "0.1",
+      "version": "0.3",
       "handlers": [
         {
           "methods": ["POST"],
@@ -193,7 +193,7 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "0.2",
+      "version": "0.3",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1050,7 +1050,43 @@
       "handlers" : [
         {
           "methods" : [ "GET" ],
-          "pathPattern" : "/_/jsonSchemas"
+          "pathPattern" : "/_/jsonSchemas",
+          "permissionsRequired": []
+        }
+      ]
+    },
+    {
+      "id": "oaipmhview",
+      "version": "1.1",
+      "handlers" : [
+        {
+          "methods" : [ "GET" ],
+          "pathPattern" : "/oai-pmh-view/instances",
+          "permissionsRequired": ["inventory-storage.oai-pmh-view.instances.collection.get"]
+        },
+        {
+          "methods" : [ "GET" ],
+          "pathPattern" : "/oai-pmh-view/updatedInstanceIds",
+          "permissionsRequired": ["inventory-storage.oai-pmh-view.updatedinstanceids.collection.get"]
+        }, {
+          "methods" : [ "POST" ],
+          "pathPattern" : "/oai-pmh-view/enrichedInstances",
+          "permissionsRequired": ["inventory-storage.oai-pmh-view.enrichedinstances.collection.post"]
+        }
+      ]
+    },
+    {
+      "id": "inventory-hierarchy",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-hierarchy/updated-instance-ids",
+          "permissionsRequired": ["inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get"]
+        }, {
+          "methods" : [ "POST" ],
+          "pathPattern" : "/inventory-hierarchy/items-and-holdings",
+          "permissionsRequired": ["inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"]
         }
       ]
     }
@@ -1979,6 +2015,31 @@
       "description": "modify the HRID settings in storage"
     },
     {
+      "permissionName": "inventory-storage.oai-pmh-view.instances.collection.get",
+      "displayName": "inventory storage - get instances for oai pmh",
+      "description": "get instances for oai pmh"
+    },
+    {
+      "permissionName": "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
+      "displayName": "inventory storage - get updated instances ids for oai pmh",
+      "description": "get updated instances ids for oai pmh"
+    },
+    {
+      "permissionName": "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
+      "displayName": "inventory storage - get enriched instances for oai pmh",
+      "description": "get enriched instances for oai pmh"
+    },
+    {
+      "permissionName": "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
+      "displayName": "inventory storage - get updated instances ids for inventory storage",
+      "description": "get updated instances ids for inventory storage"
+    },
+    {
+      "permissionName": "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
+      "displayName": "inventory storage - get instances holdings and items for inventory storage",
+      "description": "get instances holdings and items for inventory storage"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2165,7 +2226,12 @@
         "inventory-storage.preceding-succeeding-titles.item.get",
         "inventory-storage.preceding-succeeding-titles.item.post",
         "inventory-storage.preceding-succeeding-titles.item.put",
-        "inventory-storage.preceding-succeeding-titles.item.delete"
+        "inventory-storage.preceding-succeeding-titles.item.delete",
+        "inventory-storage.oai-pmh-view.instances.collection.get",
+        "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
+        "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
+        "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
+        "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"
       ]
     }
   ],

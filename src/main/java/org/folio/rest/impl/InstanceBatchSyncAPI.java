@@ -26,7 +26,7 @@ import java.util.Map;
 public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
   @Validate
   @Override
-  public void postInstanceStorageBatchSynchronous(InstancesPost entity, Map<String, String> okapiHeaders,
+  public void postInstanceStorageBatchSynchronous(boolean upsert, InstancesPost entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     final List<Instance> instances = entity.getInstances();
     final PostgresClient postgresClient = PostgresClient.getInstance(
@@ -43,7 +43,7 @@ public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
     CompositeFuture.all(futures).setHandler(ar -> {
       if (ar.succeeded()) {
         StorageHelper.postSync(InstanceStorageAPI.INSTANCE_TABLE, entity.getInstances(),
-            okapiHeaders, asyncResultHandler, vertxContext,
+            okapiHeaders, upsert, asyncResultHandler, vertxContext,
             InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse::respond201);
       } else {
         asyncResultHandler.handle(

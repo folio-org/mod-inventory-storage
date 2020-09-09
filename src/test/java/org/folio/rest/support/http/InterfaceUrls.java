@@ -174,4 +174,26 @@ public class InterfaceUrls {
   public static URL hridSettingsStorageUrl(String subPath) {
     return StorageTestSuite.storageUrl("/hrid-settings-storage/hrid-settings" + subPath);
   }
+
+  /** TODO: These entries will be removed soon */
+  public static URL oaiPmhView(String subPath) {
+    return StorageTestSuite.storageUrl("/oai-pmh-view/instances" + subPath);
+  }
+
+  public static URL oaiPmhViewUpdatedInstanceIds(String subPath) {
+    return StorageTestSuite.storageUrl("/oai-pmh-view/updatedInstanceIds" + subPath);
+  }
+
+  public static URL oaiPmhViewEnrichedInstances() {
+    return StorageTestSuite.storageUrl("/oai-pmh-view/enrichedInstances");
+  }
+  /** EoF - these entries will be removed soon */
+
+  public static URL inventoryHierarchyUpdatedInstanceIds(String subPath) {
+    return StorageTestSuite.storageUrl("/inventory-hierarchy/updated-instance-ids" + subPath);
+  }
+
+  public static URL inventoryHierarchyItemsAndHoldings() {
+    return StorageTestSuite.storageUrl("/inventory-hierarchy/items-and-holdings");
+  }
 }

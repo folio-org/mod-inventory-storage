@@ -4,11 +4,13 @@ import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.ResponseHandler.json;
@@ -23,6 +25,7 @@ import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMax
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
@@ -41,14 +44,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -66,7 +66,6 @@ import org.folio.rest.jaxrs.model.LastCheckIn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -188,7 +187,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       is(inTransitServicePointId));
     assertThat(itemFromGet.getString("hrid"), is("it00000000001"));
 
-    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(itemFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -236,7 +235,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
 
-    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(itemFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -307,7 +306,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("temporaryLocationId"),
       is(annexLibraryLocationId.toString()));
 
-    List<String> tags = itemFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(itemFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
@@ -499,12 +498,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
-    List<JsonObject> errors = JsonArrayHelper.toList(
+    List<JsonObject> errors = toList(
       postResponse.getJson().getJsonArray("errors"));
 
     assertThat(errors.size(), is(1));
-    assertThat(errors, hasItem(
-      validationErrorMatches("may not be null", "materialTypeId")));
+    assertThat(errors, anyOf(
+        hasItem(validationErrorMatches("may not be null", "materialTypeId")),
+        hasItem(validationErrorMatches("must not be null", "materialTypeId"))));
   }
 
   @Test
@@ -762,7 +762,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
-    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(item);
 
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
@@ -865,9 +865,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private Response postSynchronousBatch(JsonArray itemsArray) {
+    return postSynchronousBatch("", itemsArray);
+  }
+
+  private Response postSynchronousBatch(String subPath, JsonArray itemsArray) {
     JsonObject itemsCollection = new JsonObject().put("items", itemsArray);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(itemsStorageSyncUrl(""), itemsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
+    client.post(itemsStorageSyncUrl(subPath), itemsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
     try {
       return createCompleted.get(5, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -890,12 +894,36 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     String duplicateId = itemsArray.getJsonObject(0).getString("id");
     itemsArray.getJsonObject(1).put("id", duplicateId);
     assertThat(postSynchronousBatch(itemsArray), allOf(
-        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate key"),
         errorParametersValueIs(duplicateId)));
     for (int i=0; i<itemsArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemsArray.getJsonObject(i).getString("id")));
     }
+  }
+
+  public Response postSynchronousBatchWithExistingId(String subPath) {
+    JsonArray itemsArray1 = threeItems();
+    JsonArray itemsArray2 = threeItems();
+    String existingId = itemsArray1.getJsonObject(1).getString("id");
+    itemsArray2.getJsonObject(1).put("id", existingId);
+    assertThat(postSynchronousBatch(subPath, itemsArray1), statusCodeIs(HttpStatus.HTTP_CREATED));
+    return postSynchronousBatch(subPath, itemsArray2);
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() {
+    assertThat(postSynchronousBatchWithExistingId(""), statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithExistingIdUpsertFalse() {
+    assertThat(postSynchronousBatchWithExistingId("?upsert=false"), statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithExistingIdUpsertTrue() {
+    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HTTP_CREATED));
   }
 
   @Test
@@ -963,7 +991,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray.getJsonObject(1).put("hrid", duplicateHRID);
 
     assertThat(postSynchronousBatch(itemsArray), allOf(
-        statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+        statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
         errorMessageContains("duplicate key"),
         errorParametersValueIs(duplicateHRID)));
 
@@ -1029,7 +1057,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
-    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(item);
 
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
@@ -1082,7 +1110,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject item = getResponse.getJson();
 
-    List<String> tags = item.getJsonObject("tags").getJsonArray("tagList").getList();
+    List<String> tags = getTags(item);
 
     assertThat(item.getString("id"), is(id.toString()));
 
@@ -1487,12 +1515,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchForItemsByTags()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+  public void canSearchForItemsByTags() throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -1520,19 +1544,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertTrue(searchResponse.getBody().contains(TAG_VALUE));
 
-    LinkedHashMap item = (LinkedHashMap) foundItems.getList().get(0);
-    LinkedHashMap<String, ArrayList<String>> itemTags = (LinkedHashMap<String, ArrayList<String>>) item.get("tags");
+    List<String> itemTags = getTags(foundItems.getJsonObject(0));
 
-    assertThat(itemTags.get("tagList"), hasItem(TAG_VALUE));
+    assertThat(itemTags, hasItem(TAG_VALUE));
   }
 
   @Test
-  public void canSearchForItemsByStatus()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    UnsupportedEncodingException {
+  public void canSearchForItemsByStatus() throws MalformedURLException,
+    InterruptedException, ExecutionException, TimeoutException {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
@@ -1625,10 +1644,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(searchBody.getInteger("totalRecords"), is(1));
     assertThat(foundItems.getJsonObject(0).getString("barcode"), is("673274826203"));
 
-    LinkedHashMap item = (LinkedHashMap) foundItems.getList().get(0);
-    LinkedHashMap<String, ArrayList<String>> itemTags = (LinkedHashMap<String, ArrayList<String>>) item.get("tags");
+    List<String> itemTags = getTags(foundItems.getJsonObject(0));
 
-    assertThat(itemTags.get("tagList"), hasItem(TAG_VALUE));
+    assertThat(itemTags, hasItem(TAG_VALUE));
   }
 
   @Test
@@ -1763,8 +1781,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void tenantIsRequiredForGettingAnItem()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     URL getInstanceUrl = itemsStorageUrl(String.format("/%s",
       UUID.randomUUID().toString()));
@@ -1781,8 +1798,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void tenantIsRequiredForGettingAllItems()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -1870,7 +1886,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updateResponse.getErrors().size(), is(1));
 
     JsonObject error = updateResponse.getErrors().get(0);
-    assertThat(error.getString("message"), is("may not be null"));
+    assertThat(error.getString("message"), anyOf(is("may not be null"), is("must not be null")));
     assertThat(error.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("status"));
   }
@@ -1902,7 +1918,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updateResponse.getErrors().size(), is(1));
 
     JsonObject error = updateResponse.getErrors().get(0);
-    assertThat(error.getString("message"), is("may not be null"));
+    assertThat(error.getString("message"), anyOf(is("may not be null"), is("must not be null")));
     assertThat(error.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("status.name"));
   }
@@ -1913,9 +1929,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemArray.getJsonObject(1).remove("status");
 
     final Response response = postSynchronousBatch(itemArray);
-    assertThat(response,
-      hasValidationError("may not be null", "items[1].status", "null")
-    );
+    assertThat(response, anyOf(
+        hasValidationError("may not be null", "items[1].status", "null"),
+        hasValidationError("must not be null", "items[1].status", "null")
+    ));
 
     for (int i = 0; i < itemArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemArray.getJsonObject(i).getString("id")));
@@ -1936,7 +1953,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     "Declared lost",
     "Order closed",
     "Claimed returned",
-    "Withdrawn"
+    "Withdrawn",
+    "Lost and paid",
+    "Aged to lost"
   })
   public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
@@ -2094,6 +2113,105 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       containsInAnyOrder(notSuppressedItem.getId(), notSuppressedItemDefault.getId()));
   }
 
+  @Test
+  public void shouldFindItemByCallNumberWhenThereIsSuffix() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final IndividualResource firstItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 2014")
+        .available());
+
+    final IndividualResource secondItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 2014")
+        .withItemLevelCallNumberSuffix("Curriculum Materials Collection")
+        .available());
+
+    itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 ")
+        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
+        .available());
+
+    final List<UUID> foundItems = searchByCallNumberEyeReadable("GE77 .F73 2014");
+
+    assertThat(foundItems.size(), is(2));
+    assertThat(foundItems, hasItems(firstItemToMatch.getId(), secondItemToMatch.getId()));
+  }
+
+  @Test
+  public void explicitRightTruncationCanBeApplied() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final IndividualResource firstItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 2014")
+        .available());
+
+    final IndividualResource secondItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 2014")
+        .withItemLevelCallNumberSuffix("Curriculum Materials Collection")
+        .available());
+
+    final IndividualResource thirdItemToMatch = itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F73 ")
+        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
+        .available());
+
+    itemsClient.create(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withItemLevelCallNumber("GE77 .F74 ")
+        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
+        .available());
+
+    final List<UUID> foundItems = searchByCallNumberEyeReadable("GE77 .F73*");
+
+    assertThat(foundItems.size(), is(3));
+    assertThat(foundItems, hasItems(firstItemToMatch.getId(), secondItemToMatch.getId(),
+      thirdItemToMatch.getId()));
+  }
+
+  @Test
+  public void canSearchByPurchaseOrderLineIdentifierProperty() throws Exception {
+    final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final IndividualResource firstItem = itemsClient.create(
+      smallAngryPlanet(holdingsId).put("purchaseOrderLineIdentifier", "poli-1"));
+
+    itemsClient.create(smallAngryPlanet(holdingsId)
+      .put("purchaseOrderLineIdentifier", "poli-2"));
+
+    final List<IndividualResource> poli1Items = itemsClient
+      .getMany("purchaseOrderLineIdentifier==\"poli-1\"");
+
+    assertThat(poli1Items.size(), is(1));
+    assertThat(poli1Items.get(0).getId(), is(firstItem.getId()));
+  }
+
   private Response getById(UUID id) throws InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -2215,21 +2333,37 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         PostgresClient.getInstance(vertx, TENANT_ID);
     final CompletableFuture<Void> sequenceSet = new CompletableFuture<>();
 
-    vertx.runOnContext(v -> {
+    vertx.runOnContext(v ->
       postgresClient.selectSingle("select setval('hrid_items_seq',"
-          + sequenceNumber + ",FALSE)", r -> {
-            if (r.succeeded()) {
-              sequenceSet.complete(null);
-            } else {
-              sequenceSet.completeExceptionally(r.cause());
-            }
-          });
-    });
+        + sequenceNumber + ",FALSE)", r -> {
+        if (r.succeeded()) {
+          sequenceSet.complete(null);
+        } else {
+          sequenceSet.completeExceptionally(r.cause());
+        }
+      }));
 
     try {
       sequenceSet.get(2, SECONDS);
     } catch (Exception e) {
       fail(e.getMessage());
     }
+  }
+
+  private List<String> getTags(JsonObject item) {
+    return item.getJsonObject("tags").getJsonArray("tagList").stream()
+      .map(Object::toString)
+      .collect(Collectors.toList());
+  }
+
+  private List<UUID> searchByCallNumberEyeReadable(String searchTerm)
+    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
+
+    return itemsClient
+      .getMany("fullCallNumber==\"%1$s\" OR callNumberAndSuffix==\"%1$s\" OR " +
+          "effectiveCallNumberComponents.callNumber==\"%1$s\"", searchTerm)
+      .stream()
+      .map(IndividualResource::getId)
+      .collect(Collectors.toList());
   }
 }

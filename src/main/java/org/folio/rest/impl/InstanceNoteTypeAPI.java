@@ -105,7 +105,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
+        asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -134,7 +134,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
                     .respond400WithTextPlain((msg))));
                 return;
               }
-              int updated = reply.result().getUpdated();
+              int updated = reply.result().rowCount();
               if (updated != 1) {
                 String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
@@ -147,7 +147,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));        
+        asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse.respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -163,7 +163,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
         PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
             reply -> {
               if (reply.succeeded()) {
-                if (reply.result().getUpdated() == 0) {
+                if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
                       .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                 } else{

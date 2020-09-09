@@ -17,11 +17,12 @@ public class PostgresErrorMessageMatchers {
 
   public static Matcher<String> isMaximumSequenceValueError(final String sequenceName) {
     // 2200H = sequence_generator_limit_exceeded
-    return allOf(containsString("(SQLSTATE, 2200H)"), containsString("\"" + sequenceName + "\""));
+    // vertx-pg-client does not return code in message (ONLY message)
+    return allOf(containsString("\"" + sequenceName + "\""));
   }
 
   public static Matcher<String> isUniqueViolation(final String uniqueIndexName) {
     // 23505 = unique_violation
-    return allOf(containsString("(SQLSTATE, 23505)"), containsString("(n, " + uniqueIndexName + ")"));
+    return allOf(containsString("\"" + uniqueIndexName + "\""));
   }
 }
