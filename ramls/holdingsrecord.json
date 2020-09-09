@@ -123,6 +123,18 @@
             "description": "ID of the type of note",
             "$ref" : "uuid.json"
           },
+          "holdingsNoteType": {
+            "type": "object",
+            "description": "expanded note-type object corresponding to holdingsNoteTypeId",
+            "javaType": "org.folio.rest.jaxrs.model.HoldingsNoteTypeVirtual",
+            "folio:$ref": "holdingsnotetype.json",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "holdings-note-types",
+            "folio:linkFromField": "holdingsNoteTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "holdingsNoteTypes.0"
+          },
           "note": {
             "type": "string",
             "description": "Text content of the note"
