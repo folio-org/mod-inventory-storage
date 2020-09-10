@@ -11,6 +11,10 @@
     "name": {
       "type": "string",
       "description": "Name of the holdings records source"
+    },
+    "source": {
+      "type": "string",
+      "description": "The holdings records source"
     }
   },
   "required": [

@@ -67,7 +67,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
 
     UUID sourceId = UUID.randomUUID();
 
-    JsonObject source = holdingsSourceClient.create(
+    holdingsSourceClient.create(
       new JsonObject()
           .put("id", sourceId.toString())
           .put("name", "source with id")
@@ -159,10 +159,6 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
       is("id"));
   }
 
-  /*
-   *
-    SourceId is saved for a holdings record.
-*/
   @Test
   public void canReplaceAHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     IndividualResource sourceResponse = holdingsSourceClient.create(
