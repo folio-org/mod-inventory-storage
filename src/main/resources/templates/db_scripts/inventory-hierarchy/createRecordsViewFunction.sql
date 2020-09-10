@@ -203,14 +203,14 @@ WITH
                                             jsonb_build_object('id', hr.id,
                                                                'hrId', hr.jsonb ->> 'hrId',
                                                                'suppressFromDiscovery',
-                                                               CASE WHEN item.id IS NOT NULL THEN
+                                                               CASE WHEN hr.id IS NOT NULL THEN
                                                                   COALESCE((i.jsonb ->> 'discoverySuppress')::bool, false) OR
                                                                   COALESCE((hr.jsonb ->> 'discoverySuppress')::bool, false)
                                                                ELSE NULL END::bool,
                                                                'holdingsType', ht.jsonb ->> 'name',
                                                                'formerIds', hr.jsonb -> 'formerIds',
                                                                'location',
-                                                               CASE WHEN item.id IS NOT NULL THEN
+                                                               CASE WHEN hr.id IS NOT NULL THEN
                                                                    json_build_object('permanentLocation',
                                                                                      jsonb_build_object('name', COALESCE(holdPermLoc.locJsonb ->> 'discoveryDisplayName', holdPermLoc.locJsonb ->> 'name'),
                                                                                                         'campusName', holdPermLoc.locCampJsonb ->> 'name',
