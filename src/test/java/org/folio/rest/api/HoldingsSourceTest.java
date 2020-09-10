@@ -78,7 +78,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
             .put("id", sourceId.toString())
             .put("name", "new source with duplicate id")
     	);
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getStatusCode(), is(422));
   }
 
   @Test
@@ -101,7 +101,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
     	      new JsonObject()
     	      .put("name", "original source name")
     	    );
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getStatusCode(), is(422));
   }
 
   @Test
