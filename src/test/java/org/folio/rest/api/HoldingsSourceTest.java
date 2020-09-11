@@ -245,6 +245,39 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canNotRemoveHoldingsSourcesAttachedToHoldings() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+    UUID sourceId = UUID.randomUUID();
+
+    JsonObject instanceToCreate = new JsonObject();
+
+    instanceToCreate.put("id", instanceId.toString());
+    instanceToCreate.put("source", "Test Source");
+    instanceToCreate.put("title", "Test Instance");
+    instanceToCreate.put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
+
+    instancesClient.create(instanceToCreate);
+
+    holdingsSourceClient.create(
+              new JsonObject()
+              .put("id", sourceId.toString())
+              .put("name", "associated source")
+            ).getJson();
+
+    holdingsClient.create(new HoldingRequestBuilder()
+      .withId(UUID.randomUUID())
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withSource(sourceId));
+
+
+      Response sourceDeleteResponse = holdingsSourceClient.attemptToDelete(sourceId);
+
+      //the associated source should not have been deleted:
+      assertThat(sourceDeleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
+  @Test
   public void canAssociateSourceWithHolding() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 	    UUID instanceId = UUID.randomUUID();
 	    UUID sourceId = UUID.randomUUID();
