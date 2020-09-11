@@ -80,11 +80,11 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
             reply -> {
               if (reply.succeeded()) {
                 String source = reply.result().getSource();
-                if (source != null && !source.contentEquals("folio") && !source.contentEquals("marc")) {
+                if (source == null || (!source.contentEquals("folio") && !source.contentEquals("marc"))) {
                   try {
                     String[] fieldList = {"*"};
                     CQLWrapper cqlWrapper = getCQL(HOLDINGS_RECORD_TABLE, String.format("sourceId==%s", id), 1, 0);
-                    pgClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cqlWrapper.getQuery(), true, false,
+                    pgClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cqlWrapper, true, false,
                         holdingsRecordReply -> {
                           try {
                             if (holdingsRecordReply.succeeded()) {
@@ -111,7 +111,10 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
                         });
 
                   } catch (Exception e) {
-
+                    log.error(e.getMessage());
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
+                      respond500WithTextPlain(e.getMessage())));
                   }
                 } else {
                   log.error("Holdings Records Sources with source of folio or marc can not be deleted");
