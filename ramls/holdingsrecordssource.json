@@ -5,7 +5,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "The system assigned unique ID of the holdings records source; UUID",
+      "description": "The unique ID of the holdings records source; UUID",
       "$ref": "uuid.json"
     },
     "name": {
