@@ -257,6 +257,12 @@ public class ResourceClient {
       response.getStatusCode(), is(204));
   }
 
+  public Response attemptToDelete(UUID id) throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    return deleteIfPresent(id != null ? id.toString() : null);
+  }
+
   public void deleteAll()
     throws MalformedURLException,
     InterruptedException,

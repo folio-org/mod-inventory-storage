@@ -11,11 +11,13 @@ import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSource;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSources;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
+import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 import io.vertx.core.AsyncResult;
@@ -65,7 +67,31 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
   public void deleteHoldingsRecordsSourcesById(String id, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      PgUtil.deleteById(REFERENCE_TABLE, id, okapiHeaders, vertxContext, DeleteHoldingsRecordsSourcesByIdResponse.class, asyncResultHandler);
+      try {
+        String tenantId = TenantTool.tenantId(okapiHeaders);
+        PostgresClient.getInstance(vertxContext.owner(), tenantId).getById(REFERENCE_TABLE,
+            id, HoldingsRecordsSource.class,
+            reply -> {
+              if (reply.succeeded()) {
+                String source = reply.result().getSource();
+                if (!source.contentEquals("folio") && !source.contentEquals("marc")) {
+                  PgUtil.deleteById(REFERENCE_TABLE, id, okapiHeaders, vertxContext, DeleteHoldingsRecordsSourcesByIdResponse.class, asyncResultHandler);
+                } else {
+                  log.error("Holdings Records Sources with source of folio or marc can not be deleted");
+                  asyncResultHandler.handle(succeededFuture(GetHoldingsRecordsSourcesResponse
+                    .respond400WithTextPlain("Holdings Records Sources with source of folio or marc can not be deleted")));
+                }
+              } else {
+                log.error(reply.cause().getMessage(), reply.cause());
+                asyncResultHandler.handle(succeededFuture(GetHoldingsRecordsSourcesResponse
+                  .respond400WithTextPlain(reply.cause().getMessage())));
+              }
+            });
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(succeededFuture(DeleteHoldingsRecordsSourcesByIdResponse
+          .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      }
     });
   }
 
