@@ -1030,28 +1030,28 @@
       ]
     },
     {
-      "id": "holdings-records-sources",
+      "id": "holdings-sources",
       "version": "1.0",
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/holdings-records-sources",
+          "pathPattern": "/holdings-sources",
           "permissionsRequired": ["inventory-storage.holdings-records-source.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/holdings-records-sources/{id}",
+          "pathPattern": "/holdings-sources/{id}",
           "permissionsRequired": ["inventory-storage.holdings-records-source.item.get"]
         }, {
           "methods": ["POST"],
-          "pathPattern": "/holdings-records-sources",
+          "pathPattern": "/holdings-sources",
           "permissionsRequired": ["inventory-storage.holdings-records-source.item.post"]
         }, {
           "methods": ["PUT"],
-          "pathPattern": "/holdings-records-sources/{id}",
+          "pathPattern": "/holdings-sources/{id}",
           "permissionsRequired": ["inventory-storage.holdings-records-source.item.put"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/holdings-records-sources/{id}",
+          "pathPattern": "/holdings-sources/{id}",
           "permissionsRequired": ["inventory-storage.holdings-records-source.item.delete"]
         }
       ]

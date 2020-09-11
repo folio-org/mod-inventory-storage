@@ -39,7 +39,7 @@ public class InterfaceUrls {
   }
 
   public static URL holdingsSourceUrl(String subPath) {
-    return StorageTestSuite.storageUrl("/holdings-records-sources" + subPath);
+    return StorageTestSuite.storageUrl("/holdings-sources" + subPath);
   }
 
   public static URL instancesStorageUrl(String subPath) {
