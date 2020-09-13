@@ -25,7 +25,7 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.getElectronicAccessName(v
 $$
 SELECT jsonb_agg(DISTINCT e)
 FROM ( SELECT e || jsonb_build_object('name', ( SELECT jsonb ->> 'name'
-                                                FROM ${myuniversity}_${mymodule}.electronic_access_relationship ear
+                                                FROM ${myuniversity}_${mymodule}.electronic_access_relationship
                                                 WHERE id = (e ->> 'relationshipId')::uuid )) e
        FROM jsonb_array_elements($1) AS e ) e1
 $$ LANGUAGE sql strict;
@@ -67,6 +67,16 @@ $$
 	FROM jsonb_array_elements( $1 ) AS e,
 	 	 stat_codes sc
 	WHERE sc.statCodeId = (e ->> 0)::uuid
+$$ LANGUAGE sql strict;
+
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.getNatureOfContentName(val jsonb) RETURNS jsonb AS
+$$
+SELECT jsonb_agg(DISTINCT e.name)
+FROM (
+	SELECT (jsonb ->> 'name') AS "name"
+	FROM ${myuniversity}_${mymodule}.nature_of_content_term
+		JOIN jsonb_array_elements($1) as insNoctIds
+			ON id = (insNoctIds ->> 0)::uuid) e
 $$ LANGUAGE sql strict;
 
 -- Drop additional indexes
@@ -185,13 +195,17 @@ WITH
 	WHERE (loc.jsonb ->> 'isActive')::bool = true
 	),
 	-- Passed instances ids
-	viewInstances(instId, source) AS (
+	viewInstances(instId, source, modeOfIssuance, natureOfContent) AS (
   SELECT DISTINCT
          instId AS "instanceId",
-         i.jsonb ->> 'source' AS source
+         i.jsonb ->> 'source' AS source,
+         moi.jsonb ->> 'name' AS modeOfIssuance,
+         COALESCE(getNatureOfContentName(COALESCE(i.jsonb #> '{natureOfContentTermIds}', '[]'::jsonb)), '[]'::jsonb) AS natureOfContent
     FROM UNNEST( $1 ) instId
 		     JOIN instance i
 			        ON i.id = instId
+			   LEFT JOIN mode_of_issuance moi
+			        ON moi.id = (i.jsonb ->> 'modeOfIssuanceId')::uuid
 	),
 	-- Prepared items and holdings
 	viewItemsAndHoldings(instId, records) AS (
@@ -377,6 +391,8 @@ WITH
 SELECT
       vi.instId AS "instanceId",
       vi.source AS "source",
+  	  vi.modeOfIssuance,
+  	  vi.natureOfContent,
       COALESCE(viah.records -> 'holdings', '[]'::jsonb) AS "holdings",
       COALESCE(viah.records -> 'items', '[]'::jsonb) AS "items"
 FROM viewInstances vi
