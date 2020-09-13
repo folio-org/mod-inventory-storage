@@ -172,6 +172,8 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_items_and_holdings_vi
             (
                 "instanceId"             uuid,
                 "source"                 varchar,
+                "modeOfIssuance"         varchar,
+                "natureOfContent"        jsonb,
                 "holdings"               jsonb,
                 "items"                  jsonb
             )
@@ -391,8 +393,8 @@ WITH
 SELECT
       vi.instId AS "instanceId",
       vi.source AS "source",
-  	  vi.modeOfIssuance,
-  	  vi.natureOfContent,
+  	  vi.modeOfIssuance AS "modeOfIssuance",
+  	  vi.natureOfContent AS "natureOfContent",
       COALESCE(viah.records -> 'holdings', '[]'::jsonb) AS "holdings",
       COALESCE(viah.records -> 'items', '[]'::jsonb) AS "items"
 FROM viewInstances vi
