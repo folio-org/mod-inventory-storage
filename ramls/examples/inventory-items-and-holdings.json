@@ -1,6 +1,10 @@
 {
   "instanceId": "2fd27465-e6ce-4143-9b7c-606860747f03",
   "source": "FOLIO",
+  "modeOfIssuance": "serial",
+  "natureOfContent": [
+    "journal"
+  ],
   "holdings": [
     {
       "id": "7df791c5-e330-4cfe-bb0b-a5f0e555ac68",
