@@ -26,6 +26,7 @@
       "uniqueItems": true
     },
     "instanceId": {
+      "description": "Inventory instances identifier",
       "type": "string",
       "$ref": "uuid.json"
     },
@@ -35,6 +36,7 @@
       "$ref" : "uuid.json"
     },
     "permanentLocation": {
+      "description": "The permanent shelving location in which an item resides",
       "type": "object",
       "folio:$ref": "location.json",
       "readonly": true,
@@ -50,6 +52,7 @@
       "$ref": "uuid.json"
     },
     "electronicAccess": {
+      "description": "List of electronic access items",
       "type": "array",
       "items": {
         "type": "object",
@@ -103,10 +106,12 @@
       "description": "Indicates the shelving form of title."
     },
     "acquisitionFormat": {
-      "type": "string"
+      "type": "string",
+      "description": "Format of holdings record acquisition"
     },
     "acquisitionMethod": {
-      "type": "string"
+      "type": "string",
+      "description": "Method of holdings record acquisition"
     },
     "receiptStatus": {
       "type": "string",
@@ -169,9 +174,11 @@
       "description": "Records information regarding how long we have agreed to keep something."
     },
     "digitizationPolicy": {
+      "description": "Records information regarding digitization aspects.",
       "type": "string"
     },
     "holdingsStatements": {
+      "description": "Notes about action, copy, binding etc.",
       "type": "array",
       "items": {
         "type": "object",
@@ -192,6 +199,7 @@
       }
     },
     "holdingsStatementsForIndexes": {
+      "description": "Holdings record indexes statements",
       "type": "array",
       "items": {
         "type": "object",
@@ -212,6 +220,7 @@
       }
     },
     "holdingsStatementsForSupplements": {
+      "description": "Holdings record supplements statements",
       "type": "array",
       "items": {
         "type": "object",
@@ -240,6 +249,7 @@
       "description": "Text (Number)"
     },
     "receivingHistory": {
+      "description": "Receiving history of holdings record",
       "type": "object",
       "properties": {
         "displayType": {
@@ -248,7 +258,7 @@
         },
         "entries": {
           "type": "array",
-          "description": ".",
+          "description": "Entries of receiving history",
           "items": {
             "type": "object",
             "properties": {
@@ -283,6 +293,7 @@
       "uniqueItems": true
     },
     "holdingsItems": {
+      "description": "Items related to holdings record",
       "type": "array",
       "items": {
         "type": "object",
@@ -296,6 +307,7 @@
       "folio:includedElement": "items"
     },
     "bareHoldingsItems": {
+      "description": "Items of bareHoldings",
       "type": "array",
       "items": {
         "type": "object",
@@ -309,6 +321,7 @@
       "folio:includedElement": "items"
     },
     "holdingsInstance": {
+      "description": "Instance of holding record",
       "type": "object",
       "folio:$ref": "instance.json",
       "readonly": true,

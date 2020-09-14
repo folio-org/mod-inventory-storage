@@ -32,6 +32,7 @@
       "type": "string"
     },
     "institution": {
+      "description": "The institution, the first-level location unit, this (shelf) location belongs to.",
       "type": "object",
       "folio:$ref": "locinst.json",
       "readonly": true,
@@ -46,6 +47,7 @@
       "type": "string"
     },
     "campus": {
+      "description": "The campus, the second-level location unit, this (shelf) location belongs to",
       "type": "object",
       "folio:$ref": "loccamp.json",
       "readonly": true,
@@ -60,6 +62,7 @@
       "type": "string"
     },
     "library": {
+      "description": "The library, the third-level location unit, this (shelf) location belongs to.",
       "type": "object",
       "folio:$ref": "locinst.json",
       "readonly": true,
