@@ -12,6 +12,17 @@
       "description": "Source of metadata and format of the underlying record to the instance record",
       "type": "string"
     },
+    "modeOfIssuance": {
+      "description": "The mode of issuance would tell if the material is a serial or not",
+      "type": "string"
+    },
+    "natureOfContent": {
+      "description": "A periodical (which is a subset of serials) might also have a nature of content periodical (journal, newspaper)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "holdings": {
       "type": "array",
       "description": "Holdings record fields",
