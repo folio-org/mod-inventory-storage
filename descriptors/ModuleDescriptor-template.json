@@ -133,23 +133,23 @@
         }, {
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instance-relationships",
-          "permissionsRequired": ["inventory-storage.instances.item.get"]
+          "permissionsRequired": ["inventory-storage.instance-relationships.collection.get"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/instance-storage/instance-relationships",
-          "permissionsRequired": ["inventory-storage.instances.item.post"]
+          "permissionsRequired": ["inventory-storage.instance-relationships.item.post"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instance-relationships/{id}",
-          "permissionsRequired": ["inventory-storage.instances.item.get"]
+          "permissionsRequired": ["inventory-storage.instance-relationships.item.get"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/instance-storage/instance-relationships/{id}",
-          "permissionsRequired": ["inventory-storage.instances.item.put"]
+          "permissionsRequired": ["inventory-storage.instance-relationships.item.put"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instance-relationships/{id}",
-          "permissionsRequired": ["inventory-storage.instances.item.delete"]
+          "permissionsRequired": ["inventory-storage.instance-relationships.item.delete"]
         }
       ]
     },
@@ -1092,6 +1092,31 @@
     }
   ],
   "permissionSets": [
+    {
+      "permissionName": "inventory-storage.instance-relationships.collection.get",
+      "displayName": "inventory storage - get instance relationships by query",
+      "description": "get instance relationships by query"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationships.item.get",
+      "displayName": "inventory storage - get instance relationship by id",
+      "description": "get instance relationship by id"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationships.item.post",
+      "displayName": "inventory storage - create an instance relationship",
+      "description": "create an instance relationship"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationships.item.put",
+      "displayName": "inventory storage - modify an instance relationship",
+      "description": "modify an instance relationship"
+    },
+    {
+      "permissionName": "inventory-storage.instance-relationships.item.delete",
+      "displayName": "inventory storage - delete an instance relationship",
+      "description": "delete an instance relationship"
+    },
     {
       "permissionName": "inventory-storage.items.collection.get",
       "displayName": "inventory storage - get item collection",
@@ -2104,6 +2129,11 @@
         "inventory-storage.locations.item.post",
         "inventory-storage.locations.item.put",
         "inventory-storage.locations.item.delete",
+        "inventory-storage.instance-relationships.collection.get",
+        "inventory-storage.instance-relationships.item.get",
+        "inventory-storage.instance-relationships.item.post",
+        "inventory-storage.instance-relationships.item.put",
+        "inventory-storage.instance-relationships.item.delete",
         "inventory-storage.instance-relationship-types.collection.get",
         "inventory-storage.instance-relationship-types.item.get",
         "inventory-storage.instance-relationship-types.item.post",
