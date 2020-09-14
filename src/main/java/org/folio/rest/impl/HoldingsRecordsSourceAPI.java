@@ -40,19 +40,7 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
   @Override
   public void getHoldingsSources(String query, int offset, int limit, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    CQLWrapper cqlWrapper;
-    try {
-      cqlWrapper = getCQL(query, limit, offset);
-      PgUtil.get(REFERENCE_TABLE, HoldingsRecordsSource.class, HoldingsRecordsSources.class, cqlWrapper.getQuery(), offset, limit, okapiHeaders, vertxContext, GetHoldingsSourcesResponse.class, asyncResultHandler);
-    } catch (FieldException e) {
-      log.error(e.getMessage(), e);
-      String message = messages.getMessage(lang, MessageConsts.InternalServerError);
-      if (e.getCause() instanceof CQLParseException) {
-        message = " CQL parse error " + e.getLocalizedMessage();
-        asyncResultHandler.handle(succeededFuture(GetHoldingsSourcesResponse
-          .respond500WithTextPlain(message)));
-      }
-    }
+      PgUtil.get(REFERENCE_TABLE, HoldingsRecordsSource.class, HoldingsRecordsSources.class, query, offset, limit, okapiHeaders, vertxContext, GetHoldingsSourcesResponse.class, asyncResultHandler);
   }
 
   @Override
