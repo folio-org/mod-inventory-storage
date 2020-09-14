@@ -596,7 +596,7 @@
     },
     {
       "tableName": "holdings_records_source",
-      "withMetadata": false,
+      "withMetadata": true,
       "withAuditing": false,
       "uniqueIndex": [
         {
