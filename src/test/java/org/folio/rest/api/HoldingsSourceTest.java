@@ -61,7 +61,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canNotCreateDuplicateHoldingsSource()
+  public void cannotCreateHoldingsSourceWithDuplicateId()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -82,7 +82,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canNotCreateDuplicateHoldingsSourceName()
+  public void cannotCreateHoldingsSourceWithDuplicateName()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
