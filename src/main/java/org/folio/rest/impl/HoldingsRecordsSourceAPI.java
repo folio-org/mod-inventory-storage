@@ -81,41 +81,7 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
               if (reply.succeeded()) {
                 String source = reply.result().getSource();
                 if (source == null || (!source.contentEquals("folio") && !source.contentEquals("marc"))) {
-                  try {
-                    String[] fieldList = {"*"};
-                    CQLWrapper cqlWrapper = getCQL(HOLDINGS_RECORD_TABLE, String.format("sourceId==%s", id), 1, 0);
-                    pgClient.get(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, fieldList, cqlWrapper, true, false,
-                        holdingsRecordReply -> {
-                          try {
-                            if (holdingsRecordReply.succeeded()) {
-                              List<HoldingsRecord> holdingsList = holdingsRecordReply.result().getResults();
-                              if (holdingsList.size() == 0) {
-                                PgUtil.deleteById(REFERENCE_TABLE, id, okapiHeaders, vertxContext, DeleteHoldingsSourcesByIdResponse.class, asyncResultHandler);
-                              } else {
-                                log.error("Holdings Records Sources associated with Holdings Record(s) can not be deleted");
-                                asyncResultHandler.handle(succeededFuture(GetHoldingsSourcesResponse
-                                  .respond400WithTextPlain("Holdings Records Sources associated with Holdings Record(s) can not be deleted")));
-                              }
-                            } else {
-                              asyncResultHandler.handle(
-                                Future.succeededFuture(
-                                  GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-                                    respond500WithTextPlain(holdingsRecordReply.cause().getMessage())));
-                            }
-                          } catch (Exception e) {
-                              log.error(e.getMessage());
-                            asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                              GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-                                respond500WithTextPlain(e.getMessage())));
-                          }
-                        });
-
-                  } catch (Exception e) {
-                    log.error(e.getMessage());
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetHoldingsStorageHoldingsByHoldingsRecordIdResponse.
-                      respond500WithTextPlain(e.getMessage())));
-                  }
+                  PgUtil.deleteById(REFERENCE_TABLE, id, okapiHeaders, vertxContext, DeleteHoldingsSourcesByIdResponse.class, asyncResultHandler);
                 } else {
                   log.error("Holdings Records Sources with source of folio or marc can not be deleted");
                   asyncResultHandler.handle(succeededFuture(GetHoldingsSourcesResponse
