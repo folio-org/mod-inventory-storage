@@ -146,6 +146,7 @@
             "description": "ID of the type of note"
           },
           "itemNoteType": {
+            "description": "Type of item's note",
             "type": "object",
             "folio:$ref": "itemnotetype.json",
             "javaType": "org.folio.rest.jaxrs.model.itemNoteTypeVirtual",
@@ -276,6 +277,7 @@
       "description": "Permanent item location is the default location, shelving location, or holding which is a physical place where items are stored, or an Online location."
     },
     "permanentLocation": {
+      "description": "The permanent shelving location in which an item resides",
       "type": "object",
       "folio:$ref": "location.json",
       "readonly": true,
@@ -290,6 +292,7 @@
       "description": "Temporary item location is the temporarily location, shelving location, or holding which is a physical place where items are stored, or an Online location."
     },
     "temporaryLocation": {
+      "description": "Temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location",
       "type": "object",
       "folio:$ref": "location.json",
       "readonly": true,
