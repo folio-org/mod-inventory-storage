@@ -2,30 +2,20 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSource;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSources;
-import org.folio.rest.jaxrs.resource.HoldingsStorage.GetHoldingsStorageHoldingsByHoldingsRecordIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.CQLParseException;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -68,12 +58,12 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
             reply -> {
               if (reply.succeeded()) {
                 String source = reply.result().getSource();
-                if (source == null || (!source.contentEquals("folio") && !source.contentEquals("marc"))) {
+                if (source == null || (!source.contentEquals("folio"))) {
                   PgUtil.deleteById(REFERENCE_TABLE, id, okapiHeaders, vertxContext, DeleteHoldingsSourcesByIdResponse.class, asyncResultHandler);
                 } else {
-                  log.error("Holdings Records Sources with source of folio or marc can not be deleted");
+                  log.error("Holdings Records Sources with source of folio can not be deleted");
                   asyncResultHandler.handle(succeededFuture(GetHoldingsSourcesResponse
-                    .respond400WithTextPlain("Holdings Records Sources with source of folio or marc can not be deleted")));
+                    .respond400WithTextPlain("Holdings Records Sources with source of folio can not be deleted")));
                 }
               } else {
                 log.error(reply.cause().getMessage(), reply.cause());
@@ -94,14 +84,5 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
     HoldingsRecordsSource entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.put(REFERENCE_TABLE, entity, id, okapiHeaders, vertxContext, PutHoldingsSourcesByIdResponse.class, asyncResultHandler);
-  }
-
-  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
-    return getCQL(REFERENCE_TABLE, query, limit, offset);
-  }
-
-  private CQLWrapper getCQL(String table, String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(table+".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 }

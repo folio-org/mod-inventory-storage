@@ -228,20 +228,13 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
                 .put("name", "source with folio source")
                 .put("source", "folio")
               );
-      IndividualResource holdingsSource2 = holdingsSourceClient.create(
-          new JsonObject()
-            .put("name", "source with marc source")
-            .put("source", "marc")
-          );
+
       UUID folioHoldingsSourceId = holdingsSource.getId();
-      UUID marcHoldingsSourceId = holdingsSource2.getId();
 
       Response folioDeleteResponse = holdingsSourceClient.attemptToDelete(folioHoldingsSourceId);
-      Response marcDeleteResponse = holdingsSourceClient.attemptToDelete(marcHoldingsSourceId);
 
-      //they should not have been deleted:
+      //it should not have been deleted:
       assertThat(folioDeleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-      assertThat(marcDeleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
