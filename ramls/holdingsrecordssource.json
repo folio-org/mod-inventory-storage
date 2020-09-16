@@ -13,7 +13,10 @@
       "description": "Name of the holdings records source"
     },
     "source": {
-      "type": "string",
+      "enum": [
+        "folio",
+        "local"
+      ],
       "description": "The holdings records source"
     }
   },

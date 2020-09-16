@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.jaxrs.model.HoldingsRecordsSource;
+import org.folio.rest.jaxrs.model.HoldingsRecordsSource.Source;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSources;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -57,8 +58,8 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
             id, HoldingsRecordsSource.class,
             reply -> {
               if (reply.succeeded()) {
-                String source = reply.result().getSource();
-                if (source == null || (!source.contentEquals("folio"))) {
+                Source source = reply.result().getSource();
+                if (source == null || source.ordinal() != Source.FOLIO.ordinal()) {
                   PgUtil.deleteById(REFERENCE_TABLE, id, okapiHeaders, vertxContext, DeleteHoldingsSourcesByIdResponse.class, asyncResultHandler);
                 } else {
                   log.error("Holdings Records Sources with source of folio can not be deleted");
