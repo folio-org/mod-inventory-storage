@@ -4,7 +4,6 @@ import static org.folio.rest.api.ServicePointTest.createHoldShelfExpiryPeriod;
 import static org.folio.rest.api.ServicePointTest.createServicePoint;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
-import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -187,8 +186,7 @@ public class ServicePointsUserTest extends TestBase {
     final var secondCreateResponse = createServicePointUser(secondId, userId,
       servicePoints, null);
 
-    assertThat(secondCreateResponse, hasValidationError("Service Point User Exists",
-      "userId", userId.toString()));
+    assertThat(secondCreateResponse.getStatusCode(), is(422));
   }
 
   //END TESTS
