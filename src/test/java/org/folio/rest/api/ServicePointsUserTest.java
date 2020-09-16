@@ -41,13 +41,10 @@ import io.vertx.core.logging.LoggerFactory;
  * @author kurt
  */
 public class ServicePointsUserTest extends TestBase {
-  private static Logger logger = LoggerFactory.getLogger(ServicePointsUserTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
   @Before
-  public void beforeEach()
-      throws InterruptedException, ExecutionException, TimeoutException,
-      MalformedURLException {
+  public void beforeEach() {
     StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
     StorageTestSuite.deleteAll(servicePointsUrl(""));
   }
@@ -59,19 +56,20 @@ public class ServicePointsUserTest extends TestBase {
   }
 
   @Test
-  public void canCreateServicePointUser() throws MalformedURLException,
-      InterruptedException, ExecutionException, TimeoutException {
-    Response response = createServicePointUser(UUID.randomUUID(), UUID.randomUUID(),
-        null, null);
-    assertThat(response.getStatusCode(), is(201));
+  public void canCreateServicePointUser() throws InterruptedException, ExecutionException,
+    TimeoutException {
 
+    Response response = createServicePointUser(UUID.randomUUID(), UUID.randomUUID(),
+      null, null);
+    assertThat(response.getStatusCode(), is(201));
   }
 
   @Test
-  public void canRetrieveCreatedSPU() throws MalformedURLException,
-      InterruptedException, ExecutionException, TimeoutException {
+  public void canRetrieveCreatedSPU() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
     Response postResponse = createServicePointUser(UUID.randomUUID(),
-        UUID.randomUUID(), null, null);
+      UUID.randomUUID(), null, null);
     String id = postResponse.getJson().getString("id");
     Response getResponse = getServicePointUserById(UUID.fromString(id));
     assertThat(getResponse.getStatusCode(), is(200));
@@ -79,9 +77,9 @@ public class ServicePointsUserTest extends TestBase {
   }
 
   @Test
-  public void cannotCreateSPUWithNonExistantDefaultSP()
-      throws MalformedURLException, InterruptedException, ExecutionException,
-      TimeoutException {
+  public void cannotCreateSPUWithNonExistantDefaultSP() throws InterruptedException,
+    ExecutionException, TimeoutException {
+
     Response response = createServicePointUser(UUID.randomUUID(),
         UUID.randomUUID(), null, UUID.randomUUID());
     assertThat(response.getStatusCode(), is(422));
@@ -101,24 +99,20 @@ public class ServicePointsUserTest extends TestBase {
   }
 
   @Test
-  public void canGetSPUS() throws MalformedURLException, InterruptedException,
-      ExecutionException, TimeoutException {
+  public void canGetSPUS() throws InterruptedException, ExecutionException, TimeoutException {
     createServicePointUser(null, UUID.randomUUID(), null, null);
     createServicePointUser(null, UUID.randomUUID(), null, null);
     Response response = getServicePointUsers(null);
     assertThat(response.getJson().getInteger("totalRecords"), is(2));
-
   }
 
    @Test
-  public void canDeleteAllSPUS() throws MalformedURLException, InterruptedException,
-      ExecutionException, TimeoutException {
+  public void canDeleteAllSPUS() throws InterruptedException, ExecutionException, TimeoutException {
     createServicePointUser(null, UUID.randomUUID(), null, null);
     createServicePointUser(null, UUID.randomUUID(), null, null);
     StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
     Response response = getServicePointUsers(null);
     assertThat(response.getJson().getInteger("totalRecords"), is(0));
-
   }
 
 
@@ -152,8 +146,9 @@ public class ServicePointsUserTest extends TestBase {
   }
 
   @Test
-  public void canUpdateServicePointUser() throws MalformedURLException,
-      InterruptedException, ExecutionException, TimeoutException {
+  public void canUpdateServicePointUser() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
     UUID userId1 = UUID.randomUUID();
     UUID userId2 = UUID.randomUUID();
     UUID spuId = UUID.randomUUID();
@@ -165,12 +160,12 @@ public class ServicePointsUserTest extends TestBase {
     assertThat(response.getStatusCode(), is(204));
     Response getResponse = getServicePointUserById(spuId);
     assertThat(getResponse.getJson().getString("userId"), is(userId2.toString()));
-
   }
 
   @Test
-  public void canDeleteServicePointUser() throws MalformedURLException,
-      InterruptedException, ExecutionException, TimeoutException {
+  public void canDeleteServicePointUser() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
     UUID spuId = UUID.randomUUID();
     createServicePointUser(spuId, UUID.randomUUID(), null, null);
     Response getResponse = getServicePointUserById(spuId);
@@ -178,7 +173,6 @@ public class ServicePointsUserTest extends TestBase {
     deleteServicePointUserById(spuId);
     Response getResponseAgain = getServicePointUserById(spuId);
     assertThat(getResponseAgain.getStatusCode(), is(404));
-
   }
 
   @Test
@@ -224,9 +218,7 @@ public class ServicePointsUserTest extends TestBase {
     else {
       request = client.putAbs(url.toString());
     }
-    request.exceptionHandler(error -> {
-      Assert.fail(error.getLocalizedMessage());
-    })
+    request.exceptionHandler(error -> Assert.fail(error.getLocalizedMessage()))
     .handler(handler);
 
     request.putHeader("Authorization", "test_tenant");
@@ -236,34 +228,39 @@ public class ServicePointsUserTest extends TestBase {
     request.end(buffer);
   }
 
-  public static Response createServicePointUser(UUID id,
-      UUID userId, List<UUID> servicePointsIds, UUID defaultServicePointId)
-      throws MalformedURLException, InterruptedException, ExecutionException,
-      TimeoutException {
+  public static Response createServicePointUser(UUID id, UUID userId,
+    List<UUID> servicePointsIds, UUID defaultServicePointId)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
     JsonObject request = new JsonObject();
-    if(id != null) { request.put("id", id.toString()); }
+    if (id != null) {
+      request.put("id", id.toString());
+    }
+
     request.put("userId", userId.toString());
-    if(defaultServicePointId != null) {
+
+    if (defaultServicePointId != null) {
       request.put("defaultServicePointId", defaultServicePointId.toString());
     }
-    if(servicePointsIds != null && !servicePointsIds.isEmpty()) {
+
+    if (servicePointsIds != null && !servicePointsIds.isEmpty()) {
       JsonArray spIds = new JsonArray();
-      for(UUID uuid : servicePointsIds) {
+      for (UUID uuid : servicePointsIds) {
         spIds.add(uuid.toString());
       }
       request.put("servicePointsIds", spIds);
     }
+
     CompletableFuture<Response> createServicePointUser = new CompletableFuture<>();
+
     send(servicePointsUsersUrl(""), HttpMethod.POST, request.toString(),
-        SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(createServicePointUser));
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(createServicePointUser));
+
     return createServicePointUser.get(5, TimeUnit.SECONDS);
   }
 
   public static Response getServicePointUserById(UUID id)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -271,46 +268,42 @@ public class ServicePointsUserTest extends TestBase {
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
-
   }
 
   public static Response updateServicePointUserById(UUID id, JsonObject entity)
-      throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException {
+
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+
     send(servicePointsUsersUrl("/" + id.toString()), HttpMethod.PUT, entity.toString(),
-        SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(putCompleted));
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(putCompleted));
+
     return putCompleted.get(5, TimeUnit.SECONDS);
   }
 
-   public static Response deleteServicePointUserById(UUID id)
-      throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public static Response deleteServicePointUserById(UUID id) throws InterruptedException,
+    ExecutionException, TimeoutException {
+
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
+
     send(servicePointsUsersUrl("/" + id.toString()), HttpMethod.DELETE, null,
-        SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
+
     return deleteCompleted.get(5, TimeUnit.SECONDS);
   }
 
-  public static Response getServicePointUsers(String query)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException,
-      MalformedURLException {
+  public static Response getServicePointUsers(String query) throws InterruptedException,
+    ExecutionException, TimeoutException {
+
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL url = null;
-    if(query != null) {
-      url = servicePointsUsersUrl("?query=" + urlEncode(query));
-    } else {
-      url = servicePointsUsersUrl("");
-    }
-    send(url, HttpMethod.GET, null,
-        SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+
+    final URL url = query != null
+      ? servicePointsUsersUrl("?query=" + urlEncode(query))
+      : servicePointsUsersUrl("");
+
+    send(url, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
+      ResponseHandler.json(getCompleted));
+
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
-
 }
