@@ -26,14 +26,11 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 
 public class ServicePointsUserAPI implements ServicePointsUsers {
-
-  public static final Logger logger = LoggerFactory.getLogger(
-          ServicePointsUserAPI.class);
+  public static final Logger logger = LoggerFactory.getLogger(ServicePointsUserAPI.class);
   public static final String SERVICE_POINT_USER_TABLE = "service_point_user";
   public static final String LOCATION_PREFIX = "/service-points-users/";
-  public static final String ID_FIELD = "'id'";
 
-  PostgresClient getPGClient(Context vertxContext, String tenantId) {
+  private PostgresClient getPGClient(Context vertxContext, String tenantId) {
     return PostgresClient.getInstance(vertxContext.owner(), tenantId);
   }
 
@@ -48,32 +45,26 @@ public class ServicePointsUserAPI implements ServicePointsUsers {
     return message;
   }
 
-  private String getTenant(Map<String, String> headers)  {
+  private String getTenant(Map<String, String> headers) {
     return TenantTool.calculateTenantId(headers.get(
-            RestVerticle.OKAPI_HEADER_TENANT));
+      RestVerticle.OKAPI_HEADER_TENANT));
   }
 
-  private CQLWrapper getCQL(String query, int limit, int offset,
-          String tableName) throws FieldException {
+  private CQLWrapper getCQL(String query, int limit, int offset, String tableName) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
+
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit))
-            .setOffset(new Offset(offset));
+      .setOffset(new Offset(offset));
   }
 
   private boolean isNotPresent(String errorMessage) {
-    if(errorMessage != null && errorMessage.contains(
-       "is not present in table")) {
-      return true;
-    }
-    return false;
+    return errorMessage != null && errorMessage.contains(
+      "is not present in table");
   }
 
   private boolean isCQLError(Throwable err) {
-    if(err.getCause() != null && err.getCause().getClass().getSimpleName()
-            .endsWith("CQLParseException")) {
-      return true;
-    }
-    return false;
+    return err.getCause() != null && err.getCause().getClass().getSimpleName()
+      .endsWith("CQLParseException");
   }
 
   @Override
