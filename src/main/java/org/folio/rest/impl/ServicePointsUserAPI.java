@@ -155,7 +155,7 @@ public class ServicePointsUserAPI implements ServicePointsUsers {
       pgClient.save(SERVICE_POINT_USER_TABLE, id, entity, saveReply -> {
         if(saveReply.failed()) {
           String message = logAndSaveError(saveReply.cause());
-          if (PgExceptionUtil.isForeignKeyViolation(saveReply.cause())) {
+          if (PgExceptionUtil.isUniqueViolation(saveReply.cause())) {
             asyncResultHandler.handle(Future.succeededFuture(
                 PostServicePointsUsersResponse.respond422WithApplicationJson(
                 ValidationHelper.createValidationErrorMessage("userId",

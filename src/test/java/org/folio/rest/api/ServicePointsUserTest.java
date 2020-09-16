@@ -4,9 +4,10 @@ import static org.folio.rest.api.ServicePointTest.createHoldShelfExpiryPeriod;
 import static org.folio.rest.api.ServicePointTest.createServicePoint;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
+import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -178,6 +179,24 @@ public class ServicePointsUserTest extends TestBase {
     Response getResponseAgain = getServicePointUserById(spuId);
     assertThat(getResponseAgain.getStatusCode(), is(404));
 
+  }
+
+  @Test
+  public void cannotCreateServicePointUserIfUserAlreadyExist() throws Exception {
+    final var firstId = UUID.randomUUID();
+    final var secondId = UUID.randomUUID();
+    final var userId = UUID.randomUUID();
+    final var servicePoints = List.of(UUID.randomUUID());
+
+    final var firstCreateResponse = createServicePointUser(firstId, userId,
+      servicePoints, null);
+    assertThat(firstCreateResponse.getStatusCode(), is(201));
+
+    final var secondCreateResponse = createServicePointUser(secondId, userId,
+      servicePoints, null);
+
+    assertThat(secondCreateResponse, hasValidationError("Service Point User Exists",
+      "userId", userId.toString()));
   }
 
   //END TESTS
