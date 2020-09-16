@@ -2312,11 +2312,11 @@
         "inventory-storage.oai-pmh-view.instances.collection.get",
         "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
         "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
-        "inventory-storage.holdings-records-source.collection.get",
-        "inventory-storage.holdings-records-source.get",
-        "inventory-storage.holdings-records-source.post",
-        "inventory-storage.holdings-records-source.put",
-        "inventory-storage.holdings-records-source.delete",
+        "inventory-storage.holdings-sources.collection.get",
+        "inventory-storage.holdings-sources.get",
+        "inventory-storage.holdings-sources.post",
+        "inventory-storage.holdings-sources.put",
+        "inventory-storage.holdings-sources.delete",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
         "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"
       ]
