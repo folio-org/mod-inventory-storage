@@ -151,7 +151,7 @@ public class ServicePointsUserAPI implements ServicePointsUsers {
                 PostServicePointsUsersResponse.respond422WithApplicationJson(
                 ValidationHelper.createValidationErrorMessage("userId",
                 entity.getUserId(), "Service Point User Exists"))));
-          } else if(isNotPresent(message)) {
+          } else if(PgExceptionUtil.isForeignKeyViolation(saveReply.cause())) {
             asyncResultHandler.handle(Future.succeededFuture(
                 PostServicePointsUsersResponse.respond422WithApplicationJson(
                 ValidationHelper.createValidationErrorMessage("userId",
