@@ -173,7 +173,7 @@ public class ServicePointsUserTest extends TestBase {
   }
 
   @Test
-  public void cannotCreateServicePointUserIfUserAlreadyExist() throws Exception {
+  public void cannotCreateServicePointUserIfUserAlreadyExists() throws Exception {
     final var firstId = UUID.randomUUID();
     final var secondId = UUID.randomUUID();
     final var userId = UUID.randomUUID();
