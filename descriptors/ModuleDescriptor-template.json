@@ -46,7 +46,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "4.3",
+      "version": "4.4",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1026,6 +1026,33 @@
           "methods": ["PUT"],
           "pathPattern": "/hrid-settings-storage/hrid-settings",
           "permissionsRequired": ["inventory-storage.hrid-settings.item.put"]
+        }
+      ]
+    },
+    {
+      "id": "holdings-sources",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-sources",
+          "permissionsRequired": ["inventory-storage.holdings-sources.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/holdings-sources/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-sources.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/holdings-sources",
+          "permissionsRequired": ["inventory-storage.holdings-sources.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/holdings-sources/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-sources.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/holdings-sources/{id}",
+          "permissionsRequired": ["inventory-storage.holdings-sources.item.delete"]
         }
       ]
     },
@@ -2063,6 +2090,31 @@
       "permissionName": "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
       "displayName": "inventory storage - get instances holdings and items for inventory storage",
       "description": "get instances holdings and items for inventory storage"
+	},
+	{
+      "permissionName": "inventory-storage.holdings-sources.collection.get",
+      "displayName": "inventory storage - get holdings-source collection",
+      "description": "get holdings-records-source collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-sources.item.get",
+      "displayName": "inventory storage - get individual holdings-source",
+      "description": "get individual holdings-records-source from storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-sources.item.post",
+      "displayName": "inventory storage - create individual holdings-source",
+      "description": "create individual holdings-records-source in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-sources.item.put",
+      "displayName": "inventory storage - modify holdings-source",
+      "description": "modify holdings-records-source in storage"
+    },
+    {
+      "permissionName": "inventory-storage.holdings-sources.item.delete",
+      "displayName": "inventory storage - delete individual holdings-source",
+      "description": "delete individual holdings-source from storage"
     },
     {
       "permissionName": "inventory-storage.all",
@@ -2260,6 +2312,11 @@
         "inventory-storage.oai-pmh-view.instances.collection.get",
         "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
         "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
+        "inventory-storage.holdings-sources.collection.get",
+        "inventory-storage.holdings-sources.get",
+        "inventory-storage.holdings-sources.post",
+        "inventory-storage.holdings-sources.put",
+        "inventory-storage.holdings-sources.delete",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
         "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"
       ]

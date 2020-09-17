@@ -595,6 +595,17 @@
       ]
     },
     {
+      "tableName": "holdings_records_source",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "holdings_record",
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
@@ -632,6 +643,11 @@
         {
           "fieldName": "illPolicyId",
           "targetTable": "ill_policy",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "sourceId",
+          "targetTable": "holdings_records_source",
           "tOps": "ADD"
         }
       ],

@@ -5,7 +5,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "the system assigned unique ID of the holdings record; UUID",
+      "description": "the unique ID of the holdings record; UUID",
       "$ref": "uuid.json"
     },
     "hrid": {
@@ -341,6 +341,11 @@
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
       "readonly": true
+    },
+    "sourceId": {
+      "description": "(A reference to) the source of a holdings record",
+      "type": "string",
+      "$ref": "uuid.json"
     }
   },
   "additionalProperties": false,

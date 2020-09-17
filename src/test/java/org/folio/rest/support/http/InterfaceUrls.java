@@ -38,6 +38,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/holdings-storage/batch/synchronous" + subPath);
   }
 
+  public static URL holdingsSourceUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/holdings-sources" + subPath);
+  }
+
   public static URL instancesStorageUrl(String subPath) {
     return StorageTestSuite.storageUrl("/instance-storage/instances" + subPath);
   }

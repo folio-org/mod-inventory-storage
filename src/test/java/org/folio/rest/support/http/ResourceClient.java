@@ -47,6 +47,11 @@ public class ResourceClient {
       "holdingsTypeRecords");
   }
 
+  public static ResourceClient forHoldingsSource(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::holdingsSourceUrl,
+      "holdingsRecordsSources");
+  }
+
   public static ResourceClient forInstances(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::instancesStorageUrl,
       "instances");
@@ -250,6 +255,12 @@ public class ResourceClient {
     assertThat(String.format(
       "Failed to delete %s %s: %s", resourceName, id, response.getBody()),
       response.getStatusCode(), is(204));
+  }
+
+  public Response attemptToDelete(UUID id) throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    return deleteIfPresent(id != null ? id.toString() : null);
   }
 
   public void deleteAll()
