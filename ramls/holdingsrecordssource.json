@@ -18,6 +18,11 @@
         "local"
       ],
       "description": "The holdings records source"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
     }
   },
   "required": [
