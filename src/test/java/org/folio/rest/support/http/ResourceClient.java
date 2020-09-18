@@ -9,12 +9,10 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.folio.rest.api.StorageTestSuite;
+import org.folio.rest.api.TestBase;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -139,17 +137,12 @@ public class ResourceClient {
     this.collectionArrayPropertyName = resourceName;
   }
 
-  public IndividualResource create(Builder builder)
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+  public IndividualResource create(Builder builder) {
 
     return create(builder.create());
   }
 
-  public IndividualResource create(JsonObject request) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  public IndividualResource create(JsonObject request) {
 
     Response response = attemptToCreate(request);
 
@@ -163,8 +156,7 @@ public class ResourceClient {
     return new IndividualResource(response);
   }
 
-  public void createNoResponse(JsonObject request) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  public void createNoResponse(JsonObject request) {
 
     Response response = attemptToCreate(request);
 
@@ -173,33 +165,30 @@ public class ResourceClient {
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
   }
 
-  public Response attemptToCreate(JsonObject request) throws MalformedURLException,
-      InterruptedException, ExecutionException, TimeoutException {
+  public Response attemptToCreate(JsonObject request) {
     return attemptToCreate("", request);
   }
 
-  public Response attemptToCreate(String subPath, JsonObject request) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  public Response attemptToCreate(String subPath, JsonObject request) {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    client.post(urlMaker.combine(subPath), request, StorageTestSuite.TENANT_ID,
-      ResponseHandler.any(createCompleted));
+    try {
+      client.post(urlMaker.combine(subPath), request, StorageTestSuite.TENANT_ID,
+        ResponseHandler.any(createCompleted));
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(subPath + ": " + e.getMessage(), e);
+    }
 
-    return createCompleted.get(5, TimeUnit.SECONDS);
+    return TestBase.get(createCompleted);
   }
 
-  public void replace(UUID id, Builder builder)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public void replace(UUID id, Builder builder) {
 
     replace(id, builder.create());
   }
 
-  public void replace(UUID id, JsonObject request) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  public void replace(UUID id, JsonObject request) {
 
     Response putResponse = attemptToReplace(id != null ? id.toString() : null, request);
 
@@ -208,47 +197,55 @@ public class ResourceClient {
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
-  public Response attemptToReplace(String id, JsonObject request) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  /**
+   * Return urlMaker.combine(String.format("/%s", id)).
+   *
+   * <p>Wrap MalformedURLException into RuntimeException.
+   */
+  private URL urlMakerWithId(String id) {
+    try {
+      return urlMaker.combine(String.format("/%s", id));
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public Response attemptToReplace(String id, JsonObject request) {
 
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
-    client.put(urlMaker.combine(String.format("/%s", id)), request,
+    client.put(urlMakerWithId(id), request,
       StorageTestSuite.TENANT_ID, ResponseHandler.any(putCompleted));
 
-    return putCompleted.get(5, TimeUnit.SECONDS);
+    return TestBase.get(putCompleted);
   }
 
-  public Response getById(UUID id) throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+  public Response getById(UUID id) {
 
     return getByIdIfPresent(id != null ? id.toString() : null);
   }
 
-  public Response getByIdIfPresent(String id) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  public Response getByIdIfPresent(String id) {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(urlMaker.combine(String.format("/%s", id)),
-      StorageTestSuite.TENANT_ID, ResponseHandler.any(getCompleted));
+    client.get(urlMakerWithId(id),
+        StorageTestSuite.TENANT_ID, ResponseHandler.any(getCompleted));
 
-    return getCompleted.get(5, TimeUnit.SECONDS);
+    return TestBase.get(getCompleted);
   }
 
-  public Response deleteIfPresent(String id) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  public Response deleteIfPresent(String id) {
 
     CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
 
-    client.delete(urlMaker.combine(String.format("/%s", id)),
+    client.delete(urlMakerWithId(id),
       StorageTestSuite.TENANT_ID, ResponseHandler.any(deleteFinished));
 
-    return deleteFinished.get(5, TimeUnit.SECONDS);
+    return TestBase.get(deleteFinished);
   }
 
-  public void delete(UUID id) throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+  public void delete(UUID id) {
 
     Response response = deleteIfPresent(id != null ? id.toString() : null);
 
@@ -257,35 +254,30 @@ public class ResourceClient {
       response.getStatusCode(), is(204));
   }
 
-  public Response attemptToDelete(UUID id) throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+  public Response attemptToDelete(UUID id) {
 
     return deleteIfPresent(id != null ? id.toString() : null);
   }
 
-  public void deleteAll()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public void deleteAll() {
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
-    client.delete(urlMaker.combine(""), StorageTestSuite.TENANT_ID,
-      ResponseHandler.any(deleteAllFinished));
+    try {
+      client.delete(urlMaker.combine(""), StorageTestSuite.TENANT_ID,
+        ResponseHandler.any(deleteAllFinished));
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
 
-    Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
+    Response response = TestBase.get(deleteAllFinished);
 
     assertThat(String.format(
       "Failed to delete %s: %s", resourceName, response.getBody()),
       response.getStatusCode(), is(204));
   }
 
-  public void deleteAllIndividually()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public void deleteAllIndividually() {
 
     List<JsonObject> records = getAll();
 
@@ -293,11 +285,10 @@ public class ResourceClient {
       try {
         CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
 
-        client.delete(urlMaker.combine(String.format("/%s",
-          record.getString("id"))), StorageTestSuite.TENANT_ID,
+        client.delete(urlMakerWithId(record.getString("id")), StorageTestSuite.TENANT_ID,
           ResponseHandler.any(deleteFinished));
 
-        Response deleteResponse = deleteFinished.get(5, TimeUnit.SECONDS);
+        Response deleteResponse = TestBase.get(deleteFinished);
 
         assertThat(String.format(
           "Failed to delete %s: %s", resourceName, deleteResponse.getBody()),
@@ -311,24 +302,23 @@ public class ResourceClient {
     });
   }
 
-  public List<JsonObject> getAll()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public List<JsonObject> getAll() {
 
     return getByQuery("");
   }
 
-  public List<JsonObject> getByQuery(String query) throws MalformedURLException,
-    InterruptedException, ExecutionException, TimeoutException {
+  public List<JsonObject> getByQuery(String query) {
 
     CompletableFuture<Response> getFinished = new CompletableFuture<>();
 
-    client.get(urlMaker.combine(query), StorageTestSuite.TENANT_ID,
-      ResponseHandler.any(getFinished));
+    try {
+      client.get(urlMaker.combine(query), StorageTestSuite.TENANT_ID,
+        ResponseHandler.any(getFinished));
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
 
-    Response response = getFinished.get(5, TimeUnit.SECONDS);
+    Response response = TestBase.get(getFinished);
 
     assertThat(String.format("Get all records failed: %s", response.getBody()),
       response.getStatusCode(), is(200));
@@ -337,18 +327,21 @@ public class ResourceClient {
       .getJsonArray(collectionArrayPropertyName));
   }
 
-  public List<IndividualResource> getMany(String query, Object... queryParams)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  public List<IndividualResource> getMany(String query, Object... queryParams) {
 
     CompletableFuture<Response> getFinished = new CompletableFuture<>();
 
     final String encodedQuery = StringUtil
       .urlEncode(String.format(query, queryParams));
 
-    client.get(urlMaker.combine("?query=" + encodedQuery),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(getFinished));
+    try {
+      client.get(urlMaker.combine("?query=" + encodedQuery),
+        StorageTestSuite.TENANT_ID, ResponseHandler.json(getFinished));
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
 
-    Response response = getFinished.get(5, TimeUnit.SECONDS);
+    Response response = TestBase.get(getFinished);
 
     assertThat(String.format("Get all records failed: %s", response.getBody()),
       response.getStatusCode(), is(200));

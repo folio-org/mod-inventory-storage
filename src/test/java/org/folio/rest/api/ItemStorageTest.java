@@ -851,17 +851,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private JsonArray threeItems() {
-    try {
-      UUID holdingsRecordId = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
-        holdingRequestBuilder -> holdingRequestBuilder.withCallNumber("hrCallNumber"));
+    UUID holdingsRecordId = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
+      holdingRequestBuilder -> holdingRequestBuilder.withCallNumber("hrCallNumber"));
 
-      return new JsonArray()
-          .add(nod(holdingsRecordId))
-          .add(smallAngryPlanet(holdingsRecordId))
-          .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
-    } catch (MalformedURLException | ExecutionException | InterruptedException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
+    return new JsonArray()
+        .add(nod(holdingsRecordId))
+        .add(smallAngryPlanet(holdingsRecordId))
+        .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
   }
 
   private Response postSynchronousBatch(JsonArray itemsArray) {

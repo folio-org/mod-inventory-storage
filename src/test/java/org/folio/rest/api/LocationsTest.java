@@ -14,18 +14,13 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -79,8 +74,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Before
-  public void beforeEach() throws InterruptedException, ExecutionException,
-    TimeoutException {
+  public void beforeEach() {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
@@ -104,11 +98,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateLocation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void canCreateLocation() {
     Response response = createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -116,42 +106,26 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateLocationWithoutUnits()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void cannotCreateLocationWithoutUnits() {
     Response response = createLocation(null, "Main Library", null, null, null, "PI/CC/ML/X", servicePointIDs);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void cannotCreateLocationWithoutCode()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void cannotCreateLocationWithoutCode() {
     Response response = createLocation(null, "Main Library", instID, campID, libID, null, servicePointIDs);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void cannotCreateLocationWithSameName()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void cannotCreateLocationWithSameName() {
     createLocation(null, "Main Library", "PI/CC/ML/X");
     Response response = createLocation(null, "Main Library", instID, campID, libID, "AA/BB", servicePointIDs);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void cannotCreateLocationWithSameCode()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void cannotCreateLocationWithSameCode() {
     createLocation(null, "Main Library", "PI/CC/ML/X");
     Response response = createLocation(null, "Some Other Library", instID, campID, libID, "PI/CC/ML/X",
         servicePointIDs);
@@ -159,11 +133,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateLocationWithSameId()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void cannotCreateLocationWithSameId() {
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
     Response response = createLocation(id, "Some Other Library", instID, campID, libID, "AA/BB", servicePointIDs);
@@ -171,11 +141,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetALocationById()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void canGetALocationById() {
 
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
@@ -189,29 +155,21 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canListLocations()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void canListLocations() {
 
     createLocation(null, "Main Library", "PI/CC/ML");
     createLocation(null, "Annex Library", "PI/CC/AL");
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locationsStorageUrl("/"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    Response getResponse = get(getCompleted);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
     assertThat(item.getInteger("totalRecords"), is(2));
   }
 
   @Test
-  public void canUpdateALocation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void canUpdateALocation() {
 
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
@@ -229,7 +187,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    Response updateResponse = get(updated);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -237,12 +195,9 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     assertThat(item.getString("id"), is(id.toString()));
     assertThat(item.getString("name"), is("Annex Library"));
   }
+
   @Test
-  public void cannotUpdateId()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void cannotUpdateId() {
 
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
@@ -259,31 +214,23 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    Response updateResponse = get(updated);
     assertThat(updateResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void canDeleteALocation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void canDeleteALocation() {
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    Response deleteResponse = get(deleteCompleted);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
   @Test
-  public void cannotDeleteALocationAssociatedWithAnItem()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void cannotDeleteALocationAssociatedWithAnItem() {
 
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
@@ -292,13 +239,13 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createItemCompleted = new CompletableFuture<>();
     send(itemsStorageUrl(""), HttpMethod.POST, item.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
-    Response createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
+    Response createItemResponse = get(createItemCompleted);
     assertThat(createItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id.toString()),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(deleteCompleted));
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    Response deleteResponse = get(deleteCompleted);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
@@ -355,8 +302,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     request.end(buffer);
   }
 
-  private List<JsonObject> getMany(String cql, Object... args) throws InterruptedException,
-    ExecutionException, TimeoutException {
+  private List<JsonObject> getMany(String cql, Object... args) {
 
     final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -364,7 +310,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
       HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(5, TimeUnit.SECONDS).getJson()
+    return get(getCompleted).getJson()
       .getJsonArray("locations").stream()
       .map(obj -> (JsonObject) obj)
       .collect(Collectors.toList());
@@ -401,11 +347,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   public static Response createLocation(UUID id, String name,
-      UUID inst, UUID camp, UUID lib, String code, List<UUID> servicePoints)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+      UUID inst, UUID camp, UUID lib, String code, List<UUID> servicePoints) {
 
     CompletableFuture<Response> createLocation = new CompletableFuture<>();
     JsonObject request = new JsonObject()
@@ -424,7 +366,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     putIfNotNull(request, "servicePointIds", new JsonArray(servicePoints));
     send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
-    return createLocation.get(5, TimeUnit.SECONDS);
+    return get(createLocation);
   }
 
   /**
@@ -453,19 +395,14 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     return id;
   }
 
-  private Response getById(UUID id)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  private Response getById(UUID id) {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(5, TimeUnit.SECONDS);
+    return get(getCompleted);
   }
 
 }
-
