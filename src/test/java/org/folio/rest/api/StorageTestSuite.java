@@ -70,9 +70,6 @@ import org.junit.runners.Suite;
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
-  /** timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS) */
-  public static final long TIMEOUT = 10;
-
   private static Vertx vertx;
   private static int port;
 
@@ -173,7 +170,7 @@ public class StorageTestSuite {
       client.delete(rootUrl, TENANT_ID,
         ResponseHandler.any(deleteAllFinished));
 
-      Response response = deleteAllFinished.get(10, TimeUnit.SECONDS);
+      Response response = TestBase.get(deleteAllFinished);
 
       if (response.getStatusCode() != 204) {
         Assert.fail("Delete all preparation failed: " +
@@ -211,7 +208,7 @@ public class StorageTestSuite {
         .map(deleteResult -> cf.complete(deleteResult.rowCount() >= 0))
         .otherwise(error -> cf.complete(false));
 
-      return cf.get(10, TimeUnit.SECONDS);
+      return TestBase.get(cf);
     } catch (Exception e) {
       throw new RuntimeException("WARNING!!!!! Unable to delete all: " + e.getMessage(), e);
     }
@@ -238,7 +235,7 @@ public class StorageTestSuite {
       }
     });
 
-    return selectCompleted.get(10, TimeUnit.SECONDS);
+    return TestBase.get(selectCompleted);
   }
 
   private static void startVerticle(DeploymentOptions options)

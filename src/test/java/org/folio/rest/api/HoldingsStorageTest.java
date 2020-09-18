@@ -1856,11 +1856,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonArray holdingsArray = new JsonArray();
     for (int i=0; i<3; i++) {
       UUID instanceId = UUID.randomUUID();
-      try {
-        instancesClient.create(smallAngryPlanet(instanceId));
-      } catch (MalformedURLException | InterruptedException | ExecutionException | TimeoutException e) {
-        throw new RuntimeException(e);
-      }
+      instancesClient.create(smallAngryPlanet(instanceId));
       holdingsArray.add(new JsonObject()
           .put("id", UUID.randomUUID().toString())
           .put("instanceId", instanceId.toString())

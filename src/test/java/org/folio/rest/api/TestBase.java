@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -9,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.support.HttpClient;
@@ -26,6 +26,9 @@ import io.vertx.core.Vertx;
  * IDE during development.
  */
 public abstract class TestBase {
+  /** timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS) */
+  public static final long TIMEOUT = 10;
+
   private static boolean invokeStorageTestSuiteAfter = false;
   static HttpClient client;
   protected static ResourceClient instancesClient;
@@ -42,6 +45,19 @@ public abstract class TestBase {
   static ResourceClient instancesStorageBatchInstancesClient;
   static ResourceClient instanceTypesClient;
 
+  /**
+   * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
+   *
+   * <p>These checked exceptions are wrapped into RuntimeException:
+   * InterruptedException, ExecutionException, TimeoutException.
+   */
+  public static <T> T get(CompletableFuture<T> future) {
+    try {
+      return future.get(TestBase.TIMEOUT, TimeUnit.SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
@@ -89,13 +105,8 @@ public abstract class TestBase {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     client.get(url, TENANT_ID, ResponseHandler.text(getCompleted));
-    Response response;
-    try {
-      response = getCompleted.get(StorageTestSuite.TIMEOUT, SECONDS);
-      assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
+    Response response = get(getCompleted);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
 }

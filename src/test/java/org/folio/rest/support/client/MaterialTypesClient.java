@@ -2,15 +2,13 @@ package org.folio.rest.support.client;
 
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.api.StorageTestSuite;
+import org.folio.rest.api.TestBase;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class MaterialTypesClient {
   private final HttpClient client;
@@ -21,8 +19,7 @@ public class MaterialTypesClient {
     this.materialTypesUrl = materialTypesUrl;
   }
 
-  public String create(String name)
-    throws InterruptedException, ExecutionException, TimeoutException {
+  public String create(String name) {
 
     CompletableFuture<Response> completed = new CompletableFuture<>();
 
@@ -32,7 +29,7 @@ public class MaterialTypesClient {
     client.post(materialTypesUrl, materialTypeRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(completed));
 
-    Response response = completed.get(5, TimeUnit.SECONDS);
+    Response response = TestBase.get(completed);
 
     return response.getJson().getString("id");
   }
