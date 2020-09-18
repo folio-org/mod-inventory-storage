@@ -48,7 +48,7 @@ public abstract class TestBase {
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
    *
-   * <p>These checked exceptions are wrapped into RuntimeException:
+   * <p>Wraps these checked exceptions into RuntimeException:
    * InterruptedException, ExecutionException, TimeoutException.
    */
   public static <T> T get(CompletableFuture<T> future) {
