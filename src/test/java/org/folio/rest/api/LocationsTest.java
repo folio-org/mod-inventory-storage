@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.TIMEOUT;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
@@ -200,7 +201,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locationsStorageUrl("/"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
-    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
     assertThat(item.getInteger("totalRecords"), is(2));
@@ -229,7 +230,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -259,7 +260,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -274,7 +275,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    Response deleteResponse = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
@@ -292,13 +293,13 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createItemCompleted = new CompletableFuture<>();
     send(itemsStorageUrl(""), HttpMethod.POST, item.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
-    Response createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
+    Response createItemResponse = createItemCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(createItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id.toString()),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(deleteCompleted));
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    Response deleteResponse = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
@@ -364,7 +365,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
       HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(5, TimeUnit.SECONDS).getJson()
+    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS).getJson()
       .getJsonArray("locations").stream()
       .map(obj -> (JsonObject) obj)
       .collect(Collectors.toList());
@@ -424,7 +425,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     putIfNotNull(request, "servicePointIds", new JsonArray(servicePoints));
     send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
-    return createLocation.get(5, TimeUnit.SECONDS);
+    return createLocation.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   /**
@@ -464,7 +465,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     send(locationsStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(5, TimeUnit.SECONDS);
+    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
 }

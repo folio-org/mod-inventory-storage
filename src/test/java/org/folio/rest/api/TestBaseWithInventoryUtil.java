@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.TIMEOUT;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -326,7 +327,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     client.get(instanceStatusesUrl("?query=code=" + code),
       TENANT_ID, ResponseHandler.json(getCompleted));
 
-    JsonObject instanceStatus = getCompleted.get(5, TimeUnit.SECONDS)
+    JsonObject instanceStatus = getCompleted.get(TIMEOUT, TimeUnit.SECONDS)
       .getJson()
       .getJsonArray("instanceStatuses").getJsonObject(0);
 

@@ -3,6 +3,7 @@ package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.TIMEOUT;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -63,7 +64,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
       }
     });
 
-    result.get(5, SECONDS);
+    result.get(TIMEOUT, SECONDS);
   }
 
   RowSet<Row> executeSql(String sql)
@@ -79,7 +80,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
       }
     });
 
-    return result.get(5, SECONDS);
+    return result.get(TIMEOUT, SECONDS);
   }
 
   void updateJsonbProperty(
@@ -117,7 +118,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
         result.complete(resultSet.result());
       });
 
-    return result.get(5, SECONDS);
+    return result.get(TIMEOUT, SECONDS);
   }
 
   private PostgresClient getPostgresClient() {

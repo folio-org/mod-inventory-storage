@@ -70,6 +70,8 @@ import org.junit.runners.Suite;
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
+  /** timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS) */
+  public static final long TIMEOUT = 10;
 
   private static Vertx vertx;
   private static int port;
@@ -171,14 +173,14 @@ public class StorageTestSuite {
       client.delete(rootUrl, TENANT_ID,
         ResponseHandler.any(deleteAllFinished));
 
-      Response response = deleteAllFinished.get(5, TimeUnit.SECONDS);
+      Response response = deleteAllFinished.get(10, TimeUnit.SECONDS);
 
       if (response.getStatusCode() != 204) {
         Assert.fail("Delete all preparation failed: " +
           response.getBody());
       }
     } catch (Exception e) {
-      Assert.fail("WARNING!!!!! Unable to delete all: " + e.getMessage());
+      throw new RuntimeException("WARNING!!!!! Unable to delete all: " + e.getMessage(), e);
     }
   }
 
@@ -191,8 +193,7 @@ public class StorageTestSuite {
 
       assertThat(mismatchedRowCount, is(0));
     } catch (Exception e) {
-      System.out.println(
-        "WARNING!!!!! Unable to determine mismatched ID rows");
+      throw new RuntimeException("WARNING!!!!! Unable to determine mismatched ID rows" + e.getMessage(), e);
     }
   }
 
@@ -210,12 +211,10 @@ public class StorageTestSuite {
         .map(deleteResult -> cf.complete(deleteResult.rowCount() >= 0))
         .otherwise(error -> cf.complete(false));
 
-      return cf.get(5, TimeUnit.SECONDS);
+      return cf.get(10, TimeUnit.SECONDS);
     } catch (Exception e) {
-      Assert.fail("WARNING!!!!! Unable to delete all: " + e.getMessage());
+      throw new RuntimeException("WARNING!!!!! Unable to delete all: " + e.getMessage(), e);
     }
-
-    return false;
   }
 
   private static RowSet<Row> getRecordsWithUnmatchedIds(String tenantId,
@@ -239,7 +238,7 @@ public class StorageTestSuite {
       }
     });
 
-    return selectCompleted.get(5, TimeUnit.SECONDS);
+    return selectCompleted.get(10, TimeUnit.SECONDS);
   }
 
   private static void startVerticle(DeploymentOptions options)

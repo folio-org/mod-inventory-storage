@@ -7,17 +7,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowIterator;
-import io.vertx.sqlclient.RowSet;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -98,7 +91,7 @@ public abstract class TestBase {
     client.get(url, TENANT_ID, ResponseHandler.text(getCompleted));
     Response response;
     try {
-      response = getCompleted.get(5, SECONDS);
+      response = getCompleted.get(StorageTestSuite.TIMEOUT, SECONDS);
       assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
