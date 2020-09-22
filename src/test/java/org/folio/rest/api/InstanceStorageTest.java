@@ -542,6 +542,27 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canSearchUsingDateOfPublication() throws Exception {
+
+    JsonObject instance1 = smallAngryPlanet(null)
+        .put("publication", new JsonArray()
+            .add(new JsonObject().put("dateOfPublication", "1910")));
+    createInstance(instance1);
+
+    JsonObject instance2 = nod(null)
+        .put("publication", new JsonArray()
+            .add(new JsonObject().put("dateOfPublication", "2020"))
+            .add(new JsonObject().put("dateOfPublication", "1910")));
+    createInstance(instance2);
+
+    JsonArray instances2020 = searchForInstances("dateOfPublication = 2020").getJsonArray("instances");
+    assertThat(instances2020.size(), is(1));
+
+    JsonArray instances1910 = searchForInstances("dateOfPublication = 1910").getJsonArray("instances");
+    assertThat(instances1910.size(), is(2));
+  }
+
+  @Test
   public void canSearchUsingMetadataDateUpdatedIndex()
     throws MalformedURLException,
     InterruptedException,

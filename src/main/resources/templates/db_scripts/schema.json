@@ -484,6 +484,10 @@
           "sqlExpressionQuery": "normalize_digits($)"
         },
         {
+          "fieldName": "dateOfPublication",
+          "sqlExpression" : "concat_array_object_values(jsonb->'publication', 'dateOfPublication')"
+        },
+        {
           "fieldName": "subjects",
           "tOps": "ADD",
           "caseSensitive": false,
