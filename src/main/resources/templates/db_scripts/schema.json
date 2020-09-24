@@ -955,6 +955,11 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/createRecordsViewFunction.sql",
       "fromModuleVersion": "19.4.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "updateIllPolicyWillNotLend.sql",
+      "fromModuleVersion": "19.4.0"
     }
   ]
 }
