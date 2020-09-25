@@ -115,6 +115,11 @@ public class ResourceClient {
       "Instances batch (Deprecated)", "instances");
   }
 
+  public static ResourceClient forIllPolicies(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::illPoliciesUrl,
+      "Ill Policies", "illPolicies");
+  }
+
   private ResourceClient(
     HttpClient client,
     UrlMaker urlMaker, String resourceName,
