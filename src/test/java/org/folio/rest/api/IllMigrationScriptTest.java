@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
 
-public class illMigrationScriptTest extends MigrationTestBase {
+public class IllMigrationScriptTest extends MigrationTestBase {
   private static final String MIGRATION_SCRIPT = loadScript("updateIllPolicyWillNotLend.sql");
   private static final String WILL_NOT_LEND_ID = "b0f97013-87f5-4bab-87f2-ac4a5191b489";
   private static final String WILL_NOT_LEND_UPDATED_NAME = "Will not lend";
