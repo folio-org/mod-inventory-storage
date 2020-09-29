@@ -44,6 +44,7 @@ public abstract class TestBase {
   static ResourceClient itemsStorageSyncClient;
   static ResourceClient instancesStorageBatchInstancesClient;
   static ResourceClient instanceTypesClient;
+  static ResourceClient illPoliciesClient;
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -84,6 +85,7 @@ public abstract class TestBase {
       .forInstancesStorageBatchInstances(client);
     instanceTypesClient = ResourceClient
       .forInstanceTypes(client);
+    illPoliciesClient = ResourceClient.forIllPolicies(client);
   }
 
   @AfterClass
