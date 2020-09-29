@@ -1949,6 +1949,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     "Declared lost",
     "Order closed",
     "Claimed returned",
+    "Unknown",
     "Withdrawn",
     "Lost and paid",
     "Aged to lost"

@@ -2469,41 +2469,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateInstanceWithDuplicateMatchKey() throws Exception {
-    log.info("Starting cannotCreateInstanceWithDuplicateMatchKey");
-
-    final UUID id = UUID.randomUUID();
-    final JsonObject instanceToCreate = smallAngryPlanet(id);
-    instanceToCreate.put("matchKey", "match_key");
-
-    setInstanceSequence(1);
-
-    createInstance(instanceToCreate);
-
-    final Response createdInstance = getById(id);
-
-    assertThat(createdInstance.getJson().getString("matchKey"), is("match_key"));
-
-    final JsonObject instanceToCreateWithSameMatchKey = nod(UUID.randomUUID());
-    instanceToCreateWithSameMatchKey.put("matchKey", "match_key");
-
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    client.post(instancesStorageUrl(""), instanceToCreateWithSameMatchKey, TENANT_ID,
-      text(createCompleted));
-
-    final Response response = createCompleted.get(5, SECONDS);
-
-    assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(),
-        is("duplicate key value violates unique constraint \"instance_matchkey_idx_unique\": " +
-          "Key (lower(f_unaccent(jsonb ->> 'matchKey'::text)))=(match_key) already exists."));
-
-    log.info("Finished cannotCreateInstanceWithDuplicateMatchKey");
-  }
-
-
-  @Test
   public void canPostSynchronousBatchWithDiscoverySuppressedInstances() throws Exception {
     final JsonArray instancesArray = new JsonArray();
     final UUID smallAngryPlanetId = UUID.randomUUID();

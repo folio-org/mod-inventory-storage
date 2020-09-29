@@ -356,10 +356,6 @@
         {
           "fieldName": "hrid",
           "tOps": "ADD"
-        },
-        {
-          "fieldName": "matchKey",
-          "tOps": "ADD"
         }
       ],
       "ginIndex": [
