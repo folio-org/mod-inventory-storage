@@ -12,6 +12,10 @@
       "type": "string",
       "description": "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
     },
+    "matchKey": {
+      "type": "string",
+      "description" : "An unique instance identifier matching a client-side bibliographic record identification. Could be an actual local identifier or a key generated from metadata in the local bibliographic record. Enables the client to determine if a client side bibliographic record already exists as an Instance in Inventory"
+    },
     "source": {
       "type": "string",
       "description": "The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)"
