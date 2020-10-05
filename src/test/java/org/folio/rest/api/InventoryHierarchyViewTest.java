@@ -14,6 +14,8 @@ import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasEffectiveLocationInstitutionNameForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasIdForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasIdForInstance;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationCodeForHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasLocationCodeForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasSourceForInstance;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.isDeleted;
@@ -142,6 +144,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       allOf(
         hasIdForHoldings(predefinedHoldings.getString("id")),
         hasPermanentLocationForHoldings("d:Main Library"),
+        hasPermanentLocationCodeForHoldings("TestBaseWI/M"),
         hasAggregatedNumberOfHoldings(1)
       )
     );
@@ -160,6 +163,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       allOf(
         hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
         hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
+        hasLocationCodeForItems("TestBaseWI/M", "TestBaseWI/TF"),
         hasAggregatedNumberOfItems(2)
       )
     );
