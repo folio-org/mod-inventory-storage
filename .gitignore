@@ -18,3 +18,5 @@ nbproject/
 #npm
 node_modules
 /bin/
+.factorypath
+.vscode/
