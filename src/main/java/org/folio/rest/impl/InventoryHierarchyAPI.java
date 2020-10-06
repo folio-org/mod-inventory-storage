@@ -1,11 +1,14 @@
 package org.folio.rest.impl;
 
+import static java.lang.String.format;
+
 import java.util.Map;
 import java.util.UUID;
 
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang.StringUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.jaxrs.resource.InventoryHierarchy;
@@ -14,18 +17,39 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.sqlclient.impl.ArrayTuple;
 
 public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements InventoryHierarchy {
 
   private static final String SQL_UPDATED_INSTANCES_IDS = "select * from get_updated_instance_ids_view($1,$2,$3,$4,$5);";
   private static final String SQL_INSTANCES = "select * from get_items_and_holdings_view($1,$2);";
+  private static final String SQL_INITIAL_LOAD = "SELECT id as instanceId,\n" +
+    "       instance.jsonb ->> 'source' AS source,\n" +
+    "       strToTimestamp(instance.jsonb -> 'metadata' ->> 'updatedDate') AS updatedDate,\n" +
+    "       (instance.jsonb ->> 'discoverySuppress')::bool AS suppressFromDiscovery,\n" +
+    "       false AS deleted\n" +
+    "FROM instance WHERE (instance.jsonb ->> 'discoverySuppress')::bool = %s";
+  private static final String SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART = "UNION ALL\n" +
+    "\tSELECT (jsonb #>> '{record,id}')::uuid            AS instanceId,\n" +
+    "        jsonb #>> '{record,source}'                 AS source,\n" +
+    "        strToTimestamp(jsonb ->> 'createdDate')     AS updatedDate,\n" +
+    "        false                                       AS suppressFromDiscovery,\n" +
+    "        true                                        AS deleted\n" +
+    "\tFROM audit_instance";
 
   @Validate
   @Override
   public void getInventoryHierarchyUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords,
       boolean onlyInstanceUpdateDate, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
+    String sql;
+    if(StringUtils.isEmpty(startDate) && StringUtils.isEmpty(endDate)) {
+      sql = deletedRecordSupport ? SQL_INITIAL_LOAD + SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART : SQL_INITIAL_LOAD;
+      sql = format(sql, skipSuppressedFromDiscoveryRecords);
+      fetchRecordsByQuery(sql, () -> new ArrayTuple(0),
+        routingContext, okapiHeaders, asyncResultHandler, vertxContext,
+        "Get updated instances completed successfully");
+    }
     fetchRecordsByQuery(SQL_UPDATED_INSTANCES_IDS,
       () -> createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords, tuple -> {
         tuple.addBoolean(onlyInstanceUpdateDate);
