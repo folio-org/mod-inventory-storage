@@ -24,7 +24,6 @@
 * Postgres requires special permissions to disable triggers for migrations (MODINVSTOR-476)
 * Fixing inconsistent hit counts (totalRecords) estimation (MODINVSTOR-519)
 * Bulk download Instance UUIDs OOM (MODINVSTOR-465)
-This conversation was marked as resolved by julianladisch
 * There were upgraded these interfaces:
   * "item-storage" to version 8.5
   * "item-storage-batch-sync" to version 0.5
