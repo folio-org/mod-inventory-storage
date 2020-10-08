@@ -13,7 +13,7 @@ Provides PostgreSQL based storage to complement the [inventory module](http://gi
 
 # Prerequisites
 
-- Java 8 JDK
+- Java 11 JDK
 - Maven 3.3.9
 - Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
 - Node 6.4.0 (for API linting and documentation generation)
