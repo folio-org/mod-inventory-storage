@@ -1,3 +1,25 @@
+## 19.3.0 2020-07-28
+
+* Add 'Aged to lost' status to allowed item statuses list (MODINVSTOR-503)
+* Solving issue with GBV by making migration for preceeding and succeeding titles to be possible to run several times without failing (MODINVSTOR-541)
+* Separate filtering from response generation in oai-pmh view (MODINVSTOR-536)
+* Item record. Effective call number (item), eye readable. Search on exact data in Call number data element (MODINVSTOR-481)
+* Holdings record. Call number, eye readable. Search on exact data in Call number data element (MODINVSTOR-480)
+* Search queries without database index (MODINVSTOR-472)
+* Upgrade to raml-module-builder (RMB) 30.2.4 (MODINVSTOR-532)
+* Expand oai-pmh view with additional fields (MODINVSTOR-498)
+* OAI-PMH view doesn't respond in Bug Fest (MODINVSTOR-527)
+* Change permissions location for oai-pmh view (MODINVSTOR-524)
+* Add Index for Instances Full-text Subjects Search (MODINVSTOR-499)
+* Postgres requires special permissions to disable triggers for migrations (MODINVSTOR-476)
+* Fixing inconsistent hit counts (totalRecords) estimation (MODINVSTOR-519)
+* Bulk download Instance UUIDs OOM (MODINVSTOR-465)
+This conversation was marked as resolved by julianladisch
+* There were upgraded these interfaces:
+  * "item-storage" to version 8.5
+  * "item-storage-batch-sync" to version 0.5
+  * "oaipmhview" to version 1.1
+
 ## 19.2.2 2020-06-17
 
 * Disable triggers for migrations without requiring special permissions (MODINVSTOR-476)
