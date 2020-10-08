@@ -1,3 +1,13 @@
+## 19.4.0 2020-10-08
+
+* Introduces public and staff only holdings statements notes (MODINVSTOR-543)
+* Introduces `Unknown` item status (MODINVSTOR-588)
+* Introduces holdings record `source` property (MODINVSTOR-542, MODINVSTOR-590)
+* Introduces instance `match key` property (MODINVSTOR-587)
+* Includes `location code` in hierarchy API (MODINVSTOR-589)
+* Requires JDK 11 (MODINVSTOR-555)
+* Upgrades to RAML Module Builder 31.1.0 (MODINVSTOR-542, MODINVSTOR-557, MODINVSTOR-569)
+
 ## 19.3.0 2020-07-28
 
 * Add 'Aged to lost' status to allowed item statuses list (MODINVSTOR-503)
