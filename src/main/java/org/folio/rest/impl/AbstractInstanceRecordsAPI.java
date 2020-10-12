@@ -17,19 +17,20 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.RowStreamToBufferAdapter;
-
 import com.google.common.collect.Iterables;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.core.streams.Pipe;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
 import io.vertx.sqlclient.impl.ArrayTuple;
 
@@ -44,47 +45,84 @@ public abstract class AbstractInstanceRecordsAPI {
     return response;
   }
 
-  private void respondWithError(Throwable t, Handler<AsyncResult<Response>> asyncResultHandler) {
+  /**
+   * Return a 500 response about Throwable t via the handler,
+   * but if dataResponse's head has already been written
+   * close the dataResponse TCP connection to signal the error and return null via the handler.
+   */
+  private static void respondWithError(HttpServerResponse dataResponse, Throwable t, Handler<AsyncResult<Response>> asyncResultHandler) {
     log.error(t);
+    if (dataResponse.headWritten()) {
+      log.error("HTTP head has already been written, closing TCP connection to signal error");
+      dataResponse.close();
+      asyncResultHandler.handle(succeededFuture());
+      return;
+    }
     asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(t.getMessage())));
+  }
+
+  private static String createJsonFromRow(Row row) {
+    if (row == null) {
+      return "";
+    }
+    JsonObject json = new JsonObject();
+    for (int i = 0; i < row.size(); i++) {
+      json.put(row.getColumnName(i), convertRowValue(row.getValue(i)));
+    }
+    return json.toString();
+  }
+
+  private static Object convertRowValue(Object value) {
+    if (value == null) {
+      return "";
+    }
+    return value instanceof JsonObject ||
+      value instanceof JsonArray ? value : value.toString();
   }
 
   protected void fetchRecordsByQuery(String sql, Supplier<Tuple> paramsSupplier, RoutingContext routingContext, Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, String logMessage) {
 
+    final HttpServerResponse response = getResponse(routingContext);
     try {
-      log.debug("request params: {}", Iterables.toString(routingContext.request().params()));
+      if (log.isDebugEnabled()) {
+        log.debug("request params: {}", Iterables.toString(routingContext.request().params()));
+      }
       Tuple params = paramsSupplier.get();
       log.debug("postgres params: {}", params);
 
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-      final HttpServerResponse response = getResponse(routingContext);
 
       postgresClient.startTx(tx -> postgresClient.selectStream(tx, sql, params, ar -> {
         if (ar.failed()) {
-          respondWithError(ar.cause(), asyncResultHandler);
+          respondWithError(response, ar.cause(), asyncResultHandler);
           return;
         }
 
-        Pipe<Buffer> pipe = new RowStreamToBufferAdapter(ar.result()).pipe();
-        pipe.to(response, completed -> {
-          if (completed.failed()) {
-            respondWithError(completed.cause(), asyncResultHandler);
-            return;
-          }
-          log.debug(logMessage);
+        RowStream<Row> rowStream = ar.result();
+        rowStream
+        .exceptionHandler(e -> respondWithError(response, e, asyncResultHandler))
+        .endHandler(end -> {
           postgresClient.endTx(tx, h -> {
             if (h.failed()) {
-              respondWithError(h.cause(), asyncResultHandler);
+              respondWithError(response, h.cause(), asyncResultHandler);
+              return;
             }
+            response.end(responseEnd -> asyncResultHandler.handle(Future.succeededFuture()));
           });
+        }).handler(row -> {
+          response.write(createJsonFromRow(row));
+          if (response.writeQueueFull()) {
+            rowStream.pause();
+          }
         });
+        response.drainHandler(drain -> rowStream.resume());
       }));
     } catch (IllegalArgumentException e) {
       log.error(e);
       asyncResultHandler.handle(succeededFuture(respond400WithTextPlain(e.getMessage())));
     } catch (Exception e) {
-      respondWithError(e, asyncResultHandler);
+      respondWithError(response, e, asyncResultHandler);
     }
   }
 
