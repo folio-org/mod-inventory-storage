@@ -15,7 +15,13 @@ import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasEffectiv
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.isDeleted;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.time.LocalDateTime;
@@ -31,12 +37,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.folio.rest.impl.AbstractInstanceRecordsAPIImpl;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.OaipmhInstanceIds;
 import org.folio.rest.persist.PostgresClient;
@@ -48,14 +56,23 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.AdditionalAnswers;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.Tuple;
 
 @RunWith(VertxUnitRunner.class)
 public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
@@ -383,6 +400,74 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     getOiaPmhViewInstances(params, response -> {
       assertThat(response.getStatusCode(), is(400));
     });
+  }
+
+  @Test
+  public void test500(TestContext testContext) {
+    RoutingContext routingContext = mock(RoutingContext.class);
+    when(routingContext.response()).thenReturn(mock(HttpServerResponse.class));
+    AbstractInstanceRecordsAPIImpl.fetchRecordsByQuery("SELECT 1",
+        routingContext, null, testContext.asyncAssertSuccess(response -> {
+          assertThat(response.getStatus(), is(500));
+        }));
+  }
+
+  @Test
+  public void testTcpClose(TestContext testContext) {
+    HttpServerResponse httpServerResponse = mock(HttpServerResponse.class);
+    when(httpServerResponse.headWritten()).thenReturn(true);
+    RoutingContext routingContext = mock(RoutingContext.class);
+    when(routingContext.response()).thenReturn(httpServerResponse);
+    AbstractInstanceRecordsAPIImpl.fetchRecordsByQuery("SELECT 1",
+        routingContext, null, testContext.asyncAssertSuccess(response -> {
+          assertThat(response, is(nullValue()));
+          verify(httpServerResponse).close();
+        }));
+  }
+
+  private HttpServerResponse succeedingHttpServerResponse() {
+    HttpServerResponse httpServerResponse = mock(HttpServerResponse.class);
+    doAnswer(AdditionalAnswers.answerVoid(
+        (Handler<AsyncResult<Void>> handler) -> handler.handle(Future.succeededFuture())))
+        .when(httpServerResponse).end(any(Handler.class));
+    return httpServerResponse;
+  }
+
+  public void testFetch300(TestContext testContext) {
+    RoutingContext routingContext = mock(RoutingContext.class);
+    HttpServerResponse httpServerResponse = succeedingHttpServerResponse();
+    when(routingContext.response()).thenReturn(httpServerResponse);
+    AbstractInstanceRecordsAPIImpl.fetchRecordsByQuery("SELECT generate_series(1, 300)",
+        routingContext, () -> Tuple.tuple(), testContext.asyncAssertSuccess(response -> {
+          assertThat(response, is(nullValue()));
+        }));
+  }
+
+  public void testWriteQueueFull(TestContext testContext) {
+    Handler [] drainHandler = new Handler [1];
+    AtomicInteger drainCount = new AtomicInteger();
+    RoutingContext routingContext = mock(RoutingContext.class);
+    HttpServerResponse httpServerResponse = succeedingHttpServerResponse();
+    when(routingContext.response()).thenReturn(httpServerResponse);
+    doAnswer(AdditionalAnswers.answerVoid((Handler handler) -> drainHandler[0] = handler))
+    .when(httpServerResponse).drainHandler(any());
+    doAnswer(
+      new Answer() {
+        @Override
+        public Object answer(InvocationOnMock invocation) {
+          getVertx().runOnContext(run -> {
+            drainCount.getAndIncrement();
+            drainHandler[0].handle(null);
+          });
+          return true;
+        }
+      })
+    .when(httpServerResponse).writeQueueFull();
+    AbstractInstanceRecordsAPIImpl.fetchRecordsByQuery("SELECT generate_series(1, 300)",
+        routingContext, () -> Tuple.tuple(), testContext.asyncAssertSuccess(response -> {
+          assertThat(response, is(nullValue()));
+          assertThat(drainCount.get(), is(300));
+        }));
   }
 
   private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId)
