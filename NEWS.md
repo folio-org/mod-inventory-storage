@@ -1,3 +1,8 @@
+## 19.3.4 2020-10-14
+
+* Upgrade to RMB 30.2.8 (MODINVSTOR-591)
+  * doStreamGetQuery returns only 100 records when limit>100 (RMB-732)
+
 ## 19.3.3 2020-09-02
 
 * Upgrade to RMB 30.2.7 (MODINVSTOR-567)
