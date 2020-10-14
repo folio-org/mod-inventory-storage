@@ -51,7 +51,7 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
   }
 
   @Test
-  public void test500(TestContext testContext) {
+  public void shouldRespondWith500StatusWhenErrorsOccursWhilstFetchingRecords(TestContext testContext) {
     RoutingContext routingContext = mock(RoutingContext.class);
     when(routingContext.response()).thenReturn(mock(HttpServerResponse.class));
     new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT 1",
@@ -61,7 +61,7 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
   }
 
   @Test
-  public void testTcpClose(TestContext testContext) {
+  public void shouldCloseTcpWhenFailureAfterHttpHeadHasBeenWritten(TestContext testContext) {
     HttpServerResponse httpServerResponse = mock(HttpServerResponse.class);
     when(httpServerResponse.headWritten()).thenReturn(true);
     RoutingContext routingContext = mock(RoutingContext.class);
@@ -82,7 +82,7 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
   }
 
   @Test
-  public void testFetch300(TestContext testContext) {
+  public void canFetch300Records(TestContext testContext) {
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse httpServerResponse = getHttpServerResponseMock();
     when(routingContext.response()).thenReturn(httpServerResponse);
@@ -94,7 +94,7 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
   }
 
   @Test
-  public void testWriteQueueFull(TestContext testContext) {
+  public void canHandleWriteQueueFull(TestContext testContext) {
     Handler [] drainHandler = new Handler [1];
     AtomicInteger drainCount = new AtomicInteger();
     RoutingContext routingContext = mock(RoutingContext.class);
