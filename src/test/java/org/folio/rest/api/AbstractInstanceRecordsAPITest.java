@@ -1,4 +1,4 @@
-package org.folio.rest.impl;
+package org.folio.rest.api;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -28,8 +28,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.api.TestBase;
+import org.folio.rest.impl.AbstractInstanceRecordsAPI;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalAnswers;
@@ -41,19 +41,20 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
   private static Map<String,String> okapiHeaders = Collections.singletonMap(
       RestVerticle.OKAPI_HEADER_TENANT, StorageTestSuite.TENANT_ID);
 
-  public static void fetchRecordsByQuery(String sql, RoutingContext routingContext,
-      Supplier<Tuple> paramsSupplier, Handler<AsyncResult<Response>> asyncResultHandler) {
+  class MyAbstractInstanceRecordsAPI extends AbstractInstanceRecordsAPI {
+    public void fetchRecordsByQuery(String sql, RoutingContext routingContext,
+        Supplier<Tuple> paramsSupplier, Handler<AsyncResult<Response>> asyncResultHandler) {
 
-    new AbstractInstanceRecordsAPI(){}.fetchRecordsByQuery(
-        sql, paramsSupplier, routingContext, okapiHeaders,
-        asyncResultHandler, Vertx.vertx().getOrCreateContext(), null);
+      fetchRecordsByQuery(sql, paramsSupplier, routingContext, okapiHeaders,
+          asyncResultHandler, Vertx.vertx().getOrCreateContext(), null);
+    }
   }
 
   @Test
   public void test500(TestContext testContext) {
     RoutingContext routingContext = mock(RoutingContext.class);
     when(routingContext.response()).thenReturn(mock(HttpServerResponse.class));
-    AbstractInstanceRecordsAPITest.fetchRecordsByQuery("SELECT 1",
+    new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT 1",
         routingContext, null, testContext.asyncAssertSuccess(response -> {
           assertThat(response.getStatus(), is(500));
         }));
@@ -65,7 +66,7 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
     when(httpServerResponse.headWritten()).thenReturn(true);
     RoutingContext routingContext = mock(RoutingContext.class);
     when(routingContext.response()).thenReturn(httpServerResponse);
-    AbstractInstanceRecordsAPITest.fetchRecordsByQuery("SELECT 1",
+    new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT 1",
         routingContext, null, testContext.asyncAssertSuccess(response -> {
           assertThat(response, is(nullValue()));
           verify(httpServerResponse).close();
@@ -85,7 +86,7 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse httpServerResponse = getHttpServerResponseMock();
     when(routingContext.response()).thenReturn(httpServerResponse);
-    AbstractInstanceRecordsAPITest.fetchRecordsByQuery("SELECT generate_series(1, 300)",
+    new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT generate_series(1, 300)",
         routingContext, () -> Tuple.tuple(), testContext.asyncAssertSuccess(response -> {
           assertThat(response, is(nullValue()));
           verify(httpServerResponse, times(300)).write(anyString());
@@ -113,7 +114,7 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
         }
       })
     .when(httpServerResponse).writeQueueFull();
-    AbstractInstanceRecordsAPITest.fetchRecordsByQuery("SELECT generate_series(1, 300)",
+    new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT generate_series(1, 300)",
         routingContext, () -> Tuple.tuple(), testContext.asyncAssertSuccess(response -> {
           assertThat(response, is(nullValue()));
           assertThat(drainCount.get(), is(300));
