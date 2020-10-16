@@ -1,3 +1,8 @@
+## 19.4.1 2020-10-16
+
+* Streaming endpoints can respond with more than 100 records (MODINVSTOR-574, MODINVSTOR-595)
+* Upgrades to RAML Module Builder 33.1.2 (MODINVSTOR-595)
+
 ## 19.4.0 2020-10-08
 
 * Introduces public and staff only holdings statements notes (MODINVSTOR-543)
