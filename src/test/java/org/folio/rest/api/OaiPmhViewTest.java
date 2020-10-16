@@ -16,7 +16,6 @@ import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.isDeleted;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-
 import java.net.MalformedURLException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -48,7 +47,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
