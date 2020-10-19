@@ -120,6 +120,16 @@ public class ResourceClient {
       "Ill Policies", "illPolicies");
   }
 
+  public static ResourceClient forStatisticalCodeTypes(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::statisticalCodeTypesUrl,
+      "Statistical code types", "statisticalCodeTypes");
+  }
+
+  public static ResourceClient forStatisticalCodes(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::statisticalCodesUrl,
+      "Statistical codes", "statisticalCodes");
+  }
+
   private ResourceClient(
     HttpClient client,
     UrlMaker urlMaker, String resourceName,

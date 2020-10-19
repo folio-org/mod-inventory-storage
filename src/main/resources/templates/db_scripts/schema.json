@@ -280,6 +280,10 @@
         {
           "fieldName": "code, statisticalCodeTypeId",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
         }
       ],
       "foreignKeys": [
