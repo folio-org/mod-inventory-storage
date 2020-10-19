@@ -80,11 +80,27 @@ public class InstanceStorageAPI implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    if (PgUtil.checkOptimizedCQL(query, "title") != null) { // Until RMB-573 is fixed
+    String column = null;
+
+    // Until RMB-573 is fixed
+    if (PgUtil.checkOptimizedCQL(query, "title") != null) {
+      column = "title";
+    }
+    else if (PgUtil.checkOptimizedCQL(query, "contributors") != null) {
+      column = "contributors";
+    }
+    else if (PgUtil.checkOptimizedCQL(query, "publication") != null) {
+      column = "publication";
+    }
+    else if (PgUtil.checkOptimizedCQL(query, "relation") != null) {
+      column = "relation";
+    }
+
+    if (column != null) {
       try {
         PreparedCQL preparedCql = handleCQL(query, limit, offset);
         PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
-          "title", query, offset, limit,
+          column, query, offset, limit,
           okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
@@ -94,6 +110,7 @@ public class InstanceStorageAPI implements InstanceStorage {
       }
       return;
     }
+
     PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
       "instances", routingContext, okapiHeaders, vertxContext);
   }
