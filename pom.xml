@@ -85,11 +85,11 @@
   </dependencies>
 
   <properties>
-    <vertx.version>3.9.3</vertx.version>
+    <vertx.version>3.9.4</vertx.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>30.2.8</raml-module-builder-version>
+    <raml-module-builder-version>30.2.9</raml-module-builder-version>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/instance-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances</generate_routing_context>
     <argLine />
   </properties>
