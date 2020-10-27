@@ -10,7 +10,7 @@ documentation:
 
 types:
   servicePointsUser: !include servicepointsuser.json
-  servicepointsusers: !include servicepointsusers.json
+  servicePointsUsers: !include servicepointsusers.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -28,7 +28,7 @@ resourceTypes:
     collection:
       exampleCollection: !include examples/servicepointsusers.json
       exampleItem: !include examples/servicepointsuser.json
-      schemaCollection: servicepointsusers
+      schemaCollection: servicePointsUsers
       schemaItem: servicePointsUser
   get:
     is: [
@@ -50,15 +50,9 @@ resourceTypes:
         body:
           text/plain:
             example: "Internal server error"
-  /{servicepointsuserId}:
+  /{servicePointsUserId}:
     description: Pass the id for the service points user
     type:
       collection-item:
         exampleItem: !include examples/servicepointsuser.json
         schema: servicePointsUser
-
-
-
-
-
-
