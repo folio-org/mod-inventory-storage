@@ -1,3 +1,7 @@
+## 19.5.0 (in-progress)
+
+* Newly created item records will have the creation date as the status update date (MODINVSTOR-508)
+
 ## 19.4.0 2020-10-08
 
 * Introduces public and staff only holdings statements notes (MODINVSTOR-543)

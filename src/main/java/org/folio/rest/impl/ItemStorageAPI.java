@@ -56,6 +56,13 @@ public class ItemStorageAPI implements ItemStorage {
       RoutingContext routingContext, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
+    //if the initial status is "Available", set the last updated date of that 
+    //status to be the creation date of the item
+    
+    if (entity.getStatus().getName().toString().equals("Available")) {
+      entity.getStatus().setDate(entity.getMetadata().getCreatedDate());
+    }
+    
 
     final Future<String> hridFuture;
     if (isBlank(entity.getHrid())) {
