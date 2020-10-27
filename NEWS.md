@@ -1,3 +1,7 @@
+## 19.3.6 2020-10-27
+
+* Fixes duplicate service point user constraint violation on tenant upgrade (MODINVSTOR-573)
+
 ## 19.3.5 2020-10-22
 
 * Upgrade to RMB 30.2.9 (MODINVSTOR-605)
