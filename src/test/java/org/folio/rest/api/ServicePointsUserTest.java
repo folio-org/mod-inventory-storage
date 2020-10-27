@@ -11,6 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -174,16 +175,16 @@ public class ServicePointsUserTest extends TestBase {
 
   @Test
   public void cannotCreateServicePointUserIfUserAlreadyExists() throws Exception {
-    final var firstId = UUID.randomUUID();
-    final var secondId = UUID.randomUUID();
-    final var userId = UUID.randomUUID();
-    final var servicePoints = List.of(UUID.randomUUID());
+    final UUID firstId = UUID.randomUUID();
+    final UUID secondId = UUID.randomUUID();
+    final UUID userId = UUID.randomUUID();
+    final List<UUID> servicePoints = Collections.singletonList(UUID.randomUUID());
 
-    final var firstCreateResponse = createServicePointUser(firstId, userId,
+    final Response firstCreateResponse = createServicePointUser(firstId, userId,
       servicePoints, null);
     assertThat(firstCreateResponse.getStatusCode(), is(201));
 
-    final var secondCreateResponse = createServicePointUser(secondId, userId,
+    final Response secondCreateResponse = createServicePointUser(secondId, userId,
       servicePoints, null);
 
     assertThat(secondCreateResponse.getStatusCode(), is(422));
