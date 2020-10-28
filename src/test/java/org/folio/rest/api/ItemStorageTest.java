@@ -1265,7 +1265,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotSetStatusDate() throws Exception {
+  public void cannotChangeStatusDate() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
@@ -1335,7 +1335,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject createdItem = getById(id).getJson();
 
-    String createdDate = createdItem.getJsonObject("metadata").getString("createdDate");
+    final String createdDate = createdItem.getJsonObject("metadata").getString("createdDate");
 
     assertThat(createdItem.getJsonObject("status").getString("name"), is("Available"));
     assertThat(createdItem.getJsonObject("status").getString("date"), is(createdDate));
@@ -1346,8 +1346,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsClient.replace(id, firstUpdateItem);
 
     JsonObject firstUpdatedItemResponse = itemsClient.getById(id).getJson();
-
-    createdDate = firstUpdatedItemResponse.getJsonObject("metadata").getString("createdDate");
 
     assertThat(firstUpdatedItemResponse.getString("itemLevelCallNumber"),
       is("newItCn"));
@@ -1362,9 +1360,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsClient.replace(id, secondUpdateItem);
 
     JsonObject secondUpdatedItemResponse = itemsClient.getById(id).getJson();
-
-    createdDate = secondUpdatedItemResponse.getJsonObject("metadata").getString("createdDate");
-
 
     assertThat(secondUpdatedItemResponse.getString("temporaryLocationId"),
       is(onlineLocationId.toString()));
