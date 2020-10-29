@@ -43,6 +43,7 @@ import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.isNotNull;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -1276,7 +1277,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     String createdDate = createdItem.getJsonObject("metadata").getString("createdDate");
 
-
     assertThat(initialStatus.getString("name"), is("Available"));
     assertThat(initialStatus.getString("date"), is(createdDate));
 
@@ -1938,6 +1938,20 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     for (int i = 0; i < itemArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemArray.getJsonObject(i).getString("id")));
+    }
+  }
+
+  @Test
+  public void synchronousBatchItemsShouldHaveStatusDateOnCreation() {
+    final JsonArray itemArray = threeItems();
+
+    assertThat(postSynchronousBatch(itemArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    JsonObject item;
+    for (int i = 0; i < itemArray.size(); i++) {
+      item = getById(itemArray.getJsonObject(i).getString("id")).getJson();
+      assertThat(item.getJsonObject("status").getString("date"), notNullValue());
+
     }
   }
 
