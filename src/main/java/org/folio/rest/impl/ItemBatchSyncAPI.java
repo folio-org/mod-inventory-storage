@@ -42,7 +42,6 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
 
     for (Item item : items) {
       futures.add(setHrid(item, hridManager));
-      item.getStatus().setDate(item.getMetadata().getCreatedDate());
 
     }
 
