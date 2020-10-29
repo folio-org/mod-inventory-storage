@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 import javax.ws.rs.core.Response;
 
@@ -39,10 +40,14 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     @SuppressWarnings("rawtypes")
     final List<Future> futures = new ArrayList<>();
     final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
+    // we'll need to add status update dates to each item before it's created.
+    // unfortunately, setting this from the item created date does not seem to work as it does
+    // elsewhere (see itemstorageAPI) so we are using the current date/time.
+    Date date = new java.util.Date();
 
     for (Item item : items) {
+      item.getStatus().setDate(date);
       futures.add(setHrid(item, hridManager));
-
     }
 
     CompositeFuture.all(futures)

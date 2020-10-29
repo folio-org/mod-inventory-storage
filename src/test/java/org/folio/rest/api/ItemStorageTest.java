@@ -1947,11 +1947,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postSynchronousBatch(itemArray), statusCodeIs(HttpStatus.HTTP_CREATED));
 
-    JsonObject item;
+    JsonObject item = null;
     for (int i = 0; i < itemArray.size(); i++) {
       item = getById(itemArray.getJsonObject(i).getString("id")).getJson();
       assertThat(item.getJsonObject("status").getString("date"), notNullValue());
-
     }
   }
 
