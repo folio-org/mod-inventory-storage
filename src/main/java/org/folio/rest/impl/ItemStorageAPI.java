@@ -28,6 +28,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
+import java.util.Date;
 
 /**
  * CRUD for Item.
@@ -56,8 +57,9 @@ public class ItemStorageAPI implements ItemStorage {
       RoutingContext routingContext, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-  
-    entity.getStatus().setDate(entity.getMetadata().getCreatedDate());
+
+    Date date = new java.util.Date();
+    entity.getStatus().setDate(date);
     
     final Future<String> hridFuture;
     if (isBlank(entity.getHrid())) {

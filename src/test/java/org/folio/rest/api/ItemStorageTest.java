@@ -1334,7 +1334,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject createdItem = getById(id).getJson();
 
-    final String createdDate = createdItem.getJsonObject("metadata").getString("createdDate");
+    final String createdDate = createdItem.getJsonObject("status").getString("date");
 
     assertThat(createdItem.getJsonObject("status").getString("name"), is("Available"));
     assertThat(createdItem.getJsonObject("status").getString("date"), is(createdDate));
