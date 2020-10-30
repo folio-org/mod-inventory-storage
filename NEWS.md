@@ -1,6 +1,6 @@
 ## 19.5.0 (in-progress)
 
-* Newly created item records will have the creation date as the status update date (MODINVSTOR-508)
+* Newly created item records will have a last modified date set for status (MODINVSTOR-508)
 
 ## 19.4.0 2020-10-08
 
