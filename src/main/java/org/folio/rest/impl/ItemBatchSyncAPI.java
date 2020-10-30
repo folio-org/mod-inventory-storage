@@ -40,9 +40,8 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     @SuppressWarnings("rawtypes")
     final List<Future> futures = new ArrayList<>();
     final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
-    // we'll need to add status update dates to each item before it's created.
-    // unfortunately, setting this from the item created date does not seem to work as it does
-    // elsewhere (see itemstorageAPI) so we are using the current date/time.
+    
+    // add a last modified date to status on all created items
     Date date = new java.util.Date();
 
     for (Item item : items) {
