@@ -168,7 +168,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instanceFromGet.getJsonArray("natureOfContentTermIds"),
       containsInAnyOrder(natureOfContentIds));
     assertThat(
-      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
+      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
   }
 
@@ -209,7 +209,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(identifiers.size(), is(1));
     assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
     assertThat(
-      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
+      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
   }
 
   @Test
@@ -1764,7 +1764,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
    * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
    */
   @Test
-  public void shouldSetStatusUpdatedDate() throws Exception {
+  public void shouldChangeInitialStatusUpdatedDate() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id)
       .put("statusId", getOtherInstanceType().getId().toString());
@@ -1773,7 +1773,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Response createdInstance = getById(id);
     assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
-      nullValue());
+      notNullValue());
+    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
+
+    final String initialDate = createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY);
 
     JsonObject replacement = instanceToCreate.copy()
       .put("hrid", createdInstance.getJson().getString("hrid"))
@@ -1784,7 +1787,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedInstance.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertThat(updatedInstance
-        .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
+        .getInstant(STATUS_UPDATED_DATE_PROPERTY), not(initialDate));
   }
 
   /**
@@ -1799,8 +1802,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(instanceToCreate);
 
     Response createdInstance = getById(id);
+    
     assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
-      nullValue());
+      notNullValue());
 
     JsonObject instanceWithCatStatus = instanceToCreate.copy()
       .put("hrid", createdInstance.getJson().getString("hrid"))
@@ -1839,7 +1843,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Response createdInstance = getById(id);
     assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
-      nullValue());
+      notNullValue());
+    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
+      hasIsoFormat());
 
     JsonObject instanceWithCatStatus = instanceToCreate.copy()
       .put("hrid", createdInstance.getJson().getString("hrid"))
