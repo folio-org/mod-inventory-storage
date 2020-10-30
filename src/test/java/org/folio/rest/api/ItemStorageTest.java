@@ -43,7 +43,6 @@ import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.isNotNull;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
