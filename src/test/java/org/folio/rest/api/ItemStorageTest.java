@@ -66,6 +66,7 @@ import org.folio.rest.jaxrs.model.LastCheckIn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
