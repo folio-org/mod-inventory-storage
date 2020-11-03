@@ -1901,7 +1901,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void newSynchronousBatchInstancesShouldHaveInitialStatusDate() throws Exception {
+  public void instancesCreatedInABatchShouldHaveStatusDate() throws Exception {
     JsonArray instancesArray = new JsonArray();
     
     for (int i = 0; i < 3; i++) {
