@@ -1685,6 +1685,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
     assertThat(instances.size(), is(numberOfInstances));
     assertThat(instances.getJsonObject(1).getJsonObject(METADATA_KEY), notNullValue());
+    assertThat(instances.getJsonObject(1).getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
+    assertThat(instances.getJsonObject(1).getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertNotSuppressedFromDiscovery(instances);
   }
@@ -1887,6 +1889,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject uprooted         = instancesArray.getJsonObject(0);
     JsonObject smallAngryPlanet = instancesArray.getJsonObject(numberOfInstances / 2);
     JsonObject temeraire        = instancesArray.getJsonObject(numberOfInstances - 1);
+
     assertExists(uprooted);
     assertExists(smallAngryPlanet);
     assertExists(temeraire);
@@ -1894,6 +1897,30 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertNotSuppressedFromDiscovery(instancesArray);
   }
 
+  @Test
+  public void newSynchronousBatchInstancesShouldHaveInitialStatusDate() throws Exception {
+    JsonArray instancesArray = new JsonArray();
+    
+    for (int i = 0; i < 3; i++) {
+      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
+    }
+
+    JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.empty(createCompleted));
+    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    Response resp;
+    for (int i = 0; i < 3; i++) {
+      resp = getById(instancesArray.getJsonObject(i).getString("id"));
+      assertThat(resp.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
+      assertThat(resp.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
+    }
+
+
+  }
+  
   @Test
   public void cannotPostSynchronousBatchWithInvalidInstance() throws Exception {
     JsonArray instancesArray = new JsonArray();

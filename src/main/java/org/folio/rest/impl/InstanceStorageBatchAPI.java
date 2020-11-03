@@ -18,6 +18,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.MetadataUtil;
 import javax.ws.rs.core.Response;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,13 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
                                                 Map<String, String> okapiHeaders,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
+
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    final String currentDate = sdf.format(new Date());
+    for (Instance instance: entity.getInstances()) {
+        instance.setStatusUpdatedDate(currentDate);
+    }
+
     vertxContext.runOnContext(v -> {
       try {
         PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
