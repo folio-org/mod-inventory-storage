@@ -58,8 +58,7 @@ public class ItemStorageAPI implements ItemStorage {
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    Date date = new java.util.Date();
-    entity.getStatus().setDate(date);
+    entity.getStatus().setDate(new java.util.Date());
     
     final Future<String> hridFuture;
     if (isBlank(entity.getHrid())) {
