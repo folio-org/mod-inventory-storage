@@ -169,6 +169,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       containsInAnyOrder(natureOfContentIds));
     assertThat(
       instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
+    assertThat(
+      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
+      
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
   }
 
@@ -208,8 +211,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray identifiers = instanceFromGet.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
     assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
-    assertThat(
-      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
+    assertThat(instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
+    assertThat(instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
   }
 
   @Test
