@@ -1,10 +1,9 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 
 import java.lang.invoke.MethodHandles;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -110,9 +109,8 @@ public class InstanceStorageAPI implements InstanceStorage {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
     
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-    final String statusDate = sdf.format(new Date());
-    entity.setStatusUpdatedDate(statusDate);
+    
+    entity.setStatusUpdatedDate(generateStatusUpdatedDate());
 
     try {
       PostgresClient postgresClient =

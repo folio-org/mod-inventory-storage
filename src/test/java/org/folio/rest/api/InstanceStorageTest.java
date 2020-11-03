@@ -167,8 +167,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags, hasItem(TAG_VALUE));
     assertThat(instanceFromGet.getJsonArray("natureOfContentTermIds"),
       containsInAnyOrder(natureOfContentIds));
-    assertThat(
-      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
+
     assertThat(
       instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
       
@@ -211,7 +210,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray identifiers = instanceFromGet.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
     assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
-    assertThat(instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
     assertThat(instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
   }
 
@@ -1688,7 +1686,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
     assertThat(instances.size(), is(numberOfInstances));
     assertThat(instances.getJsonObject(1).getJsonObject(METADATA_KEY), notNullValue());
-    assertThat(instances.getJsonObject(1).getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
     assertThat(instances.getJsonObject(1).getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertNotSuppressedFromDiscovery(instances);
@@ -1777,8 +1774,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(instanceToCreate);
 
     Response createdInstance = getById(id);
-    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
-      notNullValue());
+
     assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     final String initialDate = createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY);
@@ -1848,8 +1844,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Response createdInstance = getById(id);
     assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
-      notNullValue());
-    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
       hasIsoFormat());
 
     JsonObject instanceWithCatStatus = instanceToCreate.copy()
@@ -1902,26 +1896,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void instancesCreatedInABatchShouldHaveStatusDate() throws Exception {
-    JsonArray instancesArray = new JsonArray();
-    
-    for (int i = 0; i < 3; i++) {
-      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
-    }
+    JsonObject instanceCollection = createRequestForMultipleInstances(3);
 
-    JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
-
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.empty(createCompleted));
+    final var createCompleted = createInstancesBatchSync(instanceCollection);
     assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
 
-    Response resp;
-    for (int i = 0; i < 3; i++) {
-      resp = getById(instancesArray.getJsonObject(i).getString("id"));
-      assertThat(resp.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
-      assertThat(resp.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
-    }
-
-
+    JsonArrayHelper.toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(item -> {
+      assertThat(getById(item.getString("id")).getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
+        hasIsoFormat());
+    });
   }
   
   @Test
@@ -2643,6 +2626,21 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         .map(IndividualResource::getId)
         .collect(Collectors.toList()),
       containsInAnyOrder(notSuppressedInstance.getId(), notSuppressedInstanceDefault.getId()));
+  }
+
+  private JsonObject createRequestForMultipleInstances(Integer numberOfInstances) {
+    JsonArray instancesArray = new JsonArray();
+    
+    for (int i = 0; i < numberOfInstances; i++) {
+      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
+    }
+    return new JsonObject().put(INSTANCES_KEY, instancesArray);
+  }
+
+  private CompletableFuture<Response> createInstancesBatchSync(JsonObject batchRequest) {
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    client.post(instancesStorageSyncUrl(""), batchRequest, TENANT_ID, ResponseHandler.empty(createCompleted));
+    return createCompleted;
   }
 
   private void setInstanceSequence(long sequenceNumber) {
