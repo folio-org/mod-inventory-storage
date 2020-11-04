@@ -79,6 +79,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   public static void beforeAny() {
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -90,11 +91,14 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
+    createDefaultInstanceType();
+
     MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
     journalMaterialTypeID = materialTypesClient.create("journal");
     journalMaterialTypeId = UUID.fromString(journalMaterialTypeID);
     bookMaterialTypeID = materialTypesClient.create("book");
     bookMaterialTypeId = UUID.fromString(bookMaterialTypeID);
+
     LoanTypesClient loanTypesClient = new LoanTypesClient(client, loanTypesStorageUrl(""));
     canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
     canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
@@ -221,15 +225,13 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static void createDefaultInstanceType() {
-    if (instanceTypesClient.getAll()
-      .size() == 0) {
-      InstanceType it = new InstanceType();
-      it.withId(UUID_INSTANCE_TYPE.toString());
-      it.withCode("it code");
-      it.withName("it name");
-      it.withSource("tests");
-      instanceTypesClient.create(JsonObject.mapFrom(it));
-    }
+    InstanceType it = new InstanceType();
+    it.withId(UUID_INSTANCE_TYPE.toString());
+    it.withCode("DIT");
+    it.withName("Default Instance Type");
+    it.withSource("local");
+
+    instanceTypesClient.create(JsonObject.mapFrom(it));
   }
 
   protected void createItem(JsonObject itemToCreate) {
