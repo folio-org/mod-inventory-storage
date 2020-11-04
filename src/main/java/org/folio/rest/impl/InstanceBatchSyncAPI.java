@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -22,6 +23,8 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
   @Validate
@@ -36,8 +39,10 @@ public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
     final List<Future> futures = new ArrayList<>();
     final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
 
+    final String statusUpdatedDate = generateStatusUpdatedDate();
     for (Instance instance : instances) {
       futures.add(setHrid(instance, hridManager));
+      instance.setStatusUpdatedDate(statusUpdatedDate);
     }
 
     CompositeFuture.all(futures).setHandler(ar -> {
