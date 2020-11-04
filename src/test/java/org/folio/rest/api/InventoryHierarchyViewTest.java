@@ -99,19 +99,12 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @BeforeClass
-  public static void beforeClass() throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
-    if (instanceTypesClient.getAll()
-      .size() == 0) {
-      InstanceType it = new InstanceType();
-      it.withId(UUID_INSTANCE_TYPE.toString());
-      it.withCode("it code");
-      it.withName("it name");
-      it.withSource("tests");
-      instanceTypesClient.create(JsonObject.mapFrom(it));
-    }
+  public static void beforeClass() {
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
+
+    createDefaultInstanceType();
   }
 
   @Test
@@ -441,4 +434,15 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     return results;
   }
 
+  private static void createDefaultInstanceType() {
+    if (instanceTypesClient.getAll()
+      .size() == 0) {
+      InstanceType it = new InstanceType();
+      it.withId(UUID_INSTANCE_TYPE.toString());
+      it.withCode("it code");
+      it.withName("it name");
+      it.withSource("tests");
+      instanceTypesClient.create(JsonObject.mapFrom(it));
+    }
+  }
 }
