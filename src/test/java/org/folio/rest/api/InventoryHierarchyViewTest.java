@@ -41,7 +41,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
@@ -424,15 +423,4 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     return results;
   }
 
-  private static void createDefaultInstanceType() {
-    if (instanceTypesClient.getAll()
-      .size() == 0) {
-      InstanceType it = new InstanceType();
-      it.withId(UUID_INSTANCE_TYPE.toString());
-      it.withCode("it code");
-      it.withName("it name");
-      it.withSource("tests");
-      instanceTypesClient.create(JsonObject.mapFrom(it));
-    }
-  }
 }
