@@ -1275,10 +1275,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject createdItem = getById(id).getJson();
     JsonObject initialStatus = createdItem.getJsonObject("status");
 
-    String createdDate = createdItem.getJsonObject("metadata").getString("createdDate");
-
     assertThat(initialStatus.getString("name"), is("Available"));
-    assertThat(initialStatus.getString("date"), is(createdDate));
+    assertThat(initialStatus.getString("date"), notNullValue());
+
+    final String initialStatusDate = initialStatus.getString("date");
 
     itemsClient.replace(id,
       createdItem.copy()
@@ -1289,7 +1289,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Available"));
-    assertThat(updatedStatus.getString("date"), is(createdDate));
+    assertThat(updatedStatus.getString("date"), is(initialStatusDate));
   }
 
   @Test
