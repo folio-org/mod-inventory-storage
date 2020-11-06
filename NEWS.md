@@ -1,3 +1,7 @@
+## 19.4.2 2020-11-03
+
+* Upgrade to RMB 31.1.5 (MODINVSTOR-611)
+
 ## 19.4.1 2020-10-16
 
 * Streaming endpoints can respond with more than 100 records (MODINVSTOR-574, MODINVSTOR-595)
