@@ -101,7 +101,16 @@ public abstract class AbstractInstanceRecordsAPI {
 
         RowStream<Row> rowStream = ar.result();
         rowStream
-        .exceptionHandler(e -> respondWithError(response, e, asyncResultHandler))
+        .exceptionHandler(e -> {
+          postgresClient.rollbackTx(tx, h -> {
+            if (h.failed()) {
+              respondWithError(response, h.cause(), asyncResultHandler);
+              return;
+            }
+
+            respondWithError(response, e, asyncResultHandler);
+          });
+        })
         .endHandler(end -> {
           postgresClient.endTx(tx, h -> {
             if (h.failed()) {
