@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
+import org.folio.rest.persist.InventoryPostgresClient;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import com.google.common.collect.Iterables;
@@ -91,6 +92,7 @@ public abstract class AbstractInstanceRecordsAPI {
       Tuple params = paramsSupplier.get();
       log.debug("postgres params: {}", params);
 
+      final InventoryPostgresClient client = new InventoryPostgresClient();
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
 
       postgresClient.startTx(tx -> postgresClient.selectStream(tx, sql, params, ar -> {
@@ -102,17 +104,14 @@ public abstract class AbstractInstanceRecordsAPI {
         RowStream<Row> rowStream = ar.result();
         rowStream
         .exceptionHandler(e -> {
-          postgresClient.rollbackTx(tx, h -> {
-            if (h.failed()) {
-              respondWithError(response, h.cause(), asyncResultHandler);
-              return;
-            }
-
+          postgresClient.rollbackTx(tx, res -> {
+            client.resolveConnection(tx);
             respondWithError(response, e, asyncResultHandler);
           });
         })
         .endHandler(end -> {
           postgresClient.endTx(tx, h -> {
+            client.resolveConnection(tx);
             if (h.failed()) {
               respondWithError(response, h.cause(), asyncResultHandler);
               return;
