@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 
+import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.IndividualResource;
@@ -225,13 +226,21 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static void createDefaultInstanceType() {
-    InstanceType it = new InstanceType();
-    it.withId(UUID_INSTANCE_TYPE.toString());
-    it.withCode("DIT");
-    it.withName("Default Instance Type");
-    it.withSource("local");
+    if (instanceTypeDoesNotAlreadyExist(UUID_INSTANCE_TYPE)) {
+      InstanceType it = new InstanceType();
+      it.withId(UUID_INSTANCE_TYPE.toString());
+      it.withCode("DIT");
+      it.withName("Default Instance Type");
+      it.withSource("local");
 
-    instanceTypesClient.create(JsonObject.mapFrom(it));
+      instanceTypesClient.create(JsonObject.mapFrom(it));
+    }
+  }
+
+  private static boolean instanceTypeDoesNotAlreadyExist(UUID id) {
+    Response response = instanceTypesClient.getById(id);
+
+    return response.getStatusCode() == HttpStatus.HTTP_NOT_FOUND.toInt();
   }
 
   protected void createItem(JsonObject itemToCreate) {
