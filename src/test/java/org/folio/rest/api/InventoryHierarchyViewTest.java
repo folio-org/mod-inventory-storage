@@ -14,8 +14,8 @@ import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasEffectiveLocationInstitutionNameForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasIdForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasIdForInstance;
-import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationCodeForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasLocationCodeForItems;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationCodeForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasSourceForInstance;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.isDeleted;
@@ -23,7 +23,6 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.net.MalformedURLException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -37,13 +36,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
@@ -51,7 +48,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -74,13 +70,11 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   private UUID holdingsRecordIdPredefined;
   private Map<String, String> params;
-  private UUID instanceIdPreDefined;
   private JsonObject predefinedInstance;
   private JsonObject predefinedHoldings;
 
   @Before
-  public void setUp() throws InterruptedException, ExecutionException, MalformedURLException, TimeoutException {
-
+  public void setUp() {
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
@@ -92,26 +86,9 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     predefinedHoldings = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
 
     predefinedInstance = instancesClient.getAll().get(0);
-    instanceIdPreDefined = UUID.fromString(predefinedInstance.getString("id"));
 
     createItem(mainLibraryLocationId, "item barcode", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
-  }
-
-  @BeforeClass
-  public static void beforeClass() throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
-    if (instanceTypesClient.getAll()
-      .size() == 0) {
-      InstanceType it = new InstanceType();
-      it.withId(UUID_INSTANCE_TYPE.toString());
-      it.withCode("it code");
-      it.withName("it name");
-      it.withSource("tests");
-      instanceTypesClient.create(JsonObject.mapFrom(it));
-    }
-    deleteAll(itemsStorageUrl(""));
-    deleteAll(holdingsStorageUrl(""));
-    deleteAll(instancesStorageUrl(""));
   }
 
   @Test
@@ -184,7 +161,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testDeletedRecordSupport() throws InterruptedException, TimeoutException, ExecutionException, MalformedURLException {
+  public void testDeletedRecordSupport() throws InterruptedException, TimeoutException, ExecutionException {
     // given
     itemsClient.deleteAll();
     holdingsClient.deleteAll();
@@ -323,10 +300,6 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       ));
   }
 
-  private Predicate<Object> instancePredicate() {
-    return jo -> StringUtils.equals(((JsonObject) jo).getString("instanceId"), instanceIdPreDefined.toString());
-  }
-
   /**
    * The decode exception is thrown when we try to parse the response, but the only relevant thing is the correct response status of
    * 400.
@@ -357,8 +330,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
   }
 
-  private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId)
-      throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId) {
     super.createItem(createItemRequest(mainLibraryLocationId, s, s2, journalMaterialTypeId).create());
   }
 
@@ -440,5 +412,4 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     return results;
   }
-
 }

@@ -1,55 +1,33 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.TestBaseWithInventoryUtil.UUID_ISBN;
-import static org.folio.rest.api.TestBaseWithInventoryUtil.identifier;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import org.folio.rest.api.entities.Instance;
+import java.net.HttpURLConnection;
+import java.util.List;
+import java.util.UUID;
+
 import org.folio.rest.api.entities.PrecedingSucceedingTitle;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 
-public class PrecedingSucceedingTitleTest extends TestBase {
-
+public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   private static final String INVALID_UUID_ERROR_MESSAGE = "Invalid UUID format of id, should be " +
     "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F.";
-  private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
-  private static final String TEST_TENANT = "test_tenant";
-  private static final String INSTANCE_TYPE_ID_TEXT = "6312d172-f0cf-40f6-b27d-9fa8feaf332f";
   private static final String HRID = "inst000000000022";
   private static final String TITLE = "A web primer";
 
-  @BeforeClass
-  public static void beforeAll() {
-    StorageTestSuite.deleteAll(TEST_TENANT, PRECEDING_SUCCEEDING_TITLE_TABLE);
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-  }
-
   @Test
-  public void canCreateConnectedPrecedingSucceedingTitle() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-
-    IndividualResource instance1Resource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
-    IndividualResource instance2Resource = createInstance("Title Two", INSTANCE_TYPE_ID_TEXT);
+  public void canCreateConnectedPrecedingSucceedingTitle() {
+    IndividualResource instance1Resource = createInstance("Title One");
+    IndividualResource instance2Resource = createInstance("Title Two");
     String instance1Id = instance1Resource.getId().toString();
     String instance2Id = instance2Resource.getId().toString();
 
@@ -61,10 +39,8 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void canCreateUnconnectedPrecedingTitle() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-
-    IndividualResource instanceResource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
+  public void canCreateUnconnectedPrecedingTitle() {
+    IndividualResource instanceResource = createInstance("Title One");
     String instanceId = instanceResource.getId().toString();
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
@@ -77,10 +53,8 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void canCreateUnconnectedSucceedingTitle() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-
-    IndividualResource instanceResource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
+  public void canCreateUnconnectedSucceedingTitle() {
+    IndividualResource instanceResource = createInstance("Title One");
     String instanceId = instanceResource.getId().toString();
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
@@ -93,11 +67,9 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void canUpdateConnectedPrecedingSucceedingTitle() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-
-    IndividualResource instance1Resource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
-    IndividualResource instance2Resource = createInstance("Title Two", INSTANCE_TYPE_ID_TEXT);
+  public void canUpdateConnectedPrecedingSucceedingTitle() {
+    IndividualResource instance1Resource = createInstance("Title One");
+    IndividualResource instance2Resource = createInstance("Title Two");
     String instance1Id = instance1Resource.getId().toString();
     String instance2Id = instance2Resource.getId().toString();
 
@@ -115,10 +87,8 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void canUpdateUnconnectedPrecedingSucceedingTitle() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-
-    IndividualResource instance1Resource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
+  public void canUpdateUnconnectedPrecedingSucceedingTitle() {
+    IndividualResource instance1Resource = createInstance("Title One");
     String instance1Id = instance1Resource.getId().toString();
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
@@ -128,7 +98,7 @@ public class PrecedingSucceedingTitleTest extends TestBase {
 
     IndividualResource response = precedingSucceedingTitleClient.create(precedingSucceedingTitle.getJson());
 
-    IndividualResource instance2Resource = createInstance("Title Two", INSTANCE_TYPE_ID_TEXT);
+    IndividualResource instance2Resource = createInstance("Title Two");
     String instance2Id = instance2Resource.getId().toString();
     String newTitle = "New";
     String newHrid = "inst000000000133";
@@ -143,10 +113,8 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void canDeletePrecedingSucceedingTitle() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-
-    IndividualResource instanceResource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
+  public void canDeletePrecedingSucceedingTitle() {
+    IndividualResource instanceResource = createInstance("Title One");
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
 
@@ -162,10 +130,9 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void canGetPrecedingSucceedingTitleByQuery() throws InterruptedException,
-    ExecutionException, TimeoutException, MalformedURLException {
-    IndividualResource instance1Resource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
-    IndividualResource instance2Resource = createInstance("Title Two", INSTANCE_TYPE_ID_TEXT);
+  public void canGetPrecedingSucceedingTitleByQuery() {
+    IndividualResource instance1Resource = createInstance("Title One");
+    IndividualResource instance2Resource = createInstance("Title Two");
     String instance1Id = instance1Resource.getId().toString();
     String instance2Id = instance2Resource.getId().toString();
     JsonArray identifiers = new JsonArray();
@@ -186,11 +153,9 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void cannotCreatePrecedingSucceedingTitleWithNonExistingPrecedingInstance()
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-
+  public void cannotCreatePrecedingSucceedingTitleWithNonExistingPrecedingInstance() {
     String nonExistingInstanceId = "14b65645-2e49-4a85-8dc1-43d444710570";
-    IndividualResource instanceResource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
+    IndividualResource instanceResource = createInstance("Title One");
 
     PrecedingSucceedingTitle precedingSucceedingTitle = new PrecedingSucceedingTitle(
       nonExistingInstanceId, instanceResource.getId().toString(), null, null, null);
@@ -203,12 +168,10 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void cannotCreatePrecedingSucceedingTitleWithNonExistingSucceedingInstance()
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-
+  public void cannotCreatePrecedingSucceedingTitleWithNonExistingSucceedingInstance() {
     String nonExistingInstanceId = "14b65645-2e49-4a85-8dc1-43d444710570";
 
-    IndividualResource instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
+    IndividualResource instance1Response = createInstance("Title One");
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
 
@@ -223,9 +186,7 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void cannotCreatePrecedingSucceedingTitleWithEmptyPrecedingAndSucceedingInstanceId()
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-
+  public void cannotCreatePrecedingSucceedingTitleWithEmptyPrecedingAndSucceedingInstanceId() {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
 
@@ -240,19 +201,15 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void cannotGetByInvalidPrecedingSucceedingId() throws MalformedURLException,
-    InterruptedException, TimeoutException, ExecutionException {
-
+  public void cannotGetByInvalidPrecedingSucceedingId() {
     Response badParameterResponse = precedingSucceedingTitleClient.getByIdIfPresent("abc");
     assertThat(badParameterResponse.getStatusCode(), is(HttpResponseStatus.UNPROCESSABLE_ENTITY.code()));
     assertErrors(badParameterResponse, INVALID_UUID_ERROR_MESSAGE);
   }
 
   @Test
-  public void cannotPutByInvalidPrecedingSucceedingId() throws InterruptedException,
-    TimeoutException, ExecutionException, MalformedURLException {
-
-    IndividualResource instance1Resource = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
+  public void cannotPutByInvalidPrecedingSucceedingId() {
+    IndividualResource instance1Resource = createInstance("Title One");
 
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
@@ -266,19 +223,17 @@ public class PrecedingSucceedingTitleTest extends TestBase {
   }
 
   @Test
-  public void cannotDeleteByInvalidPrecedingSucceedingId() throws InterruptedException,
-    TimeoutException, ExecutionException, MalformedURLException {
-
+  public void cannotDeleteByInvalidPrecedingSucceedingId() {
     Response badParameterResponse = precedingSucceedingTitleClient.deleteIfPresent("abc");
     assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(badParameterResponse.getBody(), is(INVALID_UUID_ERROR_MESSAGE));
   }
 
-  private IndividualResource createInstance(String title, String instanceTypeId)
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-    Instance instance = new Instance(title, "TEST", instanceTypeId);
+  private IndividualResource createInstance(String title) {
+    JsonObject instanceRequest = createInstanceRequest(UUID.randomUUID(), "TEST",
+      title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, new JsonArray());
 
-    return instancesClient.create(instance.getJson());
+    return instancesClient.create(instanceRequest);
   }
 
   private void assertErrors(Response response, String message) {
@@ -286,9 +241,9 @@ public class PrecedingSucceedingTitleTest extends TestBase {
     assertThat(errors.getErrors().get(0).getMessage(), is(message));
   }
 
-  private void assertPrecedingSucceedingTitle(IndividualResource response, String precedingSucceedingTitleId,
-    String succeedingTitleId, String title, String hrid, JsonArray identifiers)
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+  private void assertPrecedingSucceedingTitle(IndividualResource response,
+    String precedingSucceedingTitleId, String succeedingTitleId, String title,
+    String hrid, JsonArray identifiers) {
 
     Response getResponse = precedingSucceedingTitleClient.getById(response.getId());
     JsonObject precedingSucceedingTitleResponse = getResponse.getJson();
