@@ -1,15 +1,5 @@
 package org.folio.rest.api;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerResponse;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.sqlclient.Tuple;
-
 import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -26,9 +16,11 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+
 import javax.ws.rs.core.Response;
+
+import org.awaitility.Awaitility;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.api.TestBase;
 import org.folio.rest.impl.AbstractInstanceRecordsAPI;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,12 +28,22 @@ import org.mockito.AdditionalAnswers;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.sqlclient.Tuple;
+
 @RunWith(VertxUnitRunner.class)
 public class AbstractInstanceRecordsAPITest extends TestBase {
-  private static Map<String,String> okapiHeaders = Collections.singletonMap(
+  private static final Map<String,String> okapiHeaders = Collections.singletonMap(
       RestVerticle.OKAPI_HEADER_TENANT, StorageTestSuite.TENANT_ID);
 
-  class MyAbstractInstanceRecordsAPI extends AbstractInstanceRecordsAPI {
+  static class MyAbstractInstanceRecordsAPI extends AbstractInstanceRecordsAPI {
     public void fetchRecordsByQuery(String sql, RoutingContext routingContext,
         Supplier<Tuple> paramsSupplier, Handler<AsyncResult<Response>> asyncResultHandler) {
 
@@ -82,20 +84,27 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
   }
 
   @Test
-  public void canFetch300Records(TestContext testContext) {
+  public void canFetch300Records() {
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse httpServerResponse = getHttpServerResponseMock();
     when(routingContext.response()).thenReturn(httpServerResponse);
     new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT generate_series(1, 300)",
-        routingContext, () -> Tuple.tuple(), testContext.asyncAssertSuccess(response -> {
-          assertThat(response, is(nullValue()));
+        routingContext, Tuple::tuple, nu -> {});
+
+    Awaitility.await()
+      .until(() -> {
+        try {
           verify(httpServerResponse, times(300)).write(anyString());
-        }));
+          return true;
+        } catch (AssertionError assertionError) {
+          return false;
+        }
+      });
   }
 
   @Test
-  public void canHandleWriteQueueFull(TestContext testContext) {
-    Handler [] drainHandler = new Handler [1];
+  public void canHandleWriteQueueFull() {
+    Handler<?>[] drainHandler = new Handler[1];
     AtomicInteger drainCount = new AtomicInteger();
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse httpServerResponse = getHttpServerResponseMock();
@@ -115,10 +124,17 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
       })
     .when(httpServerResponse).writeQueueFull();
     new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT generate_series(1, 300)",
-        routingContext, () -> Tuple.tuple(), testContext.asyncAssertSuccess(response -> {
-          assertThat(response, is(nullValue()));
+        routingContext, Tuple::tuple, nu -> {});
+
+    Awaitility.await()
+      .until(() -> {
+        try {
           assertThat(drainCount.get(), is(300));
           verify(httpServerResponse, times(300)).write(anyString());
-        }));
+          return true;
+        } catch (AssertionError assertionError) {
+          return false;
+        }
+      });
   }
 }
