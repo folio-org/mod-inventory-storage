@@ -109,7 +109,6 @@ public abstract class AbstractInstanceRecordsAPI {
               return;
             }
             response.end();
-            asyncResultHandler.handle(Future.succeededFuture());
           });
         }).handler(row -> {
           response.write(createJsonFromRow(row));
