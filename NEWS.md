@@ -1,3 +1,7 @@
+## 19.4.3 2020-11-11
+
+* Closes database connections during inventory hierarchy requests (MODINVSTOR-614)
+
 ## 19.4.2 2020-11-03
 
 * Upgrade to RMB 31.1.5 (MODINVSTOR-611)
