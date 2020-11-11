@@ -665,6 +665,14 @@
           "tOps": "ADD"
         }
       ],
+      "ginIndex": [
+        {
+          "fieldName": "electronicAccess",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
       "index": [
         {
           "fieldName": "callNumber",
