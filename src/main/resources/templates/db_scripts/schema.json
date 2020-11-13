@@ -707,6 +707,12 @@
       ],
       "fullTextIndex": [
         {
+          "fieldName": "electronicAccess",
+          "tOps": "ADD",
+          "arraySubfield" : "uri",
+          "arrayModifiers": ["uri"]
+        },
+        {
           "fieldName": "callNumberAndSuffixNormalized",
           "sqlExpression" : "normalize_holdings_call_number_and_suffix(jsonb)",
           "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
