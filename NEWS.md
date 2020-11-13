@@ -1,3 +1,7 @@
+## 19.4.4 2020-11-13
+
+* Add index on holdings.electronicAccess field (MODINVSTOR-610)
+
 ## 19.4.3 2020-11-11
 
 * Closes database connections during inventory hierarchy requests (MODINVSTOR-614)
