@@ -57,7 +57,8 @@ public class TenantRefAPI extends TenantAPI {
     "instance-note-types",
     "holdings-note-types",
     "item-note-types",
-    "item-damaged-statuses"
+    "item-damaged-statuses",
+    "holdings-sources"
   };
 
   List<JsonObject> servicePoints = null;

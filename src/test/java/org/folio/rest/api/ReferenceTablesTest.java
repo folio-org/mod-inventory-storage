@@ -8,6 +8,7 @@ import static org.folio.rest.support.http.InterfaceUrls.contributorNameTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.contributorTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.electronicAccessRelationshipsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsNoteTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsSourceUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.identifierTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.illPoliciesUrl;
@@ -22,7 +23,7 @@ import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.UnsupportedEncodingException;
@@ -726,6 +727,13 @@ public class ReferenceTablesTest extends TestBase {
 
     testGetPutDeletePost(entityPath, instanceRelationshipId, instanceRelationshipType,
       InstanceRelationshipType.NAME_KEY);
+  }
+
+  @Test
+  public void holdingsSourcesLoaded() throws Exception {
+    final Response searchResponse = getReferenceRecords(holdingsSourceUrl(""));
+
+    validateNumberOfReferenceRecords("holdings-sources types", searchResponse, 2, 2);
   }
 
   private Response getReferenceRecords(URL baseUrl)

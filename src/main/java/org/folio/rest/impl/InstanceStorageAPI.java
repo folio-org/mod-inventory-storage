@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -107,6 +108,9 @@ public class InstanceStorageAPI implements InstanceStorage {
     Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
+    
+    
+    entity.setStatusUpdatedDate(generateStatusUpdatedDate());
 
     try {
       PostgresClient postgresClient =

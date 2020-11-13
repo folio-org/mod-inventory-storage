@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
+
 import com.google.common.collect.Lists;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -41,6 +43,12 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
                                                 Map<String, String> okapiHeaders,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
+
+    final String statusUpdatedDate = generateStatusUpdatedDate();
+    for (Instance instance: entity.getInstances()) {
+        instance.setStatusUpdatedDate(statusUpdatedDate);
+    }
+
     vertxContext.runOnContext(v -> {
       try {
         PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);

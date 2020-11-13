@@ -18,6 +18,9 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
+
+import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
@@ -75,9 +78,9 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   @BeforeClass
   public static void beforeAny() {
-
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -89,11 +92,14 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
+    createDefaultInstanceType();
+
     MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
     journalMaterialTypeID = materialTypesClient.create("journal");
     journalMaterialTypeId = UUID.fromString(journalMaterialTypeID);
     bookMaterialTypeID = materialTypesClient.create("book");
     bookMaterialTypeId = UUID.fromString(bookMaterialTypeID);
+
     LoanTypesClient loanTypesClient = new LoanTypesClient(client, loanTypesStorageUrl(""));
     canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
     canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
@@ -148,7 +154,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumber(UUID holdingsPermanentLocationId) {
-
       UUID instanceId = UUID.randomUUID();
       instancesClient.create(instance(instanceId));
 
@@ -162,7 +167,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumberPrefix(UUID holdingsPermanentLocationId) {
-
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
 
@@ -176,7 +180,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumberSuffix(UUID holdingsPermanentLocationId) {
-
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
 
@@ -222,8 +225,25 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return itemToCreate.mapTo(Item.class);
   }
 
-  protected void createItem(JsonObject itemToCreate) {
+  protected static void createDefaultInstanceType() {
+    if (instanceTypeDoesNotAlreadyExist(UUID_INSTANCE_TYPE)) {
+      InstanceType it = new InstanceType();
+      it.withId(UUID_INSTANCE_TYPE.toString());
+      it.withCode("DIT");
+      it.withName("Default Instance Type");
+      it.withSource("local");
 
+      instanceTypesClient.create(JsonObject.mapFrom(it));
+    }
+  }
+
+  private static boolean instanceTypeDoesNotAlreadyExist(UUID id) {
+    Response response = instanceTypesClient.getById(id);
+
+    return response.getStatusCode() == HttpStatus.HTTP_NOT_FOUND.toInt();
+  }
+
+  protected void createItem(JsonObject itemToCreate) {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, TENANT_ID,

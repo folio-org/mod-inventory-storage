@@ -31,13 +31,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.OaipmhInstanceIds;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
@@ -45,7 +43,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -68,11 +65,9 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
   private UUID holdingsRecordId1;
   private Map<String, String> params;
-  private UUID instanceId1;
 
   @Before
   public void setUp() throws InterruptedException, ExecutionException, MalformedURLException, TimeoutException {
-
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
@@ -81,28 +76,9 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     params = new HashMap<>();
 
     holdingsRecordId1 = createInstanceAndHolding(mainLibraryLocationId);
-    final JsonObject instanceObj = instancesClient.getAll()
-      .get(0);
-    instanceId1 = UUID.fromString(instanceObj.getString("id"));
 
     createItem(mainLibraryLocationId, "item barcode", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
-  }
-
-  @BeforeClass
-  public static void beforeClass() throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
-    if (instanceTypesClient.getAll()
-      .size() == 0) {
-      InstanceType it = new InstanceType();
-      it.withId(UUID_INSTANCE_TYPE.toString());
-      it.withCode("it code");
-      it.withName("it name");
-      it.withSource("tests");
-      instanceTypesClient.create(JsonObject.mapFrom(it));
-    }
-    deleteAll(itemsStorageUrl(""));
-    deleteAll(holdingsStorageUrl(""));
-    deleteAll(instancesStorageUrl(""));
   }
 
   @Test
@@ -142,7 +118,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testDeletedRecordSupport() throws InterruptedException, TimeoutException, ExecutionException, MalformedURLException {
+  public void testDeletedRecordSupport() throws InterruptedException, TimeoutException, ExecutionException {
     // given
     itemsClient.deleteAll();
     holdingsClient.deleteAll();
@@ -333,10 +309,6 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     assertThat(data.get(0),
       allOf(hasCallNumber("item effective call number 1", "item effective call number 2", "item effective call number 3"),
         hasAggregatedNumberOfItems(3), hasEffectiveLocationInstitutionName("Primary Institution")));
-  }
-
-  private Predicate<Object> instancePredicate() {
-    return jo -> StringUtils.equals(((JsonObject) jo).getString("instanceid"), instanceId1.toString());
   }
 
   /**

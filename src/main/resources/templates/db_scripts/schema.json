@@ -280,6 +280,10 @@
         {
           "fieldName": "code, statisticalCodeTypeId",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
         }
       ],
       "foreignKeys": [
@@ -355,6 +359,10 @@
       "uniqueIndex": [
         {
           "fieldName": "hrid",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "matchKey",
           "tOps": "ADD"
         }
       ],
@@ -661,6 +669,14 @@
           "tOps": "ADD"
         }
       ],
+      "ginIndex": [
+        {
+          "fieldName": "electronicAccess",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ],
       "index": [
         {
           "fieldName": "callNumber",
@@ -958,6 +974,11 @@
     {
       "run": "after",
       "snippetPath": "inventory-hierarchy/createRecordsViewFunction.sql",
+      "fromModuleVersion": "19.4.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "updateIllPolicyWillNotLend.sql",
       "fromModuleVersion": "19.4.0"
     }
   ]

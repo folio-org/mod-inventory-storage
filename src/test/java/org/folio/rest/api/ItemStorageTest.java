@@ -66,6 +66,7 @@ import org.folio.rest.jaxrs.model.LastCheckIn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -1265,7 +1266,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotSetStatusDate() throws Exception {
+  public void cannotChangeStatusDate() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
@@ -1275,7 +1276,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject initialStatus = createdItem.getJsonObject("status");
 
     assertThat(initialStatus.getString("name"), is("Available"));
-    assertThat(initialStatus.getString("date"), nullValue());
+    assertThat(initialStatus.getString("date"), notNullValue());
+
+    final String initialStatusDate = initialStatus.getString("date");
 
     itemsClient.replace(id,
       createdItem.copy()
@@ -1286,7 +1289,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Available"));
-    assertThat(updatedStatus.getString("date"), nullValue());
+    assertThat(updatedStatus.getString("date"), is(initialStatusDate));
   }
 
   @Test
@@ -1323,7 +1326,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void statusUpdatedDateIsNullOnSubsequentUpdates() throws Exception {
+  public void statusUpdatedDateIsUnchangedAfterUpdatesThatDoNotChangeStatus() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
@@ -1331,8 +1334,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(itemToCreate);
 
     JsonObject createdItem = getById(id).getJson();
+
+    final String createdDate = createdItem.getJsonObject("status").getString("date");
+
     assertThat(createdItem.getJsonObject("status").getString("name"), is("Available"));
-    assertThat(createdItem.getJsonObject("status").getString("date"), nullValue());
+    assertThat(createdItem.getJsonObject("status").getString("date"), is(createdDate));
 
     JsonObject firstUpdateItem = createdItem.copy()
       .put("itemLevelCallNumber", "newItCn");
@@ -1346,7 +1352,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(firstUpdatedItemResponse.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(firstUpdatedItemResponse.getJsonObject("status").getString("date"),
-      nullValue());
+      is(createdDate));
 
     JsonObject secondUpdateItem = firstUpdatedItemResponse.copy()
       .put("temporaryLocationId", onlineLocationId.toString());
@@ -1360,7 +1366,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(secondUpdatedItemResponse.getJsonObject("status").getString("name"),
       is("Available"));
     assertThat(secondUpdatedItemResponse.getJsonObject("status").getString("date"),
-      nullValue());
+      is(createdDate));
   }
 
   @Test
@@ -1936,6 +1942,19 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void synchronousBatchItemsShouldHaveStatusDateOnCreation() {
+    final JsonArray itemArray = threeItems();
+
+    assertThat(postSynchronousBatch(itemArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    JsonArrayHelper.toList(itemArray).forEach(itemInArray -> {
+      final var fetchedItem = getById(itemInArray.getString("id")).getJson();
+
+      assertThat(fetchedItem.getJsonObject("status").getString("date"), notNullValue());
+    });
+  }
+
+  @Test
   @Parameters({
     "Available",
     "Awaiting pickup",
@@ -1949,6 +1968,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     "Declared lost",
     "Order closed",
     "Claimed returned",
+    "Unknown",
     "Withdrawn",
     "Lost and paid",
     "Aged to lost"

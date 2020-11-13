@@ -64,6 +64,7 @@ import org.junit.runners.Suite;
   PrecedingSucceedingTitleTest.class,
   HoldingsCallNumberNormalizedTest.class,
   ItemCallNumberNormalizedTest.class,
+  AbstractInstanceRecordsAPITest.class,
   OaiPmhViewTest.class,
   InventoryHierarchyViewTest.class,
   HoldingsSourceTest.class

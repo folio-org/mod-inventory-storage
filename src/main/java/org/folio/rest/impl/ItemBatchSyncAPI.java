@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 import javax.ws.rs.core.Response;
 
@@ -39,8 +40,12 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     @SuppressWarnings("rawtypes")
     final List<Future> futures = new ArrayList<>();
     final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
+    
+    // add a last modified date to status on all created items
+    Date itemStatusDate = new java.util.Date();
 
     for (Item item : items) {
+      item.getStatus().setDate(itemStatusDate);
       futures.add(setHrid(item, hridManager));
     }
 

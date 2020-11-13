@@ -14,6 +14,7 @@ import java.util.concurrent.TimeoutException;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -44,6 +45,8 @@ public abstract class TestBase {
   static ResourceClient itemsStorageSyncClient;
   static ResourceClient instancesStorageBatchInstancesClient;
   static ResourceClient instanceTypesClient;
+  static ResourceClient illPoliciesClient;
+  static StatisticalCodeFixture statisticalCodeFixture;
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -84,6 +87,8 @@ public abstract class TestBase {
       .forInstancesStorageBatchInstances(client);
     instanceTypesClient = ResourceClient
       .forInstanceTypes(client);
+    illPoliciesClient = ResourceClient.forIllPolicies(client);
+    statisticalCodeFixture = new StatisticalCodeFixture(client);
   }
 
   @AfterClass

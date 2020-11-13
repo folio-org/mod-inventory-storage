@@ -76,13 +76,18 @@
                   "institutionName": {
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
                     "type": "string"
+                  },
+                  "code": {
+                    "description": "Code of the (shelf) location, usually an abbreviation of the name",
+                    "type": "string"
                   }
                 },
                 "required": [
                   "name",
                   "campusName",
                   "libraryName",
-                  "institutionName"
+                  "institutionName",
+                  "code"
                 ]
               },
               "temporaryLocation": {
@@ -103,6 +108,10 @@
                   },
                   "institutionName": {
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "code": {
+                    "description": "Code of the (shelf) location, usually an abbreviation of the name",
                     "type": "string"
                   }
                 }
@@ -419,6 +428,10 @@
                   "institutionName": {
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
                     "type": "string"
+                  },
+                  "code": {
+                    "description": "Code of the (shelf) location, usually an abbreviation of the name",
+                    "type": "string"
                   }
                 }
               },
@@ -441,6 +454,10 @@
                   "institutionName": {
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
                     "type": "string"
+                  },
+                  "code": {
+                    "description": "Code of the (shelf) location, usually an abbreviation of the name",
+                    "type": "string"
                   }
                 }
               },
@@ -462,6 +479,10 @@
                   },
                   "institutionName": {
                     "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "code": {
+                    "description": "Code of the (shelf) location, usually an abbreviation of the name",
                     "type": "string"
                   }
                 }

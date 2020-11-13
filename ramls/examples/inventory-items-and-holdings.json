@@ -20,13 +20,15 @@
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
-          "institutionName": "Københavns Universitet"
+          "institutionName": "Københavns Universitet",
+          "code": "KU/CC/DI/A"
         },
         "temporaryLocation": {
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
-          "institutionName": "Københavns Universitet"
+          "institutionName": "Københavns Universitet",
+          "code": "KU/CC/DI/A"
         }
       },
       "callNumber": {
@@ -119,19 +121,22 @@
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
-          "institutionName": "Københavns Universitet"
+          "institutionName": "Københavns Universitet",
+          "code": "KU/CC/DI/A"
         },
         "permanentLocation": {
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
-          "institutionName": "Københavns Universitet"
+          "institutionName": "Københavns Universitet",
+          "code": "KU/CC/DI/A"
         },
         "temporaryLocation": {
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
-          "institutionName": "Københavns Universitet"
+          "institutionName": "Københavns Universitet",
+          "code": "KU/CC/DI/A"
         }
       },
       "callNumber": {

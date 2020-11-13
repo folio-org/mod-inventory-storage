@@ -229,11 +229,13 @@ WITH
                                                                CASE WHEN hr.id IS NOT NULL THEN
                                                                    json_build_object('permanentLocation',
                                                                                      jsonb_build_object('name', COALESCE(holdPermLoc.locJsonb ->> 'discoveryDisplayName', holdPermLoc.locJsonb ->> 'name'),
+                                                                                                        'code', holdPermLoc.locJsonb ->> 'code',
                                                                                                         'campusName', holdPermLoc.locCampJsonb ->> 'name',
                                                                                                         'libraryName', holdPermLoc.locLibJsonb ->> 'name',
                                                                                                         'institutionName', holdPermLoc.locInstJsonb ->> 'name'),
                                                                                      'temporaryLocation',
                                                                                      jsonb_build_object('name', COALESCE(holdTempLoc.locJsonb ->> 'discoveryDisplayName', holdTempLoc.locJsonb ->> 'name'),
+                                                                                                        'code', holdTempLoc.locJsonb ->> 'code',
                                                                                                         'campusName', holdTempLoc.locCampJsonb ->> 'name',
                                                                                                         'libraryName', holdTempLoc.locLibJsonb ->> 'name',
                                                                                                         'institutionName', holdTempLoc.locInstJsonb ->> 'name'))
@@ -287,16 +289,19 @@ WITH
                                                CASE WHEN item.id IS NOT NULL THEN
                                                    json_build_object('location',
                                                                      jsonb_build_object('name', COALESCE(itemEffLoc.locJsonb ->> 'discoveryDisplayName', itemEffLoc.locJsonb ->> 'name'),
+                                                                                        'code', itemEffLoc.locJsonb ->> 'code',
                                                                                         'campusName', itemEffLoc.locCampJsonb ->> 'name',
                                                                                         'libraryName', itemEffLoc.locLibJsonb ->> 'name',
                                                                                         'institutionName', itemEffLoc.locInstJsonb ->> 'name'),
                                                                      'permanentLocation',
                                                                      jsonb_build_object('name', COALESCE(itemPermLoc.locJsonb ->> 'discoveryDisplayName', itemPermLoc.locJsonb ->> 'name'),
+                                                                                        'code', itemPermLoc.locJsonb ->> 'code',
                                                                                         'campusName', itemPermLoc.locCampJsonb ->> 'name',
                                                                                         'libraryName', itemPermLoc.locLibJsonb ->> 'name',
                                                                                         'institutionName', itemPermLoc.locInstJsonb ->> 'name'),
                                                                      'temporaryLocation',
                                                                      jsonb_build_object('name', COALESCE(itemTempLoc.locJsonb ->> 'discoveryDisplayName', itemTempLoc.locJsonb ->> 'name'),
+                                                                                        'code', itemTempLoc.locJsonb ->> 'code',
                                                                                         'campusName', itemTempLoc.locCampJsonb ->> 'name',
                                                                                         'libraryName', itemTempLoc.locLibJsonb ->> 'name',
                                                                                         'institutionName', itemTempLoc.locInstJsonb ->> 'name'))
