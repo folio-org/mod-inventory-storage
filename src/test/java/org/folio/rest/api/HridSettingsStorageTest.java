@@ -7,8 +7,8 @@ import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
@@ -17,6 +17,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import io.vertx.sqlclient.Row;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.impl.StorageHelper;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
@@ -31,16 +33,13 @@ import org.junit.runner.RunWith;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class HridSettingsStorageTest extends TestBase {
-  private static final Logger log = LoggerFactory.getLogger(HridSettingsStorageTest.class);
+  private static final Logger log = LogManager.getLogger();
 
   private final HridSettings initialHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
@@ -55,7 +54,7 @@ public class HridSettingsStorageTest extends TestBase {
     final PostgresClient postgresClient =
         PostgresClient.getInstance(vertx, TENANT_ID);
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-    hridManager.updateHridSettings(initialHridSettings).setHandler(hridSettings -> {
+    hridManager.updateHridSettings(initialHridSettings).onComplete(hridSettings -> {
       // We need to do this in cases where tests do not update the start number. In this
       // case, calling updateHridSettings will not update the sequences since the start number
       // has not changed. Since tests are executed in a non-deterministic order, we need to
@@ -272,7 +271,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.getNextInstanceHrid()
       .compose(hrid -> validateHrid(hrid, "in00000000001", testContext))
-      .setHandler(testContext.asyncAssertSuccess(
+      .onComplete(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextInstanceHrid()")));
   }
 
@@ -290,11 +289,11 @@ public class HridSettingsStorageTest extends TestBase {
         .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
         .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
 
-    hridManager.updateHridSettings(newHridSettings).setHandler(
+    hridManager.updateHridSettings(newHridSettings).onComplete(
         testContext.asyncAssertSuccess(
             hridSettingsResult -> hridManager.getNextInstanceHrid().compose(
                 hrid -> validateHrid(hrid, "in00000000250", testContext))
-              .setHandler(testContext.asyncAssertSuccess(
+              .onComplete(testContext.asyncAssertSuccess(
                   v -> log.info("Finished canGetNextInstanceHridAfterSettingStartNumber()")))));
   }
 
@@ -309,7 +308,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.getNextHoldingsHrid()
       .compose(hrid -> validateHrid(hrid, "ho00000000001", testContext))
-      .setHandler(testContext.asyncAssertSuccess(
+      .onComplete(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextHoldingHrid()")));
   }
 
@@ -327,11 +326,11 @@ public class HridSettingsStorageTest extends TestBase {
         .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890L))
         .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
 
-    hridManager.updateHridSettings(newHridSettings).setHandler(
+    hridManager.updateHridSettings(newHridSettings).onComplete(
         testContext.asyncAssertSuccess(
             hridSettings -> hridManager.getNextHoldingsHrid().compose(
                 hrid -> validateHrid(hrid, "ho00000007890", testContext))
-              .setHandler(testContext.asyncAssertSuccess(
+              .onComplete(testContext.asyncAssertSuccess(
                   v -> log.info("Finished canGetNextHoldingHridAfterSettingStartNumber()")))));
   }
 
@@ -346,7 +345,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.getNextItemHrid()
       .compose(hrid -> validateHrid(hrid, "it00000000001", testContext))
-      .setHandler(testContext.asyncAssertSuccess(v -> log.info("Finished canGetNextItemHrid()")));
+      .onComplete(testContext.asyncAssertSuccess(v -> log.info("Finished canGetNextItemHrid()")));
   }
 
   @Test
@@ -363,11 +362,11 @@ public class HridSettingsStorageTest extends TestBase {
         .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
         .withItems(new HridSetting().withPrefix("it").withStartNumber(87654321L));
 
-    hridManager.updateHridSettings(newHridSettings).setHandler(
+    hridManager.updateHridSettings(newHridSettings).onComplete(
         testContext.asyncAssertSuccess(
             hridSettings -> hridManager.getNextItemHrid().compose(
                 hrid -> validateHrid(hrid, "it00087654321", testContext))
-              .setHandler(testContext.asyncAssertSuccess(
+              .onComplete(testContext.asyncAssertSuccess(
                   v -> log.info("Finished canGetNextItemHridAfterSettingStartNumber()")))));
   }
 
@@ -389,7 +388,7 @@ public class HridSettingsStorageTest extends TestBase {
       .compose(hrid -> validateHrid(hrid, "it00000000004", testContext))
       .compose(v -> hridManager.getNextItemHrid())
       .compose(hrid -> validateHrid(hrid, "it00000000005", testContext))
-      .setHandler(testContext.asyncAssertSuccess(
+      .onComplete(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextItemHridMultipleTimes()")));
   }
 
@@ -408,10 +407,10 @@ public class HridSettingsStorageTest extends TestBase {
         .withItems(new HridSetting().withStartNumber(300L));
 
     hridManager.updateHridSettings(newHridSettings)
-      .setHandler(testContext.asyncAssertSuccess(
+      .onComplete(testContext.asyncAssertSuccess(
           hridSettings -> hridManager.getNextItemHrid().compose(
               hrid -> validateHrid(hrid, "00000000300", testContext))
-            .setHandler(testContext.asyncAssertSuccess(
+            .onComplete(testContext.asyncAssertSuccess(
               v -> log.info("Finished canGetNextItemHridWithNoPrefix()")))));
   }
 
@@ -432,7 +431,7 @@ public class HridSettingsStorageTest extends TestBase {
     hridManager.getHridSettings()
         .compose(originalHridSettings -> {
           Promise<HridSettings> promise = Promise.promise();
-          hridManager.updateHridSettings(newHridSettings).setHandler(ar -> {
+          hridManager.updateHridSettings(newHridSettings).onComplete(ar -> {
             assertTrue(ar.failed());
             hridManager.getHridSettings()
                 .compose(currentHridSettings -> {
@@ -451,11 +450,11 @@ public class HridSettingsStorageTest extends TestBase {
                       is(originalHridSettings.getItems().getStartNumber()));
                   return StorageHelper.completeFuture(currentHridSettings);
                 })
-                .setHandler(promise);
+                .onComplete(promise);
           });
           return promise.future();
         })
-        .setHandler(testContext.asyncAssertSuccess(
+        .onComplete(testContext.asyncAssertSuccess(
             v1 -> log.info("Finished canRollbackFailedTransaction()")));
   }
 
@@ -477,7 +476,7 @@ public class HridSettingsStorageTest extends TestBase {
       .compose(hrid -> validateHrid(hrid, "09999999998", testContext))
       .compose(v -> hridManager.getNextItemHrid())
       .compose(hrid -> validateHrid(hrid, "09999999999", testContext))
-      .setHandler(testContext.asyncAssertSuccess());
+      .onComplete(testContext.asyncAssertSuccess());
   }
 
   private Future<String> validateHrid(String hrid, String expectedValue, TestContext testContext) {

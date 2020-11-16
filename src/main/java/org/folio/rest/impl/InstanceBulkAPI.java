@@ -3,7 +3,8 @@ package org.folio.rest.impl;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
@@ -16,14 +17,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 public class InstanceBulkAPI implements org.folio.rest.jaxrs.resource.InstanceBulk {
   public static final String INSTANCE_TABLE = "instance";
 
-  private static final Logger LOG = LoggerFactory.getLogger(InstanceBulkAPI.class);
+  private static final Logger LOG = LogManager.getLogger();
 
   private CQLWrapper getCQL(String query) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(INSTANCE_TABLE + ".jsonb");

@@ -17,7 +17,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -71,6 +72,7 @@ import org.junit.runners.Suite;
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
+  private static Logger logger = LogManager.getLogger();
   private static Vertx vertx;
   private static int port;
 
@@ -93,6 +95,8 @@ public class StorageTestSuite {
   @BeforeClass
   public static void before()
     throws Exception {
+
+    logger.info("starting @BeforeClass before()");
 
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
@@ -127,16 +131,19 @@ public class StorageTestSuite {
         throw new Exception(message);
     }
 
+    logger.info("starting RestVerticle");
+
     port = NetworkUtils.nextFreePort();
-
     DeploymentOptions options = new DeploymentOptions();
-
     options.setConfig(new JsonObject().put("http.port", port));
     options.setWorker(true);
-
     startVerticle(options);
 
+    logger.info("preparing tenant");
+
     prepareTenant(TENANT_ID, false);
+
+    logger.info("finished @BeforeClass before()");
   }
 
   @AfterClass
@@ -145,21 +152,9 @@ public class StorageTestSuite {
     ExecutionException,
     TimeoutException {
 
+    vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
     removeTenant(TENANT_ID);
-
-    CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
-
     PostgresClient.stopEmbeddedPostgres();
-
-    vertx.close(res -> {
-      if (res.succeeded()) {
-        undeploymentComplete.complete(null);
-      } else {
-        undeploymentComplete.completeExceptionally(res.cause());
-      }
-    });
-    PostgresClient.stopEmbeddedPostgres();
-    undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
   static void deleteAll(URL rootUrl) {
@@ -191,6 +186,7 @@ public class StorageTestSuite {
 
       assertThat(mismatchedRowCount, is(0));
     } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new RuntimeException("WARNING!!!!! Unable to determine mismatched ID rows" + e.getMessage(), e);
     }
   }
@@ -242,17 +238,10 @@ public class StorageTestSuite {
   private static void startVerticle(DeploymentOptions options)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
-
-    vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-      if (res.succeeded()) {
-        deploymentComplete.complete(res.result());
-      } else {
-        deploymentComplete.completeExceptionally(res.cause());
-      }
-    });
-
-    deploymentComplete.get(20, TimeUnit.SECONDS);
+    vertx.deployVerticle(RestVerticle.class, options)
+    .toCompletionStage()
+    .toCompletableFuture()
+    .get(20, TimeUnit.SECONDS);
   }
 
   static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)
@@ -307,6 +296,9 @@ public class StorageTestSuite {
       ResponseHandler.any(tenantDeleted));
 
     Response response = tenantDeleted.get(20, TimeUnit.SECONDS);
+
+    logger.debug("DELETE /_/tenant, response = {}", response == null ? null :
+      response.getStatusCode() + " " + response.getBody());
 
     String failureMessage = String.format("Tenant cleanup failed: %s: %s",
       response.getStatusCode(), response.getBody());

@@ -18,21 +18,21 @@ import javax.ws.rs.core.Response;
 import io.vertx.core.*;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
 import org.folio.rest.jaxrs.model.ItemDamageStatuses;
 import org.folio.rest.jaxrs.resource.ItemDamagedStatuses;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ItemDamagedStatusAPI.class);
+  private static final Logger LOGGER = LogManager.getLogger();
   public static final String REFERENCE_TABLE = "item_damaged_status";
   private static final String LOCATION_PREFIX = "/item-damaged-statuses/";
   private final Messages messages = Messages.getInstance();
@@ -67,31 +67,28 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     });
   }
 
-  private Future<ItemDamageStatuses> searchItemDamagedStatuses(
+  // protected is needed for unit test
+  protected Future<ItemDamageStatuses> searchItemDamagedStatuses(
     String query,
     int offset,
     int limit,
     Map<String, String> okapiHeaders,
     Context vertxContext) throws FieldException {
 
-    Future<Results<ItemDamageStatus>> future = Future.future();
-
-    pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .get(
-        REFERENCE_TABLE,
-        ItemDamageStatus.class,
-        new String[]{"*"},
-        getCQL(query, limit, offset, REFERENCE_TABLE),
-        true,
-        true,
-        future.completer()
-      );
-
-    return future.map(results ->
-      new ItemDamageStatuses()
+    CQLWrapper cql = getCQL(query, limit, offset, REFERENCE_TABLE);
+    return Future.<Results<ItemDamageStatus>>future(promise -> {
+      pgClientFactory
+      .getInstance(vertxContext, okapiHeaders)
+      .get(REFERENCE_TABLE,
+          ItemDamageStatus.class,
+          new String[]{"*"},
+          cql,
+          true,
+          true,
+          promise);
+    }).map(results -> new ItemDamageStatuses()
         .withItemDamageStatuses(results.getResults())
-        .withTotalRecords(results.getResultInfo().getTotalRecords())
-    );
+        .withTotalRecords(results.getResultInfo().getTotalRecords()));
   }
 
   @Override
@@ -122,15 +119,13 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
   }
 
   private Future<ItemDamageStatus> saveItemDamagedStatus(ItemDamageStatus entity, Map<String, String> okapiHeaders, Context vertxContext) {
-    Future<String> future = Future.future();
     if (isNull(entity.getId())) {
       entity.setId(UUID.randomUUID().toString());
     }
-
-    pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .save(REFERENCE_TABLE, entity.getId(), entity, future.completer());
-
-    return future.map(entity::withId);
+    return Future.<String>future(promise -> pgClientFactory
+        .getInstance(vertxContext, okapiHeaders)
+        .save(REFERENCE_TABLE, entity.getId(), entity, promise))
+        .map(entity::withId);
   }
 
   @Override
@@ -161,15 +156,14 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
 
   }
 
-  private Future<ItemDamageStatus> getItemDamagedStatus(
-    String id,
-    Map<String, String> okapiHeaders,
-    Context vertxContext) {
-
-    Future<ItemDamageStatus> future = Future.future();
-    pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .getById(REFERENCE_TABLE, id, ItemDamageStatus.class, future.completer());
-    return future;
+  // protected is needed for unit testing
+  protected Future<ItemDamageStatus> getItemDamagedStatus(
+      String id,
+      Map<String, String> okapiHeaders,
+      Context vertxContext) {
+    return Future.<ItemDamageStatus>future(promise -> pgClientFactory
+        .getInstance(vertxContext, okapiHeaders)
+        .getById(REFERENCE_TABLE, id, ItemDamageStatus.class, promise));
   }
 
   @Override
@@ -221,14 +215,13 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
   }
 
   private Future<Integer> deleteItemDamagedStatus(
-    String id,
-    Map<String, String> okapiHeaders,
-    Context vertxContext) {
-
-    Promise<RowSet<Row>> promise = Promise.promise();
-    pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .delete(REFERENCE_TABLE, id, promise.future());
-    return promise.future().map(RowSet<Row>::rowCount);
+      String id,
+      Map<String, String> okapiHeaders,
+      Context vertxContext) {
+    return Future.<RowSet<Row>>future(promise -> pgClientFactory
+        .getInstance(vertxContext, okapiHeaders)
+        .delete(REFERENCE_TABLE, id, promise))
+        .map(RowSet<Row>::rowCount);
   }
 
   @Override
@@ -287,13 +280,12 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
     Map<String, String> okapiHeaders,
     Context vertxContext) {
 
-    Promise<RowSet<Row>> promise = Promise.promise();
     if (isNull(entity.getId())) {
       entity.setId(id);
     }
-    pgClientFactory.getInstance(vertxContext, okapiHeaders)
-      .update(REFERENCE_TABLE, entity, id, promise.future());
-
-    return promise.future().map(RowSet<Row>::rowCount);
+    return Future.<RowSet<Row>>future(promise -> pgClientFactory
+        .getInstance(vertxContext, okapiHeaders)
+        .update(REFERENCE_TABLE, entity, id, promise))
+        .map(RowSet<Row>::rowCount);
   }
 }

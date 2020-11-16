@@ -9,8 +9,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -20,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.MetadataUtil;
 import javax.ws.rs.core.Response;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,7 @@ import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 
 public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger log = LogManager.getLogger();
 
   private static final String INSTANCE_TABLE = "instance";
   private static final String PARALLEL_DB_CONNECTIONS_LIMIT_KEY = "inventory.storage.parallel.db.connections.limit";
@@ -55,7 +54,7 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
         MetadataUtil.populateMetadata(entity.getInstances(), okapiHeaders);
         executeInBatch(entity.getInstances(),
           (instances, saveFutures) -> saveInstances(instances, postgresClient, saveFutures))
-          .setHandler(ar -> {
+          .onComplete(ar -> {
 
             InstancesBatchResponse response = constructResponse(ar.result());
 
@@ -104,21 +103,18 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
    * @param instances      list of Instances to save
    * @param postgresClient Postgres Client
    * @param saveFutures    list of all individual result futures
-   * @return future containing the list of completed individual result futures
+   * @return future containing the list of completed (succeeded and failed) individual result futures
    */
   private Future<List<Future>> saveInstances(List<Instance> instances, PostgresClient postgresClient,
                                              List<Future> saveFutures) {
-    Future<List<Future>> future = Future.future();
     List<Future> futures = instances.stream()
       .map(instance -> saveInstance(instance, postgresClient))
       .collect(Collectors.toList());
 
-    CompositeFuture.join(futures).setHandler(ar -> {
-        saveFutures.addAll(futures);
-        future.complete(saveFutures);
-      }
-    );
-    return future;
+    return CompositeFuture.join(futures)
+        .otherwiseEmpty()  // ignore failures
+        .map(always -> futures)
+        .onComplete(ar -> saveFutures.addAll(futures));
   }
 
   /**
@@ -129,37 +125,22 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
    * @return future containing saved Instance or error
    */
   private Future<Instance> saveInstance(Instance instance, PostgresClient postgresClient) {
-    Future<Instance> future = Future.future();
-
     final Future<String> hridFuture;
+
     if (isBlank(instance.getHrid())) {
       final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
       hridFuture = hridManager.getNextInstanceHrid();
     } else {
-      hridFuture = StorageHelper.completeFuture(instance.getHrid());
+      hridFuture = Future.succeededFuture(instance.getHrid());
     }
 
-    hridFuture.map(hrid -> {
+    return hridFuture.compose(hrid -> {
       instance.setHrid(hrid);
-
-      postgresClient.save(INSTANCE_TABLE, instance.getId(), instance, save -> {
-        if (save.failed()) {
-          log.error("Failed to create Instances", save.cause());
-          future.fail(save.cause());
-          return;
-        }
-        instance.setId(save.result());
-        future.complete(instance);
-      });
-      return null;
-    })
-    .otherwise(error -> {
-      log.error("Failed to generate an instance HRID", error);
-      future.fail(error);
-      return null;
-    });
-
-    return future;
+      return Future.<String>future(promise -> postgresClient.save(INSTANCE_TABLE, instance.getId(), instance, promise));
+    }).map(id -> {
+      instance.setId(id);
+      return instance;
+    }).onFailure(error -> log.error("Failed to generate an instance HRID", error));
   }
 
   /**

@@ -6,9 +6,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 
@@ -29,7 +29,7 @@ public class TenantRefAPI extends TenantAPI {
   private static final String REFERENCE_KEY = "loadReference";
   private static final String REFERENCE_LEAD = "ref-data";
 
-  private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
+  private static final Logger log = LogManager.getLogger();
   final String[] refPaths = new String[]{
     "material-types",
     "loan-types",

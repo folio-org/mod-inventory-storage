@@ -1,9 +1,8 @@
 package org.folio.rest.impl;
 
 import io.vertx.core.*;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ContributorNameType;
 import org.folio.rest.jaxrs.model.ContributorNameTypes;
@@ -25,7 +24,7 @@ public class ContributorNameTypeAPI implements org.folio.rest.jaxrs.resource.Con
   public static final String CONTRIBUTOR_NAME_TYPE_TABLE   = "contributor_name_type";
 
   private static final String LOCATION_PREFIX       = "/contributor-name-types/";
-  private static final Logger log                 = LoggerFactory.getLogger(ContributorNameTypeAPI.class);
+  private static final Logger log                 = LogManager.getLogger();
   private final Messages messages                 = Messages.getInstance();
 
   @Validate

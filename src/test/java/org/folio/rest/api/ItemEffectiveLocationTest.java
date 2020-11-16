@@ -13,7 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import io.vertx.sqlclient.Row;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
@@ -28,9 +27,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
@@ -206,14 +205,14 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   public void responseContainsAllRequiredHeaders() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
 
-    CompletableFuture<HttpClientResponse> createCompleted = new CompletableFuture<>();
+    CompletableFuture<HttpResponse<Buffer>> createCompleted = new CompletableFuture<>();
     Item item = buildItem(holdingsRecordId, null, null);
 
     client
-      .post(InterfaceUrls.itemsStorageUrl(""), item,
-        StorageTestSuite.TENANT_ID, createCompleted::complete);
+      .post(InterfaceUrls.itemsStorageUrl(""), item, StorageTestSuite.TENANT_ID,
+          createCompleted::complete);
 
-    HttpClientResponse response = createCompleted.get(5, TimeUnit.SECONDS);
+    HttpResponse<Buffer> response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.statusCode(), is(201));
     assertThat(response.getHeader("location"), not(is(emptyString())));

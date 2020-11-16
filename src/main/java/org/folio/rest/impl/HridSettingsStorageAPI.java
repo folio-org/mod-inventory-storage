@@ -3,7 +3,8 @@ package org.folio.rest.impl;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HridSettings;
 import org.folio.rest.jaxrs.resource.HridSettingsStorage;
@@ -15,11 +16,9 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class HridSettingsStorageAPI implements HridSettingsStorage {
-  private static final Logger log = LoggerFactory.getLogger(HridSettingsStorageAPI.class);
+  private static final Logger log = LogManager.getLogger();
 
   @Validate
   @Override

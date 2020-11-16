@@ -1,9 +1,8 @@
 package org.folio.rest.impl;
 
 import io.vertx.core.*;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
@@ -32,7 +31,7 @@ public class InstanceTypeAPI implements org.folio.rest.jaxrs.resource.InstanceTy
   public static final String INSTANCE_TYPE_TABLE   = "instance_type";
 
   private static final String LOCATION_PREFIX       = "/instance-types/";
-  private static final Logger log                 = LoggerFactory.getLogger(InstanceTypeAPI.class);
+  private static final Logger log                 = LogManager.getLogger();
   private final Messages messages                 = Messages.getInstance();
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {

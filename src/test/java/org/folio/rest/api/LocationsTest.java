@@ -14,7 +14,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,20 +25,12 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /* TODO: Missing tests
    - Bad inst/camp/lib in PUT
@@ -47,7 +38,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 
 public class LocationsTest extends TestBaseWithInventoryUtil {
-  private static final Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private static UUID instID;
   private static UUID campID;
@@ -264,42 +254,6 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
 
     assertThat(locations.size(), is(1));
     assertThat(locations.get(0).getString("id"), is(expectedLocationId.toString()));
-  }
-
-  ///////////////////////////// helpers
-  private static void send(URL url, HttpMethod method, String content,
-                           String contentType, Handler<HttpClientResponse> handler) {
-
-    HttpClient client = StorageTestSuite.getVertx().createHttpClient();
-    HttpClientRequest request;
-
-    if(content == null){
-      content = "";
-    }
-    Buffer buffer = Buffer.buffer(content);
-
-    if (method == HttpMethod.POST) {
-      request = client.postAbs(url.toString());
-    }
-    else if (method == HttpMethod.DELETE) {
-      request = client.deleteAbs(url.toString());
-    }
-    else if (method == HttpMethod.GET) {
-      request = client.getAbs(url.toString());
-    }
-    else {
-      request = client.putAbs(url.toString());
-    }
-    request.exceptionHandler(error -> {
-      Assert.fail(error.getLocalizedMessage());
-    })
-    .handler(handler);
-
-    request.putHeader("X-Okapi-Tenant", "test_tenant");
-    request.putHeader("X-Okapi-User-Id", "test_user");
-    request.putHeader("Accept", "application/json,text/plain");
-    request.putHeader("Content-type", contentType);
-    request.end(buffer);
   }
 
   private List<JsonObject> getMany(String cql, Object... args) {

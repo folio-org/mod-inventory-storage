@@ -7,143 +7,216 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 
 public class HttpClient {
-  private static final Logger LOG = LoggerFactory.getLogger(HttpClient.class);
+  private static final Logger LOG = LogManager.getLogger();
 
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
   private static final String X_OKAPI_URL = "X-Okapi-Url";
   private static final String X_OKAPI_URL_TO = "X-Okapi-Url-to";
 
-  private final io.vertx.core.http.HttpClient client;
+  private final WebClient client;
 
   public HttpClient(Vertx vertx) {
-    client = vertx.createHttpClient();
+    client = WebClient.create(vertx);
   }
 
-  private void addDefaultHeaders(HttpClientRequest request, String url, String tenantId) {
-    try {
-      addDefaultHeaders(request, new URL(url), tenantId);
-    } catch (MalformedURLException ex) {
-      LOG.info(format("Malformed url: %s, message: %s", url, ex.getMessage()));
-    }
+  public WebClient getWebClient() {
+    return client;
   }
 
-  private void addDefaultHeaders(HttpClientRequest request, URL url, String tenantId) {
+  private void addDefaultHeaders(HttpRequest<Buffer> request, URL url, String tenantId) {
     if (isNotBlank(tenantId)) {
-      request.headers().add(TENANT_HEADER, tenantId);
+      request.putHeader(TENANT_HEADER, tenantId);
     }
     if (url != null) {
+      // FIXME: Several institutions have a Okapi URL with path, for example https://folio-demo.gbv.de/okapi
+      // see https://github.com/folio-org/folio-ansible/blob/master/doc/index.md#replace-port-9130
       String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
-      request.headers().add(X_OKAPI_URL, baseUrl);
-      request.headers().add(X_OKAPI_URL_TO, baseUrl);
+      request.putHeader(X_OKAPI_URL, baseUrl);
+      request.putHeader(X_OKAPI_URL_TO, baseUrl);
     }
-    request.headers().add(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
+    request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
   }
 
+  public Future<HttpResponse<Buffer>> request(
+    HttpMethod method,
+    URL url,
+    Object body,
+    String tenantId) {
+
+    try {
+      HttpRequest<Buffer> request = client.requestAbs(method, url.toString());
+      request.putHeader(CONTENT_TYPE, APPLICATION_JSON);
+      addDefaultHeaders(request, url, tenantId);
+
+      if (body == null) {
+        return request.send();
+      }
+      String encodedBody = Json.encodePrettily(body);
+      LOG.info(format("%s %s, Request: %s", method.name(), url.toString(), encodedBody));
+      return request.sendBuffer(Buffer.buffer(encodedBody));
+    } catch (Exception e) {
+      LOG.error(e.getMessage(), e);
+      return Future.failedFuture(e);
+    }
+  }
+
+  public Future<HttpResponse<Buffer>> request(
+      HttpMethod method,
+      URL url,
+      String tenantId) {
+
+    try {
+      HttpRequest<Buffer> request = client.requestAbs(method, url.toString());
+      addDefaultHeaders(request, url, tenantId);
+      return request.send();
+    } catch (Exception e) {
+      LOG.error(e.getMessage(), e);
+      return Future.failedFuture(e);
+    }
+  }
+
+  /**
+   * Convert Future<HttpResponse<Buffer>> into CompletableFuture<Response>
+   */
+  public static CompletableFuture<Response> asResponse(Future<HttpResponse<Buffer>> future) {
+
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    future
+    .onSuccess(ResponseHandler.any(completableFuture))
+    .onFailure(completableFuture::completeExceptionally);
+    return completableFuture;
+  }
+
+  /**
+   * Warning: The responseHandler gets null on error, use
+   * {@link #doPost(URL, Object, String)} or {@link #post(URL, Object, String)}
+   * for better error reporting
+   */
   public void post(
     URL url,
     Object body,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<HttpResponse<Buffer>> responseHandler) {
 
-    HttpClientRequest request = client.postAbs(url.toString(), responseHandler);
-    request.putHeader(CONTENT_TYPE, APPLICATION_JSON);
-    addDefaultHeaders(request, url, tenantId);
-
-    if (body == null) {
-      request.end();
-    } else {
-      String encodedBody = Json.encodePrettily(body);
-      LOG.info(format("POST %s, Request: %s", url.toString(), encodedBody));
-      request.end(encodedBody);
-    }
+    request(HttpMethod.POST, url, body, tenantId)
+    .recover(error -> {
+      LOG.error(error.getMessage(), error);
+      return null;
+    })
+    .onSuccess(responseHandler);
   }
 
   public CompletableFuture<Response> post(URL url, Object body, String tenantId) {
-    CompletableFuture<Response> future = new CompletableFuture<>();
-    post(url, body, tenantId, ResponseHandler.any(future));
-    return future;
+    return asResponse(request(HttpMethod.POST, url, body, tenantId));
   }
 
+  /**
+   * Warning: The responseHandler gets null on error, use
+   * {@link #doPut(URL, Object, String)} or {@link #put(URL, Object, String)}
+   * for better error reporting.
+   */
   public void put(
-    URL url,
-    Object body,
-    String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+      URL url,
+      Object body,
+      String tenantId,
+    Handler<HttpResponse<Buffer>> responseHandler) {
 
-    HttpClientRequest request = client.putAbs(url.toString(), responseHandler);
-
-    request.putHeader(CONTENT_TYPE, APPLICATION_JSON);
-    addDefaultHeaders(request, url, tenantId);
-
-    String encodedBody = Json.encodePrettily(body);
-    LOG.info(format("PUT %s, Request: %s", url.toString(), encodedBody));
-    request.end(encodedBody);
+    request(HttpMethod.PUT, url, body, tenantId)
+    .recover(error -> {
+      LOG.error(error.getMessage(), error);
+      return null;
+    })
+    .onSuccess(responseHandler);
   }
 
   public CompletableFuture<Response> put(URL url, Object body, String tenantId) {
-    CompletableFuture<Response> future = new CompletableFuture<>();
-    put(url, body, tenantId, ResponseHandler.any(future));
-    return future;
+    return asResponse(request(HttpMethod.PUT, url, body, tenantId));
   }
 
+  public void get(
+      String url,
+      String tenantId,
+      Handler<HttpResponse<Buffer>> responseHandler) {
+
+    URL finalUrl = null;
+    try {
+      finalUrl = new URL(url);
+    } catch (Exception e) {
+      LOG.error(format("URL error: %s: %s", e.getMessage(), url), e);
+    }
+    get(finalUrl, tenantId, responseHandler);
+  }
+
+  /**
+   * Warning: The responseHandler gets null on error, use
+   * {@link #doGet(URL, String)} or {@link #get(URL, String)}
+   * for better error reporting.
+   */
   public void get(
     URL url,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<HttpResponse<Buffer>> responseHandler) {
 
-    get(url.toString(), tenantId, responseHandler);
-  }
-
-  public void get(
-    String url,
-    String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
-
-    HttpClientRequest request = client.getAbs(url, responseHandler);
-    addDefaultHeaders(request, url, tenantId);
-    request.end();
+    request(HttpMethod.GET, url, tenantId)
+    .recover(error -> {
+      LOG.error(error.getMessage(), error);
+      return null;
+    })
+    .onSuccess(responseHandler);
   }
 
   public CompletableFuture<Response> get(URL url, String tenantId) {
-    CompletableFuture<Response> future = new CompletableFuture<>();
-    get(url, tenantId, ResponseHandler.any(future));
-    return future;
+    return asResponse(request(HttpMethod.GET, url, tenantId));
   }
 
+  /**
+   * Warning: The responseHandler gets null on error, use
+   * {@link #doDelete(URL, String)} or {@link #delete(URL, String)}
+   * for better error reporting.
+   */
   public void delete(
     URL url,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<HttpResponse<Buffer>> responseHandler) {
 
-    delete(url.toString(), tenantId, responseHandler);
+    request(HttpMethod.DELETE, url, tenantId)
+    .recover(error -> {
+      LOG.error(error.getMessage(), error);
+      return null;
+    })
+    .onSuccess(responseHandler);
   }
 
   public void delete(
     String url,
     String tenantId,
-    Handler<HttpClientResponse> responseHandler) {
+    Handler<HttpResponse<Buffer>> responseHandler) {
 
-    HttpClientRequest request = client.deleteAbs(url, responseHandler);
-    addDefaultHeaders(request, url, tenantId);
-    request.end();
+    URL finalUrl = null;
+    try {
+      finalUrl = new URL(url);
+    } catch (Exception e) {
+      LOG.info(format("URL error: %s: %s", e.getMessage(), url), e);
+    }
+    delete(finalUrl, tenantId, responseHandler);
   }
 
   public CompletableFuture<Response> delete(URL url, String tenantId) {
-    CompletableFuture<Response> future = new CompletableFuture<>();
-    delete(url, tenantId, ResponseHandler.any(future));
-    return future;
+    return asResponse(request(HttpMethod.DELETE, url, tenantId));
   }
 }

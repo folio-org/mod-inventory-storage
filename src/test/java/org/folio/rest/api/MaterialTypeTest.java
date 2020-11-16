@@ -1,16 +1,10 @@
 package org.folio.rest.api;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import org.folio.rest.support.*;
 import org.folio.rest.support.client.LoanTypesClient;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,7 +22,7 @@ import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
@@ -316,41 +310,6 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-  }
-
-  private void send(String url, HttpMethod method, String content,
-                    String contentType, Handler<HttpClientResponse> handler) {
-
-    HttpClient client = StorageTestSuite.getVertx().createHttpClient();
-    HttpClientRequest request;
-
-    if(content == null){
-      content = "";
-    }
-    Buffer buffer = Buffer.buffer(content);
-
-    if (method == HttpMethod.POST) {
-      request = client.postAbs(url);
-    }
-    else if (method == HttpMethod.DELETE) {
-      request = client.deleteAbs(url);
-    }
-    else if (method == HttpMethod.GET) {
-      request = client.getAbs(url);
-    }
-    else {
-      request = client.putAbs(url);
-    }
-    request.exceptionHandler(error -> {
-      Assert.fail(error.getLocalizedMessage());
-    })
-    .handler(handler);
-
-    request.putHeader("Authorization", "test_tenant");
-    request.putHeader("x-okapi-tenant", "test_tenant");
-    request.putHeader("Accept", "application/json,text/plain");
-    request.putHeader("Content-type", contentType);
-    request.end(buffer);
   }
 
   private JsonObject createItemRequest(String holdingsRecordId, String materialTypeId) {

@@ -12,7 +12,8 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
@@ -23,15 +24,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.junit.VertxUnitRunnerWithParametersFactory;
 
 @RunWith(Parameterized.class)
 @Parameterized.UseParametersRunnerFactory(VertxUnitRunnerWithParametersFactory.class)
 public class HridSettingsStorageParameterizedTest extends TestBase {
-  private static final Logger log =
-      LoggerFactory.getLogger(HridSettingsStorageParameterizedTest.class);
+  private static final Logger log = LogManager.getLogger();
 
   @Parameters(name = "{index}: test validation failure {6}.{7} = {8}")
   public static Collection<Object[]> data() {
