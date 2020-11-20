@@ -1956,22 +1956,27 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @Parameters({
+    "Aged to lost",
     "Available",
     "Awaiting pickup",
     "Awaiting delivery",
     "Checked out",
+    "Claimed returned",
+    "Declared lost",
     "In process",
+    "In process (non-requestable)",
     "In transit",
+    "Intellectual item",
+    "Long missing",
+    "Lost and paid",
     "Missing",
     "On order",
     "Paged",
-    "Declared lost",
+    "Restricted",
     "Order closed",
-    "Claimed returned",
+    "Unavailable",
     "Unknown",
-    "Withdrawn",
-    "Lost and paid",
-    "Aged to lost"
+    "Withdrawn"
   })
   public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
