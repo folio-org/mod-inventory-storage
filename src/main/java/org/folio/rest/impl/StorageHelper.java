@@ -1,36 +1,27 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-
-import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
-
-import javax.ws.rs.core.Response;
-
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
-import org.folio.rest.tools.utils.ValidationHelper;
 
 /**
  * Small helpers for mod-inventory-storage.
  */
 public final class StorageHelper {
+
+  /** Limit for PgUtil.postSync to avoid out-of-memory */
+  public static final int MAX_ENTITIES = 10000;
 
   private static Logger logger = LoggerFactory.getLogger(StorageHelper.class);
 
@@ -72,26 +63,6 @@ public final class StorageHelper {
    */
   protected static PostgresClient postgresClient(Context vertxContext, Map<String, String> okapiHeaders) {
     return PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-  }
-
-  protected static <T> void postSync(String table, List<T> entities, Map<String, String> okapiHeaders,
-      boolean upsert,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, Supplier<Response> respond201) {
-    PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-
-    Handler<AsyncResult<RowSet<Row>>> replyHandler = result -> {
-      if (result.failed()) {
-        logger.error("postSync: " + result.cause().getMessage(), result.cause());
-        ValidationHelper.handleError(result.cause(), asyncResultHandler);
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(respond201.get()));
-    };
-    if (upsert) {
-      postgresClient.upsertBatch(table, entities, replyHandler);
-    } else {
-      postgresClient.saveBatch(table, entities, replyHandler);
-    }
   }
 
   public static <T> Future<T> completeFuture(T id) {

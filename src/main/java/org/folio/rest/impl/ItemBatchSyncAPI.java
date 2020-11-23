@@ -13,6 +13,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemsPost;
 import org.folio.rest.jaxrs.resource.ItemStorageBatchSynchronous;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
@@ -40,7 +41,7 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     @SuppressWarnings("rawtypes")
     final List<Future> futures = new ArrayList<>();
     final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
-    
+
     // add a last modified date to status on all created items
     Date itemStatusDate = new java.util.Date();
 
@@ -50,16 +51,17 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     }
 
     CompositeFuture.all(futures)
-      .compose(result -> effectiveCallNumberService.populateEffectiveCallNumberComponents(items))
-      .map(result -> {
-        StorageHelper.postSync(ItemStorageAPI.ITEM_TABLE, entity.getItems(),
-          okapiHeaders, upsert, asyncResultHandler, vertxContext,
-          PostItemStorageBatchSynchronousResponse::respond201);
-        return result;
-      }).otherwise(EndpointFailureHandler.handleFailure(asyncResultHandler,
-      PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,
-      PostItemStorageBatchSynchronousResponse::respond500WithTextPlain
-    ));
+    .compose(result -> effectiveCallNumberService.populateEffectiveCallNumberComponents(items))
+    .onSuccess(ar -> {
+      PgUtil.postSync(ItemStorageAPI.ITEM_TABLE, entity.getItems(),
+          StorageHelper.MAX_ENTITIES, upsert, okapiHeaders, vertxContext,
+          PostItemStorageBatchSynchronousResponse.class,
+          asyncResultHandler);
+    })
+    .onFailure(cause -> EndpointFailureHandler.handleFailure(
+        cause, asyncResultHandler,
+        PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,
+        PostItemStorageBatchSynchronousResponse::respond500WithTextPlain));
   }
 
   private Future<Void> setHrid(Item item, HridManager hridManager) {

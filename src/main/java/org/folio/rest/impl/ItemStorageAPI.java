@@ -28,7 +28,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
-import java.util.Date;
 
 /**
  * CRUD for Item.
@@ -59,7 +58,7 @@ public class ItemStorageAPI implements ItemStorage {
       Context vertxContext) {
 
     entity.getStatus().setDate(new java.util.Date());
-    
+
     final Future<String> hridFuture;
     if (isBlank(entity.getHrid())) {
       final HridManager hridManager = new HridManager(vertxContext,
@@ -74,14 +73,15 @@ public class ItemStorageAPI implements ItemStorage {
 
     hridFuture.map(entity::withHrid)
       .compose(effectiveCallNumbersService::populateEffectiveCallNumberComponents)
-      .map(item -> {
+      .onSuccess(item -> {
         PgUtil.post(ITEM_TABLE, item, okapiHeaders, vertxContext,
           PostItemStorageItemsResponse.class, asyncResultHandler);
-        return item;
-      }).otherwise(EndpointFailureHandler.handleFailure(asyncResultHandler,
-      PostItemStorageItemsResponse::respond422WithApplicationJson,
-      PostItemStorageItemsResponse::respond500WithTextPlain
-    ));
+      })
+      .onFailure(cause -> EndpointFailureHandler.handleFailure(
+          cause, asyncResultHandler,
+          PostItemStorageItemsResponse::respond422WithApplicationJson,
+          PostItemStorageItemsResponse::respond500WithTextPlain
+      ));
   }
 
   @Validate

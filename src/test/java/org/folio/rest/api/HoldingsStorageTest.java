@@ -1721,7 +1721,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postSynchronousBatch(holdingsArray), allOf(
         statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate key"),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
         errorParametersValueIs(duplicateHRID)));
 
     for (int i = 0; i < holdingsArray.size(); i++) {
@@ -1896,7 +1896,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsArray.getJsonObject(1).put("id", duplicateId);
     assertThat(postSynchronousBatch(holdingsArray), allOf(
         statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate key"),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
         errorParametersValueIs(duplicateId)));
 
     for (int i=0; i<holdingsArray.size(); i++) {

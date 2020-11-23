@@ -18,25 +18,20 @@ public final class EndpointFailureHandler {
 
   private EndpointFailureHandler() {}
 
-  public static <T> Function<Throwable, T> handleFailure(
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Function<Errors, Response> validationHandler,
-    Function<String, Response> serverErrorHandler) {
+  public static void handleFailure(
+      Throwable error,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Function<Errors, Response> validationHandler,
+      Function<String, Response> serverErrorHandler) {
 
-    return error -> {
-      log.warn("Error occurred", error);
+    log.warn("Error occurred", error);
 
-      if (error instanceof ValidationException) {
-        final ValidationException validationError = (ValidationException) error;
-
-        asyncResultHandler.handle(Future.succeededFuture(
-          validationHandler.apply(validationError.getErrors())));
-      } else {
-        asyncResultHandler.handle(Future.succeededFuture(
-          serverErrorHandler.apply(error.getMessage())));
-      }
-
-      return null;
-    };
+    Response response;
+    if (error instanceof ValidationException) {
+      response = validationHandler.apply(((ValidationException) error).getErrors());
+    } else {
+      response = serverErrorHandler.apply(error.getMessage());
+    }
+    asyncResultHandler.handle(Future.succeededFuture(response));
   }
 }
