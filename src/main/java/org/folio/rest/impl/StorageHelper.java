@@ -18,7 +18,6 @@ import javax.ws.rs.core.Response;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgUtil;
@@ -58,10 +57,6 @@ public final class StorageHelper {
     return new CQLWrapper(cql2pgJson, query)
       .setLimit(new Limit(limit))
       .setOffset(new Offset(offset));
-  }
-
-  protected static String getTenant(Map<String, String> headers) {
-    return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
   }
 
   /**

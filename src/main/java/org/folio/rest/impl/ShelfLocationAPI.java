@@ -12,6 +12,7 @@ import org.folio.rest.jaxrs.resource.Locations.GetLocationsByIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.TenantTool;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -51,7 +52,7 @@ public class ShelfLocationAPI implements ShelfLocations {
         Handler<AsyncResult<Response>>asyncResultHandler,
         Context vertxContext) {
     try {
-      String tenantId = getTenant(okapiHeaders);
+      String tenantId = TenantTool.tenantId(okapiHeaders);
       CQLWrapper cql = getCQL(query, limit, offset, LocationAPI.LOCATION_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(
