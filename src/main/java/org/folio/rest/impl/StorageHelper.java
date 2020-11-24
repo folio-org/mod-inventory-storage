@@ -1,8 +1,6 @@
 package org.folio.rest.impl;
 
 import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,12 +62,5 @@ public final class StorageHelper {
   protected static PostgresClient postgresClient(Context vertxContext, Map<String, String> okapiHeaders) {
     return PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
   }
-
-  public static <T> Future<T> completeFuture(T id) {
-    Promise<T> p = Promise.promise();
-    p.complete(id);
-    return p.future();
-  }
-
 
 }
