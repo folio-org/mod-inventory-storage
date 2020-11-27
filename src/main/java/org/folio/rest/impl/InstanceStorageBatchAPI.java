@@ -113,8 +113,8 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
 
     return CompositeFuture.join(futures)
         .otherwiseEmpty()  // ignore failures
-        .map(always -> futures)
-        .onComplete(ar -> saveFutures.addAll(futures));
+        .onComplete(ar -> saveFutures.addAll(futures))
+        .map(always -> saveFutures);
   }
 
   /**
