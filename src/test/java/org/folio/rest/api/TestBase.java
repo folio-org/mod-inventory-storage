@@ -21,6 +21,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -114,7 +115,12 @@ public abstract class TestBase {
 
   static void send(URL url, HttpMethod method, String content,
       String contentType, Handler<HttpResponse<Buffer>> handler) {
-    send(url.toString(), method, content, contentType, handler);
+    send(url, method, null, content, contentType, handler);
+  }
+
+  static void send(URL url, HttpMethod method, String userId, String content,
+                   String contentType, Handler<HttpResponse<Buffer>> handler) {
+    send(url.toString(), method, userId, content, contentType, handler);
   }
 
   static Future<HttpResponse<Buffer>> send(URL url, HttpMethod method, String content,
@@ -123,16 +129,25 @@ public abstract class TestBase {
   }
 
   static void send(String url, HttpMethod method, String content,
-      String contentType, Handler<HttpResponse<Buffer>> handler) {
+                   String contentType, Handler<HttpResponse<Buffer>> handler) {
+    send(url, method, null, content, contentType, handler);
+  }
 
+  static void send(String url, HttpMethod method, String userId, String content,
+        String contentType, Handler<HttpResponse<Buffer>> handler) {
     Buffer body = Buffer.buffer(content == null ? "" : content);
 
+    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
+    if (userId != null) {
+      headers.add("X-Okapi-User-Id", userId);
+    }
     client.getWebClient()
     .requestAbs(method, url)
     .putHeader("Authorization", "test_tenant")
     .putHeader("x-okapi-tenant", "test_tenant")
     .putHeader("Accept", "application/json,text/plain")
     .putHeader("Content-type", contentType)
+    .putHeaders(headers)
     .sendBuffer(body)
     .onSuccess(handler)
     .onFailure(error -> logger.error(error.getMessage(), error));

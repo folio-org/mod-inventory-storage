@@ -318,7 +318,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     UUID spID = UUID.randomUUID();
     servicePointIDs.add(spID);
     putIfNotNull(request, "servicePointIds", new JsonArray(servicePoints));
-    send(locationsStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locationsStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
     return get(createLocation);
   }

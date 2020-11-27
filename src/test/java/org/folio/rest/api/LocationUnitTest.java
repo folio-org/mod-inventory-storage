@@ -56,7 +56,7 @@ System.out.println("LocationUnitTest.beforeEach start");
       request.put("id", id.toString());
     }
 
-    send(locInstitutionStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locInstitutionStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);
@@ -254,7 +254,7 @@ System.out.println("LocationUnitTest.beforeEach start");
       request.put("id", id.toString());
     }
 
-    send(locCampusStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locCampusStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);
@@ -473,7 +473,7 @@ System.out.println("LocationUnitTest.beforeEach start");
       request.put("id", id.toString());
     }
 
-    send(locLibraryStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locLibraryStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);
