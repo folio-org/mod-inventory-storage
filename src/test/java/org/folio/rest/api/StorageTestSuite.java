@@ -152,8 +152,8 @@ public class StorageTestSuite {
     ExecutionException,
     TimeoutException {
 
-    vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
     removeTenant(TENANT_ID);
+    vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
     PostgresClient.stopEmbeddedPostgres();
   }
 
