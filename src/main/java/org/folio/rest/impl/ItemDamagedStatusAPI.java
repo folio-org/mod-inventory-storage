@@ -123,8 +123,8 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
       entity.setId(UUID.randomUUID().toString());
     }
     return Future.<String>future(promise -> pgClientFactory
-        .getInstance(vertxContext, okapiHeaders)
-        .save(REFERENCE_TABLE, entity.getId(), entity, promise))
+          .getInstance(vertxContext, okapiHeaders)
+          .save(REFERENCE_TABLE, entity.getId(), entity, promise))
         .map(entity::withId);
   }
 

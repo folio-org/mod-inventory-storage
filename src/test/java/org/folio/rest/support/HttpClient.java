@@ -134,7 +134,7 @@ public class HttpClient {
       URL url,
       Object body,
       String tenantId,
-    Handler<HttpResponse<Buffer>> responseHandler) {
+      Handler<HttpResponse<Buffer>> responseHandler) {
 
     request(HttpMethod.PUT, url, body, tenantId)
     .recover(error -> {
