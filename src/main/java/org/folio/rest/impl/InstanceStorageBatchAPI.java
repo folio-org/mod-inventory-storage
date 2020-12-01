@@ -89,15 +89,15 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
    */
   private Future<List<Future>> executeInBatch(List<Instance> instances,
                                               Function<List<Instance>, Future<List<Future>>> action) {
-    List<Future> completedFutures= new ArrayList<>();
+    List<Future> totalFutures= new ArrayList<>();
 
     List<List<Instance>> batches = Lists.partition(instances, PARALLEL_DB_CONNECTIONS_LIMIT);
     Future<List<Future>> future = Future.succeededFuture();
     for (List<Instance> batch : batches) {
       future = future.compose(x -> action.apply(batch))
-          .onSuccess(list -> completedFutures.addAll(list));
+          .onSuccess(batchFutures -> totalFutures.addAll(batchFutures));
     }
-    return future.map(completedFutures);
+    return future.map(totalFutures);
   }
 
   /**
