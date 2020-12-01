@@ -136,7 +136,6 @@ public class StorageTestSuite {
     port = NetworkUtils.nextFreePort();
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", port));
-    options.setWorker(true);
     startVerticle(options);
 
     logger.info("preparing tenant");
