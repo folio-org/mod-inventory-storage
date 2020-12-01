@@ -30,7 +30,6 @@ public class LocationUnitTest extends TestBase {
 
   @Before
   public void beforeEach() {
-System.out.println("LocationUnitTest.beforeEach start");
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -40,7 +39,6 @@ System.out.println("LocationUnitTest.beforeEach start");
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    System.out.println("LocationUnitTest.beforeEach end");
   }
 
   ///////////////////////////////////////////////////////  Inst test helpers
