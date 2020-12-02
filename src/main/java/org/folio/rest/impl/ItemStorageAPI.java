@@ -19,7 +19,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
-import org.folio.services.ItemEffectiveCallNumberComponentsService;
+import org.folio.services.ItemEffectiveValuesService;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -28,7 +28,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
-import java.util.Date;
 
 /**
  * CRUD for Item.
@@ -59,7 +58,7 @@ public class ItemStorageAPI implements ItemStorage {
       Context vertxContext) {
 
     entity.getStatus().setDate(new java.util.Date());
-    
+
     final Future<String> hridFuture;
     if (isBlank(entity.getHrid())) {
       final HridManager hridManager = new HridManager(vertxContext,
@@ -69,11 +68,11 @@ public class ItemStorageAPI implements ItemStorage {
       hridFuture = StorageHelper.completeFuture(entity.getHrid());
     }
 
-    final ItemEffectiveCallNumberComponentsService effectiveCallNumbersService =
-      new ItemEffectiveCallNumberComponentsService(vertxContext, okapiHeaders);
+    final ItemEffectiveValuesService effectiveValuesService =
+      new ItemEffectiveValuesService(vertxContext, okapiHeaders);
 
     hridFuture.map(entity::withHrid)
-      .compose(effectiveCallNumbersService::populateEffectiveCallNumberComponents)
+      .compose(effectiveValuesService::populateEffectiveValues)
       .map(item -> {
         PgUtil.post(ITEM_TABLE, item, okapiHeaders, vertxContext,
           PostItemStorageItemsResponse.class, asyncResultHandler);
@@ -125,8 +124,8 @@ public class ItemStorageAPI implements ItemStorage {
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    final ItemEffectiveCallNumberComponentsService effectiveCallNumbersService =
-      new ItemEffectiveCallNumberComponentsService(vertxContext, okapiHeaders);
+    final ItemEffectiveValuesService itemEffectiveValuesService =
+      new ItemEffectiveValuesService(vertxContext, okapiHeaders);
 
     PgUtil.getById(ITEM_TABLE, Item.class, itemId, okapiHeaders, vertxContext, GetItemStorageItemsByItemIdResponse.class, response -> {
       if (response.succeeded()) {
@@ -139,7 +138,7 @@ public class ItemStorageAPI implements ItemStorage {
         } else {
           final Item existingItem = (Item) response.result().getEntity();
           if (Objects.equals(entity.getHrid(), existingItem.getHrid())) {
-            effectiveCallNumbersService.populateEffectiveCallNumberComponents(entity)
+            itemEffectiveValuesService.populateEffectiveValues(entity)
               .map(item -> {
                 PgUtil.put(ITEM_TABLE, item, itemId, okapiHeaders, vertxContext,
                   PutItemStorageItemsByItemIdResponse.class, asyncResultHandler);
