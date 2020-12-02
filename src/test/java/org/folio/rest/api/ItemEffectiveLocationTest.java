@@ -291,40 +291,6 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  private void runSqlFile(String sqlFile) {
-    CompletableFuture<Void> future = new CompletableFuture<>();
-
-    PostgresClient.getInstance(vertx).runSQLFile(sqlFile, true, handler -> {
-      if (handler.failed()) {
-        future.completeExceptionally(handler.cause());
-        return;
-      }
-      if (! handler.result().isEmpty()) {
-        future.completeExceptionally(new RuntimeException("Failing SQL: " + handler.result().toString()));
-        return;
-      }
-      future.complete(null);
-    });
-
-    try {
-      future.get(1, TimeUnit.SECONDS);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private void disableTriggers() {
-    runSql("DROP TRIGGER IF EXISTS update_effective_location_for_items ON test_tenant_mod_inventory_storage.holdings_record");
-    runSql("DROP TRIGGER IF EXISTS update_effective_location           ON test_tenant_mod_inventory_storage.item");
-  }
-
-  private void enableTriggers() {
-    runSql("create trigger update_effective_location_for_items after update on test_tenant_mod_inventory_storage.holdings_record "
-        + "for each row execute procedure test_tenant_mod_inventory_storage.update_effective_location_on_holding_update()");
-    runSql("create trigger update_effective_location before insert or update on test_tenant_mod_inventory_storage.item "
-        + "for each row execute procedure test_tenant_mod_inventory_storage.update_effective_location_on_item_update()");
-  }
-
   private Item getItem(String id) throws Exception {
     return itemsClient.getById(UUID.fromString(id)).getJson().mapTo(Item.class);
   }
