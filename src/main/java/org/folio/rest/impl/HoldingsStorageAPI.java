@@ -308,7 +308,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                   if (Objects.equals(entity.getHrid(), existingHoldings.getHrid())) {
                     try {
                       postgresClient.startTx(connection -> {
-                        updateItemEffectiveCallNumbersAndLocationsByHoldings(connection, postgresClient, entity).onComplete(updateResult -> {
+                        updateRelatedItemsAttributes(connection, postgresClient, entity).onComplete(updateResult -> {
                           if (updateResult.succeeded()) {
                             postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity,
                               "jsonb", String.format(WHERE_CLAUSE, holdingsRecordId), false,
@@ -457,7 +457,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     }
   }
 
-  private Future<RowSet<Row>> updateItemEffectiveCallNumbersAndLocationsByHoldings(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, HoldingsRecord holdingsRecord) {
+  private Future<RowSet<Row>> updateRelatedItemsAttributes(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, HoldingsRecord holdingsRecord) {
     Promise<RowSet<Row>> promise = Promise.promise();
     Criterion criterion = new Criterion(
       new Criteria().addField("holdingsRecordId")
