@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
 import static org.junit.Assert.assertEquals;
@@ -21,7 +20,6 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.http.InterfaceUrls;
-import org.folio.util.ResourceUtil;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,7 +27,6 @@ import org.junit.runner.RunWith;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -43,10 +40,6 @@ import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static Vertx vertx = Vertx.vertx();
   private static UUID instanceId = UUID.randomUUID();
-  /** The upgrading script that runs on mod-inventory-storage version upgrade.  */
-  private static final String POPULATE_EFFECTIVE_LOCATION_SQL =
-      ResourceUtil.asString("templates/db_scripts/populateEffectiveLocationForExistingItems.sql")
-      .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
 
   // for @BeforeClass beforeAny() see TestBaseWithInventoryUtil
 
@@ -258,24 +251,6 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * Does "INSERT INFO item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?
-   */
-  @Test
-  public void canSetTableFieldOnInsert() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
-    UUID itemId = UUID.randomUUID();
-    Row result = runSql(String.format(
-        "INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) "
-            + "VALUES ('%s', '{\"holdingsRecordId\": \"%s\"}') RETURNING jsonb, effectiveLocationId",
-            itemId.toString(), holdingsRecordId.toString()
-        ));
-    JsonObject jsonb = (JsonObject) result.getValue(0);
-    String effectiveLocationId = result.getUUID(1).toString();
-    assertThat(jsonb.getString("effectiveLocationId"), is(annexLibraryLocationId.toString()));
-    assertThat(effectiveLocationId, is(annexLibraryLocationId.toString()));
-  }
-
-  /**
    * Does "UPDATE item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?
    */
   @Test
@@ -348,67 +323,6 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
         + "for each row execute procedure test_tenant_mod_inventory_storage.update_effective_location_on_holding_update()");
     runSql("create trigger update_effective_location before insert or update on test_tenant_mod_inventory_storage.item "
         + "for each row execute procedure test_tenant_mod_inventory_storage.update_effective_location_on_item_update()");
-  }
-
-  @Test
-  public void canInitializeEffectiveLocation() throws Exception {
-    disableTriggers();
-
-    UUID holding1 = createHolding(instanceId, mainLibraryLocationId, annexLibraryLocationId);
-    Item item1 = buildItem(holding1, null, null);
-    createItem(item1);
-    UUID holding2 = createHolding(instanceId, secondFloorLocationId, onlineLocationId);
-    Item item2 = buildItem(holding2, thirdFloorLocationId, fourthFloorLocationId);
-    createItem(item2);
-
-    // no trigger, therefore no effective location
-    assertThat(getItem(item1.getId()).getEffectiveLocationId(), is(nullValue()));
-    assertThat(getItem(item2.getId()).getEffectiveLocationId(), is(nullValue()));
-
-    enableTriggers();
-    runSqlFile(POPULATE_EFFECTIVE_LOCATION_SQL);
-
-    assertThat(getItem(item1.getId()).getEffectiveLocationId(), is(annexLibraryLocationId.toString()));
-    assertThat(getItem(item2.getId()).getEffectiveLocationId(), is(fourthFloorLocationId.toString()));
-  }
-
-  @Test
-  public void canInitializeEffectiveLocationAfterHoldingsChange() throws Exception {
-    UUID holdingId = createHolding(instanceId, mainLibraryLocationId, annexLibraryLocationId);
-    Item item = buildItem(holdingId, null, null);
-    createItem(item);
-
-    disableTriggers();
-
-    JsonObject holding = holdingsClient.getById(holdingId).getJson();
-    // remove annexLibraryLocation
-    holding.remove(TEMPORARY_LOCATION_ID_KEY);
-    holdingsClient.replace(holdingId, holding);
-    // no trigger, effective location still has old value
-    assertThat(getItem(item.getId()).getEffectiveLocationId(), is(annexLibraryLocationId.toString()));
-
-    enableTriggers();
-    runSql(POPULATE_EFFECTIVE_LOCATION_SQL);
-
-    assertThat(getItem(item.getId()).getEffectiveLocationId(), is(mainLibraryLocationId.toString()));
-  }
-
-  @Test
-  public void canInitializeEffectiveLocationAfterItemChange() throws Exception {
-    UUID holdingId = createHolding(instanceId, mainLibraryLocationId, annexLibraryLocationId);
-    Item item = buildItem(holdingId, thirdFloorLocationId, fourthFloorLocationId);
-    createItem(item);
-
-    disableTriggers();
-    // remove fourthFloorLocation
-    runSql("UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb - 'temporaryLocationId'");
-    // no trigger, effective location still has old value
-    assertThat(getItem(item.getId()).getEffectiveLocationId(), is(fourthFloorLocationId.toString()));
-
-    enableTriggers();
-    runSql(POPULATE_EFFECTIVE_LOCATION_SQL);
-
-    assertThat(getItem(item.getId()).getEffectiveLocationId(), is(thirdFloorLocationId.toString()));
   }
 
   private Item getItem(String id) throws Exception {
