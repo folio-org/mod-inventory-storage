@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+
+import static java.lang.Boolean.TRUE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -268,11 +270,22 @@ public class StorageTestSuite {
 
     Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
-    String failureMessage = String.format("Tenant init failed: %s: %s",
+    String failureMessage = String.format("Tenant post failed: %s: %s",
       response.getStatusCode(), response.getBody());
 
-    assertThat(failureMessage,
-      response.getStatusCode(), is(201));
+    assertThat(failureMessage, response.getStatusCode(), is(201));
+
+    String id = response.getJson().getString("id");
+
+    tenantPrepared = new CompletableFuture<>();
+    client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
+        ResponseHandler.any(tenantPrepared));
+    response = tenantPrepared.get(60, TimeUnit.SECONDS);
+
+    failureMessage = String.format("Tenant get failed: %s: %s",
+        response.getStatusCode(), response.getBody());
+
+    assertThat(failureMessage, response.getStatusCode(), is(200));
   }
 
   static void prepareTenant(String tenantId, boolean loadSample)
@@ -287,23 +300,34 @@ public class StorageTestSuite {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<Response> tenantDeleted = new CompletableFuture<>();
+    CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
 
     HttpClient client = new HttpClient(vertx);
 
-    client.delete(storageUrl("/_/tenant"), tenantId,
-      ResponseHandler.any(tenantDeleted));
+    JsonObject jo = new JsonObject();
+    jo.put("purge", TRUE);
 
-    Response response = tenantDeleted.get(20, TimeUnit.SECONDS);
+    client.post(storageUrl("/_/tenant"), jo, tenantId,
+        ResponseHandler.any(tenantPrepared));
 
-    logger.debug("DELETE /_/tenant, response = {}", response == null ? null :
-      response.getStatusCode() + " " + response.getBody());
+    Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
-    String failureMessage = String.format("Tenant cleanup failed: %s: %s",
-      response.getStatusCode(), response.getBody());
+    String failureMessage = String.format("Tenant post failed: %s: %s",
+        response.getStatusCode(), response.getBody());
 
-    assertThat(failureMessage,
-      response.getStatusCode(), is(204));
+    assertThat(failureMessage, response.getStatusCode(), is(201));
+
+    String id = response.getJson().getString("id");
+
+    tenantPrepared = new CompletableFuture<>();
+    client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
+        ResponseHandler.any(tenantPrepared));
+    response = tenantPrepared.get(60, TimeUnit.SECONDS);
+
+    failureMessage = String.format("Tenant get failed: %s: %s",
+        response.getStatusCode(), response.getBody());
+
+    assertThat(failureMessage, response.getStatusCode(), is(200));
 
     // Prevent "aclcheck_error" "permission denied for schema"
     // when recreating the ROLE with the same name but a different role OID.
