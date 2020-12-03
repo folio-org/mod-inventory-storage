@@ -8,7 +8,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
-import static java.lang.Boolean.TRUE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -305,7 +304,7 @@ public class StorageTestSuite {
     HttpClient client = new HttpClient(vertx);
 
     JsonObject jo = new JsonObject();
-    jo.put("purge", TRUE);
+    jo.put("purge", Boolean.TRUE);
 
     client.post(storageUrl("/_/tenant"), jo, tenantId,
         ResponseHandler.any(tenantPrepared));
