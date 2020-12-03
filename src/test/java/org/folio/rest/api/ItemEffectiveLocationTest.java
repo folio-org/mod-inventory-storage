@@ -26,7 +26,6 @@ import org.junit.runner.RunWith;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import junitparams.JUnitParamsRunner;
