@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.buildComponents;
+import static org.folio.rest.support.ItemEffectiveLocationUtil.updateItemEffectiveLocation;
 
 import java.util.List;
 import java.util.Map;
@@ -306,7 +307,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
                   if (Objects.equals(entity.getHrid(), existingHoldings.getHrid())) {
                     try {
                       postgresClient.startTx(connection -> {
-                        updateItemEffectiveCallNumbersByHoldings(connection, postgresClient, entity).onComplete(updateResult -> {
+                        updateRelatedItemsAttributes(connection, postgresClient, entity).onComplete(updateResult -> {
                           if (updateResult.succeeded()) {
                             postgresClient.update(connection, HOLDINGS_RECORD_TABLE, entity,
                               "jsonb", String.format(WHERE_CLAUSE, holdingsRecordId), false,
@@ -455,22 +456,23 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     }
   }
 
-  private Future<RowSet<Row>> updateItemEffectiveCallNumbersByHoldings(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, HoldingsRecord holdingsRecord) {
+  private Future<RowSet<Row>> updateRelatedItemsAttributes(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, HoldingsRecord holdingsRecord) {
     Promise<RowSet<Row>> promise = Promise.promise();
     Criterion criterion = new Criterion(
       new Criteria().addField("holdingsRecordId")
         .setJSONB(false).setOperation("=").setVal(holdingsRecord.getId()));
     postgresClient.get(ITEM_TABLE, Item.class, criterion, false, false, response -> {
-      updateEffectiveCallNumbers(connection, postgresClient, response.result().getResults(), holdingsRecord).future().onComplete(promise);
+      updateEffectiveCallNumbersAndLocation(connection, postgresClient, response.result().getResults(), holdingsRecord).future().onComplete(promise);
     });
     return promise.future();
   }
 
-  private Promise<RowSet<Row>> updateEffectiveCallNumbers(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, List<Item> items, HoldingsRecord holdingsRecord) {
+  private Promise<RowSet<Row>> updateEffectiveCallNumbersAndLocation(AsyncResult<SQLConnection> connection, PostgresClient postgresClient, List<Item> items, HoldingsRecord holdingsRecord) {
     Promise<RowSet<Row>> allItemsUpdated = Promise.promise();
     List<Function<SQLConnection, Future<RowSet<Row>>>> batchFactories = items
       .stream()
       .map(item -> updateItemEffectiveCallNumber(item, holdingsRecord))
+      .map(item -> updateItemEffectiveLocation(item, holdingsRecord))
       .map(item -> updateSingleBatchFactory(ITEM_TABLE, item.getId(), item, postgresClient))
       .collect(Collectors.toList());
 
