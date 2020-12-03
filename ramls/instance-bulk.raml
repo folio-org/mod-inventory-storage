@@ -5,8 +5,8 @@ protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
 documentation:
-  - title: Inventory Storage Instance Bulk Download API
-    content: <b>API for downloading a bulk set of Instance IDs</b>
+  - title: Inventory Storage records Bulk Download API
+    content: <b>API for downloading a bulk set of records IDs</b>
 
 types:
   ids: !include ids.json
@@ -23,7 +23,7 @@ resourceTypes:
 
 /instance-bulk:
   /ids:
-    displayName: Instance ID Bulk Download API
+    displayName: Records ID Bulk Download API
     type:
       collection-get:
         schemaCollection: ids
@@ -40,4 +40,10 @@ resourceTypes:
           type: string
           enum: [id]
           default: id
+          required: false
+        recordType:
+          description: Field
+          type: string
+          enum: [INSTANCE, HOLDINGS]
+          default: INSTANCE
           required: false
