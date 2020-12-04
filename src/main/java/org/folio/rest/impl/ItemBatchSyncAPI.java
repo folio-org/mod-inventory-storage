@@ -18,7 +18,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
-import org.folio.services.ItemEffectiveCallNumberComponentsService;
+import org.folio.services.ItemEffectiveValuesService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
@@ -34,8 +34,8 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     final List<Item> items = entity.getItems();
     final PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-    final ItemEffectiveCallNumberComponentsService effectiveCallNumberService =
-      new ItemEffectiveCallNumberComponentsService(postgresClient);
+    final ItemEffectiveValuesService effectiveValuesService =
+      new ItemEffectiveValuesService(postgresClient);
 
     // Currently, there is no method on CompositeFuture to accept List<Future<String>>
     @SuppressWarnings("rawtypes")
@@ -51,17 +51,15 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     }
 
     CompositeFuture.all(futures)
-    .compose(result -> effectiveCallNumberService.populateEffectiveCallNumberComponents(items))
-    .onSuccess(ar -> {
+    .compose(result -> effectiveValuesService.populateEffectiveValues(items))
+    .onSuccess(result -> {
       PgUtil.postSync(ItemStorageAPI.ITEM_TABLE, entity.getItems(),
           StorageHelper.MAX_ENTITIES, upsert, okapiHeaders, vertxContext,
-          PostItemStorageBatchSynchronousResponse.class,
-          asyncResultHandler);
+          PostItemStorageBatchSynchronousResponse.class, asyncResultHandler);
     })
-    .onFailure(cause -> EndpointFailureHandler.handleFailure(
-        cause, asyncResultHandler,
-        PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,
-        PostItemStorageBatchSynchronousResponse::respond500WithTextPlain));
+    .onFailure(EndpointFailureHandler.handleFailure(asyncResultHandler,
+          PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,
+          PostItemStorageBatchSynchronousResponse::respond500WithTextPlain));
   }
 
   private Future<Void> setHrid(Item item, HridManager hridManager) {
