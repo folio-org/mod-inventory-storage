@@ -28,8 +28,8 @@ public class InstanceBulkAPI implements org.folio.rest.jaxrs.resource.InstanceBu
 
   private static final Logger LOG = LoggerFactory.getLogger(InstanceBulkAPI.class);
 
-  private CQLWrapper getCQL(String query) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(INSTANCE_TABLE + ".jsonb");
+  private CQLWrapper getCQL(String query, String table) throws FieldException {
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(table + ".jsonb");
     return new CQLWrapper(cql2pgJson, query);
   }
 
@@ -42,12 +42,13 @@ public class InstanceBulkAPI implements org.folio.rest.jaxrs.resource.InstanceBu
         Context vertxContext) {
 
     try {
-      CQLWrapper wrapper = getCQL(query);
-
-      if (recordType.toString().equals(HOLDING_TYPE)) {
+      if (recordType.toString().equalsIgnoreCase(HOLDING_TYPE)) {
+        CQLWrapper wrapper = getCQL(query, HOLDING_TABLE);
         PgUtil.streamGet(HOLDING_TABLE, RecordID.class, wrapper, null,
           "ids", routingContext, okapiHeaders, vertxContext);
       } else {
+        asyncResultHandler.handle(Future.succeededFuture());
+        CQLWrapper wrapper = getCQL(query, INSTANCE_TABLE);
         PgUtil.streamGet(INSTANCE_TABLE, RecordID.class, wrapper, null,
           "ids", routingContext, okapiHeaders, vertxContext);
       }
