@@ -36,7 +36,7 @@ import org.junit.runners.Suite;
 
 @Suite.SuiteClasses({
   InstanceStorageTest.class,
-  InstanceBulkTest.class,
+  RecordBulkTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
   HoldingsTypeTest.class,

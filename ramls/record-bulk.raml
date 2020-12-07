@@ -1,5 +1,5 @@
 #%RAML 1.0
-title: Inventory Storage Instance Bulk API
+title: Inventory Storage Record Bulk API
 version: v0.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
@@ -21,7 +21,7 @@ traits:
 resourceTypes:
   collection-get: !include raml-util/rtypes/collection-get.raml
 
-/instance-bulk:
+/record-bulk:
   /ids:
     displayName: Records ID Bulk Download API
     type:
@@ -29,7 +29,7 @@ resourceTypes:
         schemaCollection: ids
         exampleCollection: !include examples/ids.json
     get:
-      description: Retrieve a list of Instance IDs.
+      description: Retrieve a list of record IDs.
       is: [
         searchable: {description: "with valid searchable fields", example: "name=aaa"},
         validate
