@@ -24,6 +24,8 @@ stages:
           version: 0.1.32
           answers:
             image.repository: docker.dev.folio.org/mod-inventory-storage
+            postJob:
+              enabled: true
             image.tag: concorde-${CICD_EXECUTION_SEQUENCE}
             javaOptions: -XX:MaxRAMPercentage=85.0 -XX:+UseG1GC
             resources.limits.cpu: 250m
