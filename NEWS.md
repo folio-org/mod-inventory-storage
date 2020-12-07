@@ -2,8 +2,6 @@
 
 * Status date set on newly created instance records (MODINVSTOR-509)
 * Item status date is set for newly created item records (MODINVSTOR-508)
-* source property in holdingsrecordssource.json has a type property.  (MODINVSTOR-619)
-
 
 ## 19.4.0 2020-10-08
 
