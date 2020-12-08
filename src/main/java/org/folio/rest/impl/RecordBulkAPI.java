@@ -24,7 +24,7 @@ import io.vertx.ext.web.RoutingContext;
 public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
   public static final String INSTANCE_TABLE = "instance";
   public static final String HOLDING_TABLE = "holdings_record";
-  public static final String HOLDING_TYPE = "HOLDINGS";
+  public static final String HOLDING_TYPE = "HOLDING";
 
   private static final Logger LOG = LoggerFactory.getLogger(RecordBulkAPI.class);
 
