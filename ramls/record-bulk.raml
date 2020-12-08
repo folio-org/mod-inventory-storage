@@ -6,7 +6,7 @@ baseUri: http://localhost
 
 documentation:
   - title: Inventory Storage records Bulk Download API
-    content: <b>API for downloading a bulk set of records IDs</b>
+    content: <b>API for downloading a bulk set of instances or holdings IDs</b>
 
 types:
   ids: !include ids.json
@@ -42,7 +42,7 @@ resourceTypes:
           default: id
           required: false
         recordType:
-          description: Determines which record type should be used to query the field
+          description: Determines which record type UUIDs should be fetched
           type: string
           enum: [INSTANCE, HOLDINGS]
           default: INSTANCE
