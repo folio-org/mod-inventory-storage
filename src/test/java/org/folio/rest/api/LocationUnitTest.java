@@ -1,26 +1,16 @@
 package org.folio.rest.api;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import static org.folio.rest.api.TestBase.get;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
@@ -34,14 +24,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 // - delete a campus that is in use by a library
 // (The code for these checks is missing!)
 //
-public class LocationUnitTest {
+public class LocationUnitTest extends TestBase {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-  private static final Logger logger = LoggerFactory.getLogger(LocationUnitTest.class);
 
   @Before
   public void beforeEach() {
-
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -51,39 +39,6 @@ public class LocationUnitTest {
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-  }
-
-  ////////////////// General helpers
-  private static void send(URL url, HttpMethod method, String content,
-    String contentType, Handler<HttpClientResponse> handler) {
-
-    HttpClient client = StorageTestSuite.getVertx().createHttpClient();
-    HttpClientRequest request;
-
-    if (content == null) {
-      content = "";
-    }
-    Buffer buffer = Buffer.buffer(content);
-
-    if (method == HttpMethod.POST) {
-      request = client.postAbs(url.toString());
-    } else if (method == HttpMethod.DELETE) {
-      request = client.deleteAbs(url.toString());
-    } else if (method == HttpMethod.GET) {
-      request = client.getAbs(url.toString());
-    } else {
-      request = client.putAbs(url.toString());
-    }
-    request.exceptionHandler(error -> {
-      Assert.fail(error.getLocalizedMessage());
-    })
-      .handler(handler);
-
-    request.putHeader("X-Okapi-User-Id", "test_user");
-    request.putHeader("X-Okapi-Tenant", "test_tenant");
-    request.putHeader("Accept", "application/json,text/plain");
-    request.putHeader("Content-type", contentType);
-    request.end(buffer);
   }
 
   ///////////////////////////////////////////////////////  Inst test helpers
@@ -99,7 +54,7 @@ public class LocationUnitTest {
       request.put("id", id.toString());
     }
 
-    send(locInstitutionStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locInstitutionStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);
@@ -297,7 +252,7 @@ public class LocationUnitTest {
       request.put("id", id.toString());
     }
 
-    send(locCampusStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locCampusStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);
@@ -516,7 +471,7 @@ public class LocationUnitTest {
       request.put("id", id.toString());
     }
 
-    send(locLibraryStorageUrl(""), HttpMethod.POST, request.toString(),
+    send(locLibraryStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);

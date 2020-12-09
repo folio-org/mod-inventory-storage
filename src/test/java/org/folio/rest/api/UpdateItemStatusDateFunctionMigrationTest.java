@@ -66,8 +66,11 @@ public class UpdateItemStatusDateFunctionMigrationTest extends MigrationTestBase
       .withModuleFrom("mod-inventory-storage-" + fromVersion)
       .withModuleTo("mod-inventory-storage-" + toVersion);
 
-    client.post(StorageTestSuite.storageUrl("/_/tenant"), mapFrom(tenantAttributes), TENANT_ID)
-      .get(5, TimeUnit.SECONDS);
+    String id = client.post(StorageTestSuite.storageUrl("/_/tenant"), mapFrom(tenantAttributes), TENANT_ID)
+      .get(5, TimeUnit.SECONDS).getJson().getString("id");
+
+    client.get(StorageTestSuite.storageUrl("/_/tenant/" + id + "?wait=60000"), TENANT_ID)
+        .get(5, TimeUnit.SECONDS);
   }
 
 

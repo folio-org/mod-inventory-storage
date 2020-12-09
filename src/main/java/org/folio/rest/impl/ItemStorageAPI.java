@@ -10,7 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.resource.ItemStorage;
@@ -25,8 +26,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -35,7 +34,7 @@ import io.vertx.ext.web.RoutingContext;
 public class ItemStorageAPI implements ItemStorage {
 
   static final String ITEM_TABLE = "item";
-  private static final Logger log = LoggerFactory.getLogger(ItemStorageAPI.class);
+  private static final Logger log = LogManager.getLogger();
 
   @Validate
   @Override

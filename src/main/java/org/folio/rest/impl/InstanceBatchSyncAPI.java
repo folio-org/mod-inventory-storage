@@ -23,8 +23,6 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
   @Validate
@@ -45,17 +43,13 @@ public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
       instance.setStatusUpdatedDate(statusUpdatedDate);
     }
 
-    CompositeFuture.all(futures).setHandler(ar -> {
-      if (ar.succeeded()) {
-        StorageHelper.postSync(InstanceStorageAPI.INSTANCE_TABLE, entity.getInstances(),
+    CompositeFuture.all(futures)
+    .onSuccess(success -> StorageHelper.postSync(InstanceStorageAPI.INSTANCE_TABLE, entity.getInstances(),
             okapiHeaders, upsert, asyncResultHandler, vertxContext,
-            InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse::respond201);
-      } else {
-        asyncResultHandler.handle(
+            InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse::respond201))
+    .onFailure(cause -> asyncResultHandler.handle(
             Future.succeededFuture(PostInstanceStorageBatchSynchronousResponse
-                .respond500WithTextPlain(ar.cause().getMessage())));
-      }
-    });
+                .respond500WithTextPlain(cause.getMessage()))));
   }
 
   private Future<Void> setHrid(Instance instance, HridManager hridManager) {

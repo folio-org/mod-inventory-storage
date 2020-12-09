@@ -3,18 +3,17 @@ package org.folio.rest.support;
 import java.util.function.Function;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
 public final class EndpointFailureHandler {
-  private static final Logger log = LoggerFactory.getLogger(EndpointFailureHandler.class);
+  private static final Logger log = LogManager.getLogger();
 
   private EndpointFailureHandler() {}
 

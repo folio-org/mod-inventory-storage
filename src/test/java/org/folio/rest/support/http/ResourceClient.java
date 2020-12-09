@@ -241,13 +241,7 @@ public class ResourceClient {
   }
 
   public Response getByIdIfPresent(String id) {
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(urlMakerWithId(id),
-        StorageTestSuite.TENANT_ID, ResponseHandler.any(getCompleted));
-
-    return TestBase.get(getCompleted);
+    return TestBase.get(client.get(urlMakerWithId(id), StorageTestSuite.TENANT_ID));
   }
 
   public Response deleteIfPresent(String id) {

@@ -15,6 +15,8 @@ import javax.ws.rs.core.Response;
 
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -38,8 +40,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -48,7 +48,7 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class HoldingsStorageAPI implements HoldingsStorage {
 
-  private static final Logger log = LoggerFactory.getLogger(HoldingsStorageAPI.class);
+  private static final Logger log = LogManager.getLogger();
 
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
@@ -129,7 +129,6 @@ public class HoldingsStorageAPI implements HoldingsStorage {
               return;
             }
           }
-
           final Future<String> hridFuture =
               setHoldingsHrid(entity, vertxContext, postgresClient);
 
