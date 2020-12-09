@@ -11,6 +11,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.io.IOUtils;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.services.kafka.topic.KafkaAdminClientService;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -128,10 +129,26 @@ public class TenantRefAPI extends TenantAPI {
             .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
           return;
         }
-        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-          .respond201WithApplicationJson("")));
+
+        createKafkaTopics(hndlr, vertx);
       });
     }, cntxt);
+  }
+
+  private void createKafkaTopics(Handler<AsyncResult<Response>> handler, Vertx vertx) {
+    KafkaAdminClientService.createKafkaTopics(vertx)
+      .whenComplete((notUsed, error) -> {
+        if (error != null) {
+          log.error("Unable to create kafka topics", error);
+          handler.handle(failedFuture(PostTenantResponse.respond500WithTextPlain(
+            error.getMessage())));
+        } else {
+          log.info("Kafka topics created successfully");
+
+          handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+            .respond201WithApplicationJson("")));
+        }
+      });
   }
 
   @Override

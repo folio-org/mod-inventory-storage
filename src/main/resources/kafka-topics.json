@@ -1,0 +1,9 @@
+{
+  "topics": [
+    {
+      "name": "inventory.instance",
+      "numPartitions": 1,
+      "replicationFactor": 1
+    }
+  ]
+}
