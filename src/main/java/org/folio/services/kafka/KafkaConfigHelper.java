@@ -32,10 +32,13 @@ public final class KafkaConfigHelper {
       properties.load(propertiesIo);
       updateKafkaAddress(properties);
 
-      log.info("Kafka config {}", properties);
+      if (log.isInfoEnabled()) {
+        log.info("Kafka config " + properties);
+      }
 
       return properties;
     } catch (IOException ex) {
+      log.error("Unable to load kafka config", ex);
       throw new IllegalArgumentException("Unable to load kafka config", ex);
     }
   }

@@ -140,8 +140,8 @@ public class TenantRefAPI extends TenantAPI {
       .whenComplete((notUsed, error) -> {
         if (error != null) {
           log.error("Unable to create kafka topics", error);
-          handler.handle(failedFuture(PostTenantResponse.respond500WithTextPlain(
-            error.getMessage())));
+          handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
+            .respond500WithTextPlain(error.getMessage())));
         } else {
           log.info("Kafka topics created successfully");
 
