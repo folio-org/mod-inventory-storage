@@ -10,7 +10,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -18,8 +19,13 @@ import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.ext.web.client.HttpResponse;
 
 /**
  * When not run from StorageTestSuite then this class invokes StorageTestSuite.before() and
@@ -27,6 +33,7 @@ import io.vertx.core.Vertx;
  * IDE during development.
  */
 public abstract class TestBase {
+  protected static final Logger logger = LogManager.getLogger();
   /** timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS) */
   public static final long TIMEOUT = 10;
 
@@ -64,6 +71,7 @@ public abstract class TestBase {
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
+    logger.info("starting @BeforeClass testBaseBeforeClass()");
     Vertx vertx = StorageTestSuite.getVertx();
     if (vertx == null) {
       invokeStorageTestSuiteAfter = true;
@@ -89,6 +97,7 @@ public abstract class TestBase {
       .forInstanceTypes(client);
     illPoliciesClient = ResourceClient.forIllPolicies(client);
     statisticalCodeFixture = new StatisticalCodeFixture(client);
+    logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
   @AfterClass
@@ -97,9 +106,51 @@ public abstract class TestBase {
     ExecutionException,
     TimeoutException {
 
+    client.getWebClient().close();
+    client = null;
     if (invokeStorageTestSuiteAfter) {
       StorageTestSuite.after();
     }
+  }
+
+  static void send(URL url, HttpMethod method, String content,
+      String contentType, Handler<HttpResponse<Buffer>> handler) {
+    send(url, method, null, content, contentType, handler);
+  }
+
+  static void send(URL url, HttpMethod method, String userId, String content,
+                   String contentType, Handler<HttpResponse<Buffer>> handler) {
+    send(url.toString(), method, userId, content, contentType, handler);
+  }
+
+  static Future<HttpResponse<Buffer>> send(URL url, HttpMethod method, String content,
+      String contentType) {
+    return Future.future(promise -> send(url, method, content, contentType, promise::complete));
+  }
+
+  static void send(String url, HttpMethod method, String content,
+                   String contentType, Handler<HttpResponse<Buffer>> handler) {
+    send(url, method, null, content, contentType, handler);
+  }
+
+  static void send(String url, HttpMethod method, String userId, String content,
+        String contentType, Handler<HttpResponse<Buffer>> handler) {
+    Buffer body = Buffer.buffer(content == null ? "" : content);
+
+    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
+    if (userId != null) {
+      headers.add("X-Okapi-User-Id", userId);
+    }
+    client.getWebClient()
+    .requestAbs(method, url)
+    .putHeader("Authorization", "test_tenant")
+    .putHeader("x-okapi-tenant", "test_tenant")
+    .putHeader("Accept", "application/json,text/plain")
+    .putHeader("Content-type", contentType)
+    .putHeaders(headers)
+    .sendBuffer(body)
+    .onSuccess(handler)
+    .onFailure(error -> logger.error(error.getMessage(), error));
   }
 
   /**

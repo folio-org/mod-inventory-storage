@@ -5,8 +5,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
@@ -15,7 +13,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
@@ -32,7 +31,7 @@ import org.folio.rest.tools.utils.ValidationHelper;
  */
 public final class StorageHelper {
 
-  private static Logger logger = LoggerFactory.getLogger(StorageHelper.class);
+  private static Logger logger = LogManager.getLogger();
 
   private StorageHelper() {
     throw new UnsupportedOperationException("Cannot instantiate utility class");

@@ -2,21 +2,19 @@ package org.folio.rest.support;
 
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
-import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import io.vertx.core.Handler;
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 
 public class ResponseHandler {
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger log = LogManager.getLogger();
 
-  public static Handler<HttpClientResponse> any(
+  public static Handler<HttpResponse<Buffer>> any(
     CompletableFuture<Response> completed) {
 
     return responseHandler(completed,
@@ -24,7 +22,7 @@ public class ResponseHandler {
       failingResponse -> null);
   }
 
-  public static Handler<HttpClientResponse> empty(
+  public static Handler<HttpResponse<Buffer>> empty(
     CompletableFuture<Response> completed) {
 
     return response -> {
@@ -39,38 +37,34 @@ public class ResponseHandler {
     };
   }
 
-  public static Handler<HttpClientResponse> json(
+  public static Handler<HttpResponse<Buffer>> json(
     CompletableFuture<Response> completed) {
 
     return strictContentType(completed, "application/json");
   }
 
-  public static Handler<HttpClientResponse> text(
+  public static Handler<HttpResponse<Buffer>> text(
     CompletableFuture<Response> completed) {
 
     return strictContentType(completed, "text/plain");
   }
 
-  public static Handler<HttpClientResponse> jsonErrors(
+  public static Handler<HttpResponse<Buffer>> jsonErrors(
     CompletableFuture<JsonErrorResponse> completed) {
 
     return response -> {
-      response.bodyHandler(buffer -> {
-        try {
-          int statusCode = response.statusCode();
-          String body = BufferHelper.stringFromBuffer(buffer);
-
-          completed.complete(new JsonErrorResponse(statusCode, body,
-            response.getHeader(CONTENT_TYPE)));
-
-        } catch(Exception e) {
-          completed.completeExceptionally(e);
-        }
-      });
+      try {
+        completed.complete(new JsonErrorResponse(
+            response.statusCode(),
+            response.bodyAsString(),
+            response.headers().get(CONTENT_TYPE)));
+      } catch (Exception e) {
+        completed.completeExceptionally(e);
+      }
     };
   }
 
-  private static Handler<HttpClientResponse> strictContentType(
+  private static Handler<HttpResponse<Buffer>> strictContentType(
     CompletableFuture<Response> completed,
     String expectedContentType) {
 
@@ -84,31 +78,28 @@ public class ResponseHandler {
           failingResponse.getStatusCode(), failingResponse.getBody())));
   }
 
-  private static Handler<HttpClientResponse> responseHandler(
+  private static Handler<HttpResponse<Buffer>> responseHandler(
     CompletableFuture<Response> completed,
     Predicate<Response> expectation,
     Function<Response, Throwable> expectationFailed) {
 
     return vertxResponse -> {
-        vertxResponse.bodyHandler(buffer -> {
-          try {
+      try {
+        Response response = Response.from(vertxResponse);
 
-            Response response = Response.from(vertxResponse, buffer);
+        log.debug("Received Response: {}: {}", response.getStatusCode(), response.getContentType());
+        log.debug("Received Response Body: {}", response.getBody());
 
-            log.debug("Received Response: {}: {}", response.getStatusCode(), response.getContentType());
-            log.debug("Received Response Body: {}", response.getBody());
-
-            if(expectation.test(response)) {
-              completed.complete(response);
-            }
-            else {
-              completed.completeExceptionally(
-                expectationFailed.apply(response));
-            }
-          } catch (Throwable e) {
-            completed.completeExceptionally(e);
-          }
-        });
+        if(expectation.test(response)) {
+          completed.complete(response);
+        }
+        else {
+          completed.completeExceptionally(
+              expectationFailed.apply(response));
+        }
+      } catch (Throwable e) {
+        completed.completeExceptionally(e);
+      }
     };
   }
 
