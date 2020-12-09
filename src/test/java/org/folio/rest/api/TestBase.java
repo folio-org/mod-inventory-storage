@@ -73,10 +73,10 @@ public abstract class TestBase {
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
+    kafka.start();
     Vertx vertx = StorageTestSuite.getVertx();
     if (vertx == null) {
       invokeStorageTestSuiteAfter = true;
-      kafka.start();
       StorageTestSuite.before();
       vertx = StorageTestSuite.getVertx();
     }
