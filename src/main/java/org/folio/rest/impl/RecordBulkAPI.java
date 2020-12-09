@@ -4,6 +4,8 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
@@ -17,8 +19,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
@@ -26,7 +26,7 @@ public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
   public static final String HOLDING_TABLE = "holdings_record";
   public static final String HOLDING_TYPE = "HOLDING";
 
-  private static final Logger LOG = LoggerFactory.getLogger(RecordBulkAPI.class);
+  private static final Logger LOG = LogManager.getLogger();
 
   private CQLWrapper getCQL(String query, String table) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(table + ".jsonb");
