@@ -55,7 +55,7 @@ public abstract class TestBase {
   static FakeKafkaConsumer kafkaConsumer;
 
   private static final EmbeddedKafkaServer kafka = new EmbeddedKafkaServerBuilder()
-    .kafkaServerPort(9092).build();
+    .kafkaServerPort(9988).build();
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
