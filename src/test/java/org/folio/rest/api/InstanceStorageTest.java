@@ -8,6 +8,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -22,8 +24,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -74,7 +74,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String METADATA_KEY = "metadata";
   private static final String TAG_VALUE = "test-tag";
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
-  private static final Logger log = LoggerFactory.getLogger(InstanceStorageTest.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
   private static final String STAFF_SUPPRESS = "staffSuppress";
 

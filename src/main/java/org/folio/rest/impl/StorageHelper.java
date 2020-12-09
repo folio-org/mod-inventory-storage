@@ -3,9 +3,9 @@ package org.folio.rest.impl;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
@@ -23,7 +23,7 @@ public final class StorageHelper {
   /** Limit for PgUtil.postSync to avoid out-of-memory */
   public static final int MAX_ENTITIES = 10000;
 
-  private static Logger logger = LoggerFactory.getLogger(StorageHelper.class);
+  private static Logger logger = LogManager.getLogger();
 
   private StorageHelper() {
     throw new UnsupportedOperationException("Cannot instantiate utility class");

@@ -1,9 +1,9 @@
 package org.folio.rest.support;
 
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
 
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
@@ -18,10 +18,10 @@ public class Response {
     this.contentType = contentType;
   }
 
-  public static Response from(HttpClientResponse response, Buffer body) {
+  public static Response from(HttpResponse<Buffer> response) {
     return new Response(response.statusCode(),
-      BufferHelper.stringFromBuffer(body),
-      convertNullToEmpty(response.getHeader(CONTENT_TYPE)));
+      response.bodyAsString(),
+      convertNullToEmpty(response.getHeader(CONTENT_TYPE.toString())));
   }
 
   public boolean hasBody() {
