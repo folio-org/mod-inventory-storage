@@ -20,8 +20,6 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule;
 
 import io.vertx.core.Vertx;
 
@@ -52,10 +50,6 @@ public abstract class TestBase {
   static ResourceClient illPoliciesClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static FakeKafkaConsumer kafkaConsumer;
-
-  @ClassRule
-  public static EmbeddedKafkaRule kafkaRule = new EmbeddedKafkaRule(1)
-    .kafkaPorts(9092);
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).

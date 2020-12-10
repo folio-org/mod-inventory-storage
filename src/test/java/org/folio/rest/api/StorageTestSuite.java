@@ -29,8 +29,10 @@ import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.springframework.kafka.test.rule.EmbeddedKafkaRule;
 
 @RunWith(Suite.class)
 
@@ -73,6 +75,9 @@ public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
   private static Vertx vertx;
   private static int port;
+  @ClassRule
+  public static EmbeddedKafkaRule kafkaRule = new EmbeddedKafkaRule(1)
+    .kafkaPorts(9092);
 
   private StorageTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
