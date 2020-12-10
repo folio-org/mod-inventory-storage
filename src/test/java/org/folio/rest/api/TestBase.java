@@ -20,9 +20,8 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServer;
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
+import org.junit.ClassRule;
+import org.springframework.kafka.test.rule.EmbeddedKafkaRule;
 
 import io.vertx.core.Vertx;
 
@@ -54,8 +53,9 @@ public abstract class TestBase {
   static StatisticalCodeFixture statisticalCodeFixture;
   static FakeKafkaConsumer kafkaConsumer;
 
-  private static final EmbeddedKafkaServer kafka = new EmbeddedKafkaServerBuilder()
-    .kafkaServerPort(9988).build();
+  @ClassRule
+  public static EmbeddedKafkaRule kafkaRule = new EmbeddedKafkaRule(1)
+    .kafkaPorts(9092);
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -73,7 +73,6 @@ public abstract class TestBase {
 
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
-    kafka.start();
     Vertx vertx = StorageTestSuite.getVertx();
     if (vertx == null) {
       invokeStorageTestSuiteAfter = true;
@@ -110,7 +109,6 @@ public abstract class TestBase {
 
     if (invokeStorageTestSuiteAfter) {
       StorageTestSuite.after();
-      kafka.stop();
     }
   }
 

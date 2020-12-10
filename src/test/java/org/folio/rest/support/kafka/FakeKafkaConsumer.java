@@ -47,7 +47,7 @@ public final class FakeKafkaConsumer {
 
   private Map<String, String> consumerProperties() {
     Map<String, String> config = new HashMap<>();
-    config.put("bootstrap.servers", "localhost:9988");
+    config.put("bootstrap.servers", "localhost:9092");
     config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     config.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     config.put("group.id", "folio");
