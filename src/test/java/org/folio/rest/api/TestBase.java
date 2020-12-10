@@ -93,6 +93,7 @@ public abstract class TestBase {
     illPoliciesClient = ResourceClient.forIllPolicies(client);
     statisticalCodeFixture = new StatisticalCodeFixture(client);
     kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
+    kafkaConsumer.removeAllMessages();
   }
 
   @AfterClass
@@ -104,11 +105,6 @@ public abstract class TestBase {
     if (invokeStorageTestSuiteAfter) {
       StorageTestSuite.after();
     }
-  }
-
-  @Before
-  public void removeKafkaMessages() {
-    kafkaConsumer.removeAllMessages();
   }
 
   /**

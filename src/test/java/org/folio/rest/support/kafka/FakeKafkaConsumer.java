@@ -2,25 +2,30 @@ package org.folio.rest.support.kafka;
 
 import static io.vertx.kafka.client.consumer.KafkaConsumer.create;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.collections15.MultiMap;
-import org.apache.commons.collections15.multimap.MultiHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 public final class FakeKafkaConsumer {
-  private final MultiMap<String, JsonObject> messages = new MultiHashMap<>();
+  private final Map<String, List<JsonObject>> messages = new ConcurrentHashMap<>();
 
   public final FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, String> consumer = create(vertx, consumerProperties());
 
     consumer.subscribe("inventory.instance");
-    consumer.handler(message -> messages.put(message.key(), new JsonObject(message.value())));
+    consumer.handler(message -> {
+      final List<JsonObject> objects = messages
+        .computeIfAbsent(message.key(), k -> new ArrayList<>());
+
+      objects.add(new JsonObject(message.value()));
+    });
 
     return this;
   }
