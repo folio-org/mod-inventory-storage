@@ -1,10 +1,11 @@
 package org.folio.rest.impl;
 
+import static org.folio.services.kafka.topic.KafkaAdminClientService.createKafkaTopicsAsync;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
@@ -13,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
-import org.folio.services.kafka.topic.KafkaAdminClientService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,6 +82,20 @@ public class TenantRefAPI extends TenantAPI {
     return res;
   }
 
+  @Override
+  @Validate
+  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
+    Handler<AsyncResult<Response>> handler, Context context) {
+
+    super.postTenant(tenantAttributes, headers,
+      responseResult -> {
+        log.info("Creating kafka topics...");
+        createKafkaTopicsAsync(context.owner());
+
+        handler.handle(responseResult);
+      }, context);
+  }
+
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
@@ -122,21 +136,5 @@ public class TenantRefAPI extends TenantAPI {
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
         });
-  }
-
-  private void createKafkaTopics(Handler<AsyncResult<Response>> handler, Vertx vertx) {
-    KafkaAdminClientService.createKafkaTopics(vertx)
-      .whenComplete((notUsed, error) -> {
-        if (error != null) {
-          log.error("Unable to create kafka topics", error);
-          handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond500WithTextPlain(error.getMessage())));
-        } else {
-          log.info("Kafka topics created successfully");
-
-          handler.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond201WithApplicationJson("")));
-        }
-      });
   }
 }
