@@ -488,13 +488,13 @@
       ]
     },
     {
-      "id": "instance-bulk",
-      "version": "0.1",
+      "id": "inventory-record-bulk",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/instance-bulk/ids",
-          "permissionsRequired": ["inventory-storage.instance-bulk.ids.get"]
+          "pathPattern": "/record-bulk/ids",
+          "permissionsRequired": ["inventory-storage.record-bulk.ids.get"]
         }
       ]
     },
@@ -1058,15 +1058,15 @@
     },
     {
       "id" : "_tenant",
-      "version" : "1.2",
+      "version" : "2.0",
       "interfaceType": "system",
       "handlers": [
         {
           "methods": ["POST"],
           "pathPattern": "/_/tenant"
         }, {
-          "methods": ["DELETE"],
-          "pathPattern": "/_/tenant"
+          "methods": ["DELETE", "GET"],
+          "pathPattern": "/_/tenant/{id}"
         }
       ]
     },
@@ -1620,9 +1620,9 @@
       "description": "delete individual contributor-name-type from storage"
     },
     {
-      "permissionName": "inventory-storage.instance-bulk.ids.get",
+      "permissionName": "inventory-storage.record-bulk.ids.get",
       "displayName": "inventory storage - get bulk ids",
-      "description": "get a bulk set of instance ids from storage"
+      "description": "get a bulk set of record ids from storage"
     },
     {
       "permissionName": "inventory-storage.instance-formats.collection.get",
@@ -2206,7 +2206,7 @@
         "inventory-storage.contributor-name-types.item.post",
         "inventory-storage.contributor-name-types.item.put",
         "inventory-storage.contributor-name-types.item.delete",
-        "inventory-storage.instance-bulk.ids.get",
+        "inventory-storage.record-bulk.ids.get",
         "inventory-storage.instance-formats.collection.get",
         "inventory-storage.instance-formats.item.get",
         "inventory-storage.instance-formats.item.post",

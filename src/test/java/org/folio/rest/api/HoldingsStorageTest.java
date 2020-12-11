@@ -4,6 +4,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.persist.PostgresClient;
@@ -14,8 +16,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -53,7 +53,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
-  private static final Logger log = LoggerFactory.getLogger(HoldingsStorageTest.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
   public static final String NEW_TEST_TAG = "new test tag";
 

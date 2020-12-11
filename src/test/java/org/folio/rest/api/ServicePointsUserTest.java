@@ -20,15 +20,9 @@ import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -190,39 +184,6 @@ public class ServicePointsUserTest extends TestBase {
   }
 
   //END TESTS
-
-  private static void send(URL url, HttpMethod method, String content,
-      String contentType, Handler<HttpClientResponse> handler) {
-
-    HttpClient client = StorageTestSuite.getVertx().createHttpClient();
-    HttpClientRequest request;
-
-    if(content == null){
-      content = "";
-    }
-    Buffer buffer = Buffer.buffer(content);
-
-    if (method == HttpMethod.POST) {
-      request = client.postAbs(url.toString());
-    }
-    else if (method == HttpMethod.DELETE) {
-      request = client.deleteAbs(url.toString());
-    }
-    else if (method == HttpMethod.GET) {
-      request = client.getAbs(url.toString());
-    }
-    else {
-      request = client.putAbs(url.toString());
-    }
-    request.exceptionHandler(error -> Assert.fail(error.getLocalizedMessage()))
-    .handler(handler);
-
-    request.putHeader("Authorization", "test_tenant");
-    request.putHeader("x-okapi-tenant", "test_tenant");
-    request.putHeader("Accept", "application/json,text/plain");
-    request.putHeader("Content-type", contentType);
-    request.end(buffer);
-  }
 
   public static Response createServicePointUser(UUID id, UUID userId,
     List<UUID> servicePointsIds, UUID defaultServicePointId)

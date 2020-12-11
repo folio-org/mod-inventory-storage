@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
@@ -28,8 +29,6 @@ import org.folio.rest.tools.utils.TenantTool;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -40,7 +39,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
   public static final String RESOURCE_TABLE = "electronic_access_relationship";
 
   private static final String LOCATION_PREFIX = "/electronic-access-relationships/";
-  private static final Logger LOG = LoggerFactory.getLogger(ElectronicAccessRelationshipAPI.class);
+  private static final Logger LOG = LogManager.getLogger();
   private static final Messages MESSAGES = Messages.getInstance();
 
   @Override

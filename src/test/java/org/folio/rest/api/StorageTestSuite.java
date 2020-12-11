@@ -11,6 +11,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -40,7 +42,7 @@ import io.vertx.sqlclient.RowSet;
 
 @Suite.SuiteClasses({
   InstanceStorageTest.class,
-  InstanceBulkTest.class,
+  RecordBulkTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
   HoldingsTypeTest.class,
@@ -75,6 +77,7 @@ import io.vertx.sqlclient.RowSet;
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
+  private static Logger logger = LogManager.getLogger();
   private static Vertx vertx;
   private static int port;
 
@@ -100,6 +103,8 @@ public class StorageTestSuite {
   @BeforeClass
   public static void before()
     throws Exception {
+
+    logger.info("starting @BeforeClass before()");
 
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
@@ -134,17 +139,19 @@ public class StorageTestSuite {
         throw new Exception(message);
     }
 
+    logger.info("starting RestVerticle");
+
     port = NetworkUtils.nextFreePort();
-
     DeploymentOptions options = new DeploymentOptions();
-
     options.setConfig(new JsonObject().put("http.port", port));
-    options.setWorker(true);
-
     startVerticle(options);
+
+    logger.info("preparing tenant");
 
     kafka.start();
     prepareTenant(TENANT_ID, false);
+
+    logger.info("finished @BeforeClass before()");
   }
 
   @AfterClass
@@ -154,21 +161,9 @@ public class StorageTestSuite {
     TimeoutException {
 
     removeTenant(TENANT_ID);
-
-    CompletableFuture<String> undeploymentComplete = new CompletableFuture<>();
-
+    vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
     PostgresClient.stopEmbeddedPostgres();
-
-    vertx.close(res -> {
-      if (res.succeeded()) {
-        undeploymentComplete.complete(null);
-      } else {
-        undeploymentComplete.completeExceptionally(res.cause());
-      }
-    });
     kafka.stop();
-    PostgresClient.stopEmbeddedPostgres();
-    undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
 
   static void deleteAll(URL rootUrl) {
@@ -200,6 +195,7 @@ public class StorageTestSuite {
 
       assertThat(mismatchedRowCount, is(0));
     } catch (Exception e) {
+      logger.error(e.getMessage(), e);
       throw new RuntimeException("WARNING!!!!! Unable to determine mismatched ID rows" + e.getMessage(), e);
     }
   }
@@ -251,17 +247,10 @@ public class StorageTestSuite {
   private static void startVerticle(DeploymentOptions options)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    CompletableFuture<String> deploymentComplete = new CompletableFuture<>();
-
-    vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
-      if (res.succeeded()) {
-        deploymentComplete.complete(res.result());
-      } else {
-        deploymentComplete.completeExceptionally(res.cause());
-      }
-    });
-
-    deploymentComplete.get(20, TimeUnit.SECONDS);
+    vertx.deployVerticle(RestVerticle.class, options)
+    .toCompletionStage()
+    .toCompletableFuture()
+    .get(20, TimeUnit.SECONDS);
   }
 
   static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)
@@ -289,11 +278,22 @@ public class StorageTestSuite {
 
     Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
-    String failureMessage = String.format("Tenant init failed: %s: %s",
+    String failureMessage = String.format("Tenant post failed: %s: %s",
       response.getStatusCode(), response.getBody());
 
-    assertThat(failureMessage,
-      response.getStatusCode(), is(201));
+    assertThat(failureMessage, response.getStatusCode(), is(201));
+
+    String id = response.getJson().getString("id");
+
+    tenantPrepared = new CompletableFuture<>();
+    client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
+        ResponseHandler.any(tenantPrepared));
+    response = tenantPrepared.get(60, TimeUnit.SECONDS);
+
+    failureMessage = String.format("Tenant get failed: %s: %s",
+        response.getStatusCode(), response.getBody());
+
+    assertThat(failureMessage, response.getStatusCode(), is(200));
   }
 
   static void prepareTenant(String tenantId, boolean loadSample)
@@ -308,20 +308,34 @@ public class StorageTestSuite {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<Response> tenantDeleted = new CompletableFuture<>();
+    CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
 
     HttpClient client = new HttpClient(vertx);
 
-    client.delete(storageUrl("/_/tenant"), tenantId,
-      ResponseHandler.any(tenantDeleted));
+    JsonObject jo = new JsonObject();
+    jo.put("purge", Boolean.TRUE);
 
-    Response response = tenantDeleted.get(20, TimeUnit.SECONDS);
+    client.post(storageUrl("/_/tenant"), jo, tenantId,
+        ResponseHandler.any(tenantPrepared));
 
-    String failureMessage = String.format("Tenant cleanup failed: %s: %s",
-      response.getStatusCode(), response.getBody());
+    Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
-    assertThat(failureMessage,
-      response.getStatusCode(), is(204));
+    String failureMessage = String.format("Tenant post failed: %s: %s",
+        response.getStatusCode(), response.getBody());
+
+    assertThat(failureMessage, response.getStatusCode(), is(201));
+
+    String id = response.getJson().getString("id");
+
+    tenantPrepared = new CompletableFuture<>();
+    client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
+        ResponseHandler.any(tenantPrepared));
+    response = tenantPrepared.get(60, TimeUnit.SECONDS);
+
+    failureMessage = String.format("Tenant get failed: %s: %s",
+        response.getStatusCode(), response.getBody());
+
+    assertThat(failureMessage, response.getStatusCode(), is(200));
 
     // Prevent "aclcheck_error" "permission denied for schema"
     // when recreating the ROLE with the same name but a different role OID.

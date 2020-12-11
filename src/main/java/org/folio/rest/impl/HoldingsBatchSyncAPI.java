@@ -40,17 +40,13 @@ public class HoldingsBatchSyncAPI implements HoldingsStorageBatchSynchronous {
       futures.add(setHrid(holdingsRecord, hridManager));
     }
 
-    CompositeFuture.all(futures).setHandler(ar -> {
-      if (ar.succeeded()) {
-        StorageHelper.postSync(HoldingsStorageAPI.HOLDINGS_RECORD_TABLE, holdingsRecords,
-            okapiHeaders, upsert, asyncResultHandler, vertxContext,
-            HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse::respond201);
-      } else {
-        asyncResultHandler.handle(
-            Future.succeededFuture(PostHoldingsStorageBatchSynchronousResponse
-                .respond500WithTextPlain(ar.cause().getMessage())));
-      }
-    });
+    CompositeFuture.all(futures)
+    .onSuccess(success -> StorageHelper.postSync(HoldingsStorageAPI.HOLDINGS_RECORD_TABLE, holdingsRecords,
+        okapiHeaders, upsert, asyncResultHandler, vertxContext,
+        HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse::respond201))
+    .onFailure(cause -> asyncResultHandler.handle(
+        Future.succeededFuture(PostHoldingsStorageBatchSynchronousResponse
+            .respond500WithTextPlain(cause.getMessage()))));
   }
 
   private Future<Void> setHrid(HoldingsRecord holdingsRecord, HridManager hridManager) {
