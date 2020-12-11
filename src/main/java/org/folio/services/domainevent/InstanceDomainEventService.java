@@ -1,12 +1,12 @@
-package org.folio.services.domainEvent;
+package org.folio.services.domainevent;
 
 
 import static io.vertx.core.logging.LoggerFactory.getLogger;
 import static java.lang.String.format;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.services.domainEvent.DomainEvent.createEvent;
-import static org.folio.services.domainEvent.DomainEvent.deleteEvent;
-import static org.folio.services.domainEvent.DomainEvent.updateEvent;
+import static org.folio.services.domainevent.DomainEvent.createEvent;
+import static org.folio.services.domainevent.DomainEvent.deleteEvent;
+import static org.folio.services.domainevent.DomainEvent.updateEvent;
 import static org.folio.services.kafka.KafkaProducerServiceFactory.getKafkaProducerService;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 

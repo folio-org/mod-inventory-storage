@@ -1,8 +1,8 @@
-package org.folio.services.domainEvent;
+package org.folio.services.domainevent;
 
-import static org.folio.services.domainEvent.DomainEventType.CREATE;
-import static org.folio.services.domainEvent.DomainEventType.DELETE;
-import static org.folio.services.domainEvent.DomainEventType.UPDATE;
+import static org.folio.services.domainevent.DomainEventType.CREATE;
+import static org.folio.services.domainevent.DomainEventType.DELETE;
+import static org.folio.services.domainevent.DomainEventType.UPDATE;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 

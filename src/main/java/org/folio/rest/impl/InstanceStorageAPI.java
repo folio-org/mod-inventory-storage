@@ -4,7 +4,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
-import static org.folio.services.domainEvent.InstanceDomainEventService.createInstanceEventService;
+import static org.folio.services.domainevent.InstanceDomainEventService.createInstanceEventService;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -36,7 +36,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.services.domainEvent.InstanceDomainEventService;
+import org.folio.services.domainevent.InstanceDomainEventService;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;

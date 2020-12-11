@@ -1,4 +1,4 @@
-package org.folio.services.domainEvent;
+package org.folio.services.domainevent;
 
 public enum DomainEventType {
   UPDATE, DELETE, CREATE
