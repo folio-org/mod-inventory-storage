@@ -10,7 +10,6 @@ import static org.folio.services.kafka.KafkaProducerServiceFactory.getKafkaProdu
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.Logger;
@@ -47,10 +46,6 @@ public class InstanceDomainEventService {
     final DomainEvent domainEvent = createEvent(newInstance, tenant);
 
     sendMessageAsync(newInstance.getId(), domainEvent);
-  }
-
-  public void instancesCreated(List<Instance> newInstances) {
-    newInstances.forEach(this::instanceCreated);
   }
 
   public void instanceDeleted(Instance oldInstance) {
