@@ -29,7 +29,7 @@ public class KafkaProducerService {
       final String payload = getMapper().writeValueAsString(value);
       return sendMessage(entityId, payload, kafkaTopic.getTopicName());
     } catch (JsonProcessingException ex) {
-      throw new IllegalArgumentException(ex);
+      throw new IllegalArgumentException("Unable to deserialize message", ex);
     }
   }
 
