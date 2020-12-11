@@ -41,12 +41,4 @@ public class KafkaProducerService {
 
     return result.thenApply(rm -> null);
   }
-
-  CompletableFuture<Void> closeProducer() {
-    final CompletableFuture<Void> result = new CompletableFuture<>();
-
-    kafkaProducer.close(mapFutureResultToJavaFuture(result));
-
-    return result;
-  }
 }

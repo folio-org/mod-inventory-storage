@@ -1,10 +1,11 @@
 package org.folio.services.kafka;
 
-import static io.vertx.core.logging.LoggerFactory.getLogger;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.services.kafka.KafkaConfigHelper.getKafkaProperties;
 
+import org.apache.logging.log4j.Logger;
+
 import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
 import io.vertx.kafka.client.producer.KafkaProducer;
 
 public final class KafkaProducerServiceFactory {
@@ -23,26 +24,11 @@ public final class KafkaProducerServiceFactory {
         if (kafkaProducerService == null) {
           log.info("Creating KafkaProducerService...");
           kafkaProducerService = createProducer(vertx);
-
-          log.info("Registering shutdown hook to close the kafka producer");
-          closeKafkaProducerOnShutdown();
         }
       }
     }
 
     return kafkaProducerService;
-  }
-
-  private static void closeKafkaProducerOnShutdown() {
-    Runtime.getRuntime().addShutdownHook(new Thread(
-      () -> kafkaProducerService.closeProducer()
-        .whenComplete((notUsed, error) -> {
-          if (error != null) {
-            log.error("Unable to close kafka producer", error);
-          } else {
-            log.info("Kafka producer closed successfully");
-          }
-        })));
   }
 
   /**
