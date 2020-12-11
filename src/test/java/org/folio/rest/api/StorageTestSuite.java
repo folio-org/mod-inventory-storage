@@ -1,12 +1,5 @@
 package org.folio.rest.api;
 
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -29,10 +22,19 @@ import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.springframework.kafka.test.rule.EmbeddedKafkaRule;
+
+import com.consol.citrus.kafka.embedded.EmbeddedKafkaServer;
+import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
+
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 @RunWith(Suite.class)
 
@@ -75,9 +77,9 @@ public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
   private static Vertx vertx;
   private static int port;
-  @ClassRule
-  public static EmbeddedKafkaRule kafkaRule = new EmbeddedKafkaRule(1)
-    .kafkaPorts(9092);
+
+  private static final EmbeddedKafkaServer kafka = new EmbeddedKafkaServerBuilder()
+    .kafkaServerPort(9092).build();
 
   private StorageTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
@@ -141,6 +143,7 @@ public class StorageTestSuite {
 
     startVerticle(options);
 
+    kafka.start();
     prepareTenant(TENANT_ID, false);
   }
 
@@ -163,6 +166,7 @@ public class StorageTestSuite {
         undeploymentComplete.completeExceptionally(res.cause());
       }
     });
+    kafka.stop();
     PostgresClient.stopEmbeddedPostgres();
     undeploymentComplete.get(20, TimeUnit.SECONDS);
   }
