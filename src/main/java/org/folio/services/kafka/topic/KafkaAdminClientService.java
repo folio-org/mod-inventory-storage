@@ -1,5 +1,6 @@
 package org.folio.services.kafka.topic;
 
+import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.services.kafka.KafkaConfigHelper.getKafkaProperties;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.Logger;
 import org.folio.util.ResourceUtil;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -22,26 +24,30 @@ public final class KafkaAdminClientService {
 
   public static void createKafkaTopicsAsync(Vertx vertx) {
     final KafkaAdminClient kafkaAdminClient = create(vertx, getKafkaProperties());
+    createKafkaTopicsAsync(kafkaAdminClient).onComplete(result -> {
+      if (result.succeeded()) {
+        log.info("Topics created successfully");
+      } else {
+        log.error("Unable to create topics", result.cause());
+      }
+    });
+  }
+
+  static Future<Void> createKafkaTopicsAsync(KafkaAdminClient kafkaAdminClient) {
     final List<NewTopic> newTopics = readTopics();
 
-    kafkaAdminClient.listTopics(topics -> {
-      if (topics.failed()) {
-        log.error("Unable to retrieve kafka topics", topics.cause());
-        return;
-      }
-
+    return kafkaAdminClient.listTopics().compose(topics -> {
       final List<NewTopic> topicsToCreate = newTopics.stream()
-        .filter(newTopic -> !topics.result().contains(newTopic.getName()))
+        .filter(newTopic -> !topics.contains(newTopic.getName()))
         .collect(Collectors.toList());
 
+      if (topicsToCreate.isEmpty()) {
+        log.info("All topics already exists, skipping creation");
+        return succeededFuture();
+      }
+
       log.info("Creating topics {}", topicsToCreate);
-      kafkaAdminClient.createTopics(topicsToCreate, result -> {
-        if (result.failed()) {
-          log.warn("Unable to close kafka admin client", result.cause());
-        } else {
-          log.info("Kafka admin client closed successfully");
-        }
-      });
+      return kafkaAdminClient.createTopics(topicsToCreate);
     });
   }
 
