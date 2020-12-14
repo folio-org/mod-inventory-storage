@@ -17,7 +17,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import java.util.ArrayList;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
 import static org.folio.rest.impl.StorageHelper.*;
 import org.folio.rest.jaxrs.model.Location;
