@@ -1,7 +1,5 @@
 package org.folio.rest.impl;
 
-import static org.folio.services.kafka.topic.KafkaAdminClientService.createKafkaTopicsAsync;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -14,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.services.kafka.topic.KafkaAdminClientService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,10 +86,11 @@ public class TenantRefAPI extends TenantAPI {
   public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
     Handler<AsyncResult<Response>> handler, Context context) {
 
+    final KafkaAdminClientService adminClientService = new KafkaAdminClientService(context.owner());
     super.postTenant(tenantAttributes, headers,
       responseResult -> {
         log.info("Creating kafka topics...");
-        createKafkaTopicsAsync(context.owner());
+        adminClientService.createKafkaTopicsAsync();
 
         handler.handle(responseResult);
       }, context);

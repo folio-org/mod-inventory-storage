@@ -18,12 +18,17 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 
-public final class KafkaAdminClientService {
+public class KafkaAdminClientService {
   private static final Logger log = getLogger(KafkaAdminClientService.class);
   private static final String KAFKA_TOPICS_FILE = "kafka-topics.json";
+  private final Vertx vertx;
 
-  public static void createKafkaTopicsAsync(Vertx vertx) {
-    final KafkaAdminClient kafkaAdminClient = create(vertx, getKafkaProperties());
+  public KafkaAdminClientService(Vertx vertx) {
+    this.vertx = vertx;
+  }
+
+  public void createKafkaTopicsAsync() {
+    final KafkaAdminClient kafkaAdminClient = createKafkaAdminNativeClient();
     createKafkaTopicsAsync(kafkaAdminClient).onComplete(result -> {
       if (result.succeeded()) {
         log.info("Topics created successfully");
@@ -31,7 +36,7 @@ public final class KafkaAdminClientService {
         log.error("Unable to create topics", result.cause());
       }
 
-      kafkaAdminClient.close(closeResult -> {
+      kafkaAdminClient.close().onComplete(closeResult -> {
         if (closeResult.failed()) {
           log.error("Failed to close kafka admin client", closeResult.cause());
         }
@@ -39,7 +44,12 @@ public final class KafkaAdminClientService {
     });
   }
 
-  static Future<Void> createKafkaTopicsAsync(KafkaAdminClient kafkaAdminClient) {
+  // needed for tests mostly
+  KafkaAdminClient createKafkaAdminNativeClient() {
+    return create(vertx, getKafkaProperties());
+  }
+
+  private Future<Void> createKafkaTopicsAsync(KafkaAdminClient kafkaAdminClient) {
     final List<NewTopic> newTopics = readTopics();
 
     return kafkaAdminClient.listTopics().compose(topics -> {
@@ -57,7 +67,7 @@ public final class KafkaAdminClientService {
     });
   }
 
-  private static List<NewTopic> readTopics() {
+  private List<NewTopic> readTopics() {
     final JsonObject topics = new JsonObject(ResourceUtil.asString(KAFKA_TOPICS_FILE));
 
     return topics.getJsonArray("topics", new JsonArray()).stream()
