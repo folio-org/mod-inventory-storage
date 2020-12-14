@@ -20,7 +20,7 @@ import io.vertx.kafka.admin.NewTopic;
 
 public final class KafkaAdminClientService {
   private static final Logger log = getLogger(KafkaAdminClientService.class);
-  public static final String KAFKA_TOPICS_FILE = "kafka-topics.json";
+  private static final String KAFKA_TOPICS_FILE = "kafka-topics.json";
 
   public static void createKafkaTopicsAsync(Vertx vertx) {
     final KafkaAdminClient kafkaAdminClient = create(vertx, getKafkaProperties());
@@ -30,6 +30,12 @@ public final class KafkaAdminClientService {
       } else {
         log.error("Unable to create topics", result.cause());
       }
+
+      kafkaAdminClient.close(closeResult -> {
+        if (closeResult.failed()) {
+          log.error("Failed to close kafka admin client", closeResult.cause());
+        }
+      });
     });
   }
 
