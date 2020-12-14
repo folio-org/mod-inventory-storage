@@ -98,11 +98,6 @@
       <artifactId>vertx-unit</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>2.10.8</version>
-    </dependency>
     <!-- This dependency is required until https://issues.folio.org/browse/RMB-503 is fixed -->
     <dependency>
       <groupId>org.glassfish.web</groupId>
