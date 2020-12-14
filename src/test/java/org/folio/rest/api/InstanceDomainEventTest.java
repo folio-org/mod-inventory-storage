@@ -9,7 +9,9 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import org.awaitility.Awaitility;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.junit.Before;
@@ -87,16 +89,25 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
   }
 
   private void assertKafkaMessageNotCreatedForUpdate(UUID instanceId) {
+    Awaitility.await()
+      .atLeast(1, TimeUnit.SECONDS);
+
     final JsonObject updateMessage  = kafkaConsumer.getLastMessage(instanceId.toString());
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
   private void assertKafkaMessageNotCreatedForDelete(UUID instanceId) {
+    Awaitility.await()
+      .atLeast(1, TimeUnit.SECONDS);
+
     final JsonObject updateMessage  = kafkaConsumer.getLastMessage(instanceId.toString());
     assertThat(updateMessage.getString("type"), not(is("DELETE")));
   }
 
   private void assertKafkaMessageNotCreatedForCreate(UUID instanceId) {
+    Awaitility.await()
+      .atLeast(1, TimeUnit.SECONDS);
+
     assertThat(kafkaConsumer.getAllMessages(instanceId.toString()).size(),
       is(0));
   }
