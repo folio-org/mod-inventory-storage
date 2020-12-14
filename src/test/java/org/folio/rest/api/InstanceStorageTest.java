@@ -1424,15 +1424,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAllInstances()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    createInstance(smallAngryPlanet(UUID.randomUUID()));
-    createInstance(nod(UUID.randomUUID()));
-    createInstance(uprooted(UUID.randomUUID()));
+  public void canDeleteAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
+    final var firstInstance = createInstance(smallAngryPlanet(UUID.randomUUID()));
+    final var secondInstance = createInstance(nod(UUID.randomUUID()));
+    final var thirdInstance = createInstance(uprooted(UUID.randomUUID()));
 
     CompletableFuture<Response> allDeleted = new CompletableFuture<>();
 
@@ -1456,6 +1451,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(allInstances.size(), is(0));
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(0));
+
+    assertKafkaMessageCreatedForDelete(firstInstance.getJson());
+    assertKafkaMessageCreatedForDelete(secondInstance.getJson());
+    assertKafkaMessageCreatedForDelete(thirdInstance.getJson());
   }
 
   @Test
