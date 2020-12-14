@@ -14,6 +14,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancesPost;
 import org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
@@ -44,12 +45,17 @@ public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
     }
 
     CompositeFuture.all(futures)
-    .onSuccess(success -> StorageHelper.postSync(InstanceStorageAPI.INSTANCE_TABLE, entity.getInstances(),
-            okapiHeaders, upsert, asyncResultHandler, vertxContext,
-            InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse::respond201))
-    .onFailure(cause -> asyncResultHandler.handle(
-            Future.succeededFuture(PostInstanceStorageBatchSynchronousResponse
-                .respond500WithTextPlain(cause.getMessage()))));
+    .onSuccess(ar -> {
+      PgUtil.postSync(InstanceStorageAPI.INSTANCE_TABLE, entity.getInstances(),
+          StorageHelper.MAX_ENTITIES, upsert, okapiHeaders, vertxContext,
+          InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.class,
+          asyncResultHandler);
+    })
+    .onFailure(cause -> {
+      asyncResultHandler.handle(
+          Future.succeededFuture(PostInstanceStorageBatchSynchronousResponse
+              .respond500WithTextPlain(cause.getMessage())));
+    });
   }
 
   private Future<Void> setHrid(Instance instance, HridManager hridManager) {

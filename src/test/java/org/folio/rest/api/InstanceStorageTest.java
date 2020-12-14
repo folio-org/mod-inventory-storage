@@ -1939,7 +1939,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     Response response = instancesStorageSyncClient.attemptToCreate(subPath, instanceCollection);
     assertThat(response, allOf(
         statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate")));
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate"))));
 
     assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(0).getString("id")));
     assertExists(instancesArray.getJsonObject(1));
@@ -1982,7 +1982,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
     assertThat(response, allOf(
         statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate"),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate")),
         errorParametersValueIs(duplicateId.toString())));
 
     for (int i=0; i<instancesArray.size(); i++) {
@@ -2265,11 +2265,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors, notNullValue());
     assertThat(errors.getErrors(), hasSize(1));
     assertThat(errors.getErrors().get(0).getMessage(),
-        is("duplicate key value violates unique constraint \"instance_hrid_idx_unique\""));
+        anyOf(containsString("value already exists"), containsString("duplicate key")));
     assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
-        is("lower(f_unaccent(jsonb ->> 'hrid'::text"));
+        containsString("'hrid'"));
     assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
         is("in00000000001"));
 

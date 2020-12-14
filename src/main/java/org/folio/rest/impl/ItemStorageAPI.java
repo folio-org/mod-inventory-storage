@@ -71,15 +71,14 @@ public class ItemStorageAPI implements ItemStorage {
       new ItemEffectiveValuesService(vertxContext, okapiHeaders);
 
     hridFuture.map(entity::withHrid)
-      .compose(effectiveValuesService::populateEffectiveValues)
-      .map(item -> {
-        PgUtil.post(ITEM_TABLE, item, okapiHeaders, vertxContext,
+    .compose(effectiveValuesService::populateEffectiveValues)
+    .onSuccess(item -> {
+      PgUtil.post(ITEM_TABLE, item, okapiHeaders, vertxContext,
           PostItemStorageItemsResponse.class, asyncResultHandler);
-        return item;
-      }).otherwise(EndpointFailureHandler.handleFailure(asyncResultHandler,
-      PostItemStorageItemsResponse::respond422WithApplicationJson,
-      PostItemStorageItemsResponse::respond500WithTextPlain
-    ));
+    })
+    .onFailure(EndpointFailureHandler.handleFailure(asyncResultHandler,
+        PostItemStorageItemsResponse::respond422WithApplicationJson,
+        PostItemStorageItemsResponse::respond500WithTextPlain));
   }
 
   @Validate
