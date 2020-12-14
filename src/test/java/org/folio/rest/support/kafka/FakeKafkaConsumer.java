@@ -15,7 +15,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 public final class FakeKafkaConsumer {
-  private final Map<String, List<JsonObject>> messages = new ConcurrentHashMap<>();
+  private final static Map<String, List<JsonObject>> messages = new ConcurrentHashMap<>();
 
   public final FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, String> consumer = create(vertx, consumerProperties());
