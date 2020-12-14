@@ -11,6 +11,7 @@ import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Instance;
@@ -36,43 +37,40 @@ public class InstanceDomainEventService {
     return new InstanceDomainEventService(context.owner(), tenantId(okapiHeaders));
   }
 
-  public void instanceUpdated(Instance oldInstance, Instance newInstance) {
+  public CompletableFuture<Void> instanceUpdated(Instance oldInstance, Instance newInstance) {
     final DomainEvent domainEvent = updateEvent(oldInstance, newInstance, tenant);
 
-    sendMessageAsync(oldInstance.getId(), domainEvent);
+    return sendMessage(oldInstance.getId(), domainEvent);
   }
 
-  public void instanceCreated(Instance newInstance) {
+  public CompletableFuture<Void> instanceCreated(Instance newInstance) {
     final DomainEvent domainEvent = createEvent(newInstance, tenant);
 
-    sendMessageAsync(newInstance.getId(), domainEvent);
+    return sendMessage(newInstance.getId(), domainEvent);
   }
 
-  public void instanceDeleted(Instance oldInstance) {
+  public CompletableFuture<Void> instanceDeleted(Instance oldInstance) {
     final DomainEvent domainEvent = deleteEvent(oldInstance, tenant);
 
-    sendMessageAsync(oldInstance.getId(), domainEvent);
+    return sendMessage(oldInstance.getId(), domainEvent);
   }
 
-  public void instancesDeleted(Collection<Instance> oldInstances) {
-    oldInstances.forEach(this::instanceDeleted);
+  public CompletableFuture<Void> instancesDeleted(Collection<Instance> oldInstances) {
+    return CompletableFuture.allOf(oldInstances.stream()
+      .map(this::instanceDeleted)
+      .toArray(CompletableFuture[]::new));
   }
 
-  private void sendMessageAsync(String instanceId, DomainEvent domainEvent) {
-    try {
-      log.debug("Sending domain event for instance [{}], payload [{}]",
-        instanceId, domainEvent);
+  private CompletableFuture<Void> sendMessage(String instanceId, DomainEvent domainEvent) {
+    log.debug("Sending domain event for instance [{}], payload [{}]",
+      instanceId, domainEvent);
 
-      kafkaProducerService.sendMessage(instanceId, domainEvent, INVENTORY_INSTANCE)
-        .whenComplete((notUsed, error) -> {
-          if (error != null) {
-            log.error("Unable to send domain event for instance [{}], payload - [{}]",
-              instanceId, domainEvent, error);
-          }
-        });
-    } catch (Exception ex) {
-      log.error("Unable to send domain event for instance [{}], payload - [{}]",
-        instanceId, domainEvent, ex);
-    }
+    return kafkaProducerService.sendMessage(instanceId, domainEvent, INVENTORY_INSTANCE)
+      .whenComplete((notUsed, error) -> {
+        if (error != null) {
+          log.error("Unable to send domain event for instance [{}], payload - [{}]",
+            instanceId, domainEvent, error);
+        }
+      });
   }
 }

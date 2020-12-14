@@ -39,7 +39,6 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 @RunWith(Suite.class)
-
 @Suite.SuiteClasses({
   InstanceStorageTest.class,
   RecordBulkTest.class,
@@ -73,7 +72,8 @@ import io.vertx.sqlclient.RowSet;
   AbstractInstanceRecordsAPITest.class,
   OaiPmhViewTest.class,
   InventoryHierarchyViewTest.class,
-  HoldingsSourceTest.class
+  HoldingsSourceTest.class,
+  InstanceDomainEventTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

@@ -1,6 +1,7 @@
 package org.folio.rest.support.kafka;
 
 import static io.vertx.kafka.client.consumer.KafkaConsumer.create;
+import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,7 +36,7 @@ public final class FakeKafkaConsumer {
   }
 
   public Collection<JsonObject> getAllMessages(String instanceId) {
-    return messages.get(instanceId);
+    return messages.getOrDefault(instanceId, emptyList());
   }
 
   public JsonObject getLastMessage(String instanceId) {
