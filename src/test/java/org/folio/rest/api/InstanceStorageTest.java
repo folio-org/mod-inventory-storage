@@ -8,6 +8,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -22,8 +24,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -74,7 +74,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String METADATA_KEY = "metadata";
   private static final String TAG_VALUE = "test-tag";
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
-  private static final Logger log = LoggerFactory.getLogger(InstanceStorageTest.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
   private static final String STAFF_SUPPRESS = "staffSuppress";
 
@@ -170,7 +170,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(
       instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
-      
+
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
   }
 
@@ -1803,7 +1803,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(instanceToCreate);
 
     Response createdInstance = getById(id);
-    
+
     assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
       notNullValue());
 
@@ -1906,7 +1906,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         hasIsoFormat());
     });
   }
-  
+
   @Test
   public void cannotPostSynchronousBatchWithInvalidInstance() throws Exception {
     JsonArray instancesArray = new JsonArray();
@@ -1948,7 +1948,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     Response response = instancesStorageSyncClient.attemptToCreate(subPath, instanceCollection);
     assertThat(response, allOf(
         statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate")));
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate"))));
 
     assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(0).getString("id")));
     assertExists(instancesArray.getJsonObject(1));
@@ -1991,7 +1991,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
     assertThat(response, allOf(
         statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate"),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate")),
         errorParametersValueIs(duplicateId.toString())));
 
     for (int i=0; i<instancesArray.size(); i++) {
@@ -2274,11 +2274,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors, notNullValue());
     assertThat(errors.getErrors(), hasSize(1));
     assertThat(errors.getErrors().get(0).getMessage(),
-        is("duplicate key value violates unique constraint \"instance_hrid_idx_unique\""));
+        anyOf(containsString("value already exists"), containsString("duplicate key")));
     assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
-        is("lower(f_unaccent(jsonb ->> 'hrid'::text"));
+        containsString("'hrid'"));
     assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
         is("in00000000001"));
 
@@ -2630,7 +2630,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   private JsonObject createRequestForMultipleInstances(Integer numberOfInstances) {
     JsonArray instancesArray = new JsonArray();
-    
+
     for (int i = 0; i < numberOfInstances; i++) {
       instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
     }

@@ -13,7 +13,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Locations;
@@ -27,8 +28,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -36,7 +35,7 @@ import io.vertx.core.logging.LoggerFactory;
  */
 public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   public static final String LOCATION_TABLE = "location";
-  private final Logger logger = LoggerFactory.getLogger(LocationAPI.class);
+  private static final Logger logger = LogManager.getLogger();
   public static final String URL_PREFIX = "/locations";
 
   public static final String SERVICEPOINT_IDS = "servicePointIds";
@@ -117,7 +116,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     String tenantId = tenantId(okapiHeaders);
 
     runLocationChecks(checkIdProvided(entity), checkAtLeastOneServicePoint(entity),
-        checkPrimaryServicePointRelationship(entity)).setHandler(checksResult -> {
+        checkPrimaryServicePointRelationship(entity)).onComplete(checksResult -> {
 
       if (checksResult.succeeded()) {
 
@@ -189,7 +188,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Context vertxContext) {
     runLocationChecks(checkIdChange(id, entity), checkAtLeastOneServicePoint(entity),
         checkPrimaryServicePointRelationship(entity), checkForDuplicateServicePoints(entity))
-            .setHandler(checksResult -> {
+            .onComplete(checksResult -> {
       if (checksResult.failed()) {
         String message = logAndSaveError(checksResult.cause());
         asyncResultHandler

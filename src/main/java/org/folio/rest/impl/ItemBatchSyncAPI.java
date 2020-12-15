@@ -13,11 +13,12 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemsPost;
 import org.folio.rest.jaxrs.resource.ItemStorageBatchSynchronous;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
-import org.folio.services.ItemEffectiveCallNumberComponentsService;
+import org.folio.services.ItemEffectiveValuesService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
@@ -33,14 +34,14 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     final List<Item> items = entity.getItems();
     final PostgresClient postgresClient = PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-    final ItemEffectiveCallNumberComponentsService effectiveCallNumberService =
-      new ItemEffectiveCallNumberComponentsService(postgresClient);
+    final ItemEffectiveValuesService effectiveValuesService =
+      new ItemEffectiveValuesService(postgresClient);
 
     // Currently, there is no method on CompositeFuture to accept List<Future<String>>
     @SuppressWarnings("rawtypes")
     final List<Future> futures = new ArrayList<>();
     final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
-    
+
     // add a last modified date to status on all created items
     Date itemStatusDate = new java.util.Date();
 
@@ -50,16 +51,15 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
     }
 
     CompositeFuture.all(futures)
-      .compose(result -> effectiveCallNumberService.populateEffectiveCallNumberComponents(items))
-      .map(result -> {
-        StorageHelper.postSync(ItemStorageAPI.ITEM_TABLE, entity.getItems(),
-          okapiHeaders, upsert, asyncResultHandler, vertxContext,
-          PostItemStorageBatchSynchronousResponse::respond201);
-        return result;
-      }).otherwise(EndpointFailureHandler.handleFailure(asyncResultHandler,
-      PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,
-      PostItemStorageBatchSynchronousResponse::respond500WithTextPlain
-    ));
+    .compose(result -> effectiveValuesService.populateEffectiveValues(items))
+    .onSuccess(result -> {
+      PgUtil.postSync(ItemStorageAPI.ITEM_TABLE, entity.getItems(),
+          StorageHelper.MAX_ENTITIES, upsert, okapiHeaders, vertxContext,
+          PostItemStorageBatchSynchronousResponse.class, asyncResultHandler);
+    })
+    .onFailure(EndpointFailureHandler.handleFailure(asyncResultHandler,
+          PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,
+          PostItemStorageBatchSynchronousResponse::respond500WithTextPlain));
   }
 
   private Future<Void> setHrid(Item item, HridManager hridManager) {

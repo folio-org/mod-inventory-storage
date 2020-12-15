@@ -5,6 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.buildComponents;
+import static org.folio.rest.support.ItemEffectiveLocationUtil.updateItemEffectiveLocation;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import java.util.List;
@@ -22,30 +23,35 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 
-public class ItemEffectiveCallNumberComponentsService {
+public class ItemEffectiveValuesService {
   private final PostgresClient postgresClient;
 
-  public ItemEffectiveCallNumberComponentsService(Context context, Map<String, String> headers) {
+  public ItemEffectiveValuesService(Context context, Map<String, String> headers) {
     this.postgresClient = PgUtil.postgresClient(context, headers);
   }
 
-  public ItemEffectiveCallNumberComponentsService(PostgresClient postgresClient) {
+  public ItemEffectiveValuesService(PostgresClient postgresClient) {
     this.postgresClient = postgresClient;
   }
 
-  public Future<List<Item>> populateEffectiveCallNumberComponents(List<Item> items) {
+  public Future<List<Item>> populateEffectiveValues(List<Item> items) {
     return getHoldingsRecordsForItems(items)
       .map(holdingsRecordMap -> {
         items.forEach(item -> {
           final HoldingsRecord holdingsRecord = holdingsRecordMap.get(item.getHoldingsRecordId());
+          updateItemEffectiveLocation(item, holdingsRecord);
           item.setEffectiveCallNumberComponents(buildComponents(holdingsRecord, item));
         });
         return items;
       });
   }
 
-  public Future<Item> populateEffectiveCallNumberComponents(Item item) {
+  public Future<Item> populateEffectiveValues(Item item) {
     return getHoldingsRecordForItem(item)
+      .map(holdingsRecord -> {
+        updateItemEffectiveLocation(item, holdingsRecord);
+        return holdingsRecord;
+      })
       .map(holdingsRecord -> buildComponents(holdingsRecord, item))
       .map(item::withEffectiveCallNumberComponents);
   }

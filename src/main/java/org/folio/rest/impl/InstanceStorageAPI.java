@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -14,7 +13,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
@@ -37,13 +37,11 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 public class InstanceStorageAPI implements InstanceStorage {
 
-  private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger log = LogManager.getLogger();
 
   // Has to be lowercase because raml-module-builder uses case sensitive
   // lower case headers
@@ -108,8 +106,8 @@ public class InstanceStorageAPI implements InstanceStorage {
     Context vertxContext) {
 
     String tenantId = okapiHeaders.get(TENANT_HEADER);
-    
-    
+
+
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
 
     try {

@@ -57,7 +57,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
@@ -77,8 +78,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -88,7 +87,7 @@ import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
-  private static final Logger log = LoggerFactory.getLogger(ItemStorageTest.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
 
@@ -892,7 +891,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray.getJsonObject(1).put("id", duplicateId);
     assertThat(postSynchronousBatch(itemsArray), allOf(
         statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate key"),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
         errorParametersValueIs(duplicateId)));
     for (int i=0; i<itemsArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemsArray.getJsonObject(i).getString("id")));
@@ -989,7 +988,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postSynchronousBatch(itemsArray), allOf(
         statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate key"),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
         errorParametersValueIs(duplicateHRID)));
 
     for (int i = 0; i < itemsArray.size(); i++) {
@@ -1956,22 +1955,27 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @Parameters({
+    "Aged to lost",
     "Available",
     "Awaiting pickup",
     "Awaiting delivery",
     "Checked out",
+    "Claimed returned",
+    "Declared lost",
     "In process",
+    "In process (non-requestable)",
     "In transit",
+    "Intellectual item",
+    "Long missing",
+    "Lost and paid",
     "Missing",
     "On order",
     "Paged",
-    "Declared lost",
+    "Restricted",
     "Order closed",
-    "Claimed returned",
+    "Unavailable",
     "Unknown",
-    "Withdrawn",
-    "Lost and paid",
-    "Aged to lost"
+    "Withdrawn"
   })
   public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);

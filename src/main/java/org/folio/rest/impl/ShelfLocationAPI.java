@@ -17,10 +17,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.util.ArrayList;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
 import static org.folio.rest.impl.StorageHelper.*;
 import org.folio.rest.jaxrs.model.Location;
@@ -34,7 +32,6 @@ import org.folio.rest.jaxrs.model.Location;
  */
 public class ShelfLocationAPI implements ShelfLocations {
   public static final String SHELF_LOCATION_TABLE = "shelflocation";
-  public static final Logger logger = LoggerFactory.getLogger(ShelfLocationAPI.class);
   public static final String URL_PREFIX = "/shelflocations";
   public static final String USE_NEW = "Use the new /locations interface instead.";
 

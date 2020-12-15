@@ -5,23 +5,25 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instanceBulkUrl;
+import static org.folio.rest.support.http.InterfaceUrls.recordBulkUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.jaxrs.model.InstanceBulkIdsGetField;
+import org.folio.rest.jaxrs.model.RecordBulkIdsGetField;
 import org.folio.rest.support.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -33,7 +35,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class InstanceBulkTest extends TestBaseWithInventoryUtil {
+public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   @Before
   public void beforeEach() {
@@ -45,6 +47,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("instance");
+    StorageTestSuite.checkForMismatchedIDs("holdings_record");
   }
 
   @Test
@@ -60,7 +63,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     createManyMoons(moons);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = instanceBulkUrl("/ids");
+    URL getInstanceUrl = recordBulkUrl("/ids");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
@@ -78,11 +81,11 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     int totalMoons = 2;
     int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID);
+      RecordBulkIdsGetField.ID);
     createManyMoons(moons);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id");
+    URL getInstanceUrl = recordBulkUrl("/ids?type=id");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
@@ -100,11 +103,11 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     int totalMoons = 10;
     int expectedMatches = 1;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID);
+      RecordBulkIdsGetField.ID);
     createManyMoons(moons);
 
     String query = urlEncode("keyword all \"Moon #3\"");
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&query=" + query);
+    URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -123,11 +126,11 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     int totalMoons = 20;
     int expectedMatches = 11;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID);
+      RecordBulkIdsGetField.ID);
     createManyMoons(moons);
 
     String query = urlEncode("keyword all \"Moon #1*\"");
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&query=" + query);
+    URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -146,17 +149,36 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     int totalMoons = 2;
     int expectedMatches = 0;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
-      InstanceBulkIdsGetField.ID);
+      RecordBulkIdsGetField.ID);
     createManyMoons(moons);
 
     String query = urlEncode("keyword all \"Planet #1*\"");
-    URL getInstanceUrl = instanceBulkUrl("/ids?type=id&query=" + query);
+    URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
     validateMoonsResponse(response, expectedMatches, moons);
+  }
+
+  @Test
+  public void canGetHoldingsBulkOfId()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    int totalHoldingsIds = 2;
+    List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING");
+
+    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+
+    Response response = getCompleted.get(5, SECONDS);
+    validateHoldingsResponse(response, holdingIds, totalHoldingsIds);
   }
 
   private void validateMoonsResponse(Response response, int expectedMatches,
@@ -177,6 +199,18 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     }
   }
 
+  private void validateHoldingsResponse(Response response, List<String> holdingsIds,
+     int expectedMatches) {
+    JsonArray ids = response.getJson().getJsonArray("ids");
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    assertThat(ids.size(), is(expectedMatches));
+    assertThat(response.getJson().getInteger("totalRecords"), is(expectedMatches));
+    for (Object id : ids) {
+      JsonObject idObject = (JsonObject) id;
+      assertThat(holdingsIds.contains(idObject.getString("id")), is(true));
+    }
+  }
+
   private void createManyMoons(Map<String, JsonObject> instancesToCreate)
       throws MalformedURLException,
       InterruptedException,
@@ -189,11 +223,11 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private Map<String, JsonObject> manyMoons(int total) {
-    return manyMoons(total, InstanceBulkIdsGetField.ID);
+    return manyMoons(total, RecordBulkIdsGetField.ID);
   }
 
   private Map<String, JsonObject> manyMoons(int total,
-      InstanceBulkIdsGetField field) {
+      RecordBulkIdsGetField field) {
     Map<String, JsonObject> moons = new HashMap<String, JsonObject>();
 
     for (int i = 0; i < total; i++) {
@@ -201,7 +235,7 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
       String hrid = String.format("in%011d", i + 1);
 
       String id = "";
-      if (field.compareTo(InstanceBulkIdsGetField.ID) == 0) {
+      if (field.compareTo(RecordBulkIdsGetField.ID) == 0) {
         id = uuid.toString();
       }
 
@@ -221,6 +255,15 @@ public class InstanceBulkTest extends TestBaseWithInventoryUtil {
     }
 
     return moons;
+  }
+
+  private List<String> createAndGetHoldingsIds(int totalCount) {
+    List<String> holdingIds = new ArrayList<>();
+    for (int i = 0; i < totalCount; i++) {
+      String id = createInstanceAndHolding(mainLibraryLocationId).toString();
+      holdingIds.add(id);
+    }
+    return holdingIds;
   }
 
   private static JsonObject createInstanceRequest(

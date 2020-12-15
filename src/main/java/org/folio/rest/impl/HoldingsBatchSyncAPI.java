@@ -13,6 +13,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsrecordsPost;
 import org.folio.rest.jaxrs.resource.HoldingsStorageBatchSynchronous;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.TenantTool;
@@ -40,16 +41,17 @@ public class HoldingsBatchSyncAPI implements HoldingsStorageBatchSynchronous {
       futures.add(setHrid(holdingsRecord, hridManager));
     }
 
-    CompositeFuture.all(futures).setHandler(ar -> {
-      if (ar.succeeded()) {
-        StorageHelper.postSync(HoldingsStorageAPI.HOLDINGS_RECORD_TABLE, holdingsRecords,
-            okapiHeaders, upsert, asyncResultHandler, vertxContext,
-            HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse::respond201);
-      } else {
-        asyncResultHandler.handle(
-            Future.succeededFuture(PostHoldingsStorageBatchSynchronousResponse
-                .respond500WithTextPlain(ar.cause().getMessage())));
-      }
+    CompositeFuture.all(futures)
+    .onSuccess(ar -> {
+      PgUtil.postSync(HoldingsStorageAPI.HOLDINGS_RECORD_TABLE, holdingsRecords,
+          StorageHelper.MAX_ENTITIES, upsert, okapiHeaders, vertxContext,
+          HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse.class,
+          asyncResultHandler);
+    })
+    .onFailure(cause -> {
+      asyncResultHandler.handle(
+          Future.succeededFuture(PostHoldingsStorageBatchSynchronousResponse
+              .respond500WithTextPlain(cause.getMessage())));
     });
   }
 
