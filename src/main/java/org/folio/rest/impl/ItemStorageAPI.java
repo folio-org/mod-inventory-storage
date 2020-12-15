@@ -64,7 +64,7 @@ public class ItemStorageAPI implements ItemStorage {
           PgUtil.postgresClient(vertxContext, okapiHeaders));
       hridFuture = hridManager.getNextItemHrid();
     } else {
-      hridFuture = StorageHelper.completeFuture(entity.getHrid());
+      hridFuture = Future.succeededFuture(entity.getHrid());
     }
 
     final ItemEffectiveValuesService effectiveValuesService =

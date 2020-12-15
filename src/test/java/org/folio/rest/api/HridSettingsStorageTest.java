@@ -19,7 +19,6 @@ import java.util.concurrent.TimeoutException;
 import io.vertx.sqlclient.Row;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.impl.StorageHelper;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
 import org.folio.rest.persist.PostgresClient;
@@ -448,7 +447,7 @@ public class HridSettingsStorageTest extends TestBase {
                       is(originalHridSettings.getItems().getPrefix()));
                   assertThat(currentHridSettings.getItems().getStartNumber(),
                       is(originalHridSettings.getItems().getStartNumber()));
-                  return StorageHelper.completeFuture(currentHridSettings);
+                  return Future.succeededFuture(currentHridSettings);
                 })
                 .onComplete(promise);
           });
@@ -481,6 +480,6 @@ public class HridSettingsStorageTest extends TestBase {
 
   private Future<String> validateHrid(String hrid, String expectedValue, TestContext testContext) {
     testContext.assertEquals(expectedValue, hrid);
-    return StorageHelper.completeFuture(hrid);
+    return Future.succeededFuture(hrid);
   }
 }

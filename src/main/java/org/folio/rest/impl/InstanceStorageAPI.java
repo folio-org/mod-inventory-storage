@@ -135,7 +135,7 @@ public class InstanceStorageAPI implements InstanceStorage {
             final HridManager hridManager = new HridManager(vertxContext, postgresClient);
             hridFuture = hridManager.getNextInstanceHrid();
           } else {
-            hridFuture = StorageHelper.completeFuture(entity.getHrid());
+            hridFuture = Future.succeededFuture(entity.getHrid());
           }
 
           hridFuture.map(hrid -> {

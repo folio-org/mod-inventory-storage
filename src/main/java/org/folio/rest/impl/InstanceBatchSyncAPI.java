@@ -64,7 +64,7 @@ public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
     if (isBlank(instance.getHrid())) {
       hridFuture = hridManager.getNextInstanceHrid();
     } else {
-      hridFuture = StorageHelper.completeFuture(instance.getHrid());
+      hridFuture = Future.succeededFuture(instance.getHrid());
     }
 
     return hridFuture.map(hrid -> {
