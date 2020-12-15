@@ -163,7 +163,7 @@ public abstract class AbstractInstanceRecordsAPI {
 
     Tuple tuple = new ArrayTuple(2);
     try {
-      tuple.addUUIDArray(Optional.ofNullable(instancesIds).orElse(new UUID[0]));
+      tuple.addArrayOfUUID(Optional.ofNullable(instancesIds).orElse(new UUID[0]));
       tuple.addBoolean(skipSuppressedFromDiscoveryRecords);
 
     } catch (Exception e) {
