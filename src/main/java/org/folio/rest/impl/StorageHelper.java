@@ -55,16 +55,6 @@ public final class StorageHelper {
     return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
   }
 
-  /**
-   * Return a PostgresClient.
-   * @param vertxContext  Where to get a Vertx from.
-   * @param okapiHeaders  Where to get the tenantId from.
-   * @return the PostgresClient for the vertx and the tenantId
-   */
-  protected static PostgresClient postgresClient(Context vertxContext, Map<String, String> okapiHeaders) {
-    return PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-  }
-
   public static <T> Future<T> completeFuture(T id) {
     Promise<T> p = Promise.promise();
     p.complete(id);

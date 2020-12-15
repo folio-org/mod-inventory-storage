@@ -61,7 +61,7 @@ public class ItemStorageAPI implements ItemStorage {
     final Future<String> hridFuture;
     if (isBlank(entity.getHrid())) {
       final HridManager hridManager = new HridManager(vertxContext,
-          StorageHelper.postgresClient(vertxContext, okapiHeaders));
+          PgUtil.postgresClient(vertxContext, okapiHeaders));
       hridFuture = hridManager.getNextItemHrid();
     } else {
       hridFuture = StorageHelper.completeFuture(entity.getHrid());
@@ -99,7 +99,7 @@ public class ItemStorageAPI implements ItemStorage {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = TenantTool.tenantId(okapiHeaders);
-    PostgresClient postgresClient = StorageHelper.postgresClient(vertxContext, okapiHeaders);
+    PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
 
     postgresClient.execute(String.format("DELETE FROM %s_%s.item", tenantId, "mod_inventory_storage"),
         reply -> {
