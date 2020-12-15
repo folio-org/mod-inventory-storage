@@ -5,7 +5,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
@@ -25,8 +26,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  * Implements the instance classification type persistency using postgres jsonb.
@@ -36,7 +35,7 @@ public class ClassificationTypeAPI implements org.folio.rest.jaxrs.resource.Clas
   public static final String CLASSIFICATION_TYPE_TABLE   = "classification_type";
 
   private static final String LOCATION_PREFIX       = "/classification-types/";
-  private static final Logger log                 = LoggerFactory.getLogger(ClassificationTypeAPI.class);
+  private static final Logger log                 = LogManager.getLogger();
   private final Messages messages                 = Messages.getInstance();
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {

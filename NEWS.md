@@ -3,7 +3,6 @@
 * Status date set on newly created instance records (MODINVSTOR-509)
 * Item status date is set for newly created item records (MODINVSTOR-508)
 
-
 ## 19.4.0 2020-10-08
 
 * Introduces public and staff only holdings statements notes (MODINVSTOR-543)

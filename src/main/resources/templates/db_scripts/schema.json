@@ -903,8 +903,8 @@
     },
     {
       "run": "after",
-      "snippetPath": "itemEffectiveLocation.sql",
-      "fromModuleVersion": "17.1.0"
+      "snippetPath": "dropLegacyItemEffectiveLocationTriggers.sql",
+      "fromModuleVersion": "19.5.0"
     },
     {
       "run": "after",
