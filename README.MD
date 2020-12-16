@@ -16,6 +16,7 @@ Provides PostgreSQL based storage to complement the [inventory module](http://gi
 - Java 11 JDK
 - Maven 3.3.9
 - Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
+- Kafka 2.6 (running and listening on localhost:9092)
 - Node 6.4.0 (for API linting and documentation generation)
 - NPM 3.10.3 (for API linting and documentation generation)
 - Python 3.6.0 (for un-registering module during managed deployment scripts)
@@ -36,6 +37,12 @@ More information is available on the [developer site](https://dev.folio.org/guid
 
 Run the `setup-test-db.sh` script in the root directory to setup Postgres with a database to be used in tests.
 This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
+
+## Kafka
+
+Mod-inventory-storage implements domain event pattern and requires kafka to be listening to
+`localhost:9092`. You can override kafka port and host by setting `KAFKA_PORT` and
+`KAFKA_HOST` environment variables.
 
 # Building
 
@@ -203,3 +210,16 @@ insensitive and must be unique or not present when adding a new inventory type.
 Changing the start number to a number lower than the current number is not supported and will
 likely lead to generation of duplicate HRIDs. If an inventory type is added that contains a
 duplicate HRID, the module will reject the submission.
+
+# Domain event pattern
+
+The pattern means that every time when an instance is created/updated/removed
+a message is posted to `inventory.instance` kafka topic with following structure:
+```javascript
+{
+  "old": {...}, // the instance before update or delete
+  "new": {...}, // the instance after update or create
+  "type": "UPDATE|DELETE|CREATE", // type of the event
+  "tenant": "diku" // tenant name
+}
+```

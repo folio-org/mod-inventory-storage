@@ -225,8 +225,11 @@ public class ResourceClient {
     }
   }
 
-  public Response attemptToReplace(String id, JsonObject request) {
+  public Response attemptToReplace(UUID id, JsonObject request) {
+    return attemptToReplace(id.toString(), request);
+  }
 
+  public Response attemptToReplace(String id, JsonObject request) {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
     client.put(urlMakerWithId(id), request,
@@ -268,8 +271,7 @@ public class ResourceClient {
     return deleteIfPresent(id != null ? id.toString() : null);
   }
 
-  public void deleteAll() {
-
+  public Response attemptDeleteAll() {
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     try {
@@ -279,7 +281,11 @@ public class ResourceClient {
       throw new RuntimeException(e);
     }
 
-    Response response = TestBase.get(deleteAllFinished);
+    return TestBase.get(deleteAllFinished);
+  }
+
+  public void deleteAll() {
+    final Response response = attemptDeleteAll();
 
     assertThat(String.format(
       "Failed to delete %s: %s", resourceName, response.getBody()),

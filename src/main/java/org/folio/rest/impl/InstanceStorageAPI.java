@@ -1,7 +1,10 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
+import static org.folio.services.domainevent.InstanceDomainEventService.createInstanceEventService;
 
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,8 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.services.domainevent.InstanceDomainEventService;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -111,6 +116,9 @@ public class InstanceStorageAPI implements InstanceStorage {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
 
     try {
+      final InstanceDomainEventService domainEventService =
+        createInstanceEventService(vertxContext, okapiHeaders);
+
       PostgresClient postgresClient =
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
@@ -144,11 +152,23 @@ public class InstanceStorageAPI implements InstanceStorage {
               reply -> {
                 try {
                   if(reply.succeeded()) {
-                    asyncResultHandler.handle(
-                      io.vertx.core.Future.succeededFuture(
-                        PostInstanceStorageInstancesResponse
-                          .respond201WithApplicationJson(entity,
-                              PostInstanceStorageInstancesResponse.headersFor201().withLocation(reply.result()))));
+                    domainEventService.instanceCreated(entity)
+                    .whenComplete((notUsed, error) -> {
+                      if (error == null) {
+                        asyncResultHandler.handle(
+                          io.vertx.core.Future.succeededFuture(
+                            PostInstanceStorageInstancesResponse
+                              .respond201WithApplicationJson(entity,
+                                PostInstanceStorageInstancesResponse.headersFor201()
+                                  .withLocation(reply.result()))));
+                      } else {
+                        asyncResultHandler.handle(
+                          io.vertx.core.Future.succeededFuture(
+                            PostInstanceStorageInstancesResponse.respond500WithTextPlain(
+                              error.getMessage())));
+                      }
+                    });
+
                   }
                   else {
                     if (PgExceptionUtil.isUniqueViolation(reply.cause())) {
@@ -227,19 +247,9 @@ public class InstanceStorageAPI implements InstanceStorage {
                       .respond500WithTextPlain(reply1.cause().getMessage())));
                   return;
                 }
-                postgresClient.execute("DELETE FROM "
-                  + tenantId + "_" + MODULE + "." + INSTANCE_TABLE, reply3 -> {
-                  if (! reply3.succeeded()) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      DeleteInstanceStorageInstancesResponse
-                      .respond500WithTextPlain(reply3.cause().getMessage())));
-                    return;
-                  }
 
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    DeleteInstanceStorageInstancesResponse.respond204()
-                  ));
-                });
+                deleteAllInstances(postgresClient, tenantId, asyncResultHandler,
+                  createInstanceEventService(vertxContext, okapiHeaders));
               });
             });
       }
@@ -334,6 +344,8 @@ public class InstanceStorageAPI implements InstanceStorage {
 
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+    final InstanceDomainEventService domainEventService =
+      createInstanceEventService(vertxContext, okapiHeaders);
 
     postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply1 -> {
       if (! reply1.succeeded()) {
@@ -343,17 +355,7 @@ public class InstanceStorageAPI implements InstanceStorage {
         return;
       }
 
-      postgresClient.delete(INSTANCE_TABLE, instanceId, reply2 -> {
-        if (! reply2.succeeded()) {
-          asyncResultHandler.handle(Future.succeededFuture(
-              DeleteInstanceStorageInstancesByInstanceIdResponse
-              .respond500WithTextPlain(reply2.cause().getMessage())));
-          return;
-        }
-
-        asyncResultHandler.handle(Future.succeededFuture(
-            DeleteInstanceStorageInstancesByInstanceIdResponse.respond204()));
-      });
+      deleteSingleInstance(postgresClient, instanceId, asyncResultHandler, domainEventService);
     });
   }
 
@@ -381,7 +383,14 @@ public class InstanceStorageAPI implements InstanceStorage {
               final Instance existingInstance = (Instance) response.result().getEntity();
               if (Objects.equals(entity.getHrid(), existingInstance.getHrid())) {
                 PgUtil.put(INSTANCE_TABLE, entity, instanceId, okapiHeaders, vertxContext,
-                    PutInstanceStorageInstancesByInstanceIdResponse.class, asyncResultHandler);
+                  PutInstanceStorageInstancesByInstanceIdResponse.class, updateResult -> {
+                    if (instanceUpdatedSuccessfully(updateResult)) {
+                      sendInstanceUpdatedEvent(existingInstance, vertxContext,
+                        okapiHeaders, asyncResultHandler);
+                    } else {
+                      asyncResultHandler.handle(updateResult);
+                    }
+                  });
               } else {
                 asyncResultHandler.handle(Future.succeededFuture(
                     PutInstanceStorageInstancesByInstanceIdResponse
@@ -627,6 +636,101 @@ public class InstanceStorageAPI implements InstanceStorage {
     });
   }
 
+  private void deleteSingleInstance(PostgresClient postgresClient, String instanceId,
+    Handler<AsyncResult<Response>> handler, InstanceDomainEventService domainEventService) {
+
+    postgresClient.getById(INSTANCE_TABLE, instanceId, Instance.class, oldInstanceResult -> {
+      if (oldInstanceResult.failed()) {
+        log.error("Unable to retrieve old instance before remove",
+          oldInstanceResult.cause());
+
+        handler.handle(succeededFuture(DeleteInstanceStorageInstancesByInstanceIdResponse
+          .respond500WithTextPlain(oldInstanceResult.cause().getMessage())));
+        return;
+      }
+
+      postgresClient.delete(INSTANCE_TABLE, instanceId, deleteReply -> {
+        if (deleteReply.failed()) {
+          handler.handle(succeededFuture(DeleteInstanceStorageInstancesByInstanceIdResponse
+              .respond500WithTextPlain(deleteReply.cause().getMessage())));
+          return;
+        }
+
+        domainEventService.instanceDeleted(oldInstanceResult.result())
+          .whenComplete((notUsed, error) -> {
+            if (error == null) {
+              handler.handle(succeededFuture(DeleteInstanceStorageInstancesByInstanceIdResponse
+                .respond204()));
+            } else {
+              handler.handle(succeededFuture(DeleteInstanceStorageInstancesByInstanceIdResponse
+                .respond500WithTextPlain(deleteReply.cause().getMessage())));
+            }
+          });
+      });
+    });
+  }
+
+  private void deleteAllInstances(PostgresClient postgresClient, String tenantId,
+    Handler<AsyncResult<Response>> handler, InstanceDomainEventService domainEventService) {
+
+    postgresClient.get(INSTANCE_TABLE, new Instance(), false, instances -> {
+      if (instances.failed()) {
+        log.error("Unable to retrieve all instances before remove", instances.cause());
+        handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse
+          .respond500WithTextPlain(instances.cause().getMessage())));
+        return;
+      }
+
+      final String deleteAllSql = String.format(
+        "DELETE FROM %s_%s.%s", tenantId, MODULE, INSTANCE_TABLE);
+      postgresClient.execute(deleteAllSql, deleteReply -> {
+        if (deleteReply.failed()) {
+          handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse
+            .respond500WithTextPlain(deleteReply.cause().getMessage())));
+          return;
+        }
+
+        domainEventService.instancesDeleted(instances.result().getResults())
+          .whenComplete((notUsed, error) -> {
+            if (error == null) {
+              handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse.respond204()));
+            } else {
+              handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse
+                .respond500WithTextPlain(error.getMessage())));
+            }
+          });
+      });
+    });
+  }
+
+  private void sendInstanceUpdatedEvent(Instance oldInstance, Context vertxContext,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> handler) {
+
+    final InstanceDomainEventService domainEventService =
+      createInstanceEventService(vertxContext, okapiHeaders);
+
+    // Have to re-reed the record in order to have up-to-date metadata field
+    PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders))
+      .getById(INSTANCE_TABLE, oldInstance.getId(), Instance.class, updatedInstance -> {
+        if (updatedInstance.succeeded()) {
+          domainEventService.instanceUpdated(oldInstance, updatedInstance.result())
+          .whenComplete((notUsed, error) -> {
+            if (error == null) {
+              handler.handle(succeededFuture(PutInstanceStorageInstancesByInstanceIdResponse
+              .respond204()));
+            } else {
+              handler.handle(succeededFuture(PutInstanceStorageInstancesByInstanceIdResponse
+                .respond500WithTextPlain(error.getMessage())));
+            }
+          });
+        } else {
+          log.warn("Unable to retrieve updated instance {}", oldInstance.getId());
+          handler.handle(succeededFuture(PutInstanceStorageInstancesByInstanceIdResponse
+          .respond500WithTextPlain(updatedInstance.cause().getMessage())));
+        }
+      });
+  }
+
   static class PreparedCQL {
     private final String tableName;
     private final CQLWrapper cqlWrapper;
@@ -646,4 +750,7 @@ public class InstanceStorageAPI implements InstanceStorage {
     }
   }
 
+  private boolean instanceUpdatedSuccessfully(AsyncResult<Response> result) {
+    return result.succeeded() && result.result().getStatus() == HTTP_NO_CONTENT.toInt();
+  }
 }

@@ -1,7 +1,9 @@
 package org.folio.rest.impl;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
@@ -10,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.services.kafka.topic.KafkaAdminClientService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javax.ws.rs.core.Response;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -74,6 +79,21 @@ public class TenantRefAPI extends TenantAPI {
     String res = jOutput.encodePrettily();
     log.info("servicePointUser result : " + res);
     return res;
+  }
+
+  @Override
+  @Validate
+  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
+    Handler<AsyncResult<Response>> handler, Context context) {
+
+    final KafkaAdminClientService adminClientService = new KafkaAdminClientService(context.owner());
+    super.postTenant(tenantAttributes, headers,
+      responseResult -> {
+        log.info("Creating kafka topics...");
+        adminClientService.createKafkaTopicsAsync();
+
+        handler.handle(responseResult);
+      }, context);
   }
 
   @Validate

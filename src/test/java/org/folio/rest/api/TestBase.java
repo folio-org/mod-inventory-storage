@@ -17,6 +17,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import io.vertx.core.Future;
@@ -54,6 +55,7 @@ public abstract class TestBase {
   static ResourceClient instanceTypesClient;
   static ResourceClient illPoliciesClient;
   static StatisticalCodeFixture statisticalCodeFixture;
+  static FakeKafkaConsumer kafkaConsumer;
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -97,6 +99,8 @@ public abstract class TestBase {
       .forInstanceTypes(client);
     illPoliciesClient = ResourceClient.forIllPolicies(client);
     statisticalCodeFixture = new StatisticalCodeFixture(client);
+    kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
+    kafkaConsumer.removeAllMessages();
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 

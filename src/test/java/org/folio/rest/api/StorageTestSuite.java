@@ -1,13 +1,5 @@
 package org.folio.rest.api;
 
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -18,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
@@ -34,8 +27,18 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-@RunWith(Suite.class)
+import com.consol.citrus.kafka.embedded.EmbeddedKafkaServer;
+import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
 
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+
+@RunWith(Suite.class)
 @Suite.SuiteClasses({
   InstanceStorageTest.class,
   RecordBulkTest.class,
@@ -69,13 +72,17 @@ import org.junit.runners.Suite;
   AbstractInstanceRecordsAPITest.class,
   OaiPmhViewTest.class,
   InventoryHierarchyViewTest.class,
-  HoldingsSourceTest.class
+  HoldingsSourceTest.class,
+  InstanceDomainEventTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
   private static Logger logger = LogManager.getLogger();
   private static Vertx vertx;
   private static int port;
+
+  private static final EmbeddedKafkaServer kafka = new EmbeddedKafkaServerBuilder()
+    .kafkaServerPort(9092).build();
 
   private StorageTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
@@ -141,6 +148,7 @@ public class StorageTestSuite {
 
     logger.info("preparing tenant");
 
+    kafka.start();
     prepareTenant(TENANT_ID, false);
 
     logger.info("finished @BeforeClass before()");
@@ -155,6 +163,7 @@ public class StorageTestSuite {
     removeTenant(TENANT_ID);
     vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
     PostgresClient.stopEmbeddedPostgres();
+    kafka.stop();
   }
 
   static void deleteAll(URL rootUrl) {
