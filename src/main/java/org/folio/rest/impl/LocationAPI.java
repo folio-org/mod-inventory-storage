@@ -1,8 +1,8 @@
 package org.folio.rest.impl;
 
 import static org.folio.rest.impl.StorageHelper.getCQL;
-import static org.folio.rest.impl.StorageHelper.getTenant;
 import static org.folio.rest.impl.StorageHelper.logAndSaveError;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,7 +75,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = tenantId(okapiHeaders);
     CQLWrapper cql;
     try {
       cql = getCQL(query, limit, offset, LOCATION_TABLE);
@@ -113,7 +113,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
     Handler<AsyncResult<Response>>asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = getTenant(okapiHeaders);
+    String tenantId = tenantId(okapiHeaders);
 
     runLocationChecks(checkIdProvided(entity), checkAtLeastOneServicePoint(entity),
         checkPrimaryServicePointRelationship(entity)).onComplete(checksResult -> {

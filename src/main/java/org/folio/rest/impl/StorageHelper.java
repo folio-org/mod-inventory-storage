@@ -1,19 +1,12 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.TenantTool;
 
 /**
  * Small helpers for mod-inventory-storage.
@@ -50,26 +43,5 @@ public final class StorageHelper {
       .setLimit(new Limit(limit))
       .setOffset(new Offset(offset));
   }
-
-  protected static String getTenant(Map<String, String> headers) {
-    return TenantTool.calculateTenantId(headers.get(RestVerticle.OKAPI_HEADER_TENANT));
-  }
-
-  /**
-   * Return a PostgresClient.
-   * @param vertxContext  Where to get a Vertx from.
-   * @param okapiHeaders  Where to get the tenantId from.
-   * @return the PostgresClient for the vertx and the tenantId
-   */
-  protected static PostgresClient postgresClient(Context vertxContext, Map<String, String> okapiHeaders) {
-    return PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-  }
-
-  public static <T> Future<T> completeFuture(T id) {
-    Promise<T> p = Promise.promise();
-    p.complete(id);
-    return p.future();
-  }
-
 
 }

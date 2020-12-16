@@ -61,7 +61,7 @@ public class HoldingsBatchSyncAPI implements HoldingsStorageBatchSynchronous {
     if (isBlank(holdingsRecord.getHrid())) {
       hridFuture = hridManager.getNextHoldingsHrid();
     } else {
-      hridFuture = StorageHelper.completeFuture(holdingsRecord.getHrid());
+      hridFuture = Future.succeededFuture(holdingsRecord.getHrid());
     }
 
     return hridFuture.map(hrid -> {
