@@ -33,6 +33,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.BadRequestException;
+import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -132,6 +133,7 @@ public class ItemService {
 
   public Future<Response> updateItem(String itemId, Item newItem) {
     return postgresClientFuturized.getById(ITEM_TABLE, itemId, Item.class)
+      .compose(this::refuseIfNotFound)
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
       .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
         .compose(itemWithHolding -> {
@@ -146,6 +148,7 @@ public class ItemService {
 
   public Future<Response> deleteItem(String itemId) {
     return postgresClientFuturized.getById(ITEM_TABLE, itemId, Item.class)
+      .compose(this::refuseIfNotFound)
       .compose(item -> {
         final Promise<Response> deleteResult = promise();
         deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
@@ -225,5 +228,9 @@ public class ItemService {
   private Future<String> getHrid(Item entity) {
     return isBlank(entity.getHrid())
       ? hridManager.getNextItemHrid() : succeededFuture(entity.getHrid());
+  }
+
+  private Future<Item> refuseIfNotFound(Item item) {
+    return item != null ? succeededFuture(item) : failedFuture(new NotFoundException("Not found"));
   }
 }

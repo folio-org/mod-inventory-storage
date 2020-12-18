@@ -10,6 +10,7 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.BadRequestException;
+import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 
@@ -55,6 +56,8 @@ public final class EndpointFailureHandler {
 
       if (error instanceof BadRequestException) {
         responseToReturn = textPlainResponse(400, error);
+      } else if (error instanceof NotFoundException) {
+        responseToReturn = textPlainResponse(404, error);
       } else if (error instanceof ValidationException) {
         final Errors errors = ((ValidationException) error).getErrors();
         responseToReturn = failedValidationResponse(errors);
