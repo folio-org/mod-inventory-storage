@@ -18,6 +18,6 @@ public class KafkaProducerServiceTest {
 
     assertThrows("Unable to deserialize message", IllegalArgumentException.class,
       () -> producer.sendMessage("id", new Object(), INVENTORY_INSTANCE)
-      .get(1, TimeUnit.SECONDS));
+      .toCompletionStage().toCompletableFuture().get(1, TimeUnit.SECONDS));
   }
 }
