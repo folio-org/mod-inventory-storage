@@ -10,26 +10,26 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DomainEvent {
+public class DomainEvent<T> {
   @JsonProperty("old")
-  private Object oldEntity;
+  private T oldEntity;
   @JsonProperty("new")
-  private Object newEntity;
+  private T newEntity;
   private DomainEventType type;
   private String tenant;
 
-  public DomainEvent(Object oldEntity, Object newEntity, DomainEventType type, String tenant) {
+  public DomainEvent(T oldEntity, T newEntity, DomainEventType type, String tenant) {
     this.oldEntity = oldEntity;
     this.newEntity = newEntity;
     this.type = type;
     this.tenant = tenant;
   }
 
-  public Object getOldEntity() {
+  public T getOldEntity() {
     return oldEntity;
   }
 
-  public void setOldEntity(Object oldEntity) {
+  public void setOldEntity(T oldEntity) {
     this.oldEntity = oldEntity;
   }
 
@@ -37,7 +37,7 @@ public class DomainEvent {
     return newEntity;
   }
 
-  public void setNewEntity(Object newEntity) {
+  public void setNewEntity(T newEntity) {
     this.newEntity = newEntity;
   }
 
@@ -67,15 +67,15 @@ public class DomainEvent {
       .toString();
   }
 
-  public static DomainEvent updateEvent(Object oldEntity, Object newEntity, String tenant) {
-    return new DomainEvent(oldEntity, newEntity, UPDATE, tenant);
+  public static <T> DomainEvent<T> updateEvent(T oldEntity, T newEntity, String tenant) {
+    return new DomainEvent<>(oldEntity, newEntity, UPDATE, tenant);
   }
 
-  public static DomainEvent createEvent(Object newEntity, String tenant) {
-    return new DomainEvent(null, newEntity, CREATE, tenant);
+  public static <T> DomainEvent<T> createEvent(T newEntity, String tenant) {
+    return new DomainEvent<>(null, newEntity, CREATE, tenant);
   }
 
-  public static DomainEvent deleteEvent(Object oldEntity, String tenant) {
-    return new DomainEvent(oldEntity, null, DELETE, tenant);
+  public static <T> DomainEvent<T> deleteEvent(T oldEntity, String tenant) {
+    return new DomainEvent<>(oldEntity, null, DELETE, tenant);
   }
 }
