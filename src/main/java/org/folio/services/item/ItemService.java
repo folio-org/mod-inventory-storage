@@ -35,6 +35,8 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
@@ -116,8 +118,13 @@ public class ItemService {
 
         final Promise<Response> postSyncResult = promise();
 
-        postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, okapiHeaders, vertxContext,
-          PostItemStorageBatchSynchronousResponse.class, postSyncResult);
+        final List<Item> itemsWithUpdatedEffectiveValues = pair.getLeft()
+          .stream()
+          .map(ItemWithHolding::getItem)
+          .collect(Collectors.toList());
+
+        postSync(ITEM_TABLE, itemsWithUpdatedEffectiveValues, MAX_ENTITIES, upsert,
+          okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class, postSyncResult);
 
         return postSyncResult.future();
       });
@@ -160,8 +167,10 @@ public class ItemService {
   public Future<Void> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
     HoldingsRecord holdingsRecord) {
 
-    final Item sample = new Item().withHoldingsRecordId(holdingsRecord.getId());
-    return postgresClientFuturized.get(ITEM_TABLE, sample)
+    final Criterion criterion = new Criterion(new Criteria().setJSONB(false)
+      .addField("holdingsRecordId").setOperation("=").setVal(holdingsRecord.getId()));
+
+    return postgresClientFuturized.get(ITEM_TABLE, Item.class, criterion)
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection, items, holdingsRecord))
       .map(notUsed -> null);
   }

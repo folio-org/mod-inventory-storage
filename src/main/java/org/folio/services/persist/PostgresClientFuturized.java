@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.interfaces.Results;
 
@@ -38,12 +39,20 @@ public class PostgresClientFuturized {
     return getByIdResult.future();
   }
 
-  public <T> Future<List<T>> get(String tableName, T sample) {
+  public <T> Future<List<T>> get(String tableName, T object) {
     final Promise<Results<T>> getAllItemsResult = promise();
 
-    postgresClient.get(tableName, sample, false, getAllItemsResult);
+    postgresClient.get(tableName, object, false, getAllItemsResult);
 
     return getAllItemsResult.future().map(Results::getResults);
+  }
+
+  public <T> Future<List<T>> get(String tableName, Class<T> type, Criterion criterion) {
+    final Promise<Results<T>> getItemsResult = promise();
+
+    postgresClient.get(tableName, type, criterion, false, getItemsResult);
+
+    return getItemsResult.future().map(Results::getResults);
   }
 
   public Future<RowSet<Row>> execute(String query) {
