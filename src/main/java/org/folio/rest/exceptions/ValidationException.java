@@ -2,8 +2,8 @@ package org.folio.rest.exceptions;
 
 import org.folio.rest.jaxrs.model.Errors;
 
-public class ValidationException extends RuntimeException {
-  private final Errors errors;
+public final class ValidationException extends InventoryProcessingException {
+  private final transient Errors errors;
 
   public ValidationException(Errors errors) {
     super("Validation exception: " + errors);
