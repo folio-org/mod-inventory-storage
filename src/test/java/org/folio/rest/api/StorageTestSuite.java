@@ -258,10 +258,6 @@ public class StorageTestSuite {
     ExecutionException,
     TimeoutException {
 
-    CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
-
-    HttpClient client = new HttpClient(vertx);
-
     JsonArray ar = new JsonArray();
     ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
     ar.add(new JsonObject().put("key", "loadSample").put("value", Boolean.toString(loadSample)));
@@ -272,28 +268,7 @@ public class StorageTestSuite {
       jo.put("module_from", moduleFrom);
     }
     jo.put("module_to", moduleTo);
-
-    client.post(storageUrl("/_/tenant"), jo, tenantId,
-      ResponseHandler.any(tenantPrepared));
-
-    Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
-
-    String failureMessage = String.format("Tenant post failed: %s: %s",
-      response.getStatusCode(), response.getBody());
-
-    assertThat(failureMessage, response.getStatusCode(), is(201));
-
-    String id = response.getJson().getString("id");
-
-    tenantPrepared = new CompletableFuture<>();
-    client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
-        ResponseHandler.any(tenantPrepared));
-    response = tenantPrepared.get(60, TimeUnit.SECONDS);
-
-    failureMessage = String.format("Tenant get failed: %s: %s",
-        response.getStatusCode(), response.getBody());
-
-    assertThat(failureMessage, response.getStatusCode(), is(200));
+    tenantOp(tenantId, jo);
   }
 
   static void prepareTenant(String tenantId, boolean loadSample)
@@ -303,19 +278,19 @@ public class StorageTestSuite {
     prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
-  static void removeTenant(String tenantId)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
-
-    HttpClient client = new HttpClient(vertx);
+  static void removeTenant(String tenantId) throws InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject jo = new JsonObject();
     jo.put("purge", Boolean.TRUE);
 
-    client.post(storageUrl("/_/tenant"), jo, tenantId,
+    tenantOp(tenantId, jo);
+  }
+
+  static void tenantOp(String tenantId, JsonObject job) throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
+
+    HttpClient client = new HttpClient(vertx);
+    client.post(storageUrl("/_/tenant"), job, tenantId,
         ResponseHandler.any(tenantPrepared));
 
     Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
@@ -323,22 +298,21 @@ public class StorageTestSuite {
     String failureMessage = String.format("Tenant post failed: %s: %s",
         response.getStatusCode(), response.getBody());
 
-    assertThat(failureMessage, response.getStatusCode(), is(201));
+    // wait if not complete ...
+    if (response.getStatusCode() == 201) {
+      String id = response.getJson().getString("id");
 
-    String id = response.getJson().getString("id");
+      tenantPrepared = new CompletableFuture<>();
+      client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
+          ResponseHandler.any(tenantPrepared));
+      response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
-    tenantPrepared = new CompletableFuture<>();
-    client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
-        ResponseHandler.any(tenantPrepared));
-    response = tenantPrepared.get(60, TimeUnit.SECONDS);
+      failureMessage = String.format("Tenant get failed: %s: %s",
+          response.getStatusCode(), response.getBody());
 
-    failureMessage = String.format("Tenant get failed: %s: %s",
-        response.getStatusCode(), response.getBody());
-
-    assertThat(failureMessage, response.getStatusCode(), is(200));
-
-    // Prevent "aclcheck_error" "permission denied for schema"
-    // when recreating the ROLE with the same name but a different role OID.
-    PostgresClient.closeAllClients();
+      assertThat(failureMessage, response.getStatusCode(), is(200));
+    } else {
+      assertThat(failureMessage, response.getStatusCode(), is(204));
+    }
   }
 }
