@@ -56,12 +56,12 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
-      <version>32.0.0-20201215.110850-9</version>
+      <version>32.0.0-20201215.161224-10</version>
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>util</artifactId>
-      <version>${raml-module-builder-version}</version>
+      <version>32.0.0-20201215.161149-10</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -76,7 +76,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>testing</artifactId>
-      <version>${raml-module-builder-version}</version>
+      <version>32.0.0-20201215.161148-10</version>
       <scope>test</scope>
     </dependency>
     <dependency>
