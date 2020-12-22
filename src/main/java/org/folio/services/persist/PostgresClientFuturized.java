@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.interfaces.Results;
 
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
@@ -22,6 +24,10 @@ public class PostgresClientFuturized {
 
   public PostgresClientFuturized(PostgresClient postgresClient) {
     this.postgresClient = postgresClient;
+  }
+
+  public PostgresClientFuturized(Context context, Map<String, String> okapiHeaders) {
+    this(PgUtil.postgresClient(context, okapiHeaders));
   }
 
   public <T> Future<String> save(String table, String id, T entity) {
