@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -86,14 +88,21 @@ public class TenantRefAPI extends TenantAPI {
   public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
     Handler<AsyncResult<Response>> handler, Context context) {
 
-    final KafkaAdminClientService adminClientService = new KafkaAdminClientService(context.owner());
-    super.postTenant(tenantAttributes, headers,
-      responseResult -> {
-        log.info("Creating kafka topics...");
-        adminClientService.createKafkaTopicsAsync();
-
-        handler.handle(responseResult);
-      }, context);
+    new KafkaAdminClientService(context.owner())
+      // have to create topics before tenant init,
+      // because on init we can create sample/ref data which
+      // has to be sent to the queue as well
+      .createKafkaTopics()
+      .onComplete(topicCreateResult -> {
+        if (topicCreateResult.failed()) {
+          log.error("Unable to create kafka topics", topicCreateResult.cause());
+          handler.handle(succeededFuture(PostTenantResponse
+            .respond500WithTextPlain(topicCreateResult.cause().getMessage())));
+        } else {
+          log.info("Topics created successfully, proceeding with tenant initialization...");
+          super.postTenant(tenantAttributes, headers, handler, context);
+        }
+      });
   }
 
   @Validate
