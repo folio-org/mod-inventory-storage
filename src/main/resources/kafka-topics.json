@@ -4,6 +4,11 @@
       "name": "inventory.instance",
       "numPartitions": 1,
       "replicationFactor": 1
+    },
+    {
+      "name": "inventory.item",
+      "numPartitions": 50,
+      "replicationFactor": 1
     }
   ]
 }

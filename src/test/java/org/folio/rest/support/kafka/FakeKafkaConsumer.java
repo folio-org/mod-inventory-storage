@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.vertx.core.Vertx;
@@ -20,7 +21,7 @@ public final class FakeKafkaConsumer {
   public final FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, String> consumer = create(vertx, consumerProperties());
 
-    consumer.subscribe("inventory.instance");
+    consumer.subscribe(Set.of("inventory.instance", "inventory.item"));
     consumer.handler(message -> {
       final List<JsonObject> objects = messages
         .computeIfAbsent(message.key(), k -> new ArrayList<>());
