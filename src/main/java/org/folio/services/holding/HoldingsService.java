@@ -58,7 +58,7 @@ public class HoldingsService {
 
     return hridFuture
       .map(entity::withHrid)
-      .compose(holdingsRepository::save)
+      .compose(hr -> holdingsRepository.save(hr.getId(), hr))
       .map(notUsed -> null);
   }
 

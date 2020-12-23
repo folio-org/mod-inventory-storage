@@ -26,13 +26,10 @@ public class PostgresClientFuturized {
     this.postgresClient = postgresClient;
   }
 
-  public PostgresClientFuturized(Context context, Map<String, String> okapiHeaders) {
-    this(PgUtil.postgresClient(context, okapiHeaders));
-  }
-
-  public <T> Future<String> save(String table, T entity) {
+  public <T> Future<String> save(String table, String id, T entity) {
     final Promise<String> saveResult = promise();
-    postgresClient.save(table, entity, saveResult);
+
+    postgresClient.save(table, id, entity, saveResult);
 
     return saveResult.future();
   }

@@ -36,8 +36,8 @@ abstract class AbstractRepository<T> {
     this.recordType = recordType;
   }
 
-  public Future<String> save(T entity) {
-    return postgresClientFuturized.save(tableName, entity);
+  public Future<String> save(String id, T entity) {
+    return postgresClientFuturized.save(tableName, id, entity);
   }
 
   public Future<T> getById(String id) {
