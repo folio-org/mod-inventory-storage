@@ -1,4 +1,4 @@
-package org.folio.services.persist;
+package org.folio.persist;
 
 import static io.vertx.core.Promise.promise;
 
@@ -30,9 +30,9 @@ public class PostgresClientFuturized {
     this(PgUtil.postgresClient(context, okapiHeaders));
   }
 
-  public <T> Future<String> save(String table, String id, T entity) {
+  public <T> Future<String> save(String table, T entity) {
     final Promise<String> saveResult = promise();
-    postgresClient.save(table, id, entity, saveResult);
+    postgresClient.save(table, entity, saveResult);
 
     return saveResult.future();
   }

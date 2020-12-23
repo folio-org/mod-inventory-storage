@@ -2,8 +2,6 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
-import static org.folio.rest.impl.HoldingsStorageAPI.ITEM_TABLE;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
@@ -22,11 +20,12 @@ import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.HoldingsRepository;
+import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.services.batch.BatchOperation;
 import org.folio.services.item.effectivevalues.ItemWithHolding;
-import org.folio.services.persist.PostgresClientFuturized;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -34,11 +33,13 @@ import io.vertx.core.Future;
 public class ItemDomainEventService {
   private static final Logger log = getLogger(ItemDomainEventService.class);
 
-  private final PostgresClientFuturized postgresClientFuturized;
+  private final ItemRepository itemRepository;
+  private final HoldingsRepository holdingsRepository;
   private final BaseDomainEventService<Item> domainEventService;
 
   public ItemDomainEventService(Context context, Map<String, String> okapiHeaders) {
-    postgresClientFuturized = new PostgresClientFuturized(context, okapiHeaders);
+    itemRepository = new ItemRepository(context, okapiHeaders);
+    holdingsRepository = new HoldingsRepository(context, okapiHeaders);
     domainEventService = new BaseDomainEventService<>(context, okapiHeaders,
       ITEM_INSTANCE);
   }
@@ -50,7 +51,7 @@ public class ItemDomainEventService {
         return succeededFuture(response);
       }
 
-      return postgresClientFuturized.getById(ITEM_TABLE, oldItem.getId(), Item.class)
+      return itemRepository.getById(oldItem.getId())
         .compose(updatedItem -> domainEventService.recordUpdated(instanceId, oldItem, updatedItem))
         .map(response);
     };
@@ -78,14 +79,14 @@ public class ItemDomainEventService {
         return succeededFuture(response);
       }
 
-      final List<Pair<String, Item>> createdItemsPairs = batchOperation
+      final var createdItemsPairs = batchOperation
         .getRecordsToBeCreated().stream()
         .map(itemAndHolding -> new ImmutablePair<>(itemAndHolding.getInstanceId(),
           itemAndHolding.getItem()))
-        .collect(Collectors.toList());
+        .collect(Collectors.<Pair<String, Item>>toList());
 
-      final Set<String> updatedItemsIds = batchOperation
-        .getExistingRecordsBeforeUpdate().stream()
+      final var updatedItemsIds = batchOperation.getExistingRecordsBeforeUpdate()
+        .stream()
         .map(ItemWithHolding::getItemId)
         .collect(Collectors.toSet());
 
@@ -105,7 +106,7 @@ public class ItemDomainEventService {
         return succeededFuture(response);
       }
 
-      return fetchHoldingForItem(item)
+      return holdingsRepository.getById(item.getHoldingsRecordId())
         .compose(holding -> domainEventService.recordRemoved(holding.getInstanceId(), item))
         .map(response);
     };
@@ -117,20 +118,20 @@ public class ItemDomainEventService {
       return succeededFuture();
     }
 
-    return fetchHoldingForItems(items)
+    return holdingsRepository.getById(items, Item::getHoldingsRecordId)
       .compose(holdingsMap -> {
-        final List<Pair<String, Item>> instanceIdToItemPairs = items.stream()
+        final var instanceIdToItemPairs = items.stream()
           .map(item -> {
             final HoldingsRecord hr = holdingsMap.get(item.getHoldingsRecordId());
             return new ImmutablePair<>(hr.getInstanceId(), item);
-          }).collect(Collectors.toList());
+          }).collect(Collectors.<Pair<String, Item>>toList());
 
         return domainEventService.recordsRemoved(instanceIdToItemPairs);
       });
   }
 
   public Future<Void> itemsUpdated(HoldingsRecord holdingsRecord, List<Item> oldItems) {
-    final List<ItemWithHolding> itemWithHoldings = oldItems.stream()
+    final var itemWithHoldings = oldItems.stream()
       .map(item -> new ItemWithHolding(item, holdingsRecord))
       .collect(Collectors.toList());
 
@@ -143,13 +144,9 @@ public class ItemDomainEventService {
       return succeededFuture();
     }
 
-    final Set<String> updatedItemIds = oldItems.stream()
-      .map(ItemWithHolding::getItemId)
-      .collect(Collectors.toSet());
+    log.info("[{}] items were updated, sending events for them", oldItems.size());
 
-    log.info("[{}] items were updated, sending events for them", updatedItemIds.size());
-
-    return postgresClientFuturized.getById(ITEM_TABLE, updatedItemIds, Item.class)
+    return itemRepository.getById(oldItems, ItemWithHolding::getItemId)
       .map(updatedItems -> mapOldItemsToUpdatedItems(updatedItems, oldItems))
       .compose(domainEventService::recordsUpdated);
   }
@@ -165,18 +162,5 @@ public class ItemDomainEventService {
 
         return new ImmutableTriple<>(instanceId, oldItem, newItem);
       }).collect(Collectors.toList());
-  }
-
-  private Future<Map<String, HoldingsRecord>> fetchHoldingForItems(List<Item> items) {
-    final Set<String> holdingsId = items.stream()
-      .map(Item::getHoldingsRecordId)
-      .collect(Collectors.toSet());
-
-    return postgresClientFuturized.getById(HOLDINGS_RECORD_TABLE, holdingsId, HoldingsRecord.class);
-  }
-
-  private Future<HoldingsRecord> fetchHoldingForItem(Item item) {
-    return postgresClientFuturized.getById(HOLDINGS_RECORD_TABLE, item.getHoldingsRecordId(),
-      HoldingsRecord.class);
   }
 }

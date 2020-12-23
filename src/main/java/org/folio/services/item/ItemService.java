@@ -6,6 +6,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.HoldingsStorageAPI.ITEM_TABLE;
@@ -19,25 +20,21 @@ import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.ItemRepository;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
@@ -47,7 +44,6 @@ import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.batch.BatchOperation;
 import org.folio.services.domainevent.ItemDomainEventService;
 import org.folio.services.item.effectivevalues.ItemWithHolding;
-import org.folio.services.persist.PostgresClientFuturized;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -58,24 +54,23 @@ import io.vertx.sqlclient.RowSet;
 
 public class ItemService {
   private static final Logger log = getLogger(ItemService.class);
-  private static final String WHERE_CLAUSE = "WHERE id = '%s'";
 
-  private final PostgresClient postgresClient;
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
-  private final PostgresClientFuturized postgresClientFuturized;
   private final ItemDomainEventService domainEventService;
+  private final ItemRepository itemRepository;
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
-    postgresClient = postgresClient(vertxContext, okapiHeaders);
+
+    final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     hridManager = new HridManager(vertxContext, postgresClient);
     effectiveValuesService = new ItemEffectiveValuesService(postgresClient);
-    postgresClientFuturized = new PostgresClientFuturized(postgresClient);
     domainEventService = new ItemDomainEventService(vertxContext, okapiHeaders);
+    itemRepository = new ItemRepository(vertxContext, okapiHeaders);
   }
 
   public Future<Response> createItem(Item entity) {
@@ -102,7 +97,7 @@ public class ItemService {
       .map(item -> {
         item.getStatus().setDate(itemStatusDate);
         return getHrid(item).map(item::withHrid);
-      }).collect(Collectors.toList());
+      }).collect(toList());
 
     return all(setHridFutures)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
@@ -110,9 +105,9 @@ public class ItemService {
       .compose(batchOperation -> {
         final Promise<Response> postSyncResult = promise();
 
-        final List<Item> itemsWithUpdatedEffectiveValues = batchOperation.allRecordsStream()
+        final var itemsWithUpdatedEffectiveValues = batchOperation.allRecordsStream()
           .map(ItemWithHolding::getItem)
-          .collect(Collectors.toList());
+          .collect(toList());
 
         postSync(ITEM_TABLE, itemsWithUpdatedEffectiveValues, MAX_ENTITIES, upsert,
           okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class, postSyncResult);
@@ -123,7 +118,7 @@ public class ItemService {
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
-    return postgresClientFuturized.getById(ITEM_TABLE, itemId, Item.class)
+    return itemRepository.getById(itemId)
       .compose(this::refuseIfNotFound)
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
       .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
@@ -140,7 +135,7 @@ public class ItemService {
   }
 
   public Future<Response> deleteItem(String itemId) {
-    return postgresClientFuturized.getById(ITEM_TABLE, itemId, Item.class)
+    return itemRepository.getById(itemId)
       .compose(this::refuseIfNotFound)
       .compose(item -> {
         final Promise<Response> deleteResult = promise();
@@ -154,21 +149,15 @@ public class ItemService {
   }
 
   public Future<Void> deleteAllItems() {
-    final String removeAllQuery = format("DELETE FROM %s_mod_inventory_storage.item",
-      tenantId(okapiHeaders));
-
-    return postgresClientFuturized.get(ITEM_TABLE, new Item())
-      .compose(allItems -> postgresClientFuturized.execute(removeAllQuery)
+    return itemRepository.getAll()
+      .compose(allItems -> itemRepository.deleteAll()
         .compose(notUsed -> domainEventService.itemsRemoved(allItems)));
   }
 
   public Future<Void> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
     HoldingsRecord holdingsRecord) {
 
-    final Criterion criterion = new Criterion(new Criteria().setJSONB(false)
-      .addField("holdingsRecordId").setOperation("=").setVal(holdingsRecord.getId()));
-
-    return postgresClientFuturized.get(ITEM_TABLE, Item.class, criterion)
+    return itemRepository.getItemsForHoldingRecord(holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection, items, holdingsRecord)
         .compose(notUsed -> domainEventService.itemsUpdated(holdingsRecord, items)));
   }
@@ -177,17 +166,16 @@ public class ItemService {
     AsyncResult<SQLConnection> connectionResult, List<Item> items, HoldingsRecord holdingsRecord) {
 
     final Promise<RowSet<Row>> allItemsUpdated = promise();
-    final List<Function<SQLConnection, Future<RowSet<Row>>>> batchFactories = items.stream()
+    final var batchFactories = items.stream()
       .map(item -> new ItemWithHolding(item, holdingsRecord))
       .map(EffectiveCallNumberComponentsUtil::setCallNumberComponents)
       .map(ItemEffectiveLocationUtil::updateItemEffectiveLocation)
-      .map(itemWithHolding -> updateSingleItemBatchFactory(itemWithHolding.getItemId(),
-        itemWithHolding.getItem()))
-      .collect(Collectors.toList());
+      .map(this::updateSingleItemBatchFactory)
+      .collect(toList());
 
     final SQLConnection connection = connectionResult.result();
     Future<RowSet<Row>> lastUpdate = succeededFuture();
-    for (Function<SQLConnection, Future<RowSet<Row>>> factory : batchFactories) {
+    for (var factory : batchFactories) {
       lastUpdate = lastUpdate.compose(prev -> factory.apply(connection));
     }
 
@@ -196,17 +184,10 @@ public class ItemService {
   }
 
   private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(
-    String id, Item entity) {
+    ItemWithHolding itemWithHolding) {
 
-    return connection -> {
-      final Promise<RowSet<Row>> updateResultFuture = promise();
-      final Future<SQLConnection> connectionResult = succeededFuture(connection);
-
-      postgresClient.update(connectionResult, ITEM_TABLE, entity, "jsonb",
-        format(WHERE_CLAUSE, id), false, updateResultFuture);
-
-      return updateResultFuture.future();
-    };
+    return connection -> itemRepository.update(connection, itemWithHolding.getItemId(),
+      itemWithHolding.getItem());
   }
 
   private Future<Item> refuseWhenHridChanged(Item oldItem, Item newItem) {
@@ -236,27 +217,23 @@ public class ItemService {
       return succeededFuture(new BatchOperation<>(allItems, emptyList(), emptyList()));
     }
 
-    final Set<String> itemIds = allItems.stream()
-      .map(ItemWithHolding::getItemId)
-      .collect(Collectors.toSet());
-
-    return postgresClientFuturized.getById(ITEM_TABLE, itemIds, Item.class)
+    return itemRepository.getById(allItems, ItemWithHolding::getItemId)
       .map(foundItems -> {
-        final List<ItemWithHolding> itemsToBeCreated = allItems.stream()
+        final var itemsToBeCreated = allItems.stream()
           .filter(item -> !foundItems.containsKey(item.getItemId()))
-          .collect(Collectors.toList());
+          .collect(toList());
 
         // new Item representations
-        final List<ItemWithHolding> itemsToBeUpdated = allItems.stream()
+        final var itemsToBeUpdated = allItems.stream()
           .filter(item -> foundItems.containsKey(item.getItemId()))
-          .collect(Collectors.toList());
+          .collect(toList());
 
         // old Item representations
-        final List<ItemWithHolding> existingRecordsBeforeUpdate = itemsToBeUpdated.stream()
+        final var existingRecordsBeforeUpdate = itemsToBeUpdated.stream()
           .map(itemWithHolding -> {
-            final Item itemBeforeUpdate = foundItems.get(itemWithHolding.getItemId());
+            final var itemBeforeUpdate = foundItems.get(itemWithHolding.getItemId());
             return new ItemWithHolding(itemBeforeUpdate, itemWithHolding.getHoldingsRecord());
-          }).collect(Collectors.toList());
+          }).collect(toList());
 
         return new BatchOperation<>(itemsToBeCreated, itemsToBeUpdated, existingRecordsBeforeUpdate);
       });
