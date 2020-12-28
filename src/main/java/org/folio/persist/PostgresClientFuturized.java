@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.interfaces.Results;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;

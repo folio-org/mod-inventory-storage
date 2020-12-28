@@ -21,6 +21,9 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNowAsString;
+import static org.folio.rest.support.matchers.DomainEventAsserts.assertCreateEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAsserts.assertRemoveEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAsserts.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
@@ -72,6 +75,7 @@ import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.matchers.DomainEventAsserts;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -192,6 +196,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
     assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
+    assertCreateEventForItem(itemFromGet);
   }
 
   @Test
@@ -260,6 +265,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject updatedItemResponse = itemsClient.getById(id).getJson();
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
+    assertUpdateEventForItem(createdItem, getById(id).getJson());
   }
 
   @Test
@@ -882,6 +888,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     for (Object item : itemsArray) {
       assertExists((JsonObject) item);
     }
+
+    itemsArray.stream()
+      .map(obj -> (JsonObject) obj)
+      .forEach(DomainEventAsserts::assertCreateEventForItem);
   }
 
   @Test
@@ -919,7 +929,32 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canPostSynchronousBatchWithExistingIdUpsertTrue() {
-    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HTTP_CREATED));
+    final JsonArray itemsArray1 = threeItems();
+    final JsonArray itemsArray2 = threeItems();
+
+    final var createdItemIds = List.of(
+      itemsArray1.getJsonObject(1).getString("id"),
+      itemsArray1.getJsonObject(2).getString("id"),
+      itemsArray2.getJsonObject(1).getString("id"),
+      itemsArray2.getJsonObject(2).getString("id"));
+
+    final var firstResponse = postSynchronousBatch("?upsert=true", itemsArray1);
+
+    final var existingId = itemsArray1.getJsonObject(0).getString("id");
+    final var itemToUpdate = getById(existingId);
+    itemsArray2.getJsonObject(0).put("id", existingId);
+
+    final var secondResponse = postSynchronousBatch("?upsert=true", itemsArray2);
+
+    assertThat(firstResponse.getStatusCode(), is(201));
+    assertThat(secondResponse.getStatusCode(), is(201));
+
+    createdItemIds.stream()
+      .map(this::getById)
+      .map(Response::getJson)
+      .forEach(DomainEventAsserts::assertCreateEventForItem);
+
+    assertUpdateEventForItem(itemToUpdate.getJson(), getById(existingId).getJson());
   }
 
   @Test
@@ -1377,7 +1412,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
 
-    createItem(itemToCreate);
+    final JsonObject createdItem = createItem(itemToCreate);
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
@@ -1396,6 +1431,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertRemoveEventForItem(createdItem);
   }
 
   @Test
@@ -1733,11 +1769,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
-    createItem(smallAngryPlanet(holdingsRecordId));
-    createItem(nod(holdingsRecordId));
-    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
-    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
-    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+    final var createdItems = List.of(
+      createItem(smallAngryPlanet(holdingsRecordId)),
+      createItem(nod(holdingsRecordId)),
+      createItem(uprooted(UUID.randomUUID(), holdingsRecordId)),
+      createItem(temeraire(UUID.randomUUID(), holdingsRecordId)),
+      createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId)));
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
@@ -1761,6 +1798,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(allItems.size(), is(0));
     assertThat(responseBody.getInteger("totalRecords"), is(0));
+
+    createdItems.forEach(DomainEventAsserts::assertRemoveEventForItem);
   }
 
   @Test
