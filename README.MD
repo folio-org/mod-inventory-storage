@@ -213,13 +213,20 @@ duplicate HRID, the module will reject the submission.
 
 # Domain event pattern
 
-The pattern means that every time when an instance is created/updated/removed
-a message is posted to `inventory.instance` kafka topic with following structure:
+The pattern means that every time when an instance/item is created/updated/removed
+a message is posted to kafka topic:
+* `inventory.instance` - for instances;
+* `inventory.item` - for items;
+
+The event payload has following structure:
 ```javascript
 {
-  "old": {...}, // the instance before update or delete
-  "new": {...}, // the instance after update or create
+  "old": {...}, // the instance/item before update or delete
+  "new": {...}, // the instance/item after update or create
   "type": "UPDATE|DELETE|CREATE", // type of the event
   "tenant": "diku" // tenant name
 }
 ```
+
+Kafka partition key for the both topics is instance id (for items it is retrieved from
+associated holding record).
