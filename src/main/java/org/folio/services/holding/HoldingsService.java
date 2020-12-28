@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -15,9 +16,11 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
+import org.folio.services.domainevent.ItemDomainEventService;
 import org.folio.services.item.ItemService;
 
 import io.vertx.core.AsyncResult;
@@ -33,12 +36,14 @@ public class HoldingsService {
   private final HridManager hridManager;
   private final ItemService itemService;
   private final HoldingsRepository holdingsRepository;
+  private final ItemDomainEventService itemEventService;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
     itemService = new ItemService(context, okapiHeaders);
     postgresClient = postgresClient(context, okapiHeaders);
     hridManager = new HridManager(context, postgresClient);
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
+    itemEventService = new ItemDomainEventService(context, okapiHeaders);
   }
 
   public Future<Void> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
@@ -65,28 +70,36 @@ public class HoldingsService {
   private Future<Void> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     return refuseIfHridChanged(oldHoldings, newHoldings)
       .compose(notUsed -> {
-        final Promise<Void> overallResult = promise();
+        final Promise<List<Item>> overallResult = promise();
 
         postgresClient.startTx(
           connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
             .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
             .onComplete(handleTransaction(connection, overallResult)));
 
-        return overallResult.future();
+        return overallResult.future()
+          .compose(itemsBeforeUpdate -> itemEventService.itemsUpdated(newHoldings, itemsBeforeUpdate));
       });
   }
 
-  private Handler<AsyncResult<Void>> handleTransaction(
-    AsyncResult<SQLConnection> connection, Promise<Void> overallResult) {
+  private <T> Handler<AsyncResult<T>> handleTransaction(
+    AsyncResult<SQLConnection> connection, Promise<T> overallResult) {
 
     return transactionResult -> {
       if (transactionResult.succeeded()) {
-        postgresClient.endTx(connection, overallResult);
+        postgresClient.endTx(connection, commitResult -> {
+          if (commitResult.succeeded()) {
+            overallResult.complete(transactionResult.result());
+          } else {
+            log.error("Unable to commit transaction", commitResult.cause());
+            overallResult.fail(commitResult.cause());
+          }
+        });
       } else {
-        log.warn("Reverting transaction");
+        log.error("Reverting transaction");
         postgresClient.rollbackTx(connection, revertResult -> {
           if (revertResult.failed()) {
-            log.warn("Unable to revert transaction", revertResult.cause());
+            log.error("Unable to revert transaction", revertResult.cause());
           }
           overallResult.fail(transactionResult.cause());
         });

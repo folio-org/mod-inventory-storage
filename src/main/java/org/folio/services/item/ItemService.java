@@ -20,7 +20,9 @@ import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.support.CollectionUtil.deepCopy;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -154,16 +156,20 @@ public class ItemService {
         .compose(notUsed -> domainEventService.itemsRemoved(allItems)));
   }
 
-  public Future<Void> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
+  /**
+   * @return items before update.
+   */
+  public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
     HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(holdingsRecord.getId())
-      .compose(items -> updateEffectiveCallNumbersAndLocation(connection, items, holdingsRecord)
-        .compose(notUsed -> domainEventService.itemsUpdated(holdingsRecord, items)));
+      .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
+        deepCopy(items, Item.class), holdingsRecord)
+        .map(items));
   }
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
-    AsyncResult<SQLConnection> connectionResult, List<Item> items, HoldingsRecord holdingsRecord) {
+    AsyncResult<SQLConnection> connectionResult, Collection<Item> items, HoldingsRecord holdingsRecord) {
 
     final Promise<RowSet<Row>> allItemsUpdated = promise();
     final var batchFactories = items.stream()
