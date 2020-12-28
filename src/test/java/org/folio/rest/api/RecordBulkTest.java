@@ -94,6 +94,28 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canGetInstanceBulkOfIdWithLimitAndOffset()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    int totalMoons = 20;
+    int expectedMatches = totalMoons;
+    Map<String, JsonObject> moons = manyMoons(totalMoons,
+      RecordBulkIdsGetField.ID);
+    createManyMoons(moons);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    URL getInstanceUrl = recordBulkUrl("/ids?type=idlimit=20&offset=10");
+
+    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+
+    Response response = getCompleted.get(5, SECONDS);
+    validateMoonsResponse(response, expectedMatches, moons);
+  }
+
+  @Test
   public void canGetInstanceBulkOfIdWithQueryExact()
       throws MalformedURLException,
       InterruptedException,
@@ -174,6 +196,25 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING");
+
+    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+
+    Response response = getCompleted.get(5, SECONDS);
+    validateHoldingsResponse(response, holdingIds, totalHoldingsIds);
+  }
+
+  @Test
+  public void canGetHoldingsBulkOfIdWithLimitAndOffset()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    int totalHoldingsIds = 20;
+    List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING&limit=20&offset=10");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 

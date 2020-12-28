@@ -17,6 +17,7 @@ traits:
   orderable: !include raml-util/traits/orderable.raml
   searchable: !include raml-util/traits/searchable.raml
   validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
 
 resourceTypes:
   collection-get: !include raml-util/rtypes/collection-get.raml
@@ -32,7 +33,8 @@ resourceTypes:
       description: Retrieve a list of record IDs.
       is: [
         searchable: {description: "with valid searchable fields", example: "name=aaa"},
-        validate
+        validate,
+        pageable
       ]
       queryParameters:
         field:
