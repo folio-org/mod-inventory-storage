@@ -9,14 +9,18 @@ public final class ResponseUtil {
   private ResponseUtil() {}
 
   public static boolean isUpdateSuccessResponse(Response response) {
-    return response != null && response.getStatus() == HTTP_NO_CONTENT.toInt();
+    return responseIsInStatus(response, HTTP_NO_CONTENT.toInt());
   }
 
   public static boolean isDeleteSuccessResponse(Response response) {
-    return response != null && response.getStatus() == HTTP_NO_CONTENT.toInt();
+    return responseIsInStatus(response, HTTP_NO_CONTENT.toInt());
   }
 
   public static boolean isCreateSuccessResponse(Response response) {
-    return response != null && response.getStatus() == HTTP_CREATED.toInt();
+    return responseIsInStatus(response, HTTP_CREATED.toInt());
+  }
+
+  private static boolean responseIsInStatus(Response response, int expectedStatus) {
+    return response != null && response.getStatus() == expectedStatus;
   }
 }
