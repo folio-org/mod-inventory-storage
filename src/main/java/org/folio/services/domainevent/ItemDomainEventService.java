@@ -9,7 +9,6 @@ import static org.folio.services.kafka.topic.KafkaTopic.ITEM_INSTANCE;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -85,13 +84,8 @@ public class ItemDomainEventService {
           itemAndHolding.getItem()))
         .collect(Collectors.<Pair<String, Item>>toList());
 
-      final var updatedItemsIds = batchOperation.getExistingRecordsBeforeUpdate()
-        .stream()
-        .map(ItemWithHolding::getItemId)
-        .collect(Collectors.toSet());
-
       log.info("Items created {}, items updated {}", createdItemsPairs.size(),
-        updatedItemsIds.size());
+        batchOperation.getExistingRecordsBeforeUpdate().size());
 
       return domainEventService.recordsCreated(createdItemsPairs)
         .compose(notUsed -> itemsUpdated(batchOperation.getExistingRecordsBeforeUpdate()))
@@ -131,11 +125,15 @@ public class ItemDomainEventService {
   }
 
   public Future<Void> itemsUpdated(HoldingsRecord holdingsRecord, List<Item> oldItems) {
-    final var itemWithHoldings = oldItems.stream()
+    final var oldItemWithHoldings = oldItems.stream()
       .map(item -> new ItemWithHolding(item, holdingsRecord))
       .collect(Collectors.toList());
 
-    return itemsUpdated(itemWithHoldings);
+    log.info("[{}] items were updated, sending events for them", oldItems.size());
+
+    return itemRepository.getById(oldItemWithHoldings, ItemWithHolding::getItemId)
+      .map(updatedItems -> mapOldItemsToUpdatedItems(updatedItems, oldItemWithHoldings))
+      .compose(domainEventService::recordsUpdated);
   }
 
   private Future<Void> itemsUpdated(List<ItemWithHolding> oldItems) {
