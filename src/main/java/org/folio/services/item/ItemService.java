@@ -43,7 +43,7 @@ import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.support.ItemEffectiveLocationUtil;
 import org.folio.services.ItemEffectiveValuesService;
-import org.folio.services.batch.BatchOperation;
+import org.folio.services.batch.BatchOperationContext;
 import org.folio.services.domainevent.ItemDomainEventService;
 import org.folio.services.item.effectivevalues.ItemWithHolding;
 
@@ -131,8 +131,7 @@ public class ItemService {
             PutItemStorageItemsByItemIdResponse.class, putResult);
 
           return putResult.future()
-            .compose(domainEventService
-              .itemUpdated(itemWithHolding.getInstanceId(), oldItem));
+            .compose(domainEventService.itemUpdated(itemWithHolding.getInstanceId(), oldItem));
         }));
   }
 
@@ -164,6 +163,8 @@ public class ItemService {
 
     return itemRepository.getItemsForHoldingRecord(holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
+        // have to make deep clone of the items because the items are stateful
+        // so that domain events will have proper 'old' item state.
         deepCopy(items, Item.class), holdingsRecord)
         .map(items));
   }
@@ -216,11 +217,11 @@ public class ItemService {
     return item != null ? succeededFuture(item) : failedFuture(new NotFoundException("Not found"));
   }
 
-  private Future<BatchOperation<ItemWithHolding>> buildBatchOperationContext(
+  private Future<BatchOperationContext<ItemWithHolding>> buildBatchOperationContext(
     boolean upsert, List<ItemWithHolding> allItems) {
 
     if (!upsert) {
-      return succeededFuture(new BatchOperation<>(allItems, emptyList(), emptyList()));
+      return succeededFuture(new BatchOperationContext<>(allItems, emptyList(), emptyList()));
     }
 
     return itemRepository.getById(allItems, ItemWithHolding::getItemId)
@@ -229,19 +230,19 @@ public class ItemService {
           .filter(item -> !foundItems.containsKey(item.getItemId()))
           .collect(toList());
 
-        // new Item representations
+        // new representations for existing items
         final var itemsToBeUpdated = allItems.stream()
           .filter(item -> foundItems.containsKey(item.getItemId()))
           .collect(toList());
 
-        // old Item representations
+        // old (existing) Item representations before applying update
         final var existingRecordsBeforeUpdate = itemsToBeUpdated.stream()
           .map(itemWithHolding -> {
             final var itemBeforeUpdate = foundItems.get(itemWithHolding.getItemId());
             return new ItemWithHolding(itemBeforeUpdate, itemWithHolding.getHoldingsRecord());
           }).collect(toList());
 
-        return new BatchOperation<>(itemsToBeCreated, itemsToBeUpdated, existingRecordsBeforeUpdate);
+        return new BatchOperationContext<>(itemsToBeCreated, itemsToBeUpdated, existingRecordsBeforeUpdate);
       });
   }
 }

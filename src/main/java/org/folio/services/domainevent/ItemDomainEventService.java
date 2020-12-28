@@ -5,7 +5,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
-import static org.folio.services.kafka.topic.KafkaTopic.ITEM_INSTANCE;
+import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_ITEM;
 
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,7 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.services.batch.BatchOperation;
+import org.folio.services.batch.BatchOperationContext;
 import org.folio.services.item.effectivevalues.ItemWithHolding;
 
 import io.vertx.core.Context;
@@ -39,8 +39,7 @@ public class ItemDomainEventService {
   public ItemDomainEventService(Context context, Map<String, String> okapiHeaders) {
     itemRepository = new ItemRepository(context, okapiHeaders);
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
-    domainEventService = new BaseDomainEventService<>(context, okapiHeaders,
-      ITEM_INSTANCE);
+    domainEventService = new BaseDomainEventService<>(context, okapiHeaders, INVENTORY_ITEM);
   }
 
   public Function<Response, Future<Response>> itemUpdated(String instanceId, Item oldItem) {
@@ -70,7 +69,7 @@ public class ItemDomainEventService {
   }
 
   public Function<Response, Future<Response>> itemsCreatedOrUpdated(
-    BatchOperation<ItemWithHolding> batchOperation) {
+    BatchOperationContext<ItemWithHolding> batchOperation) {
 
     return response -> {
       if (!isCreateSuccessResponse(response)) {

@@ -8,12 +8,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-public final class BatchOperation<T>{
+public final class BatchOperationContext<T>{
   private final List<T> recordsToBeCreated;
   private final List<T> recordsToBeUpdated;
   private final List<T> existingRecordsBeforeUpdate;
 
-  public BatchOperation(Collection<T> recordsToBeCreated, Collection<T> recordsToBeUpdated,
+  public BatchOperationContext(Collection<T> recordsToBeCreated, Collection<T> recordsToBeUpdated,
     Collection<T> existingRecords) {
 
     this.recordsToBeCreated = new ArrayList<>(recordsToBeCreated);

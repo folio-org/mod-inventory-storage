@@ -2,7 +2,7 @@ package org.folio.services.kafka.topic;
 
 public enum KafkaTopic {
   INVENTORY_INSTANCE("inventory.instance"),
-  ITEM_INSTANCE("inventory.item");
+  INVENTORY_ITEM("inventory.item");
 
   private final String topicName;
 
