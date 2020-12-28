@@ -63,7 +63,7 @@ public final class DomainEventAsserts {
   public static void assertNoCreateEvent(String instanceId) {
     await().atLeast(1, TimeUnit.SECONDS);
 
-    assertThat(getLastInstanceEvent(instanceId).size(), is(0));
+    assertThat(getInstanceEvents(instanceId).size(), is(0));
   }
 
   public static void assertCreateEventForInstance(JsonObject instance) {

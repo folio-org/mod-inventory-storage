@@ -891,6 +891,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     itemsArray.stream()
       .map(obj -> (JsonObject) obj)
+      .map(obj -> getById(obj.getString("id")).getJson())
       .forEach(DomainEventAsserts::assertCreateEventForItem);
   }
 
