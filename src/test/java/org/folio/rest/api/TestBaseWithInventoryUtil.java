@@ -243,7 +243,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return response.getStatusCode() == HttpStatus.HTTP_NOT_FOUND.toInt();
   }
 
-  protected void createItem(JsonObject itemToCreate) {
+  protected JsonObject createItem(JsonObject itemToCreate) {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     client.post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
@@ -252,6 +252,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     Response response = get(createCompleted);
 
     assertThat(response.getStatusCode(), is(201));
+
+    return response.getJson();
   }
 
   protected IndividualResource createItem(Item item) {

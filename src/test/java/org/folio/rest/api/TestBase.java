@@ -41,7 +41,7 @@ public abstract class TestBase {
   private static boolean invokeStorageTestSuiteAfter = false;
   static HttpClient client;
   protected static ResourceClient instancesClient;
-  protected static ResourceClient holdingsClient;
+  public static ResourceClient holdingsClient;
   protected static ResourceClient itemsClient;
   static ResourceClient locationsClient;
   static ResourceClient callNumberTypesClient;
@@ -100,7 +100,7 @@ public abstract class TestBase {
     illPoliciesClient = ResourceClient.forIllPolicies(client);
     statisticalCodeFixture = new StatisticalCodeFixture(client);
     kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
-    kafkaConsumer.removeAllMessages();
+    kafkaConsumer.removeAllEvents();
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
