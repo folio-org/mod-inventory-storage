@@ -2,6 +2,7 @@ package org.folio.rest.support;
 
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.services.item.effectivevalues.ItemWithHolding;
 
 import static java.util.Objects.isNull;
 
@@ -9,7 +10,9 @@ public final class ItemEffectiveLocationUtil {
 
   private ItemEffectiveLocationUtil(){}
 
-  public static Item updateItemEffectiveLocation(Item item, HoldingsRecord holdingsRecord) {
+  public static ItemWithHolding updateItemEffectiveLocation(ItemWithHolding itemWithHolding) {
+    final Item item = itemWithHolding.getItem();
+    final HoldingsRecord holdingsRecord = itemWithHolding.getHoldingsRecord();
 
     if (isNull(item.getPermanentLocationId()) && isNull(item.getTemporaryLocationId())) {
       item.setEffectiveLocationId(isNull(holdingsRecord.getTemporaryLocationId()) ?
@@ -19,6 +22,6 @@ public final class ItemEffectiveLocationUtil {
         item.getPermanentLocationId() : item.getTemporaryLocationId());
     }
 
-    return item;
+    return itemWithHolding;
   }
 }
