@@ -22,14 +22,14 @@ import org.folio.services.kafka.topic.KafkaTopic;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-class BaseDomainEventService<T> {
-  private static final Logger log = getLogger(BaseDomainEventService.class);
+class CommonDomainEventService<T> {
+  private static final Logger log = getLogger(CommonDomainEventService.class);
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final KafkaTopic kafkaTopic;
 
-  BaseDomainEventService(Context vertxContext, Map<String, String> okapiHeaders,
+  CommonDomainEventService(Context vertxContext, Map<String, String> okapiHeaders,
     KafkaTopic kafkaTopic) {
 
     this.vertxContext = vertxContext;

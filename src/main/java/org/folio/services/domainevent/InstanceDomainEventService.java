@@ -14,10 +14,10 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 
 public class InstanceDomainEventService {
-  private final BaseDomainEventService<Instance> domainEventService;
+  private final CommonDomainEventService<Instance> domainEventService;
 
   public InstanceDomainEventService(Context context, Map<String, String> okapiHeaders) {
-    domainEventService = new BaseDomainEventService<>(context, okapiHeaders,
+    domainEventService = new CommonDomainEventService<>(context, okapiHeaders,
       INVENTORY_INSTANCE);
   }
 

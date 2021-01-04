@@ -34,12 +34,12 @@ public class ItemDomainEventService {
 
   private final ItemRepository itemRepository;
   private final HoldingsRepository holdingsRepository;
-  private final BaseDomainEventService<Item> domainEventService;
+  private final CommonDomainEventService<Item> domainEventService;
 
   public ItemDomainEventService(Context context, Map<String, String> okapiHeaders) {
     itemRepository = new ItemRepository(context, okapiHeaders);
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
-    domainEventService = new BaseDomainEventService<>(context, okapiHeaders, INVENTORY_ITEM);
+    domainEventService = new CommonDomainEventService<>(context, okapiHeaders, INVENTORY_ITEM);
   }
 
   public Function<Response, Future<Response>> itemUpdated(String instanceId, Item oldItem) {
