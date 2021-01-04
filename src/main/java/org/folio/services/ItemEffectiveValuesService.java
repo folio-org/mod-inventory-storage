@@ -2,7 +2,6 @@ package org.folio.services;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.folio.persist.HoldingsRepository;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
@@ -17,15 +17,14 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.folio.rest.support.ItemEffectiveLocationUtil;
 import org.folio.services.item.effectivevalues.ItemWithHolding;
-import org.folio.services.persist.PostgresClientFuturized;
 
 import io.vertx.core.Future;
 
 public class ItemEffectiveValuesService {
-  private final PostgresClientFuturized postgresClientFuturized;
+  private final HoldingsRepository holdingsRepository;
 
   public ItemEffectiveValuesService(PostgresClient postgresClient) {
-    this.postgresClientFuturized = new PostgresClientFuturized(postgresClient);
+    this.holdingsRepository = new HoldingsRepository(postgresClient);
   }
 
   public Future<List<ItemWithHolding>> populateEffectiveValues(List<Item> items) {
@@ -48,8 +47,7 @@ public class ItemEffectiveValuesService {
   private Future<HoldingsRecord> getHoldingsRecordForItem(Item item) {
     final String holdingsRecordId = item.getHoldingsRecordId();
 
-    return postgresClientFuturized.getById(HOLDINGS_RECORD_TABLE, holdingsRecordId,
-      HoldingsRecord.class)
+    return holdingsRepository.getById(holdingsRecordId)
       .compose(holdingsRecord -> {
         if (holdingsRecord != null) {
           return succeededFuture(holdingsRecord);
@@ -64,8 +62,7 @@ public class ItemEffectiveValuesService {
       .map(Item::getHoldingsRecordId)
       .collect(Collectors.toSet());
 
-    return postgresClientFuturized.getById(HOLDINGS_RECORD_TABLE, holdingsIds,
-      HoldingsRecord.class)
+    return holdingsRepository.getById(holdingsIds)
       .compose(holdingsRecordMap -> {
         if (holdingsRecordMap.keySet().containsAll(holdingsIds)) {
           return succeededFuture(holdingsRecordMap);

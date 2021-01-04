@@ -4,14 +4,14 @@ import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoCreateEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoRemoveEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEvent;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import org.awaitility.Awaitility;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.junit.Before;
@@ -40,7 +40,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
       updatedInstance);
 
     assertThat(updateInstance.getStatusCode(), is(400));
-    assertKafkaMessageNotCreatedForUpdate(instance.getId());
+    assertNoUpdateEvent(instance.getId().toString());
   }
 
   @Test
@@ -53,7 +53,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final var createResponse = instancesClient.attemptToCreate(instanceJson);
 
     assertThat(createResponse.getStatusCode(), is(400));
-    assertKafkaMessageNotCreatedForCreate(instanceId);
+    assertNoCreateEvent(instanceId.toString());
   }
 
   @Test
@@ -68,7 +68,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final Response removeResponse = instancesClient.attemptToDelete(instance.getId());
 
     assertThat(removeResponse.getStatusCode(), is(500));
-    assertKafkaMessageNotCreatedForDelete(instance.getId());
+    assertNoRemoveEvent(instance.getId().toString());
   }
 
   @Test
@@ -85,30 +85,5 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final Response removeResponse = instancesClient.attemptDeleteAll();
 
     assertThat(removeResponse.getStatusCode(), is(500));
-    assertKafkaMessageNotCreatedForDelete(instance.getId());
-  }
-
-  private void assertKafkaMessageNotCreatedForUpdate(UUID instanceId) {
-    Awaitility.await()
-      .atLeast(1, TimeUnit.SECONDS);
-
-    final JsonObject updateMessage  = kafkaConsumer.getLastMessage(instanceId.toString());
-    assertThat(updateMessage.getString("type"), not(is("UPDATE")));
-  }
-
-  private void assertKafkaMessageNotCreatedForDelete(UUID instanceId) {
-    Awaitility.await()
-      .atLeast(1, TimeUnit.SECONDS);
-
-    final JsonObject updateMessage  = kafkaConsumer.getLastMessage(instanceId.toString());
-    assertThat(updateMessage.getString("type"), not(is("DELETE")));
-  }
-
-  private void assertKafkaMessageNotCreatedForCreate(UUID instanceId) {
-    Awaitility.await()
-      .atLeast(1, TimeUnit.SECONDS);
-
-    assertThat(kafkaConsumer.getAllMessages(instanceId.toString()).size(),
-      is(0));
-  }
-}
+    assertNoRemoveEvent(instance.getId().toString());
+  }}

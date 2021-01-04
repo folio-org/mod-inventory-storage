@@ -35,7 +35,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.services.domainevent.InstanceDomainEventService;
+import org.folio.services.domainevent.InstanceDomainEventPublisher;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -115,8 +115,8 @@ public class InstanceStorageAPI implements InstanceStorage {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
 
     try {
-      final InstanceDomainEventService domainEventService =
-        new InstanceDomainEventService(vertxContext, okapiHeaders);
+      final InstanceDomainEventPublisher domainEventService =
+        new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
 
       PostgresClient postgresClient =
         PostgresClient.getInstance(
@@ -151,7 +151,7 @@ public class InstanceStorageAPI implements InstanceStorage {
               reply -> {
                 try {
                   if(reply.succeeded()) {
-                    domainEventService.instanceCreated(entity)
+                    domainEventService.publishInstanceCreated(entity)
                     .onComplete(result -> {
                       if (result.succeeded()) {
                         asyncResultHandler.handle(succeededFuture(
@@ -246,7 +246,7 @@ public class InstanceStorageAPI implements InstanceStorage {
                 }
 
                 deleteAllInstances(postgresClient, tenantId, asyncResultHandler,
-                  new InstanceDomainEventService(vertxContext, okapiHeaders));
+                  new InstanceDomainEventPublisher(vertxContext, okapiHeaders));
               });
             });
       }
@@ -341,8 +341,8 @@ public class InstanceStorageAPI implements InstanceStorage {
 
     PostgresClient postgresClient =
         PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-    final InstanceDomainEventService domainEventService =
-      new InstanceDomainEventService(vertxContext, okapiHeaders);
+    final InstanceDomainEventPublisher domainEventService =
+      new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
 
     postgresClient.delete(INSTANCE_SOURCE_MARC_TABLE, instanceId, reply1 -> {
       if (! reply1.succeeded()) {
@@ -634,7 +634,7 @@ public class InstanceStorageAPI implements InstanceStorage {
   }
 
   private void deleteSingleInstance(PostgresClient postgresClient, String instanceId,
-    Handler<AsyncResult<Response>> handler, InstanceDomainEventService domainEventService) {
+    Handler<AsyncResult<Response>> handler, InstanceDomainEventPublisher domainEventService) {
 
     postgresClient.getById(INSTANCE_TABLE, instanceId, Instance.class, oldInstanceResult -> {
       if (oldInstanceResult.failed()) {
@@ -653,7 +653,7 @@ public class InstanceStorageAPI implements InstanceStorage {
           return;
         }
 
-        domainEventService.instanceRemoved(oldInstanceResult.result())
+        domainEventService.publishInstanceRemoved(oldInstanceResult.result())
           .onComplete(result -> {
             if (result.succeeded()) {
               handler.handle(succeededFuture(DeleteInstanceStorageInstancesByInstanceIdResponse
@@ -668,7 +668,7 @@ public class InstanceStorageAPI implements InstanceStorage {
   }
 
   private void deleteAllInstances(PostgresClient postgresClient, String tenantId,
-    Handler<AsyncResult<Response>> handler, InstanceDomainEventService domainEventService) {
+    Handler<AsyncResult<Response>> handler, InstanceDomainEventPublisher domainEventService) {
 
     postgresClient.get(INSTANCE_TABLE, new Instance(), false, instances -> {
       if (instances.failed()) {
@@ -687,7 +687,7 @@ public class InstanceStorageAPI implements InstanceStorage {
           return;
         }
 
-        domainEventService.instancesRemoved(instances.result().getResults())
+        domainEventService.publishInstancesRemoved(instances.result().getResults())
           .onComplete(result -> {
             if (result.succeeded()) {
               handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse.respond204()));
@@ -703,14 +703,14 @@ public class InstanceStorageAPI implements InstanceStorage {
   private void sendInstanceUpdatedEvent(Instance oldInstance, Context vertxContext,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> handler) {
 
-    final InstanceDomainEventService domainEventService =
-      new InstanceDomainEventService(vertxContext, okapiHeaders);
+    final InstanceDomainEventPublisher domainEventService =
+      new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
 
     // Have to re-reed the record in order to have up-to-date metadata field
     PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders))
       .getById(INSTANCE_TABLE, oldInstance.getId(), Instance.class, updatedInstance -> {
         if (updatedInstance.succeeded()) {
-          domainEventService.instanceUpdated(oldInstance, updatedInstance.result())
+          domainEventService.publishInstanceUpdated(oldInstance, updatedInstance.result())
             .onComplete(result -> {
               if (result.succeeded()) {
                 handler.handle(succeededFuture(PutInstanceStorageInstancesByInstanceIdResponse

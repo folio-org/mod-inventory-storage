@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 
 import static org.folio.rest.api.ItemStorageTest.nod;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
 import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;
@@ -14,6 +15,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -243,18 +245,19 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
         .put(holdingsPropertyName, holdingsTargetValue)
     );
 
-    itemsClient.replace(createdItem.getId(),
-      createdItem.copyJson()
-        .put(itemPropertyName, itemTargetValue)
-    );
+    if (!Objects.equals(itemInitValue, itemTargetValue)) {
+      itemsClient.replace(createdItem.getId(), createdItem.copyJson()
+        .put(itemPropertyName, itemTargetValue));
+    }
 
-    JsonObject updatedEffectiveCallNumberComponents = itemsClient
-      .getById(createdItem.getId()).getJson()
+    final JsonObject updatedItem = itemsClient.getById(createdItem.getId()).getJson();
+    final JsonObject updatedEffectiveCallNumberComponents = updatedItem
       .getJsonObject("effectiveCallNumberComponents");
 
     assertNotNull(updatedEffectiveCallNumberComponents);
     assertThat(updatedEffectiveCallNumberComponents.getString(effectivePropertyName),
       is(targetEffectiveValue));
+    assertUpdateEventForItem(createdItem.getJson(), updatedItem);
   }
 
   private IndividualResource createHoldingsWithPropertySetAndInstance(

@@ -27,9 +27,9 @@ public class KafkaAdminClientService {
     this.vertx = vertx;
   }
 
-  public void createKafkaTopicsAsync() {
+  public Future<Void> createKafkaTopics() {
     final KafkaAdminClient kafkaAdminClient = createKafkaAdminNativeClient();
-    createKafkaTopicsAsync(kafkaAdminClient).onComplete(result -> {
+    return createKafkaTopics(kafkaAdminClient).onComplete(result -> {
       if (result.succeeded()) {
         log.info("Topics created successfully");
       } else {
@@ -49,7 +49,7 @@ public class KafkaAdminClientService {
     return create(vertx, getKafkaProperties());
   }
 
-  private Future<Void> createKafkaTopicsAsync(KafkaAdminClient kafkaAdminClient) {
+  private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient) {
     final List<NewTopic> newTopics = readTopics();
 
     return kafkaAdminClient.listTopics().compose(topics -> {

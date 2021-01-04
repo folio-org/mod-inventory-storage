@@ -40,7 +40,6 @@ import java.util.stream.Stream;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.HttpResponseMatchers.*;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
@@ -50,6 +49,9 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
@@ -173,7 +175,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
-    assertKafkaMessageCreatedForCreate(instanceFromGet);
+    assertCreateEventForInstance(instanceFromGet);
   }
 
   @Test
@@ -351,7 +353,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString(STATUS_UPDATED_DATE_PROPERTY),
       is(replacement.getString(STATUS_UPDATED_DATE_PROPERTY)));
     assertThat(itemFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
-    assertKafkaMessageCreatedForUpdate(createdInstance.getJson(), updatedInstance.getJson());
+    assertUpdateEventForInstance(createdInstance.getJson(), updatedInstance.getJson());
   }
 
   @Test
@@ -374,7 +376,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     assertGetNotFound(url);
-    assertKafkaMessageCreatedForDelete(createdInstance.getJson());
+    assertRemoveEventForInstance(createdInstance.getJson());
   }
 
   @Test
@@ -1452,9 +1454,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allInstances.size(), is(0));
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(0));
 
-    assertKafkaMessageCreatedForDelete(firstInstance.getJson());
-    assertKafkaMessageCreatedForDelete(secondInstance.getJson());
-    assertKafkaMessageCreatedForDelete(thirdInstance.getJson());
+    assertRemoveEventForInstance(firstInstance.getJson());
+    assertRemoveEventForInstance(secondInstance.getJson());
+    assertRemoveEventForInstance(thirdInstance.getJson());
   }
 
   @Test
@@ -2573,7 +2575,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       getById(instance.getId()).getJson().copy().put(DISCOVERY_SUPPRESS, true));
 
     assertSuppressedFromDiscovery(instance.getId().toString());
-    assertKafkaMessageCreatedForUpdate(instance.getJson(), updateInstance.getJson());
+    assertUpdateEventForInstance(instance.getJson(), updateInstance.getJson());
   }
 
   @Test
@@ -2833,48 +2835,5 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   private void assertNotSuppressedFromDiscovery(String id) {
     assertThat(getById(id).getJson().getBoolean(DISCOVERY_SUPPRESS), is(false));
-  }
-
-  private void assertKafkaMessageCreatedForCreate(JsonObject instance) {
-    final String instanceId = instance.getString("id");
-
-    await()
-      .until(() -> kafkaConsumer.getAllMessages(instanceId).size() > 0);
-
-    final JsonObject createMessage  = kafkaConsumer.getFirstMessage(instanceId);
-
-    assertThat(createMessage.getString("type"), is("CREATE"));
-    assertThat(createMessage.getString("tenant"), is(TENANT_ID));
-    assertThat(createMessage.getJsonObject("old"), nullValue());
-    assertThat(createMessage.getJsonObject("new"), is(instance));
-  }
-
-  private void assertKafkaMessageCreatedForDelete(JsonObject instance) {
-    final String instanceId = instance.getString("id");
-
-    await()
-      .until(() -> kafkaConsumer.getAllMessages(instanceId).size() > 1);
-
-    final JsonObject deleteMessage  = kafkaConsumer.getLastMessage(
-      instanceId);
-
-    assertThat(deleteMessage.getString("type"), is("DELETE"));
-    assertThat(deleteMessage.getString("tenant"), is(TENANT_ID));
-    assertThat(deleteMessage.getJsonObject("new"), nullValue());
-    assertThat(deleteMessage.getJsonObject("old"), is(instance));
-  }
-
-  private void assertKafkaMessageCreatedForUpdate(JsonObject oldInstance, JsonObject newInstance) {
-    final String instanceId = oldInstance.getString("id");
-    await()
-      .until(() -> kafkaConsumer.getAllMessages(instanceId).size() > 1);
-
-    final JsonObject updateMessage  = kafkaConsumer.getLastMessage(instanceId);
-
-    assertThat(updateMessage.getString("type"), is("UPDATE"));
-    assertThat(updateMessage.getString("tenant"), is(TENANT_ID));
-    assertThat(updateMessage.getJsonObject("old"), is(oldInstance));
-    assertThat(updateMessage.getJsonObject("new"), is(newInstance));
-    assertKafkaMessageCreatedForCreate(oldInstance);
   }
 }

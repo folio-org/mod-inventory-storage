@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.vertx.core.Vertx;
@@ -15,40 +16,79 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 
 public final class FakeKafkaConsumer {
-  private final static Map<String, List<JsonObject>> messages = new ConcurrentHashMap<>();
+  private final static Map<String, List<JsonObject>> itemEvents = new ConcurrentHashMap<>();
+  private final static Map<String, List<JsonObject>> instanceEvents = new ConcurrentHashMap<>();
 
   public final FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, String> consumer = create(vertx, consumerProperties());
 
-    consumer.subscribe("inventory.instance");
+    consumer.subscribe(Set.of("inventory.instance", "inventory.item"));
     consumer.handler(message -> {
-      final List<JsonObject> objects = messages
-        .computeIfAbsent(message.key(), k -> new ArrayList<>());
+      final JsonObject payload = new JsonObject(message.value());
+      final String instanceId = message.key();
+      List<JsonObject> storageList;
 
-      objects.add(new JsonObject(message.value()));
+      if (message.topic().equals("inventory.item")) {
+        storageList = itemEvents
+          .computeIfAbsent(itemKey(instanceId, payload), k -> new ArrayList<>());
+      } else {
+        storageList = instanceEvents.computeIfAbsent(instanceId, k -> new ArrayList<>());
+      }
+
+      storageList.add(payload);
     });
 
     return this;
   }
 
-  public void removeAllMessages() {
-    messages.clear();
+  public void removeAllEvents() {
+    itemEvents.clear();
+    instanceEvents.clear();
   }
 
-  public Collection<JsonObject> getAllMessages(String instanceId) {
-    return messages.getOrDefault(instanceId, emptyList());
+  public static Collection<JsonObject> getInstanceEvents(String instanceId) {
+    return instanceEvents.getOrDefault(instanceId, emptyList());
   }
 
-  public JsonObject getLastMessage(String instanceId) {
-    final Collection<JsonObject> allMessages = getAllMessages(instanceId);
+  public static Collection<JsonObject> getItemEvents(String instanceId, String itemId) {
+    return itemEvents.getOrDefault(itemKey(instanceId, itemId), emptyList());
+  }
 
-    return allMessages.stream().skip(allMessages.size() - 1)
+  private static JsonObject getLastEvent(Collection<JsonObject> events) {
+    return events.stream().skip(events.size() - 1)
       .findFirst().orElse(null);
   }
 
-  public JsonObject getFirstMessage(String instanceId) {
-    return getAllMessages(instanceId).stream()
+  private static JsonObject getFirstEvent(Collection<JsonObject> events) {
+    return events.stream()
       .findFirst().orElse(null);
+  }
+
+  public static JsonObject getLastInstanceEvent(String instanceId) {
+    return getLastEvent(getInstanceEvents(instanceId));
+  }
+
+  public static JsonObject getFirstInstanceEvent(String instanceId) {
+    return getFirstEvent(getInstanceEvents(instanceId));
+  }
+
+  public static JsonObject getLastItemEvent(String instanceId, String itemId) {
+    return getLastEvent(getItemEvents(instanceId, itemId));
+  }
+
+  public static JsonObject getFirstItemEvent(String instanceId, String itemId) {
+    return getFirstEvent(getItemEvents(instanceId, itemId));
+  }
+
+  private static String itemKey(String instanceId, String itemId) {
+    return instanceId + "_" + itemId;
+  }
+
+  private static String itemKey(String instanceId, JsonObject payload) {
+    final var item = payload.containsKey("new")
+      ? payload.getJsonObject("new") : payload.getJsonObject("old");
+
+    return itemKey(instanceId, item.getString("id"));
   }
 
   private Map<String, String> consumerProperties() {
