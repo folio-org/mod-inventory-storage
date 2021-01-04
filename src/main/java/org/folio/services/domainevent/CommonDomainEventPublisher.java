@@ -22,14 +22,14 @@ import org.folio.services.kafka.topic.KafkaTopic;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-class CommonDomainEventService<T> {
-  private static final Logger log = getLogger(CommonDomainEventService.class);
+class CommonDomainEventPublisher<T> {
+  private static final Logger log = getLogger(CommonDomainEventPublisher.class);
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final KafkaTopic kafkaTopic;
 
-  CommonDomainEventService(Context vertxContext, Map<String, String> okapiHeaders,
+  CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
     KafkaTopic kafkaTopic) {
 
     this.vertxContext = vertxContext;
@@ -37,58 +37,58 @@ class CommonDomainEventService<T> {
     this.kafkaTopic = kafkaTopic;
   }
 
-  Future<Void> recordUpdated(String instanceId, T oldRecord, T newRecord) {
+  Future<Void> publishRecordUpdated(String instanceId, T oldRecord, T newRecord) {
     final DomainEvent<T> domainEvent = updateEvent(oldRecord, newRecord, getTenant());
 
-    return sendMessage(instanceId, domainEvent);
+    return publishMessage(instanceId, domainEvent);
   }
 
-  Future<Void> recordsUpdated(Collection<Triple<String, T, T>> updatedRecords) {
+  Future<Void> publishRecordsUpdated(Collection<Triple<String, T, T>> updatedRecords) {
     if (updatedRecords.isEmpty()) {
       return succeededFuture();
     }
 
     return all(updatedRecords.stream()
-      .map(record -> recordUpdated(record.getLeft(), record.getMiddle(), record.getRight()))
+      .map(record -> publishRecordUpdated(record.getLeft(), record.getMiddle(), record.getRight()))
       .collect(Collectors.toList()))
       .map(notUsed -> null);
   }
 
-  Future<Void> recordCreated(String instanceId, T newRecord) {
+  Future<Void> publishRecordCreated(String instanceId, T newRecord) {
     final DomainEvent<T> domainEvent = createEvent(newRecord, getTenant());
 
-    return sendMessage(instanceId, domainEvent);
+    return publishMessage(instanceId, domainEvent);
   }
 
-  Future<Void> recordsCreated(List<Pair<String, T>> records) {
+  Future<Void> publishRecordsCreated(List<Pair<String, T>> records) {
     if (records.isEmpty()) {
       return succeededFuture();
     }
 
     return all(records.stream()
-      .map(record -> recordCreated(record.getKey(), record.getValue()))
+      .map(record -> publishRecordCreated(record.getKey(), record.getValue()))
       .collect(Collectors.toList()))
       .map(notUsed -> null);
   }
 
-  Future<Void> recordRemoved(String instanceId, T oldEntity) {
+  Future<Void> publishRecordRemoved(String instanceId, T oldEntity) {
     final DomainEvent<T> domainEvent = deleteEvent(oldEntity, getTenant());
 
-    return sendMessage(instanceId, domainEvent);
+    return publishMessage(instanceId, domainEvent);
   }
 
-  Future<Void> recordsRemoved(List<Pair<String, T>> records) {
+  Future<Void> publishRecordsRemoved(List<Pair<String, T>> records) {
     if (records.isEmpty()) {
       return succeededFuture();
     }
 
     return all(records.stream()
-      .map(record -> recordRemoved(record.getKey(), record.getValue()))
+      .map(record -> publishRecordRemoved(record.getKey(), record.getValue()))
       .collect(Collectors.toList()))
       .map(notUsed -> null);
   }
 
-  private Future<Void> sendMessage(String instanceId, DomainEvent<?> domainEvent) {
+  private Future<Void> publishMessage(String instanceId, DomainEvent<?> domainEvent) {
     log.debug("Sending domain event [{}], payload [{}]",
       instanceId, domainEvent);
 

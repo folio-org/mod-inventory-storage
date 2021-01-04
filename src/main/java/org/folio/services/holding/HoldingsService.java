@@ -20,7 +20,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
-import org.folio.services.domainevent.ItemDomainEventService;
+import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.services.item.ItemService;
 
 import io.vertx.core.AsyncResult;
@@ -36,14 +36,14 @@ public class HoldingsService {
   private final HridManager hridManager;
   private final ItemService itemService;
   private final HoldingsRepository holdingsRepository;
-  private final ItemDomainEventService itemEventService;
+  private final ItemDomainEventPublisher itemEventService;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
     itemService = new ItemService(context, okapiHeaders);
     postgresClient = postgresClient(context, okapiHeaders);
     hridManager = new HridManager(context, postgresClient);
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
-    itemEventService = new ItemDomainEventService(context, okapiHeaders);
+    itemEventService = new ItemDomainEventPublisher(context, okapiHeaders);
   }
 
   public Future<Void> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
@@ -78,7 +78,7 @@ public class HoldingsService {
             .onComplete(handleTransaction(connection, overallResult)));
 
         return overallResult.future()
-          .compose(itemsBeforeUpdate -> itemEventService.itemsUpdated(newHoldings, itemsBeforeUpdate));
+          .compose(itemsBeforeUpdate -> itemEventService.publishItemsUpdated(newHoldings, itemsBeforeUpdate));
       });
   }
 

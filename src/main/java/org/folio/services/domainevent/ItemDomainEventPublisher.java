@@ -29,20 +29,20 @@ import org.folio.services.item.effectivevalues.ItemWithHolding;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-public class ItemDomainEventService {
-  private static final Logger log = getLogger(ItemDomainEventService.class);
+public class ItemDomainEventPublisher {
+  private static final Logger log = getLogger(ItemDomainEventPublisher.class);
 
   private final ItemRepository itemRepository;
   private final HoldingsRepository holdingsRepository;
-  private final CommonDomainEventService<Item> domainEventService;
+  private final CommonDomainEventPublisher<Item> domainEventService;
 
-  public ItemDomainEventService(Context context, Map<String, String> okapiHeaders) {
+  public ItemDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     itemRepository = new ItemRepository(context, okapiHeaders);
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
-    domainEventService = new CommonDomainEventService<>(context, okapiHeaders, INVENTORY_ITEM);
+    domainEventService = new CommonDomainEventPublisher<>(context, okapiHeaders, INVENTORY_ITEM);
   }
 
-  public Function<Response, Future<Response>> itemUpdated(String instanceId, Item oldItem) {
+  public Function<Response, Future<Response>> publishItemUpdated(String instanceId, Item oldItem) {
     return response -> {
       if (!isUpdateSuccessResponse(response)) {
         log.warn("Item update failed, skipping event publishing");
@@ -50,25 +50,25 @@ public class ItemDomainEventService {
       }
 
       return itemRepository.getById(oldItem.getId())
-        .compose(updatedItem -> domainEventService.recordUpdated(instanceId, oldItem, updatedItem))
+        .compose(updatedItem -> domainEventService.publishRecordUpdated(instanceId, oldItem, updatedItem))
         .map(response);
     };
   }
 
-  public Function<Response, Future<Response>> itemCreated(ItemWithHolding itemWithHolding) {
+  public Function<Response, Future<Response>> publishItemCreated(ItemWithHolding itemWithHolding) {
     return response -> {
       if (!isCreateSuccessResponse(response)) {
         log.warn("Item create failed, skipping event publishing");
         return succeededFuture(response);
       }
 
-      return domainEventService.recordCreated(itemWithHolding.getInstanceId(),
+      return domainEventService.publishRecordCreated(itemWithHolding.getInstanceId(),
         itemWithHolding.getItem())
         .map(response);
     };
   }
 
-  public Function<Response, Future<Response>> itemsCreatedOrUpdated(
+  public Function<Response, Future<Response>> publishItemsCreatedOrUpdated(
     BatchOperationContext<ItemWithHolding> batchOperation) {
 
     return response -> {
@@ -86,13 +86,13 @@ public class ItemDomainEventService {
       log.info("Items created {}, items updated {}", createdItemsPairs.size(),
         batchOperation.getExistingRecordsBeforeUpdate().size());
 
-      return domainEventService.recordsCreated(createdItemsPairs)
-        .compose(notUsed -> itemsUpdated(batchOperation.getExistingRecordsBeforeUpdate()))
+      return domainEventService.publishRecordsCreated(createdItemsPairs)
+        .compose(notUsed -> publishItemsUpdated(batchOperation.getExistingRecordsBeforeUpdate()))
         .map(response);
     };
   }
 
-  public Function<Response, Future<Response>> itemRemoved(Item item) {
+  public Function<Response, Future<Response>> publishItemRemoved(Item item) {
     return response -> {
       if (!isDeleteSuccessResponse(response)) {
         log.warn("Item removal failed, no event will be sent");
@@ -100,12 +100,12 @@ public class ItemDomainEventService {
       }
 
       return holdingsRepository.getById(item.getHoldingsRecordId())
-        .compose(holding -> domainEventService.recordRemoved(holding.getInstanceId(), item))
+        .compose(holding -> domainEventService.publishRecordRemoved(holding.getInstanceId(), item))
         .map(response);
     };
   }
 
-  public Future<Void> itemsRemoved(List<Item> items) {
+  public Future<Void> publishItemsRemoved(List<Item> items) {
     if (items.isEmpty()) {
       log.info("No records were removed, skipping event sending");
       return succeededFuture();
@@ -119,11 +119,11 @@ public class ItemDomainEventService {
             return new ImmutablePair<>(hr.getInstanceId(), item);
           }).collect(Collectors.<Pair<String, Item>>toList());
 
-        return domainEventService.recordsRemoved(instanceIdToItemPairs);
+        return domainEventService.publishRecordsRemoved(instanceIdToItemPairs);
       });
   }
 
-  public Future<Void> itemsUpdated(HoldingsRecord holdingsRecord, List<Item> oldItems) {
+  public Future<Void> publishItemsUpdated(HoldingsRecord holdingsRecord, List<Item> oldItems) {
     final var oldItemWithHoldings = oldItems.stream()
       .map(item -> new ItemWithHolding(item, holdingsRecord))
       .collect(Collectors.toList());
@@ -132,10 +132,10 @@ public class ItemDomainEventService {
 
     return itemRepository.getById(oldItemWithHoldings, ItemWithHolding::getItemId)
       .map(updatedItems -> mapOldItemsToUpdatedItems(updatedItems, oldItemWithHoldings))
-      .compose(domainEventService::recordsUpdated);
+      .compose(domainEventService::publishRecordsUpdated);
   }
 
-  private Future<Void> itemsUpdated(List<ItemWithHolding> oldItems) {
+  private Future<Void> publishItemsUpdated(List<ItemWithHolding> oldItems) {
     if (oldItems.isEmpty()) {
       log.info("No items were updated, skipping event sending");
       return succeededFuture();
@@ -145,7 +145,7 @@ public class ItemDomainEventService {
 
     return itemRepository.getById(oldItems, ItemWithHolding::getItemId)
       .map(updatedItems -> mapOldItemsToUpdatedItems(updatedItems, oldItems))
-      .compose(domainEventService::recordsUpdated);
+      .compose(domainEventService::publishRecordsUpdated);
   }
 
   private List<Triple<String, Item, Item>> mapOldItemsToUpdatedItems(

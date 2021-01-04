@@ -44,7 +44,7 @@ import org.folio.rest.support.HridManager;
 import org.folio.rest.support.ItemEffectiveLocationUtil;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.batch.BatchOperationContext;
-import org.folio.services.domainevent.ItemDomainEventService;
+import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.services.item.effectivevalues.ItemWithHolding;
 
 import io.vertx.core.AsyncResult;
@@ -61,7 +61,7 @@ public class ItemService {
   private final ItemEffectiveValuesService effectiveValuesService;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
-  private final ItemDomainEventService domainEventService;
+  private final ItemDomainEventPublisher domainEventService;
   private final ItemRepository itemRepository;
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -71,7 +71,7 @@ public class ItemService {
     final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     hridManager = new HridManager(vertxContext, postgresClient);
     effectiveValuesService = new ItemEffectiveValuesService(postgresClient);
-    domainEventService = new ItemDomainEventService(vertxContext, okapiHeaders);
+    domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
   }
 
@@ -87,7 +87,7 @@ public class ItemService {
           PostItemStorageItemsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventService.itemCreated(itemWithHolding));
+          .compose(domainEventService.publishItemCreated(itemWithHolding));
       });
   }
 
@@ -115,7 +115,7 @@ public class ItemService {
           okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class, postSyncResult);
 
         return postSyncResult.future()
-          .compose(domainEventService.itemsCreatedOrUpdated(batchOperation));
+          .compose(domainEventService.publishItemsCreatedOrUpdated(batchOperation));
       });
   }
 
@@ -131,7 +131,7 @@ public class ItemService {
             PutItemStorageItemsByItemIdResponse.class, putResult);
 
           return putResult.future()
-            .compose(domainEventService.itemUpdated(itemWithHolding.getInstanceId(), oldItem));
+            .compose(domainEventService.publishItemUpdated(itemWithHolding.getInstanceId(), oldItem));
         }));
   }
 
@@ -145,14 +145,14 @@ public class ItemService {
           DeleteItemStorageItemsByItemIdResponse.class, deleteResult);
 
         return deleteResult.future()
-          .compose(domainEventService.itemRemoved(item));
+          .compose(domainEventService.publishItemRemoved(item));
       });
   }
 
   public Future<Void> deleteAllItems() {
     return itemRepository.getAll()
       .compose(allItems -> itemRepository.deleteAll()
-        .compose(notUsed -> domainEventService.itemsRemoved(allItems)));
+        .compose(notUsed -> domainEventService.publishItemsRemoved(allItems)));
   }
 
   /**
