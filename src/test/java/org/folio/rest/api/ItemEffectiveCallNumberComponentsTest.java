@@ -2,7 +2,7 @@ package org.folio.rest.api;
 
 
 import static org.folio.rest.api.ItemStorageTest.nod;
-import static org.folio.rest.support.matchers.DomainEventAsserts.assertUpdateEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
 import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;
@@ -26,7 +26,6 @@ import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData.Cal
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
-import org.folio.rest.support.matchers.DomainEventAsserts;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;

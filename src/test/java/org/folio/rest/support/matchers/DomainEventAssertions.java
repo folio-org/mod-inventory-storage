@@ -20,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 
 import io.vertx.core.json.JsonObject;
 
-public final class DomainEventAsserts {
-  private DomainEventAsserts() {}
+public final class DomainEventAssertions {
+  private DomainEventAssertions() {}
 
   private static void assertCreateEvent(JsonObject createEvent, JsonObject newRecord) {
     assertThat(createEvent.getString("type"), is("CREATE"));

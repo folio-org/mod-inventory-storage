@@ -4,9 +4,9 @@ import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.matchers.DomainEventAsserts.assertNoCreateEvent;
-import static org.folio.rest.support.matchers.DomainEventAsserts.assertNoRemoveEvent;
-import static org.folio.rest.support.matchers.DomainEventAsserts.assertNoUpdateEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoCreateEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoRemoveEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEvent;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 

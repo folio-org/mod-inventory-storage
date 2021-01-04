@@ -1,6 +1,6 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.matchers.DomainEventAsserts.assertUpdateEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;

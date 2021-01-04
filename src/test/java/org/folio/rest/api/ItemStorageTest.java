@@ -21,9 +21,9 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNowAsString;
-import static org.folio.rest.support.matchers.DomainEventAsserts.assertCreateEventForItem;
-import static org.folio.rest.support.matchers.DomainEventAsserts.assertRemoveEventForItem;
-import static org.folio.rest.support.matchers.DomainEventAsserts.assertUpdateEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
@@ -75,7 +75,7 @@ import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.support.matchers.DomainEventAsserts;
+import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -892,7 +892,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray.stream()
       .map(obj -> (JsonObject) obj)
       .map(obj -> getById(obj.getString("id")).getJson())
-      .forEach(DomainEventAsserts::assertCreateEventForItem);
+      .forEach(DomainEventAssertions::assertCreateEventForItem);
   }
 
   @Test
@@ -953,7 +953,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createdItemIds.stream()
       .map(this::getById)
       .map(Response::getJson)
-      .forEach(DomainEventAsserts::assertCreateEventForItem);
+      .forEach(DomainEventAssertions::assertCreateEventForItem);
 
     assertUpdateEventForItem(itemToUpdate.getJson(), getById(existingId).getJson());
   }
@@ -1800,7 +1800,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allItems.size(), is(0));
     assertThat(responseBody.getInteger("totalRecords"), is(0));
 
-    createdItems.forEach(DomainEventAsserts::assertRemoveEventForItem);
+    createdItems.forEach(DomainEventAssertions::assertRemoveEventForItem);
   }
 
   @Test
