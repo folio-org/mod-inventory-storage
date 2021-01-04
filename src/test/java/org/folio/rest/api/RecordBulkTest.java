@@ -214,7 +214,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING&limit=20&offset=10");
+    URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
