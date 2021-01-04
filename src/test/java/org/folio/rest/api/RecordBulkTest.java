@@ -107,7 +107,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     createManyMoons(moons);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = recordBulkUrl("/ids?type=idlimit=20&offset=10");
+    URL getInstanceUrl = recordBulkUrl("/ids?type=id&limit=20&offset=0");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
@@ -152,7 +152,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     createManyMoons(moons);
 
     String query = urlEncode("keyword all \"Moon #1*\"");
-    URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
+    URL getInstanceUrl = recordBulkUrl("/ids?type=id&limit=20&offset=0&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
@@ -214,7 +214,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING");
+    URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING&limit=20&offset=0");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
