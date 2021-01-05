@@ -15,9 +15,12 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public final class DomainEventAssertions {
@@ -72,6 +75,19 @@ public final class DomainEventAssertions {
     await().until(() -> getInstanceEvents(instanceId).size() > 0);
 
     assertCreateEvent(getFirstInstanceEvent(instanceId), instance);
+  }
+
+  public static void assertCreateEventForInstances(JsonArray instances) {
+    assertCreateEventForInstances(instances.stream()
+      .map(obj -> (JsonObject) obj)
+      .collect(Collectors.toList()));
+  }
+
+  public static void assertCreateEventForInstances(List<JsonObject> instances) {
+    instances.forEach(instance -> {
+      final String instanceId = instance.getString("id");
+      assertCreateEvent(getFirstInstanceEvent(instanceId), instance);
+    });
   }
 
   public static void assertRemoveEventForInstance(JsonObject instance) {
