@@ -6,19 +6,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.services.item.effectivevalues.ItemWithHolding;
 
 public final class EffectiveCallNumberComponentsUtil {
   private EffectiveCallNumberComponentsUtil() {}
 
-  public static ItemWithHolding setCallNumberComponents(ItemWithHolding itemWithHolding) {
-    return itemWithHolding.withEffectiveCallNumberComponents(buildComponents(itemWithHolding));
+  public static void setCallNumberComponents(Item item, HoldingsRecord hr) {
+    item.setEffectiveCallNumberComponents(buildComponents(item, hr));
   }
 
-  private static EffectiveCallNumberComponents buildComponents(ItemWithHolding itemWithHolding) {
-    final Item item = itemWithHolding.getItem();
-    final HoldingsRecord holdings = itemWithHolding.getHoldingsRecord();
-
+  private static EffectiveCallNumberComponents buildComponents(Item item, HoldingsRecord holdings) {
     String updatedCallNumber = null;
     if (isNotBlank(item.getItemLevelCallNumber())) {
       updatedCallNumber = item.getItemLevelCallNumber();
