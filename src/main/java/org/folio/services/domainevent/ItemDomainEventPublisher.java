@@ -1,16 +1,21 @@
 package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Collections.singletonList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
+import static org.folio.services.domainevent.OldOrNewItem.fromItem;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_ITEM;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.core.Response;
 
@@ -24,7 +29,6 @@ import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.services.batch.BatchOperationContext;
-import org.folio.services.item.effectivevalues.ItemWithHolding;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -34,7 +38,7 @@ public class ItemDomainEventPublisher {
 
   private final ItemRepository itemRepository;
   private final HoldingsRepository holdingsRepository;
-  private final CommonDomainEventPublisher<Item> domainEventService;
+  private final CommonDomainEventPublisher<OldOrNewItem> domainEventService;
 
   public ItemDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     itemRepository = new ItemRepository(context, okapiHeaders);
@@ -42,34 +46,30 @@ public class ItemDomainEventPublisher {
     domainEventService = new CommonDomainEventPublisher<>(context, okapiHeaders, INVENTORY_ITEM);
   }
 
-  public Function<Response, Future<Response>> publishItemUpdated(String instanceId, Item oldItem) {
+  public Function<Response, Future<Response>> publishItemUpdated(Item oldItem) {
     return response -> {
       if (!isUpdateSuccessResponse(response)) {
         log.warn("Item update failed, skipping event publishing");
         return succeededFuture(response);
       }
 
-      return itemRepository.getById(oldItem.getId())
-        .compose(updatedItem -> domainEventService.publishRecordUpdated(instanceId, oldItem, updatedItem))
-        .map(response);
+      return publishItemsUpdated(singletonList(oldItem)).map(response);
     };
   }
 
-  public Function<Response, Future<Response>> publishItemCreated(ItemWithHolding itemWithHolding) {
+  public Function<Response, Future<Response>> publishItemCreated(Item item) {
     return response -> {
       if (!isCreateSuccessResponse(response)) {
         log.warn("Item create failed, skipping event publishing");
         return succeededFuture(response);
       }
 
-      return domainEventService.publishRecordCreated(itemWithHolding.getInstanceId(),
-        itemWithHolding.getItem())
-        .map(response);
+      return publishItemsCreated(singletonList(item)).map(response);
     };
   }
 
   public Function<Response, Future<Response>> publishItemsCreatedOrUpdated(
-    BatchOperationContext<ItemWithHolding> batchOperation) {
+    BatchOperationContext<Item> batchOperation) {
 
     return response -> {
       if (!isCreateSuccessResponse(response)) {
@@ -77,17 +77,12 @@ public class ItemDomainEventPublisher {
         return succeededFuture(response);
       }
 
-      final var createdItemsPairs = batchOperation
-        .getRecordsToBeCreated().stream()
-        .map(itemAndHolding -> new ImmutablePair<>(itemAndHolding.getInstanceId(),
-          itemAndHolding.getItem()))
-        .collect(Collectors.<Pair<String, Item>>toList());
+      log.info("Items created {}, items updated {}",
+        batchOperation.getRecordsToBeCreated().size(),
+        batchOperation.getExistingRecords().size());
 
-      log.info("Items created {}, items updated {}", createdItemsPairs.size(),
-        batchOperation.getExistingRecordsBeforeUpdate().size());
-
-      return domainEventService.publishRecordsCreated(createdItemsPairs)
-        .compose(notUsed -> publishItemsUpdated(batchOperation.getExistingRecordsBeforeUpdate()))
+      return publishItemsCreated(batchOperation.getRecordsToBeCreated())
+        .compose(notUsed -> publishItemsUpdated(batchOperation.getExistingRecords()))
         .map(response);
     };
   }
@@ -99,9 +94,7 @@ public class ItemDomainEventPublisher {
         return succeededFuture(response);
       }
 
-      return holdingsRepository.getById(item.getHoldingsRecordId())
-        .compose(holding -> domainEventService.publishRecordRemoved(holding.getInstanceId(), item))
-        .map(response);
+      return publishItemsRemoved(singletonList(item)).map(response);
     };
   }
 
@@ -111,31 +104,12 @@ public class ItemDomainEventPublisher {
       return succeededFuture();
     }
 
-    return holdingsRepository.getById(items, Item::getHoldingsRecordId)
-      .compose(holdingsMap -> {
-        final var instanceIdToItemPairs = items.stream()
-          .map(item -> {
-            final HoldingsRecord hr = holdingsMap.get(item.getHoldingsRecordId());
-            return new ImmutablePair<>(hr.getInstanceId(), item);
-          }).collect(Collectors.<Pair<String, Item>>toList());
-
-        return domainEventService.publishRecordsRemoved(instanceIdToItemPairs);
-      });
+    return fetchAndSetInstanceIdForItems(items)
+      .map(this::convertDomainStatesToPairs)
+      .compose(domainEventService::publishRecordsRemoved);
   }
 
-  public Future<Void> publishItemsUpdated(HoldingsRecord holdingsRecord, List<Item> oldItems) {
-    final var oldItemWithHoldings = oldItems.stream()
-      .map(item -> new ItemWithHolding(item, holdingsRecord))
-      .collect(Collectors.toList());
-
-    log.info("[{}] items were updated, sending events for them", oldItems.size());
-
-    return itemRepository.getById(oldItemWithHoldings, ItemWithHolding::getItemId)
-      .map(updatedItems -> mapOldItemsToUpdatedItems(updatedItems, oldItemWithHoldings))
-      .compose(domainEventService::publishRecordsUpdated);
-  }
-
-  private Future<Void> publishItemsUpdated(List<ItemWithHolding> oldItems) {
+  public Future<Void> publishItemsUpdated(HoldingsRecord hr, List<Item> oldItems) {
     if (oldItems.isEmpty()) {
       log.info("No items were updated, skipping event sending");
       return succeededFuture();
@@ -143,21 +117,112 @@ public class ItemDomainEventPublisher {
 
     log.info("[{}] items were updated, sending events for them", oldItems.size());
 
-    return itemRepository.getById(oldItems, ItemWithHolding::getItemId)
-      .map(updatedItems -> mapOldItemsToUpdatedItems(updatedItems, oldItems))
+    return itemRepository.getById(oldItems, Item::getId)
+      .map(updatedItems -> mapOldItemsToUpdatedItems(oldItems, updatedItems))
+      .map(this::convertItemsToDomainStateObjectPairs)
+      .map(pairs -> setInstanceIdForDomainStatePairs(Map.of(hr.getId(), hr), pairs))
+      .map(this::convertDomainStatesPairsToTriple)
       .compose(domainEventService::publishRecordsUpdated);
   }
 
-  private List<Triple<String, Item, Item>> mapOldItemsToUpdatedItems(
-    Map<String, Item> updatedItemsMap, List<ItemWithHolding> oldItems) {
+  private Future<Void> publishItemsUpdated(Collection<Item> oldItems) {
+    if (oldItems.isEmpty()) {
+      log.info("No items were updated, skipping event sending");
+      return succeededFuture();
+    }
+
+    log.info("[{}] items were updated, sending events for them", oldItems.size());
+
+    return itemRepository.getById(oldItems, Item::getId)
+      .map(updatedItems -> mapOldItemsToUpdatedItems(oldItems, updatedItems))
+      .map(this::convertItemsToDomainStateObjectPairs)
+      .compose(this::fetchAndSetInstanceIdForItemPairs)
+      .map(this::convertDomainStatesPairsToTriple)
+      .compose(domainEventService::publishRecordsUpdated);
+  }
+
+  private Future<Void> publishItemsCreated(Collection<Item> items) {
+    return fetchAndSetInstanceIdForItems(items)
+      .map(this::convertDomainStatesToPairs )
+      .compose(domainEventService::publishRecordsCreated);
+  }
+
+  private List<Pair<OldOrNewItem, OldOrNewItem>> convertItemsToDomainStateObjectPairs(
+    List<Pair<Item, Item>> pairs) {
+
+    return pairs.stream()
+      .map(pair -> {
+        final var oldItem = fromItem(pair.getLeft());
+        final var newItem = fromItem(pair.getRight());
+
+        return new ImmutablePair<>(oldItem, newItem);
+      }).collect(Collectors.toList());
+  }
+
+  private Future<List<Pair<OldOrNewItem, OldOrNewItem>>> fetchAndSetInstanceIdForItemPairs(
+    List<Pair<OldOrNewItem, OldOrNewItem>> pairs) {
+
+    final Set<String> holdingIdsToFetch = pairs.stream()
+      .flatMap(pair -> Stream.of(pair.getLeft(), pair.getRight()))
+      .map(OldOrNewItem::getHoldingsRecordId)
+      .collect(Collectors.toSet());
+
+    return holdingsRepository.getById(holdingIdsToFetch)
+      .map(holdings -> setInstanceIdForDomainStatePairs(holdings, pairs));
+  }
+
+  private Future<List<OldOrNewItem>> fetchAndSetInstanceIdForItems(Collection<Item> items) {
+    return holdingsRepository.getById(items, Item::getHoldingsRecordId)
+      .map(holdings -> setInstanceIdForDomainState(holdings, items));
+  }
+
+  private List<Pair<OldOrNewItem, OldOrNewItem>> setInstanceIdForDomainStatePairs(
+    Map<String, HoldingsRecord> holdings, List<Pair<OldOrNewItem, OldOrNewItem>> pairs) {
+
+    return pairs.stream()
+      .map(pair -> {
+        final OldOrNewItem left = pair.getLeft();
+        final OldOrNewItem right = pair.getRight();
+
+        final HoldingsRecord hrForLeft = holdings.get(left.getHoldingsRecordId());
+        final HoldingsRecord hrForRight = holdings.get(right.getHoldingsRecordId());
+
+        return new ImmutablePair<>(left.withInstanceId(hrForLeft.getInstanceId()),
+          right.withInstanceId(hrForRight.getInstanceId()));
+      }).collect(Collectors.toList());
+  }
+
+  private List<OldOrNewItem> setInstanceIdForDomainState(
+    Map<String, HoldingsRecord> holdings, Collection<Item> items) {
+
+    return items.stream()
+      .map(item -> fromItem(item, holdings.get(item.getHoldingsRecordId())))
+      .collect(Collectors.toList());
+  }
+
+  private List<Pair<Item, Item>> mapOldItemsToUpdatedItems(
+    Collection<Item> oldItems, Map<String, Item> newItems) {
 
     return oldItems.stream()
-      .map(itemWithHolding -> {
-        final String instanceId = itemWithHolding.getInstanceId();
-        final Item oldItem = itemWithHolding.getItem();
-        final Item newItem = updatedItemsMap.get(itemWithHolding.getItemId());
+      .map(oldItem -> new ImmutablePair<>(oldItem, newItems.get(oldItem.getId())))
+      .collect(Collectors.toList());
+  }
 
-        return new ImmutableTriple<>(instanceId, oldItem, newItem);
+  private List<Triple<String, OldOrNewItem, OldOrNewItem>> convertDomainStatesPairsToTriple(
+    List<Pair<OldOrNewItem, OldOrNewItem>> pairs) {
+
+    return pairs.stream()
+      .map(pair -> {
+        final var oldItem = pair.getLeft();
+        final var newItem = pair.getRight();
+
+        return new ImmutableTriple<>(newItem.getInstanceId(), oldItem, newItem);
       }).collect(Collectors.toList());
+  }
+
+  private List<Pair<String, OldOrNewItem>> convertDomainStatesToPairs(List<OldOrNewItem> items) {
+    return items.stream()
+      .map(item -> new ImmutablePair<>(item.getInstanceId(), item))
+      .collect(Collectors.toList());
   }
 }
