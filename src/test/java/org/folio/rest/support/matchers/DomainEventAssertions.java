@@ -97,7 +97,10 @@ public final class DomainEventAssertions {
     await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 0);
 
     final JsonObject message = getFirstItemEvent(instanceIdForItem, itemId);
-    assertCreateEvent(message, item);
+    // Domain event for item has an extra 'instanceId' property for
+    // old/new object, the property does not exist in schema,
+    // so we have to add it manually
+    assertCreateEvent(message, addInstanceIdForItem(item, instanceIdForItem));
   }
 
   public static void assertRemoveEventForItem(JsonObject item) {
@@ -107,8 +110,10 @@ public final class DomainEventAssertions {
     await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 1);
 
     final JsonObject message = getLastItemEvent(instanceIdForItem, itemId);
-
-    assertRemoveEvent(message, item);
+    // Domain event for item has an extra 'instanceId' property for
+    // old/new object, the property does not exist in schema,
+    // so we have to add it manually
+    assertRemoveEvent(message, addInstanceIdForItem(item, instanceIdForItem));
   }
 
   public static void assertUpdateEventForItem(JsonObject oldItem, JsonObject newItem) {
@@ -118,13 +123,21 @@ public final class DomainEventAssertions {
     await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 0);
 
     final JsonObject message = getLastItemEvent(instanceIdForItem, itemId);
-
-    assertUpdateEvent(message, oldItem, newItem);
+    // Domain event for item has an extra 'instanceId' property for
+    // old/new object, the property does not exist in schema,
+    // so we have to add it manually
+    assertUpdateEvent(message,
+      addInstanceIdForItem(oldItem, getInstanceIdForItem(oldItem)),
+      addInstanceIdForItem(newItem, instanceIdForItem));
   }
 
   private static String getInstanceIdForItem(JsonObject newItem) {
     final UUID holdingsRecordId = fromString(newItem.getString("holdingsRecordId"));
 
     return holdingsClient.getById(holdingsRecordId).getJson().getString("instanceId");
+  }
+
+  private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {
+    return item.copy().put("instanceId", instanceId);
   }
 }
