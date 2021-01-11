@@ -76,7 +76,7 @@ public class ItemEffectiveValuesService {
       item.getItemLevelCallNumberPrefix(),
       item.getItemLevelCallNumberSuffix(),
       item.getItemLevelCallNumberTypeId())
-      && isAllBlank(item.getPermanentLocationId(), item.getTemporaryLocationId());
+      || isAllBlank(item.getPermanentLocationId(), item.getTemporaryLocationId());
   }
 
   private ValidationException holdingsRecordNotFoundException(String id) {
