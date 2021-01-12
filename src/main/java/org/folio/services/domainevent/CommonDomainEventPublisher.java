@@ -3,6 +3,8 @@ package org.folio.services.domainevent;
 import static io.vertx.core.CompositeFuture.all;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
+import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.createEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteEvent;
@@ -12,6 +14,7 @@ import static org.folio.services.kafka.KafkaProducerServiceFactory.getKafkaProdu
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,6 +28,8 @@ import io.vertx.core.Future;
 
 class CommonDomainEventPublisher<T> {
   private static final Logger log = getLogger(CommonDomainEventPublisher.class);
+  private static final Set<String> FORWARDER_HEADERS = Set.of(URL.toLowerCase(),
+    TENANT.toLowerCase());
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -95,13 +100,19 @@ class CommonDomainEventPublisher<T> {
     return getKafkaProducerService(vertxContext.owner())
       .sendMessage(KafkaMessage.builder()
         .key(instanceId).payload(domainEvent).topic(kafkaTopic)
-        .headers(okapiHeaders).build())
+        .headers(getHeadersToForward()).build())
       .onComplete(result -> {
         if (result.failed()) {
           log.error("Unable to send domain event [{}], payload - [{}]",
             instanceId, domainEvent, result.cause());
         }
       });
+  }
+
+  private Map<String, String> getHeadersToForward() {
+    return okapiHeaders.entrySet().stream()
+      .filter(entry -> FORWARDER_HEADERS.contains(entry.getKey().toLowerCase()))
+      .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   private String getTenant() {

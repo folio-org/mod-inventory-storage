@@ -4,12 +4,10 @@ import static io.vertx.core.MultiMap.caseInsensitiveMultiMap;
 import static java.util.UUID.fromString;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.api.TestBase.holdingsClient;
-import static org.folio.rest.support.HttpClient.DUMMY_USER_TOKEN;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstItemEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
@@ -66,8 +64,8 @@ public final class DomainEventAssertions {
   private static void assertHeaders(Map<String, String> headers) {
     final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap().addAll(headers);
 
+    assertEquals(caseInsensitiveMap.size(), 2);
     assertEquals(caseInsensitiveMap.get(TENANT), TENANT_ID);
-    assertEquals(caseInsensitiveMap.get(TOKEN), DUMMY_USER_TOKEN);
     assertEquals(caseInsensitiveMap.get(URL), storageUrl("").toString());
   }
 
