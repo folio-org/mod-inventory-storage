@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
+import org.folio.services.kafka.KafkaMessage;
 import org.folio.services.kafka.topic.KafkaTopic;
 
 import io.vertx.core.Context;
@@ -89,11 +90,12 @@ class CommonDomainEventPublisher<T> {
   }
 
   private Future<Void> publishMessage(String instanceId, DomainEvent<?> domainEvent) {
-    log.debug("Sending domain event [{}], payload [{}]",
-      instanceId, domainEvent);
+    log.debug("Sending domain event [{}], payload [{}]", instanceId, domainEvent);
 
     return getKafkaProducerService(vertxContext.owner())
-      .sendMessage(instanceId, domainEvent, kafkaTopic)
+      .sendMessage(KafkaMessage.builder()
+        .key(instanceId).payload(domainEvent).topic(kafkaTopic)
+        .headers(okapiHeaders).build())
       .onComplete(result -> {
         if (result.failed()) {
           log.error("Unable to send domain event [{}], payload - [{}]",
