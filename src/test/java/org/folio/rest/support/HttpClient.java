@@ -6,6 +6,7 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
 
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
@@ -24,6 +25,7 @@ import io.vertx.ext.web.client.WebClient;
 public class HttpClient {
   private static final Logger LOG = LogManager.getLogger();
 
+  public static final String DUMMY_USER_TOKEN = "1.2.3";
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
   private static final String X_OKAPI_URL = "X-Okapi-Url";
   private static final String X_OKAPI_URL_TO = "X-Okapi-Url-to";
@@ -48,6 +50,7 @@ public class HttpClient {
       String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
       request.putHeader(X_OKAPI_URL, baseUrl);
       request.putHeader(X_OKAPI_URL_TO, baseUrl);
+      request.putHeader(TOKEN, DUMMY_USER_TOKEN);
     }
     request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
   }
