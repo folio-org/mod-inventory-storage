@@ -143,7 +143,7 @@ public final class DomainEventAssertions {
     final String itemId = newItem.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(newItem);
 
-    await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 0);
+    await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 1);
 
     // Domain event for item has an extra 'instanceId' property for
     // old/new object, the property does not exist in schema,
