@@ -22,11 +22,8 @@ public class OldOrNewItem extends Item {
     return this;
   }
 
-  public static OldOrNewItem fromItem(Item item) {
-    return decodeValue(encode(item), OldOrNewItem.class);
-  }
-
   public static OldOrNewItem fromItem(Item item, HoldingsRecord hr) {
-    return fromItem(item).withInstanceId(hr.getInstanceId());
+    return decodeValue(encode(item), OldOrNewItem.class)
+      .withInstanceId(hr.getInstanceId());
   }
 }
