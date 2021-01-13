@@ -8,10 +8,13 @@ import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.api.TestBase.holdingsClient;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstItemEvent;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getItemEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.hamcrest.CoreMatchers.is;
@@ -73,6 +76,13 @@ public final class DomainEventAssertions {
     await().atLeast(1, TimeUnit.SECONDS);
 
     final JsonObject updateMessage  = getLastInstanceEvent(instanceId).getPayload();
+    assertThat(updateMessage.getString("type"), not(is("UPDATE")));
+  }
+
+  public static void assertNoUpdateEventForHolding(String instanceId, String hrId) {
+    await().atLeast(1, TimeUnit.SECONDS);
+
+    final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).getPayload();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
@@ -151,6 +161,33 @@ public final class DomainEventAssertions {
     assertUpdateEvent(getLastItemEvent(instanceIdForItem, itemId),
       addInstanceIdForItem(oldItem, getInstanceIdForItem(oldItem)),
       addInstanceIdForItem(newItem, instanceIdForItem));
+  }
+
+  public static void assertCreateEventForHolding(JsonObject hr) {
+    final String id = hr.getString("id");
+    final String instanceId = hr.getString("instanceId");
+
+    await().until(() -> getHoldingsEvents(instanceId, id).size() > 0);
+
+    assertCreateEvent(getFirstHoldingEvent(instanceId, id), hr);
+  }
+
+  public static void assertRemoveEventForHolding(JsonObject hr) {
+    final String id = hr.getString("id");
+    final String instanceId = hr.getString("instanceId");
+
+    await().until(() -> getHoldingsEvents(instanceId, id).size() > 0);
+
+    assertRemoveEvent(getLastHoldingEvent(instanceId, id), hr);
+  }
+
+  public static void assertUpdateEventForHolding(JsonObject oldHr, JsonObject newHr) {
+    final String id = newHr.getString("id");
+    final String instanceId = newHr.getString("instanceId");
+
+    await().until(() -> getHoldingsEvents(instanceId, id).size() > 0);
+
+    assertUpdateEvent(getLastHoldingEvent(instanceId, id), oldHr, newHr);
   }
 
   private static String getInstanceIdForItem(JsonObject newItem) {

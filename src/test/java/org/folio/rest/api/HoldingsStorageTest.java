@@ -12,6 +12,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
@@ -39,6 +41,10 @@ import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForHolding;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEventForHolding;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -77,12 +83,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateAHolding()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void canCreateAHolding() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -117,6 +118,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+    assertCreateEventForHolding(holding);
   }
 
   @Test
@@ -264,12 +266,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canReplaceAHoldingAtSpecificLocation()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void canReplaceAHoldingAtSpecificLocation() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -304,15 +301,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(NEW_TEST_TAG));
+    assertUpdateEventForHolding(holdingResource.getJson(), holdingFromGet);
   }
 
   @Test
-  public void canDeleteAHolding()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
+  public void canDeleteAHolding() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -328,6 +321,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     Response getResponse = holdingsClient.getById(holdingId);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertRemoveEventForHolding(holdingResource.getJson());
   }
 
   @Test
@@ -511,12 +505,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAllHoldings()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void canDeleteAllHoldings() {
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
     UUID thirdInstanceId = UUID.randomUUID();
@@ -525,23 +514,29 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(nod(secondInstanceId));
     instancesClient.create(uprooted(thirdInstanceId));
 
-    holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(firstInstanceId)
-      .withPermanentLocation(mainLibraryLocationId));
+    final List<IndividualResource> createdHoldings = List.of(
+      holdingsClient.create(new HoldingRequestBuilder()
+        .forInstance(firstInstanceId)
+        .withPermanentLocation(mainLibraryLocationId)),
 
-    holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(secondInstanceId)
-      .withPermanentLocation(annexLibraryLocationId));
+      holdingsClient.create(new HoldingRequestBuilder()
+        .forInstance(secondInstanceId)
+        .withPermanentLocation(annexLibraryLocationId)),
 
-    holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(thirdInstanceId)
-      .withPermanentLocation(mainLibraryLocationId));
+      holdingsClient.create(new HoldingRequestBuilder()
+        .forInstance(thirdInstanceId)
+        .withPermanentLocation(mainLibraryLocationId))
+    );
 
     holdingsClient.deleteAll();
 
     List<JsonObject> allHoldings = holdingsClient.getAll();
 
     assertThat(allHoldings.size(), is(0));
+
+    createdHoldings.stream()
+      .map(IndividualResource::getJson)
+      .forEach(DomainEventAssertions::assertRemoveEventForHolding);
   }
 
   @Test
@@ -1627,11 +1622,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUsePutToCreateAHoldingsWhenHRIDIsSupplied()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
+  public void canUsePutToCreateAHoldingsWhenHRIDIsSupplied() {
     log.info("Starting canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
 
     final UUID instanceId = UUID.randomUUID();
@@ -1656,6 +1647,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holdingsFromGet = getResponse.getJson();
 
     assertThat(holdingsFromGet.getString("hrid"), is(hrid));
+    // Make sure a create event published vs update event
+    assertCreateEventForHolding(holdingsFromGet);
+    assertNoUpdateEventForHolding(instanceId.toString(), holdingsId.toString());
 
     log.info("Finished canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
   }
@@ -1884,8 +1878,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void canPostSynchronousBatch() {
     JsonArray holdingsArray = threeHoldings();
     assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HTTP_CREATED));
-    for (Object holding : holdingsArray) {
-      assertExists((JsonObject) holding);
+    for (Object hrObj : holdingsArray) {
+      final JsonObject holding = (JsonObject) hrObj;
+
+      assertExists(holding);
+      assertCreateEventForHolding(getById(holding.getString("id")).getJson());
     }
   }
 
@@ -1925,7 +1922,28 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canPostSynchronousBatchWithExistingIdWithUpsertTrue() {
-    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HTTP_CREATED));
+    final String existingHrId = UUID.randomUUID().toString();
+    final JsonArray holdingsArray1 = threeHoldings();
+    final JsonArray holdingsArray2 = threeHoldings();
+
+    holdingsArray1.getJsonObject(1).put("id", existingHrId);
+    holdingsArray2.getJsonObject(1).put("id", existingHrId);
+
+    final Response firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
+    final JsonObject existingHrBeforeUpdate = getById(existingHrId).getJson();
+    final Response secondResponse = postSynchronousBatch("?upsert=true", holdingsArray2);
+
+    assertThat(firstResponse, statusCodeIs(HTTP_CREATED));
+    assertThat(secondResponse, statusCodeIs(HTTP_CREATED));
+
+    Stream.concat(holdingsArray1.stream(), holdingsArray2.stream())
+      .map(json -> ((JsonObject) json).getString("id"))
+      .filter(id -> !id.equals(existingHrId.toString()))
+      .map(this::getById)
+      .map(Response::getJson)
+      .forEach(DomainEventAssertions::assertCreateEventForHolding);
+
+    assertUpdateEventForHolding(existingHrBeforeUpdate, getById(existingHrId).getJson());
   }
 
   @Test
