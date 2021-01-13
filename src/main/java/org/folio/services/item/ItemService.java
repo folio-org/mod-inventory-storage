@@ -9,7 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.rest.impl.HoldingsStorageAPI.ITEM_TABLE;
+import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.ItemStorage.DeleteItemStorageItemsByItemIdResponse;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PostItemStorageItemsResponse;
@@ -34,7 +34,6 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.exceptions.BadRequestException;
-import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
@@ -43,6 +42,7 @@ import org.folio.rest.support.HridManager;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.batch.BatchOperationContext;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.validator.CommonValidators;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -67,7 +67,7 @@ public class ItemService {
 
     final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     hridManager = new HridManager(vertxContext, postgresClient);
-    effectiveValuesService = new ItemEffectiveValuesService(postgresClient);
+    effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
   }
@@ -75,7 +75,7 @@ public class ItemService {
   public Future<Response> createItem(Item entity) {
     entity.getStatus().setDate(new Date());
 
-    return getHrid(entity).map(entity::withHrid)
+    return setHrid(entity)
       .compose(effectiveValuesService::populateEffectiveValues)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
@@ -84,7 +84,7 @@ public class ItemService {
           PostItemStorageItemsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventService.publishItemCreated(item));
+          .compose(domainEventService.publishCreated(item));
       });
   }
 
@@ -95,7 +95,7 @@ public class ItemService {
     final List<Future> setHridFutures = items.stream()
       .map(item -> {
         item.getStatus().setDate(itemStatusDate);
-        return getHrid(item).map(item::withHrid);
+        return setHrid(item);
       }).collect(toList());
 
     return all(setHridFutures)
@@ -108,13 +108,13 @@ public class ItemService {
           okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class, postSyncResult);
 
         return postSyncResult.future()
-          .compose(domainEventService.publishItemsCreatedOrUpdated(batchOperation));
+          .compose(domainEventService.publishCreatedOrUpdated(batchOperation));
       });
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
     return itemRepository.getById(itemId)
-      .compose(this::refuseIfNotFound)
+      .compose(CommonValidators::refuseIfNotFound)
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
       .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
         .compose(notUsed -> {
@@ -124,13 +124,13 @@ public class ItemService {
             PutItemStorageItemsByItemIdResponse.class, putResult);
 
           return putResult.future()
-            .compose(domainEventService.publishItemUpdated(oldItem));
+            .compose(domainEventService.publishUpdated(oldItem));
         }));
   }
 
   public Future<Response> deleteItem(String itemId) {
     return itemRepository.getById(itemId)
-      .compose(this::refuseIfNotFound)
+      .compose(CommonValidators::refuseIfNotFound)
       .compose(item -> {
         final Promise<Response> deleteResult = promise();
 
@@ -138,14 +138,14 @@ public class ItemService {
           DeleteItemStorageItemsByItemIdResponse.class, deleteResult);
 
         return deleteResult.future()
-          .compose(domainEventService.publishItemRemoved(item));
+          .compose(domainEventService.publishRemoved(item));
       });
   }
 
   public Future<Void> deleteAllItems() {
     return itemRepository.getAll()
       .compose(allItems -> itemRepository.deleteAll()
-        .compose(notUsed -> domainEventService.publishItemsRemoved(allItems)));
+        .compose(notUsed -> domainEventService.publishRemoved(allItems)));
   }
 
   /**
@@ -196,13 +196,10 @@ public class ItemService {
     }
   }
 
-  private Future<String> getHrid(Item entity) {
+  private Future<Item> setHrid(Item entity) {
     return isBlank(entity.getHrid())
-      ? hridManager.getNextItemHrid() : succeededFuture(entity.getHrid());
-  }
-
-  private Future<Item> refuseIfNotFound(Item item) {
-    return item != null ? succeededFuture(item) : failedFuture(new NotFoundException("Not found"));
+      ? hridManager.getNextItemHrid().map(entity::withHrid)
+      : succeededFuture(entity);
   }
 
   private Future<BatchOperationContext<Item>> buildBatchOperationContext(

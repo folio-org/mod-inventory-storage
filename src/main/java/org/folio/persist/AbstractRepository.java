@@ -21,19 +21,21 @@ import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
-abstract class AbstractRepository<T> {
+public abstract class AbstractRepository<T> {
   protected final PostgresClientFuturized postgresClientFuturized;
   protected final PostgresClient postgresClient;
   protected final String tableName;
   protected final Class<T> recordType;
+  protected final String tenantId;
 
   protected AbstractRepository(PostgresClient postgresClient, String tableName,
-    Class<T> recordType) {
+    Class<T> recordType, String tenantId) {
 
     this.postgresClientFuturized = new PostgresClientFuturized(postgresClient);
     this.postgresClient = postgresClient;
     this.tableName = tableName;
     this.recordType = recordType;
+    this.tenantId = tenantId;
   }
 
   public Future<String> save(String id, T entity) {
@@ -71,5 +73,12 @@ abstract class AbstractRepository<T> {
 
   public Future<RowSet<Row>> update(SQLConnection connection, String id, T record) {
     return update(succeededFuture(connection), id, record);
+  }
+
+  public Future<RowSet<Row>> deleteAll() {
+    final String removeAllQuery = format("DELETE FROM %s_mod_inventory_storage.%s",
+      tenantId, tableName);
+
+    return postgresClientFuturized.execute(removeAllQuery);
   }
 }
