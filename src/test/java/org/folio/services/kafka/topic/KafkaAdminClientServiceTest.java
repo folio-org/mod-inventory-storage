@@ -27,7 +27,8 @@ import io.vertx.kafka.admin.NewTopic;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
-  private final Set<String> allTopics = Set.of("inventory.instance", "inventory.item");
+  private final Set<String> allTopics = Set.of("inventory.instance", "inventory.item",
+    "inventory.holdings-record");
   private KafkaAdminClientService adminClientService;
 
   @Before
