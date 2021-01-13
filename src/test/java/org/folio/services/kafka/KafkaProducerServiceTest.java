@@ -17,8 +17,11 @@ public class KafkaProducerServiceTest {
   public void canThrowJacksonExceptionWhenCannotParseObject(){
     final var producer = new KafkaProducerService(mock(KafkaProducer.class));
 
+    final KafkaMessage<Object> message = KafkaMessage.builder()
+      .key("id").payload(new Object()).topic(INVENTORY_INSTANCE).build();
+
     assertThrows("Unable to deserialize message", ExecutionException.class,
-      () -> producer.sendMessage("id", new Object(), INVENTORY_INSTANCE)
-      .toCompletionStage().toCompletableFuture().get(1, TimeUnit.SECONDS));
+      () -> producer.sendMessage(message).toCompletionStage().toCompletableFuture()
+        .get(1, TimeUnit.SECONDS));
   }
 }
