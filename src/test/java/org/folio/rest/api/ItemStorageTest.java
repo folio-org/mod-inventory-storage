@@ -60,6 +60,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
@@ -929,33 +931,35 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdUpsertTrue() {
-    final JsonArray itemsArray1 = threeItems();
-    final JsonArray itemsArray2 = threeItems();
+  public void canPostSynchronousBatchWithExistingIdUpsertTrue() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID existingItemId = UUID.randomUUID();
 
-    final var createdItemIds = List.of(
-      itemsArray1.getJsonObject(1).getString("id"),
-      itemsArray1.getJsonObject(2).getString("id"),
-      itemsArray2.getJsonObject(1).getString("id"),
-      itemsArray2.getJsonObject(2).getString("id"));
+    final JsonArray itemsArray1 = new JsonArray()
+      .add(nod(existingItemId, holdingsRecordId))
+      .add(smallAngryPlanet(holdingsRecordId))
+      .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+
+    final JsonArray itemsArray2 = new JsonArray()
+      .add(nod(existingItemId, holdingsRecordId))
+      .add(smallAngryPlanet(holdingsRecordId))
+      .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
 
     final var firstResponse = postSynchronousBatch("?upsert=true", itemsArray1);
-
-    final var existingId = itemsArray1.getJsonObject(0).getString("id");
-    final var itemToUpdate = getById(existingId);
-    itemsArray2.getJsonObject(0).put("id", existingId);
-
+    final var existingItemBeforeUpdate = getById(existingItemId).getJson();
     final var secondResponse = postSynchronousBatch("?upsert=true", itemsArray2);
 
     assertThat(firstResponse.getStatusCode(), is(201));
     assertThat(secondResponse.getStatusCode(), is(201));
 
-    createdItemIds.stream()
+    Stream.concat(itemsArray1.stream(), itemsArray2.stream())
+      .map(json -> ((JsonObject) json).getString("id"))
+      .filter(id -> !id.equals(existingItemId.toString()))
       .map(this::getById)
       .map(Response::getJson)
       .forEach(DomainEventAssertions::assertCreateEventForItem);
 
-    assertUpdateEventForItem(itemToUpdate.getJson(), getById(existingId).getJson());
+    assertUpdateEventForItem(existingItemBeforeUpdate, getById(existingItemId).getJson());
   }
 
   @Test
