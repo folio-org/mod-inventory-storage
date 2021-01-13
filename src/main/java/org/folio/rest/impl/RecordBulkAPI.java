@@ -38,8 +38,8 @@ public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
   @Validate
   @Override
   public void getRecordBulkIds(RecordBulkIdsGetField field,
-        RecordBulkIdsGetRecordType recordType, String query, int offset,
-        int limit, String lang, RoutingContext routingContext,
+        RecordBulkIdsGetRecordType recordType, int limit, String query,
+        int offset, String lang, RoutingContext routingContext,
         Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
         Context vertxContext) {
 
