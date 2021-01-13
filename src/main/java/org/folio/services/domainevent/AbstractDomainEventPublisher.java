@@ -23,14 +23,19 @@ import org.folio.persist.AbstractRepository;
 import org.folio.services.batch.BatchOperationContext;
 
 import io.vertx.core.Future;
-import lombok.AllArgsConstructor;
 
-@AllArgsConstructor
 abstract class AbstractDomainEventPublisher<DomainType, EventType> {
   private static final Logger log = getLogger(AbstractDomainEventPublisher.class);
 
   protected final AbstractRepository<DomainType> repository;
   protected final CommonDomainEventPublisher<EventType> domainEventService;
+
+  public AbstractDomainEventPublisher(AbstractRepository<DomainType> repository,
+    CommonDomainEventPublisher<EventType> domainEventService) {
+
+    this.repository = repository;
+    this.domainEventService = domainEventService;
+  }
 
   public Function<Response, Future<Response>> publishUpdated(DomainType oldRecord) {
     return response -> {
