@@ -42,7 +42,6 @@ public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
         int offset, String lang, RoutingContext routingContext,
         Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
         Context vertxContext) {
-
     try {
       if (recordType.toString().equalsIgnoreCase(HOLDING_TYPE)) {
         CQLWrapper wrapper = getCQL(query, HOLDING_TABLE, limit, offset);

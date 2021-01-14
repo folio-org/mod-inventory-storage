@@ -68,7 +68,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponse(response, expectedMatches, moons);
+    validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
   @Test
@@ -90,7 +90,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponse(response, expectedMatches, moons);
+    validateMoonsResponseWithTotal(response, 5, moons);
   }
 
   @Test
@@ -101,13 +101,13 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     TimeoutException {
 
     int totalMoons = 20;
-    int expectedMatches = totalMoons;
+    int expectedMatches = 5;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
       RecordBulkIdsGetField.ID);
     createManyMoons(moons);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = recordBulkUrl("/ids?type=id&limit=20&offset=0");
+    URL getInstanceUrl = recordBulkUrl("/ids?type=id&limit=5&offset=0");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
@@ -135,7 +135,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponse(response, expectedMatches, moons);
+    validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
   @Test
@@ -152,13 +152,13 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     createManyMoons(moons);
 
     String query = urlEncode("keyword all \"Moon #1*\"");
-    URL getInstanceUrl = recordBulkUrl("/ids?type=id&limit=20&offset=0&query=" + query);
+    URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponse(response, expectedMatches, moons);
+    validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
   @Test
@@ -181,7 +181,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponse(response, expectedMatches, moons);
+    validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
   @Test
@@ -200,7 +200,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateHoldingsResponse(response, holdingIds, totalHoldingsIds);
+    validateHoldingsResponseWithTotals(response, holdingIds, totalHoldingsIds);
   }
 
   @Test
@@ -214,21 +214,21 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING&limit=20&offset=0");
+    URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING&limit=5");
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateHoldingsResponse(response, holdingIds, totalHoldingsIds);
+    validateHoldingsResponse(response, holdingIds.subList(0, 5), 5);
   }
 
-  private void validateMoonsResponse(Response response, int expectedMatches,
+  private void validateMoonsResponseWithTotal(Response response, int expectedMatches,
       Map<String, JsonObject> moons) {
     assertThat(response.getStatusCode(), is(HTTP_OK));
-    validateMoonsResponse(response.getJson(), expectedMatches, moons);
+    validateMoonsResponseWithTotal(response.getJson(), expectedMatches, moons);
   }
 
-  private void validateMoonsResponse(JsonObject collection,
+  private void validateMoonsResponseWithTotal(JsonObject collection,
       int expectedMatches, Map<String, JsonObject> moons) {
     JsonArray ids = collection.getJsonArray("ids");
     assertThat(ids.size(), is(expectedMatches));
@@ -240,8 +240,35 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     }
   }
 
+  private void validateMoonsResponse(Response response, int expectedMatches,
+      Map<String, JsonObject> moons) {
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    validateMoonsResponse(response.getJson(), expectedMatches, moons);
+  }
+
+  private void validateMoonsResponse(JsonObject collection,
+       int expectedMatches, Map<String, JsonObject> moons) {
+    JsonArray ids = collection.getJsonArray("ids");
+    assertThat(ids.size(), is(expectedMatches));
+    for (int i = 0; i < ids.size(); i++) {
+      JsonObject idObject = ids.getJsonObject(i);
+      assertThat(moons.containsKey(idObject.getString("id")), is(true));
+    }
+  }
+
   private void validateHoldingsResponse(Response response, List<String> holdingsIds,
      int expectedMatches) {
+    JsonArray ids = response.getJson().getJsonArray("ids");
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    assertThat(ids.size(), is(expectedMatches));
+    for (Object id : ids) {
+      JsonObject idObject = (JsonObject) id;
+      assertThat(holdingsIds.contains(idObject.getString("id")), is(true));
+    }
+  }
+
+  private void validateHoldingsResponseWithTotals(Response response, List<String> holdingsIds,
+      int expectedMatches) {
     JsonArray ids = response.getJson().getJsonArray("ids");
     assertThat(response.getStatusCode(), is(HTTP_OK));
     assertThat(ids.size(), is(expectedMatches));
