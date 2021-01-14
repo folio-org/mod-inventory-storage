@@ -219,7 +219,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateHoldingsResponse(response, holdingIds.subList(0, 5), 5);
+    validateHoldingsResponse(response, holdingIds, 5);
   }
 
   private void validateMoonsResponseWithTotal(Response response, int expectedMatches,
