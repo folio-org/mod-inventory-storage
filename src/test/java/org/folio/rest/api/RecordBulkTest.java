@@ -90,7 +90,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponseWithTotal(response, 5, moons);
+    validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
   @Test
