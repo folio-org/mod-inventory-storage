@@ -51,7 +51,7 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
   public Function<Response, Future<Response>> publishCreated(DomainType record) {
     return response -> {
       if (!isCreateSuccessResponse(response)) {
-        log.warn("Item create failed, skipping event publishing");
+        log.warn("Record create failed, skipping event publishing");
         return succeededFuture(response);
       }
 
