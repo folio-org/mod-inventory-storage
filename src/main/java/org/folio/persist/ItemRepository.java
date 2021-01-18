@@ -2,7 +2,6 @@ package org.folio.persist;
 
 import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,7 @@ import io.vertx.core.Future;
 
 public class ItemRepository extends AbstractRepository<Item> {
   public ItemRepository(Context context, Map<String, String> okapiHeaders) {
-    super(postgresClient(context, okapiHeaders), ITEM_TABLE, Item.class, tenantId(okapiHeaders));
+    super(postgresClient(context, okapiHeaders), ITEM_TABLE, Item.class);
   }
 
   public Future<List<Item>> getAll() {

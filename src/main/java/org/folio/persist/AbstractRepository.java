@@ -26,16 +26,14 @@ public abstract class AbstractRepository<T> {
   protected final PostgresClient postgresClient;
   protected final String tableName;
   protected final Class<T> recordType;
-  protected final String tenantId;
 
   protected AbstractRepository(PostgresClient postgresClient, String tableName,
-    Class<T> recordType, String tenantId) {
+    Class<T> recordType) {
 
     this.postgresClientFuturized = new PostgresClientFuturized(postgresClient);
     this.postgresClient = postgresClient;
     this.tableName = tableName;
     this.recordType = recordType;
-    this.tenantId = tenantId;
   }
 
   public Future<String> save(String id, T entity) {
@@ -76,9 +74,6 @@ public abstract class AbstractRepository<T> {
   }
 
   public Future<RowSet<Row>> deleteAll() {
-    final String removeAllQuery = format("DELETE FROM %s_mod_inventory_storage.%s",
-      tenantId, tableName);
-
-    return postgresClientFuturized.execute(removeAllQuery);
+    return postgresClientFuturized.delete(tableName, new Criterion());
   }
 }
