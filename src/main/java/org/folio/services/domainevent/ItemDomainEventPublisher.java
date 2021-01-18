@@ -6,7 +6,6 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
-import static org.folio.services.domainevent.OldOrNewItem.fromItem;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_ITEM;
 
 import java.util.Collection;
@@ -38,7 +37,7 @@ public class ItemDomainEventPublisher {
 
   private final ItemRepository itemRepository;
   private final HoldingsRepository holdingsRepository;
-  private final CommonDomainEventPublisher<OldOrNewItem> domainEventService;
+  private final CommonDomainEventPublisher<ItemWithInstanceId> domainEventService;
 
   public ItemDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     itemRepository = new ItemRepository(context, okapiHeaders);
@@ -119,7 +118,6 @@ public class ItemDomainEventPublisher {
 
     return itemRepository.getById(oldItems, Item::getId)
       .map(updatedItems -> mapOldItemsToUpdatedItems(oldItems, updatedItems))
-      .map(this::convertItemsToDomainStateObjectPairs)
       .map(pairs -> setInstanceIdForDomainStatePairs(Map.of(hr.getId(), hr), pairs))
       .map(this::convertDomainStatesPairsToTriple)
       .compose(domainEventService::publishRecordsUpdated);
@@ -135,7 +133,6 @@ public class ItemDomainEventPublisher {
 
     return itemRepository.getById(oldItems, Item::getId)
       .map(updatedItems -> mapOldItemsToUpdatedItems(oldItems, updatedItems))
-      .map(this::convertItemsToDomainStateObjectPairs)
       .compose(this::fetchAndSetInstanceIdForItemPairs)
       .map(this::convertDomainStatesPairsToTriple)
       .compose(domainEventService::publishRecordsUpdated);
@@ -147,56 +144,44 @@ public class ItemDomainEventPublisher {
       .compose(domainEventService::publishRecordsCreated);
   }
 
-  private List<Pair<OldOrNewItem, OldOrNewItem>> convertItemsToDomainStateObjectPairs(
+  private Future<List<Pair<ItemWithInstanceId, ItemWithInstanceId>>> fetchAndSetInstanceIdForItemPairs(
     List<Pair<Item, Item>> pairs) {
-
-    return pairs.stream()
-      .map(pair -> {
-        final var oldItem = fromItem(pair.getLeft());
-        final var newItem = fromItem(pair.getRight());
-
-        return new ImmutablePair<>(oldItem, newItem);
-      }).collect(Collectors.toList());
-  }
-
-  private Future<List<Pair<OldOrNewItem, OldOrNewItem>>> fetchAndSetInstanceIdForItemPairs(
-    List<Pair<OldOrNewItem, OldOrNewItem>> pairs) {
 
     final Set<String> holdingIdsToFetch = pairs.stream()
       .flatMap(pair -> Stream.of(pair.getLeft(), pair.getRight()))
-      .map(OldOrNewItem::getHoldingsRecordId)
+      .map(Item::getHoldingsRecordId)
       .collect(Collectors.toSet());
 
     return holdingsRepository.getById(holdingIdsToFetch)
       .map(holdings -> setInstanceIdForDomainStatePairs(holdings, pairs));
   }
 
-  private Future<List<OldOrNewItem>> fetchAndSetInstanceIdForItems(Collection<Item> items) {
+  private Future<List<ItemWithInstanceId>> fetchAndSetInstanceIdForItems(Collection<Item> items) {
     return holdingsRepository.getById(items, Item::getHoldingsRecordId)
       .map(holdings -> setInstanceIdForDomainState(holdings, items));
   }
 
-  private List<Pair<OldOrNewItem, OldOrNewItem>> setInstanceIdForDomainStatePairs(
-    Map<String, HoldingsRecord> holdings, List<Pair<OldOrNewItem, OldOrNewItem>> pairs) {
+  private List<Pair<ItemWithInstanceId, ItemWithInstanceId>> setInstanceIdForDomainStatePairs(
+    Map<String, HoldingsRecord> holdings, List<Pair<Item, Item>> pairs) {
 
     return pairs.stream()
       .map(pair -> {
-        final OldOrNewItem left = pair.getLeft();
-        final OldOrNewItem right = pair.getRight();
+        final var left = pair.getLeft();
+        final var right = pair.getRight();
 
-        final HoldingsRecord hrForLeft = holdings.get(left.getHoldingsRecordId());
-        final HoldingsRecord hrForRight = holdings.get(right.getHoldingsRecordId());
+        final var instanceIdForLeft = holdings.get(left.getHoldingsRecordId()).getInstanceId();
+        final var instanceIdForRight = holdings.get(right.getHoldingsRecordId()).getInstanceId();
 
-        return new ImmutablePair<>(left.withInstanceId(hrForLeft.getInstanceId()),
-          right.withInstanceId(hrForRight.getInstanceId()));
+        return new ImmutablePair<>(new ItemWithInstanceId(left, instanceIdForLeft),
+          new ItemWithInstanceId(right, instanceIdForRight));
       }).collect(Collectors.toList());
   }
 
-  private List<OldOrNewItem> setInstanceIdForDomainState(
+  private List<ItemWithInstanceId> setInstanceIdForDomainState(
     Map<String, HoldingsRecord> holdings, Collection<Item> items) {
 
     return items.stream()
-      .map(item -> fromItem(item, holdings.get(item.getHoldingsRecordId())))
+      .map(item -> new ItemWithInstanceId(item, holdings.get(item.getHoldingsRecordId()).getInstanceId()))
       .collect(Collectors.toList());
   }
 
@@ -208,8 +193,8 @@ public class ItemDomainEventPublisher {
       .collect(Collectors.toList());
   }
 
-  private List<Triple<String, OldOrNewItem, OldOrNewItem>> convertDomainStatesPairsToTriple(
-    List<Pair<OldOrNewItem, OldOrNewItem>> pairs) {
+  private List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> convertDomainStatesPairsToTriple(
+    List<Pair<ItemWithInstanceId, ItemWithInstanceId>> pairs) {
 
     return pairs.stream()
       .map(pair -> {
@@ -220,7 +205,7 @@ public class ItemDomainEventPublisher {
       }).collect(Collectors.toList());
   }
 
-  private List<Pair<String, OldOrNewItem>> convertDomainStatesToPairs(List<OldOrNewItem> items) {
+  private List<Pair<String, ItemWithInstanceId>> convertDomainStatesToPairs(List<ItemWithInstanceId> items) {
     return items.stream()
       .map(item -> new ImmutablePair<>(item.getInstanceId(), item))
       .collect(Collectors.toList());
