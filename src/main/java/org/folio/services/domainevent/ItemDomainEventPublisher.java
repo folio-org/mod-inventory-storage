@@ -2,7 +2,6 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.services.domainevent.OldOrNewItem.fromItem;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_ITEM;
 
 import java.util.Collection;
@@ -25,7 +24,7 @@ import org.folio.rest.jaxrs.model.Item;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, OldOrNewItem> {
+public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, ItemWithInstanceId> {
   private static final Logger log = getLogger(ItemDomainEventPublisher.class);
 
   private final HoldingsRepository holdingsRepository;
@@ -51,7 +50,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
-  protected Future<List<Pair<String, OldOrNewItem>>> toInstanceIdEventTypePairs(
+  protected Future<List<Pair<String, ItemWithInstanceId>>> toInstanceIdEventTypePairs(
     Collection<Item> records) {
 
     return holdingsRepository.getById(records, Item::getHoldingsRecordId)
@@ -59,7 +58,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
-  protected Future<List<Triple<String, OldOrNewItem, OldOrNewItem>>> toInstanceIdEventTypeTriples(
+  protected Future<List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>>> toInstanceIdEventTypeTriples(
     Collection<Pair<Item, Item>> oldToNewRecordPairs) {
 
     final Set<String> holdingIdsToFetch = oldToNewRecordPairs.stream()
@@ -76,27 +75,28 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     return record.getId();
   }
 
-  private List<Triple<String, OldOrNewItem, OldOrNewItem>> convertItemsToDomainStateTriples(
+  private List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> convertItemsToDomainStateTriples(
     Map<String, HoldingsRecord> holdings, Collection<Pair<Item, Item>> pairs) {
 
     return pairs.stream()
       .map(pair -> {
-        final Item left = pair.getLeft();
-        final Item right = pair.getRight();
+        final var left = pair.getLeft();
+        final var right = pair.getRight();
 
-        final HoldingsRecord hrForLeft = holdings.get(left.getHoldingsRecordId());
-        final HoldingsRecord hrForRight = holdings.get(right.getHoldingsRecordId());
+        final var instanceIdForLeft = holdings.get(left.getHoldingsRecordId()).getInstanceId();
+        final var instanceIdForRight = holdings.get(right.getHoldingsRecordId()).getInstanceId();
 
-        return new ImmutableTriple<>(hrForRight.getInstanceId(), fromItem(left, hrForLeft),
-          fromItem(right, hrForRight));
+        return new ImmutableTriple<>(instanceIdForRight,
+          new ItemWithInstanceId(left, instanceIdForLeft),
+          new ItemWithInstanceId(right, instanceIdForRight));
       }).collect(Collectors.toList());
   }
 
-  private List<Pair<String, OldOrNewItem>> convertItemsToDomainStatePairs(
+  private List<Pair<String, ItemWithInstanceId>> convertItemsToDomainStatePairs(
     Map<String, HoldingsRecord> holdings, Collection<Item> items) {
 
     return items.stream()
-      .map(item -> fromItem(item, holdings.get(item.getHoldingsRecordId())))
+      .map(item -> new ItemWithInstanceId(item, holdings.get(item.getHoldingsRecordId()).getInstanceId()))
       .map(item -> new ImmutablePair<>(item.getInstanceId(), item))
       .collect(Collectors.toList());
   }
