@@ -74,7 +74,7 @@ public class InstanceService {
     boolean upsert, List<Instance> allInstances) {
 
     if (!upsert) {
-      return succeededFuture(new BatchOperationContext<>(allInstances, emptyList(), emptyList()));
+      return succeededFuture(new BatchOperationContext<>(allInstances, emptyList()));
     }
 
     return instanceRepository.getById(allInstances, Instance::getId)
@@ -83,18 +83,7 @@ public class InstanceService {
           .filter(instance -> !foundInstances.containsKey(instance.getId()))
           .collect(toList());
 
-        // new representations for existing instances
-        final var instancesToBeUpdated = allInstances.stream()
-          .filter(instance -> foundInstances.containsKey(instance.getId()))
-          .collect(toList());
-
-        // old (existing) instance representations before applying update
-        final var existingRecordsBeforeUpdate = instancesToBeUpdated.stream()
-          .map(instances -> foundInstances.get(instances.getId()))
-          .collect(toList());
-
-        return new BatchOperationContext<>(instancesToBeCreated, instancesToBeUpdated,
-          existingRecordsBeforeUpdate);
+        return new BatchOperationContext<>(instancesToBeCreated, foundInstances.values());
       });
   }
 
