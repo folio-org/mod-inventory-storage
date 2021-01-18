@@ -73,7 +73,8 @@ import io.vertx.sqlclient.RowSet;
   OaiPmhViewTest.class,
   InventoryHierarchyViewTest.class,
   HoldingsSourceTest.class,
-  InstanceDomainEventTest.class
+  InstanceDomainEventTest.class,
+  KafkaTenantInitTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
@@ -286,7 +287,7 @@ public class StorageTestSuite {
     tenantOp(tenantId, jo);
   }
 
-  static void tenantOp(String tenantId, JsonObject job) throws InterruptedException, ExecutionException, TimeoutException {
+  public static void tenantOp(String tenantId, JsonObject job) throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
 
     HttpClient client = new HttpClient(vertx);
