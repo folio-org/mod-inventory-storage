@@ -2,6 +2,7 @@ package org.folio.persist;
 
 import static org.folio.rest.impl.InstanceStorageAPI.INSTANCE_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Map;
 
@@ -12,6 +13,7 @@ import io.vertx.core.Context;
 public class InstanceRepository extends AbstractRepository<Instance> {
 
   public InstanceRepository(Context context, Map<String, String> okapiHeaders) {
-    super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
+    super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class,
+      tenantId(okapiHeaders));
   }
 }
