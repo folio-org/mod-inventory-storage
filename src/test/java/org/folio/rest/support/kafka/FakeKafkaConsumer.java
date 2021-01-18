@@ -2,6 +2,9 @@ package org.folio.rest.support.kafka;
 
 import static io.vertx.kafka.client.consumer.KafkaConsumer.create;
 import static java.util.Collections.emptyList;
+import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_HOLDINGS_RECORD;
+import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
+import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_ITEM;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.folio.services.kafka.KafkaMessage;
 import org.folio.services.kafka.topic.KafkaTopic;
@@ -22,6 +26,10 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class FakeKafkaConsumer {
+  private static final Set<String> TOPIC_NAMES = Stream.of(INVENTORY_INSTANCE,
+    INVENTORY_ITEM, INVENTORY_HOLDINGS_RECORD)
+    .map(KafkaTopic::getTopicName).collect(Collectors.toSet());
+
   private final static Map<String, List<KafkaMessage<JsonObject>>> itemEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaMessage<JsonObject>>> instanceEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaMessage<JsonObject>>> holdingsEvents = new ConcurrentHashMap<>();
@@ -29,7 +37,7 @@ public final class FakeKafkaConsumer {
   public final FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, String> consumer = create(vertx, consumerProperties());
 
-    consumer.subscribe(Set.of("inventory.instance", "inventory.item", "inventory.holdings-record"));
+    consumer.subscribe(TOPIC_NAMES);
     consumer.handler(message -> {
       final KafkaMessage<JsonObject> kafkaMessage = kafkaRecordToKafkaMessage(message);
       final List<KafkaMessage<JsonObject>> storageList;

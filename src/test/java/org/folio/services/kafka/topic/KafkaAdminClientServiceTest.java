@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,8 +29,9 @@ import io.vertx.kafka.admin.NewTopic;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
-  private final Set<String> allTopics = Set.of("inventory.instance", "inventory.item",
-    "inventory.holdings-record");
+  private final Set<String> allTopics = Stream.of(KafkaTopic.values())
+    .map(KafkaTopic::getTopicName).collect(Collectors.toSet());
+
   private KafkaAdminClientService adminClientService;
 
   @Before
