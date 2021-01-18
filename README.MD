@@ -230,3 +230,6 @@ The event payload has following structure:
 
 Kafka partition key for the both topics is instance id (for items it is retrieved from
 associated holding record).
+
+*Note for items:* the `new` and `old` records also includes `instanceId` property,
+on the same level with other item properties, which defined in the schema.

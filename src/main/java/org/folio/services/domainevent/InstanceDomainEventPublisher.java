@@ -5,6 +5,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -44,7 +45,7 @@ public class InstanceDomainEventPublisher {
     return domainEventService.publishRecordCreated(newInstance.getId(), newInstance);
   }
 
-  public Future<Void> publishInstancesCreated(List<Instance> instances) {
+  public Future<Void> publishInstancesCreated(Collection<Instance> instances) {
     if (instances.isEmpty()) {
       log.info("No instances were created, skipping event sending");
       return succeededFuture();
@@ -82,15 +83,15 @@ public class InstanceDomainEventPublisher {
 
       log.info("Instances created {}, instances updated {}",
         batchOperation.getRecordsToBeCreated().size(),
-        batchOperation.getExistingRecordsBeforeUpdate().size());
+        batchOperation.getExistingRecords().size());
 
       return publishInstancesCreated(batchOperation.getRecordsToBeCreated())
-        .compose(notUsed -> publishInstancesUpdated(batchOperation.getExistingRecordsBeforeUpdate()))
+        .compose(notUsed -> publishInstancesUpdated(batchOperation.getExistingRecords()))
         .map(response);
     };
   }
 
-  private Future<Void> publishInstancesUpdated(List<Instance> oldInstances) {
+  private Future<Void> publishInstancesUpdated(Collection<Instance> oldInstances) {
     log.info("[{}] instances were updated, sending events for them", oldInstances.size());
 
     return instanceRepository.getById(oldInstances, Instance::getId)
@@ -99,7 +100,7 @@ public class InstanceDomainEventPublisher {
   }
 
   private List<Triple<String, Instance, Instance>> mapOldInstancesToUpdated(
-    Map<String, Instance> updatedInstancesMap, List<Instance> oldInstances) {
+    Map<String, Instance> updatedInstancesMap, Collection<Instance> oldInstances) {
 
     return oldInstances.stream()
       .map(instance -> {

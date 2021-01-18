@@ -1,33 +1,26 @@
 package org.folio.services.batch;
 
-import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Stream.concat;
+import static java.util.Collections.unmodifiableCollection;
 
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.Collection;
 
 public final class BatchOperationContext<T>{
-  private final List<T> recordsToBeCreated;
-  private final List<T> recordsToBeUpdated;
-  private final List<T> existingRecordsBeforeUpdate;
+  private final Collection<T> recordsToBeCreated;
+  /**
+   * Existing records from database, without update.
+   */
+  private final Collection<T> existingRecords;
 
-  public BatchOperationContext(List<T> recordsToBeCreated, List<T> recordsToBeUpdated,
-    List<T> existingRecords) {
-
-    this.recordsToBeCreated = unmodifiableList(recordsToBeCreated);
-    this.recordsToBeUpdated = unmodifiableList(recordsToBeUpdated);
-    this.existingRecordsBeforeUpdate = unmodifiableList(existingRecords);
+  public BatchOperationContext(Collection<T> recordsToBeCreated, Collection<T> existingRecords) {
+    this.recordsToBeCreated = unmodifiableCollection(recordsToBeCreated);
+    this.existingRecords = unmodifiableCollection(existingRecords);
   }
 
-  public List<T> getRecordsToBeCreated() {
+  public Collection<T> getRecordsToBeCreated() {
     return recordsToBeCreated;
   }
 
-  public List<T> getExistingRecordsBeforeUpdate() {
-    return existingRecordsBeforeUpdate;
-  }
-
-  public Stream<T> allRecordsStream() {
-    return concat(recordsToBeCreated.stream(), recordsToBeUpdated.stream());
+  public Collection<T> getExistingRecords() {
+    return existingRecords;
   }
 }

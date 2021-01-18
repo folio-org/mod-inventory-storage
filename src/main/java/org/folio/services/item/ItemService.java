@@ -39,13 +39,10 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
-import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.folio.rest.support.HridManager;
-import org.folio.rest.support.ItemEffectiveLocationUtil;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.batch.BatchOperationContext;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
-import org.folio.services.item.effectivevalues.ItemWithHolding;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -80,14 +77,14 @@ public class ItemService {
 
     return getHrid(entity).map(entity::withHrid)
       .compose(effectiveValuesService::populateEffectiveValues)
-      .compose(itemWithHolding -> {
+      .compose(item -> {
         final Promise<Response> postResponse = promise();
 
-        post(ITEM_TABLE, itemWithHolding.getItem(), okapiHeaders, vertxContext,
+        post(ITEM_TABLE, item, okapiHeaders, vertxContext,
           PostItemStorageItemsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventService.publishItemCreated(itemWithHolding));
+          .compose(domainEventService.publishItemCreated(item));
       });
   }
 
@@ -103,15 +100,11 @@ public class ItemService {
 
     return all(setHridFutures)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
-      .compose(itemsWithHoldings -> buildBatchOperationContext(upsert, itemsWithHoldings))
+      .compose(result -> buildBatchOperationContext(upsert, items))
       .compose(batchOperation -> {
         final Promise<Response> postSyncResult = promise();
 
-        final var itemsWithUpdatedEffectiveValues = batchOperation.allRecordsStream()
-          .map(ItemWithHolding::getItem)
-          .collect(toList());
-
-        postSync(ITEM_TABLE, itemsWithUpdatedEffectiveValues, MAX_ENTITIES, upsert,
+        postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert,
           okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class, postSyncResult);
 
         return postSyncResult.future()
@@ -124,14 +117,14 @@ public class ItemService {
       .compose(this::refuseIfNotFound)
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
       .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
-        .compose(itemWithHolding -> {
+        .compose(notUsed -> {
           final Promise<Response> putResult = promise();
 
           put(ITEM_TABLE, newItem, itemId, okapiHeaders, vertxContext,
             PutItemStorageItemsByItemIdResponse.class, putResult);
 
           return putResult.future()
-            .compose(domainEventService.publishItemUpdated(itemWithHolding.getInstanceId(), oldItem));
+            .compose(domainEventService.publishItemUpdated(oldItem));
         }));
   }
 
@@ -174,9 +167,7 @@ public class ItemService {
 
     final Promise<RowSet<Row>> allItemsUpdated = promise();
     final var batchFactories = items.stream()
-      .map(item -> new ItemWithHolding(item, holdingsRecord))
-      .map(EffectiveCallNumberComponentsUtil::setCallNumberComponents)
-      .map(ItemEffectiveLocationUtil::updateItemEffectiveLocation)
+      .map(item -> effectiveValuesService.populateEffectiveValues(item, holdingsRecord))
       .map(this::updateSingleItemBatchFactory)
       .collect(toList());
 
@@ -190,11 +181,8 @@ public class ItemService {
     return allItemsUpdated.future();
   }
 
-  private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(
-    ItemWithHolding itemWithHolding) {
-
-    return connection -> itemRepository.update(connection, itemWithHolding.getItemId(),
-      itemWithHolding.getItem());
+  private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(Item item) {
+    return connection -> itemRepository.update(connection, item.getId(), item);
   }
 
   private Future<Item> refuseWhenHridChanged(Item oldItem, Item newItem) {
@@ -217,32 +205,20 @@ public class ItemService {
     return item != null ? succeededFuture(item) : failedFuture(new NotFoundException("Not found"));
   }
 
-  private Future<BatchOperationContext<ItemWithHolding>> buildBatchOperationContext(
-    boolean upsert, List<ItemWithHolding> allItems) {
+  private Future<BatchOperationContext<Item>> buildBatchOperationContext(
+    boolean upsert, List<Item> allItems) {
 
     if (!upsert) {
-      return succeededFuture(new BatchOperationContext<>(allItems, emptyList(), emptyList()));
+      return succeededFuture(new BatchOperationContext<>(allItems, emptyList()));
     }
 
-    return itemRepository.getById(allItems, ItemWithHolding::getItemId)
+    return itemRepository.getById(allItems, Item::getId)
       .map(foundItems -> {
         final var itemsToBeCreated = allItems.stream()
-          .filter(item -> !foundItems.containsKey(item.getItemId()))
+          .filter(item -> !foundItems.containsKey(item.getId()))
           .collect(toList());
 
-        // new representations for existing items
-        final var itemsToBeUpdated = allItems.stream()
-          .filter(item -> foundItems.containsKey(item.getItemId()))
-          .collect(toList());
-
-        // old (existing) Item representations before applying update
-        final var existingRecordsBeforeUpdate = itemsToBeUpdated.stream()
-          .map(itemWithHolding -> {
-            final var itemBeforeUpdate = foundItems.get(itemWithHolding.getItemId());
-            return new ItemWithHolding(itemBeforeUpdate, itemWithHolding.getHoldingsRecord());
-          }).collect(toList());
-
-        return new BatchOperationContext<>(itemsToBeCreated, itemsToBeUpdated, existingRecordsBeforeUpdate);
+        return new BatchOperationContext<>(itemsToBeCreated, foundItems.values());
       });
   }
 }

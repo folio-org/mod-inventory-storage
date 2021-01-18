@@ -135,7 +135,11 @@ public final class DomainEventAssertions {
 
     await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 0);
 
-    assertCreateEvent(getFirstItemEvent(instanceIdForItem, itemId), item);
+    // Domain event for item has an extra 'instanceId' property for
+    // old/new object, the property does not exist in schema,
+    // so we have to add it manually
+    assertCreateEvent(getFirstItemEvent(instanceIdForItem, itemId),
+      addInstanceIdForItem(item, instanceIdForItem));
   }
 
   public static void assertRemoveEventForItem(JsonObject item) {
@@ -144,21 +148,34 @@ public final class DomainEventAssertions {
 
     await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 1);
 
-    assertRemoveEvent(getLastItemEvent(instanceIdForItem, itemId), item);
+    // Domain event for item has an extra 'instanceId' property for
+    // old/new object, the property does not exist in schema,
+    // so we have to add it manually
+    assertRemoveEvent(getLastItemEvent(instanceIdForItem, itemId),
+      addInstanceIdForItem(item, instanceIdForItem));
   }
 
   public static void assertUpdateEventForItem(JsonObject oldItem, JsonObject newItem) {
     final String itemId = newItem.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(newItem);
 
-    await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 0);
+    await().until(() -> getItemEvents(instanceIdForItem, itemId).size() > 1);
 
-    assertUpdateEvent(getLastItemEvent(instanceIdForItem, itemId), oldItem, newItem);
+    // Domain event for item has an extra 'instanceId' property for
+    // old/new object, the property does not exist in schema,
+    // so we have to add it manually
+    assertUpdateEvent(getLastItemEvent(instanceIdForItem, itemId),
+      addInstanceIdForItem(oldItem, getInstanceIdForItem(oldItem)),
+      addInstanceIdForItem(newItem, instanceIdForItem));
   }
 
   private static String getInstanceIdForItem(JsonObject newItem) {
     final UUID holdingsRecordId = fromString(newItem.getString("holdingsRecordId"));
 
     return holdingsClient.getById(holdingsRecordId).getJson().getString("instanceId");
+  }
+
+  private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {
+    return item.copy().put("instanceId", instanceId);
   }
 }
