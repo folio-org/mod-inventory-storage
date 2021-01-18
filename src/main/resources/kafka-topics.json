@@ -2,7 +2,7 @@
   "topics": [
     {
       "name": "inventory.instance",
-      "numPartitions": 1,
+      "numPartitions": 50,
       "replicationFactor": 1
     },
     {
