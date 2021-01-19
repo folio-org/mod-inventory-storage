@@ -2,6 +2,7 @@ package org.folio.rest.support.matchers;
 
 import static io.vertx.core.MultiMap.caseInsensitiveMultiMap;
 import static java.util.UUID.fromString;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
@@ -76,28 +77,31 @@ public final class DomainEventAssertions {
   }
 
   public static void assertNoUpdateEvent(String instanceId) {
-    await().atLeast(1, TimeUnit.SECONDS);
+    await().atLeast(1, SECONDS);
+    await().until(() -> getInstanceEvents(instanceId).size() > 0);
 
     final JsonObject updateMessage  = getLastInstanceEvent(instanceId).getPayload();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
   public static void assertNoUpdateEventForHolding(String instanceId, String hrId) {
-    await().atLeast(1, TimeUnit.SECONDS);
+    await().atLeast(1, SECONDS);
+    await().until(() -> getHoldingsEvents(instanceId, hrId).size() > 0);
 
     final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).getPayload();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
   public static void assertNoRemoveEvent(String instanceId) {
-    await().atLeast(1, TimeUnit.SECONDS);
+    await().atLeast(1, SECONDS);
+    await().until(() -> getInstanceEvents(instanceId).size() > 0);
 
     final JsonObject updateMessage  = getLastInstanceEvent(instanceId).getPayload();
     assertThat(updateMessage.getString("type"), not(is("DELETE")));
   }
 
   public static void assertNoCreateEvent(String instanceId) {
-    await().atLeast(1, TimeUnit.SECONDS);
+    await().atLeast(1, SECONDS);
 
     assertThat(getInstanceEvents(instanceId).size(), is(0));
   }
