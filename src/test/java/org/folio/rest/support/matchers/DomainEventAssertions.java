@@ -39,7 +39,7 @@ public final class DomainEventAssertions {
     assertThat(createEvent.getPayload().getString("type"), is("CREATE"));
     assertThat(createEvent.getPayload().getString("tenant"), is(TENANT_ID));
     assertThat(createEvent.getPayload().getJsonObject("old"), nullValue());
-    assertThat(createEvent.getPayload().getJsonObject("new"), is(newRecord));
+    assertThat(createEvent.getPayload().getJsonObject("new").putNull("_version"), is(newRecord.putNull("_version")));
 
     assertHeaders(createEvent.getHeaders());
   }
@@ -48,7 +48,7 @@ public final class DomainEventAssertions {
     assertThat(deleteEvent.getPayload().getString("type"), is("DELETE"));
     assertThat(deleteEvent.getPayload().getString("tenant"), is(TENANT_ID));
     assertThat(deleteEvent.getPayload().getJsonObject("new"), nullValue());
-    assertThat(deleteEvent.getPayload().getJsonObject("old"), is(record));
+    assertThat(deleteEvent.getPayload().getJsonObject("old").putNull("_version"), is(record.putNull("_version")));
 
     assertHeaders(deleteEvent.getHeaders());
   }
@@ -58,8 +58,8 @@ public final class DomainEventAssertions {
 
     assertThat(updateEvent.getPayload().getString("type"), is("UPDATE"));
     assertThat(updateEvent.getPayload().getString("tenant"), is(TENANT_ID));
-    assertThat(updateEvent.getPayload().getJsonObject("old"), is(oldRecord));
-    assertThat(updateEvent.getPayload().getJsonObject("new"), is(newRecord));
+    assertThat(updateEvent.getPayload().getJsonObject("old").putNull("_version"), is(oldRecord.putNull("_version")));
+    assertThat(updateEvent.getPayload().getJsonObject("new").putNull("_version"), is(newRecord.putNull("_version")));
 
     assertHeaders(updateEvent.getHeaders());
   }
