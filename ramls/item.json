@@ -233,22 +233,27 @@
           "description": "Name of the status e.g. Available, Checked out, In transit",
           "type": "string",
           "enum": [
+            "Aged to lost",
             "Available",
             "Awaiting pickup",
             "Awaiting delivery",
             "Checked out",
+            "Claimed returned",
+            "Declared lost",
             "In process",
+            "In process (non-requestable)",
             "In transit",
+            "Intellectual item",
+            "Long missing",
+            "Lost and paid",
             "Missing",
             "On order",
             "Paged",
-            "Declared lost",
+            "Restricted",
             "Order closed",
-            "Claimed returned",
+            "Unavailable",
             "Unknown",
-            "Withdrawn",
-            "Lost and paid",
-            "Aged to lost"
+            "Withdrawn"
           ]
         },
         "date": {
@@ -264,6 +269,18 @@
     "materialTypeId": {
       "type": "string",
       "description": "Material type, term. Define what type of thing the item is."
+    },
+    "materialType": {
+      "description": "Item's material type",
+      "type": "object",
+      "folio:$ref": "materialtype.json",
+      "javaType": "org.folio.rest.jaxrs.model.materialTypeVirtual",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "material-types",
+      "folio:linkFromField": "materialTypeId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "mtypes.0"
     },
     "permanentLoanTypeId": {
       "type": "string",

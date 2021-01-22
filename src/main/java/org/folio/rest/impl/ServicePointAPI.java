@@ -4,13 +4,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
@@ -30,8 +29,7 @@ import org.folio.rest.tools.utils.ValidationHelper;
  * @author kurt
  */
 public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoints {
-  public static final Logger logger = LoggerFactory.getLogger(
-          ServicePointAPI.class);
+  private static final Logger logger = LogManager.getLogger();
   public static final String SERVICE_POINT_TABLE = "service_point";
   public static final String LOCATION_PREFIX = "/service-points/";
   public static final String ID_FIELD = "'id'";

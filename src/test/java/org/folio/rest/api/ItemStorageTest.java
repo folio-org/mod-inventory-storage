@@ -21,6 +21,9 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNowAsString;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
@@ -57,7 +60,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
@@ -71,14 +77,13 @@ import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -88,7 +93,7 @@ import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
-  private static final Logger log = LoggerFactory.getLogger(ItemStorageTest.class);
+  private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
 
@@ -193,6 +198,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
     assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
+    assertCreateEventForItem(itemFromGet);
   }
 
   @Test
@@ -261,6 +267,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject updatedItemResponse = itemsClient.getById(id).getJson();
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
+    assertUpdateEventForItem(createdItem, getById(id).getJson());
   }
 
   @Test
@@ -883,6 +890,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     for (Object item : itemsArray) {
       assertExists((JsonObject) item);
     }
+
+    itemsArray.stream()
+      .map(obj -> (JsonObject) obj)
+      .map(obj -> getById(obj.getString("id")).getJson())
+      .forEach(DomainEventAssertions::assertCreateEventForItem);
   }
 
   @Test
@@ -892,7 +904,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray.getJsonObject(1).put("id", duplicateId);
     assertThat(postSynchronousBatch(itemsArray), allOf(
         statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate key"),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
         errorParametersValueIs(duplicateId)));
     for (int i=0; i<itemsArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemsArray.getJsonObject(i).getString("id")));
@@ -919,8 +931,35 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdUpsertTrue() {
-    assertThat(postSynchronousBatchWithExistingId("?upsert=true"), statusCodeIs(HTTP_CREATED));
+  public void canPostSynchronousBatchWithExistingIdUpsertTrue() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID existingItemId = UUID.randomUUID();
+
+    final JsonArray itemsArray1 = new JsonArray()
+      .add(nod(existingItemId, holdingsRecordId))
+      .add(smallAngryPlanet(holdingsRecordId))
+      .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+
+    final JsonArray itemsArray2 = new JsonArray()
+      .add(nod(existingItemId, holdingsRecordId))
+      .add(smallAngryPlanet(holdingsRecordId))
+      .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+
+    final var firstResponse = postSynchronousBatch("?upsert=true", itemsArray1);
+    final var existingItemBeforeUpdate = getById(existingItemId).getJson();
+    final var secondResponse = postSynchronousBatch("?upsert=true", itemsArray2);
+
+    assertThat(firstResponse.getStatusCode(), is(201));
+    assertThat(secondResponse.getStatusCode(), is(201));
+
+    Stream.concat(itemsArray1.stream(), itemsArray2.stream())
+      .map(json -> ((JsonObject) json).getString("id"))
+      .filter(id -> !id.equals(existingItemId.toString()))
+      .map(this::getById)
+      .map(Response::getJson)
+      .forEach(DomainEventAssertions::assertCreateEventForItem);
+
+    assertUpdateEventForItem(existingItemBeforeUpdate, getById(existingItemId).getJson());
   }
 
   @Test
@@ -989,7 +1028,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postSynchronousBatch(itemsArray), allOf(
         statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-        errorMessageContains("duplicate key"),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
         errorParametersValueIs(duplicateHRID)));
 
     for (int i = 0; i < itemsArray.size(); i++) {
@@ -1378,7 +1417,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
 
-    createItem(itemToCreate);
+    final JsonObject createdItem = createItem(itemToCreate);
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
@@ -1397,6 +1436,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertRemoveEventForItem(createdItem);
   }
 
   @Test
@@ -1734,11 +1774,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
-    createItem(smallAngryPlanet(holdingsRecordId));
-    createItem(nod(holdingsRecordId));
-    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
-    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
-    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+    final var createdItems = List.of(
+      createItem(smallAngryPlanet(holdingsRecordId)),
+      createItem(nod(holdingsRecordId)),
+      createItem(uprooted(UUID.randomUUID(), holdingsRecordId)),
+      createItem(temeraire(UUID.randomUUID(), holdingsRecordId)),
+      createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId)));
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
@@ -1762,6 +1803,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(allItems.size(), is(0));
     assertThat(responseBody.getInteger("totalRecords"), is(0));
+
+    createdItems.forEach(DomainEventAssertions::assertRemoveEventForItem);
   }
 
   @Test
@@ -1956,22 +1999,27 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @Parameters({
+    "Aged to lost",
     "Available",
     "Awaiting pickup",
     "Awaiting delivery",
     "Checked out",
+    "Claimed returned",
+    "Declared lost",
     "In process",
+    "In process (non-requestable)",
     "In transit",
+    "Intellectual item",
+    "Long missing",
+    "Lost and paid",
     "Missing",
     "On order",
     "Paged",
-    "Declared lost",
+    "Restricted",
     "Order closed",
-    "Claimed returned",
+    "Unavailable",
     "Unknown",
-    "Withdrawn",
-    "Lost and paid",
-    "Aged to lost"
+    "Withdrawn"
   })
   public void canCreateItemWithAllAllowedStatuses(String status) throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);

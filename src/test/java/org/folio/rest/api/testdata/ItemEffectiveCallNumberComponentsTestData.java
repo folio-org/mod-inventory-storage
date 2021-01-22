@@ -6,7 +6,7 @@ import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.HOLDINGS_
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 public class ItemEffectiveCallNumberComponentsTestData {

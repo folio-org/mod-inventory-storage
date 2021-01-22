@@ -12,13 +12,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public final class InstanceID {
+public final class RecordID {
   @JsonProperty("id")
   @JsonPropertyDescription("identifier")
   @NotNull
   private String id;
 
-  public InstanceID() {
+  public RecordID() {
     id = "";
   }
 

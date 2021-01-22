@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.Error;
@@ -31,8 +32,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -43,7 +42,7 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
   public static final String REFERENCE_TABLE  = "holdings_type";
 
   private static final String LOCATION_PREFIX = "/holdings-types/";
-  private static final Logger log             = LoggerFactory.getLogger(HoldingsTypeAPI.class);
+  private static final Logger log = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 
   @Override
@@ -211,9 +210,8 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
   }
 
   private Future<String> saveHoldingsType(PostgresClient pgClient, HoldingsType entity) {
-    Future<String> future = Future.future();
-    pgClient.save(REFERENCE_TABLE, entity.getId(), entity, future);
-    return future;
+    return Future.future(promise
+        -> pgClient.save(REFERENCE_TABLE, entity.getId(), entity, promise));
   }
 
   private PostHoldingsTypesResponse handleSaveHoldingsTypeException(Throwable t) {

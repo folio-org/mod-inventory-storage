@@ -34,8 +34,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.OaipmhInstanceIds;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
@@ -49,14 +51,12 @@ import org.junit.runner.RunWith;
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
 
 @RunWith(VertxUnitRunner.class)
 public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
-  private static final Logger log = LoggerFactory.getLogger(OaiPmhViewTest.class);
+  private static final Logger log = LogManager.getLogger();
 
   private static final PostgresClient postgresClient = PostgresClient.getInstance(getVertx(),
     TenantTool.calculateTenantId(TENANT_ID));

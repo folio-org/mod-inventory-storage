@@ -5,7 +5,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
@@ -25,8 +26,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  * @author shale
@@ -37,7 +36,7 @@ public class MaterialTypeAPI implements MaterialTypes {
   public static final String MATERIAL_TYPE_TABLE   = "material_type";
 
   private static final String LOCATION_PREFIX       = "/material-types/";
-  private static final Logger log                 = LoggerFactory.getLogger(MaterialTypeAPI.class);
+  private static final Logger log                 = LogManager.getLogger();
   private final Messages messages                 = Messages.getInstance();
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {

@@ -1,18 +1,21 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.services.kafka.topic.KafkaAdminClientService;
 
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -22,6 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.Response;
+
 public class TenantRefAPI extends TenantAPI {
 
   private static final String SAMPLE_LEAD = "sample-data";
@@ -29,7 +34,7 @@ public class TenantRefAPI extends TenantAPI {
   private static final String REFERENCE_KEY = "loadReference";
   private static final String REFERENCE_LEAD = "ref-data";
 
-  private static final Logger log = LoggerFactory.getLogger(TenantRefAPI.class);
+  private static final Logger log = LogManager.getLogger();
   final String[] refPaths = new String[]{
     "material-types",
     "loan-types",
@@ -79,70 +84,74 @@ public class TenantRefAPI extends TenantAPI {
   }
 
   @Override
-  public void postTenant(TenantAttributes ta, Map<String, String> headers,
-    Handler<AsyncResult<Response>> hndlr, Context cntxt) {
-    log.info("postTenant");
-    Vertx vertx = cntxt.owner();
-    super.postTenant(ta, headers, res -> {
-      if (res.failed()) {
-        hndlr.handle(res);
-        return;
-      }
-      try {
-        List<URL> urls = TenantLoading.getURLsFromClassPathDir(
-          REFERENCE_LEAD + "/service-points");
-        servicePoints = new LinkedList<>();
-        for (URL url : urls) {
-          InputStream stream = url.openStream();
-          String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
-          stream.close();
-          servicePoints.add(new JsonObject(content));
-        }
-      } catch (URISyntaxException | IOException ex) {
-        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-          .respond500WithTextPlain(ex.getLocalizedMessage())));
-        return;
-      }
-      TenantLoading tl = new TenantLoading();
+  @Validate
+  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
+    Handler<AsyncResult<Response>> handler, Context context) {
 
-      tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
-      tl.withIdContent();
-      for (String p : refPaths) {
-        tl.add(p);
-      }
-      tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
-      tl.add("instances", "instance-storage/instances");
-      tl.withIdContent();
-      tl.add("holdingsrecords", "holdings-storage/holdings");
-      tl.add("items", "item-storage/items");
-      tl.add("instance-relationships", "instance-storage/instance-relationships");
-      if (servicePoints != null) {
-        tl.withFilter(this::servicePointUserFilter)
-          .withPostOnly()
-          .withAcceptStatus(422)
-          .add("users", "service-points-users");
-      }
-      tl.perform(ta, headers, vertx, res1 -> {
-        if (res1.failed()) {
-          hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-            .respond500WithTextPlain(res1.cause().getLocalizedMessage())));
-          return;
+    // have to create topics before tenant init,
+    // because on init we can create sample/ref data which
+    // has to be sent to the queue as well
+    createTopics(context, tenantAttributes)
+      .onComplete(topicCreateResult -> {
+        if (topicCreateResult.failed()) {
+          log.error("Unable to create kafka topics", topicCreateResult.cause());
+          handler.handle(succeededFuture(PostTenantResponse
+            .respond500WithTextPlain(topicCreateResult.cause().getMessage())));
+        } else {
+          super.postTenant(tenantAttributes, headers, handler, context);
         }
-        hndlr.handle(io.vertx.core.Future.succeededFuture(PostTenantResponse
-          .respond201WithApplicationJson("")));
       });
-    }, cntxt);
   }
 
+  @Validate
   @Override
-  public void getTenant(Map<String, String> map, Handler<AsyncResult<Response>> hndlr, Context cntxt) {
-    log.info("getTenant");
-    super.getTenant(map, hndlr, cntxt);
+  Future<Integer> loadData(TenantAttributes attributes, String tenantId,
+                           Map<String, String> headers, Context vertxContext) {
+    return super.loadData(attributes, tenantId, headers, vertxContext)
+        .compose(superRecordsLoaded -> {
+          try {
+            List<URL> urls = TenantLoading.getURLsFromClassPathDir(
+                REFERENCE_LEAD + "/service-points");
+            servicePoints = new LinkedList<>();
+            for (URL url : urls) {
+              InputStream stream = url.openStream();
+              String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
+              stream.close();
+              servicePoints.add(new JsonObject(content));
+            }
+          } catch (URISyntaxException | IOException ex) {
+            return Future.failedFuture(ex.getMessage());
+          }
+          TenantLoading tl = new TenantLoading();
+
+          tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
+          tl.withIdContent();
+          for (String p : refPaths) {
+            tl.add(p);
+          }
+          tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+          tl.add("instances", "instance-storage/instances");
+          tl.withIdContent();
+          tl.add("holdingsrecords", "holdings-storage/holdings");
+          tl.add("items", "item-storage/items");
+          tl.add("instance-relationships", "instance-storage/instance-relationships");
+          if (servicePoints != null) {
+            tl.withFilter(this::servicePointUserFilter)
+                .withPostOnly()
+                .withAcceptStatus(422)
+                .add("users", "service-points-users");
+          }
+          return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
+        });
   }
 
-  @Override
-  public void deleteTenant(Map<String, String> map, Handler<AsyncResult<Response>> hndlr, Context cntxt) {
-    log.info("deleteTenant");
-    super.deleteTenant(map, hndlr, cntxt);
+  private Future<Void> createTopics(Context context, TenantAttributes tenantAttributes) {
+    if (tenantAttributes.getPurge() != null && tenantAttributes.getPurge()) {
+      log.info("Purge is true, skipping topics creation...");
+      return succeededFuture();
+    }
+
+    log.info("Creating kafka topics...");
+    return new KafkaAdminClientService(context.owner()).createKafkaTopics();
   }
 }

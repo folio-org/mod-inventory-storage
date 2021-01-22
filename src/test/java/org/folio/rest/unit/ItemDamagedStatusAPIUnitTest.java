@@ -2,6 +2,8 @@ package org.folio.rest.unit;
 
 import static org.folio.rest.impl.ItemDamagedStatusAPI.REFERENCE_TABLE;
 import static org.folio.rest.support.db.ErrorFactory.getUUIDErrorMap;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -16,8 +18,10 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 
 import io.vertx.pgclient.PgException;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.impl.ItemDamagedStatusAPI;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
+import org.folio.rest.jaxrs.model.ItemDamageStatuses;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -36,7 +40,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -61,8 +64,32 @@ public class ItemDamagedStatusAPIUnitTest {
 
   @Before
   public void setUp() {
-    MockitoAnnotations.initMocks(this);
+    MockitoAnnotations.openMocks(this);
     when(pgClientFactory.getInstance(any(Context.class), any(Map.class))).thenReturn(postgresClient);
+  }
+
+  private Handler<AsyncResult<Response>> assertStatus(TestContext testContext, int expected) {
+    return testContext.asyncAssertSuccess(response -> assertThat(response.getStatus(), is(expected)));
+  }
+
+  private class FailingItemDamagedStatusAPI extends ItemDamagedStatusAPI {
+    @Override
+    protected Future<ItemDamageStatuses> searchItemDamagedStatuses(
+        String query,
+        int offset,
+        int limit,
+        Map<String, String> okapiHeaders,
+        Context vertxContext) throws FieldException {
+      throw new RuntimeException("mock");
+    }
+
+    @Override
+    protected Future<ItemDamageStatus> getItemDamagedStatus(
+        String id,
+        Map<String, String> okapiHeaders,
+        Context vertxContext) {
+      throw new RuntimeException("mock");
+    }
   }
 
   @Test
@@ -77,56 +104,32 @@ public class ItemDamagedStatusAPIUnitTest {
         any(CQLWrapper.class),
         eq(true),
         eq(true),
-        any(Future.class)
+        any(Handler.class)
       );
 
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
     itemDamagedStatusAPI.getItemDamagedStatuses(
       "cql=bad*?/format",
       DEFAULT_OFFSET,
       DEFAULT_LIMIT,
       DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
-      responseFuture.completer(),
+      assertStatus(testContext, 400),
       rule.vertx().getOrCreateContext()
     );
-
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(400, it.result().getStatus());
-      async.complete();
-    });
   }
 
   @Test
   public void getItemDamagedStatusesShouldRespondWithServerErrorWhenUnexpectedExceptionIsThrown(TestContext testContext) {
 
-    doThrow(new RuntimeException(INTERNAL_SERVER_ERROR_MSG))
-      .when(postgresClient).get(
-      eq(REFERENCE_TABLE),
-      eq(ItemDamageStatus.class),
-      eq(new String[]{"*"}),
-      any(CQLWrapper.class),
-      eq(true),
-      eq(true),
-      any(Future.class)
-    );
-
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
-    itemDamagedStatusAPI.getItemDamagedStatuses(
-      DEFAULT_QUERY,
-      DEFAULT_OFFSET,
-      DEFAULT_LIMIT,
-      DEFAULT_LANGUAGE,
-      DEFAULT_HEADERS,
-      responseFuture.completer(),
-      rule.vertx().getOrCreateContext()
-    );
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(500, it.result().getStatus());
-      async.complete();
-    });
+    new FailingItemDamagedStatusAPI().getItemDamagedStatuses(
+        DEFAULT_QUERY,
+        DEFAULT_OFFSET,
+        DEFAULT_LIMIT,
+        DEFAULT_LANGUAGE,
+        DEFAULT_HEADERS,
+        assertStatus(testContext, 500),
+        rule.vertx().getOrCreateContext()
+      );
   }
 
   @Test
@@ -138,22 +141,15 @@ public class ItemDamagedStatusAPIUnitTest {
         eq(REFERENCE_TABLE),
         anyString(),
         any(ItemDamageStatus.class),
-        any(Future.class)
+        any(Handler.class)
       );
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
     itemDamagedStatusAPI.postItemDamagedStatuses(
       DEFAULT_LANGUAGE,
       new ItemDamageStatus(),
       DEFAULT_HEADERS,
-      responseFuture.completer(),
+      assertStatus(testContext, 400),
       rule.vertx().getOrCreateContext()
     );
-
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(400, it.result().getStatus());
-      async.complete();
-    });
   }
 
   @Test
@@ -164,50 +160,26 @@ public class ItemDamagedStatusAPIUnitTest {
         eq(REFERENCE_TABLE),
         anyString(),
         any(ItemDamageStatus.class),
-        any(Future.class)
+        any(Handler.class)
       );
-
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
     itemDamagedStatusAPI.postItemDamagedStatuses(
       DEFAULT_LANGUAGE,
       new ItemDamageStatus(),
       DEFAULT_HEADERS,
-      responseFuture.completer(),
+      assertStatus(testContext, 500),
       rule.vertx().getOrCreateContext()
     );
-
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(500, it.result().getStatus());
-      async.complete();
-    });
   }
 
   @Test
   public void getItemDamagedStatusesByIdShouldReturnInternalServerErrorWhenUnexpectedExceptionIsThrown(TestContext testContext) {
-    doThrow(new RuntimeException(INTERNAL_SERVER_ERROR_MSG))
-      .when(postgresClient)
-      .getById(
-        eq(REFERENCE_TABLE),
-        anyString(),
-        any(Class.class),
-        any(Future.class)
-      );
-
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
-    itemDamagedStatusAPI.getItemDamagedStatusesById(
+    new FailingItemDamagedStatusAPI().getItemDamagedStatusesById(
       UUID.randomUUID().toString(),
       DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
-      responseFuture.completer(),
+      assertStatus(testContext, 500),
       rule.vertx().getOrCreateContext()
     );
-
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(500, it.result().getStatus());
-      async.complete();
-    });
   }
 
   @Test
@@ -217,23 +189,15 @@ public class ItemDamagedStatusAPIUnitTest {
       .delete(
         eq(REFERENCE_TABLE),
         anyString(),
-        any(Future.class)
+        any(Handler.class)
       );
-
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
     itemDamagedStatusAPI.deleteItemDamagedStatusesById(
       UUID.randomUUID().toString(),
       DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
-      responseFuture.completer(),
+      assertStatus(testContext, 500),
       rule.vertx().getOrCreateContext()
     );
-
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(500, it.result().getStatus());
-      async.complete();
-    });
   }
 
   @Test
@@ -244,23 +208,15 @@ public class ItemDamagedStatusAPIUnitTest {
       .delete(
         eq(REFERENCE_TABLE),
         anyString(),
-        any(Future.class)
+        any(Handler.class)
       );
-
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
     itemDamagedStatusAPI.deleteItemDamagedStatusesById(
       UUID.randomUUID().toString(),
       DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
-      responseFuture.completer(),
+      assertStatus(testContext, 400),
       rule.vertx().getOrCreateContext()
     );
-
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(400, it.result().getStatus());
-      async.complete();
-    });
   }
 
   @Test
@@ -272,24 +228,16 @@ public class ItemDamagedStatusAPIUnitTest {
         eq(REFERENCE_TABLE),
         any(ItemDamageStatus.class),
         anyString(),
-        any(Future.class)
+        any(Handler.class)
       );
-
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
     itemDamagedStatusAPI.putItemDamagedStatusesById(
       UUID.randomUUID().toString(),
       DEFAULT_LANGUAGE,
       new ItemDamageStatus(),
       DEFAULT_HEADERS,
-      responseFuture.completer(),
+      assertStatus(testContext, 400),
       rule.vertx().getOrCreateContext()
     );
-
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(400, it.result().getStatus());
-      async.complete();
-    });
   }
 
   @Test
@@ -300,24 +248,16 @@ public class ItemDamagedStatusAPIUnitTest {
         eq(REFERENCE_TABLE),
         any(ItemDamageStatus.class),
         anyString(),
-        any(Future.class)
+        any(Handler.class)
       );
-
-    Async async = testContext.async();
-    Future<Response> responseFuture = Future.future();
     itemDamagedStatusAPI.putItemDamagedStatusesById(
       UUID.randomUUID().toString(),
       DEFAULT_LANGUAGE,
       new ItemDamageStatus(),
       DEFAULT_HEADERS,
-      responseFuture.completer(),
+      assertStatus(testContext, 500),
       rule.vertx().getOrCreateContext()
     );
-
-    responseFuture.setHandler(it -> {
-      testContext.assertEquals(500, it.result().getStatus());
-      async.complete();
-    });
   }
 
   private Answer setExceptionForHandlerArgument(int indexOfHandler, Exception ex) {

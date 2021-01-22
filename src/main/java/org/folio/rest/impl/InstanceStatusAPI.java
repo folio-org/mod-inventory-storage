@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
@@ -25,8 +26,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -37,7 +36,7 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
   public static final String RESOURCE_TABLE = "instance_status";
 
   private static final String LOCATION_PREFIX = "/instance-statuses/";
-  private static final Logger LOG = LoggerFactory.getLogger(InstanceStatusAPI.class);
+  private static final Logger LOG = LogManager.getLogger();
   private static final Messages MESSAGES = Messages.getInstance();
 
   @Override

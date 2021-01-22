@@ -10,7 +10,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.HoldingsNoteType;
@@ -29,8 +30,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -41,7 +40,7 @@ public class HoldingsNoteTypeAPI implements org.folio.rest.jaxrs.resource.Holdin
   public static final String REFERENCE_TABLE  = "holdings_note_type";
 
   private static final String LOCATION_PREFIX = "/holdings-note-types/";
-  private static final Logger log             = LoggerFactory.getLogger(HoldingsNoteTypeAPI.class);
+  private static final Logger log             = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 
   @Override

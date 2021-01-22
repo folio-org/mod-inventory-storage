@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 import static org.folio.rest.impl.ServicePointAPI.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
 import static org.folio.rest.impl.ServicePointAPI.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
-import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -11,7 +10,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,15 +27,9 @@ import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
@@ -780,38 +772,4 @@ public class ServicePointTest extends TestBase{
     return getCompleted.get(5, TimeUnit.SECONDS);
   }
 
-  private static void send(URL url, HttpMethod method, String content,
-                    String contentType, Handler<HttpClientResponse> handler) {
-
-    HttpClient client = StorageTestSuite.getVertx().createHttpClient();
-    HttpClientRequest request;
-
-    if(content == null){
-      content = "";
-    }
-    Buffer buffer = Buffer.buffer(content);
-
-    if (method == HttpMethod.POST) {
-      request = client.postAbs(url.toString());
-    }
-    else if (method == HttpMethod.DELETE) {
-      request = client.deleteAbs(url.toString());
-    }
-    else if (method == HttpMethod.GET) {
-      request = client.getAbs(url.toString());
-    }
-    else {
-      request = client.putAbs(url.toString());
-    }
-    request.exceptionHandler(error -> {
-      Assert.fail(error.getLocalizedMessage());
-    })
-    .handler(handler);
-
-    request.putHeader("Authorization", "test_tenant");
-    request.putHeader("x-okapi-tenant", "test_tenant");
-    request.putHeader("Accept", "application/json,text/plain");
-    request.putHeader("Content-type", contentType);
-    request.end(buffer);
-  }
 }

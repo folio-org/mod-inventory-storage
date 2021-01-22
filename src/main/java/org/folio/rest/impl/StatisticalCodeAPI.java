@@ -5,7 +5,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.StatisticalCode;
@@ -24,8 +25,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -35,7 +34,7 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
   public static final String REFERENCE_TABLE = "statistical_code";
 
   private static final String LOCATION_PREFIX = "/statistical-codes/";
-  private static final Logger LOG = LoggerFactory.getLogger(StatisticalCodeAPI.class);
+  private static final Logger LOG = LogManager.getLogger();
   private static final Messages MESSAGES = Messages.getInstance();
 
   @Override

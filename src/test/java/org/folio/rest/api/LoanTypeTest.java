@@ -10,7 +10,7 @@ import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,18 +21,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.ResourceClient;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
@@ -272,9 +265,9 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
   private JsonObject send(URL url, HttpMethod method, String content,
                           int expectedStatusCode) {
 
-    CompletableFuture<Response> future = new CompletableFuture<>();
-    Handler<HttpClientResponse> handler = ResponseHandler.any(future);
-    send(url, method, content, handler);
+    CompletableFuture<Response> future =
+        HttpClient.asResponse(send(url, method, content, SUPPORTED_CONTENT_TYPE_JSON_DEF));
+
     Response response;
 
     try {
@@ -294,40 +287,6 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
       return null;
     }
   }
-
-  private void send(URL url, HttpMethod method, String content,
-                    Handler<HttpClientResponse> handler) {
-    HttpClient client = StorageTestSuite.getVertx().createHttpClient();
-    HttpClientRequest request;
-    if (content == null) {
-      content = "";
-    }
-    Buffer buffer = Buffer.buffer(content);
-
-    switch (method) {
-      case POST:
-        request = client.postAbs(url.toString());
-        break;
-      case DELETE:
-        request = client.deleteAbs(url.toString());
-        break;
-      case GET:
-        request = client.getAbs(url.toString());
-        break;
-      default:
-        request = client.putAbs(url.toString());
-    }
-    request.exceptionHandler(error -> {
-      Assert.fail(error.getLocalizedMessage());
-    })
-      .handler(handler);
-    request.putHeader("Authorization", "test_tenant");
-    request.putHeader("x-okapi-tenant", "test_tenant");
-    request.putHeader("Accept", "application/json,text/plain");
-    request.putHeader("Content-type", SUPPORTED_CONTENT_TYPE_JSON_DEF);
-    request.end(buffer);
-  }
-
 
   /** Create a JSON String of an item; set permanentLoanTypeId and temporaryLoanTypeId
    * if the passed variable is not null */

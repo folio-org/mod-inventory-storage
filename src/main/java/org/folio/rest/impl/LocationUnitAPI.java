@@ -59,7 +59,7 @@ public class LocationUnitAPI implements LocationUnits {
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
     CQLWrapper cql;
     try {
       cql = StorageHelper.getCQL(query, limit, offset, INSTITUTION_TABLE);
@@ -95,7 +95,7 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
     String id = entity.getId();
     if (id == null) {
       id = UUID.randomUUID().toString();
@@ -198,7 +198,7 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
     CQLWrapper cql;
     try {
       cql = StorageHelper.getCQL(query, limit, offset, CAMPUS_TABLE);
@@ -234,7 +234,7 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
     String id = entity.getId();
     if (id == null) {
       id = UUID.randomUUID().toString();
@@ -333,7 +333,7 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
     CQLWrapper cql;
     try {
       cql = StorageHelper.getCQL(query, limit, offset, LIBRARY_TABLE);
@@ -369,7 +369,7 @@ public class LocationUnitAPI implements LocationUnits {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = StorageHelper.getTenant(okapiHeaders);
+    String tenantId = TenantTool.tenantId(okapiHeaders);
       String id = entity.getId();
       if (id == null) {
         id = UUID.randomUUID().toString();

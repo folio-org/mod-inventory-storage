@@ -8,14 +8,13 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 
 public final class EffectiveCallNumberComponentsUtil {
+  private EffectiveCallNumberComponentsUtil() {}
 
-  public static EffectiveCallNumberComponents buildComponents(HoldingsRecord holdings, Item item) {
-    return updateComponents(new EffectiveCallNumberComponents(), holdings, item);
+  public static void setCallNumberComponents(Item item, HoldingsRecord hr) {
+    item.setEffectiveCallNumberComponents(buildComponents(item, hr));
   }
 
-  private static EffectiveCallNumberComponents updateComponents(
-    EffectiveCallNumberComponents components, HoldingsRecord holdings, Item item) {
-
+  private static EffectiveCallNumberComponents buildComponents(Item item, HoldingsRecord holdings) {
     String updatedCallNumber = null;
     if (isNotBlank(item.getItemLevelCallNumber())) {
       updatedCallNumber = item.getItemLevelCallNumber();
@@ -39,14 +38,12 @@ public final class EffectiveCallNumberComponentsUtil {
 
     String updatedCallNumberTypeId = StringUtils.firstNonBlank(
       item.getItemLevelCallNumberTypeId(),
-      holdings != null ? holdings.getCallNumberTypeId() : null
-    );
+      holdings != null ? holdings.getCallNumberTypeId() : null);
 
-    components.setCallNumber(updatedCallNumber);
-    components.setPrefix(updatedCallNumberPrefix);
-    components.setSuffix(updatedCallNumberSuffix);
-    components.setTypeId(updatedCallNumberTypeId);
-
-    return components;
+    return new EffectiveCallNumberComponents()
+      .withCallNumber(updatedCallNumber)
+      .withPrefix(updatedCallNumberPrefix)
+      .withSuffix(updatedCallNumberSuffix)
+      .withTypeId(updatedCallNumberTypeId);
   }
 }

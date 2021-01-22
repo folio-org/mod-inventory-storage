@@ -12,14 +12,13 @@ import org.folio.rest.jaxrs.resource.Locations.GetLocationsByIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.TenantTool;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.util.ArrayList;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
 import static org.folio.rest.impl.StorageHelper.*;
 import org.folio.rest.jaxrs.model.Location;
@@ -33,7 +32,6 @@ import org.folio.rest.jaxrs.model.Location;
  */
 public class ShelfLocationAPI implements ShelfLocations {
   public static final String SHELF_LOCATION_TABLE = "shelflocation";
-  public static final Logger logger = LoggerFactory.getLogger(ShelfLocationAPI.class);
   public static final String URL_PREFIX = "/shelflocations";
   public static final String USE_NEW = "Use the new /locations interface instead.";
 
@@ -51,7 +49,7 @@ public class ShelfLocationAPI implements ShelfLocations {
         Handler<AsyncResult<Response>>asyncResultHandler,
         Context vertxContext) {
     try {
-      String tenantId = getTenant(okapiHeaders);
+      String tenantId = TenantTool.tenantId(okapiHeaders);
       CQLWrapper cql = getCQL(query, limit, offset, LocationAPI.LOCATION_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(

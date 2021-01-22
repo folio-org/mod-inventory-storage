@@ -64,9 +64,13 @@
       <version>${raml-module-builder-version}</version>
     </dependency>
     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-kafka-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.12</version>
+      <version>1.18.16</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -115,15 +119,27 @@
       <version>3.0.0</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-kafka</artifactId>
+      <version>3.0.0-M2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.stefanbirkner</groupId>
+      <artifactId>system-rules</artifactId>
+      <version>1.19.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <properties>
-    <vertx.version>3.9.4</vertx.version>
+    <vertx.version>4.0.0</vertx.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>31.1.5</raml-module-builder-version>
-    <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/instance-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings</generate_routing_context>
+    <raml-module-builder-version>32.0.0</raml-module-builder-version>
+    <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings</generate_routing_context>
     <argLine />
   </properties>
 
@@ -232,7 +248,7 @@
         <configuration>
           <verbose>true</verbose>
           <showWeaveInfo>false</showWeaveInfo>
-          <complianceLevel>1.8</complianceLevel>
+          <complianceLevel>11</complianceLevel>
           <XaddSerialVersionUID>true</XaddSerialVersionUID>
           <showWeaveInfo>true</showWeaveInfo>
           <aspectLibraries>
@@ -253,12 +269,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.9.5</version>
+            <version>1.9.6</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.5</version>
+            <version>1.9.6</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -412,6 +428,7 @@
                   <manifestEntries>
                     <Main-Class>org.folio.rest.RestLauncher</Main-Class>
                     <Main-Verticle>org.folio.rest.RestVerticle</Main-Verticle>
+                    <Multi-Release>true</Multi-Release>
                   </manifestEntries>
                 </transformer>
               </transformers>
@@ -432,6 +449,7 @@
           <includes>
             <include>org/folio/rest/api/StorageTestSuite.java</include>
             <include>org/folio/rest/**</include>
+            <include>org/folio/services/**</include>
           </includes>
           <!-- 3 tests of ItemStorageTest fail when run with de (= German) locale because
                of translated error messages.

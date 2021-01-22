@@ -6,6 +6,8 @@ import java.util.function.Function;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
 import org.folio.rest.persist.SQLConnection;
@@ -16,11 +18,9 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class HridManager {
-  private static final Logger log = LoggerFactory.getLogger(HridManager.class);
+  private static final Logger log = LogManager.getLogger();
 
   public static final String HRID_SETTINGS_TABLE  = "hrid_settings";
 

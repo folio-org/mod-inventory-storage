@@ -22,8 +22,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 
 /**
@@ -34,7 +34,7 @@ public class AlternativeTitleTypeAPI implements org.folio.rest.jaxrs.resource.Al
   public static final String REFERENCE_TABLE  = "alternative_title_type";
 
   private static final String LOCATION_PREFIX = "/alternative-title-types/";
-  private static final Logger log             = LoggerFactory.getLogger(AlternativeTitleTypeAPI.class);
+  private static final Logger log             = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 
   @Validate

@@ -6,7 +6,8 @@ import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.ServicePointsUser;
 import org.folio.rest.jaxrs.model.ServicePointsUsers;
 import org.folio.rest.persist.PgUtil;
@@ -15,11 +16,9 @@ import org.folio.rest.persist.PostgresClient;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class ServicePointsUserAPI implements org.folio.rest.jaxrs.resource.ServicePointsUsers {
-  private static final Logger logger = LoggerFactory.getLogger(ServicePointsUserAPI.class);
+  private static final Logger logger = LogManager.getLogger();
   private static final String SERVICE_POINT_USER_TABLE = "service_point_user";
 
   @Override

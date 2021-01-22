@@ -5,7 +5,8 @@ import static io.vertx.core.Future.succeededFuture;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSource;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSource.Source;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSources;
@@ -18,14 +19,12 @@ import org.folio.rest.tools.utils.TenantTool;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.HoldingsSources {
 
   private static final String REFERENCE_TABLE = "holdings_records_source";
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
-  private static final Logger log = LoggerFactory.getLogger(HoldingsRecordsSourceAPI.class);
+  private static final Logger log = LogManager.getLogger();
   private final Messages messages = Messages.getInstance();
 
   @Override

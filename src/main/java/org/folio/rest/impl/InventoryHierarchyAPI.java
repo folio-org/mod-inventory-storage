@@ -6,7 +6,7 @@ import java.util.UUID;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.jaxrs.resource.InventoryHierarchy;
