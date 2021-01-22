@@ -14,17 +14,17 @@ stages:
   - publishImageConfig:
       dockerfilePath: ./Dockerfile
       buildContext: .
-      tag: docker.dev.folio.org/mod-inventory-storage:folijet-latest
+      tag: docker.dev.folio.org/mod-inventory-storage:folijet-${CICD_EXECUTION_SEQUENCE}
       pushRemote: true
       registry: docker.dev.folio.org
 - name: Deploy
   steps:
   - applyAppConfig:
-      catalogTemplate: p-mf42h:folijet-helmcharts-mod-inventory-storage
-      version: 0.1.26
+      catalogTemplate: p-gh7sb:folijet-helmcharts-mod-inventory-storage
+      version: 0.1.32
       answers:
         image.repository: docker.dev.folio.org/mod-inventory-storage
-        image.tag: folijet-latest
+        image.tag: folijet-${CICD_EXECUTION_SEQUENCE}
       targetNamespace: folijet
       name: mod-inventory-storage
 timeout: 60
