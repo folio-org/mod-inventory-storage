@@ -56,10 +56,10 @@ public class PostgresClientFuturized {
     return getItemsResult.future().map(Results::getResults);
   }
 
-  public Future<RowSet<Row>> execute(String query) {
+  public Future<RowSet<Row>> delete(String tableName, Criterion criterion) {
     final Promise<RowSet<Row>> removeAllResult = promise();
 
-    postgresClient.execute(query, removeAllResult);
+    postgresClient.delete(tableName, criterion, removeAllResult);
 
     return removeAllResult.future();
   }

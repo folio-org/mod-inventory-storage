@@ -22,8 +22,7 @@ import io.vertx.ext.web.RoutingContext;
  * CRUD for Item.
  */
 public class ItemStorageAPI implements ItemStorage {
-
-  static final String ITEM_TABLE = "item";
+  public static final String ITEM_TABLE = "item";
 
   @Validate
   @Override

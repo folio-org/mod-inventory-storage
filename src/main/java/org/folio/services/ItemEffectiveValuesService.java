@@ -18,15 +18,15 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.persist.PostgresClient;
 
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 
 public class ItemEffectiveValuesService {
   private final HoldingsRepository holdingsRepository;
 
-  public ItemEffectiveValuesService(PostgresClient postgresClient) {
-    this.holdingsRepository = new HoldingsRepository(postgresClient);
+  public ItemEffectiveValuesService(Context context, Map<String, String> okapiHeaders) {
+    this.holdingsRepository = new HoldingsRepository(context, okapiHeaders);
   }
 
   public Future<List<Item>> populateEffectiveValues(List<Item> items) {
