@@ -217,6 +217,7 @@ The pattern means that every time when an instance/item is created/updated/remov
 a message is posted to kafka topic:
 * `inventory.instance` - for instances;
 * `inventory.item` - for items;
+* `inventory.holdings-record` - for holdings records.
 
 The event payload has following structure:
 ```javascript
@@ -228,7 +229,9 @@ The event payload has following structure:
 }
 ```
 
-Kafka partition key for the both topics is instance id (for items it is retrieved from
+`X-Okapi-Url` and `X-Okapi-Tenant` headers are set from the request to the kafka message.
+
+Kafka partition key for all the events is instance id (for items it is retrieved from
 associated holding record).
 
 *Note for items:* the `new` and `old` records also includes `instanceId` property,

@@ -21,7 +21,7 @@ import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
-abstract class AbstractRepository<T> {
+public abstract class AbstractRepository<T> {
   protected final PostgresClientFuturized postgresClientFuturized;
   protected final PostgresClient postgresClient;
   protected final String tableName;
@@ -71,5 +71,9 @@ abstract class AbstractRepository<T> {
 
   public Future<RowSet<Row>> update(SQLConnection connection, String id, T record) {
     return update(succeededFuture(connection), id, record);
+  }
+
+  public Future<RowSet<Row>> deleteAll() {
+    return postgresClientFuturized.delete(tableName, new Criterion());
   }
 }

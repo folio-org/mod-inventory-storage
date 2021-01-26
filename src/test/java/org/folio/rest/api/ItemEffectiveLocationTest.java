@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -176,9 +177,10 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   @Parameters(source = ItemEffectiveLocationTestDataProvider.class,
     method = "canCalculateEffectiveLocationOnHoldingUpdateParams")
   public void canCalculateEffectiveLocationOnHoldingUpdate(
-      PermTemp itemLoc, PermTemp holdingStartLoc, PermTemp holdingEndLoc) throws Exception {
+      PermTemp itemLoc, PermTemp holdingStartLoc, PermTemp holdingEndLoc) {
 
     UUID holdingsRecordId = createHolding(instanceId, holdingStartLoc.perm, holdingStartLoc.temp);
+    JsonObject createdHolding = holdingsClient.getById(holdingsRecordId).getJson();
 
     Item item = buildItem(holdingsRecordId, itemLoc.perm, itemLoc.temp);
     UUID itemId = UUID.fromString(item.getId());
@@ -187,7 +189,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertThat(createdItem.getString(EFFECTIVE_LOCATION_ID_KEY),
       is(effectiveLocation(holdingStartLoc, itemLoc)));
 
-    JsonObject holdingToUpdate = holdingsClient.getById(holdingsRecordId).getJson();
+    JsonObject holdingToUpdate = createdHolding.copy();
     setPermanentTemporaryLocation(holdingToUpdate, holdingEndLoc);
     holdingsClient.replace(holdingsRecordId, holdingToUpdate);
 
@@ -195,6 +197,8 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertThat(associatedItem.getString(EFFECTIVE_LOCATION_ID_KEY),
       is(effectiveLocation(holdingEndLoc, itemLoc)));
     assertUpdateEventForItem(createdItem, associatedItem);
+    assertUpdateEventForHolding(createdHolding,
+      holdingsClient.getById(holdingsRecordId).getJson());
   }
 
   @Test

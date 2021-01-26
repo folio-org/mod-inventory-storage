@@ -2,6 +2,8 @@ package org.folio.rest.support.kafka;
 
 import static io.vertx.kafka.client.consumer.KafkaConsumer.create;
 import static java.util.Collections.emptyList;
+import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_HOLDINGS_RECORD;
+import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_ITEM;
 
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.folio.services.kafka.KafkaMessage;
 import org.folio.services.kafka.topic.KafkaTopic;
@@ -23,22 +26,37 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class FakeKafkaConsumer {
+  private static final Set<String> TOPIC_NAMES = Stream.of(INVENTORY_INSTANCE,
+    INVENTORY_ITEM, INVENTORY_HOLDINGS_RECORD)
+    .map(KafkaTopic::getTopicName).collect(Collectors.toSet());
+
   private final static Map<String, List<KafkaMessage<JsonObject>>> itemEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaMessage<JsonObject>>> instanceEvents = new ConcurrentHashMap<>();
+  private final static Map<String, List<KafkaMessage<JsonObject>>> holdingsEvents = new ConcurrentHashMap<>();
 
   public final FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, String> consumer = create(vertx, consumerProperties());
 
-    consumer.subscribe(Set.of("inventory.instance", "inventory.item"));
+    consumer.subscribe(TOPIC_NAMES);
     consumer.handler(message -> {
       final KafkaMessage<JsonObject> kafkaMessage = kafkaRecordToKafkaMessage(message);
-      List<KafkaMessage<JsonObject>> storageList;
+      final List<KafkaMessage<JsonObject>> storageList;
 
-      if (kafkaMessage.getTopic() == INVENTORY_ITEM) {
-        storageList = itemEvents
-          .computeIfAbsent(itemKey(kafkaMessage), k -> new ArrayList<>());
-      } else {
-        storageList = instanceEvents.computeIfAbsent(kafkaMessage.getKey(), k -> new ArrayList<>());
+      switch (kafkaMessage.getTopic()){
+        case INVENTORY_ITEM:
+          storageList = itemEvents.computeIfAbsent(instanceAndIdKey(kafkaMessage),
+            k -> new ArrayList<>());
+          break;
+        case INVENTORY_INSTANCE:
+          storageList = instanceEvents.computeIfAbsent(kafkaMessage.getKey(),
+            k -> new ArrayList<>());
+          break;
+        case INVENTORY_HOLDINGS_RECORD:
+          storageList = holdingsEvents.computeIfAbsent(instanceAndIdKey(kafkaMessage),
+            k -> new ArrayList<>());
+          break;
+        default:
+          throw new IllegalArgumentException("Undefined topic");
       }
 
       storageList.add(kafkaMessage);
@@ -50,6 +68,7 @@ public final class FakeKafkaConsumer {
   public void removeAllEvents() {
     itemEvents.clear();
     instanceEvents.clear();
+    holdingsEvents.clear();
   }
 
   public static Collection<KafkaMessage<JsonObject>> getInstanceEvents(String instanceId) {
@@ -57,7 +76,11 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<KafkaMessage<JsonObject>> getItemEvents(String instanceId, String itemId) {
-    return itemEvents.getOrDefault(itemKey(instanceId, itemId), emptyList());
+    return itemEvents.getOrDefault(instanceAndIdKey(instanceId, itemId), emptyList());
+  }
+
+  public static Collection<KafkaMessage<JsonObject>> getHoldingsEvents(String instanceId, String hrId) {
+    return holdingsEvents.getOrDefault(instanceAndIdKey(instanceId, hrId), emptyList());
   }
 
   private static KafkaMessage<JsonObject> getLastEvent(Collection<KafkaMessage<JsonObject>> events) {
@@ -86,16 +109,24 @@ public final class FakeKafkaConsumer {
     return getFirstEvent(getItemEvents(instanceId, itemId));
   }
 
-  private static String itemKey(String instanceId, String itemId) {
+  public static KafkaMessage<JsonObject> getLastHoldingEvent(String instanceId, String hrId) {
+    return getLastEvent(getHoldingsEvents(instanceId, hrId));
+  }
+
+  public static KafkaMessage<JsonObject> getFirstHoldingEvent(String instanceId, String hrId) {
+    return getFirstEvent(getHoldingsEvents(instanceId, hrId));
+  }
+
+  private static String instanceAndIdKey(String instanceId, String itemId) {
     return instanceId + "_" + itemId;
   }
 
-  private static String itemKey(KafkaMessage<JsonObject> kafkaMessage) {
-    final JsonObject payload = kafkaMessage.getPayload();
-    final var item = payload.containsKey("new")
+  private static String instanceAndIdKey(KafkaMessage<JsonObject> message) {
+    final JsonObject payload = message.getPayload();
+    final var oldOrNew = payload.containsKey("new")
       ? payload.getJsonObject("new") : payload.getJsonObject("old");
 
-    return itemKey(kafkaMessage.getKey(), item.getString("id"));
+    return instanceAndIdKey(message.getKey(), oldOrNew.getString("id"));
   }
 
   private Map<String, String> consumerProperties() {

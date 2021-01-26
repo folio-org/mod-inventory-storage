@@ -4,7 +4,8 @@ import java.util.stream.Stream;
 
 public enum KafkaTopic {
   INVENTORY_INSTANCE("inventory.instance"),
-  INVENTORY_ITEM("inventory.item");
+  INVENTORY_ITEM("inventory.item"),
+  INVENTORY_HOLDINGS_RECORD("inventory.holdings-record");
 
   private final String topicName;
 
