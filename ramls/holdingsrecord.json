@@ -8,6 +8,10 @@
       "description": "the unique ID of the holdings record; UUID",
       "$ref": "uuid.json"
     },
+    "_version": {
+      "type": "integer",
+      "description": "Record version for optimistic locking"
+    },
     "hrid": {
       "type": "string",
       "description": "the human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
