@@ -28,6 +28,11 @@ types:
     responses:
       201:
         description: "All instances have been successfully created or updated"
+      409:
+        description: "Conflict, constraint error or locking failed"
+        body:
+          text/plain:
+            example: "constraint error"
       413:
         description: "Payload Too Large"
         body:
