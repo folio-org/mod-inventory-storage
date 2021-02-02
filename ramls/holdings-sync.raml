@@ -29,7 +29,7 @@ types:
       201:
         description: "All holdings have been successfully created or updated"
       409:
-        description: "Optimistic locking failed"
+        description: "Optimistic locking version conflict"
         body:
           text/plain:
             example: "version conflict"
@@ -48,4 +48,3 @@ types:
         body:
           text/plain:
             example: "Internal server error"
-
