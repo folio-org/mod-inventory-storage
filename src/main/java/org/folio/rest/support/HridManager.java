@@ -184,7 +184,7 @@ public class HridManager {
     return promise.future();
   }
 
-  private Future<String> getNextHrid(HridSetting hridSetting, String type) {
+  private Future<String> getNextHrid(final HridSetting hridSetting, String type) {
     final String sql = "SELECT nextval('hrid_" + type + "_seq')";
     final Promise<Row> promise = Promise.promise();
 
@@ -197,8 +197,12 @@ public class HridManager {
     final String hridPrefix = hridSetting.getPrefix();
 
     return promise.future()
-        .map(sequence -> String.format("%s%011d", Objects.toString(hridPrefix, ""),
-            sequence.getLong(0)));
+      .map(sequence -> String.format(getHridFormatter(hridSetting),
+        Objects.toString(hridPrefix, ""), sequence.getLong(0)));
+  }
+
+  private String getHridFormatter(HridSetting hridSetting) {
+    return hridSetting.getRetainLeadingZeroes() ? "%s%011d" : "%s%d";
   }
 
   private Void endTransaction(AsyncResult<SQLConnection> conn, Promise<Void> promise) {

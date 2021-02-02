@@ -14,6 +14,11 @@
       "type": "integer",
       "minimum": 1,
       "maximum": 99999999999
+    },
+    "retainLeadingZeroes" : {
+      "type": "boolean",
+      "description": "If true, leading zeros should be applied for HRIDs",
+      "default": true
     }
   },
   "additionalProperties": false,

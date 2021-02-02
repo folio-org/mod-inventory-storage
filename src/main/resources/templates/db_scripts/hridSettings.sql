@@ -4,9 +4,9 @@ ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
     lock boolean DEFAULT true UNIQUE CHECK(lock=true);
 INSERT INTO ${myuniversity}_${mymodule}.${table.tableName}
   SELECT 'a501f2a8-5b31-48b2-874d-2191e48db8cd', jsonb_build_object(
-    'instances', jsonb_build_object('prefix', 'in', 'startNumber', 1),
-    'holdings', jsonb_build_object('prefix', 'ho', 'startNumber', 1),
-    'items', jsonb_build_object('prefix', 'it', 'startNumber', 1)
+    'instances', jsonb_build_object('prefix', 'in', 'startNumber', 1, 'retainLeadingZeroes', true),
+    'holdings', jsonb_build_object('prefix', 'ho', 'startNumber', 1, 'retainLeadingZeroes', true),
+    'items', jsonb_build_object('prefix', 'it', 'startNumber', 1, 'retainLeadingZeroes', true)
   )
   ON CONFLICT DO NOTHING;
 
