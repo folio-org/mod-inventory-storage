@@ -28,6 +28,11 @@ types:
     responses:
       201:
         description: "All items have been successfully created or updated"
+      409:
+        description: "Optimistic locking version conflict"
+        body:
+          text/plain:
+            example: "version conflict"
       413:
         description: "Payload Too Large"
         body:
