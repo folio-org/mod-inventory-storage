@@ -127,7 +127,9 @@ public class HridManager {
 
   private Future<Void> updateHridSettings(AsyncResult<SQLConnection> conn,
       HridSettings existingHridSettings, HridSettings hridSettings) {
+
     hridSettings.setId(existingHridSettings.getId());
+    updateRetainLeadingZeroes(hridSettings);
 
     final Promise<RowSet<Row>> promise = Promise.promise();
 
@@ -150,6 +152,12 @@ public class HridManager {
     }
 
     return promise.future().map(v -> null);
+  }
+
+  private void updateRetainLeadingZeroes(HridSettings hridSettings) {
+    hridSettings.getInstances().setRetainLeadingZeroes(hridSettings.getCommonRetainLeadingZeroes());
+    hridSettings.getHoldings().setRetainLeadingZeroes(hridSettings.getCommonRetainLeadingZeroes());
+    hridSettings.getItems().setRetainLeadingZeroes(hridSettings.getCommonRetainLeadingZeroes());
   }
 
   private Future<Void> updateSequence(AsyncResult<SQLConnection> conn, String field,

@@ -46,9 +46,10 @@ public class HridSettingsStorageTest extends TestBase {
     .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
 
   private final HridSettings initialHridSettingsWithoutLeadingZeroes = new HridSettings()
-    .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L).withRetainLeadingZeroes(false))
-    .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L).withRetainLeadingZeroes(false))
-    .withItems(new HridSetting().withPrefix("it").withStartNumber(1L).withRetainLeadingZeroes(false));
+    .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
+    .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
+    .withItems(new HridSetting().withPrefix("it").withStartNumber(1L))
+    .withCommonRetainLeadingZeroes(false);
 
   @Before
   public void setUp(TestContext testContext) {
@@ -331,9 +332,10 @@ public class HridSettingsStorageTest extends TestBase {
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     final HridSettings newHridSettings = new HridSettings()
-      .withInstances(new HridSetting().withPrefix("in").withStartNumber(250L).withRetainLeadingZeroes(false))
-      .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L).withRetainLeadingZeroes(false))
-      .withItems(new HridSetting().withPrefix("it").withStartNumber(1L).withRetainLeadingZeroes(false));
+      .withInstances(new HridSetting().withPrefix("in").withStartNumber(250L))
+      .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
+      .withItems(new HridSetting().withPrefix("it").withStartNumber(1L))
+      .withCommonRetainLeadingZeroes(false);
 
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
@@ -408,8 +410,9 @@ public class HridSettingsStorageTest extends TestBase {
 
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
-      .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890L).withRetainLeadingZeroes(false))
-      .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
+      .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890L))
+      .withItems(new HridSetting().withPrefix("it").withStartNumber(1L))
+      .withCommonRetainLeadingZeroes(false);
 
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
@@ -616,9 +619,10 @@ public class HridSettingsStorageTest extends TestBase {
 
     final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
     final HridSettings newHridSettings = new HridSettings()
-      .withInstances(new HridSetting().withStartNumber(9_999_999_997L).withRetainLeadingZeroes(false))
-      .withHoldings(new HridSetting().withStartNumber(9_999_999_998L).withRetainLeadingZeroes(false))
-      .withItems(new HridSetting().withStartNumber(9_999_999_999L).withRetainLeadingZeroes(false));
+      .withInstances(new HridSetting().withStartNumber(9_999_999_997L))
+      .withHoldings(new HridSetting().withStartNumber(9_999_999_998L))
+      .withItems(new HridSetting().withStartNumber(9_999_999_999L))
+      .withCommonRetainLeadingZeroes(false);
 
     hridManager.updateHridSettings(newHridSettings)
       .compose(v -> hridManager.getNextInstanceHrid())
