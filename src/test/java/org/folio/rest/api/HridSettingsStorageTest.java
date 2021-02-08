@@ -547,50 +547,6 @@ public class HridSettingsStorageTest extends TestBase {
   }
 
   @Test
-  public void canRollbackFailedTransactionWithoutLeadingZeroes(TestContext testContext) {
-    log.info("Starting canRollbackFailedTransactionWithoutLeadingZeroes()");
-
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
-    final HridSettings newHridSettings = new HridSettings()
-      .withInstances(new HridSetting().withStartNumber(200L))
-      .withHoldings(new HridSetting().withStartNumber(999_999_999_999L).withRetainLeadingZeroes(false))
-      .withItems(new HridSetting().withStartNumber(300L));
-
-    hridManager.getHridSettings()
-      .compose(originalHridSettings -> {
-        Promise<HridSettings> promise = Promise.promise();
-        hridManager.updateHridSettings(newHridSettings).onComplete(ar -> {
-          assertTrue(ar.failed());
-          hridManager.getHridSettings()
-            .compose(currentHridSettings -> {
-              assertThat(currentHridSettings.getId(), is(originalHridSettings.getId()));
-              assertThat(currentHridSettings.getInstances().getPrefix(),
-                is(originalHridSettings.getInstances().getPrefix()));
-              assertThat(currentHridSettings.getInstances().getStartNumber(),
-                is(originalHridSettings.getInstances().getStartNumber()));
-              assertThat(currentHridSettings.getHoldings().getPrefix(),
-                is(originalHridSettings.getHoldings().getPrefix()));
-              assertThat(currentHridSettings.getHoldings().getStartNumber(),
-                is(originalHridSettings.getHoldings().getStartNumber()));
-              assertThat(currentHridSettings.getItems().getPrefix(),
-                is(originalHridSettings.getItems().getPrefix()));
-              assertThat(currentHridSettings.getItems().getStartNumber(),
-                is(originalHridSettings.getItems().getStartNumber()));
-              return Future.succeededFuture(currentHridSettings);
-            })
-            .onComplete(promise);
-        });
-        return promise.future();
-      })
-      .onComplete(testContext.asyncAssertSuccess(
-        v1 -> log.info("Finished canRollbackFailedTransactionWithoutLeadingZeroes()")));
-  }
-
-  @Test
   public void canGetNextHridWhenStartNumberIsLong(TestContext testContext) {
     final Vertx vertx = StorageTestSuite.getVertx();
     final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
