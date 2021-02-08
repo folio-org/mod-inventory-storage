@@ -7,6 +7,7 @@ import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.createEvent;
+import static org.folio.services.domainevent.DomainEvent.deleteAllEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteEvent;
 import static org.folio.services.domainevent.DomainEvent.updateEvent;
 import static org.folio.services.kafka.KafkaProducerServiceFactory.getKafkaProducerService;
@@ -27,6 +28,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 
 class CommonDomainEventPublisher<T> {
+  private static final String NULL_INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
   private static final Logger log = getLogger(CommonDomainEventPublisher.class);
   private static final Set<String> FORWARDER_HEADERS = Set.of(URL.toLowerCase(),
     TENANT.toLowerCase());
@@ -83,15 +85,8 @@ class CommonDomainEventPublisher<T> {
     return publishMessage(instanceId, domainEvent);
   }
 
-  Future<Void> publishRecordsRemoved(List<Pair<String, T>> records) {
-    if (records.isEmpty()) {
-      return succeededFuture();
-    }
-
-    return all(records.stream()
-      .map(record -> publishRecordRemoved(record.getKey(), record.getValue()))
-      .collect(Collectors.toList()))
-      .map(notUsed -> null);
+  Future<Void> publishAllRecordsRemoved() {
+    return publishMessage(NULL_INSTANCE_ID, deleteAllEvent(getTenant()));
   }
 
   private Future<Void> publishMessage(String instanceId, DomainEvent<?> domainEvent) {

@@ -224,7 +224,7 @@ The event payload has following structure:
 {
   "old": {...}, // the instance/item before update or delete
   "new": {...}, // the instance/item after update or create
-  "type": "UPDATE|DELETE|CREATE", // type of the event
+  "type": "UPDATE|DELETE|CREATE|DELETE_ALL", // type of the event
   "tenant": "diku" // tenant name
 }
 ```
@@ -234,5 +234,28 @@ The event payload has following structure:
 Kafka partition key for all the events is instance id (for items it is retrieved from
 associated holding record).
 
-*Note for items:* the `new` and `old` records also includes `instanceId` property,
-on the same level with other item properties, which defined in the schema.
+## Domain events for items
+
+The `new` and `old` records also includes `instanceId` property,
+on the same level with other item properties, which defined in the schema:
+```javascript
+{
+  "instanceId": "<the instance id>",
+  // all other properties that defined in the schema
+}
+```
+
+## Domain events for delete all APIs
+
+There are delete all APIs for items instances and holding records. For such
+APIs we're issuing a special domain event:
+* Partition key: `00000000-0000-0000-0000-000000000000`
+* Event payload:
+```javascript
+{
+  "type": "DELETE_ALL",
+  "tenant": "<the tenant name>"
+  "old": null,
+  "new": null
+}
+```
