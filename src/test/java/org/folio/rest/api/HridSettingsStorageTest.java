@@ -102,17 +102,16 @@ public class HridSettingsStorageTest extends TestBase {
     assertThat(actualHridSettings.getInstances(), is(notNullValue()));
     assertThat(actualHridSettings.getInstances().getPrefix(), is("in"));
     assertThat(actualHridSettings.getInstances().getStartNumber(), is(1L));
-    assertThat(actualHridSettings.getInstances().getRetainLeadingZeroes(), is(true));
 
     assertThat(actualHridSettings.getHoldings(), is(notNullValue()));
     assertThat(actualHridSettings.getHoldings().getPrefix(), is("ho"));
     assertThat(actualHridSettings.getHoldings().getStartNumber(), is(1L));
-    assertThat(actualHridSettings.getHoldings().getRetainLeadingZeroes(), is(true));
 
     assertThat(actualHridSettings.getItems(), is(notNullValue()));
     assertThat(actualHridSettings.getItems().getPrefix(), is("it"));
     assertThat(actualHridSettings.getItems().getStartNumber(), is(1L));
-    assertThat(actualHridSettings.getItems().getRetainLeadingZeroes(), is(true));
+
+    assertThat(actualHridSettings.getCommonRetainLeadingZeroes(), is(true));
 
     log.info("Finished canRetrieveHridSettings()");
   }
