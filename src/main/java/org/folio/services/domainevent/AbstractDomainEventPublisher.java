@@ -86,7 +86,7 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
       }
 
       return toInstanceIdEventTypePair(record)
-        .compose(event -> domainEventService.publishRecordRemoved(event.getKey(), event.getRight()))
+        .compose(event -> domainEventService.publishRecordRemoved(event.getKey(), event.getValue()))
         .map(response);
     };
   }
