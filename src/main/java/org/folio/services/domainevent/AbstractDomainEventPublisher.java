@@ -125,8 +125,8 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
   protected abstract Future<List<Pair<String, EventType>>> toInstanceIdEventTypePairs(
     Collection<DomainType> records);
 
-  private Future<Pair<String, EventType>> toInstanceIdEventTypePair(DomainType records) {
-    return toInstanceIdEventTypePairs(List.of(records))
+  private Future<Pair<String, EventType>> toInstanceIdEventTypePair(DomainType record) {
+    return toInstanceIdEventTypePairs(List.of(record))
       .map(list -> list.get(0));
   }
 
