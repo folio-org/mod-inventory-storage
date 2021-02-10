@@ -1,8 +1,10 @@
 package org.folio.rest.support;
 
-import java.util.Objects;
-import java.util.function.Function;
-
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -10,14 +12,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.json.Json;
+import java.util.Objects;
+import java.util.function.Function;
 
 public class HridManager {
   private static final Logger log = LogManager.getLogger();
@@ -33,15 +32,15 @@ public class HridManager {
   }
 
   public Future<String> getNextInstanceHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getInstances(), "instances"));
+    return getNextHrid(hridSettings -> getNextHrid(hridSettings, InventoryType.Instances));
   }
 
   public Future<String> getNextHoldingsHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getHoldings(), "holdings"));
+    return getNextHrid(hridSettings -> getNextHrid(hridSettings, InventoryType.Holdings));
   }
 
   public Future<String> getNextItemHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings.getItems(), "items"));
+    return getNextHrid(hridSettings -> getNextHrid(hridSettings, InventoryType.Items));
   }
 
   public Future<HridSettings> getHridSettings() {
@@ -184,8 +183,8 @@ public class HridManager {
     return promise.future();
   }
 
-  private Future<String> getNextHrid(HridSetting hridSetting, String type) {
-    final String sql = "SELECT nextval('hrid_" + type + "_seq')";
+  private Future<String> getNextHrid(final HridSettings hridSettings, InventoryType type) {
+    final String sql = "SELECT nextval('hrid_" + type.name().toLowerCase() + "_seq')";
     final Promise<Row> promise = Promise.promise();
 
     try {
@@ -194,11 +193,14 @@ public class HridManager {
       fail(promise, "Failed to get the next sequence value from the database", e);
     }
 
-    final String hridPrefix = hridSetting.getPrefix();
-
+    final String hridPrefix = type.getPrefix(hridSettings);
     return promise.future()
-        .map(sequence -> String.format("%s%011d", Objects.toString(hridPrefix, ""),
-            sequence.getLong(0)));
+      .map(sequence -> String.format(getHridFormatter(hridSettings),
+        Objects.toString(hridPrefix, ""), sequence.getLong(0)));
+  }
+
+  private String getHridFormatter(HridSettings hridSettings) {
+    return hridSettings.getCommonRetainLeadingZeroes() ? "%s%011d" : "%s%d";
   }
 
   private Void endTransaction(AsyncResult<SQLConnection> conn, Promise<Void> promise) {
@@ -234,5 +236,30 @@ public class HridManager {
   private <T> void fail(Promise<T> promise, String message, Throwable t) {
     log.error(message, t);
     promise.fail(t);
+  }
+
+  private interface Inventory<H> {
+    String getPrefix(HridSettings hridSettings);
+  }
+
+  private enum InventoryType implements Inventory<HridSettings> {
+    Holdings {
+      @Override
+      public String getPrefix(HridSettings hridSettings) {
+        return hridSettings.getHoldings().getPrefix();
+      }
+    },
+
+    Instances {
+      public String getPrefix(HridSettings hridSettings) {
+        return hridSettings.getInstances().getPrefix();
+      }
+    },
+
+    Items {
+      public String getPrefix(HridSettings hridSettings) {
+        return hridSettings.getItems().getPrefix();
+      }
+    }
   }
 }
