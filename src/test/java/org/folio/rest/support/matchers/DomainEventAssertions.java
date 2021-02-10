@@ -18,6 +18,7 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getItemEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
+import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_INSTANCE_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -34,7 +35,6 @@ import java.util.stream.Collectors;
 import org.folio.services.kafka.KafkaMessage;
 
 public final class DomainEventAssertions {
-  private static final String NULL_INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
   private DomainEventAssertions() {}
 
   private static void assertCreateEvent(KafkaMessage<JsonObject> createEvent, JsonObject newRecord) {

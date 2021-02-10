@@ -27,8 +27,8 @@ import org.folio.services.kafka.topic.KafkaTopic;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
-class CommonDomainEventPublisher<T> {
-  private static final String NULL_INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
+public class CommonDomainEventPublisher<T> {
+  public static final String NULL_INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
   private static final Logger log = getLogger(CommonDomainEventPublisher.class);
   private static final Set<String> FORWARDER_HEADERS = Set.of(URL.toLowerCase(),
     TENANT.toLowerCase());
