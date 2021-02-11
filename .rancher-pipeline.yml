@@ -1,0 +1,27 @@
+stages:
+- name: Build
+  steps:
+  - runScriptConfig:
+      image: maven:3-openjdk-11
+      shellScript: mvn package -DskipTests
+- name: Build Docker with DIND
+  steps:
+  - publishImageConfig:
+      dockerfilePath: ./Dockerfile
+      buildContext: .
+      tag: docker.dev.folio.org/mod-inventory-storage:spitfire-${CICD_EXECUTION_SEQUENCE}
+      pushRemote: true
+      registry: docker.dev.folio.org
+- name: Deploy
+  steps:
+  - applyAppConfig:
+      catalogTemplate: p-htqfq:spitfire-helmcharts-mod-inventory-storage
+      version: 0.1.34
+      answers:
+        image.repository: docker.dev.folio.org/mod-inventory-storage
+        image.tag: spitfire-${CICD_EXECUTION_SEQUENCE}
+        postJob.enabled: true
+      targetNamespace: spitfire
+      name: mod-inventory-storage
+timeout: 60
+notification: {}
