@@ -43,6 +43,7 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEventForHolding;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
@@ -534,9 +535,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(allHoldings.size(), is(0));
 
-    createdHoldings.stream()
-      .map(IndividualResource::getJson)
-      .forEach(DomainEventAssertions::assertRemoveEventForHolding);
+    assertRemoveAllEventForHolding();
   }
 
   @Test
