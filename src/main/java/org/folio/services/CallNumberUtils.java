@@ -6,6 +6,9 @@ import org.marc4j.callnum.LCCallNumber;
 import java.util.Optional;
 
 public class CallNumberUtils {
+
+  private CallNumberUtils() {}
+
   public static Optional<String> getShelfKeyFromCallNumber(String callNumberParam) {
     if (callNumberParam == null) return Optional.empty();
     CallNumber callNumber = new LCCallNumber();

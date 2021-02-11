@@ -4,7 +4,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import java.util.Map;
-import java.util.Optional;
+
 
 import javax.ws.rs.core.Response;
 
@@ -12,7 +12,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
-import org.folio.services.CallNumberUtils;
 import org.folio.services.item.ItemService;
 
 import io.vertx.core.AsyncResult;
@@ -45,9 +44,6 @@ public class ItemStorageAPI implements ItemStorage {
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
-    Optional<String> shelvingOrder = CallNumberUtils.getShelfKeyFromCallNumber(entity.getItemLevelCallNumber());
-    if (shelvingOrder.isPresent()) entity.setShelvingOrder(shelvingOrder.get());
 
     new ItemService(vertxContext, okapiHeaders).createItem(entity)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
@@ -83,9 +79,6 @@ public class ItemStorageAPI implements ItemStorage {
     String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
     io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
-//    Optional<String> shelvingOrder = CallNumberUtils.getShelveNumber(entity.getEffectiveCallNumberComponents().getCallNumber());
-//    if (shelvingOrder.isPresent()) entity.setShelvingOrder(shelvingOrder.get());
 
     new ItemService(vertxContext, okapiHeaders).updateItem(itemId, entity)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
