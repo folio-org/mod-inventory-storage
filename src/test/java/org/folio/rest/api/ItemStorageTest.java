@@ -22,6 +22,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNowAsString;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForItem;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
@@ -1804,7 +1805,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allItems.size(), is(0));
     assertThat(responseBody.getInteger("totalRecords"), is(0));
 
-    createdItems.forEach(DomainEventAssertions::assertRemoveEventForItem);
+    assertRemoveAllEventForItem();
   }
 
   @Test

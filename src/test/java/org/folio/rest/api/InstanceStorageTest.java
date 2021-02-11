@@ -20,6 +20,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +53,7 @@ import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBefo
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoCreateEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
@@ -1456,9 +1458,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allInstances.size(), is(0));
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(0));
 
-    assertRemoveEventForInstance(firstInstance.getJson());
-    assertRemoveEventForInstance(secondInstance.getJson());
-    assertRemoveEventForInstance(thirdInstance.getJson());
+    assertRemoveAllEventForInstance();
   }
 
   @Test

@@ -126,7 +126,9 @@ public final class FakeKafkaConsumer {
     final var oldOrNew = payload.containsKey("new")
       ? payload.getJsonObject("new") : payload.getJsonObject("old");
 
-    return instanceAndIdKey(message.getKey(), oldOrNew.getString("id"));
+    final var id = oldOrNew != null ? oldOrNew.getString("id") : null;
+
+    return instanceAndIdKey(message.getKey(), id);
   }
 
   private Map<String, String> consumerProperties() {

@@ -670,33 +670,24 @@ public class InstanceStorageAPI implements InstanceStorage {
   private void deleteAllInstances(PostgresClient postgresClient, String tenantId,
     Handler<AsyncResult<Response>> handler, InstanceDomainEventPublisher domainEventService) {
 
-    postgresClient.get(INSTANCE_TABLE, new Instance(), false, instances -> {
-      if (instances.failed()) {
-        log.error("Unable to retrieve all instances before remove", instances.cause());
+    final String deleteAllSql = String.format(
+      "DELETE FROM %s_%s.%s", tenantId, MODULE, INSTANCE_TABLE);
+    postgresClient.execute(deleteAllSql, deleteReply -> {
+      if (deleteReply.failed()) {
         handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse
-          .respond500WithTextPlain(instances.cause().getMessage())));
+          .respond500WithTextPlain(deleteReply.cause().getMessage())));
         return;
       }
 
-      final String deleteAllSql = String.format(
-        "DELETE FROM %s_%s.%s", tenantId, MODULE, INSTANCE_TABLE);
-      postgresClient.execute(deleteAllSql, deleteReply -> {
-        if (deleteReply.failed()) {
-          handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse
-            .respond500WithTextPlain(deleteReply.cause().getMessage())));
-          return;
-        }
-
-        domainEventService.publishInstancesRemoved(instances.result().getResults())
-          .onComplete(result -> {
-            if (result.succeeded()) {
-              handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse.respond204()));
-            } else {
-              handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse
-                .respond500WithTextPlain(result.cause().getMessage())));
-            }
-          });
-      });
+      domainEventService.publishAllInstancesRemoved()
+        .onComplete(result -> {
+          if (result.succeeded()) {
+            handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse.respond204()));
+          } else {
+            handler.handle(succeededFuture(DeleteInstanceStorageInstancesResponse
+              .respond500WithTextPlain(result.cause().getMessage())));
+          }
+        });
     });
   }
 
