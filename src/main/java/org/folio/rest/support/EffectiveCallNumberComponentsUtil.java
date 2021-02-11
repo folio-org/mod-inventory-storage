@@ -6,12 +6,25 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.services.CallNumberUtils;
+
+import java.util.Optional;
 
 public final class EffectiveCallNumberComponentsUtil {
   private EffectiveCallNumberComponentsUtil() {}
 
   public static void setCallNumberComponents(Item item, HoldingsRecord hr) {
     item.setEffectiveCallNumberComponents(buildComponents(item, hr));
+    setShelvesNumber(item);
+  }
+
+  public static void setShelvesNumber(Item item) {
+    if (isNotBlank(item.getEffectiveCallNumberComponents().getCallNumber())) {
+      Optional<String> shelfKey = CallNumberUtils.getShelfKeyFromCallNumber(
+        item.getEffectiveCallNumberComponents().getCallNumber()
+      );
+      if (shelfKey.isPresent()) item.setShelvingOrder(shelfKey.get());
+    }
   }
 
   private static EffectiveCallNumberComponents buildComponents(Item item, HoldingsRecord holdings) {

@@ -39,6 +39,10 @@
       "type": "string",
       "description": "Unique inventory control number for physical resources, used largely for circulation purposes"
     },
+    "shelvingOrder": {
+      "type": "string",
+      "description": "Shelving order automatically generated form Call Number (R/O for manually editing)"
+    },
     "itemLevelCallNumber": {
       "type": "string",
       "description": "Call Number is an identifier assigned to an item, usually printed on a label attached to the item. The call number is used to determine the items physical position in a shelving sequence, e.g. K1 .M44. The Item level call number, is the call number on item level."

@@ -5,6 +5,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
@@ -140,6 +141,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("tags", new JsonObject().put("tagList",new JsonArray().add(TAG_VALUE)));
     itemToCreate.put("copyNumber", "copy1");
 
+    itemToCreate.put("itemLevelCallNumber", "PS3623.R534 P37 2005");
+    itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
+    itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
+    itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+
+
     //TODO: Replace with real service point when validated
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
 
@@ -171,6 +178,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         is(inTransitServicePointId));
     assertThat(itemFromPost.getString("hrid"), is("it00000000001"));
     assertThat(itemFromPost.getString("copyNumber"), is("copy1"));
+    assertThat(itemFromPost.getString("shelvingOrder"), is("PS 43623 R534 P37 42005"));
 
     Response getResponse = getById(id);
 
@@ -199,6 +207,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags, hasItem(TAG_VALUE));
     assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
     assertCreateEventForItem(itemFromGet);
+    assertThat(itemFromGet.getString("shelvingOrder"), is("PS 43623 R534 P37 42005"));
   }
 
   @Test
