@@ -245,9 +245,15 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
         .put(holdingsPropertyName, holdingsTargetValue)
     );
 
+    var itemAfterHoldingsUpdate = getById(createdItem.getJson());
+    assertUpdateEventForItem(createdItem.getJson(), itemAfterHoldingsUpdate);
+
     if (!Objects.equals(itemInitValue, itemTargetValue)) {
       itemsClient.replace(createdItem.getId(), createdItem.copyJson()
         .put(itemPropertyName, itemTargetValue));
+
+      assertUpdateEventForItem(itemAfterHoldingsUpdate,
+        itemsClient.getById(createdItem.getId()).getJson());
     }
 
     final JsonObject updatedItem = itemsClient.getById(createdItem.getId()).getJson();
@@ -257,7 +263,6 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     assertNotNull(updatedEffectiveCallNumberComponents);
     assertThat(updatedEffectiveCallNumberComponents.getString(effectivePropertyName),
       is(targetEffectiveValue));
-    assertUpdateEventForItem(createdItem.getJson(), updatedItem);
   }
 
   private IndividualResource createHoldingsWithPropertySetAndInstance(
