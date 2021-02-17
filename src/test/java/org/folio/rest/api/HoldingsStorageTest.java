@@ -1853,6 +1853,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       holdingsArray.add(new JsonObject()
           .put("id", UUID.randomUUID().toString())
           .put("instanceId", instanceId.toString())
+          .put("_version", 1)
           .put("permanentLocationId", mainLibraryLocationId.toString()));
     }
     return holdingsArray;

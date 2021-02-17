@@ -48,14 +48,16 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
     };
   }
 
-  public Function<Response, Future<Response>> publishCreated(DomainType record) {
+  @SuppressWarnings("unchecked")
+  public Function<Response, Future<Response>> publishCreated() {
     return response -> {
       if (!isCreateSuccessResponse(response)) {
         log.warn("Record create failed, skipping event publishing");
         return succeededFuture(response);
       }
 
-      return publishCreated(singletonList(record)).map(response);
+      return publishCreated(singletonList((DomainType) response.getEntity()))
+        .map(response);
     };
   }
 
