@@ -71,9 +71,8 @@ public class HoldingsService {
   }
 
   public Future<Void> deleteAllHoldings() {
-    return holdingsRepository.getAll()
-      .compose(allItems -> holdingsRepository.deleteAll()
-        .compose(notUsed -> domainEventPublisher.publishRemoved(allItems)));
+    return holdingsRepository.deleteAll()
+      .compose(notUsed -> domainEventPublisher.publishAllRemoved());
   }
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
@@ -96,7 +95,7 @@ public class HoldingsService {
           PostHoldingsStorageHoldingsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventPublisher.publishCreated(hr));
+          .compose(domainEventPublisher.publishCreated());
       });
   }
 

@@ -297,6 +297,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     instanceToCreate.put("contributors", contributors);
     instanceToCreate.put("instanceTypeId", instanceTypeId.toString());
     instanceToCreate.put("tags", new JsonObject().put("tagList", tags));
+    instanceToCreate.put("_version", 1);
     return instanceToCreate;
   }
 

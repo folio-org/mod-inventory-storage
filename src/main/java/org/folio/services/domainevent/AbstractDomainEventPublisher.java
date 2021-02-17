@@ -48,14 +48,16 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
     };
   }
 
-  public Function<Response, Future<Response>> publishCreated(DomainType record) {
+  @SuppressWarnings("unchecked")
+  public Function<Response, Future<Response>> publishCreated() {
     return response -> {
       if (!isCreateSuccessResponse(response)) {
         log.warn("Record create failed, skipping event publishing");
         return succeededFuture(response);
       }
 
-      return publishCreated(singletonList(record)).map(response);
+      return publishCreated(singletonList((DomainType) response.getEntity()))
+        .map(response);
     };
   }
 
@@ -85,18 +87,14 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
         return succeededFuture(response);
       }
 
-      return publishRemoved(singletonList(record)).map(response);
+      return toInstanceIdEventTypePair(record)
+        .compose(event -> domainEventService.publishRecordRemoved(event.getKey(), event.getValue()))
+        .map(response);
     };
   }
 
-  public Future<Void> publishRemoved(List<DomainType> records) {
-    if (records.isEmpty()) {
-      log.info("No records were removed, skipping event sending");
-      return succeededFuture();
-    }
-
-    return toInstanceIdEventTypePairs(records)
-      .compose(domainEventService::publishRecordsRemoved);
+  public Future<Void> publishAllRemoved() {
+    return domainEventService.publishAllRecordsRemoved();
   }
 
   protected Future<Void> publishUpdated(Collection<DomainType> oldRecords) {
@@ -128,6 +126,11 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
 
   protected abstract Future<List<Pair<String, EventType>>> toInstanceIdEventTypePairs(
     Collection<DomainType> records);
+
+  private Future<Pair<String, EventType>> toInstanceIdEventTypePair(DomainType record) {
+    return toInstanceIdEventTypePairs(List.of(record))
+      .map(list -> list.get(0));
+  }
 
   protected abstract Future<List<Triple<String, EventType, EventType>>> toInstanceIdEventTypeTriples(
     Collection<Pair<DomainType, DomainType>> oldToNewRecordPairs);

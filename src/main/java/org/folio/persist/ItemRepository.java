@@ -18,10 +18,6 @@ public class ItemRepository extends AbstractRepository<Item> {
     super(postgresClient(context, okapiHeaders), ITEM_TABLE, Item.class);
   }
 
-  public Future<List<Item>> getAll() {
-    return postgresClientFuturized.get(tableName, new Item());
-  }
-
   public Future<List<Item>> getItemsForHoldingRecord(String holdingRecordId) {
     final Criterion criterion = new Criterion(new Criteria().setJSONB(false)
       .addField("holdingsRecordId").setOperation("=").setVal(holdingRecordId));

@@ -7,6 +7,10 @@
       "type": "string",
       "description": "Unique ID of the item record"
     },
+    "_version": {
+      "type": "integer",
+      "description": "Record version for optimistic locking"
+    },
     "hrid": {
       "type": "string",
       "description": "The human readable ID, also called eye readable ID. A system-assigned sequential alternate ID"

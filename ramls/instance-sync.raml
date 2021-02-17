@@ -28,6 +28,11 @@ types:
     responses:
       201:
         description: "All instances have been successfully created or updated"
+      409:
+        description: "Optimistic locking version conflict"
+        body:
+          text/plain:
+            example: "version error"
       413:
         description: "Payload Too Large"
         body:

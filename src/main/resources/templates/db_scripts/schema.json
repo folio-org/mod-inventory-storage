@@ -336,6 +336,7 @@
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
       "withAuditing": true,
+      "withOptimisticLocking": "logOnConflict",
       "auditingTableName": "audit_instance",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -464,6 +465,10 @@
         {
           "fieldName": "keyword",
           "multiFieldNames": "title,contributors[*].name,identifiers[*].value"
+        },
+        {
+          "fieldName": "allTitles",
+          "multiFieldNames": "title,indexTitle,alternativeTitles[*].alternativeTitle,series"
         },
         {
           "fieldName": "title"
@@ -622,6 +627,7 @@
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
       "withAuditing": true,
+      "withOptimisticLocking": "logOnConflict",
       "auditingTableName": "audit_holdings_record",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -729,6 +735,7 @@
       "withMetadata": true,
       "fromModuleVersion": "19.2.0",
       "withAuditing": true,
+      "withOptimisticLocking": "logOnConflict",
       "auditingTableName": "audit_item",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -910,6 +917,11 @@
     {
       "run": "after",
       "snippetPath": "dropLegacyItemEffectiveLocationTriggers.sql",
+      "fromModuleVersion": "19.5.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateRetainLeadingZeroesSetting.sql",
       "fromModuleVersion": "19.5.0"
     },
     {

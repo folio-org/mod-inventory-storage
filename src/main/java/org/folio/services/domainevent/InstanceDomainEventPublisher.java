@@ -64,12 +64,8 @@ public class InstanceDomainEventPublisher {
     return domainEventService.publishRecordRemoved(oldEntity.getId(), oldEntity);
   }
 
-  public Future<Void> publishInstancesRemoved(List<Instance> records) {
-    final List<Pair<String, Instance>> instancesWithIdsList = records.stream()
-      .map(instance -> new ImmutablePair<>(instance.getId(), instance))
-      .collect(Collectors.toList());
-
-    return domainEventService.publishRecordsRemoved(instancesWithIdsList);
+  public Future<Void> publishAllInstancesRemoved() {
+    return domainEventService.publishAllRecordsRemoved();
   }
 
   public Function<Response, Future<Response>> publishInstancesCreatedOrUpdated(

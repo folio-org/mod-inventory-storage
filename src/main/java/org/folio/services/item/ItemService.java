@@ -84,7 +84,7 @@ public class ItemService {
           PostItemStorageItemsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventService.publishCreated(item));
+          .compose(domainEventService.publishCreated());
       });
   }
 
@@ -143,9 +143,8 @@ public class ItemService {
   }
 
   public Future<Void> deleteAllItems() {
-    return itemRepository.getAll()
-      .compose(allItems -> itemRepository.deleteAll()
-        .compose(notUsed -> domainEventService.publishRemoved(allItems)));
+    return itemRepository.deleteAll()
+      .compose(notUsed -> domainEventService.publishAllRemoved());
   }
 
   /**

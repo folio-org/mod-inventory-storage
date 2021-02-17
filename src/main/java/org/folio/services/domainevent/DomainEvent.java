@@ -2,6 +2,7 @@ package org.folio.services.domainevent;
 
 import static org.folio.services.domainevent.DomainEventType.CREATE;
 import static org.folio.services.domainevent.DomainEventType.DELETE;
+import static org.folio.services.domainevent.DomainEventType.DELETE_ALL;
 import static org.folio.services.domainevent.DomainEventType.UPDATE;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -77,5 +78,9 @@ public class DomainEvent<T> {
 
   public static <T> DomainEvent<T> deleteEvent(T oldEntity, String tenant) {
     return new DomainEvent<>(oldEntity, null, DELETE, tenant);
+  }
+
+  public static <T> DomainEvent<T> deleteAllEvent(String tenant) {
+    return new DomainEvent<>(null, null, DELETE_ALL, tenant);
   }
 }

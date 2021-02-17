@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 
 import io.vertx.core.AsyncResult;
