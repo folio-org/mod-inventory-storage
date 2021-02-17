@@ -84,7 +84,7 @@ public class ItemService {
           PostItemStorageItemsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventService.publishCreated(item));
+          .compose(domainEventService.publishCreated());
       });
   }
 

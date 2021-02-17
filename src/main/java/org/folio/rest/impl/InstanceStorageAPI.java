@@ -29,6 +29,7 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.messages.MessageConsts;
@@ -121,6 +122,8 @@ public class InstanceStorageAPI implements InstanceStorage {
       PostgresClient postgresClient =
         PostgresClient.getInstance(
           vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+      PostgresClientFuturized postgresClientFuturized =
+        new PostgresClientFuturized(postgresClient);
 
       vertxContext.runOnContext(v -> {
         try {
@@ -147,18 +150,19 @@ public class InstanceStorageAPI implements InstanceStorage {
 
           hridFuture.map(hrid -> {
             entity.setHrid(hrid);
-            postgresClient.save(INSTANCE_TABLE, entity.getId(), entity,
-              reply -> {
+            postgresClientFuturized.saveAndReturnEntity(INSTANCE_TABLE, entity.getId(), entity)
+              .onComplete(reply -> {
                 try {
                   if(reply.succeeded()) {
-                    domainEventService.publishInstanceCreated(entity)
+                    var instance = reply.result();
+                    domainEventService.publishInstanceCreated(instance)
                     .onComplete(result -> {
                       if (result.succeeded()) {
                         asyncResultHandler.handle(succeededFuture(
                             PostInstanceStorageInstancesResponse
-                              .respond201WithApplicationJson(entity,
+                              .respond201WithApplicationJson(instance,
                                 PostInstanceStorageInstancesResponse.headersFor201()
-                                  .withLocation(reply.result()))));
+                                  .withLocation(instance.getId()))));
                       } else {
                         asyncResultHandler.handle(succeededFuture(
                             PostInstanceStorageInstancesResponse

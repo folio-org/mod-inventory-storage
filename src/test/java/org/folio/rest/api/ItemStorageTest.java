@@ -2316,6 +2316,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("materialTypeId", materialType);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("_version", 1);
 
     return itemToCreate;
   }

@@ -95,7 +95,7 @@ public class HoldingsService {
           PostHoldingsStorageHoldingsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventPublisher.publishCreated(hr));
+          .compose(domainEventPublisher.publishCreated());
       });
   }
 
