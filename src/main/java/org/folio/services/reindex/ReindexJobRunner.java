@@ -1,0 +1,158 @@
+package org.folio.services.reindex;
+
+import static org.folio.rest.impl.InstanceStorageAPI.INSTANCE_TABLE;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.CANCELLED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.COMPLETED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.FAILED;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.WorkerExecutor;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowStream;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.folio.persist.ReindexJobRepository;
+import org.folio.rest.jaxrs.model.ReindexJob;
+import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.SQLConnection;
+import org.folio.services.domainevent.ReindexInstanceEventPublisher;
+
+public final class ReindexJobRunner {
+  private static final Logger log = LogManager.getLogger(ReindexJobRunner.class);
+  private static final int POOL_SIZE = 2;
+  private static volatile WorkerExecutor workerExecutor;
+
+  private final ReindexJob reindexJob;
+  private final ReindexInstanceEventPublisher publisher;
+  private final PostgresClientFuturized postgresClient;
+  private final ReindexJobRepository reindexJobRepository;
+  private final AtomicInteger recordsPublished;
+  private SQLConnection connection;
+  private RowStream<Row> stream;
+
+  public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders, ReindexJob reindexJob) {
+    this.reindexJob = reindexJob;
+    this.publisher = new ReindexInstanceEventPublisher(vertxContext, okapiHeaders);
+    this.postgresClient = new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders));
+    this.reindexJobRepository = new ReindexJobRepository(vertxContext, okapiHeaders);
+    this.recordsPublished = new AtomicInteger(0);
+
+    initWorker(vertxContext);
+  }
+
+  public void startReindex() {
+    workerExecutor.executeBlocking(
+      promise -> streamInstanceIds()
+        .map(notUsed -> null)
+        .onComplete(promise))
+      .map(notUsed -> null);
+  }
+
+  public Future<Void> streamInstanceIds() {
+    return postgresClient.startTx()
+      .map(this::setConnection)
+      .compose(con -> postgresClient.selectStream(con, "SELECT id FROM " + INSTANCE_TABLE))
+      .map(this::setStream)
+      .compose(this::processStream)
+      .onComplete(result -> {
+        stream.close()
+          .onComplete(notUsed -> postgresClient.endTx(connection))
+          .onFailure(error -> log.warn("Unable to commit transaction", error));
+
+        if (result.failed()) {
+          log.warn("Unable to reindex instances", result.cause());
+          logFailedJob();
+        } else {
+          log.info("Reindex completed");
+          logReindexCompleted();
+        }
+      });
+  }
+
+  private void logReindexCompleted() {
+    reindexJobRepository.fetchAndUpdate(reindexJob.getId(),
+      job -> job.withPublished(recordsPublished.get()).withJobStatus(COMPLETED));
+  }
+
+  private Future<Void> processStream(RowStream<Row> stream) {
+    Promise<Void> result = Promise.promise();
+
+    stream.endHandler(notUsed -> {
+      log.debug("End of the stream has reached");
+      result.complete();
+    }).exceptionHandler(error -> {
+      log.warn("Unable to reindex instances", error);
+      result.fail(error);
+    }).handler(row -> {
+      if (shouldLogJobDetails()) {
+        logJobDetails();
+
+        jobIsCancelled().onSuccess(isCancelled -> {
+          if (isCancelled) {
+            stream.pause();
+            result.fail(new IllegalStateException("Job is cancelled"));
+          }
+        });
+      }
+
+      var instanceId = row.getUUID("id");
+      publisher.publishReindexInstance(instanceId.toString())
+      .onFailure(error ->
+        log.warn("Unable to publish reindex event for instance [id = {}, jobId={}]",
+          instanceId, reindexJob.getId()));
+
+      recordsPublished.incrementAndGet();
+      log.debug("Records processed so far: " + recordsPublished);
+    });
+
+    return result.future();
+  }
+
+  private void logJobDetails() {
+    reindexJobRepository.fetchAndUpdate(reindexJob.getId(),
+      job -> job.withPublished(recordsPublished.get()));
+  }
+
+  private Future<Boolean> jobIsCancelled() {
+    return reindexJobRepository.getById(reindexJob.getId())
+      .map(job -> job.getJobStatus() == CANCELLED);
+  }
+
+  private boolean shouldLogJobDetails() {
+    return recordsPublished.get() % 1000 == 0;
+  }
+
+  private void logFailedJob() {
+    reindexJobRepository.fetchAndUpdate(reindexJob.getId(),
+      resp -> {
+        var finalStatus = resp.getJobStatus() == CANCELLED ? CANCELLED : FAILED;
+        return resp.withJobStatus(finalStatus).withPublished(recordsPublished.get());
+      });
+  }
+
+  private RowStream<Row> setStream(RowStream<Row> stream) {
+    this.stream = stream;
+    return stream;
+  }
+
+  private SQLConnection setConnection(SQLConnection connection) {
+    this.connection = connection;
+    return connection;
+  }
+
+  private static void initWorker(Context vertxContext) {
+    if (workerExecutor == null) {
+      synchronized (ReindexJobRunner.class) {
+        if (workerExecutor == null) {
+          workerExecutor = vertxContext.owner()
+            .createSharedWorkerExecutor("instance-reindex", POOL_SIZE);
+        }
+      }
+    }
+  }
+}

@@ -259,3 +259,23 @@ APIs we're issuing a special domain event:
   "new": null
 }
 ```
+
+## Reindex of instances
+
+Some consumers need to pull all instances from an existing database. There is
+`instance-reindex` API for this. When a reindex job is submitted we initiate
+streaming of all instance IDs and publishing domain events for them. The domain
+event has following structure:
+* Topic: `search.resources`
+* Partition key: `The instance id`
+* Payload:
+```javascript
+x-okapi-tenant: <tenant-id>
+x-okapi-url: <okapi-url>
+
+{
+  "type": "REINDEX",
+  "tenant": "<the-tenant-name>"
+  "id": "<instance-id>"
+}
+```
