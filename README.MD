@@ -44,6 +44,8 @@ Mod-inventory-storage implements domain event pattern and requires kafka to be l
 `localhost:9092`. You can override kafka port and host by setting `KAFKA_PORT` and
 `KAFKA_HOST` environment variables.
 
+Please note that the test suite will fail, however, if kafka is listening to `localhost:9092` during `mvn install` or `mvn test`. 
+
 # Building
 
 run `mvn install` from the root directory.
