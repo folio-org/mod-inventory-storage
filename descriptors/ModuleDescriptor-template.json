@@ -1116,6 +1116,27 @@
           "permissionsRequired": ["inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"]
         }
       ]
+    },
+    {
+      "id": "instance-reindex",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/reindex",
+          "permissionsRequired": ["inventory-storage.instance.reindex.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/reindex/{id}",
+          "permissionsRequired": ["inventory-storage.instance.reindex.item.get"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/reindex/{id}",
+          "permissionsRequired": ["inventory-storage.instance.reindex.item.delete"]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -2117,6 +2138,21 @@
       "description": "delete individual holdings-source from storage"
     },
     {
+      "permissionName": "inventory-storage.instance.reindex.item.delete",
+      "displayName": "inventory storage - cancel reindex job",
+      "description": "cancel a running reindexing job"
+    },
+    {
+      "permissionName": "inventory-storage.instance.reindex.item.get",
+      "displayName": "inventory storage - get reindex job by id",
+      "description": "get reindex job by id"
+    },
+    {
+      "permissionName": "inventory-storage.instance.reindex.post",
+      "displayName": "inventory storage - submit reindex instance job",
+      "description": "submit reindex instance job"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2318,7 +2354,10 @@
         "inventory-storage.holdings-sources.put",
         "inventory-storage.holdings-sources.delete",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
-        "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"
+        "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
+        "inventory-storage.instance.reindex.item.delete",
+        "inventory-storage.instance.reindex.item.get",
+        "inventory-storage.instance.reindex.post"
       ]
     }
   ],
