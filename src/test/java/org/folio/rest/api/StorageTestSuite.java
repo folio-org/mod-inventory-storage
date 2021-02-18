@@ -74,7 +74,8 @@ import io.vertx.sqlclient.RowSet;
   InventoryHierarchyViewTest.class,
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
-  KafkaTenantInitTest.class
+  KafkaTenantInitTest.class,
+  ReindexInstanceAPITest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

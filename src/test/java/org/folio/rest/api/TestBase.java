@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
@@ -56,6 +57,7 @@ public abstract class TestBase {
   static ResourceClient illPoliciesClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static FakeKafkaConsumer kafkaConsumer;
+  static InstanceReindexFixture instanceReindex;
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -101,6 +103,7 @@ public abstract class TestBase {
     statisticalCodeFixture = new StatisticalCodeFixture(client);
     kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
     kafkaConsumer.removeAllEvents();
+    instanceReindex = new InstanceReindexFixture(client);
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
