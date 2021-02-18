@@ -1,7 +1,9 @@
 package org.folio.rest.persist;
 
+import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 
+import io.vertx.sqlclient.RowStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -77,5 +79,29 @@ public class PostgresClientFuturized {
     postgresClient.getById(tableName, new JsonArray(new ArrayList<>(ids)), type, promise);
 
     return promise.future();
+  }
+
+  public Future<SQLConnection> startTx() {
+    Promise<SQLConnection> result = promise();
+
+    postgresClient.startTx(result);
+
+    return result.future();
+  }
+
+  public Future<RowStream<Row>> selectStream(SQLConnection con, String query) {
+    Promise<RowStream<Row>> result = promise();
+
+    postgresClient.selectStream(succeededFuture(con), query, result);
+
+    return result.future();
+  }
+
+  public Future<Void> endTx(SQLConnection connection) {
+    Promise<Void> result = promise();
+
+    postgresClient.endTx(succeededFuture(connection), result);
+
+    return result.future();
   }
 }
