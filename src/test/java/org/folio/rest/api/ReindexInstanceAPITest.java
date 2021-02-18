@@ -40,14 +40,15 @@ public class ReindexInstanceAPITest extends TestBaseWithInventoryUtil {
   public void canReindexInstances() {
     var jobId = instanceReindex.submitReindex().getId();
 
+    await().until(() -> instanceReindex.getReindexJob(jobId).getJobStatus() == COMPLETED);
+
+    var reindexJob = instanceReindex.getReindexJob(jobId);
+
+    assertThat(reindexJob.getPublished(), is(allInstanceIds.size()));
+    assertThat(reindexJob.getJobStatus(), is(COMPLETED));
+    assertThat(reindexJob.getSubmittedDate(), notNullValue());
+
     await().untilAsserted(() -> {
-      var reindexJob = instanceReindex.getReindexJob(jobId);
-
-      assertThat(reindexJob.getPublished(), is(allInstanceIds.size()));
-      assertThat(reindexJob.getJobStatus(), is(COMPLETED));
-      assertThat(reindexJob.getSubmittedDate(), notNullValue());
-      assertThat(reindexJob.getVersion(), notNullValue());
-
       var instanceId = allInstanceIds.get(0);
       var lastInstanceEvent = getLastReindexEvent(instanceId);
       assertThat(lastInstanceEvent.getPayload().getString("type"), is("REINDEX"));
@@ -62,13 +63,12 @@ public class ReindexInstanceAPITest extends TestBaseWithInventoryUtil {
 
     instanceReindex.cancelReindexJob(jobId);
 
-    await().untilAsserted(() -> {
-      var reindexJob = instanceReindex.getReindexJob(jobId);
+    await().until(() -> instanceReindex.getReindexJob(jobId).getJobStatus() == CANCELLED);
 
-      assertThat(reindexJob.getPublished(), lessThan(allInstanceIds.size()));
-      assertThat(reindexJob.getJobStatus(), is(CANCELLED));
-      assertThat(reindexJob.getSubmittedDate(), notNullValue());
-      assertThat(reindexJob.getVersion(), notNullValue());
-    });
+    var reindexJob = instanceReindex.getReindexJob(jobId);
+
+    assertThat(reindexJob.getJobStatus(), is(CANCELLED));
+    assertThat(reindexJob.getPublished(), lessThan(allInstanceIds.size()));
+    assertThat(reindexJob.getSubmittedDate(), notNullValue());
   }
 }

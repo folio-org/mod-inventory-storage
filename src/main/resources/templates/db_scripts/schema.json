@@ -893,7 +893,6 @@
     },
     {
       "tableName": "reindex_job",
-      "withOptimisticLocking": "logOnConflict",
       "withMetadata": false,
       "withAuditing": false
     }

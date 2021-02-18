@@ -23,10 +23,6 @@
         "Cancelled"
       ]
     },
-    "_version": {
-      "description": "Version of the document",
-      "type": "integer"
-    },
     "submittedDate": {
       "description": "Timestamp when the job has been submitted",
       "type": "string",
