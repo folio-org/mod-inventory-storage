@@ -90,13 +90,9 @@ public final class ReindexJobRunner {
       result.fail(error);
     }).handler(row -> {
       if (shouldLogJobDetails()) {
-        logJobDetails();
-
-        jobIsCancelled().onSuccess(isCancelled -> {
-          if (isCancelled) {
-            stream.pause();
-            result.fail(new IllegalStateException("Job is cancelled"));
-          }
+        logJobDetails().onFailure(error -> {
+          stream.pause();
+          result.fail(error);
         });
       }
 
@@ -113,14 +109,14 @@ public final class ReindexJobRunner {
     return result.future();
   }
 
-  private void logJobDetails() {
-    reindexJobRepository.fetchAndUpdate(reindexJob.getId(),
-      job -> job.withPublished(recordsPublished.get()));
-  }
-
-  private Future<Boolean> jobIsCancelled() {
-    return reindexJobRepository.getById(reindexJob.getId())
-      .map(job -> job.getJobStatus() == CANCELLED);
+  private Future<ReindexJob> logJobDetails() {
+    return reindexJobRepository.fetchAndUpdate(reindexJob.getId(),
+      job -> {
+        if (job.getJobStatus() == CANCELLED) {
+          throw new IllegalStateException("The job has been cancelled");
+        }
+        return job.withPublished(recordsPublished.get());
+      });
   }
 
   private boolean shouldLogJobDetails() {

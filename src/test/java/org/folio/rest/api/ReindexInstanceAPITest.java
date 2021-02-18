@@ -15,15 +15,14 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.IntStream;
-import org.folio.rest.jaxrs.model.ReindexJob;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class ReindexInstanceAPITest extends TestBaseWithInventoryUtil {
-  private static final Set<String> allInstanceIds = new HashSet<>();
+  private static final List<String> allInstanceIds = new ArrayList<>();
 
   @BeforeClass
   public static void createInstances() {
@@ -41,16 +40,15 @@ public class ReindexInstanceAPITest extends TestBaseWithInventoryUtil {
   public void canReindexInstances() {
     var jobId = instanceReindex.submitReindex().getId();
 
-    await().until(() -> instanceReindex.getReindexJob(jobId).getJobStatus() == COMPLETED);
+    await().untilAsserted(() -> {
+      var reindexJob = instanceReindex.getReindexJob(jobId);
 
-    var reindexJob = instanceReindex.getReindexJob(jobId);
+      assertThat(reindexJob.getPublished(), is(allInstanceIds.size()));
+      assertThat(reindexJob.getJobStatus(), is(COMPLETED));
+      assertThat(reindexJob.getSubmittedDate(), notNullValue());
+      assertThat(reindexJob.getVersion(), notNullValue());
 
-    assertThat(reindexJob.getPublished(), is(allInstanceIds.size()));
-    assertThat(reindexJob.getJobStatus(), is(COMPLETED));
-    assertThat(reindexJob.getSubmittedDate(), notNullValue());
-    assertThat(reindexJob.getVersion(), notNullValue());
-
-    allInstanceIds.forEach(instanceId -> {
+      var instanceId = allInstanceIds.get(0);
       var lastInstanceEvent = getLastReindexEvent(instanceId);
       assertThat(lastInstanceEvent.getPayload().getString("type"), is("REINDEX"));
       assertThat(lastInstanceEvent.getPayload().getString("id"), is(instanceId));
@@ -64,13 +62,13 @@ public class ReindexInstanceAPITest extends TestBaseWithInventoryUtil {
 
     instanceReindex.cancelReindexJob(jobId);
 
-    await().until(() -> instanceReindex.getReindexJob(jobId).getJobStatus() == CANCELLED);
+    await().untilAsserted(() -> {
+      var reindexJob = instanceReindex.getReindexJob(jobId);
 
-    var reindexJob = instanceReindex.getReindexJob(jobId);
-
-    assertThat(reindexJob.getPublished(), lessThan(allInstanceIds.size()));
-    assertThat(reindexJob.getJobStatus(), is(ReindexJob.JobStatus.CANCELLED));
-    assertThat(reindexJob.getSubmittedDate(), notNullValue());
-    assertThat(reindexJob.getVersion(), notNullValue());
+      assertThat(reindexJob.getPublished(), lessThan(allInstanceIds.size()));
+      assertThat(reindexJob.getJobStatus(), is(CANCELLED));
+      assertThat(reindexJob.getSubmittedDate(), notNullValue());
+      assertThat(reindexJob.getVersion(), notNullValue());
+    });
   }
 }
