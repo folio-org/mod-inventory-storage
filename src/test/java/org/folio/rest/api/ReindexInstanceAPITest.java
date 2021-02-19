@@ -6,6 +6,7 @@ import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.COMPLETED;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -46,12 +47,11 @@ public class ReindexInstanceAPITest extends TestBaseWithInventoryUtil {
     assertThat(reindexJob.getJobStatus(), is(COMPLETED));
     assertThat(reindexJob.getSubmittedDate(), notNullValue());
 
-    await().untilAsserted(() -> {
-      var instanceId = allInstanceIds.get(0);
-      var lastInstanceEvent = getLastInstanceEvent(instanceId);
-      assertThat(lastInstanceEvent.getPayload().getString("type"), is("REINDEX"));
-      assertThat(lastInstanceEvent.getPayload().getString("id"), is(instanceId));
-      assertThat(lastInstanceEvent.getPayload().getString("tenant"), is(TENANT_ID));
-    });
+    var instanceId = allInstanceIds.get(0);
+    await().until(() -> getInstanceEvents(instanceId).size() > 1);
+
+    var lastInstanceEvent = getLastInstanceEvent(instanceId);
+    assertThat(lastInstanceEvent.getPayload().getString("type"), is("REINDEX"));
+    assertThat(lastInstanceEvent.getPayload().getString("tenant"), is(TENANT_ID));
   }
 }
