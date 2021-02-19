@@ -5,11 +5,15 @@ import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.CANCELLED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -24,7 +28,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.persist.ReindexJobRepository;
@@ -37,8 +43,43 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
 
   @Test
+  public void canReindexInstances() {
+    var numberOfRecords = 2000;
+    var rowStream = new TestRowStream(numberOfRecords);
+    var reindexJob = reindexJob();
+    var postgresClientFuturized = spy(getPostgresClientFuturized());
+
+    doReturn(succeededFuture(rowStream))
+      .when(postgresClientFuturized).selectStream(any(), anyString());
+
+    var runner = new ReindexJobRunner(getContext(), okapiHeaders(),
+      postgresClientFuturized, reindexJob);
+
+    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+      .toCompletableFuture());
+
+    runner.startReindex();
+
+    await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
+      .getJobStatus() == COMPLETED);
+
+    var job = instanceReindex.getReindexJob(reindexJob.getId());
+
+    assertThat(job.getPublished(), is(numberOfRecords));
+    assertThat(job.getJobStatus(), is(COMPLETED));
+    assertThat(job.getSubmittedDate(), notNullValue());
+
+    var instanceId = rowStream.allInstances.get(0);
+    await().until(() -> getInstanceEvents(instanceId).size() > 0);
+
+    var lastInstanceEvent = getLastInstanceEvent(instanceId);
+    assertThat(lastInstanceEvent.getPayload().getString("type"), is("REINDEX"));
+    assertThat(lastInstanceEvent.getPayload().getString("tenant"), is(TENANT_ID));
+  }
+
+  @Test
   public void canCancelReindex() {
-    var rowStream = new TestRowStream();
+    var rowStream = new TestRowStream(10_000_000);
     var reindexJob = reindexJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
@@ -89,10 +130,18 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   private static class TestRowStream implements RowStream<Row> {
+    private final int numberOfRecords;
+    private final List<String> allInstances;
+
     private Handler<Throwable> errorHandler;
     private Handler<Void> endHandler;
     private volatile boolean paused;
     private volatile boolean closed;
+
+    public TestRowStream(int numberOfRecords) {
+      this.numberOfRecords = numberOfRecords;
+      this.allInstances = new ArrayList<>();
+    }
 
     @Override
     public RowStream<Row> exceptionHandler(Handler<Throwable> handler) {
@@ -104,14 +153,16 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     public RowStream<Row> handler(Handler<Row> handler) {
       new Thread(() -> {
         try {
-          for (int i = 0; i < Integer.MAX_VALUE; i++) {
+          for (int i = 0; i < numberOfRecords; i++) {
             if (closed) {
               break;
             }
 
             if (!paused) {
               var row = mock(Row.class);
-              when(row.getUUID("id")).thenReturn(UUID.randomUUID());
+              var id = UUID.randomUUID();
+              when(row.getUUID("id")).thenReturn(id);
+              allInstances.add(id.toString());
 
               handler.handle(row);
             } else {
