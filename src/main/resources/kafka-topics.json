@@ -14,11 +14,6 @@
       "name": "inventory.holdings-record",
       "numPartitions": 50,
       "replicationFactor": 1
-    },
-    {
-      "name": "search.resources",
-      "numPartitions": 50,
-      "replicationFactor": 1
     }
   ]
 }

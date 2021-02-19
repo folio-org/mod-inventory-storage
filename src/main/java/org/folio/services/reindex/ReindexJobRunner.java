@@ -21,7 +21,7 @@ import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
-import org.folio.services.domainevent.ReindexInstanceEventPublisher;
+import org.folio.services.domainevent.InstanceDomainEventPublisher;
 
 public final class ReindexJobRunner {
   private static final Logger log = LogManager.getLogger(ReindexJobRunner.class);
@@ -29,7 +29,7 @@ public final class ReindexJobRunner {
   private static volatile WorkerExecutor workerExecutor;
 
   private final ReindexJob reindexJob;
-  private final ReindexInstanceEventPublisher publisher;
+  private final InstanceDomainEventPublisher publisher;
   private final PostgresClientFuturized postgresClient;
   private final ReindexJobRepository reindexJobRepository;
   private final AtomicInteger recordsPublished;
@@ -45,7 +45,7 @@ public final class ReindexJobRunner {
     PostgresClientFuturized postgresClient, ReindexJob reindexJob) {
 
     this.reindexJob = reindexJob;
-    this.publisher = new ReindexInstanceEventPublisher(vertxContext, okapiHeaders);
+    this.publisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
     this.postgresClient = postgresClient;
     this.reindexJobRepository = new ReindexJobRepository(vertxContext, okapiHeaders);
     this.recordsPublished = new AtomicInteger(0);
@@ -98,7 +98,8 @@ public final class ReindexJobRunner {
       result.tryFail(error);
     }).handler(row -> {
       var instanceId = row.getUUID("id");
-      publisher.publishReindexInstance(instanceId.toString())
+
+      publisher.publishInstanceReindex(instanceId.toString())
       .onFailure(error ->
         log.warn("Unable to publish reindex event for instance [id = {}, jobId={}]",
           instanceId, reindexJob.getId()));

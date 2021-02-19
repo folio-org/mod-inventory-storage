@@ -255,8 +255,6 @@ APIs we're issuing a special domain event:
 {
   "type": "DELETE_ALL",
   "tenant": "<the tenant name>"
-  "old": null,
-  "new": null
 }
 ```
 
@@ -266,7 +264,7 @@ Some consumers need to pull all instances from an existing database. There is
 `instance-reindex` API for this. When a reindex job is submitted we initiate
 streaming of all instance IDs and publishing domain events for them. The domain
 event has following structure:
-* Topic: `search.resources`
+* Topic: `inventory.instance`
 * Partition key: `The instance id`
 * Payload:
 ```javascript
@@ -276,6 +274,5 @@ x-okapi-url: <okapi-url>
 {
   "type": "REINDEX",
   "tenant": "<the-tenant-name>"
-  "id": "<instance-id>"
 }
 ```
