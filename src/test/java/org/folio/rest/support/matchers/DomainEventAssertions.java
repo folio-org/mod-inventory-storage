@@ -137,7 +137,7 @@ public final class DomainEventAssertions {
   public static void assertRemoveEventForInstance(JsonObject instance) {
     final String instanceId = instance.getString("id");
 
-    await().until(() -> getInstanceEvents(instanceId).size() > 0);
+    await().until(() -> getInstanceEvents(instanceId).size() > 1);
 
     assertRemoveEvent(getLastInstanceEvent(instanceId), instance);
   }
@@ -151,7 +151,7 @@ public final class DomainEventAssertions {
   public static void assertUpdateEventForInstance(JsonObject oldInstance, JsonObject newInstance) {
     final String instanceId = oldInstance.getString("id");
 
-    await().until(() -> getInstanceEvents(instanceId).size() > 0);
+    await().until(() -> getInstanceEvents(instanceId).size() > 1);
 
     assertUpdateEvent(getLastInstanceEvent(instanceId), oldInstance, newInstance);
   }
@@ -215,7 +215,7 @@ public final class DomainEventAssertions {
     final String id = hr.getString("id");
     final String instanceId = hr.getString("instanceId");
 
-    await().until(() -> getHoldingsEvents(instanceId, id).size() > 0);
+    await().until(() -> getHoldingsEvents(instanceId, id).size() > 1);
 
     assertRemoveEvent(getLastHoldingEvent(instanceId, id), hr);
   }
@@ -230,7 +230,7 @@ public final class DomainEventAssertions {
     final String id = newHr.getString("id");
     final String instanceId = newHr.getString("instanceId");
 
-    await().until(() -> getHoldingsEvents(instanceId, id).size() > 0);
+    await().until(() -> getHoldingsEvents(instanceId, id).size() > 1);
 
     assertUpdateEvent(getLastHoldingEvent(instanceId, id), oldHr, newHr);
   }
