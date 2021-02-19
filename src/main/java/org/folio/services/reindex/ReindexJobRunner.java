@@ -4,6 +4,7 @@ import static org.folio.rest.impl.InstanceStorageAPI.INSTANCE_TABLE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.FAILED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -96,13 +97,6 @@ public final class ReindexJobRunner {
       log.warn("Unable to reindex instances", error);
       result.tryFail(error);
     }).handler(row -> {
-      if (shouldLogJobDetails()) {
-        logJobDetails().onFailure(error -> {
-          stream.pause();
-          result.tryFail(error);
-        });
-      }
-
       var instanceId = row.getUUID("id");
       publisher.publishReindexInstance(instanceId.toString())
       .onFailure(error ->
@@ -111,6 +105,13 @@ public final class ReindexJobRunner {
 
       recordsPublished.incrementAndGet();
       log.debug("Records processed so far: " + recordsPublished);
+
+      if (shouldLogJobDetails()) {
+        logJobDetails().onFailure(error -> {
+          stream.pause();
+          result.tryFail(error);
+        });
+      }
     });
 
     return result.future();
@@ -119,7 +120,7 @@ public final class ReindexJobRunner {
   private Future<ReindexJob> logJobDetails() {
     return reindexJobRepository.fetchAndUpdate(reindexJob.getId(),
       job -> {
-        if (job.getJobStatus() == CANCELLED) {
+        if (job.getJobStatus() == PENDING_CANCEL) {
           throw new IllegalStateException("The job has been cancelled");
         }
         return job.withPublished(recordsPublished.get());
@@ -133,7 +134,7 @@ public final class ReindexJobRunner {
   private void logFailedJob() {
     reindexJobRepository.fetchAndUpdate(reindexJob.getId(),
       resp -> {
-        var finalStatus = resp.getJobStatus() == CANCELLED ? CANCELLED : FAILED;
+        var finalStatus = resp.getJobStatus() == PENDING_CANCEL ? CANCELLED : FAILED;
         return resp.withJobStatus(finalStatus).withPublished(recordsPublished.get());
       });
   }

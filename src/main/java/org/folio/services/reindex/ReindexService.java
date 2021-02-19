@@ -1,8 +1,8 @@
 package org.folio.services.reindex;
 
 import static java.util.UUID.randomUUID;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -36,7 +36,7 @@ public final class ReindexService {
 
   public Future<ReindexJob> cancelReindex(String jobId) {
     return reindexJobRepository.fetchAndUpdate(jobId,
-      resp -> resp.withJobStatus(CANCELLED));
+      resp -> resp.withJobStatus(PENDING_CANCEL));
   }
 
   private ReindexJob buildInitialJob() {

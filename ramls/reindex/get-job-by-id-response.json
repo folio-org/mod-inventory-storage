@@ -11,7 +11,8 @@
     "published": {
       "description": "Number of records that was published so far",
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "default": 0
     },
     "jobStatus": {
       "description": "Overall job status",
@@ -20,6 +21,7 @@
         "In progress",
         "Failed",
         "Completed",
+        "Pending cancel",
         "Cancelled"
       ]
     },
