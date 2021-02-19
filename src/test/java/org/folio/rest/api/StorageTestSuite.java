@@ -74,8 +74,7 @@ import io.vertx.sqlclient.RowSet;
   InventoryHierarchyViewTest.class,
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
-  ReindexJobRunnerTest.class,
-  KafkaTenantInitTest.class
+  ReindexJobRunnerTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
@@ -222,10 +221,7 @@ public class StorageTestSuite {
     }
   }
 
-  private static RowSet<Row> getRecordsWithUnmatchedIds(String tenantId,
-                                                      String tableName)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
+  private static RowSet<Row> getRecordsWithUnmatchedIds(String tenantId, String tableName){
     PostgresClient dbClient = PostgresClient.getInstance(
       getVertx(), tenantId);
 

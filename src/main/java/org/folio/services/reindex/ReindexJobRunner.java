@@ -156,8 +156,6 @@ public class ReindexJobRunner {
     private ReindexContext(ReindexJob reindexJob) {
       this.reindexJob = reindexJob;
       this.recordsPublished = new AtomicInteger(0);
-      this.connection = null;
-      this.stream = null;
     }
 
     private ReindexContext withConnection(SQLConnection connection) {
