@@ -3,7 +3,6 @@ package org.folio.rest.support;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Arrays;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
