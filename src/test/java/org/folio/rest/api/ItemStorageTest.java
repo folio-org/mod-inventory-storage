@@ -195,7 +195,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     sb.append(Objects.toString(suffix,""));
     sb.append(fieldDelimiter);
 
-    System.out.println(sb.toString());
 
     StringBuilder sbi = new StringBuilder();
     sbi.append(Objects.toString(callNumber,"").trim());
@@ -209,8 +208,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     sbi.append(Objects.toString(copy,"").trim());
 
     String inputForShelvesOrderExtraction = sbi.toString().trim();
-    System.out.println("Prepared input:"+inputForShelvesOrderExtraction);
-//    assertThat(inputForShelvesOrderExtraction,is(shelvesOrder));
 
     Optional<String> extractedShelvesOrder = CallNumberUtils.getShelfKeyFromCallNumber(inputForShelvesOrderExtraction);
     assertThat(extractedShelvesOrder.isPresent(),is(true));

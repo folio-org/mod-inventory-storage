@@ -657,7 +657,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
-//    itemToCreate.put("itemLevelCallNumber", "testCallNumber");
     itemToCreate.put("itemLevelCallNumberSuffix", suffix);
     itemToCreate.put("itemLevelCallNumberPrefix", prefix);
     itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
@@ -692,14 +691,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(firstItemFromGet.getString("id"), is(firstItemId));
     assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-//    assertThat(
-//      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-//      is("testCallNumber"));
+    assertThat(
+      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+      is("testCallNumber"));
     assertThat(secondItemFromGet.getString("id"), is(secondItemId));
     assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-//    assertThat(
-//      secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-//      is("testCallNumber"));
+    assertThat(
+      secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+      is("testCallNumber"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
