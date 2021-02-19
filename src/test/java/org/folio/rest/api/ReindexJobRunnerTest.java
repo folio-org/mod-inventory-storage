@@ -8,7 +8,7 @@ import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,9 +53,6 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     runner.startReindex();
 
-    await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
-      .getJobStatus() == IN_PROGRESS);
-
     instanceReindex.cancelReindexJob(reindexJob.getId());
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
@@ -64,7 +61,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var job = instanceReindex.getReindexJob(reindexJob.getId());
 
     assertThat(job.getJobStatus(), is(CANCELLED));
-    assertThat(job.getPublished(), greaterThan(1000));
+    assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
   }
 
   private static ReindexJob reindexJob() {
@@ -106,25 +103,25 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     @Override
     public RowStream<Row> handler(Handler<Row> handler) {
       new Thread(() -> {
-        for (long i = 0; i < Long.MAX_VALUE; i++) {
-          if (closed) {
-            break;
-          }
+        try {
+          for (int i = 0; i < Integer.MAX_VALUE; i++) {
+            if (closed) {
+              break;
+            }
 
-          if (!paused) {
-            var row = mock(Row.class);
-            when(row.getUUID("id")).thenReturn(UUID.randomUUID());
+            if (!paused) {
+              var row = mock(Row.class);
+              when(row.getUUID("id")).thenReturn(UUID.randomUUID());
 
-            handler.handle(row);
-          } else {
-            try {
+              handler.handle(row);
+            } else {
               synchronized (this) {
                 wait();
               }
-            } catch (Exception ex) {
-              errorHandler.handle(ex);
             }
           }
+        } catch (Exception ex) {
+          errorHandler.handle(ex);
         }
 
         endHandler.handle(null);
