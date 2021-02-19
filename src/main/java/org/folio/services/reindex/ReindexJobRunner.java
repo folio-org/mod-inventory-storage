@@ -36,9 +36,16 @@ public final class ReindexJobRunner {
   private RowStream<Row> stream;
 
   public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders, ReindexJob reindexJob) {
+    this(vertxContext, okapiHeaders, new PostgresClientFuturized(PgUtil
+      .postgresClient(vertxContext, okapiHeaders)), reindexJob);
+  }
+
+  public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders,
+    PostgresClientFuturized postgresClient, ReindexJob reindexJob) {
+
     this.reindexJob = reindexJob;
     this.publisher = new ReindexInstanceEventPublisher(vertxContext, okapiHeaders);
-    this.postgresClient = new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders));
+    this.postgresClient = postgresClient;
     this.reindexJobRepository = new ReindexJobRepository(vertxContext, okapiHeaders);
     this.recordsPublished = new AtomicInteger(0);
 
@@ -53,7 +60,7 @@ public final class ReindexJobRunner {
       .map(notUsed -> null);
   }
 
-  public Future<Void> streamInstanceIds() {
+  private Future<Void> streamInstanceIds() {
     return postgresClient.startTx()
       .map(this::setConnection)
       .compose(con -> postgresClient.selectStream(con, "SELECT id FROM " + INSTANCE_TABLE))
@@ -84,15 +91,15 @@ public final class ReindexJobRunner {
 
     stream.endHandler(notUsed -> {
       log.debug("End of the stream has reached");
-      result.complete();
+      result.tryComplete();
     }).exceptionHandler(error -> {
       log.warn("Unable to reindex instances", error);
-      result.fail(error);
+      result.tryFail(error);
     }).handler(row -> {
       if (shouldLogJobDetails()) {
         logJobDetails().onFailure(error -> {
           stream.pause();
-          result.fail(error);
+          result.tryFail(error);
         });
       }
 

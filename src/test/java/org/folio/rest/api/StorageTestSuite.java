@@ -75,6 +75,7 @@ import io.vertx.sqlclient.RowSet;
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
   ReindexInstanceAPITest.class,
+  ReindexJobRunnerTest.class,
   KafkaTenantInitTest.class
 })
 public class StorageTestSuite {
