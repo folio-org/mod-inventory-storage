@@ -8,7 +8,6 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.services.CallNumberUtils;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,31 +22,25 @@ public final class EffectiveCallNumberComponentsUtil {
 
   public static void calculateAndSetEffectiveShelvingOrder(Item item) {
     if (isNotBlank(item.getEffectiveCallNumberComponents().getCallNumber())) {
-      List<String> argLIst = Stream.of(
-        item.getEffectiveCallNumberComponents().getCallNumber(),
-        item.getVolume(),
-        item.getEnumeration(),
-        item.getChronology(),
-        item.getCopyNumber()
-      ).collect(Collectors.toList());
-
-      StringBuilder arg = new StringBuilder();
-      for (String xs : argLIst) {
-        String argValue = Objects.toString(xs, "").trim();
-        if (!arg.toString().isEmpty() && !argValue.isEmpty()) {
-          arg.append(" ");
-        }
-        arg.append(argValue);
-      }
-
       Optional<String> shelfKey
-        = CallNumberUtils.getShelfKeyFromCallNumber(arg.toString().trim());
+        = CallNumberUtils.getShelfKeyFromCallNumber(
+        Stream.of(
+          item.getEffectiveCallNumberComponents().getCallNumber(),
+          item.getVolume(),
+          item.getEnumeration(),
+          item.getChronology(),
+          item.getCopyNumber()
+        ).filter(StringUtils::isNotBlank)
+          .map(x -> x.trim())
+          .collect(Collectors.joining(" "))
+      );
       String suffixValue = Objects.toString(item.getEffectiveCallNumberComponents().getSuffix(), "").trim();
+      String nonNullableSuffixValue = suffixValue.isEmpty() ? "" : " " + suffixValue;
       if (shelfKey.isPresent()) {
         item.setEffectiveShelvingOrder(shelfKey.get()
-          + (suffixValue.isEmpty() ? "" : " " + suffixValue));
+          + nonNullableSuffixValue);
       } else {
-        item.setEffectiveShelvingOrder("");
+        item.setEffectiveShelvingOrder(nonNullableSuffixValue);
       }
     }
   }
