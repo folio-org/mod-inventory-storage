@@ -73,6 +73,16 @@ public abstract class TestBase {
     }
   }
 
+  /**
+   * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
+   *
+   * <p>Wraps these checked exceptions into RuntimeException:
+   * InterruptedException, ExecutionException, TimeoutException.
+   */
+  public static <T> T get(Future<T> future) {
+    return get(future.toCompletionStage().toCompletableFuture());
+  }
+
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
     logger.info("starting @BeforeClass testBaseBeforeClass()");

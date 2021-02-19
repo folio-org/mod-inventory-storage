@@ -53,12 +53,12 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .when(postgresClientFuturized).selectStream(any(), anyString());
 
     var runner = new ReindexJobRunner(getContext(), okapiHeaders(),
-      postgresClientFuturized, reindexJob);
+      postgresClientFuturized);
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    runner.startReindex();
+    runner.startReindex(reindexJob);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == COMPLETED);
@@ -87,12 +87,12 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .when(postgresClientFuturized).selectStream(any(), anyString());
 
     var runner = new ReindexJobRunner(getContext(), okapiHeaders(),
-      postgresClientFuturized, reindexJob);
+      postgresClientFuturized);
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    runner.startReindex();
+    runner.startReindex(reindexJob);
 
     instanceReindex.cancelReindexJob(reindexJob.getId());
 
