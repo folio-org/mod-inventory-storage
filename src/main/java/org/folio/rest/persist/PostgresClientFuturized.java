@@ -2,6 +2,7 @@ package org.folio.rest.persist;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
+import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
 import io.vertx.sqlclient.RowStream;
 import java.util.ArrayList;
@@ -103,5 +104,9 @@ public class PostgresClientFuturized {
     postgresClient.endTx(succeededFuture(connection), result);
 
     return result.future();
+  }
+
+  public String getFullTableName(String tableName) {
+    return convertToPsqlStandard(postgresClient.getTenantId()) + "." + tableName;
   }
 }

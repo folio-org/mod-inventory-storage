@@ -13,13 +13,16 @@ import org.folio.rest.jaxrs.model.ReindexJob;
 
 public final class ReindexService {
   private final ReindexJobRepository reindexJobRepository;
-  private final Context vertxContext;
-  private final Map<String, String> okapiHeaders;
+  private final ReindexJobRunner jobRunner;
 
   public ReindexService(Context vertxContext, Map<String, String> okapiHeaders) {
-    this.vertxContext = vertxContext;
-    this.okapiHeaders = okapiHeaders;
-    this.reindexJobRepository = new ReindexJobRepository(vertxContext, okapiHeaders);
+    this(new ReindexJobRepository(vertxContext, okapiHeaders),
+      new ReindexJobRunner(vertxContext, okapiHeaders));
+  }
+
+  public ReindexService(ReindexJobRepository repository, ReindexJobRunner runner) {
+    this.reindexJobRepository = repository;
+    this.jobRunner = runner;
   }
 
   public Future<ReindexJob> submitReindex() {
@@ -27,8 +30,7 @@ public final class ReindexService {
 
     return reindexJobRepository.save(reindexResponse.getId(), reindexResponse)
       .map(notUsed -> {
-        new ReindexJobRunner(vertxContext, okapiHeaders, reindexResponse)
-          .startReindex();
+        jobRunner.startReindex(reindexResponse);
 
         return reindexResponse;
       });
