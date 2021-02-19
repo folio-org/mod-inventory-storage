@@ -5,7 +5,6 @@ import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import java.util.Map;
 
-
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
@@ -40,10 +39,10 @@ public class ItemStorageAPI implements ItemStorage {
   @Validate
   @Override
   public void postItemStorageItems(
-    String lang, Item entity,
-    RoutingContext routingContext, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+      String lang, Item entity,
+      RoutingContext routingContext, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
 
     new ItemService(vertxContext, okapiHeaders).createItem(entity)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
@@ -76,9 +75,9 @@ public class ItemStorageAPI implements ItemStorage {
   @Validate
   @Override
   public void putItemStorageItemsByItemId(
-    String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
-    io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+      String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
+      io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
+      Context vertxContext) {
 
     new ItemService(vertxContext, okapiHeaders).updateItem(itemId, entity)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))

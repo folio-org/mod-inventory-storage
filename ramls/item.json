@@ -39,9 +39,10 @@
       "type": "string",
       "description": "Unique inventory control number for physical resources, used largely for circulation purposes"
     },
-    "shelvingOrder": {
+    "effectiveShelvingOrder": {
       "type": "string",
-      "description": "Shelving order automatically generated form Call Number (R/O for manually editing)"
+      "description": "A system generated normalization of the call number that allows for call number sorting in reports and search results",
+      "readonly": true
     },
     "itemLevelCallNumber": {
       "type": "string",

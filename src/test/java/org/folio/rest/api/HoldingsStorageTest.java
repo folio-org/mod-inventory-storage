@@ -3,6 +3,8 @@ package org.folio.rest.api;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +19,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -35,6 +38,7 @@ import java.util.stream.Stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.HttpResponseMatchers.*;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
@@ -58,7 +62,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
-
+@RunWith(JUnitParamsRunner.class)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
@@ -598,6 +602,130 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
+  }
+
+  @Parameters({
+    "PN 12 A6,PN12 .A6,,PN2 .A6,,,,,",
+    "PN 12 A6 V 13 NO 12 41999,PN2 .A6 v.3 no.2 1999,,PN2 .A6,v. 3,no. 2,1999,,",
+    "PN 12 A6 41999,PN12 .A6 41999,,PN2 .A6 1999,,,,,",
+    "PN 12 A6 41999 CD,PN12 .A6 41999 CD,,PN2 .A6 1999,,,,,CD",
+    "PN 12 A6 41999 12,PN12 .A6 41999 C.12,,PN2 .A6 1999,,,,2,",
+    "PN 12 A69 41922 12,PN12 .A69 41922 C.12,,PN2 .A69,,,1922,2,",
+    "PN 12 A69 NO 12,PN12 .A69 NO.12,,PN2 .A69,,no. 2,,,",
+    "PN 12 A69 NO 12 41922 11,PN12 .A69 NO.12 41922 C.11,,PN2 .A69,,no. 2,1922,1,",
+    "PN 12 A69 NO 12 41922 12,PN12 .A69 NO.12 41922 C.12,Wordsworth,PN2 .A69,,no. 2,1922,2,",
+    "PN 12 A69 V 11 NO 11,PN12 .A69 V.11 NO.11,,PN2 .A69,v.1,no. 1,,,",
+    "PN 12 A69 V 11 NO 11 +,PN12 .A69 V.11 NO.11 +,Over,PN2 .A69,v.1,no. 1,,,+",
+    "PN 12 A69 V 11 NO 11 41921,PN12 .A69 V.11 NO.11 41921,,PN2 .A69,v.1,no. 1,1921,,",
+    "PR 49199.3 41920 L33 41475 A6,PR 49199.3 41920 .L33 41475 .A6,,PR9199.3 1920 .L33 1475 .A6,,,,,",
+    "PQ 42678 K26 P54,PQ 42678 .K26 P54,,PQ2678.K26 P54,,,,,",
+    "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5 1992,,,,,",
+    "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5,,,1992,,",
+    "PR 3919 L33 41990,PR 3919 .L33 41990,,PR919 .L33 1990,,,,,",
+    "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,",
+    "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
+  })
+  @Test // in work
+  public void updatingHoldingsUpdatesItemShelvingOrder(
+    String desiredShelvingOrder,
+    String initiallyDesiredShelvesOrder,
+    String prefix,
+    String callNumber,
+    String volume,
+    String enumeration,
+    String chronology,
+    String copy,
+    String suffix
+  ) throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withCallNumber("testCallNumber")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("holdingsRecordId", holdingId.toString());
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+//    itemToCreate.put("itemLevelCallNumber", "testCallNumber");
+    itemToCreate.put("itemLevelCallNumberSuffix", suffix);
+    itemToCreate.put("itemLevelCallNumberPrefix", prefix);
+    itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+    itemToCreate.put("volume",volume);
+    itemToCreate.put("enumeration",enumeration);
+    itemToCreate.put("chronology",chronology);
+    itemToCreate.put("copyNumber",copy);
+
+    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
+    Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
+
+    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject firstItem = postFirstItemResponse.getJson();
+    JsonObject secondItem = postSecondItemResponse.getJson();
+
+    String firstItemId = firstItem.getString("id");
+    String secondItemId = secondItem.getString("id");
+
+    assertThat(firstItemId, is(notNullValue()));
+    assertThat(secondItemId, is(notNullValue()));
+
+    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
+    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
+
+    Response getFirstItemResponse = get(getFirstItemUrl);
+    Response getSecondItemResponse = get(getSecondItemUrl);
+
+    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
+    JsonObject secondItemFromGet = getSecondItemResponse.getJson();
+
+    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
+    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+//    assertThat(
+//      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+//      is("testCallNumber"));
+    assertThat(secondItemFromGet.getString("id"), is(secondItemId));
+    assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+//    assertThat(
+//      secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+//      is("testCallNumber"));
+
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    holding.put("callNumber", callNumber);
+
+    Response putResponse = update(holdingsUrl, holding);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(holding.getString("callNumber"), is(callNumber));
+
+    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
+    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
+
+    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
+    JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
+
+    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
+    assertThat(
+      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+      is(callNumber));
+    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
+    assertThat(
+      secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+      is(callNumber));
   }
 
   @Test
