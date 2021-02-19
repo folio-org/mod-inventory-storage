@@ -1,9 +1,11 @@
 package org.folio.rest.support.fixtures;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.TestBase.get;
 import static org.folio.rest.support.http.InterfaceUrls.instanceReindex;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.support.HttpClient;
@@ -17,25 +19,16 @@ public final class InstanceReindexFixture {
   }
 
   @SneakyThrows
-  public ReindexJob submitReindex() {
-    return client.post(instanceReindex(""),
-      null, TENANT_ID)
-      .thenApply(Response::getJson)
-      .thenApply(json -> json.mapTo(ReindexJob.class))
-      .get(5, TimeUnit.SECONDS);
-  }
+  public void cancelReindexJob(String id) {
+    var statusCode = get(client.delete(instanceReindex("/" + id), TENANT_ID)).getStatusCode();
 
-  @SneakyThrows
-  public Response cancelReindexJob(String id) {
-    return client.delete(instanceReindex("/" + id), TENANT_ID)
-      .get(5, TimeUnit.SECONDS);
+    assertThat(statusCode, is(204));
   }
 
   @SneakyThrows
   public ReindexJob getReindexJob(String id) {
-    return client.get(instanceReindex("/" + id), TENANT_ID)
+    return get(client.get(instanceReindex("/" + id), TENANT_ID)
       .thenApply(Response::getJson)
-      .thenApply(json -> json.mapTo(ReindexJob.class))
-      .get(5, TimeUnit.SECONDS);
+      .thenApply(json -> json.mapTo(ReindexJob.class)));
   }
 }
