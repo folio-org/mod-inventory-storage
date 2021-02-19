@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_HOLDINGS_RECORD;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_ITEM;
-import static org.folio.services.kafka.topic.KafkaTopic.SEARCH_RESOURCES;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,13 +27,12 @@ import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class FakeKafkaConsumer {
   private static final Set<String> TOPIC_NAMES = Stream.of(INVENTORY_INSTANCE,
-    INVENTORY_ITEM, INVENTORY_HOLDINGS_RECORD, SEARCH_RESOURCES)
+    INVENTORY_ITEM, INVENTORY_HOLDINGS_RECORD)
     .map(KafkaTopic::getTopicName).collect(Collectors.toSet());
 
   private final static Map<String, List<KafkaMessage<JsonObject>>> itemEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaMessage<JsonObject>>> instanceEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaMessage<JsonObject>>> holdingsEvents = new ConcurrentHashMap<>();
-  private final static Map<String, List<KafkaMessage<JsonObject>>> reindexEvents = new ConcurrentHashMap<>();
 
   public final FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, String> consumer = create(vertx, consumerProperties());
@@ -57,10 +55,6 @@ public final class FakeKafkaConsumer {
           storageList = holdingsEvents.computeIfAbsent(instanceAndIdKey(kafkaMessage),
             k -> new ArrayList<>());
           break;
-        case SEARCH_RESOURCES:
-          storageList = reindexEvents.computeIfAbsent(kafkaMessage.getKey(),
-            k -> new ArrayList<>());
-          break;
         default:
           throw new IllegalArgumentException("Undefined topic");
       }
@@ -75,7 +69,6 @@ public final class FakeKafkaConsumer {
     itemEvents.clear();
     instanceEvents.clear();
     holdingsEvents.clear();
-    reindexEvents.clear();
   }
 
   public static Collection<KafkaMessage<JsonObject>> getInstanceEvents(String instanceId) {
@@ -88,10 +81,6 @@ public final class FakeKafkaConsumer {
 
   public static Collection<KafkaMessage<JsonObject>> getHoldingsEvents(String instanceId, String hrId) {
     return holdingsEvents.getOrDefault(instanceAndIdKey(instanceId, hrId), emptyList());
-  }
-
-  public static Collection<KafkaMessage<JsonObject>> getReindexEvents(String instanceId) {
-    return reindexEvents.getOrDefault(instanceId, emptyList());
   }
 
   private static KafkaMessage<JsonObject> getLastEvent(Collection<KafkaMessage<JsonObject>> events) {
@@ -126,10 +115,6 @@ public final class FakeKafkaConsumer {
 
   public static KafkaMessage<JsonObject> getFirstHoldingEvent(String instanceId, String hrId) {
     return getFirstEvent(getHoldingsEvents(instanceId, hrId));
-  }
-
-  public static KafkaMessage<JsonObject> getLastReindexEvent(String instanceId) {
-    return getLastEvent(getReindexEvents(instanceId));
   }
 
   private static String instanceAndIdKey(String instanceId, String itemId) {

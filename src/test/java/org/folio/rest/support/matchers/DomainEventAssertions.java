@@ -64,7 +64,7 @@ public final class DomainEventAssertions {
     assertHeaders(deleteEvent.getHeaders());
   }
 
-  private static void assertUpdateEvent(
+  public static void assertUpdateEvent(
     KafkaMessage<JsonObject> updateEvent, JsonObject oldRecord, JsonObject newRecord) {
 
     assertThat(updateEvent.getPayload().getString("type"), is("UPDATE"));
