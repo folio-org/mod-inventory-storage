@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class EffectiveCallNumberComponentsUtil {
   private EffectiveCallNumberComponentsUtil() {}
@@ -23,12 +24,12 @@ public final class EffectiveCallNumberComponentsUtil {
 
   public static void calculateAndSetEffectiveShelvingOrder(Item item) {
     if (isNotBlank(item.getEffectiveCallNumberComponents().getCallNumber())) {
-      List<String> argLIst = java.util.Arrays.stream(Arrays.array(
+      List<String> argLIst = Stream.of(
         item.getEffectiveCallNumberComponents().getCallNumber(),
         item.getVolume(),
         item.getEnumeration(),
         item.getChronology(),
-        item.getCopyNumber())
+        item.getCopyNumber()
       ).collect(Collectors.toList());
 
       StringBuilder arg = new StringBuilder();
