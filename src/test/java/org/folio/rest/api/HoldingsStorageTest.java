@@ -62,6 +62,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
+
 @RunWith(JUnitParamsRunner.class)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
@@ -625,7 +626,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,",
     "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
   })
-  @Test // in work
+  @Test
   public void updatingHoldingsUpdatesItemShelvingOrder(
     String desiredShelvingOrder,
     String initiallyDesiredShelvesOrder,

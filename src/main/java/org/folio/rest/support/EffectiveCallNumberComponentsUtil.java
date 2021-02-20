@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class EffectiveCallNumberComponentsUtil {
+
   private EffectiveCallNumberComponentsUtil() {}
 
   public static void setCallNumberComponents(Item item, HoldingsRecord hr) {
@@ -31,17 +32,17 @@ public final class EffectiveCallNumberComponentsUtil {
           item.getChronology(),
           item.getCopyNumber()
         ).filter(StringUtils::isNotBlank)
-          .map(x -> x.trim())
+          .map(StringUtils::trim)
           .collect(Collectors.joining(" "))
       );
       String suffixValue = Objects.toString(item.getEffectiveCallNumberComponents().getSuffix(), "").trim();
       String nonNullableSuffixValue = suffixValue.isEmpty() ? "" : " " + suffixValue;
-      if (shelfKey.isPresent()) {
-        item.setEffectiveShelvingOrder(shelfKey.get()
-          + nonNullableSuffixValue);
-      } else {
-        item.setEffectiveShelvingOrder(nonNullableSuffixValue);
-      }
+
+      item.setEffectiveShelvingOrder(
+        shelfKey.stream()
+          .map(shelfKeyValue->shelfKeyValue+nonNullableSuffixValue)
+          .findFirst()
+          .orElse(nonNullableSuffixValue));
     }
   }
 
