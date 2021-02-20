@@ -53,10 +53,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -159,41 +158,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final String fieldDelimiter = "\n";
     StringBuilder sb = new StringBuilder();
 
-    sb.append("Desired Shelving Order:");
-    sb.append(Objects.toString(desiredShelvingOrder,""));
-    sb.append(fieldDelimiter);
-
-    sb.append("Initially Desired Shelving Order:");
-    sb.append(Objects.toString(initiallyDesiredShelvesOrder,""));
-    sb.append(fieldDelimiter);
-
-    sb.append("Prefix:");
-    sb.append(Objects.toString(prefix,""));
-    sb.append(fieldDelimiter);
-
-    sb.append("Call Number:");
-    sb.append(Objects.toString(callNumber,""));
-    sb.append(fieldDelimiter);
-
-    sb.append("Volume:");
-    sb.append(Objects.toString(volume,""));
-    sb.append(fieldDelimiter);
-
-    sb.append("Enumeration:");
-    sb.append(Objects.toString(enumeration,""));
-    sb.append(fieldDelimiter);
-
-    sb.append("Chronology:");
-    sb.append(Objects.toString(chronology,""));
-    sb.append(fieldDelimiter);
-
-    sb.append("Copy:");
-    sb.append(Objects.toString(copy,""));
-    sb.append(fieldDelimiter);
-
-    sb.append("Suffix:");
-    sb.append(Objects.toString(suffix,""));
-    sb.append(fieldDelimiter);
 
 
     StringBuilder sbi = new StringBuilder();
