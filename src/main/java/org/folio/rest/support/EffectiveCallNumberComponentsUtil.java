@@ -35,12 +35,17 @@ public final class EffectiveCallNumberComponentsUtil {
           .map(StringUtils::trim)
           .collect(Collectors.joining(" "))
       );
-      String suffixValue = Objects.toString(item.getEffectiveCallNumberComponents().getSuffix(), "").trim();
+//      String suffixValue = Objects.toString(item.getEffectiveCallNumberComponents().getSuffix(), "").trim();
+      String suffixValue =
+        Objects.toString(Optional.ofNullable(item.getEffectiveCallNumberComponents())
+          .orElse(new EffectiveCallNumberComponents()).getSuffix(), "")
+          .trim();
+
       String nonNullableSuffixValue = suffixValue.isEmpty() ? "" : " " + suffixValue;
 
       item.setEffectiveShelvingOrder(
         shelfKey.stream()
-          .map(shelfKeyValue->shelfKeyValue+nonNullableSuffixValue)
+          .map(shelfKeyValue -> shelfKeyValue + nonNullableSuffixValue)
           .findFirst()
           .orElse(nonNullableSuffixValue));
     }
