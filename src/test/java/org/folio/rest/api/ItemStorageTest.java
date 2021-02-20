@@ -144,7 +144,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
   })
   @Test
-  public void inputForShelvingNumber(
+  public void canCreateItemEffectiveShelvingOrder(
     String desiredShelvingOrder,
     String initiallyDesiredShelvesOrder,
     String prefix,
@@ -155,27 +155,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     String copy,
     String suffix
   ) throws InterruptedException, ExecutionException, TimeoutException {
-    final String fieldDelimiter = "\n";
-    StringBuilder sb = new StringBuilder();
-
-
-
-    StringBuilder sbi = new StringBuilder();
-    sbi.append(Objects.toString(callNumber,"").trim());
-    sbi.append(" ");
-    sbi.append(Objects.toString(volume,""));
-    sbi.append(" ");
-    sbi.append(Objects.toString(enumeration,"").trim());
-    sbi.append(" ");
-    sbi.append(Objects.toString(chronology,"").trim());
-    sbi.append(" ");
-    sbi.append(Objects.toString(copy,"").trim());
-
-    String inputForShelvesOrderExtraction = sbi.toString().trim();
-
-    Optional<String> extractedShelvesOrder = CallNumberUtils.getShelfKeyFromCallNumber(inputForShelvesOrderExtraction);
-    assertThat(extractedShelvesOrder.isPresent(),is(true));
-    assertThat((extractedShelvesOrder.get()+" "+Objects.toString(suffix,"")).trim(),is(desiredShelvingOrder));
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
