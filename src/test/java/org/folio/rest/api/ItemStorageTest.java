@@ -5,6 +5,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
@@ -54,6 +55,7 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -79,6 +81,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.matchers.DomainEventAssertions;
+import org.folio.services.CallNumberUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -117,6 +120,85 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.checkForMismatchedIDs("item");
   }
 
+  @Parameters({
+    "PN 12 A6,PN12 .A6,,PN2 .A6,,,,,",
+    "PN 12 A6 V 13 NO 12 41999,PN2 .A6 v.3 no.2 1999,,PN2 .A6,v. 3,no. 2,1999,,",
+    "PN 12 A6 41999,PN12 .A6 41999,,PN2 .A6 1999,,,,,",
+    "PN 12 A6 41999 CD,PN12 .A6 41999 CD,,PN2 .A6 1999,,,,,CD",
+    "PN 12 A6 41999 12,PN12 .A6 41999 C.12,,PN2 .A6 1999,,,,2,",
+    "PN 12 A69 41922 12,PN12 .A69 41922 C.12,,PN2 .A69,,,1922,2,",
+    "PN 12 A69 NO 12,PN12 .A69 NO.12,,PN2 .A69,,no. 2,,,",
+    "PN 12 A69 NO 12 41922 11,PN12 .A69 NO.12 41922 C.11,,PN2 .A69,,no. 2,1922,1,",
+    "PN 12 A69 NO 12 41922 12,PN12 .A69 NO.12 41922 C.12,Wordsworth,PN2 .A69,,no. 2,1922,2,",
+    "PN 12 A69 V 11 NO 11,PN12 .A69 V.11 NO.11,,PN2 .A69,v.1,no. 1,,,",
+    "PN 12 A69 V 11 NO 11 +,PN12 .A69 V.11 NO.11 +,Over,PN2 .A69,v.1,no. 1,,,+",
+    "PN 12 A69 V 11 NO 11 41921,PN12 .A69 V.11 NO.11 41921,,PN2 .A69,v.1,no. 1,1921,,",
+    "PR 49199.3 41920 L33 41475 A6,PR 49199.3 41920 .L33 41475 .A6,,PR9199.3 1920 .L33 1475 .A6,,,,,",
+    "PQ 42678 K26 P54,PQ 42678 .K26 P54,,PQ2678.K26 P54,,,,,",
+    "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5 1992,,,,,",
+    "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5,,,1992,,",
+    "PR 3919 L33 41990,PR 3919 .L33 41990,,PR919 .L33 1990,,,,,",
+    "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,",
+    "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
+  })
+  @Test
+  public void canCreateItemEffectiveShelvingOrder(
+    String desiredShelvingOrder,
+    String initiallyDesiredShelvesOrder,
+    String prefix,
+    String callNumber,
+    String volume,
+    String enumeration,
+    String chronology,
+    String copy,
+    String suffix
+  ) throws InterruptedException, ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    UUID id = UUID.randomUUID();
+    final String inTransitServicePointId = UUID.randomUUID().toString();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("barcode", "565578437802");
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("tags", new JsonObject().put("tagList",new JsonArray().add(TAG_VALUE)));
+    itemToCreate.put("copyNumber", "copy1");
+
+    itemToCreate.put("itemLevelCallNumber", callNumber);
+    itemToCreate.put("itemLevelCallNumberSuffix", suffix);
+    itemToCreate.put("itemLevelCallNumberPrefix", prefix);
+    itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+    itemToCreate.put("volume",volume);
+    itemToCreate.put("enumeration",enumeration);
+    itemToCreate.put("chronology",chronology);
+    itemToCreate.put("copyNumber",copy);
+
+    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
+
+    setItemSequence(1);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(itemsStorageUrl(""), itemToCreate, StorageTestSuite.TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postResponse.getJson();
+
+    assertThat(itemFromPost.getString("effectiveShelvingOrder"), is(desiredShelvingOrder));
+  }
+
+
   @Test
   public void canCreateAnItemViaCollectionResource()
     throws MalformedURLException,
@@ -140,6 +222,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
     itemToCreate.put("tags", new JsonObject().put("tagList",new JsonArray().add(TAG_VALUE)));
     itemToCreate.put("copyNumber", "copy1");
+
+    itemToCreate.put("itemLevelCallNumber", "PS3623.R534 P37 2005");
+    itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
+    itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
+    itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+
 
     //TODO: Replace with real service point when validated
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
@@ -172,6 +260,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         is(inTransitServicePointId));
     assertThat(itemFromPost.getString("hrid"), is("it00000000001"));
     assertThat(itemFromPost.getString("copyNumber"), is("copy1"));
+    assertThat(itemFromPost.getString("effectiveShelvingOrder"), is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
 
     Response getResponse = getById(id);
 
@@ -200,6 +289,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags, hasItem(TAG_VALUE));
     assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
     assertCreateEventForItem(itemFromGet);
+    assertThat(itemFromGet.getString("effectiveShelvingOrder"), is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
   }
 
   @Test
