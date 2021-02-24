@@ -10,9 +10,9 @@ import io.vertx.ext.web.RoutingContext;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
-import org.folio.rest.jaxrs.resource.InventoryView;
+import org.folio.rest.jaxrs.resource.InventoryViewInstances;
 
-public class InventoryViewAPI implements InventoryView {
+public class InventoryViewAPI implements InventoryViewInstances {
   @Override
   public void getInventoryViewInstances(int offset, int limit, String query, String lang,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
