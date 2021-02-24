@@ -130,6 +130,11 @@ public class ResourceClient {
       "Statistical codes", "statisticalCodes");
   }
 
+  public static ResourceClient forInventoryView(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::inventoryViewInstances,
+      "Inventory view", "instances");
+  }
+
   private ResourceClient(
     HttpClient client,
     UrlMaker urlMaker, String resourceName,
