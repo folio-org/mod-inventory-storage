@@ -4,6 +4,7 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.StringUtils.isAllBlank;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
+import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder;
 import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.setCallNumberComponents;
 import static org.folio.rest.support.ItemEffectiveLocationUtil.updateItemEffectiveLocation;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
@@ -45,7 +46,7 @@ public class ItemEffectiveValuesService {
   public Item populateEffectiveValues(Item item, HoldingsRecord hr) {
     updateItemEffectiveLocation(item, hr);
     setCallNumberComponents(item, hr);
-
+    calculateAndSetEffectiveShelvingOrder(item);
     return item;
   }
 

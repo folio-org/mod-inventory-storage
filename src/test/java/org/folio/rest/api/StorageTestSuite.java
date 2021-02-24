@@ -21,6 +21,8 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
+import org.folio.services.CallNumberUtils;
+import org.folio.services.CallNumberUtilsTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -40,6 +42,7 @@ import io.vertx.sqlclient.RowSet;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+  CallNumberUtilsTest.class,
   InstanceStorageTest.class,
   RecordBulkTest.class,
   HoldingsStorageTest.class,
