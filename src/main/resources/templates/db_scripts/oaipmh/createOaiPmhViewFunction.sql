@@ -26,7 +26,7 @@ $$
 select jsonb_agg(distinct e)
 from ( select e || jsonb_build_object('name', ( select jsonb ->> 'name'
                                                 from ${myuniversity}_${mymodule}.electronic_access_relationship ear
-                                                where id = (e ->> 'relationshipId')::uuid )) e
+                                                where id  and id = nullif(e ->> 'relationshipId','')::uuid )) e
        from jsonb_array_elements($1) as e ) e1
 $$ language sql strict;
 
@@ -35,7 +35,7 @@ $$
 select jsonb_agg(distinct e)
 from ( select e || jsonb_build_object('noteTypeName', ( select jsonb ->> 'name'
                                                         from item_note_type
-                                                        where id = (e ->> 'itemNoteTypeId')::uuid )) e
+                                                        where id = nullif(e ->> 'itemNoteTypeId','')::uuid )) e
        from jsonb_array_elements($1) as e ) e1
 $$ language sql strict;
 
@@ -158,23 +158,23 @@ select instanceIdsAndDatesInRange.instanceId,
                 from holdings_record hr
                          join ${myuniversity}_${mymodule}.item item on item.holdingsrecordid = hr.id
                          join ${myuniversity}_${mymodule}.location loc
-                              on (item.jsonb ->> 'effectiveLocationId')::uuid = loc.id and
+                              on nullif(item.jsonb ->> 'effectiveLocationId','')::uuid = loc.id and
                                  (loc.jsonb ->> 'isActive')::bool = true
                          join ${myuniversity}_${mymodule}.locinstitution itemLocInst
-                              on (loc.jsonb ->> 'institutionId')::uuid = itemLocInst.id
+                              on nullif(loc.jsonb ->> 'institutionId','')::uuid = itemLocInst.id
                          join ${myuniversity}_${mymodule}.loccampus itemLocCamp
-                              on (loc.jsonb ->> 'campusId')::uuid = itemLocCamp.id
+                              on nullif(loc.jsonb ->> 'campusId','')::uuid = itemLocCamp.id
                          join ${myuniversity}_${mymodule}.loclibrary itemLocLib
-                              on (loc.jsonb ->> 'libraryId')::uuid = itemLocLib.id
+                              on nullif(loc.jsonb ->> 'libraryId','')::uuid = itemLocLib.id
                          left join ${myuniversity}_${mymodule}.material_type mt on item.materialtypeid = mt.id
-                         left join ${myuniversity}_${mymodule}.call_number_type cnt on (item.jsonb #>> '{effectiveCallNumberComponents, typeId}')::uuid = cnt.id
+                         left join ${myuniversity}_${mymodule}.call_number_type cnt on nullif(item.jsonb #>> '{effectiveCallNumberComponents, typeId}','')::uuid = cnt.id
                 where instanceId = instanceIdsAndDatesInRange.instanceId
                   and not ($4 and coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false))
                   and not ($4 and coalesce((item.jsonb ->> 'discoverySuppress')::bool, false))
                 group by 1) itemAndHoldingsAttrs )
 from instanceIdsAndDatesInRange
 union all
-select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
+select nullif(audit_instance.jsonb #>> '{record,id}','')::uuid as instanceId,
        strToTimestamp(jsonb ->> 'createdDate')         as maxDate,
        true                                           as deleted,
        null                                           as itemFields
@@ -212,12 +212,12 @@ with instanceIdsInRange as ( select inst.id                                     
                                     (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) between dateOrMin($1) and dateOrMax($2))
 
                              union all
-                             select (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
+                             select nullif(audit_holdings_record.jsonb #>> '{record,instanceId}','')::uuid,
                                     greatest((strtotimestamp(audit_item.jsonb -> 'record' ->> 'updatedDate')),
                                              (strtotimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate'))) as maxDate
                              from audit_holdings_record audit_holdings_record
                                       join audit_item audit_item
-                                           on (audit_item.jsonb ->> '{record,holdingsRecordId}')::uuid =
+                                           on nullif(audit_item.jsonb ->> '{record,holdingsRecordId}','')::uuid =
                                               audit_holdings_record.id
                              where ((strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate')) between dateOrMin($1) and dateOrMax($2) or
                                     (strToTimestamp(audit_item.jsonb #>> '{record,updatedDate}')) between dateOrMin($1) and dateOrMax($2)) )
@@ -233,7 +233,7 @@ select instanceId,
                                        and not ($4 and coalesce((instance.jsonb ->> 'discoverySuppress')::bool, false))
                                      group by 1, 3
 union all
-select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
+select nullif(audit_instance.jsonb #>> '{record,id}','')::uuid as instanceId,
        strToTimestamp(jsonb ->> 'createdDate')        as maxDate,
        false                                          as suppressFromDiscovery,
        true                                           as deleted
@@ -300,16 +300,16 @@ select instId,
                 from holdings_record hr
                          join ${myuniversity}_${mymodule}.item item on item.holdingsrecordid = hr.id
                          join ${myuniversity}_${mymodule}.location loc
-                              on (item.jsonb ->> 'effectiveLocationId')::uuid = loc.id and
+                              on nullif(item.jsonb ->> 'effectiveLocationId','')::uuid = loc.id and
                                  (loc.jsonb ->> 'isActive')::bool = true
                          join ${myuniversity}_${mymodule}.locinstitution itemLocInst
-                              on (loc.jsonb ->> 'institutionId')::uuid = itemLocInst.id
+                              on nullif(loc.jsonb ->> 'institutionId','')::uuid = itemLocInst.id
                          join ${myuniversity}_${mymodule}.loccampus itemLocCamp
-                              on (loc.jsonb ->> 'campusId')::uuid = itemLocCamp.id
+                              on nullif(loc.jsonb ->> 'campusId','')::uuid = itemLocCamp.id
                          join ${myuniversity}_${mymodule}.loclibrary itemLocLib
-                              on (loc.jsonb ->> 'libraryId')::uuid = itemLocLib.id
+                              on nullif(loc.jsonb ->> 'libraryId','')::uuid = itemLocLib.id
                          left join ${myuniversity}_${mymodule}.material_type mt on item.materialtypeid = mt.id
-                         left join ${myuniversity}_${mymodule}.call_number_type cnt on (item.jsonb #>> '{effectiveCallNumberComponents, typeId}')::uuid = cnt.id
+                         left join ${myuniversity}_${mymodule}.call_number_type cnt on nullif(item.jsonb #>> '{effectiveCallNumberComponents, typeId}','')::uuid = cnt.id
                 where instanceId = instId
                   and not ($2 and coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false))
                   and not ($2 and coalesce((item.jsonb ->> 'discoverySuppress')::bool, false))
