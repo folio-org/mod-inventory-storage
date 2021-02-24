@@ -158,14 +158,14 @@ select instanceIdsAndDatesInRange.instanceId,
                 from holdings_record hr
                          join ${myuniversity}_${mymodule}.item item on item.holdingsrecordid = hr.id
                          join ${myuniversity}_${mymodule}.location loc
-                              on nullif(item.jsonb ->> 'effectiveLocationId','')::uuid = loc.id and
+                              on (item.jsonb ->> 'effectiveLocationId')::uuid = loc.id and
                                  (loc.jsonb ->> 'isActive')::bool = true
                          join ${myuniversity}_${mymodule}.locinstitution itemLocInst
-                              on nullif(loc.jsonb ->> 'institutionId','')::uuid = itemLocInst.id
+                              on (loc.jsonb ->> 'institutionId')::uuid = itemLocInst.id
                          join ${myuniversity}_${mymodule}.loccampus itemLocCamp
-                              on nullif(loc.jsonb ->> 'campusId','')::uuid = itemLocCamp.id
+                              on (loc.jsonb ->> 'campusId')::uuid = itemLocCamp.id
                          join ${myuniversity}_${mymodule}.loclibrary itemLocLib
-                              on nullif(loc.jsonb ->> 'libraryId','')::uuid = itemLocLib.id
+                              on (loc.jsonb ->> 'libraryId')::uuid = itemLocLib.id
                          left join ${myuniversity}_${mymodule}.material_type mt on item.materialtypeid = mt.id
                          left join ${myuniversity}_${mymodule}.call_number_type cnt on nullif(item.jsonb #>> '{effectiveCallNumberComponents, typeId}','')::uuid = cnt.id
                 where instanceId = instanceIdsAndDatesInRange.instanceId
@@ -174,7 +174,7 @@ select instanceIdsAndDatesInRange.instanceId,
                 group by 1) itemAndHoldingsAttrs )
 from instanceIdsAndDatesInRange
 union all
-select nullif(audit_instance.jsonb #>> '{record,id}','')::uuid as instanceId,
+select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
        strToTimestamp(jsonb ->> 'createdDate')         as maxDate,
        true                                           as deleted,
        null                                           as itemFields
@@ -212,12 +212,12 @@ with instanceIdsInRange as ( select inst.id                                     
                                     (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) between dateOrMin($1) and dateOrMax($2))
 
                              union all
-                             select nullif(audit_holdings_record.jsonb #>> '{record,instanceId}','')::uuid,
+                             select (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
                                     greatest((strtotimestamp(audit_item.jsonb -> 'record' ->> 'updatedDate')),
                                              (strtotimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate'))) as maxDate
                              from audit_holdings_record audit_holdings_record
                                       join audit_item audit_item
-                                           on nullif(audit_item.jsonb ->> '{record,holdingsRecordId}','')::uuid =
+                                           on (audit_item.jsonb ->> '{record,holdingsRecordId}')::uuid =
                                               audit_holdings_record.id
                              where ((strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate')) between dateOrMin($1) and dateOrMax($2) or
                                     (strToTimestamp(audit_item.jsonb #>> '{record,updatedDate}')) between dateOrMin($1) and dateOrMax($2)) )
@@ -233,7 +233,7 @@ select instanceId,
                                        and not ($4 and coalesce((instance.jsonb ->> 'discoverySuppress')::bool, false))
                                      group by 1, 3
 union all
-select nullif(audit_instance.jsonb #>> '{record,id}','')::uuid as instanceId,
+select (audit_instance.jsonb #>> '{record,id}')::uuid as instanceId,
        strToTimestamp(jsonb ->> 'createdDate')        as maxDate,
        false                                          as suppressFromDiscovery,
        true                                           as deleted
@@ -300,14 +300,14 @@ select instId,
                 from holdings_record hr
                          join ${myuniversity}_${mymodule}.item item on item.holdingsrecordid = hr.id
                          join ${myuniversity}_${mymodule}.location loc
-                              on nullif(item.jsonb ->> 'effectiveLocationId','')::uuid = loc.id and
+                              on (item.jsonb ->> 'effectiveLocationId')::uuid = loc.id and
                                  (loc.jsonb ->> 'isActive')::bool = true
                          join ${myuniversity}_${mymodule}.locinstitution itemLocInst
-                              on nullif(loc.jsonb ->> 'institutionId','')::uuid = itemLocInst.id
+                              on (loc.jsonb ->> 'institutionId')::uuid = itemLocInst.id
                          join ${myuniversity}_${mymodule}.loccampus itemLocCamp
-                              on nullif(loc.jsonb ->> 'campusId','')::uuid = itemLocCamp.id
+                              on (loc.jsonb ->> 'campusId')::uuid = itemLocCamp.id
                          join ${myuniversity}_${mymodule}.loclibrary itemLocLib
-                              on nullif(loc.jsonb ->> 'libraryId','')::uuid = itemLocLib.id
+                              on (loc.jsonb ->> 'libraryId')::uuid = itemLocLib.id
                          left join ${myuniversity}_${mymodule}.material_type mt on item.materialtypeid = mt.id
                          left join ${myuniversity}_${mymodule}.call_number_type cnt on nullif(item.jsonb #>> '{effectiveCallNumberComponents, typeId}','')::uuid = cnt.id
                 where instanceId = instId
