@@ -26,7 +26,7 @@ $$
 select jsonb_agg(distinct e)
 from ( select e || jsonb_build_object('name', ( select jsonb ->> 'name'
                                                 from ${myuniversity}_${mymodule}.electronic_access_relationship ear
-                                                where id  and id = nullif(e ->> 'relationshipId','')::uuid )) e
+                                                where id = nullif(e ->> 'relationshipId','')::uuid )) e
        from jsonb_array_elements($1) as e ) e1
 $$ language sql strict;
 
