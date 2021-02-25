@@ -1,4 +1,4 @@
-package org.folio.persist;
+package org.folio.rest.persist;
 
 import static io.vertx.core.Promise.promise;
 
@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.interfaces.Results;
 
 import io.vertx.core.Future;
@@ -28,6 +27,14 @@ public class PostgresClientFuturized {
     final Promise<String> saveResult = promise();
 
     postgresClient.save(table, id, entity, saveResult);
+
+    return saveResult.future();
+  }
+
+  public <T> Future<T> saveAndReturnEntity(String table, String id, T entity) {
+    final Promise<T> saveResult = promise();
+
+    postgresClient.saveAndReturnUpdatedEntity(table, id, entity, saveResult);
 
     return saveResult.future();
   }
