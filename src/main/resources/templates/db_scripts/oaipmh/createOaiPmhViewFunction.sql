@@ -26,7 +26,7 @@ $$
 select jsonb_agg(distinct e)
 from ( select e || jsonb_build_object('name', ( select jsonb ->> 'name'
                                                 from ${myuniversity}_${mymodule}.electronic_access_relationship ear
-                                                where id = nullif(e ->> 'relationshipId','')::uuid )) e
+                                                where id = (e ->> 'relationshipId')::uuid )) e
        from jsonb_array_elements($1) as e ) e1
 $$ language sql strict;
 
@@ -35,7 +35,7 @@ $$
 select jsonb_agg(distinct e)
 from ( select e || jsonb_build_object('noteTypeName', ( select jsonb ->> 'name'
                                                         from item_note_type
-                                                        where id = nullif(e ->> 'itemNoteTypeId','')::uuid )) e
+                                                        where id = (e ->> 'itemNoteTypeId')::uuid )) e
        from jsonb_array_elements($1) as e ) e1
 $$ language sql strict;
 
@@ -167,7 +167,7 @@ select instanceIdsAndDatesInRange.instanceId,
                          join ${myuniversity}_${mymodule}.loclibrary itemLocLib
                               on (loc.jsonb ->> 'libraryId')::uuid = itemLocLib.id
                          left join ${myuniversity}_${mymodule}.material_type mt on item.materialtypeid = mt.id
-                         left join ${myuniversity}_${mymodule}.call_number_type cnt on nullif(item.jsonb #>> '{effectiveCallNumberComponents, typeId}','')::uuid = cnt.id
+                         left join ${myuniversity}_${mymodule}.call_number_type cnt on (item.jsonb #>> '{effectiveCallNumberComponents, typeId}')::uuid = cnt.id
                 where instanceId = instanceIdsAndDatesInRange.instanceId
                   and not ($4 and coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false))
                   and not ($4 and coalesce((item.jsonb ->> 'discoverySuppress')::bool, false))
@@ -309,7 +309,7 @@ select instId,
                          join ${myuniversity}_${mymodule}.loclibrary itemLocLib
                               on (loc.jsonb ->> 'libraryId')::uuid = itemLocLib.id
                          left join ${myuniversity}_${mymodule}.material_type mt on item.materialtypeid = mt.id
-                         left join ${myuniversity}_${mymodule}.call_number_type cnt on nullif(item.jsonb #>> '{effectiveCallNumberComponents, typeId}','')::uuid = cnt.id
+                         left join ${myuniversity}_${mymodule}.call_number_type cnt on (item.jsonb #>> '{effectiveCallNumberComponents, typeId}')::uuid = cnt.id
                 where instanceId = instId
                   and not ($2 and coalesce((hr.jsonb ->> 'discoverySuppress')::bool, false))
                   and not ($2 and coalesce((item.jsonb ->> 'discoverySuppress')::bool, false))
