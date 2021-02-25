@@ -1,9 +1,12 @@
 ## 19.5.0 (in-progress)
 
+* Determines effective shelving order for items (MODINVSTOR-381)
 * Adds identifier type `Cancelled system control number` (MODINVSTOR-636)
 * Status date set on newly created instance records (MODINVSTOR-509)
 * Item status date is set for newly created item records (MODINVSTOR-508)
 * Allow generation of HRID values with and without leading zeroes (MODINVSTOR-661)
+* Provides `item-storage 8.9`
+* Provides `item-storage-batch-sync 0.6`
 
 ## 19.4.0 2020-10-08
 

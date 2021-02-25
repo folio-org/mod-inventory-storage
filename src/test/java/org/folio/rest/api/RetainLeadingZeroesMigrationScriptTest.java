@@ -29,6 +29,7 @@ public class RetainLeadingZeroesMigrationScriptTest extends MigrationTestBase {
     Assert.assertFalse(withoutLeadingZeroes.containsKey(LEADING_ZEROES_PROPERTY));
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
+    executeMultipleSqlStatements(MIGRATION_SCRIPT); //check 2nd run MODINVSTOR-675
 
     result = executeSql(String.format(SQL_GET_HRID_SETTINGS, getSchemaName()));
     Assert.assertNotNull(result);
