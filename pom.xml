@@ -144,7 +144,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>32.2.0-SNAPSHOT</raml-module-builder-version>
+    <raml-module-builder-version>33.0.0-SNAPSHOT</raml-module-builder-version>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings</generate_routing_context>
     <argLine />
   </properties>

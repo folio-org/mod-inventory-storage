@@ -1901,7 +1901,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
     assertThat(postResponse.getStatusCode(), is(400));
     assertThat(postResponse.getBody(),
-      matchesPattern("(?s)Json content error Cannot construct instance of `.+`, problem: Wrong status name.+")
+      matchesPattern("(?s)Cannot construct instance of `.+`, problem: Wrong status name.+")
     );
   }
 
