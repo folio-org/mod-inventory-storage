@@ -27,13 +27,13 @@ traits:
           application/json:
             type: reindexJob
       500:
-        description: "Internal server error"
+        description: Internal server error
         body:
           text/plain:
-            example: "Internal server error"
+            example: Internal server error
   /{id}:
-    description: Get reindex job status by id
     get:
+      description: Get reindex job by id
       responses:
         200:
           description: Reindex job has returned
@@ -46,11 +46,12 @@ traits:
             text/plain:
               example: Not found
         500:
-          description: "Internal server error"
+          description: Internal server error
           body:
             text/plain:
-              example: "Internal server error"
+              example: Internal server error
     delete:
+      description: Cancell reindex job by id
       responses:
         204:
           description: Reindex job has been cancelled
@@ -60,7 +61,7 @@ traits:
             text/plain:
               example: Not found
         500:
-          description: "Internal server error"
+          description: Internal server error
           body:
             text/plain:
-              example: "Internal server error"
+              example: Internal server error
