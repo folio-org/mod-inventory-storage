@@ -10,6 +10,11 @@
     </license>
   </licenses>
 
+  <organization>
+    <name>The Open Library Foundation</name>
+    <url>https://dev.folio.org</url>
+  </organization>
+
   <repositories>
     <repository>
       <id>folio-nexus</id>
@@ -137,6 +142,11 @@
       <version>1.19.0</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.13</version>
+    </dependency>
   </dependencies>
 
   <properties>
@@ -174,8 +184,8 @@
   </scm>
 
   <build>
-
     <plugins>
+
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.1</version>
@@ -444,6 +454,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -469,6 +480,31 @@
           <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>2.0.0</version>
+        <executions>
+          <execution>
+            <configuration>
+              <verbose>false</verbose>
+              <thirdPartyFilename>THIRD-PARTY-Licenses.txt</thirdPartyFilename>
+              <useMissingFile>true</useMissingFile>
+              <missingFile>THIRD-PARTY-Missed-Licenses.txt</missingFile>
+              <deployMissingFile>true</deployMissingFile>
+            </configuration>
+            <id>add-third-party</id>
+            <goals>
+              <goal>download-licenses</goal>
+              <goal>aggregate-download-licenses</goal>
+              <goal>add-third-party</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
+
 </project>
