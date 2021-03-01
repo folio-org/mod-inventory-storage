@@ -1116,6 +1116,17 @@
           "permissionsRequired": ["inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"]
         }
       ]
+    },
+    {
+      "id": "inventory-view",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-view/instances",
+          "permissionsRequired": ["inventory-storage.inventory-view.instances.collection.get"]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -2117,6 +2128,11 @@
       "description": "delete individual holdings-source from storage"
     },
     {
+      "permissionName": "inventory-storage.inventory-view.instances.collection.get",
+      "displayName": "inventory view - get instances by query with their holdings and items",
+      "description": "get instances by query with their holdings and items"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2318,7 +2334,8 @@
         "inventory-storage.holdings-sources.put",
         "inventory-storage.holdings-sources.delete",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
-        "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post"
+        "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
+        "inventory-storage.inventory-view.instances.collection.get"
       ]
     }
   ],

@@ -21,7 +21,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
-import org.folio.services.CallNumberUtils;
 import org.folio.services.CallNumberUtilsTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -77,11 +76,12 @@ import io.vertx.sqlclient.RowSet;
   InventoryHierarchyViewTest.class,
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
+  InventoryViewTest.class,
   KafkaTenantInitTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
-  private static Logger logger = LogManager.getLogger();
+  private static final Logger logger = LogManager.getLogger();
   private static Vertx vertx;
   private static int port;
 
