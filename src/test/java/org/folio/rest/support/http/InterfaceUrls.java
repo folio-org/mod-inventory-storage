@@ -201,6 +201,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/inventory-hierarchy/items-and-holdings");
   }
 
+  public static URL inventoryViewInstances(String path) {
+    return StorageTestSuite.storageUrl("/inventory-view/instances" + path);
+  }
+
   public static URL instanceReindex(String path) {
     return StorageTestSuite.storageUrl("/instance-storage/reindex" + path);
   }
