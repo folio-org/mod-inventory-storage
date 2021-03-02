@@ -15,6 +15,7 @@ import static org.folio.services.kafka.KafkaProducerServiceFactory.getKafkaProdu
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,13 +90,24 @@ public class CommonDomainEventPublisher<T> {
     return publishMessage(NULL_INSTANCE_ID, deleteAllEvent(tenantId));
   }
 
-  protected Future<Void> publishMessage(String instanceId, DomainEvent<?> domainEvent) {
+  private Future<Void> publishMessage(String instanceId, DomainEvent<T> domainEvent) {
+    return publishMessage(instanceId, domainEvent, Collections.emptyMap());
+  }
+
+  Future<Void> publishMessage(String instanceId, DomainEvent<T> domainEvent,
+    Map<String, String> additionalHeaders) {
+
     log.debug("Sending domain event [{}], payload [{}]", instanceId, domainEvent);
 
+    var kafkaMessage = KafkaMessage.builder()
+      .key(instanceId).payload(domainEvent)
+      .topic(kafkaTopic)
+      .headers(headersToForward);
+
+    additionalHeaders.forEach(kafkaMessage::header);
+
     return getKafkaProducerService(vertxContext.owner())
-      .sendMessage(KafkaMessage.builder()
-        .key(instanceId).payload(domainEvent).topic(kafkaTopic)
-        .headers(headersToForward).build())
+      .sendMessage(kafkaMessage.build())
       .onComplete(result -> {
         if (result.failed()) {
           log.error("Unable to send domain event [{}], payload - [{}]",

@@ -12,6 +12,7 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
@@ -75,6 +76,9 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var lastInstanceEvent = getLastInstanceEvent(instanceId);
     assertThat(lastInstanceEvent.getPayload().getString("type"), is("REINDEX"));
     assertThat(lastInstanceEvent.getPayload().getString("tenant"), is(TENANT_ID));
+
+    assertThat(lastInstanceEvent.getHeaders(), hasEntry(
+      "reindex-job-id", job.getId()));
   }
 
   @Test

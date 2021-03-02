@@ -95,7 +95,7 @@ public class ReindexJobRunner {
     }).handler(row -> {
       var instanceId = row.getUUID("id");
 
-      publisher.publishInstanceReindex(instanceId.toString())
+      publisher.publishInstanceReindex(instanceId.toString(), context.getJobId())
       .onFailure(error ->
         log.warn("Unable to publish reindex event for instance [id = {}, jobId={}]",
           instanceId, context.getJobId()));

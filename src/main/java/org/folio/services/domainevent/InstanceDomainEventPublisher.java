@@ -28,6 +28,7 @@ import io.vertx.core.Future;
 
 public class InstanceDomainEventPublisher {
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
+  private static final String JOB_ID_HEADER = "reindex-job-id";
 
   private final InstanceRepository instanceRepository;
   private final CommonDomainEventPublisher<Instance> domainEventService;
@@ -88,9 +89,11 @@ public class InstanceDomainEventPublisher {
     };
   }
 
-  public Future<Void> publishInstanceReindex(String instanceId) {
+  public Future<Void> publishInstanceReindex(String instanceId, String reindexJobId) {
+    var jobIdHeader = Map.of(JOB_ID_HEADER, reindexJobId);
+
     return domainEventService.publishMessage(instanceId,
-      reindexEvent(domainEventService.tenantId));
+      reindexEvent(domainEventService.tenantId), jobIdHeader);
   }
 
   private Future<Void> publishInstancesUpdated(Collection<Instance> oldInstances) {
