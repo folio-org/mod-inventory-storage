@@ -179,6 +179,12 @@
   </scm>
 
   <build>
+
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <resource><directory>target/generated-resources</directory></resource><!-- license-maven-plugin -->
+    </resources>
+
     <plugins>
 
       <plugin>
@@ -487,11 +493,11 @@
               <!-- specify "missing file" licenses for not detected dependencies -->
               <useMissingFile>true</useMissingFile>
               <failOnMissing>true</failOnMissing>
+              <licensesOutputDirectory>src/main/resources/licenses</licensesOutputDirectory>
             </configuration>
             <id>add-third-party</id>
             <goals>
               <goal>download-licenses</goal>
-              <goal>aggregate-download-licenses</goal>
               <goal>add-third-party</goal>
             </goals>
           </execution>
