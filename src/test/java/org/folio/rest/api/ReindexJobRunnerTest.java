@@ -10,6 +10,7 @@ import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
+import static org.folio.services.domainevent.InstanceDomainEventPublisher.REINDEX_JOB_ID_HEADER;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasEntry;
@@ -78,7 +79,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(lastInstanceEvent.getPayload().getString("tenant"), is(TENANT_ID));
 
     assertThat(lastInstanceEvent.getHeaders(), hasEntry(
-      "reindex-job-id", job.getId()));
+      REINDEX_JOB_ID_HEADER, job.getId()));
   }
 
   @Test
