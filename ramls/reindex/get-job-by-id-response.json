@@ -19,10 +19,10 @@
       "type": "string",
       "enum": [
         "In progress",
-        "Failed",
-        "Completed",
+        "Id publishing failed",
+        "Ids published",
         "Pending cancel",
-        "Cancelled"
+        "Id publishing cancelled"
       ]
     },
     "submittedDate": {

@@ -4,8 +4,8 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.CANCELLED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.COMPLETED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
@@ -63,12 +63,12 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     runner.startReindex(reindexJob);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
-      .getJobStatus() == COMPLETED);
+      .getJobStatus() == IDS_PUBLISHED);
 
     var job = instanceReindex.getReindexJob(reindexJob.getId());
 
     assertThat(job.getPublished(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(COMPLETED));
+    assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
     var instanceId = rowStream.allInstances.get(0);
@@ -102,11 +102,11 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     instanceReindex.cancelReindexJob(reindexJob.getId());
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
-      .getJobStatus() == CANCELLED);
+      .getJobStatus() == ID_PUBLISHING_CANCELLED);
 
     var job = instanceReindex.getReindexJob(reindexJob.getId());
 
-    assertThat(job.getJobStatus(), is(CANCELLED));
+    assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
     assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
   }
 

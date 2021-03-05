@@ -1,9 +1,9 @@
 package org.folio.services.reindex;
 
 import static org.folio.rest.impl.InstanceStorageAPI.INSTANCE_TABLE;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.CANCELLED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.COMPLETED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.FAILED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
 
 import io.vertx.core.Context;
@@ -79,7 +79,8 @@ public class ReindexJobRunner {
 
   private void logReindexCompleted(ReindexContext context) {
     reindexJobRepository.fetchAndUpdate(context.getJobId(),
-      job -> job.withPublished(context.getRecordsPublished()).withJobStatus(COMPLETED));
+      job -> job.withPublished(context.getRecordsPublished())
+        .withJobStatus(IDS_PUBLISHED));
   }
 
   private Future<ReindexContext> processStream(ReindexContext context) {
@@ -131,7 +132,8 @@ public class ReindexJobRunner {
   private void logFailedJob(ReindexContext context) {
     reindexJobRepository.fetchAndUpdate(context.getJobId(),
       resp -> {
-        var finalStatus = resp.getJobStatus() == PENDING_CANCEL ? CANCELLED : FAILED;
+        var finalStatus = resp.getJobStatus() == PENDING_CANCEL
+          ? ID_PUBLISHING_CANCELLED : ID_PUBLISHING_FAILED;
         return resp.withJobStatus(finalStatus).withPublished(context.getRecordsPublished());
       });
   }
