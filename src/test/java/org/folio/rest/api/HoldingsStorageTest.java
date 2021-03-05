@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
@@ -45,10 +46,13 @@ import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -2066,12 +2070,20 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     Stream.concat(holdingsArray1.stream(), holdingsArray2.stream())
       .map(json -> ((JsonObject) json).getString("id"))
-      .filter(id -> !id.equals(existingHrId.toString()))
+      .filter(id -> !id.equals(existingHrId))
       .map(this::getById)
       .map(Response::getJson)
       .forEach(DomainEventAssertions::assertCreateEventForHolding);
 
-    assertUpdateEventForHolding(existingHrBeforeUpdate, getById(existingHrId).getJson());
+    await().untilAsserted(() -> {
+      var newHr = getById(existingHrId).getJson();
+      final String id = newHr.getString("id");
+      final String instanceId = newHr.getString("instanceId");
+
+      assertThat(getHoldingsEvents(instanceId, id).size(), greaterThan(0));
+      assertUpdateEvent(getLastHoldingEvent(instanceId, id),
+        existingHrBeforeUpdate, newHr);
+    });
   }
 
   @Test

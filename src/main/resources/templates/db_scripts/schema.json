@@ -890,6 +890,11 @@
         }
       ],
       "customSnippetPath": "alterPrecedingSucceedingTitle.sql"
+    },
+    {
+      "tableName": "reindex_job",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [

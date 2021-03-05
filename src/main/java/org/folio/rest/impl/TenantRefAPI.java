@@ -91,7 +91,8 @@ public class TenantRefAPI extends TenantAPI {
     // have to create topics before tenant init,
     // because on init we can create sample/ref data which
     // has to be sent to the queue as well
-    createTopics(context, tenantAttributes)
+    new KafkaAdminClientService(context.owner())
+      .createKafkaTopics(tenantAttributes)
       .onComplete(topicCreateResult -> {
         if (topicCreateResult.failed()) {
           log.error("Unable to create kafka topics", topicCreateResult.cause());
@@ -143,15 +144,5 @@ public class TenantRefAPI extends TenantAPI {
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
         });
-  }
-
-  private Future<Void> createTopics(Context context, TenantAttributes tenantAttributes) {
-    if (tenantAttributes.getPurge() != null && tenantAttributes.getPurge()) {
-      log.info("Purge is true, skipping topics creation...");
-      return succeededFuture();
-    }
-
-    log.info("Creating kafka topics...");
-    return new KafkaAdminClientService(context.owner()).createKafkaTopics();
   }
 }

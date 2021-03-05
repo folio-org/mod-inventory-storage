@@ -204,4 +204,8 @@ public class InterfaceUrls {
   public static URL inventoryViewInstances(String path) {
     return StorageTestSuite.storageUrl("/inventory-view/instances" + path);
   }
+
+  public static URL instanceReindex(String path) {
+    return StorageTestSuite.storageUrl("/instance-storage/reindex" + path);
+  }
 }
