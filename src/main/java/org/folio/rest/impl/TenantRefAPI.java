@@ -83,36 +83,19 @@ public class TenantRefAPI extends TenantAPI {
     return res;
   }
 
-  @Override
-  @Validate
-  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
-    Handler<AsyncResult<Response>> handler, Context context) {
-
-    // have to create topics before tenant init,
-    // because on init we can create sample/ref data which
-    // has to be sent to the queue as well
-    new KafkaAdminClientService(context.owner())
-      .createKafkaTopics(tenantAttributes)
-      .onComplete(topicCreateResult -> {
-        if (topicCreateResult.failed()) {
-          log.error("Unable to create kafka topics", topicCreateResult.cause());
-          handler.handle(succeededFuture(PostTenantResponse
-            .respond500WithTextPlain(topicCreateResult.cause().getMessage())));
-        } else {
-          super.postTenant(tenantAttributes, headers, handler, context);
-        }
-      });
-  }
-
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
                            Map<String, String> headers, Context vertxContext) {
-    return super.loadData(attributes, tenantId, headers, vertxContext)
+    // create topics before loading data
+    return
+      new KafkaAdminClientService(vertxContext.owner())
+        .createKafkaTopics(attributes)
+        .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext))
         .compose(superRecordsLoaded -> {
           try {
             List<URL> urls = TenantLoading.getURLsFromClassPathDir(
-                REFERENCE_LEAD + "/service-points");
+              REFERENCE_LEAD + "/service-points");
             servicePoints = new LinkedList<>();
             for (URL url : urls) {
               InputStream stream = url.openStream();
@@ -138,9 +121,9 @@ public class TenantRefAPI extends TenantAPI {
           tl.add("instance-relationships", "instance-storage/instance-relationships");
           if (servicePoints != null) {
             tl.withFilter(this::servicePointUserFilter)
-                .withPostOnly()
-                .withAcceptStatus(422)
-                .add("users", "service-points-users");
+              .withPostOnly()
+              .withAcceptStatus(422)
+              .add("users", "service-points-users");
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
         });

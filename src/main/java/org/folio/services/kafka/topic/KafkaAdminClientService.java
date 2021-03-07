@@ -2,7 +2,6 @@ package org.folio.services.kafka.topic;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
-import static org.apache.commons.lang.BooleanUtils.isTrue;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.services.kafka.KafkaConfigHelper.getKafkaProperties;
 
@@ -35,11 +34,6 @@ public class KafkaAdminClientService {
   }
 
   public Future<Void> createKafkaTopics(TenantAttributes tenantAttributes) {
-    if (isTrue(tenantAttributes.getPurge())) {
-      log.info("Purge is true, skipping topics creation...");
-      return succeededFuture();
-    }
-
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
     return createKafkaTopics(kafkaAdminClient).onComplete(result -> {
       if (result.succeeded()) {
