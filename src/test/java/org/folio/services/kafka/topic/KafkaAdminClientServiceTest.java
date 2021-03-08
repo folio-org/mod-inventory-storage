@@ -62,18 +62,6 @@ public class KafkaAdminClientServiceTest {
       }));
   }
 
-  @Test
-  public void shouldNotCreateTopicsIfPurge(TestContext testContext) {
-    final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
-    when(mockClient.listTopics()).thenReturn(succeededFuture(allTopics));
-    when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
-    when(mockClient.close()).thenReturn(succeededFuture());
-
-    createKafkaTopicsAsync(mockClient, true)
-      .onComplete(testContext.asyncAssertSuccess(
-        notUsed -> verifyNoInteractions(mockClient)));
-  }
-
   private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient, Boolean purge) {
     return new KafkaAdminClientService(() -> mockClient)
       .createKafkaTopics(new TenantAttributes().withPurge(purge));
