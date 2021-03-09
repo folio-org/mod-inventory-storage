@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Instance with holdings and items (there will be all instance properties, they just omitted)",
+  "description": "Instance with holdings and items (there will be all instance properties, they just omitted, see instance.json)",
   "type": "object",
   "properties": {
     "id": {
