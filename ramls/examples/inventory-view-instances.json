@@ -1,56 +1,53 @@
 {
   "instances": [
     {
-      "instanceId": "4b763e7c-2470-4d31-91b0-23a606b7d55e",
-      "instance": {
-        "id": "4b763e7c-2470-4d31-91b0-23a606b7d55e",
-        "_version": 1,
-        "hrid": "in00000000002",
-        "source": "TEST",
-        "title": "Long Way to a Small Angry Planet",
-        "alternativeTitles": [],
-        "editions": [],
-        "series": [],
-        "identifiers": [
-          {
-            "value": "9781473619777",
-            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
-          }
-        ],
-        "contributors": [
-          {
-            "name": "Chambers, Becky",
-            "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a"
-          }
-        ],
-        "subjects": [],
-        "classifications": [],
-        "publication": [],
-        "publicationFrequency": [],
-        "publicationRange": [],
-        "electronicAccess": [],
-        "instanceTypeId": "535e3160-763a-42f9-b0c0-d8ed7df6e2a2",
-        "instanceFormatIds": [],
-        "instanceFormats": [],
-        "physicalDescriptions": [],
-        "languages": [],
-        "notes": [],
-        "discoverySuppress": false,
-        "statisticalCodeIds": [],
-        "statusUpdatedDate": "2021-02-24T11:30:15.752+0200",
-        "tags": {
-          "tagList": [
-            "test-tag"
-          ]
-        },
-        "metadata": {
-          "createdDate": "2021-02-24T09:30:15.752+00:00",
-          "updatedDate": "2021-02-24T09:30:15.752+00:00"
-        },
-        "holdingsRecords2": [],
-        "natureOfContentTermIds": []
+      "id": "4b763e7c-2470-4d31-91b0-23a606b7d55e",
+      "_version": 1,
+      "hrid": "in00000000002",
+      "source": "TEST",
+      "title": "Long Way to a Small Angry Planet",
+      "alternativeTitles": [],
+      "editions": [],
+      "series": [],
+      "identifiers": [
+        {
+          "value": "9781473619777",
+          "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+        }
+      ],
+      "contributors": [
+        {
+          "name": "Chambers, Becky",
+          "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a"
+        }
+      ],
+      "subjects": [],
+      "classifications": [],
+      "publication": [],
+      "publicationFrequency": [],
+      "publicationRange": [],
+      "electronicAccess": [],
+      "instanceTypeId": "535e3160-763a-42f9-b0c0-d8ed7df6e2a2",
+      "instanceFormatIds": [],
+      "instanceFormats": [],
+      "physicalDescriptions": [],
+      "languages": [],
+      "notes": [],
+      "discoverySuppress": false,
+      "statisticalCodeIds": [],
+      "statusUpdatedDate": "2021-02-24T11:30:15.752+0200",
+      "tags": {
+        "tagList": [
+          "test-tag"
+        ]
       },
-      "holdingsRecords": [
+      "metadata": {
+        "createdDate": "2021-02-24T09:30:15.752+00:00",
+        "updatedDate": "2021-02-24T09:30:15.752+00:00"
+      },
+      "holdingsRecords2": [],
+      "natureOfContentTermIds": [],
+      "holdings": [
         {
           "id": "2a4cad3d-d978-4404-88f3-f4c2b04f254c",
           "_version": 1,

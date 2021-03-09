@@ -1,17 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Instance with holdings and items",
+  "description": "Instance with holdings and items (there will be all instance properties, they just omitted)",
   "type": "object",
   "properties": {
-    "instanceId": {
-      "description": "Instance id",
-      "$ref": "uuid.json"
+    "id": {
+      "type": "string",
+      "description": "Instance id"
     },
-    "instance": {
-      "description": "Instance record",
-      "$ref": "instance.json"
-    },
-    "holdingsRecords": {
+    "holdings": {
       "type": "array",
       "description": "Holdings records for the instance",
       "items": {
@@ -26,7 +22,6 @@
       }
     }
   },
-  "additionalProperties": false,
-  "required": ["instanceId", "instance"]
+  "additionalProperties": true
 }
 
