@@ -1,12 +1,26 @@
-## 19.5.0 (in-progress)
+## 20.0.0 2020-03-11
 
-* Determines effective shelving order for items (MODINVSTOR-381)
+* Determines effective shelving order for items (MODINVSTOR-381, MODINVSTOR-679)
+* Statistical codes must have an unique name (MODINVSTOR-596)
 * Adds identifier type `Cancelled system control number` (MODINVSTOR-636)
 * Status date set on newly created instance records (MODINVSTOR-509)
 * Item status date is set for newly created item records (MODINVSTOR-508)
-* Allow generation of HRID values with and without leading zeroes (MODINVSTOR-661)
+* HRID can be generated with and without leading zeroes (MODINVSTOR-661)
+* Publishes domain events to Kafka to support searching and remote storage (MODINVSTOR-639, MODINVSTOR-640, MODINVSTOR-644, MODINVSTOR-649, MODINVSTOR-654, MODINVSTOR-662, MODINVSTOR-664)
+* Detects potential optimistic concurrency collisions for instances, holdings records and items (MODINVSTOR-656)
+* Upgrades to RAML Module Builder 32.1.0
+* Upgrades to Vert.x 4.0.0 (MODINVSTOR-624)
 * Provides `item-storage 8.9`
 * Provides `item-storage-batch-sync 0.6`
+* Provides `holdings-storage 4.5`
+* Provides `instance-storage 7.6`
+* Provides `inventory-record-bulk 1.0`
+* Provides `hrid-settings-storage 1.2`
+* Provides `_tenant 2.0`
+* Provides `inventory-view 1.0`
+* Provides `instance-reindex 0.1`
+* No longer provides `instance-bulk`
+* Requires Kafka 2.6
 
 ## 19.4.0 2020-10-08
 
