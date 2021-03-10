@@ -65,7 +65,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     var holdingForOne = createHolding(instanceOne.getId(), mainLibraryLocationId, null);
 
     var instanceTwo = instancesClient.create(instance(randomUUID()));
-    var holdings = List.of(
+    var holdingsForTwo = List.of(
       createHolding(instanceTwo.getId(), mainLibraryLocationId, null),
       createHolding(instanceTwo.getId(), secondFloorLocationId, null),
       createHolding(instanceTwo.getId(), fourthFloorLocationId, null));
@@ -78,9 +78,8 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     var firstInstance = getInstanceById(instances, instanceOne.getId());
     var secondInstance = getInstanceById(instances, instanceTwo.getId());
 
-
     assertThat(firstInstance.getHoldings().get(0).getId(), is(holdingForOne.toString()));
-    assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(holdings));
+    assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(holdingsForTwo));
 
     isNonNullEmpty(firstInstance.getItems());
     isNonNullEmpty(secondInstance.getItems());
