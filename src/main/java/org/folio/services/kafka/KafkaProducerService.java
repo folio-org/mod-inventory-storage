@@ -6,11 +6,11 @@ import static io.vertx.kafka.client.producer.KafkaProducerRecord.create;
 import static org.folio.dbschema.ObjectMapperTool.getMapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.RecordMetadata;
+import java.util.Map;
 
 public class KafkaProducerService {
   private final KafkaProducer<String, String> kafkaProducer;
@@ -25,18 +25,20 @@ public class KafkaProducerService {
   public Future<Void> sendMessage(KafkaMessage<?> message) {
     try {
       final String payload = getMapper().writeValueAsString(message.getPayload());
-      return sendMessageInternal(message.withPayload(payload));
+      return sendMessageInternal(message.getTopic().getTopicName(),
+        message.getKey(), payload, message.getHeaders());
     } catch (JsonProcessingException ex) {
       return failedFuture(new IllegalArgumentException("Unable to deserialize message", ex));
     }
   }
 
-  private Future<Void> sendMessageInternal(KafkaMessage<String> message) {
-    final Promise<RecordMetadata> result = promise();
-    final var kafkaRecord = create(message.getTopic().getTopicName(), message.getKey(),
-      message.getPayload());
+  private Future<Void> sendMessageInternal(String topic, String key, String value,
+    Map<String, String> headers) {
 
-    message.getHeaders().forEach(kafkaRecord::addHeader);
+    final Promise<RecordMetadata> result = promise();
+    final var kafkaRecord = create(topic, key, value);
+
+    headers.forEach(kafkaRecord::addHeader);
 
     kafkaProducer.send(kafkaRecord, result);
 

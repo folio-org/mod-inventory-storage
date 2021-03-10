@@ -6,9 +6,11 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.services.kafka.KafkaConfigHelper.getKafkaProperties;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.util.ResourceUtil;
 
 import io.vertx.core.Future;
@@ -21,14 +23,18 @@ import io.vertx.kafka.admin.NewTopic;
 public class KafkaAdminClientService {
   private static final Logger log = getLogger(KafkaAdminClientService.class);
   private static final String KAFKA_TOPICS_FILE = "kafka-topics.json";
-  private final Vertx vertx;
+  private final Supplier<KafkaAdminClient> clientFactory;
 
   public KafkaAdminClientService(Vertx vertx) {
-    this.vertx = vertx;
+    this(() -> create(vertx, getKafkaProperties()));
   }
 
-  public Future<Void> createKafkaTopics() {
-    final KafkaAdminClient kafkaAdminClient = createKafkaAdminNativeClient();
+  public KafkaAdminClientService(Supplier<KafkaAdminClient> clientFactory) {
+    this.clientFactory = clientFactory;
+  }
+
+  public Future<Void> createKafkaTopics(TenantAttributes tenantAttributes) {
+    final KafkaAdminClient kafkaAdminClient = clientFactory.get();
     return createKafkaTopics(kafkaAdminClient).onComplete(result -> {
       if (result.succeeded()) {
         log.info("Topics created successfully");
@@ -42,11 +48,6 @@ public class KafkaAdminClientService {
         }
       });
     });
-  }
-
-  // needed for tests mostly
-  KafkaAdminClient createKafkaAdminNativeClient() {
-    return create(vertx, getKafkaProperties());
   }
 
   private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient) {

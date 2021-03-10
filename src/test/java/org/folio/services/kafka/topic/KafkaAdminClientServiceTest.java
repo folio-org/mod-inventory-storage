@@ -5,39 +5,29 @@ import static java.util.Set.of;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
   private final Set<String> allTopics = Stream.of(KafkaTopic.values())
     .map(KafkaTopic::getTopicName).collect(Collectors.toSet());
-
-  private KafkaAdminClientService adminClientService;
-
-  @Before
-  public void createAdminClientService() {
-    adminClientService = spy(new KafkaAdminClientService(Vertx.vertx()));
-  }
 
   @Test
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
@@ -46,10 +36,10 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
-    .onComplete(testContext.asyncAssertSuccess(notUsed -> {
-      verify(mockClient, times(0)).createTopics(anyList());
-      verify(mockClient, times(1)).close();
-    }));
+      .onComplete(testContext.asyncAssertSuccess(notUsed -> {
+        verify(mockClient, times(0)).createTopics(anyList());
+        verify(mockClient, times(1)).close();
+      }));
   }
 
   @Test
@@ -60,22 +50,24 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
-    .onComplete(testContext.asyncAssertSuccess(notUsed -> {
-      @SuppressWarnings("unchecked")
-      final ArgumentCaptor<List<NewTopic>> createTopicsCaptor = forClass(List.class);
+      .onComplete(testContext.asyncAssertSuccess(notUsed -> {
+        @SuppressWarnings("unchecked")
+        final ArgumentCaptor<List<NewTopic>> createTopicsCaptor = forClass(List.class);
 
-      verify(mockClient, times(1)).createTopics(createTopicsCaptor.capture());
-      verify(mockClient, times(1)).close();
+        verify(mockClient, times(1)).createTopics(createTopicsCaptor.capture());
+        verify(mockClient, times(1)).close();
 
-      testContext.assertEquals(1, createTopicsCaptor.getAllValues().size());
-      testContext.assertEquals(allTopics.size(), createTopicsCaptor.getAllValues().get(0).size());
-    }));
+        testContext.assertEquals(1, createTopicsCaptor.getAllValues().size());
+        testContext.assertEquals(allTopics.size(), createTopicsCaptor.getAllValues().get(0).size());
+      }));
+  }
+
+  private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient, Boolean purge) {
+    return new KafkaAdminClientService(() -> mockClient)
+      .createKafkaTopics(new TenantAttributes().withPurge(purge));
   }
 
   private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient) {
-    when(adminClientService.createKafkaAdminNativeClient())
-      .thenReturn(mockClient);
-
-    return adminClientService.createKafkaTopics();
+    return createKafkaTopicsAsync(mockClient, null);
   }
 }
