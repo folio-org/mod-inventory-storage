@@ -3,17 +3,17 @@
     {
       "name": "inventory.instance",
       "numPartitions": 50,
-      "replicationFactor": 3
+      "replicationFactor": 2
     },
     {
       "name": "inventory.item",
       "numPartitions": 50,
-      "replicationFactor": 3
+      "replicationFactor": 2
     },
     {
       "name": "inventory.holdings-record",
       "numPartitions": 50,
-      "replicationFactor": 3
+      "replicationFactor": 2
     }
   ]
 }
