@@ -1,17 +1,12 @@
 CREATE OR REPLACE VIEW ${myuniversity}_${mymodule}.instance_holdings_item_view
 AS
-SELECT instance.id as id, (instance.jsonb ||
-  JSONB_BUILD_OBJECT(
-	  'holdings', COALESCE(
-		  jsonb_agg(DISTINCT holdings_record.jsonb)
-		  FILTER (WHERE holdings_record.id IS NOT NULL),
-		  '[]'::jsonb),
-	  'items', COALESCE(
-		  jsonb_agg(DISTINCT item.jsonb)
-		  FILTER (WHERE item.id IS NOT NULL),
-		  '[]'::jsonb))
+SELECT instance.id as id, JSONB_BUILD_OBJECT(
+    'instanceId',      instance.id,
+    'instance',        instance.jsonb,
+	  'holdingsRecords', (SELECT jsonb_agg(jsonb) FROM ${myuniversity}_${mymodule}.holdings_record
+	                      WHERE holdings_record.instanceId = instance.id),
+	  'items',           (SELECT jsonb_agg(item.jsonb) FROM ${myuniversity}_${mymodule}.holdings_record as hr
+	                      JOIN ${myuniversity}_${mymodule}.item
+	                        ON item.holdingsRecordId=hr.id AND hr.instanceId = instance.id)
 	) AS jsonb
-  FROM ${myuniversity}_${mymodule}.instance
-    LEFT JOIN ${myuniversity}_${mymodule}.holdings_record ON instance.id = holdings_record.instanceId
-    LEFT JOIN ${myuniversity}_${mymodule}.item ON holdings_record.id = item.holdingsRecordId
-  GROUP BY instance.id;
+  FROM ${myuniversity}_${mymodule}.instance;

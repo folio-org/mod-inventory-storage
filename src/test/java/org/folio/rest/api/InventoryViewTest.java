@@ -12,8 +12,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.folio.rest.jaxrs.model.Holding;
 import org.folio.rest.jaxrs.model.HoldingsItem;
+import org.folio.rest.jaxrs.model.HoldingsRecords2;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
 import org.folio.rest.support.IndividualResource;
 import org.hamcrest.Matcher;
@@ -78,7 +78,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     var firstInstance = getInstanceById(instances, instanceOne.getId());
     var secondInstance = getInstanceById(instances, instanceTwo.getId());
 
-    assertThat(firstInstance.getHoldings().get(0).getId(), is(holdingForOne.toString()));
+    assertThat(firstInstance.getHoldingsRecords().get(0).getId(), is(holdingForOne.toString()));
     assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(holdingsForTwo));
 
     isNonNullEmpty(firstInstance.getItems());
@@ -100,17 +100,17 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       .collect(Collectors.toList());
 
     for (InventoryViewInstance returnedInstance : returnedInstances) {
-      isNonNullEmpty(returnedInstance.getHoldings());
+      isNonNullEmpty(returnedInstance.getHoldingsRecords());
       isNonNullEmpty(returnedInstance.getItems());
 
-      assertTrue(returnedInstance.getId().equals(instanceOne.getId().toString())
-        || returnedInstance.getId().equals(instanceTwo.getId().toString()));
+      assertTrue(returnedInstance.getInstanceId().equals(instanceOne.getId().toString())
+        || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
     }
   }
 
   private List<UUID> getHoldingIds(InventoryViewInstance instance) {
-    return instance.getHoldings().stream()
-      .map(Holding::getId)
+    return instance.getHoldingsRecords().stream()
+      .map(HoldingsRecords2::getId)
       .map(UUID::fromString)
       .collect(toList());
   }
@@ -134,8 +134,8 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
 
   private InventoryViewInstance getInstanceById(List<IndividualResource> instances, UUID id) {
     return instances.stream()
-      .filter(res -> res.getId().equals(id))
       .map(r -> r.getJson().mapTo(InventoryViewInstance.class))
+      .filter(r -> r.getInstanceId().equals(id.toString()))
       .findFirst()
       .orElseThrow(() -> new AssertionError("No instance"));
   }

@@ -1,26 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Instance with holdings and items (there will be all instance properties, they just omitted, see instance.json)",
+  "description": "Instance with holdings and items",
   "type": "object",
   "properties": {
-    "id": {
-      "type": "string",
-      "description": "Instance id"
-    },
-    "source": {
-      "type": "string",
-      "description": "The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)"
-    },
-    "title": {
-      "type": "string",
-      "description": "The primary title (or label) associated with the resource"
-    },
-    "instanceTypeId": {
-      "type": "string",
-      "description": "UUID of the unique term for the resource type whether it's from the RDA content term list of locally defined",
+    "instanceId": {
+      "description": "Instance id",
       "$ref": "uuid.json"
     },
-    "holdings": {
+    "instance": {
+      "description": "Instance record",
+      "$ref": "instance.json"
+    },
+    "holdingsRecords": {
       "type": "array",
       "description": "Holdings records for the instance",
       "items": {
@@ -35,11 +26,6 @@
       }
     }
   },
-  "additionalProperties": true,
-  "required": [
-    "source",
-    "title",
-    "instanceTypeId"
-  ]
+  "additionalProperties": false,
+  "required": ["instanceId", "instance"]
 }
-
