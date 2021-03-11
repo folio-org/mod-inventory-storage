@@ -11,18 +11,22 @@
       "description": "Instance record",
       "$ref": "instance.json"
     },
-    "holdingsRecords": {
+    "holdingsAndItems": {
       "type": "array",
-      "description": "Holdings records for the instance",
+      "description": "Holdings records for the instance with items",
       "items": {
-        "$ref": "holdingsrecord.json"
-      }
-    },
-    "items": {
-      "type": "array",
-      "description": "Items for the instance",
-      "items": {
-        "$ref": "item.json"
+        "type": "object",
+        "properties": {
+          "holding": {
+            "$ref": "holdingsrecord.json"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "item.json"
+            }
+          }
+        }
       }
     }
   },
