@@ -890,6 +890,11 @@
         }
       ],
       "customSnippetPath": "alterPrecedingSucceedingTitle.sql"
+    },
+    {
+      "tableName": "reindex_job",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [
@@ -997,6 +1002,16 @@
       "run": "after",
       "snippetPath": "addIdentifierTypeCancelledSystemControlNumber.sql",
       "fromModuleVersion": "19.4.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/addNullChecksToRecordsViewFunctions.sql",
+      "fromModuleVersion": "19.5.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance-hr-item/instance-hr-item-view.sql",
+      "fromModuleVersion": "19.5.0"
     }
   ]
 }
