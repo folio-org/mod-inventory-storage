@@ -492,7 +492,7 @@
               <sortArtifactByName>true</sortArtifactByName>
               <!-- specify "missing file" licenses for not detected dependencies -->
               <useMissingFile>true</useMissingFile>
-              <failOnMissing>true</failOnMissing>
+              <failOnMissing>false</failOnMissing>
             </configuration>
             <id>add-third-party</id>
             <goals>
