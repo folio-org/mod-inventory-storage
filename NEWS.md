@@ -1,4 +1,6 @@
-## 20.0.0 2020-03-11
+## 20.1.0 In-progress
+
+## 20.0.0 2021-03-11
 
 * Determines effective shelving order for items (MODINVSTOR-381, MODINVSTOR-679)
 * Statistical codes must have an unique name (MODINVSTOR-596)
