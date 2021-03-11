@@ -33,16 +33,21 @@ public class ReindexJobRunner {
   private final ReindexJobRepository reindexJobRepository;
 
   public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(vertxContext, okapiHeaders, new PostgresClientFuturized(PgUtil
-      .postgresClient(vertxContext, okapiHeaders)));
+    this(
+      new InstanceDomainEventPublisher(vertxContext, okapiHeaders),
+      new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
+      new ReindexJobRepository(vertxContext, okapiHeaders),
+      vertxContext
+    );
   }
 
-  public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders,
-    PostgresClientFuturized postgresClient) {
+  public ReindexJobRunner(InstanceDomainEventPublisher publisher,
+    PostgresClientFuturized postgresClient, ReindexJobRepository repository,
+    Context vertxContext) {
 
-    this.publisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
+    this.publisher = publisher;
     this.postgresClient = postgresClient;
-    this.reindexJobRepository = new ReindexJobRepository(vertxContext, okapiHeaders);
+    this.reindexJobRepository = repository;
 
     initWorker(vertxContext);
   }
