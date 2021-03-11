@@ -12,7 +12,7 @@
 
   <organization>
     <name>The Open Library Foundation</name>
-    <url>>https://openlibraryfoundation.org</url>
+    <url>https://openlibraryfoundation.org</url>
   </organization>
 
   <repositories>
@@ -493,7 +493,6 @@
               <!-- specify "missing file" licenses for not detected dependencies -->
               <useMissingFile>true</useMissingFile>
               <failOnMissing>true</failOnMissing>
-              <licensesOutputDirectory>src/main/resources/licenses</licensesOutputDirectory>
             </configuration>
             <id>add-third-party</id>
             <goals>
