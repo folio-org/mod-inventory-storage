@@ -12,7 +12,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.folio.rest.jaxrs.model.HoldingsAndItem;
 import org.folio.rest.jaxrs.model.HoldingsItem;
 import org.folio.rest.jaxrs.model.HoldingsRecords2;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
@@ -79,16 +78,11 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     var firstInstance = getInstanceById(instances, instanceOne.getId());
     var secondInstance = getInstanceById(instances, instanceTwo.getId());
 
-    assertThat(firstInstance.getHoldingsAndItems().get(0).getHolding().getId(),
-      is(holdingForOne.toString()));
+    assertThat(firstInstance.getHoldingsRecords().get(0).getId(), is(holdingForOne.toString()));
     assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(holdingsForTwo));
 
-    for (HoldingsAndItem holdingsAndItem : firstInstance.getHoldingsAndItems()) {
-      isNonNullEmpty(holdingsAndItem.getItems());
-    }
-
-    firstInstance.getHoldingsAndItems().forEach(hi -> isNonNullEmpty(hi.getItems()));
-    secondInstance.getHoldingsAndItems().forEach(hi -> isNonNullEmpty(hi.getItems()));
+    isNonNullEmpty(firstInstance.getItems());
+    isNonNullEmpty(secondInstance.getItems());
   }
 
   @Test
@@ -106,7 +100,8 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       .collect(Collectors.toList());
 
     for (InventoryViewInstance returnedInstance : returnedInstances) {
-      isNonNullEmpty(returnedInstance.getHoldingsAndItems());
+      isNonNullEmpty(returnedInstance.getHoldingsRecords());
+      isNonNullEmpty(returnedInstance.getItems());
 
       assertTrue(returnedInstance.getInstanceId().equals(instanceOne.getId().toString())
         || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
@@ -114,16 +109,14 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   private List<UUID> getHoldingIds(InventoryViewInstance instance) {
-    return instance.getHoldingsAndItems().stream()
-      .map(HoldingsAndItem::getHolding)
+    return instance.getHoldingsRecords().stream()
       .map(HoldingsRecords2::getId)
       .map(UUID::fromString)
       .collect(toList());
   }
 
   private List<String> getItemIds(InventoryViewInstance instance) {
-    return instance.getHoldingsAndItems().stream()
-      .flatMap(hi -> hi.getItems().stream())
+    return instance.getItems().stream()
       .map(HoldingsItem::getId)
       .collect(toList());
   }
