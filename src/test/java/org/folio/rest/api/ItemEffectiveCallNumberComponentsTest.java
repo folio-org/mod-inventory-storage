@@ -1,7 +1,9 @@
 package org.folio.rest.api;
 
 
+import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.ItemStorageTest.nod;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
 import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
@@ -12,14 +14,16 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.naming.TestCaseName;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData.CallNumberComponentPropertyNames;
@@ -30,12 +34,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import junitparams.naming.TestCaseName;
-
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventoryUtil {
   public static final String HOLDINGS_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
@@ -44,7 +42,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   public static final String ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND = UUID.randomUUID().toString();
 
   @BeforeClass
-  public static void createCallNumberTypes() throws Exception {
+  public static void createCallNumberTypes() {
     callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);
     callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE_SECOND);
     callNumberTypesClient.deleteIfPresent(ITEM_LEVEL_CALL_NUMBER_TYPE);
@@ -80,7 +78,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   @TestCaseName("[{index}]: {params}")
   public void canCalculateEffectiveCallNumberPropertyOnCreate(
     CallNumberComponentPropertyNames callNumberProperties,
-    String holdingsPropertyValue, String itemPropertyValue) throws Exception {
+    String holdingsPropertyValue, String itemPropertyValue) {
 
     final String effectiveValue = StringUtils.firstNonBlank(itemPropertyValue, holdingsPropertyValue);
     IndividualResource holdings = createHoldingsWithPropertySetAndInstance(
@@ -110,7 +108,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   }
 
   @Test
-  public void canCalculateEffectiveCallNumberPropertyOnBatchCreate() throws Exception {
+  public void canCalculateEffectiveCallNumberPropertyOnBatchCreate() {
     final UUID firstHoldingsId = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
       builder -> builder.withCallNumber("firstHRCallNumber")
         .withCallNumberPrefix("firstHRPrefix")
@@ -186,7 +184,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   }
 
   @Test
-  public void shouldCalculatePropertyWhenHoldingsIsNotRetrieved() throws Exception {
+  public void shouldCalculatePropertyWhenHoldingsIsNotRetrieved() {
     final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
     final JsonObject useAllOwnComponents = nod(holdingsId)
       .put("itemLevelCallNumber", "allOwnComponentsCN")
@@ -215,7 +213,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   public void canCalculateEffectiveCallNumberPropertyOnUpdate(
     CallNumberComponentPropertyNames callNumberProperties,
     String holdingsInitValue, String holdingsTargetValue,
-    String itemInitValue, String itemTargetValue) throws Exception {
+    String itemInitValue, String itemTargetValue) {
 
     final String holdingsPropertyName = callNumberProperties.holdingsPropertyName;
     final String itemPropertyName = callNumberProperties.itemPropertyName;
@@ -252,6 +250,14 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       itemsClient.replace(createdItem.getId(), createdItem.copyJson()
         .put(itemPropertyName, itemTargetValue));
 
+      await().untilAsserted(() -> {
+        var instanceId = holdings.getJson().getString("instanceId");
+        var itemId = createdItem.getId().toString();
+
+        var lastItemEvent = getLastItemEvent(instanceId, itemId);
+        assertTrue(lastItemEvent
+          .getPayload().getJsonObject("new").getInteger("_version") > 1);
+      });
       assertUpdateEventForItem(itemAfterHoldingsUpdate,
         itemsClient.getById(createdItem.getId()).getJson());
     }
@@ -266,8 +272,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   }
 
   private IndividualResource createHoldingsWithPropertySetAndInstance(
-    String propertyName, String propertyValue)
-    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
+    String propertyName, String propertyValue) {
 
     IndividualResource instance = instancesClient.create(instance(UUID.randomUUID()));
 
@@ -283,9 +288,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     return holdings;
   }
 
-  private JsonObject getById(JsonObject origin) throws InterruptedException,
-    MalformedURLException, TimeoutException, ExecutionException {
-
+  private JsonObject getById(JsonObject origin) {
     return itemsClient.getByIdIfPresent(origin.getString("id")).getJson();
   }
 }
