@@ -24,7 +24,7 @@ import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 
-public class ShelvingOrderUpdate extends Versioned {
+public class ShelvingOrderUpdate {
 
   private static final Logger log = LogManager.getLogger();
 
@@ -52,15 +52,17 @@ public class ShelvingOrderUpdate extends Versioned {
   private static final String OPERATION_STATUS_ITEMS_UPDATES_SUCCESSFUL = "Items updates completed successfully";
   private static final String OPERATION_STATUS_ITEMS_UPDATES_FAILED = "Items updates failed";
 
+  private Versioned versionChecker;
 
   private int updateBunchSize;
   private Map<UUID, String> itemsShelvingOrderMap;
   private Map<UUID, Item> itemsMap;
 
   public ShelvingOrderUpdate(int updateBunchSize) {
-    super();
+    this.versionChecker = new Versioned() { };
+    this.versionChecker.setFromModuleVersion(FROM_VERSION_SHELVING_ORDER);
     this.updateBunchSize = updateBunchSize;
-    setFromModuleVersion(FROM_VERSION_SHELVING_ORDER);
+
     itemsShelvingOrderMap = new LinkedHashMap<>();
     itemsMap = new LinkedHashMap<>();
   }
@@ -69,7 +71,7 @@ public class ShelvingOrderUpdate extends Versioned {
     Promise<String> promise = Promise.promise();
 
     String fromModuleVersion = attributes.getModuleFrom().trim();
-    if (StringUtils.isBlank(fromModuleVersion) || isNewForThisInstall(fromModuleVersion)) {
+    if (StringUtils.isBlank(fromModuleVersion) || versionChecker.isNewForThisInstall(fromModuleVersion)) {
       // Update items only for versions before the expected
       promise.fail(OPERATION_STATUS_VERSION_MISMATCH);
     } else {
