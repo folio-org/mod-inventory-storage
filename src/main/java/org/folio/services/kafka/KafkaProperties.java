@@ -23,7 +23,7 @@ public final class KafkaProperties {
     return getenv().getOrDefault("KAFKA_HOST", "localhost");
   }
 
-  private static String getServerAddress() {
+  public static String getServerAddress() {
     return getHost() + ":" + port;
   }
 
