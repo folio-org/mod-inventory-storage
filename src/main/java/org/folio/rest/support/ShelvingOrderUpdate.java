@@ -46,7 +46,7 @@ public class ShelvingOrderUpdate extends Versioned {
       .append("WHERE id = $2").toString();
 
   // Defines version threshold where this property was introduces from
-  private static final String FROM_VERSION_SHELVING_ORDER = "19.5.0";
+  private static final String FROM_VERSION_SHELVING_ORDER = "20.1.0";
 
   private static final String OPERATION_STATUS_VERSION_MISMATCH = "Module version isn't expected";
   private static final String OPERATION_STATUS_ITEMS_UPDATES_SUCCESSFUL = "Items updates completed successfully";
@@ -169,7 +169,12 @@ public class ShelvingOrderUpdate extends Versioned {
                 }
               )
                   // Finish transaction
-              .compose(res3 -> tx.commit())
+              .compose(res3 -> {
+                tx.commit();
+                // Set updated rows count
+                promise.complete(res3.size());
+                return Future.<Void>succeededFuture();
+              })
               .eventually(v -> conn.close())
                   .onSuccess(h -> log.info("Items update transaction succeeded"))
                   .onFailure(h -> log.error("Items update transaction filed: {}", h.getMessage())));
@@ -181,6 +186,10 @@ public class ShelvingOrderUpdate extends Versioned {
      }); // Eof vert.x timer scope
 
     return promise.future();
+  }
+
+  public static boolean isModuleUpgradeRequest(TenantAttributes attributes) {
+    return StringUtils.isNotBlank(attributes.getModuleFrom());
   }
 
 }
