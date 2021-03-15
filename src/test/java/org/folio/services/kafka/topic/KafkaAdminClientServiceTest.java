@@ -7,7 +7,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.Future;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -62,12 +60,7 @@ public class KafkaAdminClientServiceTest {
       }));
   }
 
-  private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient, Boolean purge) {
-    return new KafkaAdminClientService(() -> mockClient)
-      .createKafkaTopics(new TenantAttributes().withPurge(purge));
-  }
-
   private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient) {
-    return createKafkaTopicsAsync(mockClient, null);
+    return new KafkaAdminClientService(() -> mockClient).createKafkaTopics();
   }
 }

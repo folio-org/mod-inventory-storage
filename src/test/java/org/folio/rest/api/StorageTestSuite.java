@@ -22,6 +22,7 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
+import org.folio.services.kafka.KafkaProperties;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -86,7 +87,8 @@ public class StorageTestSuite {
   private static int port;
 
   private static final EmbeddedKafkaServer kafka = new EmbeddedKafkaServerBuilder()
-    .kafkaServerPort(9092).build();
+    .kafkaServerPort(KafkaProperties.changePort(NetworkUtils.nextFreePort()))
+    .build();
 
   private StorageTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
