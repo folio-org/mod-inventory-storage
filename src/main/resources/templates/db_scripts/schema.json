@@ -899,6 +899,11 @@
   ],
   "scripts": [
     {
+        "run":"after",
+        "snippetPath":"setPreviouslyHeldDefault.sql",
+        "fromModuleVersion":"20.1.0"
+    },
+    {
       "run": "before",
       "snippetPath": "populateRmbInternalIndex.sql",
       "fromModuleVersion": "19.1.1"
