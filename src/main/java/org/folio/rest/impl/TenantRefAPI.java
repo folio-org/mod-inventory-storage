@@ -1,11 +1,7 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.succeededFuture;
-
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
@@ -24,8 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.Response;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -90,7 +84,7 @@ public class TenantRefAPI extends TenantAPI {
     // create topics before loading data
     return
       new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics(attributes)
+        .createKafkaTopics()
         .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext))
         .compose(superRecordsLoaded -> {
           try {
