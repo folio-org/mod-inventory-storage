@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.folio.services.kafka.KafkaProducerServiceFactoryTest.KAFKA_TEST_PORT;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -87,7 +88,7 @@ public class StorageTestSuite {
   private static int port;
 
   private static final EmbeddedKafkaServer kafka = new EmbeddedKafkaServerBuilder()
-    .kafkaServerPort(KafkaProperties.changePort(NetworkUtils.nextFreePort()))
+    .kafkaServerPort(KafkaProperties.changePort(KAFKA_TEST_PORT))
     .build();
 
   private StorageTestSuite() {
