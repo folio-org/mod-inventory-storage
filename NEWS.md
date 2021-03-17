@@ -1,3 +1,7 @@
+## 20.0.1 2020-03-17
+
+* Allow overriding topic replication factor via environment variable (MODINVSTOR-694).
+
 ## 20.0.0 2020-03-11
 
 * Determines effective shelving order for items (MODINVSTOR-381, MODINVSTOR-679)

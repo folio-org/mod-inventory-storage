@@ -44,7 +44,19 @@ Mod-inventory-storage implements domain event pattern and requires kafka to be l
 `localhost:9092`. You can override kafka port and host by setting `KAFKA_PORT` and
 `KAFKA_HOST` environment variables.
 
-Please note that the test suite will fail, however, if kafka is listening to `localhost:9092` during `mvn install` or `mvn test`. 
+For production deployments it is also required to set `REPLICATION_FACTOR`
+env variable, this property has following description:
+> The replication factor controls how many servers will replicate each message that is written.
+> If replication factor set to 3 then up to 2 servers can fail before access to the data will be lost.
+
+The default configuration for this property is `1` for production environments
+it is usually `3`.
+
+There is another important property - `number of partitions` for a topic - it has following
+description:
+> The partition count controls how many logs the topic will be sharded into.
+
+This property has fixed value - `50`.
 
 # Building
 

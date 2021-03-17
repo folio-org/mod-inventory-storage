@@ -1,7 +1,7 @@
 package org.folio.services.kafka;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.services.kafka.KafkaConfigHelper.getKafkaProperties;
+import static org.folio.services.kafka.KafkaProperties.getProducerProperties;
 
 import org.apache.logging.log4j.Logger;
 
@@ -35,6 +35,6 @@ public final class KafkaProducerServiceFactory {
    * @throws IllegalArgumentException - if kafka config can not be read
    */
   private static KafkaProducerService createProducer(Vertx vertx) {
-    return new KafkaProducerService(KafkaProducer.create(vertx, getKafkaProperties()));
+    return new KafkaProducerService(KafkaProducer.create(vertx, getProducerProperties()));
   }
 }

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-inventory-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>20.0.1-SNAPSHOT</version>
+  <version>20.0.2-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -134,12 +134,6 @@
       <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-kafka</artifactId>
       <version>3.0.0-M2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.stefanbirkner</groupId>
-      <artifactId>system-rules</artifactId>
-      <version>1.19.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
