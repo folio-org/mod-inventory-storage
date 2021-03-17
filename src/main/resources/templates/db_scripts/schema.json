@@ -471,7 +471,7 @@
           "multiFieldNames": "title,indexTitle,alternativeTitles[*].alternativeTitle,series"
         },
         {
-          "fieldName": "contributorsName",
+          "fieldName": "contributorsNames",
           "multiFieldNames": "contributors[*].name"
         },
         {
