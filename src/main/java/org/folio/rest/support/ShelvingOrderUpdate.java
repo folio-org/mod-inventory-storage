@@ -1,5 +1,13 @@
 package org.folio.rest.support;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -9,15 +17,10 @@ import io.vertx.pgclient.PgConnection;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.folio.dbschema.Versioned;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -28,16 +31,13 @@ public class ShelvingOrderUpdate {
 
   private static final Logger log = LogManager.getLogger();
 
-  private static final String SQL_EXISTS_ITEMS_TO_UPDATE = new StringBuilder()
-      .append("SELECT EXISTS (SELECT null FROM item WHERE not (jsonb ? 'effectiveShelvingOrder'))")
-      .toString();
-
-  private static final String SQL_SELECT_ITEMS = new StringBuilder()
-      .append("SELECT id AS \"id\", ")
-      .append("jsonb AS \"itemJson\" ")
-      .append("FROM item WHERE not (jsonb ? 'effectiveShelvingOrder') ")
-      .append(" FOR UPDATE ")
-      .append("LIMIT $1").toString();
+  private static final String SQL_SELECT_ITEMS =
+      new StringBuilder()
+          .append("SELECT id AS \"id\", ")
+          .append("jsonb AS \"itemJson\" ")
+          .append("FROM item WHERE not (jsonb ? 'effectiveShelvingOrder') ")
+          .append(" FOR UPDATE ")
+          .append("LIMIT $1").toString();
 
 
   private static final String SQL_UPDATE_ITEMS = new StringBuilder()
@@ -48,150 +48,203 @@ public class ShelvingOrderUpdate {
   // Defines version threshold where this property was introduces from
   private static final String FROM_VERSION_SHELVING_ORDER = "20.1.0";
 
-  private static final String OPERATION_STATUS_VERSION_MISMATCH = "Module version isn't expected";
-  private static final String OPERATION_STATUS_ITEMS_UPDATES_SUCCESSFUL = "Items updates completed successfully";
-  private static final String OPERATION_STATUS_ITEMS_UPDATES_FAILED = "Items updates failed";
+  public static int DEF_FETCH_SIZE = 5000;
 
+  private static ShelvingOrderUpdate instance;
   private Versioned versionChecker;
+  private int rowsBunchSize;
+  private AtomicInteger totalUpdatedRows;
 
-  private int updateBunchSize;
-  private Map<UUID, String> itemsShelvingOrderMap;
-  private Map<UUID, Item> itemsMap;
-
-  public ShelvingOrderUpdate(int updateBunchSize) {
-    this.versionChecker = new Versioned() { };
-    this.versionChecker.setFromModuleVersion(FROM_VERSION_SHELVING_ORDER);
-    this.updateBunchSize = updateBunchSize;
-
-    itemsShelvingOrderMap = new LinkedHashMap<>();
-    itemsMap = new LinkedHashMap<>();
+  public static ShelvingOrderUpdate getInstance() {
+    return getInstance(DEF_FETCH_SIZE);
   }
 
-  public Future<String> updateItems(TenantAttributes attributes, Map<String, String> headers, Context vertxContext) {
-    Promise<String> promise = Promise.promise();
+  public static ShelvingOrderUpdate getInstance(int rowsBunchSize) {
+    if (Objects.isNull(instance)) {
+      instance = new ShelvingOrderUpdate(rowsBunchSize);
+    }
+    return instance;
+  }
 
-    String fromModuleVersion = attributes.getModuleFrom().trim();
-    if (StringUtils.isBlank(fromModuleVersion) || versionChecker.isNewForThisInstall(fromModuleVersion)) {
-      // Update items only for versions before the expected
-      promise.fail(OPERATION_STATUS_VERSION_MISMATCH);
+  private ShelvingOrderUpdate(int rowsBunchSize) {
+    this.versionChecker = new Versioned() {};
+    this.versionChecker.setFromModuleVersion(FROM_VERSION_SHELVING_ORDER);
+    this.rowsBunchSize = rowsBunchSize;
+    this.totalUpdatedRows = new AtomicInteger(0);
+  }
+
+  /**
+   * Entry routine of items updates. Invokes the process recursively until no items to update
+   *
+   * @param attributes
+   * @param headers
+   * @param vertxContext
+   * @return
+   */
+  public Future<Integer> updateItems(TenantAttributes attributes, Map<String, String> headers,
+      Context vertxContext) {
+    Promise<Integer> updateItemsPromise = Promise.promise();
+    final Vertx vertx = vertxContext.owner();
+
+    if (ShelvingOrderUpdate.getInstance().isAllowedToUpdate(attributes)) {
+      // Updates items with shelving order property.
+      // This should be triggered once for particular version only.
+      PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, headers);
+
+      final long startTime = System.currentTimeMillis();
+      fetchAndUpdatesItems(vertx, postgresClient).onSuccess(rowsAffected -> {
+
+        totalUpdatedRows.addAndGet(rowsAffected);
+
+        // If previous updates returns affected rows, try it again
+        if (rowsAffected > 0) {
+          fetchAndUpdatesItems(vertx, postgresClient);
+        } else {
+          // No rows affected, just set accumulated amount of rows to result
+          log.info("Items update with shelving order property completed in {} seconds",
+              (System.currentTimeMillis() - startTime) / 1000);
+          updateItemsPromise.complete(totalUpdatedRows.get());
+        }
+
+      }).onFailure(h -> log.error("Error updating items: {}" + h.getCause().getMessage()));
+
     } else {
-      PostgresClient postgresClient =  PgUtil.postgresClient(vertxContext, headers);
-
-      hasItemsToUpdate(vertxContext.owner(), postgresClient)
-          .onSuccess(itemsExists -> {
-            log.warn("Items update started");
-          }).onFailure(h -> {
-            log.info("No items for update");
-      });
+      // Not allowed to perform items updates, just returns
+      updateItemsPromise.complete(0);
     }
 
-    return promise.future();
+    return updateItemsPromise.future();
   }
 
-  private Future<Boolean> hasItemsToUpdate(Vertx vertx, PostgresClient postgresClient) {
-    Promise<Boolean> promise = Promise.promise();
+  /**
+   * Performs fetching items by fixed bunches of rows with further property calculations and
+   * updating in database
+   *
+   * @param vertx
+   * @param postgresClient
+   * @return
+   */
+  private Future<Integer> fetchAndUpdatesItems(Vertx vertx, PostgresClient postgresClient) {
+    Promise<Integer> fetchAndUpdatePromise = Promise.promise();
 
-    postgresClient.execute(SQL_EXISTS_ITEMS_TO_UPDATE, ar -> {
-      if (ar.succeeded()) {
-        RowSet<Row> rows = ar.result();
-        boolean itemsExists = rows.iterator().next().getBoolean(0);
-        promise.complete(itemsExists);
+    postgresClient.getConnection(ar -> {
 
-        fetchAndUpdatesItems(vertx, postgresClient)
-            .onSuccess(h -> hasItemsToUpdate(vertx, postgresClient))
-            .onFailure(h -> log.warn("Current items updates failed: "  + h.getMessage()));
-
+      if (ar.failed()) {
+        fetchAndUpdatePromise.fail("Connection acquiring failure : " + ar.cause().getMessage());
       } else {
-        promise.fail("Failure: " + ar.cause().getMessage());
+
+        PgConnection connection = ar.result();
+        // Starts a new transaction (acquiring and updating of items performs in single transaction)
+        connection.begin()
+            .compose(tx -> connection
+                // Acquiring current bunch of items
+                .preparedQuery(SQL_SELECT_ITEMS)
+                .execute(Tuple.of(rowsBunchSize))
+                .compose(fetchedRows -> {
+                  // Read items and fill them into data structures for further processing
+                  return aggregateRow2List(fetchedRows)
+                      // Calculate items shelving order
+                      .compose(ShelvingOrderUpdate.this::calculateShelvingOrder)
+                      // Prepare items update parameters
+                      .compose(ShelvingOrderUpdate.this::prepareItemsUpdate)
+                      // Updates of items
+                      .compose(listOfTuple -> updateItems(listOfTuple, connection));
+                })
+                // Finish transaction
+                .compose(updatedRows -> {
+                  Promise<Void> promise = Promise.promise();
+                  tx.commit()
+                      .onSuccess(h -> {
+                        fetchAndUpdatePromise.complete(updatedRows.size());
+                        promise.complete();
+                        })
+                      .onFailure(h -> promise.fail(h.getCause().getMessage()));
+                  return promise.future();
+                  })
+                // Close connection
+                .eventually(v -> connection.close()));
+        }
+      });
+
+    return fetchAndUpdatePromise.future();
+  }
+
+  /**
+   * Read items and fill them into data structures for further processing
+   * 
+   * @param rowSet
+   * @return
+   */
+  private Future<List<Item>> aggregateRow2List(RowSet<Row> rowSet) {
+    List<Item> targetList = new ArrayList<>();
+    rowSet.forEach(row -> {
+      JsonObject itemJsonObject = row.getJsonObject("itemJson");
+      Item item = itemJsonObject.mapTo(Item.class);
+      targetList.add(item);
+    });
+    return Future.succeededFuture(targetList);
+  }
+
+  /**
+   * Calculate items shelving order
+   * 
+   * @return
+   */
+  private Future<Map<UUID, JsonObject>> calculateShelvingOrder(List<Item> itemList) {
+    Map<UUID, JsonObject> updatedItemsMap = itemList.stream()
+        .map(EffectiveCallNumberComponentsUtil::getCalculateAndSetEffectiveShelvingOrder)
+        .collect(Collectors.toMap(item -> UUID.fromString(item.getId()), JsonObject::mapFrom));
+    return Future.succeededFuture(updatedItemsMap);
+  }
+
+  /**
+   * Prepare items update parameters
+   * 
+   * @param itemIdMap
+   * @return
+   */
+  private Future<List<Tuple>> prepareItemsUpdate(Map<UUID, JsonObject> itemIdMap) {
+    List<Tuple> itemsUpdateParams = new ArrayList<>();
+    itemIdMap.entrySet().stream()
+        .map(entry -> itemsUpdateParams.add(Tuple.of(entry.getValue(), entry.getKey())))
+        .collect(Collectors.toList());
+    return Future.succeededFuture(itemsUpdateParams);
+  }
+
+  /**
+   * Updates of items
+   * 
+   * @param itemsParams
+   * @param connection
+   * @return
+   */
+  private Future<RowSet<Row>> updateItems(List<Tuple> itemsParams, PgConnection connection) {
+    Promise<RowSet<Row>> promise = Promise.promise();
+    connection.preparedQuery(SQL_UPDATE_ITEMS).executeBatch(itemsParams, res -> {
+      if (res.succeeded()) {
+        int updatedItemsCount = res.result().rowCount();
+        log.info("There were {} items updated", updatedItemsCount);
+        promise.complete(res.result());
+      } else {
+        log.error("Items updates failed {}", res.cause());
+        promise.fail(res.cause().getMessage());
       }
     });
-
     return promise.future();
   }
 
-  private Future<Integer> fetchAndUpdatesItems(Vertx vertx, PostgresClient postgresClient) {
-    Promise<Integer> promise = Promise.promise();
+  /**
+   * Determine conditions of starting items updates
+   * 
+   * @param attributes
+   * @return
+   */
+  private boolean isAllowedToUpdate(TenantAttributes attributes) {
+    String fromModuleVersion = attributes.getModuleFrom().trim();
+    log.debug("fromModuleVersion is: {}", fromModuleVersion);
 
-    vertx.setTimer(500L, timer -> {
-      itemsShelvingOrderMap.clear();
-
-      postgresClient.getConnection(ar -> {
-
-        if (ar.failed()) {
-          promise.fail("Connection acquiring failure : " + ar.cause().getMessage());
-        } else {
-
-          PgConnection conn = ar.result();
-          // Starts a new transaction (acquiring and updating of items performs in single transaction)
-          conn.begin()
-              .compose(tx -> conn
-
-                  // Acquiring current bunch of items
-                .preparedQuery(SQL_SELECT_ITEMS)
-                .execute(Tuple.of(updateBunchSize))
-                .compose(itemsRows -> {
-                  final Promise<RowSet<Row>> promiseOfUpdateItems = Promise.promise();
-
-                  // Read items and fill them into data structures for further processing
-                  List<Item> itemList = new ArrayList<>();
-                  itemsRows.forEach(row -> {
-                    UUID itemId = row.getUUID("id");
-                    JsonObject itemJsonObject = row.getJsonObject("itemJson");
-                    Item item = itemJsonObject.mapTo(Item.class);
-                    itemList.add(item);
-                    itemsMap.put(itemId, item);
-                  });
-
-                  // Calculate items shelving order
-                  Map<UUID, JsonObject> updatedItemsMap = itemList.stream()
-                      .map(EffectiveCallNumberComponentsUtil::getCalculateAndSetEffectiveShelvingOrder)
-                      .collect(Collectors.toMap(item -> UUID.fromString(item.getId()), JsonObject::mapFrom));
-
-                  // Prepare items update parameters
-                  List<Tuple> itemsUpdateParams = new ArrayList<>();
-                  updatedItemsMap.entrySet().stream()
-                      .map(entry -> itemsUpdateParams.add(Tuple.of(entry.getValue(), entry.getKey())))
-                      .collect(Collectors.toList());
-
-                  // Updates of items
-                  conn
-                      .preparedQuery(SQL_UPDATE_ITEMS)
-                      .executeBatch(itemsUpdateParams, res -> {
-                        if (res.succeeded()) {
-                          int updatedItemsCount = res.result().iterator().next().getInteger(0);
-                          log.info("There were {} items updated", updatedItemsCount);
-                          promiseOfUpdateItems.complete(res.result());
-                        } else {
-                          log.error("Items updates failed {}", res.cause());
-                          promiseOfUpdateItems.fail(res.cause().getMessage());
-                        }
-                      });
-
-                  return promiseOfUpdateItems.future();
-                }
-              )
-                  // Finish transaction
-              .compose(res3 -> {
-                tx.commit();
-                // Set updated rows count
-                promise.complete(res3.size());
-                return Future.<Void>succeededFuture();
-              })
-              .eventually(v -> conn.close())
-                  .onSuccess(h -> log.info("Items update transaction succeeded"))
-                  .onFailure(h -> log.error("Items update transaction filed: {}", h.getMessage())));
-
-        } // Connection acquired successfully
-
-      }); // Eof getConnection scope
-
-     }); // Eof vert.x timer scope
-
-    return promise.future();
-  }
-
-  public static boolean isModuleUpgradeRequest(TenantAttributes attributes) {
-    return StringUtils.isNotBlank(attributes.getModuleFrom());
+    return (StringUtils.isNotBlank(fromModuleVersion)
+        && !versionChecker.isNewForThisInstall(fromModuleVersion));
   }
 
 }
