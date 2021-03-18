@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgConnection;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Transaction;
 import io.vertx.sqlclient.Tuple;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -83,35 +85,44 @@ public class ShelvingOrderUpdate {
    */
   public Future<Integer> updateItems(TenantAttributes attributes, Map<String, String> headers,
       Context vertxContext) {
-    Promise<Integer> updateItemsPromise = Promise.promise();
+    final Promise updateItemsPromise = Promise.promise();
     final Vertx vertx = vertxContext.owner();
+    
+    vertx.executeBlocking(blockingHandler -> {
+      
+      if (ShelvingOrderUpdate.getInstance().isAllowedToUpdate(attributes)) {
+        // Updates items with shelving order property.
+        // This should be triggered once for particular version only.
+        PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, headers);
 
-    if (ShelvingOrderUpdate.getInstance().isAllowedToUpdate(attributes)) {
-      // Updates items with shelving order property.
-      // This should be triggered once for particular version only.
-      PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, headers);
+        final long startTime = System.currentTimeMillis();
+        fetchAndUpdatesItems(vertx, postgresClient)
+            .onSuccess(rowsAffected -> {
 
-      final long startTime = System.currentTimeMillis();
-      fetchAndUpdatesItems(vertx, postgresClient).onSuccess(rowsAffected -> {
+                totalUpdatedRows.addAndGet(rowsAffected);
+                // If previous updates returns affected rows, try it again
+                if (rowsAffected > 0) {
+                  fetchAndUpdatesItems(vertx, postgresClient);
+                } else {
+                  // No rows affected, just set accumulated amount of rows to result
+                  log.info("Items update with shelving order property completed in {} seconds",
+                      (System.currentTimeMillis() - startTime) / 1000);
+                  updateItemsPromise.complete(totalUpdatedRows.get());
+                  blockingHandler.complete();
+                }
+            })
+            .onFailure(h -> {
+              updateItemsPromise.fail(h.getCause());
+              blockingHandler.fail(h.getCause());
+              log.error("Error updating items: {}" + h.getCause().getMessage());
+            });
 
-        totalUpdatedRows.addAndGet(rowsAffected);
-
-        // If previous updates returns affected rows, try it again
-        if (rowsAffected > 0) {
-          fetchAndUpdatesItems(vertx, postgresClient);
-        } else {
-          // No rows affected, just set accumulated amount of rows to result
-          log.info("Items update with shelving order property completed in {} seconds",
-              (System.currentTimeMillis() - startTime) / 1000);
-          updateItemsPromise.complete(totalUpdatedRows.get());
-        }
-
-      }).onFailure(h -> log.error("Error updating items: {}" + h.getCause().getMessage()));
-
-    } else {
-      // Not allowed to perform items updates, just returns
-      updateItemsPromise.complete(0);
-    }
+      } else {
+        // Not allowed to perform items updates, just returns
+        updateItemsPromise.complete();
+      }  
+      
+    });
 
     return updateItemsPromise.future();
   }
@@ -131,44 +142,59 @@ public class ShelvingOrderUpdate {
 
       if (ar.failed()) {
         fetchAndUpdatePromise.fail("Connection acquiring failure : " + ar.cause().getMessage());
-      } else {
 
+      } else {
         PgConnection connection = ar.result();
         // Starts a new transaction (acquiring and updating of items performs in single transaction)
-        connection.begin()
+        connection
+            .begin()
             .compose(tx -> connection
                 // Acquiring current bunch of items
                 .preparedQuery(SQL_SELECT_ITEMS)
                 .execute(Tuple.of(rowsBunchSize))
+
                 .compose(fetchedRows -> {
                   // Read items and fill them into data structures for further processing
                   return aggregateRow2List(fetchedRows)
+
                       // Calculate items shelving order
                       .compose(ShelvingOrderUpdate.this::calculateShelvingOrder)
+
                       // Prepare items update parameters
                       .compose(ShelvingOrderUpdate.this::prepareItemsUpdate)
+
                       // Updates of items
                       .compose(listOfTuple -> updateItems(listOfTuple, connection));
                 })
+
                 // Finish transaction
-                .compose(updatedRows -> {
-                  Promise<Void> promise = Promise.promise();
-                  tx.commit()
-                      .onSuccess(h -> {
-                        fetchAndUpdatePromise.complete(updatedRows.size());
-                        promise.complete();
-                        })
-                      .onFailure(h -> promise.fail(h.getCause().getMessage()));
-                  return promise.future();
-                  })
+                .compose(updatedRows -> completeTransaction(tx, updatedRows.size(), fetchAndUpdatePromise))
+
                 // Close connection
                 .eventually(v -> connection.close()));
         }
+
       });
 
     return fetchAndUpdatePromise.future();
   }
 
+  /**
+   * Completes transaction and set common update promise with affected rows count
+   *
+   * @param tx
+   * @param updatedRowsCount
+   * @param itemsUpdatePromise
+   * @return
+   */
+  private Future<Void> completeTransaction(Transaction tx, Integer updatedRowsCount,
+      Promise<Integer> itemsUpdatePromise) {
+    tx.commit()
+        .onSuccess(h -> itemsUpdatePromise.complete(updatedRowsCount))
+        .onFailure(h -> itemsUpdatePromise.fail(h.getCause().getMessage()));
+    return Future.succeededFuture();
+  }
+  
   /**
    * Read items and fill them into data structures for further processing
    * 
@@ -240,7 +266,7 @@ public class ShelvingOrderUpdate {
    * @return
    */
   private boolean isAllowedToUpdate(TenantAttributes attributes) {
-    String fromModuleVersion = attributes.getModuleFrom().trim();
+    String fromModuleVersion = Optional.ofNullable(attributes.getModuleFrom()).orElse(StringUtils.EMPTY).trim();
     log.debug("fromModuleVersion is: {}", fromModuleVersion);
 
     return (StringUtils.isNotBlank(fromModuleVersion)
