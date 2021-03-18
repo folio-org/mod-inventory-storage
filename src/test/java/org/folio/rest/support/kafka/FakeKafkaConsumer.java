@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.folio.services.kafka.KafkaMessage;
+import org.folio.services.kafka.KafkaProperties;
 import org.folio.services.kafka.topic.KafkaTopic;
 
 import io.vertx.core.Vertx;
@@ -133,7 +134,7 @@ public final class FakeKafkaConsumer {
 
   private Map<String, String> consumerProperties() {
     Map<String, String> config = new HashMap<>();
-    config.put("bootstrap.servers", "localhost:9092");
+    config.put("bootstrap.servers", KafkaProperties.getServerAddress());
     config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     config.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     config.put("group.id", "folio");
