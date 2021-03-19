@@ -54,7 +54,7 @@ public class ShelvingOrderUpdateTest extends TestBase {
     log.info("Tenant initialization finished");
 
     log.info("Module upgrade started, fromModuleVersion: {}", FROM_MODULE_EXPECTED_VALUE);
-//    postTenantOperation(tenant, FROM_MODULE_EXPECTED_VALUE);
+    postTenantOperation(tenant, FROM_MODULE_EXPECTED_VALUE);
     log.info("Module upgrade completed");
 
     log.info("Tenant deletion started: {}", tenant);
@@ -73,7 +73,7 @@ public class ShelvingOrderUpdateTest extends TestBase {
     log.info("Tenant initialization finished");
 
     log.info("Module upgrade started, fromModuleVersion: {}", FROM_MODULE_UNEXPECTED_VALUE);
-//    postTenantOperation(tenant, FROM_MODULE_UNEXPECTED_VALUE);
+    postTenantOperation(tenant, FROM_MODULE_UNEXPECTED_VALUE);
     log.info("Module upgrade completed");
 
     log.info("Tenant deletion started: {}", tenant);
