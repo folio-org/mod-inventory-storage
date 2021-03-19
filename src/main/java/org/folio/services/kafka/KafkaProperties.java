@@ -11,9 +11,13 @@ public final class KafkaProperties {
   private static int port = parseInt(getenv().getOrDefault("KAFKA_PORT", "9092"));
   private static String host = getenv().getOrDefault("KAFKA_HOST", "localhost");
 
-  public static void setHostPort(String host, int port) {
+  public static void setPort(int port) {
     KafkaProducerServiceFactory.clear();
     KafkaProperties.port = port;
+  }
+
+  public static void setHost(String host) {
+    KafkaProducerServiceFactory.clear();
     KafkaProperties.host = host;
   }
 

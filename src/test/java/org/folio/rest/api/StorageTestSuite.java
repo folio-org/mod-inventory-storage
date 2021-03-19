@@ -22,6 +22,8 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
+import org.folio.services.kafka.KafkaProducerService;
+import org.folio.services.kafka.KafkaProducerServiceFactory;
 import org.folio.services.kafka.KafkaProperties;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -146,7 +148,8 @@ public class StorageTestSuite {
     kafkaContainer.start();
     logger.info("starting Kafka host={} port={}",
       kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
-    KafkaProperties.setHostPort(kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
+    KafkaProperties.setHost(kafkaContainer.getHost());
+    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
 
     logger.info("starting RestVerticle");
 
