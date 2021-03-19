@@ -16,7 +16,7 @@ public class KafkaProducerServiceFactoryTest {
   public void kafkaProducerIsSingleton() {
     final Vertx vertx = Vertx.vertx();
 
-    KafkaProperties.changePort(KAFKA_TEST_PORT);
+    KafkaProperties.setHostPort("localhost", KAFKA_TEST_PORT);
     final KafkaProducerService firstKafkaProducer = getKafkaProducerService(vertx);
     final KafkaProducerService secondKafkaProducer = getKafkaProducerService(vertx);
 

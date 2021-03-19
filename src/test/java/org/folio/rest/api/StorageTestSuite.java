@@ -146,7 +146,7 @@ public class StorageTestSuite {
     kafkaContainer.start();
     logger.info("starting Kafka host={} port={}",
       kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
-    KafkaProperties.changePort(kafkaContainer.getFirstMappedPort());
+    KafkaProperties.setHostPort(kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
 
     logger.info("starting RestVerticle");
 
