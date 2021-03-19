@@ -143,6 +143,10 @@ public class StorageTestSuite {
         throw new Exception(message);
     }
 
+    logger.info("starting Kafka");
+    kafkaContainer.start();
+    KafkaProperties.changePort(kafkaContainer.getFirstMappedPort());
+
     logger.info("starting RestVerticle");
 
     port = NetworkUtils.nextFreePort();
@@ -151,9 +155,6 @@ public class StorageTestSuite {
     startVerticle(options);
 
     logger.info("preparing tenant");
-
-    kafkaContainer.start();
-    KafkaProperties.changePort(kafkaContainer.getFirstMappedPort());
 
     prepareTenant(TENANT_ID, false);
 
