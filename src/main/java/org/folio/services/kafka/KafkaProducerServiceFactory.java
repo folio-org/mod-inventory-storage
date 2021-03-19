@@ -32,6 +32,14 @@ public final class KafkaProducerServiceFactory {
   }
 
   /**
+   * clear this (if for example we are using other Vert.x)
+   */
+  public static void clear() {
+    synchronized (KafkaProducerService.class) {
+      kafkaProducerService = null;
+    }
+  }
+  /**
    * @throws IllegalArgumentException - if kafka config can not be read
    */
   private static KafkaProducerService createProducer(Vertx vertx) {

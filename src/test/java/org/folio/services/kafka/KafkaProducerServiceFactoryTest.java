@@ -10,13 +10,13 @@ import io.vertx.core.Vertx;
 
 public class KafkaProducerServiceFactoryTest {
 
-  public static final int KAFKA_TEST_PORT = NetworkUtils.nextFreePort();
+  static final int KAFKA_TEST_PORT = NetworkUtils.nextFreePort();
 
   @Test
   public void kafkaProducerIsSingleton() {
     final Vertx vertx = Vertx.vertx();
 
-    KafkaProperties.changePort(KAFKA_TEST_PORT);
+    KafkaProperties.setPort(KAFKA_TEST_PORT);
     final KafkaProducerService firstKafkaProducer = getKafkaProducerService(vertx);
     final KafkaProducerService secondKafkaProducer = getKafkaProducerService(vertx);
 

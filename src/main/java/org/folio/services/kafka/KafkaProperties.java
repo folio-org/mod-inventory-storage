@@ -9,10 +9,16 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 public final class KafkaProperties {
   private static int port = parseInt(getenv().getOrDefault("KAFKA_PORT", "9092"));
+  private static String host = getenv().getOrDefault("KAFKA_HOST", "localhost");
 
-  public static int changePort(int port) {
+  public static void setPort(int port) {
+    KafkaProducerServiceFactory.clear();
     KafkaProperties.port = port;
-    return port;
+  }
+
+  public static void setHost(String host) {
+    KafkaProducerServiceFactory.clear();
+    KafkaProperties.host = host;
   }
 
   public static short getReplicationFactor() {
@@ -20,7 +26,7 @@ public final class KafkaProperties {
   }
 
   private static String getHost() {
-    return getenv().getOrDefault("KAFKA_HOST", "localhost");
+    return host;
   }
 
   public static String getServerAddress() {
