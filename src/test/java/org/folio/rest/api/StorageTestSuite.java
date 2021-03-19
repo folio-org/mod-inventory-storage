@@ -262,7 +262,7 @@ public class StorageTestSuite {
     prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
-  static void removeTenant(String tenantId) throws InterruptedException, ExecutionException, TimeoutException {
+  public static void removeTenant(String tenantId) throws InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject jo = new JsonObject();
     jo.put("purge", Boolean.TRUE);
