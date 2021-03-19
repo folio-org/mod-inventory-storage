@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.support.ShelvingOrderUpdate;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.services.kafka.topic.KafkaAdminClientService;
 
@@ -120,6 +121,7 @@ public class TenantRefAPI extends TenantAPI {
               .add("users", "service-points-users");
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
-        });
+        }).compose(loaded -> ShelvingOrderUpdate
+          .getInstance().updateItems(attributes, headers, vertxContext));
   }
 }
