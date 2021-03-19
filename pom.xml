@@ -42,6 +42,13 @@
         <artifactId>vertx-pg-client</artifactId>
         <version>${vertx.version}-FOLIO</version>
       </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-bom</artifactId>
+        <version>1.15.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -131,9 +138,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-kafka</artifactId>
-      <version>3.0.0-M2</version>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>kafka</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

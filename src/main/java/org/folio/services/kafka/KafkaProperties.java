@@ -11,6 +11,7 @@ public final class KafkaProperties {
   private static int port = parseInt(getenv().getOrDefault("KAFKA_PORT", "9092"));
 
   public static int changePort(int port) {
+    KafkaProducerServiceFactory.clear();
     KafkaProperties.port = port;
     return port;
   }
