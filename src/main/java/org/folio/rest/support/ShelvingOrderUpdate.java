@@ -1,6 +1,9 @@
 package org.folio.rest.support;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -55,6 +58,7 @@ public class ShelvingOrderUpdate {
   private Versioned versionChecker;
   private int rowsBunchSize;
   private AtomicInteger totalUpdatedRows;
+  private Handler<AsyncResult<Boolean>> completionHandler;
 
   public static ShelvingOrderUpdate getInstance() {
     return getInstance(DEF_FETCH_SIZE);
@@ -79,6 +83,16 @@ public class ShelvingOrderUpdate {
     this.totalUpdatedRows = new AtomicInteger(0);
   }
 
+  public void setCompletionHandler(Handler<AsyncResult<Boolean>> handler) {
+    log.info("getCompletionHandler set up: {}", handler);
+    completionHandler = handler;
+  }
+
+  public Handler<AsyncResult<Boolean>> getCompletionHandler() {
+    log.info("getCompletionHandler acquired: {}", completionHandler);
+    return completionHandler;
+  }
+
   /**
    * Entry routine of items updates. Invokes the process recursively until no items to update
    *
@@ -89,6 +103,15 @@ public class ShelvingOrderUpdate {
    */
   public Future<Integer> updateItems(TenantAttributes attributes, Map<String, String> headers,
       Context vertxContext) {
+
+    // Set completion handler promise for notifying if update performed or not
+    final Promise<Boolean> completionHandlerPromise = Promise.promise();
+    if (!Objects.isNull(getCompletionHandler())) {
+      log.info("Setting completionHandler {} to promise: {}", getCompletionHandler(), completionHandlerPromise);
+      getCompletionHandler().handle(completionHandlerPromise.future());
+    } else {
+      log.info("Setting completionHandler skipped, it's a null: {}", getCompletionHandler());
+    }
 
     final Promise<Integer> updateItemsPromise = Promise.promise();
     final Vertx vertx = vertxContext.owner();
@@ -114,10 +137,12 @@ public class ShelvingOrderUpdate {
               log.info("Items update with shelving order property completed in {} seconds",
                   (System.currentTimeMillis() - startTime) / 1000);
               updateItemsPromise.complete(totalUpdatedRows.get());
+              completionHandlerPromise.complete((totalUpdatedRows.get() > 0));
             }
           })
           .onFailure(h -> {
             updateItemsPromise.fail(h.getCause());
+            completionHandlerPromise.fail(h.getCause());
             log.error("Error updating items: {}", h.getCause().getMessage());
           });
 
@@ -125,6 +150,7 @@ public class ShelvingOrderUpdate {
       log.info("Module isn't eligible for upgrade, just exit.");
       // Not allowed to perform items updates, just returns
       updateItemsPromise.complete(0);
+      completionHandlerPromise.complete(Boolean.FALSE);
     }
 
     return updateItemsPromise.future();
@@ -170,9 +196,9 @@ public class ShelvingOrderUpdate {
 
                   // Updates of items
                   .compose(listOfTuple -> updateItems(listOfTuple, connection))
-                    
+
                   // Finish transaction
-                  .compose(updatedRows -> completeTransaction(tx, updatedRows, fetchAndUpdatePromise))
+                  .compose(updatedRowsCount -> completeTransaction(tx, updatedRowsCount, fetchAndUpdatePromise))
 
                   // Close connection
                   .eventually(v -> connection.close())));
@@ -186,16 +212,16 @@ public class ShelvingOrderUpdate {
    * Completes transaction and set common update promise with affected rows count
    *
    * @param tx
-   * @param updatedRows
+   * @param updatedRowsCount
    * @param itemsUpdatePromise
    * @return
    */
-  private Future<Void> completeTransaction(Transaction tx,Integer updatedRows,
+  private Future<Void> completeTransaction(Transaction tx,Integer updatedRowsCount,
       Promise<Integer> itemsUpdatePromise) {
-    log.info("Invoking of completeTransaction, updatedRows size: {}", updatedRows);
+    log.info("Invoking of completeTransaction, updatedRows size: {}", updatedRowsCount);
 
     tx.commit()
-        .onSuccess(h -> itemsUpdatePromise.complete(updatedRows))
+        .onSuccess(h -> itemsUpdatePromise.complete(updatedRowsCount))
         .onFailure(h -> itemsUpdatePromise.fail(h.getCause().getMessage()));
 
     return Future.succeededFuture();
@@ -211,13 +237,17 @@ public class ShelvingOrderUpdate {
     log.info("Invoking of aggregateRow2List, rows size: {}", rowSet.size());
     Promise<List<Item>> promise = Promise.promise();
 
-    List<Item> targetList = new ArrayList<>();
-    rowSet.forEach(row -> {
-      JsonObject itemJsonObject = row.getJsonObject("itemJson");
-      Item item = itemJsonObject.mapTo(Item.class);
-      targetList.add(item);
-    });
-    promise.complete(targetList);
+    if (rowSet.size() > 0) {
+      List<Item> targetList = new ArrayList<>();
+      rowSet.forEach(row -> {
+        JsonObject itemJsonObject = row.getJsonObject("itemJson");
+        Item item = itemJsonObject.mapTo(Item.class);
+        targetList.add(item);
+      });
+      promise.complete(targetList);
+    } else {
+      promise.complete(Collections.emptyList());
+    }
 
     return promise.future();
   }
@@ -284,6 +314,7 @@ public class ShelvingOrderUpdate {
         promise.fail(res.cause().getMessage());
       }
     });
+
     return promise.future();
   }
 

@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import static org.folio.rest.api.StorageTestSuite.removeTenant;
 import static org.folio.rest.api.StorageTestSuite.tenantOp;
 
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -52,7 +54,6 @@ public class ShelvingOrderUpdateTest extends TestBase {
 
   @Test
   public void checkingShouldPassForOlderModuleVersions() {
-    shelvingOrderUpdate = ShelvingOrderUpdate.getInstance();
     defaultTenant = generateTenantValue();
 
     final TenantAttributes tenantAttributes = getTenantAttributes(FROM_MODULE_DO_UPGRADE);
@@ -62,7 +63,6 @@ public class ShelvingOrderUpdateTest extends TestBase {
 
   @Test
   public void checkingShouldFailForNewerModuleVersions() {
-    shelvingOrderUpdate = ShelvingOrderUpdate.getInstance();
     defaultTenant = generateTenantValue();
 
     final TenantAttributes tenantAttributes = getTenantAttributes(FROM_MODULE_SKIP_UPGRADE);
@@ -72,7 +72,6 @@ public class ShelvingOrderUpdateTest extends TestBase {
 
   @Test
   public void checkingShouldFailForEmptyModuleVersionPassed() {
-    shelvingOrderUpdate = ShelvingOrderUpdate.getInstance();
     defaultTenant = generateTenantValue();
 
     final TenantAttributes tenantAttributes = getTenantAttributes(StringUtils.EMPTY);
@@ -82,7 +81,6 @@ public class ShelvingOrderUpdateTest extends TestBase {
 
   @Test
   public void checkingShouldFailForNullModuleVersionPassed() {
-    shelvingOrderUpdate = ShelvingOrderUpdate.getInstance();
     defaultTenant = generateTenantValue();
 
     final TenantAttributes tenantAttributes = getTenantAttributes(null);
@@ -92,7 +90,6 @@ public class ShelvingOrderUpdateTest extends TestBase {
 
   @Test
   public void checkingShouldFailForMissedModuleVersionPassed() {
-    shelvingOrderUpdate = ShelvingOrderUpdate.getInstance();
     defaultTenant = generateTenantValue();
 
     final TenantAttributes tenantAttributes = new TenantAttributes();
@@ -109,9 +106,10 @@ public class ShelvingOrderUpdateTest extends TestBase {
     initTenant(tenant);
     log.info("Tenant initialization finished");
 
-    log.info("Module upgrade started, fromModuleVersion: {}", FROM_MODULE_DO_UPGRADE);
-    postTenantOperation(tenant, FROM_MODULE_DO_UPGRADE);
-    log.info("Module upgrade completed");
+    Future<Boolean> operationFutureResult = doModuleUpgrade(tenant, FROM_MODULE_DO_UPGRADE);
+    log.info("!!!!!! 1) operationFutureResult: {}, operationFutureResult.succeeded: {}, operationFutureResult.result: {} ", operationFutureResult, operationFutureResult.succeeded(), operationFutureResult.result());
+    shelvingOrderUpdate.setCompletionHandler(null);
+    //assertTrue("Items update should succeed", operationFutureResult.result());
 
     log.info("Tenant deletion started: {}", tenant);
     deleteTenant(tenant);
@@ -127,18 +125,37 @@ public class ShelvingOrderUpdateTest extends TestBase {
     initTenant(tenant);
     log.info("Tenant initialization finished");
 
-    log.info("Module upgrade started, fromModuleVersion: {}", FROM_MODULE_SKIP_UPGRADE);
-    postTenantOperation(tenant, FROM_MODULE_SKIP_UPGRADE);
-    log.info("Module upgrade completed");
+    Future<Boolean> operationFutureResult = doModuleUpgrade(tenant, FROM_MODULE_SKIP_UPGRADE);
+    log.info("!!!!!! 2) operationFutureResult: {}, operationFutureResult.succeeded: {}, operationFutureResult.result: {} ", operationFutureResult, operationFutureResult.succeeded(), operationFutureResult.result());
+    shelvingOrderUpdate.setCompletionHandler(null);
+    //assertFalse("Items update should skipped", operationFutureResult.succeeded());
 
     log.info("Tenant deletion started: {}", tenant);
     deleteTenant(tenant);
     log.info("Tenant deletion finished");
   }
 
+  private Future<Boolean> doModuleUpgrade(String tenant, String fromModuleVersion) {
+    Promise<Boolean> promise = Promise.promise();
+    shelvingOrderUpdate.setCompletionHandler(promise);
+
+    // Trigger operation
+    log.info("Module upgrade started, fromModuleVersion: {}", fromModuleVersion);
+    postTenantOperation(tenant, fromModuleVersion);
+
+    promise.future().onComplete(h -> {
+      log.info("Module upgrade completed");
+      if (h.succeeded()) {
+        log.info("Items updates occurred: {}", h.result());
+      } else {
+        log.info("Items updates failed: {}", h.cause().getMessage());
+      }
+    });
+    return promise.future();
+  }
+
   private static TenantAttributes getTenantAttributes(String moduleFrom) {
-    return new TenantAttributes()
-        .withModuleTo(VERSION_WITH_SHELVING_ORDER)
+    return new TenantAttributes().withModuleTo(VERSION_WITH_SHELVING_ORDER)
         .withModuleFrom(moduleFrom);
   }
 
