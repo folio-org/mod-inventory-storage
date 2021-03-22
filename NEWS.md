@@ -1,5 +1,8 @@
 ## 20.1.0 In-progress
 
+* Provides `holdings-storage 4.6` (MODINVSTOR-669)
+* Add effective holdings location attribute to holdings record (MODINVSTOR-669)
+
 ## 20.0.0 2021-03-11
 
 * Determines effective shelving order for items (MODINVSTOR-381, MODINVSTOR-679)
