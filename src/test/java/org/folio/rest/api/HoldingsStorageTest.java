@@ -112,6 +112,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
     assertThat(holding.getString("hrid"), is("ho00000000001"));
+    assertThat(holding.getString("effectiveLocationId"), is(mainLibraryLocationId));
 
     Response getResponse = holdingsClient.getById(holdingId);
 
