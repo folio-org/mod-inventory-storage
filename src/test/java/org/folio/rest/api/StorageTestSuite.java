@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.folio.services.kafka.KafkaProducerServiceFactoryTest.KAFKA_TEST_PORT;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -23,15 +22,14 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
+import org.folio.services.kafka.KafkaProducerService;
+import org.folio.services.kafka.KafkaProducerServiceFactory;
 import org.folio.services.kafka.KafkaProperties;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServer;
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Promise;
@@ -40,6 +38,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -87,9 +87,8 @@ public class StorageTestSuite {
   private static Vertx vertx;
   private static int port;
 
-  private static final EmbeddedKafkaServer kafka = new EmbeddedKafkaServerBuilder()
-    .kafkaServerPort(KafkaProperties.changePort(KAFKA_TEST_PORT))
-    .build();
+  private static final KafkaContainer kafkaContainer
+    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
 
   private StorageTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
@@ -146,6 +145,12 @@ public class StorageTestSuite {
         throw new Exception(message);
     }
 
+    kafkaContainer.start();
+    logger.info("starting Kafka host={} port={}",
+      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
+    KafkaProperties.setHost(kafkaContainer.getHost());
+    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
+
     logger.info("starting RestVerticle");
 
     port = NetworkUtils.nextFreePort();
@@ -155,7 +160,6 @@ public class StorageTestSuite {
 
     logger.info("preparing tenant");
 
-    kafka.start();
     prepareTenant(TENANT_ID, false);
 
     logger.info("finished @BeforeClass before()");
@@ -168,9 +172,10 @@ public class StorageTestSuite {
     TimeoutException {
 
     removeTenant(TENANT_ID);
+    kafkaContainer.stop();
     vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
+    vertx = null; // declare it dead but also for TestBase.testBaseBeforeClass.
     PostgresClient.stopEmbeddedPostgres();
-    kafka.stop();
   }
 
   static void deleteAll(URL rootUrl) {
