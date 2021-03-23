@@ -76,6 +76,7 @@ public class HoldingsService {
   }
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
+
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
@@ -87,7 +88,7 @@ public class HoldingsService {
   }
 
   public Future<Response> createHolding(HoldingsRecord entity) {
-    //entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
+    entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
     return setHrid(entity)
       .compose(hr -> {
         final Promise<Response> postResponse = promise();
@@ -101,7 +102,8 @@ public class HoldingsService {
   }
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
-    //newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
+    newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
+    log.info("updated location: " + newHoldings.getEffectiveLocationId());
     return refuseIfHridChanged(oldHoldings, newHoldings)
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
@@ -134,9 +136,9 @@ public class HoldingsService {
 
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert) {
     
-    //for (HoldingsRecord record : holdings) {
-    //  record.setEffectiveLocationId(calculateEffectiveLocation(record));
-    //}
+    for (HoldingsRecord record : holdings) {
+      record.setEffectiveLocationId(calculateEffectiveLocation(record));
+    }
 
     @SuppressWarnings("all")
     final List<Future> setHridFutures = holdings.stream()
@@ -161,10 +163,10 @@ public class HoldingsService {
     String permanentLocationId = record.getPermanentLocationId();
     String temporaryLocationId = record.getTemporaryLocationId();
 
-    if (temporaryLocationId.isEmpty() || temporaryLocationId == null) {
-      return permanentLocationId;
-    } else {
+    if (temporaryLocationId != null) {
       return temporaryLocationId;
+    } else {
+      return permanentLocationId;
     }
   }
 

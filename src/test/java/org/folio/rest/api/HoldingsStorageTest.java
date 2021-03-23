@@ -65,6 +65,7 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnitParamsRunner.class)
@@ -112,7 +113,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
     assertThat(holding.getString("hrid"), is("ho00000000001"));
-    assertThat(holding.getString("effectiveLocationId"), is(mainLibraryLocationId));
+    assertThat(holding.getString("effectiveLocationId"), is(mainLibraryLocationId.toString()));
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -609,6 +610,45 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
+
+  @Test
+  public void updatingTemporaryLocationChangesEffectiveLocation() 
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    setHoldingsSequence(1);
+
+    UUID holdingId = UUID.randomUUID();
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    assertThat(holding.getString("effectiveLocationId"), is(mainLibraryLocationId.toString()));
+
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    holding.put("temporaryLocationId", annexLibraryLocationId.toString());
+
+    update(holdingsUrl, holding);
+
+    Response updatedHolding = holdingsClient.getById(holdingId);
+
+    assertThat(updatedHolding.getJson().getString("effectiveLocationId"), is(annexLibraryLocationId.toString()));
+
+    holding.remove("temporaryLocationId");
+
+    update(holdingsUrl, holding);
+
+    updatedHolding = holdingsClient.getById(holdingId);
+
+    assertThat(updatedHolding.getJson().getString("effectiveLocationId"), is(mainLibraryLocationId.toString()));
+  }
+
 
   @Parameters({
     "PN 12 A6,PN12 .A6,,PN2 .A6,,,,,",
@@ -1802,6 +1842,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
           final Response response = getById(holdings.getString("id"));
           assertExists(response, holdings);
           assertHRIDRange(response, "ho00000000001", "ho00000000003");
+          JsonObject body = response.getJson();
+          assertEquals(body.getString("effectiveLocationId"), body.getString("permanentLocationId"));
+
         });
 
     log.info("Finished canPostSynchronousBatchWithGeneratedHRID");
