@@ -14,6 +14,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -135,8 +136,8 @@ public class StorageTestSuite {
         PostgresClient.setConfigFilePath(postgresConfigPath);
         break;
       case "embedded":
-        PostgresClient.setIsEmbedded(true);
-        PostgresClient.getInstance(vertx).startEmbeddedPostgres();
+        PostgresClient.setPostgresTester(new PostgresTesterContainer());
+        PostgresClient.getInstance(vertx);
         break;
       default:
         String message = "No understood database choice made." +
@@ -169,7 +170,7 @@ public class StorageTestSuite {
 
     removeTenant(TENANT_ID);
     vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
-    PostgresClient.stopEmbeddedPostgres();
+    PostgresClient.stopPostgresTester();
     kafka.stop();
   }
 
