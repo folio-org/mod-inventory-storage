@@ -101,7 +101,7 @@ public class ShelvingOrderUpdate {
    * @param vertxContext
    * @return
    */
-  public Future<Integer> updateItems(TenantAttributes attributes, Map<String, String> headers,
+  public Future<Integer> startUpdatingOfItems(TenantAttributes attributes, Map<String, String> headers,
       Context vertxContext) {
 
     // Set completion handler promise for notifying if update performed or not
@@ -164,7 +164,7 @@ public class ShelvingOrderUpdate {
    * @param postgresClient
    * @return
    */
-  private Future<Integer> fetchAndUpdatesItems(Vertx vertx, PostgresClient postgresClient) {
+  public Future<Integer> fetchAndUpdatesItems(Vertx vertx, PostgresClient postgresClient) {
     log.info("The routine of \"fetchAndUpdatesItems\" has started");
     Promise<Integer> fetchAndUpdatePromise = Promise.promise();
 
@@ -233,7 +233,7 @@ public class ShelvingOrderUpdate {
    * @param rowSet
    * @return
    */
-  private Future<List<Item>> aggregateRow2List(RowSet<Row> rowSet) {
+  public Future<List<Item>> aggregateRow2List(RowSet<Row> rowSet) {
     log.info("Invoking of aggregateRow2List, rows size: {}", rowSet.size());
     Promise<List<Item>> promise = Promise.promise();
 
@@ -257,7 +257,7 @@ public class ShelvingOrderUpdate {
    * 
    * @return
    */
-  private Future<Map<UUID, JsonObject>> calculateShelvingOrder(List<Item> itemList) {
+  public Future<Map<UUID, JsonObject>> calculateShelvingOrder(List<Item> itemList) {
     log.info("Invoking of calculateShelvingOrder, itemList size: {}",
         Optional.ofNullable(itemList).orElse(new ArrayList<>()).size());
 
@@ -274,7 +274,7 @@ public class ShelvingOrderUpdate {
    * @param itemIdMap
    * @return
    */
-  private Future<List<Tuple>> prepareItemsUpdate(Map<UUID, JsonObject> itemIdMap) {
+  public Future<List<Tuple>> prepareItemsUpdate(Map<UUID, JsonObject> itemIdMap) {
     log.info("Invoking of prepareItemsUpdate");
 
     List<Tuple> itemsUpdateParams = new ArrayList<>();
@@ -292,7 +292,7 @@ public class ShelvingOrderUpdate {
    * @param connection
    * @return
    */
-  private Future<Integer> updateItems(List<Tuple> itemsParams, PgConnection connection) {
+  public Future<Integer> updateItems(List<Tuple> itemsParams, PgConnection connection) {
     log.info("Invoking of updateItems, itemsParams size: {}", itemsParams.size());
     log.info("Items parameters for update SQL: {}",
         StringUtils.defaultIfBlank(itemsParams.stream().map(Tuple::toString).collect(Collectors.joining(",")),

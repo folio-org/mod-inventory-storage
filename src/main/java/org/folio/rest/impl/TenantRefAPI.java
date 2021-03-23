@@ -122,6 +122,6 @@ public class TenantRefAPI extends TenantAPI {
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
         }).compose(loaded -> ShelvingOrderUpdate
-          .getInstance().updateItems(attributes, headers, vertxContext));
+          .getInstance().startUpdatingOfItems(attributes, headers, vertxContext));
   }
 }
