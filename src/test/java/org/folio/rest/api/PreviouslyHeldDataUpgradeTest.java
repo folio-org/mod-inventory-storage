@@ -13,19 +13,14 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.IndividualResource;
 import org.folio.util.ResourceUtil;
 import io.vertx.core.json.JsonObject;
 
 import io.vertx.core.Vertx;
 import junitparams.JUnitParamsRunner;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 @RunWith(JUnitParamsRunner.class)
 public class PreviouslyHeldDataUpgradeTest extends TestBaseWithInventoryUtil {
-    Logger log = LogManager.getLogger(PreviouslyHeldDataUpgradeTest.class);
     private static Vertx vertx = Vertx.vertx();
     private static UUID instanceId = UUID.randomUUID();
     private static final String SET_DEFAULT_PREVIOUSLY_HELD = ResourceUtil
