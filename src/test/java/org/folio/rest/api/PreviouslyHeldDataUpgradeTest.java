@@ -1,8 +1,7 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.isNull;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -36,12 +35,12 @@ public class PreviouslyHeldDataUpgradeTest extends TestBaseWithInventoryUtil {
         runSql(query);
 
         JsonObject instance = instancesClient.getById(instanceId).getJson();
-        assertThat(instance.getBoolean("previouslyHeld"), isNull());
+        assertNull(instance.getBoolean("previouslyHeld"));
 
         runSql(SET_DEFAULT_PREVIOUSLY_HELD);
 
         JsonObject instanceAfter = instancesClient.getById(instanceId).getJson();
-        assertNull(instanceAfter.getBoolean("previouslyHeld"));
+        assertEquals(instanceAfter.getBoolean("previouslyHeld"), false);
     }
 
     private void runSql(String sql) {
