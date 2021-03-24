@@ -2,18 +2,15 @@
   "topics": [
     {
       "name": "inventory.instance",
-      "numPartitions": 50,
-      "replicationFactor": 1
+      "numPartitions": 50
     },
     {
       "name": "inventory.item",
-      "numPartitions": 50,
-      "replicationFactor": 1
+      "numPartitions": 50
     },
     {
       "name": "inventory.holdings-record",
-      "numPartitions": 50,
-      "replicationFactor": 1
+      "numPartitions": 50
     }
   ]
 }

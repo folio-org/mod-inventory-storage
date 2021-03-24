@@ -3,9 +3,11 @@ package org.folio.services.kafka.topic;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.services.kafka.KafkaConfigHelper.getKafkaProperties;
+import static org.folio.services.kafka.KafkaProperties.getProducerProperties;
+import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Logger;
@@ -21,14 +23,18 @@ import io.vertx.kafka.admin.NewTopic;
 public class KafkaAdminClientService {
   private static final Logger log = getLogger(KafkaAdminClientService.class);
   private static final String KAFKA_TOPICS_FILE = "kafka-topics.json";
-  private final Vertx vertx;
+  private final Supplier<KafkaAdminClient> clientFactory;
 
   public KafkaAdminClientService(Vertx vertx) {
-    this.vertx = vertx;
+    this(() -> create(vertx, getProducerProperties()));
+  }
+
+  public KafkaAdminClientService(Supplier<KafkaAdminClient> clientFactory) {
+    this.clientFactory = clientFactory;
   }
 
   public Future<Void> createKafkaTopics() {
-    final KafkaAdminClient kafkaAdminClient = createKafkaAdminNativeClient();
+    final KafkaAdminClient kafkaAdminClient = clientFactory.get();
     return createKafkaTopics(kafkaAdminClient).onComplete(result -> {
       if (result.succeeded()) {
         log.info("Topics created successfully");
@@ -44,17 +50,13 @@ public class KafkaAdminClientService {
     });
   }
 
-  // needed for tests mostly
-  KafkaAdminClient createKafkaAdminNativeClient() {
-    return create(vertx, getKafkaProperties());
-  }
-
   private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient) {
     final List<NewTopic> newTopics = readTopics();
 
     return kafkaAdminClient.listTopics().compose(topics -> {
       final List<NewTopic> topicsToCreate = newTopics.stream()
         .filter(newTopic -> !topics.contains(newTopic.getName()))
+        .map(newTopic -> newTopic.setReplicationFactor(getReplicationFactor()))
         .collect(Collectors.toList());
 
       if (topicsToCreate.isEmpty()) {

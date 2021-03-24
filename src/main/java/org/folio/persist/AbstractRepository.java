@@ -74,6 +74,14 @@ public abstract class AbstractRepository<T> {
     return update(succeededFuture(connection), id, record);
   }
 
+  public Future<RowSet<Row>> update(String id, T record) {
+    final Promise<RowSet<Row>> promise = promise();
+
+    postgresClient.update(tableName, record, id, promise);
+
+    return promise.future();
+  }
+
   public Future<RowSet<Row>> deleteAll() {
     return postgresClientFuturized.delete(tableName, new Criterion());
   }

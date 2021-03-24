@@ -1,11 +1,7 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.succeededFuture;
-
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
@@ -24,8 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.Response;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -83,35 +77,19 @@ public class TenantRefAPI extends TenantAPI {
     return res;
   }
 
-  @Override
-  @Validate
-  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
-    Handler<AsyncResult<Response>> handler, Context context) {
-
-    // have to create topics before tenant init,
-    // because on init we can create sample/ref data which
-    // has to be sent to the queue as well
-    createTopics(context, tenantAttributes)
-      .onComplete(topicCreateResult -> {
-        if (topicCreateResult.failed()) {
-          log.error("Unable to create kafka topics", topicCreateResult.cause());
-          handler.handle(succeededFuture(PostTenantResponse
-            .respond500WithTextPlain(topicCreateResult.cause().getMessage())));
-        } else {
-          super.postTenant(tenantAttributes, headers, handler, context);
-        }
-      });
-  }
-
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
                            Map<String, String> headers, Context vertxContext) {
-    return super.loadData(attributes, tenantId, headers, vertxContext)
+    // create topics before loading data
+    return
+      new KafkaAdminClientService(vertxContext.owner())
+        .createKafkaTopics()
+        .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext))
         .compose(superRecordsLoaded -> {
           try {
             List<URL> urls = TenantLoading.getURLsFromClassPathDir(
-                REFERENCE_LEAD + "/service-points");
+              REFERENCE_LEAD + "/service-points");
             servicePoints = new LinkedList<>();
             for (URL url : urls) {
               InputStream stream = url.openStream();
@@ -137,21 +115,11 @@ public class TenantRefAPI extends TenantAPI {
           tl.add("instance-relationships", "instance-storage/instance-relationships");
           if (servicePoints != null) {
             tl.withFilter(this::servicePointUserFilter)
-                .withPostOnly()
-                .withAcceptStatus(422)
-                .add("users", "service-points-users");
+              .withPostOnly()
+              .withAcceptStatus(422)
+              .add("users", "service-points-users");
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
         });
-  }
-
-  private Future<Void> createTopics(Context context, TenantAttributes tenantAttributes) {
-    if (tenantAttributes.getPurge() != null && tenantAttributes.getPurge()) {
-      log.info("Purge is true, skipping topics creation...");
-      return succeededFuture();
-    }
-
-    log.info("Creating kafka topics...");
-    return new KafkaAdminClientService(context.owner()).createKafkaTopics();
   }
 }

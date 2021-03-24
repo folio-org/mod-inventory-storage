@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Get job by id response",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Job id",
+      "type": "string",
+      "$ref": "../raml-util/schemas/uuid.schema"
+    },
+    "published": {
+      "description": "Number of records that was published so far",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "jobStatus": {
+      "description": "Overall job status",
+      "type": "string",
+      "enum": [
+        "In progress",
+        "Id publishing failed",
+        "Ids published",
+        "Pending cancel",
+        "Id publishing cancelled"
+      ]
+    },
+    "submittedDate": {
+      "description": "Timestamp when the job has been submitted",
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
@@ -54,8 +55,10 @@ public abstract class TestBase {
   static ResourceClient instancesStorageBatchInstancesClient;
   static ResourceClient instanceTypesClient;
   static ResourceClient illPoliciesClient;
+  static ResourceClient inventoryViewClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static FakeKafkaConsumer kafkaConsumer;
+  static InstanceReindexFixture instanceReindex;
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -71,6 +74,16 @@ public abstract class TestBase {
     }
   }
 
+  /**
+   * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
+   *
+   * <p>Wraps these checked exceptions into RuntimeException:
+   * InterruptedException, ExecutionException, TimeoutException.
+   */
+  public static <T> T get(Future<T> future) {
+    return get(future.toCompletionStage().toCompletableFuture());
+  }
+
   @BeforeClass
   public static void testBaseBeforeClass() throws Exception {
     logger.info("starting @BeforeClass testBaseBeforeClass()");
@@ -79,6 +92,8 @@ public abstract class TestBase {
       invokeStorageTestSuiteAfter = true;
       StorageTestSuite.before();
       vertx = StorageTestSuite.getVertx();
+    } else {
+      invokeStorageTestSuiteAfter = false;
     }
 
     client = new HttpClient(vertx);
@@ -93,6 +108,7 @@ public abstract class TestBase {
     precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(client);
     instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(client);
     itemsStorageSyncClient = ResourceClient.forItemsStorageSync(client);
+    inventoryViewClient = ResourceClient.forInventoryView(client);
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(client);
     instanceTypesClient = ResourceClient
@@ -101,6 +117,7 @@ public abstract class TestBase {
     statisticalCodeFixture = new StatisticalCodeFixture(client);
     kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
     kafkaConsumer.removeAllEvents();
+    instanceReindex = new InstanceReindexFixture(client);
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 

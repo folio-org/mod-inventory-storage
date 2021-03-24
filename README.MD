@@ -44,6 +44,20 @@ Mod-inventory-storage implements domain event pattern and requires kafka to be l
 `localhost:9092`. You can override kafka port and host by setting `KAFKA_PORT` and
 `KAFKA_HOST` environment variables.
 
+For production deployments it is also required to set `REPLICATION_FACTOR`
+env variable, this property has following description:
+> The replication factor controls how many servers will replicate each message that is written.
+> If replication factor set to 3 then up to 2 servers can fail before access to the data will be lost.
+
+The default configuration for this property is `1` for production environments
+it is usually `3`.
+
+There is another important property - `number of partitions` for a topic - it has following
+description:
+> The partition count controls how many logs the topic will be sharded into.
+
+This property has fixed value - `50`.
+
 # Building
 
 run `mvn install` from the root directory.
@@ -255,7 +269,24 @@ APIs we're issuing a special domain event:
 {
   "type": "DELETE_ALL",
   "tenant": "<the tenant name>"
-  "old": null,
-  "new": null
+}
+```
+
+## Reindex of instances
+
+Some consumers need to pull all instances from an existing database. There is
+`instance-reindex` API for this. When a reindex job is submitted we initiate
+streaming of all instance IDs and publishing domain events for them. The domain
+event has following structure:
+* Topic: `inventory.instance`
+* Partition key: `The instance id`
+* Payload:
+```javascript
+x-okapi-tenant: <tenant-id>
+x-okapi-url: <okapi-url>
+
+{
+  "type": "REINDEX",
+  "tenant": "<the-tenant-name>"
 }
 ```

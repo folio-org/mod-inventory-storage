@@ -1,8 +1,9 @@
 package org.folio.services.kafka;
 
+import static java.util.Collections.unmodifiableMap;
+
 import java.util.HashMap;
 import java.util.Map;
-
 import org.folio.services.kafka.topic.KafkaTopic;
 
 public final class KafkaMessage<T> {
@@ -15,15 +16,11 @@ public final class KafkaMessage<T> {
     this.payload = payload;
     this.key = key;
     this.topic = topic;
-    this.headers = new HashMap<>(headers);
+    this.headers = unmodifiableMap(headers);
   }
 
   public static <T> KafkaMessageBuilder<T> builder() {
     return new KafkaMessageBuilder<>();
-  }
-
-  public <V> KafkaMessage<V> withPayload(V payload) {
-    return new KafkaMessage<>(payload, key, topic, headers);
   }
 
   public T getPayload() {
@@ -65,6 +62,11 @@ public final class KafkaMessage<T> {
 
     public KafkaMessageBuilder<T> headers(Map<String, String> headers) {
       this.headers.putAll(headers);
+      return this;
+    }
+
+    public KafkaMessageBuilder<T> header(String key, String value) {
+      this.headers.put(key, value);
       return this;
     }
 

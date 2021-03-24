@@ -3,6 +3,7 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
+import static org.folio.services.domainevent.DomainEvent.reindexEvent;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 
 import java.util.Collection;
@@ -27,6 +28,7 @@ import io.vertx.core.Future;
 
 public class InstanceDomainEventPublisher {
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
+  public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
 
   private final InstanceRepository instanceRepository;
   private final CommonDomainEventPublisher<Instance> domainEventService;
@@ -85,6 +87,13 @@ public class InstanceDomainEventPublisher {
         .compose(notUsed -> publishInstancesUpdated(batchOperation.getExistingRecords()))
         .map(response);
     };
+  }
+
+  public Future<Void> publishInstanceReindex(String instanceId, String reindexJobId) {
+    var jobIdHeader = Map.of(REINDEX_JOB_ID_HEADER, reindexJobId);
+
+    return domainEventService.publishMessage(instanceId,
+      reindexEvent(domainEventService.tenantId), jobIdHeader);
   }
 
   private Future<Void> publishInstancesUpdated(Collection<Instance> oldInstances) {

@@ -1,0 +1,229 @@
+{
+  "instances": [
+    {
+      "instanceId": "4b763e7c-2470-4d31-91b0-23a606b7d55e",
+      "instance": {
+        "id": "4b763e7c-2470-4d31-91b0-23a606b7d55e",
+        "_version": 1,
+        "hrid": "in00000000002",
+        "source": "TEST",
+        "title": "Long Way to a Small Angry Planet",
+        "alternativeTitles": [],
+        "editions": [],
+        "series": [],
+        "identifiers": [
+          {
+            "value": "9781473619777",
+            "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422"
+          }
+        ],
+        "contributors": [
+          {
+            "name": "Chambers, Becky",
+            "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a"
+          }
+        ],
+        "subjects": [],
+        "classifications": [],
+        "publication": [],
+        "publicationFrequency": [],
+        "publicationRange": [],
+        "electronicAccess": [],
+        "instanceTypeId": "535e3160-763a-42f9-b0c0-d8ed7df6e2a2",
+        "instanceFormatIds": [],
+        "instanceFormats": [],
+        "physicalDescriptions": [],
+        "languages": [],
+        "notes": [],
+        "discoverySuppress": false,
+        "statisticalCodeIds": [],
+        "statusUpdatedDate": "2021-02-24T11:30:15.752+0200",
+        "tags": {
+          "tagList": [
+            "test-tag"
+          ]
+        },
+        "metadata": {
+          "createdDate": "2021-02-24T09:30:15.752+00:00",
+          "updatedDate": "2021-02-24T09:30:15.752+00:00"
+        },
+        "holdingsRecords2": [],
+        "natureOfContentTermIds": []
+      },
+      "holdingsRecords": [
+        {
+          "id": "2a4cad3d-d978-4404-88f3-f4c2b04f254c",
+          "_version": 1,
+          "hrid": "ho00000000003",
+          "formerIds": [],
+          "instanceId": "4b763e7c-2470-4d31-91b0-23a606b7d55e",
+          "permanentLocationId": "9f551ce9-ac88-4f89-970d-b00e4b69edf2",
+          "electronicAccess": [],
+          "notes": [],
+          "holdingsStatements": [],
+          "holdingsStatementsForIndexes": [],
+          "holdingsStatementsForSupplements": [],
+          "statisticalCodeIds": [],
+          "holdingsItems": [],
+          "bareHoldingsItems": [],
+          "metadata": {
+            "createdDate": "2021-02-24T09:30:15.770+00:00",
+            "updatedDate": "2021-02-24T09:30:15.770+00:00"
+          }
+        },
+        {
+          "id": "3dac5efd-f778-498c-9e58-bea2473694b1",
+          "_version": 1,
+          "hrid": "ho00000000004",
+          "formerIds": [],
+          "instanceId": "4b763e7c-2470-4d31-91b0-23a606b7d55e",
+          "permanentLocationId": "ded842f9-cd42-43f5-bc9c-e54cb1bfa2e0",
+          "electronicAccess": [],
+          "notes": [],
+          "holdingsStatements": [],
+          "holdingsStatementsForIndexes": [],
+          "holdingsStatementsForSupplements": [],
+          "statisticalCodeIds": [],
+          "holdingsItems": [],
+          "bareHoldingsItems": [],
+          "metadata": {
+            "createdDate": "2021-02-24T09:30:15.786+00:00",
+            "updatedDate": "2021-02-24T09:30:15.786+00:00"
+          }
+        },
+        {
+          "id": "5508aa51-dc6c-4bd5-8b88-2773cf3f2978",
+          "_version": 1,
+          "hrid": "ho00000000005",
+          "formerIds": [],
+          "instanceId": "4b763e7c-2470-4d31-91b0-23a606b7d55e",
+          "permanentLocationId": "ce97794f-2729-49c7-8561-d7016816b685",
+          "electronicAccess": [],
+          "notes": [],
+          "holdingsStatements": [],
+          "holdingsStatementsForIndexes": [],
+          "holdingsStatementsForSupplements": [],
+          "statisticalCodeIds": [],
+          "holdingsItems": [],
+          "bareHoldingsItems": [],
+          "metadata": {
+            "createdDate": "2021-02-24T09:30:15.811+00:00",
+            "updatedDate": "2021-02-24T09:30:15.811+00:00"
+          }
+        }
+      ],
+      "items": [
+        {
+          "id": "c83efee3-ebbc-4772-ab34-1918381da2c7",
+          "_version": 1,
+          "hrid": "it00000000003",
+          "holdingsRecordId": "2a4cad3d-d978-4404-88f3-f4c2b04f254c",
+          "formerIds": [],
+          "barcode": "565578437802",
+          "effectiveCallNumberComponents": {},
+          "yearCaption": [],
+          "notes": [],
+          "circulationNotes": [],
+          "status": {
+            "name": "Available",
+            "date": "2021-02-24T09:30:15.828+00:00"
+          },
+          "materialTypeId": "0c7ff668-08d4-47b5-ae64-f5a31b757e1c",
+          "permanentLoanTypeId": "81ebe45c-f4df-4b92-afab-90b4f433f6b3",
+          "temporaryLocationId": "bbe659bf-fb2d-44b2-bd1a-7f968993bca0",
+          "effectiveLocationId": "bbe659bf-fb2d-44b2-bd1a-7f968993bca0",
+          "electronicAccess": [],
+          "statisticalCodeIds": [],
+          "metadata": {
+            "createdDate": "2021-02-24T09:30:15.828+00:00",
+            "updatedDate": "2021-02-24T09:30:15.828+00:00"
+          }
+        },
+        {
+          "id": "bf6b5993-7f0a-4bcf-9b48-fac7e4405a48",
+          "_version": 1,
+          "hrid": "it00000000004",
+          "holdingsRecordId": "2a4cad3d-d978-4404-88f3-f4c2b04f254c",
+          "formerIds": [],
+          "barcode": "565578437802",
+          "effectiveCallNumberComponents": {},
+          "yearCaption": [],
+          "notes": [],
+          "circulationNotes": [],
+          "status": {
+            "name": "Available",
+            "date": "2021-02-24T09:30:15.848+00:00"
+          },
+          "materialTypeId": "0c7ff668-08d4-47b5-ae64-f5a31b757e1c",
+          "permanentLoanTypeId": "81ebe45c-f4df-4b92-afab-90b4f433f6b3",
+          "temporaryLocationId": "bbe659bf-fb2d-44b2-bd1a-7f968993bca0",
+          "effectiveLocationId": "bbe659bf-fb2d-44b2-bd1a-7f968993bca0",
+          "electronicAccess": [],
+          "statisticalCodeIds": [],
+          "metadata": {
+            "createdDate": "2021-02-24T09:30:15.848+00:00",
+            "updatedDate": "2021-02-24T09:30:15.848+00:00"
+          }
+        },
+        {
+          "id": "6f3a5084-75a6-4065-9b8e-19cf62a64b01",
+          "_version": 1,
+          "hrid": "it00000000005",
+          "holdingsRecordId": "3dac5efd-f778-498c-9e58-bea2473694b1",
+          "formerIds": [],
+          "barcode": "565578437802",
+          "effectiveCallNumberComponents": {},
+          "yearCaption": [],
+          "notes": [],
+          "circulationNotes": [],
+          "status": {
+            "name": "Available",
+            "date": "2021-02-24T09:30:15.868+00:00"
+          },
+          "materialTypeId": "0c7ff668-08d4-47b5-ae64-f5a31b757e1c",
+          "permanentLoanTypeId": "81ebe45c-f4df-4b92-afab-90b4f433f6b3",
+          "temporaryLocationId": "bbe659bf-fb2d-44b2-bd1a-7f968993bca0",
+          "effectiveLocationId": "bbe659bf-fb2d-44b2-bd1a-7f968993bca0",
+          "electronicAccess": [],
+          "statisticalCodeIds": [],
+          "metadata": {
+            "createdDate": "2021-02-24T09:30:15.868+00:00",
+            "updatedDate": "2021-02-24T09:30:15.868+00:00"
+          }
+        },
+        {
+          "id": "e6febf5b-e931-473c-b9a5-60e9cfc27ce1",
+          "_version": 1,
+          "hrid": "it00000000006",
+          "holdingsRecordId": "5508aa51-dc6c-4bd5-8b88-2773cf3f2978",
+          "formerIds": [],
+          "barcode": "565578437802",
+          "effectiveCallNumberComponents": {},
+          "yearCaption": [],
+          "notes": [],
+          "circulationNotes": [],
+          "status": {
+            "name": "Available",
+            "date": "2021-02-24T09:30:15.885+00:00"
+          },
+          "materialTypeId": "0c7ff668-08d4-47b5-ae64-f5a31b757e1c",
+          "permanentLoanTypeId": "81ebe45c-f4df-4b92-afab-90b4f433f6b3",
+          "temporaryLocationId": "bbe659bf-fb2d-44b2-bd1a-7f968993bca0",
+          "effectiveLocationId": "bbe659bf-fb2d-44b2-bd1a-7f968993bca0",
+          "electronicAccess": [],
+          "statisticalCodeIds": [],
+          "metadata": {
+            "createdDate": "2021-02-24T09:30:15.885+00:00",
+            "updatedDate": "2021-02-24T09:30:15.885+00:00"
+          }
+        }
+      ]
+    }
+  ],
+  "totalRecords": 1,
+  "resultInfo": {
+    "totalRecords": 1,
+    "facets": [],
+    "diagnostics": []
+  }
+}
