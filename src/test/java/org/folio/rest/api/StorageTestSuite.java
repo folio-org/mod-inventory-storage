@@ -237,7 +237,7 @@ public class StorageTestSuite {
     .get(20, TimeUnit.SECONDS);
   }
 
-  static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)
+  public static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
@@ -255,7 +255,7 @@ public class StorageTestSuite {
     tenantOp(tenantId, jo);
   }
 
-  static void prepareTenant(String tenantId, boolean loadSample)
+  public static void prepareTenant(String tenantId, boolean loadSample)
       throws InterruptedException,
       ExecutionException,
       TimeoutException {

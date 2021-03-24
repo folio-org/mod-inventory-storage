@@ -58,7 +58,7 @@ public class ShelvingOrderUpdate {
   private Versioned versionChecker;
   private int rowsBunchSize;
   private AtomicInteger totalUpdatedRows;
-  private Handler<AsyncResult<Boolean>> completionHandler;
+//  private Handler<AsyncResult<Boolean>> completionHandler;
 
   public static ShelvingOrderUpdate getInstance() {
     return getInstance(DEF_FETCH_SIZE);
@@ -83,15 +83,15 @@ public class ShelvingOrderUpdate {
     this.totalUpdatedRows = new AtomicInteger(0);
   }
 
-  public void setCompletionHandler(Handler<AsyncResult<Boolean>> handler) {
-    log.info("getCompletionHandler set up: {}", handler);
-    completionHandler = handler;
-  }
+//  public void setCompletionHandler(Handler<AsyncResult<Boolean>> handler) {
+//    log.info("getCompletionHandler set up: {}", handler);
+//    completionHandler = handler;
+//  }
 
-  public Handler<AsyncResult<Boolean>> getCompletionHandler() {
-    log.info("getCompletionHandler acquired: {}", completionHandler);
-    return completionHandler;
-  }
+//  public Handler<AsyncResult<Boolean>> getCompletionHandler() {
+//    log.info("getCompletionHandler acquired: {}", completionHandler);
+//    return completionHandler;
+//  }
 
   /**
    * Entry routine of items updates. Invokes the process recursively until no items to update
@@ -105,13 +105,13 @@ public class ShelvingOrderUpdate {
       Context vertxContext) {
 
     // Set completion handler promise for notifying if update performed or not
-    final Promise<Boolean> completionHandlerPromise = Promise.promise();
-    if (!Objects.isNull(getCompletionHandler())) {
-      log.info("Setting completionHandler {} to promise: {}", getCompletionHandler(), completionHandlerPromise);
-      getCompletionHandler().handle(completionHandlerPromise.future());
-    } else {
-      log.info("Setting completionHandler skipped, it's a null: {}", getCompletionHandler());
-    }
+//    final Promise<Boolean> completionHandlerPromise = Promise.promise();
+//    if (!Objects.isNull(getCompletionHandler())) {
+//      log.info("Setting completionHandler {} to promise: {}", getCompletionHandler(), completionHandlerPromise);
+//      getCompletionHandler().handle(completionHandlerPromise.future());
+//    } else {
+//      log.info("Setting completionHandler skipped, it's a null: {}", getCompletionHandler());
+//    }
 
     final Promise<Integer> updateItemsPromise = Promise.promise();
     final Vertx vertx = vertxContext.owner();
@@ -137,12 +137,12 @@ public class ShelvingOrderUpdate {
               log.info("Items update with shelving order property completed in {} seconds",
                   (System.currentTimeMillis() - startTime) / 1000);
               updateItemsPromise.complete(totalUpdatedRows.get());
-              completionHandlerPromise.complete((totalUpdatedRows.get() > 0));
+//              completionHandlerPromise.complete((totalUpdatedRows.get() > 0));
             }
           })
           .onFailure(h -> {
             updateItemsPromise.fail(h.getCause());
-            completionHandlerPromise.fail(h.getCause());
+//            completionHandlerPromise.fail(h.getCause());
             log.error("Error updating items: {}", h.getCause().getMessage());
           });
 
@@ -150,7 +150,7 @@ public class ShelvingOrderUpdate {
       log.info("Module isn't eligible for upgrade, just exit.");
       // Not allowed to perform items updates, just returns
       updateItemsPromise.complete(0);
-      completionHandlerPromise.complete(Boolean.FALSE);
+//      completionHandlerPromise.complete(Boolean.FALSE);
     }
 
     return updateItemsPromise.future();
