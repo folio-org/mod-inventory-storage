@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.isNull;
 
 import java.util.UUID;
@@ -31,9 +32,7 @@ public class PreviouslyHeldDataUpgradeTest extends TestBaseWithInventoryUtil {
     public void canMigrateToDefaultPreviouslyHeldValue() {
         instancesClient.create(instance(instanceId));
 
-        String query = "UPDATE test_tenant_mod_inventory_storage.instance " +
-            "SET jsonb = JSONB_SET(instance.jsonb, '{previouslyHeld}', TO_JSONB(null)) " +
-            "WHERE jsonb->>'previouslyHeld' IS NOT NULL;";
+        String query = "UPDATE test_tenant_mod_inventory_storage.instance SET jsonb = jsonb - 'previouslyHeld';";
              
         runSql(query);
 
@@ -43,7 +42,7 @@ public class PreviouslyHeldDataUpgradeTest extends TestBaseWithInventoryUtil {
         runSql(SET_DEFAULT_PREVIOUSLY_HELD);
 
         JsonObject instanceAfter = instancesClient.getById(instanceId).getJson();
-        assertEquals(instanceAfter.getBoolean("previouslyHeld"), false);
+        assertNull(instanceAfter.getBoolean("previouslyHeld"));
     }
 
     private void runSql(String sql) {
