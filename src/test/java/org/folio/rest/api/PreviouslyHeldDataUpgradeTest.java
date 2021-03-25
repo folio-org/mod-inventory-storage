@@ -31,11 +31,6 @@ public class PreviouslyHeldDataUpgradeTest extends TestBaseWithInventoryUtil {
   public void canMigrateToDefaultPreviouslyHeldValue() throws 
     InterruptedException, ExecutionException, TimeoutException{
     instancesClient.create(instance(instanceId));
-
-    //Becasue calling the API will result in the previouslyHeld value being automatically
-    //set to false, it is neccessary to test the migration script by pulling data directly from
-    //the back-end database. 
-
     String query = "UPDATE test_tenant_mod_inventory_storage.instance SET jsonb = jsonb - 'previouslyHeld';";
              
     runSql(query);
