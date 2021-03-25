@@ -1,6 +1,6 @@
 ## 20.1.0 In-progress
 
-* Set a default value of false for instance.previouslyHeld (https://issues.folio.org/browse/MODINVSTOR-454)
+* Defaults instance.previouslyHeld to false (MODINVSTOR-454)
 * Provides `instance-storage 7.7`
 
 ## 20.0.0 2021-03-11
