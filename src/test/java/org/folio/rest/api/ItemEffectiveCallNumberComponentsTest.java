@@ -256,7 +256,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
         var lastItemEvent = getLastItemEvent(instanceId, itemId);
         assertTrue(lastItemEvent
-          .getPayload().getJsonObject("new").getInteger("_version") > 1);
+          .value().getJsonObject("new").getInteger("_version") > 1);
       });
       assertUpdateEventForItem(itemAfterHoldingsUpdate,
         itemsClient.getById(createdItem.getId()).getJson());
