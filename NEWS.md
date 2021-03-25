@@ -1,4 +1,8 @@
-## 20.1.0 In-progress
+## 20.1.0 2021-03-25
+
+* Introduces `contributorsNames` CQL index for searching `instances` (MODINVSTOR-705)
+* Introduces `REPLICATION_FACTOR` environment variable for configuring Kafka topic replication (MODINVSTOR-694)
+* Provides `instance-storage 7.7`
 
 * Defaults instance.previouslyHeld to false (MODINVSTOR-454)
 * Provides `instance-storage 7.7`
