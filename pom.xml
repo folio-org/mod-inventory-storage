@@ -84,11 +84,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
-      <version>2.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-kafka-client</artifactId>
+      <version>2.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

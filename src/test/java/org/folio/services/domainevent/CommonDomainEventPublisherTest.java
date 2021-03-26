@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.Map;
-import org.awaitility.Awaitility;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.rest.api.ReindexJobRunnerTest;
 import org.folio.rest.api.TestBase;
