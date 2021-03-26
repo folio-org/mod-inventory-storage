@@ -24,6 +24,7 @@ import org.folio.util.StringUtil;
 import io.vertx.core.json.JsonObject;
 
 public class ResourceClient {
+
   private final HttpClient client;
   private final UrlMaker urlMaker;
   private final String resourceName;
@@ -169,6 +170,7 @@ public class ResourceClient {
   public IndividualResource create(JsonObject request) {
 
     Response response = attemptToCreate(request);
+    
     assertThat(
       String.format("Failed to create %s: %s", resourceName, response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
