@@ -30,8 +30,8 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
   private static final String SET_EFFECTIVE_LOCATION = ResourceUtil
     .asString("templates/db_scripts/setEffectiveLocation.sql")
     .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
-  private static String query = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb - 'effectiveLocationId';";
-  private static String migrationQuery = "SELECT jsonb FROM test_tenant_mod_inventory_storage.holdings_record WHERE id = '" + holdingsId.toString() + "';";
+  private static String removeExistingField = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb - 'effectiveLocationId';";
+  private static String query = "SELECT jsonb FROM test_tenant_mod_inventory_storage.holdings_record WHERE id = '" + holdingsId.toString() + "';";
   
   @Before
   public void setUp() {
@@ -52,16 +52,16 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
     .forInstance(instanceId)
     .withPermanentLocation(mainLibraryLocationId));
 
-    runSql(query);
+    runSql(removeExistingField);
 
-    RowSet<Row> result = runSql(migrationQuery);
+    RowSet<Row> result = runSql(query);
     assertEquals(result.rowCount(), 1);
     JsonObject entry = result.iterator().next().toJson();
     assertNull(entry.getJsonObject("jsonb").getString("effectiveLocationId"));
 
     runSql(SET_EFFECTIVE_LOCATION);
 
-    RowSet<Row> migrationResult = runSql(migrationQuery);
+    RowSet<Row> migrationResult = runSql(query);
     assertEquals(migrationResult.rowCount(), 1);
     JsonObject migrationEntry = migrationResult.iterator().next().toJson();
     assertEquals(mainLibraryLocationId.toString(), migrationEntry.getJsonObject("jsonb").getString("effectiveLocationId")); 
@@ -76,16 +76,16 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
     .withTemporaryLocation(annexLibraryLocationId)
     .withPermanentLocation(mainLibraryLocationId));
 
-    runSql(query);
+    runSql(removeExistingField);
 
-    RowSet<Row> result = runSql(migrationQuery);
+    RowSet<Row> result = runSql(query);
     assertEquals(result.rowCount(), 1);
     JsonObject entry = result.iterator().next().toJson();
     assertNull(entry.getJsonObject("jsonb").getString("effectiveLocationId"));
 
     runSql(SET_EFFECTIVE_LOCATION);
 
-    RowSet<Row> migrationResult = runSql(migrationQuery);
+    RowSet<Row> migrationResult = runSql(query);
     assertEquals(migrationResult.rowCount(), 1);
     JsonObject migrationEntry = migrationResult.iterator().next().toJson();
     assertEquals(annexLibraryLocationId.toString(), migrationEntry.getJsonObject("jsonb").getString("effectiveLocationId")); 

@@ -76,7 +76,6 @@ public class HoldingsService {
   }
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
-
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {

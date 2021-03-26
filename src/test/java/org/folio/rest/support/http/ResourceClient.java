@@ -23,11 +23,7 @@ import org.folio.util.StringUtil;
 
 import io.vertx.core.json.JsonObject;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-
 public class ResourceClient {
-  private static final Logger log = LogManager.getLogger(ResourceClient.class);
   private final HttpClient client;
   private final UrlMaker urlMaker;
   private final String resourceName;
@@ -173,12 +169,6 @@ public class ResourceClient {
   public IndividualResource create(JsonObject request) {
 
     Response response = attemptToCreate(request);
-
-    if (response.getStatusCode() == 400) {
-      log.info("Request is: " + request.toString());
-      log.info("back end response: " + response.toString());
-    }
-
     assertThat(
       String.format("Failed to create %s: %s", resourceName, response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
