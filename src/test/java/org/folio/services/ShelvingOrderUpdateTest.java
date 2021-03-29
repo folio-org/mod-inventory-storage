@@ -12,10 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
+import javax.annotation.concurrent.NotThreadSafe;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -30,26 +29,28 @@ import io.vertx.sqlclient.RowSet;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kafka.common.protocol.types.Field.ComplexArray;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.plexus.util.dag.Vertex;
-import org.folio.rest.api.TestBase;
-import org.folio.rest.api.TestBaseWithInventoryUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
+import org.folio.rest.api.TestBaseWithInventoryUtil;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.helpers.LocalRowSet;
 import org.folio.rest.support.ShelvingOrderUpdate;
 
+@NotThreadSafe
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(VertxUnitRunner.class)
 public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
 
@@ -75,7 +76,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   // Items raw data
   // (1)expectedShelvingOrder, (2)defaultExpectedDesiredShelvesOrder, (3)prefix, (4)callNumber,
   // (5)volume, (6)enumeration, (7)chronology, (8)copy, (9)suffix
-  private static String[] ITEMS_DATA = new String[] {
+  private static String[] ITEMS_DATA1 = new String[] {
       "PN 12 A6,PN12 .A6,,PN2 .A6,,,,,",
       "PN 12 A6 V 13 NO 12 41999,PN2 .A6 v.3 no.2 1999,,PN2 .A6,v. 3,no. 2,1999,,",
       "PN 12 A6 41999,PN12 .A6 41999,,PN2 .A6 1999,,,,,",
@@ -97,8 +98,34 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
       "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
   };
 
+  private static String[] ITEMS_DATA = new String[] {
+      "0,1,PRFX1,CN1,VL1,EN1,CHR1,CPN1,SFX1",
+      "0,1,PRFX2,CN2,VL2,EN2,CHR2,CPN2,SFX2",
+      "0,1,PRFX3,CN3,VL3,EN3,CHR3,CPN3,SFX3",
+      "0,1,PRFX4,CN4,VL4,EN4,CHR4,CPN4,SFX4",
+      "0,1,PRFX5,CN5,VL5,EN5,CHR5,CPN5,SFX5",
+      "0,1,PRFX6,CN6,VL6,EN6,CHR6,CPN6,SFX6",
+      "0,1,PRFX7,CN7,VL7,EN7,CHR7,CPN7,SFX7",
+      "0,1,PRFX8,CN8,VL8,EN8,CHR8,CPN8,SFX8",
+      "0,1,PRFX9,CN9,VL9,EN9,CHR9,CPN9,SFX9",
+      "0,1,PRFX10,CN10,VL10,EN10,CHR10,CPN10,SFX10",
+      "0,1,PRFX11,CN11,VL11,EN11,CHR11,CPN11,SFX11",
+      "0,1,PRFX12,CN12,VL12,EN12,CHR12,CPN12,SFX12",
+      "0,1,PRFX13,CN13,VL13,EN13,CHR13,CPN13,SFX13",
+      "0,1,PRFX14,CN14,VL14,EN14,CHR14,CPN14,SFX14",
+      "0,1,PRFX15,CN15,VL15,EN15,CHR15,CPN15,SFX15",
+      "0,1,PRFX16,CN16,VL16,EN16,CHR16,CPN16,SFX16",
+      "0,1,PRFX17,CN17,VL17,EN17,CHR17,CPN17,SFX17",
+      "0,1,PRFX18,CN18,VL18,EN18,CHR18,CPN18,SFX18",
+      "0,1,PRFX19,CN19,VL19,EN19,CHR19,CPN19,SFX19",
+      "0,1,PRFX20,CN20,VL20,EN20,CHR20,CPN20,SFX20"
+  };
+
+
   private static String defaultTenant;
   private static ShelvingOrderUpdate shelvingOrderUpdate;
+
+  public Timeout timeoutRule = Timeout.seconds(3600);
 
   @BeforeClass
   @SneakyThrows
@@ -117,8 +144,8 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     removeTenant(defaultTenant);
   }
 
-  @Test
-  public void checkingShouldPassForOlderModuleVersions() {
+  @Test()
+  public void testOrder1_checkingShouldPassForOlderModuleVersions() {
     log.info("The test \"checkingShouldPassForOlderModuleVersions\" started...");
     final TenantAttributes tenantAttributes = getTenantAttributes(FROM_MODULE_DO_UPGRADE);
     boolean result = shelvingOrderUpdate.isAllowedToUpdate(tenantAttributes);
@@ -127,7 +154,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void checkingShouldFailForNewerModuleVersions() {
+  public void testOrder2_checkingShouldFailForNewerModuleVersions() {
     log.info("The test \"checkingShouldFailForNewerModuleVersions\" started...");
     final TenantAttributes tenantAttributes = getTenantAttributes(FROM_MODULE_SKIP_UPGRADE);
     boolean result = shelvingOrderUpdate.isAllowedToUpdate(tenantAttributes);
@@ -136,7 +163,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void checkingShouldFailForEmptyModuleVersionPassed() {
+  public void testOrder3_checkingShouldFailForEmptyModuleVersionPassed() {
     log.info("The test \"checkingShouldFailForEmptyModuleVersionPassed\" started...");
     final TenantAttributes tenantAttributes = getTenantAttributes(StringUtils.EMPTY);
     boolean result = shelvingOrderUpdate.isAllowedToUpdate(tenantAttributes);
@@ -145,7 +172,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void checkingShouldFailForNullModuleVersionPassed() {
+  public void testOrder4_checkingShouldFailForNullModuleVersionPassed() {
     log.info("The test \"checkingShouldFailForNullModuleVersionPassed\" started...");
     final TenantAttributes tenantAttributes = getTenantAttributes(null);
     boolean result = shelvingOrderUpdate.isAllowedToUpdate(tenantAttributes);
@@ -154,7 +181,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void checkingShouldFailForMissedModuleVersionPassed() {
+  public void testOrder5_checkingShouldFailForMissedModuleVersionPassed() {
     log.info("The test \"checkingShouldFailForMissedModuleVersionPassed\" started...");
     final TenantAttributes tenantAttributes = new TenantAttributes();
     boolean result = shelvingOrderUpdate.isAllowedToUpdate(tenantAttributes);
@@ -162,15 +189,10 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     log.info("The test \"checkingShouldFailForMissedModuleVersionPassed\" done");
   }
 
+  @Ignore
   @Test
-  public void shouldSucceedItemsUpdateForExpectedModuleVersion() {
+  public void testOrder6_shouldSucceedItemsUpdateForExpectedModuleVersion() {
     log.info("The test \"shouldSucceedItemsUpdateForExpectedModuleVersion\" started...");
-//    String tenant = generateTenantValue();
-//    log.info("Tenant generated: {}", tenant);
-//
-//    log.info("Tenant initialization started: {}", tenant);
-//    initTenant(tenant, VERSION_WITH_SHELVING_ORDER);
-//    log.info("Tenant initialization finished");
 
     // Check total items
     RowSet<Row> result = executeSql(SQL_SELECT_ITEMS_COUNT);
@@ -193,21 +215,13 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     log.info("There are {} items after update", expectedItemsCountAfterUpdate);
     //assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
 
-//    log.info("Tenant deletion started: {}", tenant);
-//    deleteTenant(tenant);
-//    log.info("Tenant deletion finished");
     log.info("The test \"shouldSucceedItemsUpdateForExpectedModuleVersion\" finished");
   }
 
+  @Ignore
   @Test
-  public void shouldFailItemsUpdateForUnexpectedModuleVersion() {
+  public void testOrder7_shouldFailItemsUpdateForUnexpectedModuleVersion() {
     log.info("The test \"shouldFailItemsUpdateForUnexpectedModuleVersion\" started...");
-//    String tenant = generateTenantValue();
-//    log.info("Tenant generated: {}", tenant);
-//
-//    log.info("Tenant initialization started: {}", tenant);
-//    initTenant(tenant, VERSION_WITH_SHELVING_ORDER);
-//    log.info("Tenant initialization finished");
 
     // Check total items
     RowSet<Row> result = executeSql(SQL_SELECT_ITEMS_COUNT);
@@ -230,21 +244,12 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     log.info("There are {} items after update", expectedItemsCountAfterUpdate);
     //assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
 
-//    log.info("Tenant deletion started: {}", tenant);
-//    deleteTenant(tenant);
-//    log.info("Tenant deletion finished");
     log.info("The test \"shouldFailItemsUpdateForUnexpectedModuleVersion\" finished");
   }
 
   @Test
-  public void shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom() {
+  public void testOrder8_shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom() {
     log.info("The test \"shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom\" started...");
-//    String tenant = generateTenantValue();
-//    log.info("Tenant generated: {}", tenant);
-//
-//    log.info("Tenant initialization started: {}", tenant);
-//    initTenant(tenant, VERSION_WITH_SHELVING_ORDER);
-//    log.info("Tenant initialization finished");
 
     // Check total items
     RowSet<Row> result = executeSql(SQL_SELECT_ITEMS_COUNT);
@@ -252,7 +257,14 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     log.info("There are {} items total", itemsTotal);
 
     // Insert items from tst data
+    log.info("Before insert amount of items: {}", getItemsForUpdateCount());
     insertItemsFromData();
+    log.info("After insert amount of items: {}", getItemsForUpdateCount());
+
+    // Prepare items for update
+    log.info("Before remove property amount of items: {}", getItemsForUpdateCount());
+    removeItemsProperty((defaultTenant));
+    log.info("After remove property amount of items: {}", getItemsForUpdateCount());
 
     // Check amount of items for update
     int expectedItemsCountForUpdate = getItemsForUpdateCount();
@@ -260,23 +272,25 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
 //    assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
 
     // Get operation result
-    ShelvingOrderUpdate.getInstance().startUpdatingOfItems(getTenantAttributes(FROM_MODULE_DO_UPGRADE),
-        Map.of("tenant", defaultTenant), Vertx.vertx().getOrCreateContext());
+    log.info("Starting startUpdatingOfItems, default tenant: {}", defaultTenant);
+    Future<Integer> updatedAmountFuture = ShelvingOrderUpdate.getInstance(3).startUpdatingOfItems(getTenantAttributes(FROM_MODULE_DO_UPGRADE),
+        Map.of("x-okapi-tenant", defaultTenant), Vertx.vertx().getOrCreateContext());
+    log.info("Finished startUpdatingOfItems, updatedAmountFuture: {}", updatedAmountFuture);
+
+    int updatedCount = getFutureResult(updatedAmountFuture);
+    log.info("There are {} items updated", updatedCount);
 
     // Check amount of items after update
     int expectedItemsCountAfterUpdate = getItemsForUpdateCount();
     log.info("There are {} items after update", expectedItemsCountAfterUpdate);
     //assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
 
-//    log.info("Tenant deletion started: {}", tenant);
-//    deleteTenant(tenant);
-//    log.info("Tenant deletion finished");
     log.info("The test \"shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom\" finished");
   }
 
   @Ignore
   @Test
-  public void acquiringOfConnectionShouldFail() {
+  public void testOrder9_acquiringOfConnectionShouldFail() {
     PostgresClient postgresClient =  Mockito.mock(PostgresClient.class);
     AsyncResult<PgConnection> asyncResult = Mockito.mock(AsyncResult.class);
 
@@ -324,31 +338,17 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
 
   private void doModuleUpgrade(String tenant, String fromModuleVersion) {
     log.info("Started execution of the doModuleUpgrade, tenant: {}, fromModuleVersion: {} ...", tenant, fromModuleVersion);
-    final Promise<Boolean> result = Promise.promise();
-//    shelvingOrderUpdate.setCompletionHandler(result);
 
     // Initiate post tenant operation
     log.info("Module upgrade started, fromModuleVersion: {}", fromModuleVersion);
     postTenantOperation(tenant, fromModuleVersion);
-    log.info("doModuleUpgrade post tenant operation completed");
 
-//    result.future().onComplete(ar -> {
-//      log.info("doModuleUpgrade post tenant operation completed");
-////      shelvingOrderUpdate.setCompletionHandler(null);
-//      if (ar.succeeded()) {
-//        log.info("doModuleUpgrade post tenant operation succeed : {}", ar.result());
-//      } else {
-//        log.info("doModuleUpgrade post tenant operation failed: {}", ar.cause().getMessage());
-//      }
-//    });
-//
-//    log.info("Finished execution of the doModuleUpgrade");
-//    return getFutureResult(result.future());
+    log.info("doModuleUpgrade post tenant operation completed");
   }
 
   private static <T> T getFutureResult(Future<T> future) {
     log.info("Started \"getFutureResult\", future: {} ...", future);
-    return get(future.toCompletionStage().toCompletableFuture());
+    return getFutureResult(future.toCompletionStage().toCompletableFuture());
   }
 
   @SneakyThrows
@@ -408,8 +408,11 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     List<Item> items = Arrays.stream(ITEMS_DATA).map(e -> {
-      String[] itemData = e.split(",");
+      log.info("map's e: {}", e);
+      String[] itemData = StringUtils.split(e, ",");
+      log.info("itemData: {}", itemData);
       Item item = buildItem(holdingsRecordId, null, null);
+      log.info(": {}", item);
 
       String callNumberPrefix = itemData[2];
       String callNumber = itemData[3];
@@ -418,6 +421,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
       String chronology = itemData[6];
       String copyNumber = itemData[7];
       String callNumberSuffix = itemData[8];
+      log.info("callNumberPrefix: {}, callNumber: {}, volume: {}, enumeration: {}, chronology: {}, copyNumber: {}, callNumberSuffix: {}", callNumberPrefix, callNumber, volume, enumeration, chronology, copyNumber, callNumberSuffix);
 
       item.withItemLevelCallNumberPrefix(callNumberPrefix)
           .withItemLevelCallNumber(callNumber)
@@ -427,7 +431,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
           .withCopyNumber(copyNumber)
           .withItemLevelCallNumberSuffix(callNumberSuffix);
 
-      log.info("An item {} has been prepared");
+      log.info("An item {} has been prepared", item);
       return item;
     }).collect(Collectors.toList());
 
@@ -436,7 +440,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
 
     items.stream().forEach(i -> {
       createItem(i);
-      log.info("An item {} has been created...");
+      log.info("An item {} has been created...", i);
     });
 
     log.info("Finishing of the insertItemsFromData...");
