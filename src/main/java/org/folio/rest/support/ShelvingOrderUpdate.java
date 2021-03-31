@@ -201,7 +201,13 @@ public class ShelvingOrderUpdate {
                   .compose(updatedRowsCount -> completeTransaction(tx, updatedRowsCount, fetchAndUpdatePromise))
 
                   // Close connection
-                  .eventually(v -> connection.close())));
+                  .eventually(v -> connection.close()))
+                .onFailure(h -> {
+                  tx.rollback();
+                  log.error("Error occurred in fetchAndUpdatesItems: {}, rolled back transaction...", h.getMessage());
+                  fetchAndUpdatePromise.fail(h.getCause());
+                })
+            );
       }
     });
 
@@ -224,6 +230,7 @@ public class ShelvingOrderUpdate {
         .onSuccess(h -> itemsUpdatePromise.complete(updatedRowsCount))
         .onFailure(h -> itemsUpdatePromise.fail(h.getCause().getMessage()));
 
+    log.info("Finishing of \"completeTransaction\", itemsUpdatePromise: {}", itemsUpdatePromise);
     return Future.succeededFuture();
   }
 
@@ -249,6 +256,7 @@ public class ShelvingOrderUpdate {
       promise.complete(Collections.emptyList());
     }
 
+    log.info("Finishing of aggregateRow2List, promise: {}", promise);
     return promise.future();
   }
 
@@ -265,6 +273,7 @@ public class ShelvingOrderUpdate {
         .map(EffectiveCallNumberComponentsUtil::getCalculateAndSetEffectiveShelvingOrder)
         .collect(Collectors.toMap(item -> UUID.fromString(item.getId()), JsonObject::mapFrom));
 
+    log.info("Finishing of calculateShelvingOrder, updatedItemsMap: {}", updatedItemsMap);
     return Future.succeededFuture(updatedItemsMap);
   }
 
@@ -282,6 +291,7 @@ public class ShelvingOrderUpdate {
         .map(entry -> itemsUpdateParams.add(Tuple.of(entry.getValue(), entry.getKey())))
         .collect(Collectors.toList());
 
+    log.info("Finishing of prepareItemsUpdate, itemsUpdateParams: {}", itemsUpdateParams);
     return Future.succeededFuture(itemsUpdateParams);
   }
 
@@ -315,6 +325,7 @@ public class ShelvingOrderUpdate {
       }
     });
 
+    log.info("Finishing of updateItems, promise: {}", promise);
     return promise.future();
   }
 
