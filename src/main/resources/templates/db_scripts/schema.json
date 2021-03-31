@@ -905,7 +905,7 @@
     {
         "run":"after",
         "snippetPath":"setPreviouslyHeldDefault.sql",
-        "fromModuleVersion":"20.1.0"
+        "fromModuleVersion":"20.2.0"
     },
     {
       "run": "before",
