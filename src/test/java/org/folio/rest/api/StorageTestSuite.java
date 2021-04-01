@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.folio.postgres.testing.PostgresTesterContainer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,6 +37,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import lombok.SneakyThrows;
+
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -105,10 +108,9 @@ public class StorageTestSuite {
   public static Vertx getVertx() {
     return vertx;
   }
-
+  @SneakyThrows
   @BeforeClass
-  public static void before()
-    throws Exception {
+  public static void before() {
 
     logger.info("starting @BeforeClass before()");
 
@@ -117,34 +119,7 @@ public class StorageTestSuite {
 
     vertx = Vertx.vertx();
 
-    String useExternalDatabase = System.getProperty(
-      "org.folio.inventory.storage.test.database",
-      "embedded");
-
-    switch (useExternalDatabase) {
-      case "environment":
-        System.out.println("Using environment settings");
-        break;
-
-      case "external":
-        String postgresConfigPath = System.getProperty(
-          "org.folio.inventory.storage.test.config",
-          "/postgres-conf-local.json");
-
-        PostgresClient.setConfigFilePath(postgresConfigPath);
-        break;
-      case "embedded":
-        PostgresClient.setIsEmbedded(true);
-        PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-        break;
-      default:
-        String message = "No understood database choice made." +
-          "Please set org.folio.inventory.storage.test.config" +
-          "to 'external', 'environment' or 'embedded'";
-
-        throw new Exception(message);
-    }
-
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     kafkaContainer.start();
     logger.info("starting Kafka host={} port={}",
       kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
