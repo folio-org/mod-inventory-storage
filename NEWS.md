@@ -1,8 +1,12 @@
+## 20.2.0 IN-PROGRESS
+
+* Defaults instance.previouslyHeld to false (MODINVSTOR-454)
+* Provides `instance-storage 7.7`
+
 ## 20.1.0 2021-03-25
 
 * Introduces `contributorsNames` CQL index for searching `instances` (MODINVSTOR-705)
 * Introduces `REPLICATION_FACTOR` environment variable for configuring Kafka topic replication (MODINVSTOR-694)
-* Provides `instance-storage 7.7`
 
 ## 20.0.0 2021-03-11
 

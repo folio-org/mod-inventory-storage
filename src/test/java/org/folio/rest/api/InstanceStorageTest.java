@@ -147,6 +147,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(instance.getString("id"), is(id.toString()));
     assertThat(instance.getString("title"), is("Long Way to a Small Angry Planet"));
+    assertThat(instance.getBoolean("previouslyHeld"), is(false));
 
     JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
