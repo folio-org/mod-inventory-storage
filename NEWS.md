@@ -1,13 +1,14 @@
 ## 20.2.0 IN-PROGRESS
 
 * Adds `effective location` attribute to holdings record (MODINVSTOR-669)
-* Provides `holdings-storage 4.6` (MODINVSTOR-669)
+* Defaults instance.previouslyHeld to false (MODINVSTOR-454)
+* Provides `holdings-storage 4.6` (MODINVSTOR-669
+* Provides `instance-storage 7.7`
 
 ## 20.1.0 2021-03-25
 
 * Introduces `contributorsNames` CQL index for searching `instances` (MODINVSTOR-705)
 * Introduces `REPLICATION_FACTOR` environment variable for configuring Kafka topic replication (MODINVSTOR-694)
-* Provides `instance-storage 7.7`
 
 ## 20.0.0 2021-03-11
 

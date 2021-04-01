@@ -78,7 +78,8 @@ import org.testcontainers.utility.DockerImageName;
   InstanceDomainEventTest.class,
   InventoryViewTest.class,
   ReindexJobRunnerTest.class,
-  EffectiveLocationMigrationTest.class
+  EffectiveLocationMigrationTest.class,
+  PreviouslyHeldDataUpgradeTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
