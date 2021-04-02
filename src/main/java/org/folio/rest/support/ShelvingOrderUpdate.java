@@ -1,17 +1,24 @@
 package org.folio.rest.support;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import static org.folio.rest.support.CompletableFutureUtil.getFutureResult;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -34,6 +41,21 @@ import org.folio.rest.persist.PostgresClient;
 
 public class ShelvingOrderUpdate {
   private static final Logger log = LogManager.getLogger();
+
+//  public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+  public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS+0000";
+
+  public static final ObjectMapper jsonMapper =
+      new ObjectMapper()
+          .enable(SerializationFeature.INDENT_OUTPUT)
+          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+  static {
+    SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT);
+    df.setTimeZone(TimeZone.getTimeZone("UTC"));
+    jsonMapper.setDateFormat(df);
+  }
 
   private static final String SQL_SELECT_ITEMS =
       new StringBuilder()
@@ -126,31 +148,29 @@ public class ShelvingOrderUpdate {
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, headers);
 
       final long startTime = System.currentTimeMillis();
-      fetchAndUpdatesItems(vertx, postgresClient)
-          .onSuccess(rowsAffected -> {
-           totalUpdatedRows.addAndGet(rowsAffected);
-            // If previous updates returns affected rows, try it again
-            if (rowsAffected > 0) {
-              fetchAndUpdatesItems(vertx, postgresClient);
-            } else {
-              // No rows affected, just set accumulated amount of rows to result
-              log.info("Items update with shelving order property completed in {} seconds",
-                  (System.currentTimeMillis() - startTime) / 1000);
-              updateItemsPromise.complete(totalUpdatedRows.get());
-//              completionHandlerPromise.complete((totalUpdatedRows.get() > 0));
-            }
-          })
-          .onFailure(h -> {
-            updateItemsPromise.fail(h.getCause());
-//            completionHandlerPromise.fail(h.getCause());
-            log.error("Error updating items: {}", h.getCause().getMessage());
-          });
+
+      int rowsAffected = 0;
+      do {
+        Future<Integer> affectedRowsFuture = fetchAndUpdatesItems(vertx, postgresClient);
+        rowsAffected = getFutureResult(affectedRowsFuture);
+
+        if (affectedRowsFuture.failed()) {
+          log.error("Error updating portion of items: {}", affectedRowsFuture.cause().getMessage());
+          updateItemsPromise.fail(affectedRowsFuture.cause());
+        } else {
+          log.info("Portion of items has been updated: affected rows amount: {}", rowsAffected);
+          totalUpdatedRows.addAndGet(rowsAffected);
+        }
+      } while (rowsAffected > 0);
+
+      log.info("Items updates with shelving order property completed in {} seconds",
+          (System.currentTimeMillis() - startTime) / 1000);
+      updateItemsPromise.complete(totalUpdatedRows.get());
 
     } else {
       log.info("Module isn't eligible for upgrade, just exit.");
       // Not allowed to perform items updates, just returns
       updateItemsPromise.complete(0);
-//      completionHandlerPromise.complete(Boolean.FALSE);
     }
 
     return updateItemsPromise.future();
@@ -196,6 +216,10 @@ public class ShelvingOrderUpdate {
 
                   // Updates of items
                   .compose(listOfTuple -> updateItems(listOfTuple, connection))
+                    .onFailure(h -> {
+                      log.error("Failed updateItems execution: {}, transaction will be rolled back/", h.getMessage());
+                      tx.rollback();
+                      })
 
                   // Finish transaction
                   .compose(updatedRowsCount -> completeTransaction(tx, updatedRowsCount, fetchAndUpdatePromise))
@@ -234,6 +258,27 @@ public class ShelvingOrderUpdate {
     return Future.succeededFuture();
   }
 
+  public <T> String toJsonString(T object) {
+    try {
+      return jsonMapper.writeValueAsString(object);
+    } catch (JsonProcessingException jpe) {
+      log.error("Error occurs when converting {} to JSON string", object);
+    }
+    return StringUtils.EMPTY;
+  }
+
+  public <T> T fromJsonString(String jsonString, Class<T> clazz) {
+    try {
+      T object = jsonMapper.readValue(jsonString, clazz);
+      return object;
+    } catch (JsonMappingException jme) {
+      log.error("Mapping error: {} occurs when converting {} from JSON string to {}", jme, jsonString, clazz);
+    } catch (JsonProcessingException jpe) {
+      log.error("Processing error: {} occurs when converting {} from JSON string to {}",jpe, jsonString, clazz);
+    }
+    return null;
+  }
+
   /**
    * Read items and fill them into data structures for further processing
    * 
@@ -248,7 +293,10 @@ public class ShelvingOrderUpdate {
       List<Item> targetList = new ArrayList<>();
       rowSet.forEach(row -> {
         JsonObject itemJsonObject = row.getJsonObject("itemJson");
-        Item item = itemJsonObject.mapTo(Item.class);
+        log.info("Read JSON from database as JsonObject : {}", itemJsonObject);
+        log.info("JonObject toString: {}", itemJsonObject.toString());
+        Item item = fromJsonString(itemJsonObject.toString(), Item.class);
+        log.info("Deserialized item which was converted to JSON string : {}", toJsonString(item));
         targetList.add(item);
       });
       promise.complete(targetList);
@@ -269,9 +317,15 @@ public class ShelvingOrderUpdate {
     log.info("Invoking of calculateShelvingOrder, itemList size: {}",
         Optional.ofNullable(itemList).orElse(new ArrayList<>()).size());
 
+    final ObjectMapper objectMapper = new ObjectMapper();
     Map<UUID, JsonObject> updatedItemsMap = itemList.stream()
         .map(EffectiveCallNumberComponentsUtil::getCalculateAndSetEffectiveShelvingOrder)
-        .collect(Collectors.toMap(item -> UUID.fromString(item.getId()), JsonObject::mapFrom));
+        .collect(Collectors.toMap(
+            item -> UUID.fromString(item.getId()),
+            item -> {
+              log.info("map's value, an item: {}", item);
+              return new JsonObject(toJsonString(item));
+            }));
 
     log.info("Finishing of calculateShelvingOrder, updatedItemsMap: {}", updatedItemsMap);
     return Future.succeededFuture(updatedItemsMap);
@@ -305,7 +359,7 @@ public class ShelvingOrderUpdate {
   public Future<Integer> updateItems(List<Tuple> itemsParams, PgConnection connection) {
     log.info("Invoking of updateItems, itemsParams size: {}", itemsParams.size());
     log.info("Items parameters for update SQL: {}",
-        StringUtils.defaultIfBlank(itemsParams.stream().map(Tuple::toString).collect(Collectors.joining(",")),
+        StringUtils.defaultIfBlank(itemsParams.stream().map(Tuple::deepToString).collect(Collectors.joining(",")),
             "none"));
 
     if (itemsParams.isEmpty()) {

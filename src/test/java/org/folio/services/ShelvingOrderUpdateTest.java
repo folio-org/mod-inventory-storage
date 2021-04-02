@@ -1,5 +1,6 @@
 package org.folio.services;
 
+import static org.folio.rest.support.CompletableFutureUtil.getFutureResult;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -344,17 +345,6 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     postTenantOperation(tenant, fromModuleVersion);
 
     log.info("doModuleUpgrade post tenant operation completed");
-  }
-
-  private static <T> T getFutureResult(Future<T> future) {
-    log.info("Started \"getFutureResult\", future: {} ...", future);
-    return getFutureResult(future.toCompletionStage().toCompletableFuture());
-  }
-
-  @SneakyThrows
-  private static <T> T getFutureResult(CompletableFuture<T> future) {
-    log.info("Started \"getFutureResult 2\", future: {} ...", future);
-    return future.get();
   }
 
   @SneakyThrows
