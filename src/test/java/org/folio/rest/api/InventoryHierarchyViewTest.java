@@ -115,6 +115,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
+    log.info("hierarchy objects: " + instancesData.toString());
     // then
     assertThat(
       instancesData.get(0),

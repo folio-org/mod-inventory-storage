@@ -115,6 +115,32 @@
                     "type": "string"
                   }
                 }
+              },
+              "effectiveLocation": {
+                "type": "object",
+                "description": "Effective location, shelving location, or holding which is a physical place where items are stored, or an Online location",
+                "properties": {
+                  "name": {
+                    "description": "Name of the (shelf) location",
+                    "type": "string"
+                  },
+                  "campusName": {
+                    "description": "The name of the campus, the second-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "libraryName": {
+                    "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "institutionName": {
+                    "description": "The name of the institution, the first-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "code": {
+                    "description": "Code of the (shelf) location, usually an abbreviation of the name",
+                    "type": "string"
+                  }
+                }
               }
             },
             "required": [
