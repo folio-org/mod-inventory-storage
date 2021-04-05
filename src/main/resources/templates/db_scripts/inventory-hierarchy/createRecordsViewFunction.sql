@@ -238,7 +238,13 @@ WITH
                                                                                                         'code', holdTempLoc.locJsonb ->> 'code',
                                                                                                         'campusName', holdTempLoc.locCampJsonb ->> 'name',
                                                                                                         'libraryName', holdTempLoc.locLibJsonb ->> 'name',
-                                                                                                        'institutionName', holdTempLoc.locInstJsonb ->> 'name'))
+                                                                                                        'institutionName', holdTempLoc.locInstJsonb ->> 'name'),
+                                                                                     'effectiveLocation',
+                                                                                     jsonb_build_object('name', COALESCE(holdEffLoc.locJsonb ->> 'discoveryDisplayName', holdEffLoc.locJsonb ->> 'name'),
+                                                                                                        'code', holdEffLoc.locJsonb ->> 'code',
+                                                                                                        'campusName', holdEffLoc.locCampJsonb ->> 'name',
+                                                                                                        'libraryName', holdEffLoc.locLibJsonb ->> 'name',
+                                                                                                        'institutionName', holdEffLoc.locInstJsonb ->> 'name'))
                                                                ELSE NULL END::jsonb,
                                                                'callNumber', json_build_object('prefix', hr.jsonb ->> 'callNumberPrefix',
                                                                                                'suffix', hr.jsonb ->> 'callNumberSuffix',
@@ -382,6 +388,9 @@ WITH
                   -- Holdings Temporary location relation
                   LEFT JOIN viewLocations holdTempLoc
                        ON (hr.jsonb ->> 'temporaryLocationId')::uuid = holdTempLoc.locId
+                  -- Holdings Effective location relation
+                  LEFT JOIN viewLocations holdEffLoc
+                       ON (hr.jsonb ->> 'effectiveLocationId')::uuid = holdEffLoc.locId
                   -- Holdings Call number type relation
                   LEFT JOIN ${myuniversity}_${mymodule}.call_number_type hrcnt
                        ON (hr.jsonb ->> 'callNumberTypeId')::uuid = hrcnt.id
