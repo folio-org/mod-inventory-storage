@@ -653,6 +653,11 @@
           "tOps": "ADD"
         },
         {
+          "fieldName": "effectiveLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
           "fieldName": "holdingsTypeId",
           "targetTable": "holdings_type",
           "tOps": "ADD"
@@ -921,6 +926,11 @@
       "run": "before",
       "snippetPath": "createCallNumberNormalizationFunctions.sql",
       "fromModuleVersion": "19.2.0"
+    },
+    {
+      "run":"after",
+      "snippetPath":"setEffectiveLocation.sql",
+      "fromModuleVersion":"20.1.0"
     },
     {
       "run": "after",

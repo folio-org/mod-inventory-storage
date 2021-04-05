@@ -99,6 +99,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>postgres-testing</artifactId>
+      <version>${raml-module-builder-version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.13.1</version>
@@ -150,7 +156,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>32.0.2</raml-module-builder-version>
+    <raml-module-builder-version>32.2.0</raml-module-builder-version>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances</generate_routing_context>
     <argLine />
   </properties>

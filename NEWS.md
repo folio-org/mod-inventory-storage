@@ -1,6 +1,8 @@
 ## 20.2.0 IN-PROGRESS
 
+* Adds `effective location` attribute to holdings record (MODINVSTOR-669)
 * Defaults instance.previouslyHeld to false (MODINVSTOR-454)
+* Provides `holdings-storage 4.6` (MODINVSTOR-669
 * Provides `instance-storage 7.7`
 
 ## 20.1.0 2021-03-25
