@@ -143,8 +143,18 @@ public final class InventoryHierarchyResponseMatchers {
     return hasHoldingsElement(JsonPointer.from("/location/permanentLocation/name"), ArrayUtils.toArray(permanentLocation));
   }
 
+  public static Matcher<JsonObject> hasEffectiveLocationForHoldings(String effectiveLocation) {
+    return hasHoldingsElement(
+      JsonPointer.from("/location/effectiveLocation/name"), 
+      ArrayUtils.toArray(effectiveLocation));
+  }
+
   public static Matcher<JsonObject> hasPermanentLocationCodeForHoldings(String location) {
     return hasHoldingsElement(JsonPointer.from("/location/permanentLocation/code"), ArrayUtils.toArray(location));
+  }
+
+  public static Matcher<JsonObject> hasEffectiveLocationCodeForHoldings(String location) {
+    return hasHoldingsElement(JsonPointer.from("/location/effectiveLocation/code"), ArrayUtils.toArray(location));
   }
 
   public static Matcher<JsonObject> hasLocationCodeForItems(String...code) {

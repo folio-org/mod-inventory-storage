@@ -8,6 +8,8 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyItemsAndHoldings;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyUpdatedInstanceIds;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasEffectiveLocationCodeForHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasEffectiveLocationForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasAggregatedNumberOfHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasAggregatedNumberOfItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasCallNumberForItems;
@@ -84,7 +86,6 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     holdingsRecordIdPredefined = createInstanceAndHolding(mainLibraryLocationId);
     predefinedHoldings = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
-
     predefinedInstance = instancesClient.getAll().get(0);
 
     createItem(mainLibraryLocationId, "item barcode", "item effective call number 1", journalMaterialTypeId);
@@ -121,8 +122,10 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       instancesData.get(0),
       allOf(
         hasIdForHoldings(predefinedHoldings.getString("id")),
+        hasEffectiveLocationForHoldings("d:Main Library"),
         hasPermanentLocationForHoldings("d:Main Library"),
         hasPermanentLocationCodeForHoldings("TestBaseWI/M"),
+        hasEffectiveLocationCodeForHoldings("TestBaseWI/M"),
         hasAggregatedNumberOfHoldings(1)
       )
     );
