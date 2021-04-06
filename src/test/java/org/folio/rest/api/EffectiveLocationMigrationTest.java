@@ -28,7 +28,7 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
   private static UUID instanceId = UUID.randomUUID();
   private static UUID holdingsId = UUID.randomUUID();
   private static final String SET_EFFECTIVE_LOCATION = ResourceUtil
-    .asString("templates/db_scripts/setEffectiveLocation.sql")
+    .asString("templates/db_scripts/setEffectiveHoldingsLocation.sql")
     .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
   private static String removeExistingField = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb - 'effectiveLocationId';";
   private static String query = "SELECT jsonb FROM test_tenant_mod_inventory_storage.holdings_record WHERE id = '" + holdingsId.toString() + "';";
