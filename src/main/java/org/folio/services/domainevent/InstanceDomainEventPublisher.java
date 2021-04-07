@@ -3,17 +3,16 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
-import static org.folio.services.domainevent.DomainEvent.reindexEvent;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import javax.ws.rs.core.Response;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,12 +22,8 @@ import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.services.batch.BatchOperationContext;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-
 public class InstanceDomainEventPublisher {
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
-  public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
 
   private final InstanceRepository instanceRepository;
   private final CommonDomainEventPublisher<Instance> domainEventService;
@@ -87,13 +82,6 @@ public class InstanceDomainEventPublisher {
         .compose(notUsed -> publishInstancesUpdated(batchOperation.getExistingRecords()))
         .map(response);
     };
-  }
-
-  public Future<Void> publishInstanceReindex(String instanceId, String reindexJobId) {
-    var jobIdHeader = Map.of(REINDEX_JOB_ID_HEADER, reindexJobId);
-
-    return domainEventService.publishMessage(instanceId,
-      reindexEvent(domainEventService.tenantId), jobIdHeader);
   }
 
   private Future<Void> publishInstancesUpdated(Collection<Instance> oldInstances) {

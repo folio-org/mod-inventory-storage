@@ -46,7 +46,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "4.5",
+      "version": "4.6",
       "handlers": [
         {
           "methods": ["GET"],
@@ -88,7 +88,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "7.6",
+      "version": "7.7",
       "handlers": [
         {
           "methods": ["GET"],
@@ -2458,7 +2458,8 @@
       { "name": "DB_CHARSET", "value": "UTF-8" },
       { "name": "DB_MAXPOOLSIZE", "value": "5" },
       { "name": "KAFKA_HOST", "value": "kafka" },
-      { "name": "KAFKA_PORT", "value": "9092" }
+      { "name": "KAFKA_PORT", "value": "9092" },
+      { "name": "REPLICATION_FACTOR", "value": "1" }
     ]
   }
 }

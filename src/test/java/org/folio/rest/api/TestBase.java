@@ -92,6 +92,8 @@ public abstract class TestBase {
       invokeStorageTestSuiteAfter = true;
       StorageTestSuite.before();
       vertx = StorageTestSuite.getVertx();
+    } else {
+      invokeStorageTestSuiteAfter = false;
     }
 
     client = new HttpClient(vertx);

@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.folio.postgres.testing.PostgresTesterContainer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,14 +23,12 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
+import org.folio.services.kafka.KafkaProperties;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServer;
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Promise;
@@ -38,6 +37,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import lombok.SneakyThrows;
+
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -77,7 +80,9 @@ import io.vertx.sqlclient.RowSet;
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
   InventoryViewTest.class,
-  ReindexJobRunnerTest.class
+  ReindexJobRunnerTest.class,
+  EffectiveLocationMigrationTest.class,
+  PreviouslyHeldDataUpgradeTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
@@ -85,8 +90,8 @@ public class StorageTestSuite {
   private static Vertx vertx;
   private static int port;
 
-  private static final EmbeddedKafkaServer kafka = new EmbeddedKafkaServerBuilder()
-    .kafkaServerPort(9092).build();
+  private static final KafkaContainer kafkaContainer
+    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
 
   private StorageTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
@@ -103,10 +108,9 @@ public class StorageTestSuite {
   public static Vertx getVertx() {
     return vertx;
   }
-
+  @SneakyThrows
   @BeforeClass
-  public static void before()
-    throws Exception {
+  public static void before() {
 
     logger.info("starting @BeforeClass before()");
 
@@ -115,33 +119,12 @@ public class StorageTestSuite {
 
     vertx = Vertx.vertx();
 
-    String useExternalDatabase = System.getProperty(
-      "org.folio.inventory.storage.test.database",
-      "embedded");
-
-    switch (useExternalDatabase) {
-      case "environment":
-        System.out.println("Using environment settings");
-        break;
-
-      case "external":
-        String postgresConfigPath = System.getProperty(
-          "org.folio.inventory.storage.test.config",
-          "/postgres-conf-local.json");
-
-        PostgresClient.setConfigFilePath(postgresConfigPath);
-        break;
-      case "embedded":
-        PostgresClient.setIsEmbedded(true);
-        PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-        break;
-      default:
-        String message = "No understood database choice made." +
-          "Please set org.folio.inventory.storage.test.config" +
-          "to 'external', 'environment' or 'embedded'";
-
-        throw new Exception(message);
-    }
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    kafkaContainer.start();
+    logger.info("starting Kafka host={} port={}",
+      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
+    KafkaProperties.setHost(kafkaContainer.getHost());
+    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
 
     logger.info("starting RestVerticle");
 
@@ -152,7 +135,6 @@ public class StorageTestSuite {
 
     logger.info("preparing tenant");
 
-    kafka.start();
     prepareTenant(TENANT_ID, false);
 
     logger.info("finished @BeforeClass before()");
@@ -165,9 +147,10 @@ public class StorageTestSuite {
     TimeoutException {
 
     removeTenant(TENANT_ID);
+    kafkaContainer.stop();
     vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
+    vertx = null; // declare it dead but also for TestBase.testBaseBeforeClass.
     PostgresClient.stopEmbeddedPostgres();
-    kafka.stop();
   }
 
   static void deleteAll(URL rootUrl) {

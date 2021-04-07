@@ -471,6 +471,10 @@
           "multiFieldNames": "title,indexTitle,alternativeTitles[*].alternativeTitle,series"
         },
         {
+          "fieldName": "contributorsNames",
+          "multiFieldNames": "contributors[*].name"
+        },
+        {
           "fieldName": "title"
         },
         {
@@ -645,6 +649,11 @@
         },
         {
           "fieldName": "temporaryLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "effectiveLocationId",
           "targetTable": "location",
           "tOps": "ADD"
         },
@@ -915,6 +924,11 @@
   ],
   "scripts": [
     {
+        "run":"after",
+        "snippetPath":"setPreviouslyHeldDefault.sql",
+        "fromModuleVersion":"20.2.0"
+    },
+    {
       "run": "before",
       "snippetPath": "populateRmbInternalIndex.sql",
       "fromModuleVersion": "19.1.1"
@@ -928,6 +942,11 @@
       "run": "before",
       "snippetPath": "createCallNumberNormalizationFunctions.sql",
       "fromModuleVersion": "19.2.0"
+    },
+    {
+      "run":"after",
+      "snippetPath":"setEffectiveLocation.sql",
+      "fromModuleVersion":"20.1.0"
     },
     {
       "run": "after",
