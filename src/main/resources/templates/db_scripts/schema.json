@@ -895,6 +895,22 @@
       "tableName": "reindex_job",
       "withMetadata": false,
       "withAuditing": false
+    },
+    {
+      "tableName": "bound_with_part",
+      "withMetadata": true,
+      "foreignKeys": [
+        {
+          "fieldName": "itemId",
+          "targetTable": "item",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "holdingsRecordId",
+          "targetTable": "holdings_record",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "scripts": [
