@@ -929,7 +929,7 @@
     },
     {
       "run":"after",
-      "snippetPath":"setEffectiveLocation.sql",
+      "snippetPath":"setEffectiveHoldingsLocation.sql",
       "fromModuleVersion":"20.1.0"
     },
     {
