@@ -157,8 +157,6 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
         hasAggregatedNumberOfHoldings(1)
       )
     );
-
-
   }
   @Test
   public void canRequestInventoryHierarchyItemsWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
