@@ -20,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1850,7 +1849,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedInstanceWithCatStatus = updateInstance(instanceWithCatStatus)
       .getJson();
 
-    JsonObject instanceWithOthStatus = instanceWithCatStatus.copy()
+    JsonObject instanceWithOthStatus = updatedInstanceWithCatStatus.copy()
       .put("statusId", getOtherInstanceType().getId().toString());
     JsonObject updatedInstanceWithOthStatus = updateInstance(instanceWithOthStatus)
       .getJson();

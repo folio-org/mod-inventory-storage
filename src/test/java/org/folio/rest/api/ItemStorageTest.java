@@ -81,7 +81,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.matchers.DomainEventAssertions;
-import org.folio.services.CallNumberUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -739,6 +738,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("hrid", "testHRID");
     createItem(itemToCreate);
 
+    itemToCreate = getById(itemId).getJson();
     itemToCreate.put("materialTypeId", UUID.randomUUID().toString());
 
     CompletableFuture<Response> completed = new CompletableFuture<>();
@@ -1333,7 +1333,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     Instant changedStatusDate = item.getStatus().getDate().toInstant();
 
-    JsonObject secondReplacement = itemToCreate.copy();
+    JsonObject secondReplacement = getResponse.getJson().copy();
 
     secondReplacement
       .put("status", new JsonObject().put("name", "Available"));
