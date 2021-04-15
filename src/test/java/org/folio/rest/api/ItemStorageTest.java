@@ -14,6 +14,7 @@ import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
+import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
@@ -358,6 +359,19 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedItemResponse = itemsClient.getById(id).getJson();
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
     assertUpdateEventForItem(createdItem, getById(id).getJson());
+  }
+
+  @Test
+  public void optimisticLockingVersion() {
+    UUID itemId = UUID.randomUUID();
+    UUID holdingId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject item = createItem(nod(itemId, holdingId));
+    item.put(PERMANENT_LOCATION_ID_KEY, annexLibraryLocationId);
+    // updating with current _version 1 succeeds and increments _version to 2
+    assertThat(update(item).getStatusCode(), is(204));
+    item.put(PERMANENT_LOCATION_ID_KEY, secondFloorLocationId);
+    // updating with outdated _version 1 fails, current _version is 2
+    assertThat(update(item).getStatusCode(), is(409));
   }
 
   @Test
@@ -2367,19 +2381,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(poli1Items.get(0).getId(), is(firstItem.getId()));
   }
 
-  private Response getById(UUID id) throws InterruptedException,
-    ExecutionException, TimeoutException {
-
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", id));
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(getItemUrl, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    return getCompleted.get(5, TimeUnit.SECONDS);
-  }
-
   private static JsonObject createItemRequest(
       UUID id,
       UUID holdingsRecordId,
@@ -2454,6 +2455,20 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     client.get(itemsStorageUrl("/" + id), TENANT_ID, json(getCompleted));
     try {
       return getCompleted.get(5, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Response getById(UUID id) {
+    return getById(id.toString());
+  }
+
+  private Response update(JsonObject item) {
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + item.getString("id")), item, TENANT_ID, empty(completed));
+    try {
+      return completed.get(5, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }

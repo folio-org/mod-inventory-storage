@@ -612,6 +612,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void optimisticLockingVersion() {
+    UUID holdingId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject holding = getById(holdingId.toString()).getJson();
+    holding.put(PERMANENT_LOCATION_ID_KEY, annexLibraryLocationId);
+    // updating with current _version 1 succeeds and increments _version to 2
+    assertThat(update(holding).getStatusCode(), is(204));
+    holding.put(PERMANENT_LOCATION_ID_KEY, secondFloorLocationId);
+    // updating with outdated _version 1 fails, current _version is 2
+    assertThat(update(holding).getStatusCode(), is(409));
+  }
+
+  @Test
   public void updatingPermanentLocationChangesEffectiveLocationWhenNoTemporaryLocationSet()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
@@ -2493,6 +2505,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       ResponseHandler.empty(putCompleted));
 
     return putCompleted.get(5, TimeUnit.SECONDS);
+  }
+
+  private Response update(JsonObject holding) {
+    URL holdingsUrl = holdingsStorageUrl("/" + holding.getString("id"));
+    try {
+      return update(holdingsUrl, holding);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private List<String> getTags(JsonObject json) {

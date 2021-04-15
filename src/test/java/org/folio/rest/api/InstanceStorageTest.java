@@ -281,6 +281,19 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void optimisticLockingVersion() throws Exception {
+    UUID id = UUID.randomUUID();
+    createInstance(nod(id));
+    JsonObject instance = getById(id).getJson();
+    instance.put("title", "foo");
+    // updating with current _version 1 succeeds and increments _version to 2
+    assertThat(update(instance).getStatusCode(), is(204));
+    instance.put("title", "bar");
+    // updating with outdated _version 1 fails, current _version is 2
+    assertThat(update(instance).getStatusCode(), is(409));
+  }
+
+  @Test
   public void cannotProvideAdditionalPropertiesInInstance()
     throws InterruptedException,
     MalformedURLException,
@@ -2779,19 +2792,25 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     return new IndividualResource(response);
   }
 
-  private IndividualResource updateInstance(JsonObject instance)
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
-
+  private Response update(JsonObject instance) {
     final UUID id = UUID.fromString(instance.getString("id"));
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
     client.put(instancesStorageUrl(String.format("/%s", id)), instance,
       TENANT_ID, ResponseHandler.empty(replaceCompleted));
 
-    Response putResponse = replaceCompleted.get(5, SECONDS);
+    try {
+      return replaceCompleted.get(5, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private IndividualResource updateInstance(JsonObject instance) {
+    Response putResponse = update(instance);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    Response getResponse = getById(id);
+    Response getResponse = getById(instance.getString("id"));
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
 
     return new IndividualResource(getResponse);
