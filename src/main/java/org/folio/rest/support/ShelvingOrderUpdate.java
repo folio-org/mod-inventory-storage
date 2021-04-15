@@ -2,23 +2,17 @@ package org.folio.rest.support;
 
 import static org.folio.rest.support.CompletableFutureUtil.getFutureResult;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -43,33 +37,40 @@ public class ShelvingOrderUpdate {
   private static final Logger log = LogManager.getLogger();
 
 //  public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-  public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS+0000";
+  public static final String UPDATED_ATTR_NAME = "effectiveShelvingOrder";
 
-  public static final ObjectMapper jsonMapper =
-      new ObjectMapper()
-          .enable(SerializationFeature.INDENT_OUTPUT)
-          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-
-  static {
-    SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT);
-    df.setTimeZone(TimeZone.getTimeZone("UTC"));
-    jsonMapper.setDateFormat(df);
-  }
+//  public static final ObjectMapper jsonMapper =
+//      new ObjectMapper()
+//          .enable(SerializationFeature.INDENT_OUTPUT)
+//          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+//          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+//
+//  static {
+//    SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT);
+//    df.setTimeZone(TimeZone.getTimeZone("UTC"));
+//    jsonMapper.setDateFormat(df);
+//  }
 
   private static final String SQL_SELECT_ITEMS =
       new StringBuilder()
           .append("SELECT id AS \"id\", ")
           .append("jsonb AS \"itemJson\" ")
-          .append("FROM item WHERE not (jsonb ? 'effectiveShelvingOrder') ")
+          .append(String.format("FROM item WHERE not (jsonb ? '%s') ", UPDATED_ATTR_NAME))
           .append(" FOR UPDATE ")
           .append("LIMIT $1").toString();
 
 
-  private static final String SQL_UPDATE_ITEMS = new StringBuilder()
+  private static final String SQL_UPDATE_ITEMS1 = new StringBuilder()
       .append("UPDATE ITEM ")
       .append("SET jsonb = $1 ")
       .append("WHERE id = $2").toString();
+
+  private static final String SQL_UPDATE_ITEMS = new StringBuilder()
+      .append("UPDATE ITEM ")
+      .append(String.format("SET jsonb = jsonb - '%s' || jsonb_build_object('%s', $2) ", UPDATED_ATTR_NAME, UPDATED_ATTR_NAME))
+      .append("WHERE id = $1 ")
+      .append("AND COALESCE($2, '') <> ''")
+      .toString();
 
   // Defines version threshold where this property was introduces from
   private static final String VERSION_WITH_SHELVING_ORDER = "20.1.0";
@@ -258,26 +259,26 @@ public class ShelvingOrderUpdate {
     return Future.succeededFuture();
   }
 
-  public <T> String toJsonString(T object) {
-    try {
-      return jsonMapper.writeValueAsString(object);
-    } catch (JsonProcessingException jpe) {
-      log.error("Error occurs when converting {} to JSON string", object);
-    }
-    return StringUtils.EMPTY;
-  }
-
-  public <T> T fromJsonString(String jsonString, Class<T> clazz) {
-    try {
-      T object = jsonMapper.readValue(jsonString, clazz);
-      return object;
-    } catch (JsonMappingException jme) {
-      log.error("Mapping error: {} occurs when converting {} from JSON string to {}", jme, jsonString, clazz);
-    } catch (JsonProcessingException jpe) {
-      log.error("Processing error: {} occurs when converting {} from JSON string to {}",jpe, jsonString, clazz);
-    }
-    return null;
-  }
+//  public <T> String toJsonString(T object) {
+//    try {
+//      return jsonMapper.writeValueAsString(object);
+//    } catch (JsonProcessingException jpe) {
+//      log.error("Error occurs when converting {} to JSON string", object);
+//    }
+//    return StringUtils.EMPTY;
+//  }
+//
+//  public <T> T fromJsonString(String jsonString, Class<T> clazz) {
+//    try {
+//      T object = jsonMapper.readValue(jsonString, clazz);
+//      return object;
+//    } catch (JsonMappingException jme) {
+//      log.error("Mapping error: {} occurs when converting {} from JSON string to {}", jme, jsonString, clazz);
+//    } catch (JsonProcessingException jpe) {
+//      log.error("Processing error: {} occurs when converting {} from JSON string to {}",jpe, jsonString, clazz);
+//    }
+//    return null;
+//  }
 
   /**
    * Read items and fill them into data structures for further processing
@@ -295,8 +296,8 @@ public class ShelvingOrderUpdate {
         JsonObject itemJsonObject = row.getJsonObject("itemJson");
         log.info("Read JSON from database as JsonObject : {}", itemJsonObject);
         log.info("JonObject toString: {}", itemJsonObject.toString());
-        Item item = fromJsonString(itemJsonObject.toString(), Item.class);
-        log.info("Deserialized item which was converted to JSON string : {}", toJsonString(item));
+        Item item = itemJsonObject.mapTo(Item.class);
+        log.info("Deserialized item which was converted to JSON string : {}", item);
         targetList.add(item);
       });
       promise.complete(targetList);
@@ -313,39 +314,39 @@ public class ShelvingOrderUpdate {
    * 
    * @return
    */
-  public Future<Map<UUID, JsonObject>> calculateShelvingOrder(List<Item> itemList) {
+  public Future<Map<UUID, String>> calculateShelvingOrder(List<Item> itemList) {
     log.info("Invoking of calculateShelvingOrder, itemList size: {}",
         Optional.ofNullable(itemList).orElse(new ArrayList<>()).size());
 
     final ObjectMapper objectMapper = new ObjectMapper();
-    Map<UUID, JsonObject> updatedItemsMap = itemList.stream()
+    Map<UUID, String> updatedItemsShelvingOrderMap = itemList.stream()
         .map(EffectiveCallNumberComponentsUtil::getCalculateAndSetEffectiveShelvingOrder)
         .collect(Collectors.toMap(
-            item -> UUID.fromString(item.getId()),
+            item -> UUID.fromString(item. getId()),
             item -> {
               log.info("map's value, an item: {}", item);
-              return new JsonObject(toJsonString(item));
+              return item.getEffectiveShelvingOrder();
             }));
 
-    log.info("Finishing of calculateShelvingOrder, updatedItemsMap: {}", updatedItemsMap);
-    return Future.succeededFuture(updatedItemsMap);
+    log.info("Finishing of calculateShelvingOrder, updatedItemsShelvingOrderMap: {}", updatedItemsShelvingOrderMap);
+    return Future.succeededFuture(updatedItemsShelvingOrderMap);
   }
 
   /**
    * Prepare items update parameters
    * 
-   * @param itemIdMap
+   * @param itemIdShelvingOrderMap
    * @return
    */
-  public Future<List<Tuple>> prepareItemsUpdate(Map<UUID, JsonObject> itemIdMap) {
-    log.info("Invoking of prepareItemsUpdate");
+  public Future<List<Tuple>> prepareItemsUpdate(Map<UUID, String> itemIdShelvingOrderMap) {
+    log.info("Invoking of prepareItemsUpdate, itemIdShelvingOrderMap: {}", itemIdShelvingOrderMap);
 
     List<Tuple> itemsUpdateParams = new ArrayList<>();
-    itemIdMap.entrySet().stream()
-        .map(entry -> itemsUpdateParams.add(Tuple.of(entry.getValue(), entry.getKey())))
+    itemIdShelvingOrderMap.entrySet().stream()
+        .map(entry -> itemsUpdateParams.add(Tuple.of(entry.getKey(), entry.getValue())))
         .collect(Collectors.toList());
 
-    log.info("Finishing of prepareItemsUpdate, itemsUpdateParams: {}", itemsUpdateParams);
+    log.info("Finishing of prepareItemsUpdate, itemsUpdateParams: {}, single tuple: {}", itemsUpdateParams, itemsUpdateParams.stream().findFirst().orElse(Tuple.of(StringUtils.EMPTY)));
     return Future.succeededFuture(itemsUpdateParams);
   }
 
@@ -358,9 +359,9 @@ public class ShelvingOrderUpdate {
    */
   public Future<Integer> updateItems(List<Tuple> itemsParams, PgConnection connection) {
     log.info("Invoking of updateItems, itemsParams size: {}", itemsParams.size());
-    log.info("Items parameters for update SQL: {}",
+    log.info("Items parameters for update SQL: {}, query itself: {}",
         StringUtils.defaultIfBlank(itemsParams.stream().map(Tuple::deepToString).collect(Collectors.joining(",")),
-            "none"));
+            "none"), SQL_UPDATE_ITEMS);
 
     if (itemsParams.isEmpty()) {
       log.info("Items parameters for update SQL are empty");

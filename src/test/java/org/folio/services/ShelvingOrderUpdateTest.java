@@ -1,12 +1,12 @@
 package org.folio.services;
 
-import static org.folio.rest.support.CompletableFutureUtil.getFutureResult;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import static org.folio.rest.api.StorageTestSuite.prepareTenant;
 import static org.folio.rest.api.StorageTestSuite.removeTenant;
 import static org.folio.rest.api.StorageTestSuite.tenantOp;
+import static org.folio.rest.support.CompletableFutureUtil.getFutureResult;
 
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +48,12 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.helpers.LocalRowSet;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.ShelvingOrderUpdate;
+import org.folio.rest.support.http.InterfaceUrls;
 
 @NotThreadSafe
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -125,6 +130,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
 
   private static String defaultTenant;
   private static ShelvingOrderUpdate shelvingOrderUpdate;
+  private static HttpClient client;
 
   public Timeout timeoutRule = Timeout.seconds(3600);
 
@@ -133,6 +139,7 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   public static void beforeClass(TestContext context) {
     shelvingOrderUpdate = ShelvingOrderUpdate.getInstance();
     defaultTenant = generateTenantValue();
+    client = new HttpClient(Vertx.vertx());
 
     log.info("Default tenant initialization started: {}", defaultTenant);
     initTenant(defaultTenant, VERSION_WITH_SHELVING_ORDER);
@@ -308,6 +315,20 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   /*
   * Internal purposes functions below
   */
+  @Override
+  protected IndividualResource createItem(Item item) {
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    JsonObject requestPayload = JsonObject.mapFrom(item);
+    try {
+      client.post(InterfaceUrls.itemsStorageUrl(StringUtils.EMPTY), requestPayload, defaultTenant,
+          ResponseHandler.any(createCompleted));
+    } catch (Exception e) {
+      throw new RuntimeException(e.getMessage(), e);
+    }
+    Response response = getFutureResult(createCompleted);
+    return new IndividualResource(response);
+  }
+
   private static TenantAttributes getTenantAttributes(String moduleFrom) {
     return new TenantAttributes().withModuleTo(VERSION_WITH_SHELVING_ORDER)
         .withModuleFrom(moduleFrom);
