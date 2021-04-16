@@ -16,6 +16,7 @@ import java.util.function.Function;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -120,7 +121,7 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
     Collection<DomainType> oldRecords, Map<String, DomainType> newRecords) {
 
     return oldRecords.stream()
-      .map(oldItem -> new ImmutablePair<>(oldItem, newRecords.get(getId(oldItem))))
+      .map(oldItem -> pair(oldItem, newRecords.get(getId(oldItem))))
       .collect(toList());
   }
 
@@ -136,4 +137,12 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
     Collection<Pair<DomainType, DomainType>> oldToNewRecordPairs);
 
   protected abstract String getId(DomainType record);
+
+  static <L, R> Pair<L, R> pair(L left, R right) {
+    return new ImmutablePair<>(left, right);
+  }
+
+  static <L, M, R> Triple<L, M, R> triple(L left, M middle, R right) {
+    return new ImmutableTriple<>(left, middle, right);
+  }
 }

@@ -85,4 +85,8 @@ public abstract class AbstractRepository<T> {
   public Future<RowSet<Row>> deleteAll() {
     return postgresClientFuturized.delete(tableName, new Criterion());
   }
+
+  public Future<RowSet<Row>> deleteById(String id) {
+    return postgresClientFuturized.deleteById(tableName, id);
+  }
 }

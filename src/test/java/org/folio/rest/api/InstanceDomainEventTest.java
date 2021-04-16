@@ -67,7 +67,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
 
     final Response removeResponse = instancesClient.attemptToDelete(instance.getId());
 
-    assertThat(removeResponse.getStatusCode(), is(500));
+    assertThat(removeResponse.getStatusCode(), is(400));
     assertNoRemoveEvent(instance.getId().toString());
   }
 
