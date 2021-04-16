@@ -1,7 +1,6 @@
 package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 
@@ -10,8 +9,8 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
@@ -24,7 +23,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
       new CommonDomainEventPublisher<>(context, okapiHeaders, INVENTORY_INSTANCE));
   }
 
-  public Future<Void> publishInstancesCreated(Collection<Instance> instances) {
+  public Future<Void> publishInstancesCreated(List<Instance> instances) {
     if (instances.isEmpty()) {
       log.info("No instances were created, skipping event sending");
       return succeededFuture();
@@ -34,23 +33,19 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
 
     return domainEventService.publishRecordsCreated(instances.stream()
       .map(instance -> pair(instance.getId(), instance))
-      .collect(toList()));
+      .collect(Collectors.toList()));
   }
 
   @Override
-  protected Future<List<Pair<String, Instance>>> toInstanceIdEventTypePairs(Collection<Instance> records) {
-    return succeededFuture(records.stream()
+  protected Future<List<Pair<String, Instance>>> getInstanceIds(Collection<Instance> instances) {
+    return succeededFuture(instances.stream()
       .map(instance -> pair(instance.getId(), instance))
-      .collect(toList()));
+      .collect(Collectors.toList()));
   }
 
   @Override
-  protected Future<List<Triple<String, Instance, Instance>>> toInstanceIdEventTypeTriples(
-    Collection<Pair<Instance, Instance>> oldToNewRecordPairs) {
-
-    return succeededFuture(oldToNewRecordPairs.stream()
-      .map(pair -> triple(pair.getLeft().getId(), pair.getLeft(), pair.getRight()))
-      .collect(toList()));
+  protected Instance convertDomainToEvent(String instanceId, Instance domain) {
+    return domain;
   }
 
   @Override

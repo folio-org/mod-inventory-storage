@@ -26,6 +26,15 @@ public final class CollectionUtil {
       .collect(Collectors.toList());
   }
 
+  public static <T> T getFirst(Collection<T> collection) {
+    if (collection == null) {
+      return null;
+    }
+
+    return collection.stream()
+      .findFirst().orElse(null);
+  }
+
   /**
    * @throws IllegalArgumentException - if can not serialize/deserialize to/from json
    */
