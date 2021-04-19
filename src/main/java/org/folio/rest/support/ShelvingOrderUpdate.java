@@ -36,20 +36,7 @@ import org.folio.rest.persist.PostgresClient;
 public class ShelvingOrderUpdate {
   private static final Logger log = LogManager.getLogger();
 
-//  public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
   public static final String UPDATED_ATTR_NAME = "effectiveShelvingOrder";
-
-//  public static final ObjectMapper jsonMapper =
-//      new ObjectMapper()
-//          .enable(SerializationFeature.INDENT_OUTPUT)
-//          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-//          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-//
-//  static {
-//    SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT);
-//    df.setTimeZone(TimeZone.getTimeZone("UTC"));
-//    jsonMapper.setDateFormat(df);
-//  }
 
   private static final String SQL_SELECT_ITEMS =
       new StringBuilder()
@@ -69,7 +56,7 @@ public class ShelvingOrderUpdate {
       .append("UPDATE ITEM ")
       .append(String.format("SET jsonb = jsonb - '%s' || jsonb_build_object('%s', $2) ", UPDATED_ATTR_NAME, UPDATED_ATTR_NAME))
       .append("WHERE id = $1 ")
-      .append("AND COALESCE($2, '') <> ''")
+//      .append("AND COALESCE($2, '') <> ''")
       .toString();
 
   // Defines version threshold where this property was introduces from
@@ -106,16 +93,6 @@ public class ShelvingOrderUpdate {
     this.totalUpdatedRows = new AtomicInteger(0);
   }
 
-//  public void setCompletionHandler(Handler<AsyncResult<Boolean>> handler) {
-//    log.info("getCompletionHandler set up: {}", handler);
-//    completionHandler = handler;
-//  }
-
-//  public Handler<AsyncResult<Boolean>> getCompletionHandler() {
-//    log.info("getCompletionHandler acquired: {}", completionHandler);
-//    return completionHandler;
-//  }
-
   /**
    * Entry routine of items updates. Invokes the process recursively until no items to update
    *
@@ -126,15 +103,6 @@ public class ShelvingOrderUpdate {
    */
   public Future<Integer> startUpdatingOfItems(TenantAttributes attributes, Map<String, String> headers,
       Context vertxContext) {
-
-    // Set completion handler promise for notifying if update performed or not
-//    final Promise<Boolean> completionHandlerPromise = Promise.promise();
-//    if (!Objects.isNull(getCompletionHandler())) {
-//      log.info("Setting completionHandler {} to promise: {}", getCompletionHandler(), completionHandlerPromise);
-//      getCompletionHandler().handle(completionHandlerPromise.future());
-//    } else {
-//      log.info("Setting completionHandler skipped, it's a null: {}", getCompletionHandler());
-//    }
 
     final Promise<Integer> updateItemsPromise = Promise.promise();
     final Vertx vertx = vertxContext.owner();
@@ -164,8 +132,8 @@ public class ShelvingOrderUpdate {
         }
       } while (rowsAffected > 0);
 
-      log.info("Items updates with shelving order property completed in {} seconds",
-          (System.currentTimeMillis() - startTime) / 1000);
+      log.info("Items updates with shelving order property completed in {} milliseconds",
+          (System.currentTimeMillis() - startTime));
       updateItemsPromise.complete(totalUpdatedRows.get());
 
     } else {
@@ -247,38 +215,17 @@ public class ShelvingOrderUpdate {
    * @param itemsUpdatePromise
    * @return
    */
-  private Future<Void> completeTransaction(Transaction tx,Integer updatedRowsCount,
+  private Future<Void> completeTransaction(Transaction tx, Integer updatedRowsCount,
       Promise<Integer> itemsUpdatePromise) {
     log.info("Invoking of completeTransaction, updatedRows size: {}", updatedRowsCount);
 
-    tx.commit()
+    Future<Void> commitFuture = tx.commit()
         .onSuccess(h -> itemsUpdatePromise.complete(updatedRowsCount))
         .onFailure(h -> itemsUpdatePromise.fail(h.getCause().getMessage()));
 
-    log.info("Finishing of \"completeTransaction\", itemsUpdatePromise: {}", itemsUpdatePromise);
+    log.info("Finishing of \"completeTransaction\", itemsUpdatePromise: {}, commitFuture: {}", itemsUpdatePromise, commitFuture);
     return Future.succeededFuture();
   }
-
-//  public <T> String toJsonString(T object) {
-//    try {
-//      return jsonMapper.writeValueAsString(object);
-//    } catch (JsonProcessingException jpe) {
-//      log.error("Error occurs when converting {} to JSON string", object);
-//    }
-//    return StringUtils.EMPTY;
-//  }
-//
-//  public <T> T fromJsonString(String jsonString, Class<T> clazz) {
-//    try {
-//      T object = jsonMapper.readValue(jsonString, clazz);
-//      return object;
-//    } catch (JsonMappingException jme) {
-//      log.error("Mapping error: {} occurs when converting {} from JSON string to {}", jme, jsonString, clazz);
-//    } catch (JsonProcessingException jpe) {
-//      log.error("Processing error: {} occurs when converting {} from JSON string to {}",jpe, jsonString, clazz);
-//    }
-//    return null;
-//  }
 
   /**
    * Read items and fill them into data structures for further processing
@@ -371,7 +318,33 @@ public class ShelvingOrderUpdate {
     Promise<Integer> promise = Promise.promise();
     connection.preparedQuery(SQL_UPDATE_ITEMS).executeBatch(itemsParams, res -> {
       if (res.succeeded()) {
+        try {
+          int resultIterationNextRowCount = res.result().next().rowCount();
+          log.info("!!!!!!!!!!!!!! 1) resultIterationNextRowCount: {}", resultIterationNextRowCount);
+        } catch (Exception e) {
+          log.warn("!!!!!!!!!!!!!! 1) Exception occurs: {}", e.getMessage());
+        }
+        try {
+          int resultIterationNextRowCount1 = res.result().next().size();
+          log.info("!!!!!!!!!!!!!! 2) resultIterationNextRowCount1: {}", resultIterationNextRowCount1);
+        } catch (Exception e) {
+          log.warn("!!!!!!!!!!!!!! 2) Exception occurs: {}", e.getMessage());
+        }
+
+        try {
+          int resultIterationNextGetInt = res.result().iterator().next().getInteger(0);
+          log.info("!!!!!!!!!!!!!! 3) resultIterationNextRowCount: {}", resultIterationNextGetInt);
+        } catch (Exception e) {
+          log.warn("!!!!!!!!!!!!!! 3) Exception occurs: {}", e.getMessage());
+        }
+
         int updatedItemsCount = res.result().rowCount();
+        log.info("!!!!!!!!!!!! 4) updatedItemsCount: {}", updatedItemsCount);
+        int resultSize = res.result().size();
+        log.info("!!!!!!!!!!!! 5) resultSize: {}", resultSize);
+
+//         int updatedItemsCount = res.result().rowCount();
+
         log.info("There were {} items updated", updatedItemsCount);
         promise.complete(updatedItemsCount);
       } else {

@@ -32,6 +32,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.api.StorageTestSuite;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -138,7 +139,8 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   public static void beforeClass(TestContext context) {
     shelvingOrderUpdate = ShelvingOrderUpdate.getInstance();
-    defaultTenant = generateTenantValue();
+//    defaultTenant = generateTenantValue();
+    defaultTenant = StorageTestSuite.TENANT_ID;
     client = new HttpClient(Vertx.vertx());
 
     log.info("Default tenant initialization started: {}", defaultTenant);
@@ -203,25 +205,24 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     log.info("The test \"shouldSucceedItemsUpdateForExpectedModuleVersion\" started...");
 
     // Check total items
-    RowSet<Row> result = executeSql(SQL_SELECT_ITEMS_COUNT);
-    int itemsTotal = result.iterator().next().getInteger(0);
-    log.info("There are {} items total", itemsTotal);
+    log.info("There are {} items total", executeCountSQL(SQL_SELECT_ITEMS_COUNT));
 
     // Prepare items for update
-    removeItemsProperty((defaultTenant));
+    int affectedRows = executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY);
+    log.info("There were {} items processed with removing property routine...", affectedRows);
 
     // Check amount of items for update
-    int expectedItemsCountForUpdate = getItemsForUpdateCount();
+    int expectedItemsCountForUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
     log.info("There are {} items to update", expectedItemsCountForUpdate);
-    //assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
+    assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
 
     // Get operation result
     doModuleUpgrade(defaultTenant, FROM_MODULE_DO_UPGRADE);
 
     // Check amount of items after update
-    int expectedItemsCountAfterUpdate = getItemsForUpdateCount();
+    int expectedItemsCountAfterUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
     log.info("There are {} items after update", expectedItemsCountAfterUpdate);
-    //assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
+    assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
 
     log.info("The test \"shouldSucceedItemsUpdateForExpectedModuleVersion\" finished");
   }
@@ -232,25 +233,24 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     log.info("The test \"shouldFailItemsUpdateForUnexpectedModuleVersion\" started...");
 
     // Check total items
-    RowSet<Row> result = executeSql(SQL_SELECT_ITEMS_COUNT);
-    int itemsTotal = result.iterator().next().getInteger(0);
-    log.info("There are {} items total", itemsTotal);
+    log.info("There are {} items total", executeCountSQL(SQL_SELECT_ITEMS_COUNT));
 
     // Prepare items for update
-    removeItemsProperty((defaultTenant));
+    int affectedRows = executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY);
+    log.info("There were {} items processed with removing property routine...", affectedRows);
 
     // Check amount of items for update
-    int expectedItemsCountForUpdate = getItemsForUpdateCount();
+    int expectedItemsCountForUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
     log.info("There are {} items to update", expectedItemsCountForUpdate);
-    //assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
+    assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
 
     // Get operation result
     doModuleUpgrade(defaultTenant, FROM_MODULE_SKIP_UPGRADE);
 
     // Check amount of items after update
-    int expectedItemsCountAfterUpdate = getItemsForUpdateCount();
+    int expectedItemsCountAfterUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
     log.info("There are {} items after update", expectedItemsCountAfterUpdate);
-    //assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
+    assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
 
     log.info("The test \"shouldFailItemsUpdateForUnexpectedModuleVersion\" finished");
   }
@@ -260,38 +260,39 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     log.info("The test \"shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom\" started...");
 
     // Check total items
-    RowSet<Row> result = executeSql(SQL_SELECT_ITEMS_COUNT);
-    int itemsTotal = result.iterator().next().getInteger(0);
-    log.info("There are {} items total", itemsTotal);
-
-    // Insert items from tst data
-    log.info("Before insert amount of items: {}", getItemsForUpdateCount());
-    insertItemsFromData();
-    log.info("After insert amount of items: {}", getItemsForUpdateCount());
+    log.info("There are {} items total", executeCountSQL(SQL_SELECT_ITEMS_COUNT));
 
     // Prepare items for update
-    log.info("Before remove property amount of items: {}", getItemsForUpdateCount());
-    removeItemsProperty((defaultTenant));
-    log.info("After remove property amount of items: {}", getItemsForUpdateCount());
+    log.info("Before property removing amount of items: {}", executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE));
+    int affectedRows = executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY);
+    log.info("There were {} items processed with removing property routine...", affectedRows);
+    log.info("After property removing amount of items: {}", executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE));
+
+    // Insert items from tst data
+    log.info("Before insert amount of items: {}", executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE));
+    insertItemsFromData();
+    log.info("After insert amount of items: {}", executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE));
 
     // Check amount of items for update
-    int expectedItemsCountForUpdate = getItemsForUpdateCount();
+    int expectedItemsCountForUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
     log.info("There are {} items to update", expectedItemsCountForUpdate);
-//    assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
+    assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
 
     // Get operation result
     log.info("Starting startUpdatingOfItems, default tenant: {}", defaultTenant);
-    Future<Integer> updatedAmountFuture = ShelvingOrderUpdate.getInstance(3).startUpdatingOfItems(getTenantAttributes(FROM_MODULE_DO_UPGRADE),
-        Map.of("x-okapi-tenant", defaultTenant), Vertx.vertx().getOrCreateContext());
+    Future<Integer> updatedAmountFuture = ShelvingOrderUpdate
+        .getInstance(3)
+        .startUpdatingOfItems(getTenantAttributes(FROM_MODULE_DO_UPGRADE),
+            Map.of("x-okapi-tenant", defaultTenant), Vertx.vertx().getOrCreateContext());
     log.info("Finished startUpdatingOfItems, updatedAmountFuture: {}", updatedAmountFuture);
 
     int updatedCount = getFutureResult(updatedAmountFuture);
     log.info("There are {} items updated", updatedCount);
 
     // Check amount of items after update
-    int expectedItemsCountAfterUpdate = getItemsForUpdateCount();
+    int expectedItemsCountAfterUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
     log.info("There are {} items after update", expectedItemsCountAfterUpdate);
-    //assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
+    assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
 
     log.info("The test \"shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom\" finished");
   }
@@ -391,26 +392,26 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     return getFutureResult(result.future());
   }
 
-  private int getItemsForUpdateCount() {
-    log.info("Starting of the getItemsForUpdateCount...");
+  private int executeCountSQL(String countSql) {
+    log.info("Starting of the executeCountSQL, countSql: {}", countSql);
 
-    RowSet<Row> result = executeSql(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
-    int itemsCount = result.iterator().next().getInteger(0);
+    RowSet<Row> result = executeSql(countSql);
+    int countResult = result.iterator().next().getInteger(0);
 
-    log.info("There are {} items ready for updates", itemsCount);
-    log.info("Finishing of the getItemsForUpdateCount");
-    return itemsCount;
-}
+    log.info("There is {} amount of entries returned", countResult);
+    log.info("Finishing of the executeCountSQL");
+    return countResult;
+  }
 
-  private int removeItemsProperty(String tenant) {
-    log.info("Starting of the removeItemsProperty...");
+  private int executeUpdateSQL(String updateSql) {
+    log.info("Starting of the executeUpdateSQL, updateSql: {}", updateSql);
 
-    RowSet<Row> result = executeSql(SQL_UPDATE_REMOVE_ITEMS_PROPERTY);
-    int itemsAffected = result.rowCount();
+    RowSet<Row> result = executeSql(updateSql);
+    int affectedCount = result.rowCount();
 
-    log.info("There were {} items updates", itemsAffected);
-    log.info("Finishing of the removeItemsProperty");
-    return itemsAffected;
+    log.info("There were {} entries affected", affectedCount);
+    log.info("Finishing of the executeUpdateSQL");
+    return affectedCount;
  }
 
   private void insertItemsFromData() {
