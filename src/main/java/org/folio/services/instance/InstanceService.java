@@ -1,9 +1,6 @@
 package org.folio.services.instance;
 
-import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
@@ -13,6 +10,7 @@ import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
+import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
 import io.vertx.core.Context;
@@ -28,7 +26,6 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
-import org.folio.services.batch.BatchOperationContext;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 
@@ -73,7 +70,8 @@ public class InstanceService {
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
     return hridManager.populateHridForInstances(instances)
-      .compose(notUsed -> buildBatchOperationContext(upsert, instances))
+      .compose(notUsed -> buildBatchOperationContext(upsert, instances,
+        instanceRepository, Instance::getId))
       .compose(batchOperation -> {
         final Promise<Response> postResult = promise();
 
@@ -121,23 +119,6 @@ public class InstanceService {
 
         return deleteResult.future()
           .compose(domainEventPublisher.publishRemoved(instance));
-      });
-  }
-
-  private Future<BatchOperationContext<Instance>> buildBatchOperationContext(
-    boolean upsert, List<Instance> allInstances) {
-
-    if (!upsert) {
-      return succeededFuture(new BatchOperationContext<>(allInstances, emptyList()));
-    }
-
-    return instanceRepository.getById(allInstances, Instance::getId)
-      .map(foundInstances -> {
-        final var instancesToBeCreated = allInstances.stream()
-          .filter(instance -> !foundInstances.containsKey(instance.getId()))
-          .collect(toList());
-
-        return new BatchOperationContext<>(instancesToBeCreated, foundInstances.values());
       });
   }
 }
