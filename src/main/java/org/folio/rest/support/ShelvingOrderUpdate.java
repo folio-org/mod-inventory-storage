@@ -1,7 +1,5 @@
 package org.folio.rest.support;
 
-import static org.folio.rest.support.CompletableFutureUtil.getFutureResult;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,7 +7,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,8 +64,6 @@ public class ShelvingOrderUpdate {
   private static ShelvingOrderUpdate instance;
   private Versioned versionChecker;
   private int rowsBunchSize;
-  private AtomicInteger totalUpdatedRows;
-//  private Handler<AsyncResult<Boolean>> completionHandler;
 
   public static ShelvingOrderUpdate getInstance() {
     return getInstance(DEF_FETCH_SIZE);
@@ -90,7 +85,6 @@ public class ShelvingOrderUpdate {
     this.versionChecker = new Versioned() {};
     this.versionChecker.setFromModuleVersion(VERSION_WITH_SHELVING_ORDER);
     this.rowsBunchSize = rowsBunchSize;
-    this.totalUpdatedRows = new AtomicInteger(0);
   }
 
   /**
@@ -104,45 +98,37 @@ public class ShelvingOrderUpdate {
   public Future<Integer> startUpdatingOfItems(TenantAttributes attributes, Map<String, String> headers,
       Context vertxContext) {
 
-    final Promise<Integer> updateItemsPromise = Promise.promise();
     final Vertx vertx = vertxContext.owner();
 
     log.info("Update items started, moduleTo is: \"{}\",  moduleFrom is: \"{}\"",
         attributes.getModuleTo(), attributes.getModuleFrom());
 
-    if (ShelvingOrderUpdate.getInstance().isAllowedToUpdate(attributes)) {
-      log.info("Module is eligible for upgrade.");
-      // Updates items with shelving order property.
-      // This should be triggered once for particular version only.
-      PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, headers);
-
-      final long startTime = System.currentTimeMillis();
-
-      int rowsAffected = 0;
-      do {
-        Future<Integer> affectedRowsFuture = fetchAndUpdatesItems(vertx, postgresClient);
-        rowsAffected = getFutureResult(affectedRowsFuture);
-
-        if (affectedRowsFuture.failed()) {
-          log.error("Error updating portion of items: {}", affectedRowsFuture.cause().getMessage());
-          updateItemsPromise.fail(affectedRowsFuture.cause());
-        } else {
-          log.info("Portion of items has been updated: affected rows amount: {}", rowsAffected);
-          totalUpdatedRows.addAndGet(rowsAffected);
-        }
-      } while (rowsAffected > 0);
-
-      log.info("Items updates with shelving order property completed in {} milliseconds",
-          (System.currentTimeMillis() - startTime));
-      updateItemsPromise.complete(totalUpdatedRows.get());
-
-    } else {
+    if (! ShelvingOrderUpdate.getInstance().isAllowedToUpdate(attributes)) {
       log.info("Module isn't eligible for upgrade, just exit.");
       // Not allowed to perform items updates, just returns
-      updateItemsPromise.complete(0);
+      return Future.succeededFuture(0);
     }
 
-    return updateItemsPromise.future();
+    log.info("Module is eligible for upgrade.");
+    // Updates items with shelving order property.
+    // This should be triggered once for particular version only.
+    PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, headers);
+
+    final long startTime = System.currentTimeMillis();
+
+    return fetchAndUpdateAll(vertx, postgresClient)
+        .onComplete(x -> log.info("Items updates with shelving order property completed in {} milliseconds",
+            (System.currentTimeMillis() - startTime)));
+  }
+
+  private Future<Integer> fetchAndUpdateAll(Vertx vertx, PostgresClient postgresClient) {
+    return fetchAndUpdateBunch(vertx, postgresClient)
+    .compose(headRows -> {
+      if (headRows <= 0) {
+        return Future.succeededFuture(0);
+      }
+      return fetchAndUpdateAll(vertx, postgresClient).map(tailRows -> headRows + tailRows);
+    });
   }
 
   /**
@@ -153,12 +139,12 @@ public class ShelvingOrderUpdate {
    * @param postgresClient
    * @return
    */
-  public Future<Integer> fetchAndUpdatesItems(Vertx vertx, PostgresClient postgresClient) {
+  private Future<Integer> fetchAndUpdateBunch(Vertx vertx, PostgresClient postgresClient) {
     log.info("The routine of \"fetchAndUpdatesItems\" has started");
     Promise<Integer> fetchAndUpdatePromise = Promise.promise();
 
     postgresClient.getConnection(ar -> {
-      
+
       if (ar.failed()) {
         log.info("Connection acquiring failure : {}", ar.cause().getMessage());
         fetchAndUpdatePromise.fail("Connection acquiring failure : " + ar.cause().getMessage());
@@ -229,7 +215,7 @@ public class ShelvingOrderUpdate {
 
   /**
    * Read items and fill them into data structures for further processing
-   * 
+   *
    * @param rowSet
    * @return
    */
@@ -258,7 +244,7 @@ public class ShelvingOrderUpdate {
 
   /**
    * Calculate items shelving order
-   * 
+   *
    * @return
    */
   public Future<Map<UUID, String>> calculateShelvingOrder(List<Item> itemList) {
@@ -281,7 +267,7 @@ public class ShelvingOrderUpdate {
 
   /**
    * Prepare items update parameters
-   * 
+   *
    * @param itemIdShelvingOrderMap
    * @return
    */
@@ -299,7 +285,7 @@ public class ShelvingOrderUpdate {
 
   /**
    * Updates of items
-   * 
+   *
    * @param itemsParams
    * @param connection
    * @return
@@ -359,7 +345,7 @@ public class ShelvingOrderUpdate {
 
   /**
    * Determine conditions of starting items updates
-   * 
+   *
    * @param attributes
    * @return
    */
