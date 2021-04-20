@@ -476,6 +476,50 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canSearchByClassificationNumber()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+    
+    UUID firstInstanceId = UUID.randomUUID();
+    UUID secondInstanceId = UUID.randomUUID();
+    UUID classificationTypeId = UUID.randomUUID();
+
+    JsonObject firstClassifications = new JsonObject();
+    firstClassifications.put("classificationTypeId", classificationTypeId.toString());
+    firstClassifications.put("classificationNumber", "K1 .M385");
+
+    JsonObject secondClassifications = new JsonObject();
+    secondClassifications.put("classificationTypeId", classificationTypeId.toString());
+    secondClassifications.put("classificationNumber", "KB1 .A437");
+
+    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId)
+    .put("classifications", new JsonArray()
+    .add(firstClassifications));
+    JsonObject secondInstanceToCreate = nod(secondInstanceId)
+    .put("classifications", new JsonArray()
+    .add(secondClassifications));
+
+    createInstance(firstInstanceToCreate);
+    createInstance(secondInstanceToCreate);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    
+    client.get(instancesStorageUrl("?query=classifications%3D%22K1%20.M385%22"), StorageTestSuite.TENANT_ID,
+    ResponseHandler.json(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject responseBody = response.getJson();
+
+    JsonArray allInstances = responseBody.getJsonArray("instances");
+
+    assertThat(allInstances.size(), is(1));
+    assertThat(allInstances.getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
+  }
+
+  @Test
   public void canSearchUsingKeywordIndex()
     throws MalformedURLException,
     InterruptedException,
@@ -2777,12 +2821,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private JsonObject nod(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ASIN, "B01D1PLMDO"));
-
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Barnes, Adrian"));
-
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
+
     return createInstanceRequest(id, "TEST", "Nod",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
