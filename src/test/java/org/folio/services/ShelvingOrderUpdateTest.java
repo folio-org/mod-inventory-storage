@@ -6,13 +6,17 @@ import static org.junit.Assert.assertTrue;
 import static org.folio.rest.api.StorageTestSuite.prepareTenant;
 import static org.folio.rest.api.StorageTestSuite.removeTenant;
 import static org.folio.rest.api.StorageTestSuite.tenantOp;
-import static org.folio.rest.support.CompletableFutureUtil.getFutureResult;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import javax.annotation.concurrent.NotThreadSafe;
@@ -32,7 +36,10 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.api.StorageTestSuite;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -44,17 +51,14 @@ import org.junit.runners.MethodSorters;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
+import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.api.TestBaseWithInventoryUtil;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.helpers.LocalRowSet;
 import org.folio.rest.support.HttpClient;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.ShelvingOrderUpdate;
-import org.folio.rest.support.http.InterfaceUrls;
 
 @NotThreadSafe
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -67,44 +71,22 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   private static final String FROM_MODULE_DO_UPGRADE = "mod-inventory-storage-19.9.0";
   private static final String FROM_MODULE_SKIP_UPGRADE = "mod-inventory-storage-20.2.0";
 
-  private static String SQL_UPDATE_REMOVE_ITEMS_PROPERTY = new StringBuilder()
-      .append("UPDATE item ")
-      .append("SET jsonb = jsonb - 'effectiveShelvingOrder' ").toString();
+  private static String SQL_UPDATE_REMOVE_ITEMS_PROPERTY =
+      "UPDATE item " +
+      "SET jsonb = jsonb - 'effectiveShelvingOrder' ";
 
-  private static String SQL_SELECT_ITEMS_COUNT = new StringBuilder()
-      .append("SELECT COUNT(*) AS cnt ")
-      .append("FROM item ").toString();
+  private static String SQL_SELECT_ITEMS_COUNT =
+      "SELECT COUNT(*) AS cnt " +
+      "FROM item ";
 
-  private static String SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE = new StringBuilder()
-      .append("SELECT COUNT(*) AS cnt ")
-      .append("FROM item ")
-      .append("WHERE NOT (jsonb ? 'effectiveShelvingOrder') ").toString();
+  private static String SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE =
+      "SELECT COUNT(*) AS cnt " +
+      "FROM item " +
+      "WHERE NOT (jsonb ? 'effectiveShelvingOrder') ";
 
   // Items raw data
   // (1)expectedShelvingOrder, (2)defaultExpectedDesiredShelvesOrder, (3)prefix, (4)callNumber,
   // (5)volume, (6)enumeration, (7)chronology, (8)copy, (9)suffix
-  private static String[] ITEMS_DATA1 = new String[] {
-      "PN 12 A6,PN12 .A6,,PN2 .A6,,,,,",
-      "PN 12 A6 V 13 NO 12 41999,PN2 .A6 v.3 no.2 1999,,PN2 .A6,v. 3,no. 2,1999,,",
-      "PN 12 A6 41999,PN12 .A6 41999,,PN2 .A6 1999,,,,,",
-      "PN 12 A6 41999 CD,PN12 .A6 41999 CD,,PN2 .A6 1999,,,,,CD",
-      "PN 12 A6 41999 12,PN12 .A6 41999 C.12,,PN2 .A6 1999,,,,2,",
-      "PN 12 A69 41922 12,PN12 .A69 41922 C.12,,PN2 .A69,,,1922,2,",
-      "PN 12 A69 NO 12,PN12 .A69 NO.12,,PN2 .A69,,no. 2,,,",
-      "PN 12 A69 NO 12 41922 11,PN12 .A69 NO.12 41922 C.11,,PN2 .A69,,no. 2,1922,1,",
-      "PN 12 A69 NO 12 41922 12,PN12 .A69 NO.12 41922 C.12,Wordsworth,PN2 .A69,,no. 2,1922,2,",
-      "PN 12 A69 V 11 NO 11,PN12 .A69 V.11 NO.11,,PN2 .A69,v.1,no. 1,,,",
-      "PN 12 A69 V 11 NO 11 +,PN12 .A69 V.11 NO.11 +,Over,PN2 .A69,v.1,no. 1,,,+",
-      "PN 12 A69 V 11 NO 11 41921,PN12 .A69 V.11 NO.11 41921,,PN2 .A69,v.1,no. 1,1921,,",
-      "PR 49199.3 41920 L33 41475 A6,PR 49199.3 41920 .L33 41475 .A6,,PR9199.3 1920 .L33 1475 .A6,,,,,",
-      "PQ 42678 K26 P54,PQ 42678 .K26 P54,,PQ2678.K26 P54,,,,,",
-      "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5 1992,,,,,",
-      "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5,,,1992,,",
-      "PR 3919 L33 41990,PR 3919 .L33 41990,,PR919 .L33 1990,,,,,",
-      "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,",
-      "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
-  };
-
   private static String[] ITEMS_DATA = new String[] {
       "0,1,PRFX1,CN1,VL1,EN1,CHR1,CPN1,SFX1",
       "0,1,PRFX2,CN2,VL2,EN2,CHR2,CPN2,SFX2",
@@ -128,19 +110,21 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
       "0,1,PRFX20,CN20,VL20,EN20,CHR20,CPN20,SFX20"
   };
 
-
   private static String defaultTenant;
   private static ShelvingOrderUpdate shelvingOrderUpdate;
   private static HttpClient client;
 
-  public Timeout timeoutRule = Timeout.seconds(3600);
-
   @BeforeClass
   @SneakyThrows
-  public static void beforeClass(TestContext context) {
+  public static void beforeClass(TestContext testContext) {
     shelvingOrderUpdate = ShelvingOrderUpdate.getInstance();
-//    defaultTenant = generateTenantValue();
-    defaultTenant = StorageTestSuite.TENANT_ID;
+    defaultTenant = generateTenantValue();
+//    defaultTenant = StorageTestSuite.TENANT_ID;
+//    hackTestSuiteTenant(defaultTenant);
+
+    // Insert items from tst data
+//    insertTestingData(testContext);
+
     client = new HttpClient(Vertx.vertx());
 
     log.info("Default tenant initialization started: {}", defaultTenant);
@@ -201,100 +185,115 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
 
   @Ignore
   @Test
-  public void testOrder6_shouldSucceedItemsUpdateForExpectedModuleVersion() {
+  public void testOrder6_shouldSucceedItemsUpdateForExpectedModuleVersion(TestContext testContext) {
     log.info("The test \"shouldSucceedItemsUpdateForExpectedModuleVersion\" started...");
 
     // Check total items
-    log.info("There are {} items total", executeCountSQL(SQL_SELECT_ITEMS_COUNT));
+    executeCountSQL(SQL_SELECT_ITEMS_COUNT)
+        .onComplete(testContext.asyncAssertSuccess(value -> log.info("There are {} items total", value)));
 
     // Prepare items for update
-    int affectedRows = executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY);
-    log.info("There were {} items processed with removing property routine...", affectedRows);
+    executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY)
+        .onComplete(testContext.asyncAssertSuccess(value -> log.info("There were {} items processed with removing property routine...", value)));
 
     // Check amount of items for update
-    int expectedItemsCountForUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
-    log.info("There are {} items to update", expectedItemsCountForUpdate);
-    assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
+    executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE)
+        .onComplete(testContext.asyncAssertSuccess(value -> {
+          log.info("There are {} items to update", value);
+          assertTrue("The are expected items for update", value > 0);
+        }));
 
     // Get operation result
     doModuleUpgrade(defaultTenant, FROM_MODULE_DO_UPGRADE);
 
     // Check amount of items after update
-    int expectedItemsCountAfterUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
-    log.info("There are {} items after update", expectedItemsCountAfterUpdate);
-    assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
+    executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE)
+        .onComplete(testContext.asyncAssertSuccess(value -> {
+          log.info("There are {} items after update", value);
+          assertTrue("No items should remain after update", value == 0);
+        }));
 
     log.info("The test \"shouldSucceedItemsUpdateForExpectedModuleVersion\" finished");
   }
 
   @Ignore
   @Test
-  public void testOrder7_shouldFailItemsUpdateForUnexpectedModuleVersion() {
+  public void testOrder7_shouldFailItemsUpdateForUnexpectedModuleVersion(TestContext testContext) {
     log.info("The test \"shouldFailItemsUpdateForUnexpectedModuleVersion\" started...");
 
     // Check total items
-    log.info("There are {} items total", executeCountSQL(SQL_SELECT_ITEMS_COUNT));
+    executeCountSQL(SQL_SELECT_ITEMS_COUNT)
+        .onComplete(testContext.asyncAssertSuccess(value -> log.info("There are {} items total", value)));
 
     // Prepare items for update
-    int affectedRows = executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY);
-    log.info("There were {} items processed with removing property routine...", affectedRows);
+    executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY)
+        .onComplete(testContext.asyncAssertSuccess(value ->
+            log.info("There were {} items processed with removing property routine...", value)));
 
     // Check amount of items for update
-    int expectedItemsCountForUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
-    log.info("There are {} items to update", expectedItemsCountForUpdate);
-    assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
+    executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE)
+        .onComplete(testContext.asyncAssertSuccess(value -> {
+          log.info("There are {} items to update", value);
+          assertTrue("The are expected items for update", value > 0);
+        }));
 
     // Get operation result
     doModuleUpgrade(defaultTenant, FROM_MODULE_SKIP_UPGRADE);
 
     // Check amount of items after update
-    int expectedItemsCountAfterUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
-    log.info("There are {} items after update", expectedItemsCountAfterUpdate);
-    assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
+    executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE)
+        .onComplete(testContext.asyncAssertSuccess(value -> {
+          log.info("There are {} items after update", value);
+          assertTrue("No items should remain after update", value == 0);
+        }));
 
     log.info("The test \"shouldFailItemsUpdateForUnexpectedModuleVersion\" finished");
   }
 
   @Test
-  public void testOrder8_shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom() {
+  public void testOrder8_shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom(TestContext testContext) {
     log.info("The test \"shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom\" started...");
 
     // Check total items
-    log.info("There are {} items total", executeCountSQL(SQL_SELECT_ITEMS_COUNT));
+    executeCountSQL(SQL_SELECT_ITEMS_COUNT)
+        .onComplete(testContext.asyncAssertSuccess(value -> log.info("There are {} items total", value)));
+//    log.info("There are {} items total", executeCountSQL(SQL_SELECT_ITEMS_COUNT));
 
     // Prepare items for update
-    log.info("Before property removing amount of items: {}", executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE));
-    int affectedRows = executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY);
-    log.info("There were {} items processed with removing property routine...", affectedRows);
-    log.info("After property removing amount of items: {}", executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE));
+    executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE)
+      .onComplete(testContext.asyncAssertSuccess(value -> log.info("Before property removing amount of items: {}", value)))
+    .compose(countForUpdateValue -> executeUpdateSQL(SQL_UPDATE_REMOVE_ITEMS_PROPERTY))
+      .onComplete(testContext.asyncAssertSuccess(value ->  log.info("There were {} items processed with removing property routine...", value)))
+    .compose(amountOfUpdatedValue -> executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE))
+      .onComplete(testContext.asyncAssertSuccess(value -> log.info("After property removing amount of items: {}", value)));
 
-    // Insert items from tst data
-    log.info("Before insert amount of items: {}", executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE));
-    insertItemsFromData();
-    log.info("After insert amount of items: {}", executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE));
 
-    // Check amount of items for update
-    int expectedItemsCountForUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
-    log.info("There are {} items to update", expectedItemsCountForUpdate);
-    assertTrue("The are expected items for update", expectedItemsCountForUpdate > 0);
+    // Insert items test data
+//    insertTestingData(testContext);
+
+     // Check amount of items for update
+    executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE)
+        .onComplete(testContext.asyncAssertSuccess(value -> {
+          log.info("There are {} items to update", value);
+//          assertTrue("The are expected items for update", value > 0);
+    }));
 
     // Get operation result
     log.info("Starting startUpdatingOfItems, default tenant: {}", defaultTenant);
     Future<Integer> updatedAmountFuture = ShelvingOrderUpdate
-        .getInstance(3)
+        .getInstance()
+        .withLimit(3)
         .startUpdatingOfItems(getTenantAttributes(FROM_MODULE_DO_UPGRADE),
-            Map.of("x-okapi-tenant", defaultTenant), Vertx.vertx().getOrCreateContext());
+            Map.of("x-okapi-tenant", defaultTenant), Vertx.vertx().getOrCreateContext())
+            .onComplete(testContext.asyncAssertSuccess(value -> log.info("There were {} items updated", value)))
+        .compose(amountOfUpdatedValue -> executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE))
+            .onComplete(testContext.asyncAssertSuccess(value -> {
+              log.info("There are {} items after update", value);
+              assertTrue("No items should remain after update", value == 0);
+              log.info("The test \"shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom\" finished");
+            }));
+
     log.info("Finished startUpdatingOfItems, updatedAmountFuture: {}", updatedAmountFuture);
-
-    int updatedCount = getFutureResult(updatedAmountFuture);
-    log.info("There are {} items updated", updatedCount);
-
-    // Check amount of items after update
-    int expectedItemsCountAfterUpdate = executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE);
-    log.info("There are {} items after update", expectedItemsCountAfterUpdate);
-    assertTrue("No items should remain after update", expectedItemsCountAfterUpdate == 0);
-
-    log.info("The test \"shouldSucceedInsertedItemsUpdateWithExpectedModuleFrom\" finished");
   }
 
   @Ignore
@@ -309,15 +308,41 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
     }).when(postgresClient).getConnection(Mockito.any());
 
     // Try to execute processing
-    Future<Integer> future = shelvingOrderUpdate.fetchAndUpdatesItems(Vertx.vertx(), postgresClient);
+    Future<Integer> future = shelvingOrderUpdate.fetchAndUpdateAll(Vertx.vertx(), postgresClient);
     assertTrue("Connection acquiring should fail", future.failed());
+  }
+
+  private static void insertTestingData(TestContext testContext) {
+    // Insert items from tst data
+    executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE)
+        .onComplete(testContext.asyncAssertSuccess(value -> {
+          log.info("Before insert amount of items: {}", value);
+          insertItemsFromData();
+        }))
+        .compose(countForUpdateValue -> executeCountSQL(SQL_SELECT_ITEMS_AMOUNT_FOR_UPDATE))
+        .onComplete(testContext.asyncAssertSuccess(value -> log.info("After insert amount of items: {}", value)));
   }
 
   /*
   * Internal purposes functions below
   */
-  @Override
-  protected IndividualResource createItem(Item item) {
+
+  private static <T> T getFutureResult(Future<T> future) {
+    log.info("Started \"getFutureResult\", future: {} ...", future);
+    return getFutureResult(future.toCompletionStage().toCompletableFuture());
+  }
+
+  private static <T> T getFutureResult(CompletableFuture<T> completableFuture) {
+    log.info("Started \"getFutureResult\", completableFuture: {} ...", completableFuture);
+    try {
+      return completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      log.error("Error occurs in getFutureResult: {}", e.getMessage());
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static IndividualResource createItemInternal(Item item) {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     JsonObject requestPayload = JsonObject.mapFrom(item);
     try {
@@ -370,51 +395,59 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
-  private RowSet<Row> executeSql(String sql) {
+  private static Future<RowSet<Row>> executeSql(String sql) {
     log.info("Started executeSql: {}", sql);
-    final Promise<RowSet<Row>> result = Promise.promise();
 
+    RowSet<Row> result = new LocalRowSet(0);
     if (StringUtils.isNotBlank(sql)) {
-      getPostgresClient(defaultTenant).execute(sql, executeResult -> {
-        if (executeResult.failed()) {
-          result.fail(executeResult.cause());
-          log.info("Error: {}, result: {}, result.future.isComplete: {}", executeResult.cause().getMessage(), result, result.future().isComplete());
-        } else {
-          result.complete(executeResult.result());
-          log.info("Successfully executed: {}, result: {}, result.future.isComplete: {}", executeResult.result(), result, result.future().isComplete());
-        }
-      });
-    } else {
-      result.complete(new LocalRowSet(0));
-    }
-
-    log.info("Finished executeSql, result: {}, result.future: {}", result, result.future());
-    return getFutureResult(result.future());
+      Future<RowSet<Row>> resultFuture = getPostgresClient(defaultTenant).execute(sql);
+      log.info("Resulting execute SQL future: {}", resultFuture);
+      return resultFuture;
+      } else {
+        log.info("Empty SQL was passed");
+      return Future.succeededFuture();
+      }
   }
 
-  private int executeCountSQL(String countSql) {
+  private static Future<Integer> executeCountSQL(String countSql) {
     log.info("Starting of the executeCountSQL, countSql: {}", countSql);
+    Promise<Integer> promise = Promise.promise();
 
-    RowSet<Row> result = executeSql(countSql);
-    int countResult = result.iterator().next().getInteger(0);
+    executeSql(countSql).onComplete(ar -> {
+      if (ar.succeeded()) {
+        int rowCountResult = ar.result().iterator().next().getInteger(0);
+        log.info("There is {} amount of entries returned", rowCountResult);
+        promise.complete(rowCountResult);
+      } else {
+        log.info("Error occurs in executeCountSQL: {}", ar.cause().getMessage());
+        promise.fail(ar.cause());
+      }
+      log.info("Finishing of the executeCountSQL");
+    });
 
-    log.info("There is {} amount of entries returned", countResult);
-    log.info("Finishing of the executeCountSQL");
-    return countResult;
+    return promise.future();
   }
 
-  private int executeUpdateSQL(String updateSql) {
+  private Future<Integer> executeUpdateSQL(String updateSql) {
     log.info("Starting of the executeUpdateSQL, updateSql: {}", updateSql);
+    Promise<Integer> promise = Promise.promise();
 
-    RowSet<Row> result = executeSql(updateSql);
-    int affectedCount = result.rowCount();
+    executeSql(updateSql).onComplete(ar -> {
+      if (ar.succeeded()) {
+        int affectedCount = ar.result().rowCount();
+        log.info("There were {} entries affected", affectedCount);
+        promise.complete(affectedCount);
+      } else {
+        log.info("Error occurs in executeUpdateSQL: {}", ar.cause().getMessage());
+        promise.fail(ar.cause());
+      }
+      log.info("Finishing of the executeUpdateSQL");
+    });
 
-    log.info("There were {} entries affected", affectedCount);
-    log.info("Finishing of the executeUpdateSQL");
-    return affectedCount;
- }
+    return promise.future();
+  }
 
-  private void insertItemsFromData() {
+  private static void insertItemsFromData() {
     log.info("Starting of the insertItemsFromData...");
     // Prepare item list
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
@@ -451,11 +484,42 @@ public class ShelvingOrderUpdateTest extends TestBaseWithInventoryUtil {
 
 
     items.stream().forEach(i -> {
-      createItem(i);
+      createItemInternal(i);
       log.info("An item {} has been created...", i);
     });
 
     log.info("Finishing of the insertItemsFromData...");
+  }
+
+  /**
+   * This is a kind of workaround of hardcoded TENANT_ID provided by StorageTetSuite.
+   * Don't do this in common a way. Used by current tests only.
+   *
+   * @param tenant
+   */
+  private static void hackTestSuiteTenant(String tenant) {
+    log.info("Started hackTestSuiteTenant, tenant {}", tenant);
+    if (StringUtils.isBlank(tenant)) {
+      log.info("Set up tenant is empty");
+      return;
+    }
+    try {
+      Field tenantField = StorageTestSuite.class.getDeclaredField("TENANT_ID");
+      tenantField.setAccessible(true);
+
+      // Clear final specifier
+      Field modifiers = Field.class.getDeclaredField("modifiers");
+      modifiers.setAccessible(true);
+      modifiers.setInt(tenantField, tenantField.getModifiers() & ~Modifier.FINAL);
+      tenantField.set(null, tenant);
+
+      // Return back final specifier and accessible for field
+      modifiers.setInt(tenantField, tenantField.getModifiers() & Modifier.FINAL);
+      tenantField.setAccessible(false);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      log.error("There is an error occurred when changing suite's TENANT_ID to value: {}", tenant);
+    }
+    log.info("Finished hackTestSuiteTenant...");
   }
 
 }
