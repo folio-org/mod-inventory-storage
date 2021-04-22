@@ -8,8 +8,8 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import io.vertx.core.json.JsonObject;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.folio.rest.jaxrs.model.Parameter;
@@ -18,18 +18,14 @@ import org.folio.rest.support.IndividualResource;
 import org.junit.Test;
 
 public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase {
+  private final AtomicInteger nextPatch = new AtomicInteger(1);
+
   @Test
   public void shouldPopulateShelvingOrder() throws Exception {
     var items = create201Items();
     removeShelvingOrder(items);
 
-    var ta = new TenantAttributes()
-      .withModuleFrom("20.1.1")
-      .withParameters(List.of(
-        new Parameter().withKey("loadSample").withValue("false"),
-        new Parameter().withKey("loadReference").withValue("false")));
-
-    tenantOp(TENANT_ID, JsonObject.mapFrom(ta));
+    tenantOp(TENANT_ID, getTenantAttributes());
 
     for (IndividualResource item : items) {
       var updatedItem = itemsClient.getById(item.getId());
@@ -53,7 +49,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
   private JsonObject getTenantAttributes() {
     return JsonObject.mapFrom(new TenantAttributes()
       .withModuleFrom("20.1.1")
-      .withModuleTo("20.2.0")
+      .withModuleTo("20.2." + nextPatch.incrementAndGet())
       .withParameters(List.of(
         new Parameter().withKey("loadSample").withValue("false"),
         new Parameter().withKey("loadReference").withValue("false"))));
