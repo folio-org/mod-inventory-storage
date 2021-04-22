@@ -53,6 +53,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
   private JsonObject getTenantAttributes() {
     return JsonObject.mapFrom(new TenantAttributes()
       .withModuleFrom("20.1.1")
+      .withModuleTo("20.2.0")
       .withParameters(List.of(
         new Parameter().withKey("loadSample").withValue("false"),
         new Parameter().withKey("loadReference").withValue("false"))));
@@ -65,14 +66,13 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
   }
 
   private IndividualResource createItem(int index) {
-    var random = new Random();
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("barcode", random.nextLong())
+      .put("barcode", "100000" + index)
       .put("itemLevelCallNumber", "PS3623.R534 P37 2005 " + index)
       .put("itemLevelCallNumberSuffix", "cns" + index)
       .put("itemLevelCallNumberPrefix", "cnp" + index)

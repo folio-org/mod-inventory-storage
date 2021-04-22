@@ -35,6 +35,7 @@ public class BatchedReadStream<T> implements ReadStream<List<T>> {
   @Override
   public BatchedReadStream<T> handler(Handler<List<T>> handler) {
     if (handler == null) {
+      delegate.handler(null);
       return this;
     }
 

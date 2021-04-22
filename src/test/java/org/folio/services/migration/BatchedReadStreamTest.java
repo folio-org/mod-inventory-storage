@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.TestBase.get;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -59,13 +60,13 @@ public class BatchedReadStreamTest {
   }
 
   @Test
-  public void shouldDoNothingIfNullHandler() {
+  public void shouldClearOnDelegateIfNullHandler() {
     var rowStream = mockStream();
     var batchedReadStream = new BatchedReadStream<>(rowStream);
 
     batchedReadStream.handler(null);
 
-    verifyNoInteractions(rowStream);
+    verify(rowStream, times(1)).handler(null);
   }
 
   @Test
@@ -86,31 +87,6 @@ public class BatchedReadStreamTest {
     batchedReadStream.endHandler(error -> {});
 
     verify(delegate, times(1)).endHandler(any());
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
-  public void shouldProcessRemainingRecordsWhenEndReached() {
-    var batchSize = 10;
-    var delegate = new ReindexJobRunnerTest.TestRowStream(21);
-    var batchedReadStream = new BatchedReadStream<>(delegate, batchSize);
-    Handler<Void> endHandler = mock(Handler.class);
-    Handler<List<Row>> handler = mock(Handler.class);
-
-    batchedReadStream
-      .handler(handler)
-      .endHandler(endHandler);
-
-    await().untilAsserted(() -> {
-      var captor = ArgumentCaptor.forClass(List.class);
-      verify(endHandler, times(1)).handle(any());
-
-      verify(handler, times(3)).handle(captor.capture());
-      assertThat(captor.getAllValues()).hasSize(3);
-      assertThat(captor.getAllValues().get(0)).hasSize(batchSize);
-      assertThat(captor.getAllValues().get(1)).hasSize(batchSize);
-      assertThat(captor.getAllValues().get(2)).hasSize(1);
-    });
   }
 
   @Test
