@@ -504,10 +504,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(firstInstanceToCreate);
     createInstance(secondInstanceToCreate);
 
-    JsonArray allInstances = searchForInstances("classifications =/@classificationNumber \"K1 .M385\"");
+    JsonObject allInstances = searchForInstances("classifications =/@classificationNumber \"K1 .M385\"");
 
-    assertThat(allInstances.size(), is(1));
-    assertThat(allInstances.getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
+    assertThat(allInstances.getInteger("totalRecords"), is(1));
+    assertThat(allInstances.getJsonArray("instances").getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
   }
 
   @Test
