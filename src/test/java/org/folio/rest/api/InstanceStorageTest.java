@@ -476,35 +476,30 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByClassificationNumber()
+  public void canSearchByClassificationNumberWithArrayModifier()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
     TimeoutException {
     
-    UUID firstInstanceId = UUID.randomUUID();
-    UUID secondInstanceId = UUID.randomUUID();
-    UUID classificationTypeId = UUID.randomUUID();
-
-    JsonObject firstClassifications = new JsonObject();
-    firstClassifications.put("classificationTypeId", classificationTypeId.toString());
-    firstClassifications.put("classificationNumber", "K1 .M385");
-
-    JsonObject secondClassifications = new JsonObject();
-    secondClassifications.put("classificationTypeId", classificationTypeId.toString());
-    secondClassifications.put("classificationNumber", "KB1 .A437");
-
-    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId)
-    .put("classifications", new JsonArray()
-    .add(firstClassifications));
-    JsonObject secondInstanceToCreate = nod(secondInstanceId)
-    .put("classifications", new JsonArray()
-    .add(secondClassifications));
-
-    createInstance(firstInstanceToCreate);
-    createInstance(secondInstanceToCreate);
+    createInstancesWithClassificationNumbers();
 
     JsonObject allInstances = searchForInstances("classifications =/@classificationNumber \"K1 .M385\"");
+
+    assertThat(allInstances.getInteger("totalRecords"), is(1));
+    assertThat(allInstances.getJsonArray("instances").getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
+  }
+
+  @Test
+  public void canSearchByClassificationNumberWithoutArrayModifier()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+    
+    createInstancesWithClassificationNumbers();
+
+    JsonObject allInstances = searchForInstances("classifications =\"K1 .M385\"");
 
     assertThat(allInstances.getInteger("totalRecords"), is(1));
     assertThat(allInstances.getJsonArray("instances").getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
@@ -2685,6 +2680,32 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         .map(IndividualResource::getId)
         .collect(Collectors.toList()),
       containsInAnyOrder(notSuppressedInstance.getId(), notSuppressedInstanceDefault.getId()));
+  }
+
+  private void createInstancesWithClassificationNumbers() throws InterruptedException,
+    ExecutionException, TimeoutException{
+
+    UUID firstInstanceId = UUID.randomUUID();
+    UUID secondInstanceId = UUID.randomUUID();
+    UUID classificationTypeId = UUID.randomUUID();
+
+    JsonObject firstClassifications = new JsonObject();
+    firstClassifications.put("classificationTypeId", classificationTypeId.toString());
+    firstClassifications.put("classificationNumber", "K1 .M385");
+
+    JsonObject secondClassifications = new JsonObject();
+    secondClassifications.put("classificationTypeId", classificationTypeId.toString());
+    secondClassifications.put("classificationNumber", "KB1 .A437");
+
+    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId)
+    .put("classifications", new JsonArray()
+    .add(firstClassifications));
+    JsonObject secondInstanceToCreate = nod(secondInstanceId)
+    .put("classifications", new JsonArray()
+    .add(secondClassifications));
+
+    createInstance(firstInstanceToCreate);
+    createInstance(secondInstanceToCreate);
   }
 
   private JsonObject createRequestForMultipleInstances(Integer numberOfInstances) {
