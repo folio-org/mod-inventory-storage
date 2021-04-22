@@ -1,18 +1,10 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.apache.commons.lang3.BooleanUtils.isTrue;
-import static org.folio.rest.jaxrs.resource.Tenant.PostTenantResponse.respond500WithTextPlain;
-import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
-
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.stream.Collectors;
-import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,21 +81,6 @@ public class TenantRefAPI extends TenantAPI {
     return res;
   }
 
-  @Override
-  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers, Handler<AsyncResult<Response>> handler, Context context) {
-    super.postTenant(tenantAttributes, headers, response -> {
-      // when tenant is initialized the 204 response is returned.
-      if (isTenantInitialized(tenantAttributes, response)) {
-        runJavaMigrations(tenantAttributes, context, headers)
-          .onSuccess(notUsed -> handler.handle(response))
-          .onFailure(error -> handler.handle(succeededFuture(
-            respond500WithTextPlain(error.getMessage()))));
-      } else {
-        handler.handle(response);
-      }
-    }, context);
-  }
-
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
@@ -147,7 +124,7 @@ public class TenantRefAPI extends TenantAPI {
               .add("users", "service-points-users");
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
-        });
+        }).compose(result -> runJavaMigrations(attributes, vertxContext, headers).map(result));
   }
 
   private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,
@@ -169,10 +146,5 @@ public class TenantRefAPI extends TenantAPI {
       .onSuccess(notUsed -> log.info("Java migrations has been completed"))
       .onFailure(error -> log.error("Some java migrations failed", error))
       .mapEmpty();
-  }
-
-  private boolean isTenantInitialized(TenantAttributes ta, AsyncResult<Response> response) {
-    return !isTrue(ta.getPurge()) && response.succeeded()
-      && isUpdateSuccessResponse(response.result());
   }
 }
