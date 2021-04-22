@@ -52,7 +52,7 @@ public class ItemShelvingOrderMigrationService extends BaseMigrationService {
           "Shelving order migration has been completed [recordsProcessed={}]", records))
         .onFailure(error -> log.error("Unable to complete shelving order migration", error))
         .onComplete(result -> postgresClient.endTx(con)))
-      .map(notUsed -> null);
+      .mapEmpty();
   }
 
   private Future<Integer> handleUpdate(RowStream<Row> stream) {
