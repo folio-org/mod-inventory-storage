@@ -295,7 +295,7 @@ public class StorageTestSuite {
       failureMessage = String.format("Tenant get failed: %s: %s",
           response.getStatusCode(), response.getBody());
 
-      if (response.getJson().containsKey("error")) {
+      if (response.getStatusCode() == 200 && response.getJson().containsKey("error")) {
         throw new IllegalStateException(response.getJson().getString("error"));
       }
 
