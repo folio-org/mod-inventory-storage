@@ -6,7 +6,6 @@ import static org.folio.rest.jaxrs.resource.Tenant.PostTenantResponse.respond500
 import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -17,6 +16,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
@@ -158,17 +158,17 @@ public class TenantRefAPI extends TenantAPI {
     List<BaseMigrationService> javaMigrations = List.of(
       new ItemShelvingOrderMigrationService(context, okapiHeaders));
 
-    @SuppressWarnings("rawtypes")
-    List<Future> startedMigrations = javaMigrations.stream()
+    var startedMigrations = javaMigrations.stream()
       .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
       .peek(migration -> log.info(
         "Following migration is to be executed [migration={}]", migration))
       .map(BaseMigrationService::runMigration)
       .collect(Collectors.toList());
 
-    return CompositeFuture.all(startedMigrations).<Void>map(result -> null)
+    return GenericCompositeFuture.all(startedMigrations)
       .onSuccess(notUsed -> log.info("Java migrations has been completed"))
-      .onFailure(error -> log.error("Some java migrations failed", error));
+      .onFailure(error -> log.error("Some java migrations failed", error))
+      .mapEmpty();
   }
 
   private boolean isTenantInitialized(TenantAttributes ta, AsyncResult<Response> response) {
