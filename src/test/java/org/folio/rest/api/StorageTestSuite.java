@@ -41,6 +41,7 @@ import io.vertx.sqlclient.RowSet;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
+
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
   CallNumberUtilsTest.class,
@@ -79,7 +80,8 @@ import org.testcontainers.utility.DockerImageName;
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
   InventoryViewTest.class,
-  ReindexJobRunnerTest.class
+  ReindexJobRunnerTest.class,
+  ItemShelvingOrderMigrationServiceApiTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
@@ -257,9 +259,9 @@ public class StorageTestSuite {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     vertx.deployVerticle(RestVerticle.class, options)
-    .toCompletionStage()
-    .toCompletableFuture()
-    .get(20, TimeUnit.SECONDS);
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get(20, TimeUnit.SECONDS);
   }
 
   static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)
@@ -281,9 +283,9 @@ public class StorageTestSuite {
   }
 
   static void prepareTenant(String tenantId, boolean loadSample)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
     prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
@@ -300,12 +302,12 @@ public class StorageTestSuite {
 
     HttpClient client = new HttpClient(vertx);
     client.post(storageUrl("/_/tenant"), job, tenantId,
-        ResponseHandler.any(tenantPrepared));
+      ResponseHandler.any(tenantPrepared));
 
     Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant post failed: %s: %s",
-        response.getStatusCode(), response.getBody());
+      response.getStatusCode(), response.getBody());
 
     // wait if not complete ...
     if (response.getStatusCode() == 201) {
@@ -313,11 +315,11 @@ public class StorageTestSuite {
 
       tenantPrepared = new CompletableFuture<>();
       client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
-          ResponseHandler.any(tenantPrepared));
+        ResponseHandler.any(tenantPrepared));
       response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
       failureMessage = String.format("Tenant get failed: %s: %s",
-          response.getStatusCode(), response.getBody());
+        response.getStatusCode(), response.getBody());
 
       assertThat(failureMessage, response.getStatusCode(), is(200));
     } else {
