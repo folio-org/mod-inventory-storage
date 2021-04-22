@@ -1,9 +1,19 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.apache.commons.lang3.BooleanUtils.isTrue;
+import static org.folio.rest.jaxrs.resource.Tenant.PostTenantResponse.respond500WithTextPlain;
+import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.stream.Collectors;
+import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +30,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -77,6 +89,21 @@ public class TenantRefAPI extends TenantAPI {
     return res;
   }
 
+  @Override
+  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers, Handler<AsyncResult<Response>> handler, Context context) {
+    super.postTenant(tenantAttributes, headers, response -> {
+      // when tenant is initialized the 204 response is returned.
+      if (isTenantInitialized(tenantAttributes, response)) {
+        runJavaMigrations(tenantAttributes, context, headers)
+          .onSuccess(notUsed -> handler.handle(response))
+          .onFailure(error -> handler.handle(succeededFuture(
+            respond500WithTextPlain(error.getMessage()))));
+      } else {
+        handler.handle(response);
+      }
+    }, context);
+  }
+
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
@@ -121,5 +148,31 @@ public class TenantRefAPI extends TenantAPI {
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
         });
+  }
+
+  private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,
+    Map<String, String> okapiHeaders) {
+
+    log.info("About to start java migrations...");
+
+    List<BaseMigrationService> javaMigrations = List.of(
+      new ItemShelvingOrderMigrationService(context, okapiHeaders));
+
+    @SuppressWarnings("rawtypes")
+    List<Future> startedMigrations = javaMigrations.stream()
+      .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
+      .peek(migration -> log.info(
+        "Following migration is to be executed [migration={}]", migration))
+      .map(BaseMigrationService::runMigration)
+      .collect(Collectors.toList());
+
+    return CompositeFuture.all(startedMigrations).<Void>map(result -> null)
+      .onSuccess(notUsed -> log.info("Java migrations has been completed"))
+      .onFailure(error -> log.error("Some java migrations failed", error));
+  }
+
+  private boolean isTenantInitialized(TenantAttributes ta, AsyncResult<Response> response) {
+    return !isTrue(ta.getPurge()) && response.succeeded()
+      && isUpdateSuccessResponse(response.result());
   }
 }
