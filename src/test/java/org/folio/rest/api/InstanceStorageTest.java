@@ -503,16 +503,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(firstInstanceToCreate);
     createInstance(secondInstanceToCreate);
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    
-    client.get(instancesStorageUrl("?query=classifications%3D%22K1%20.M385%22"), StorageTestSuite.TENANT_ID,
-    ResponseHandler.json(getCompleted));
-
-    Response response = getCompleted.get(5, TimeUnit.SECONDS);
-
-    JsonObject responseBody = response.getJson();
-
-    JsonArray allInstances = responseBody.getJsonArray("instances");
+    JsonArray allInstances = searchForInstances("classifications =/@classificationNumber \"K1 .M385\"");
 
     assertThat(allInstances.size(), is(1));
     assertThat(allInstances.getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
