@@ -129,7 +129,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     return new ReindexJobRepository(getContext(), okapiHeaders());
   }
 
-  private static class TestRowStream implements RowStream<Row> {
+  public static class TestRowStream implements RowStream<Row> {
     private final int numberOfRecords;
 
     private Handler<Throwable> errorHandler;
