@@ -1,3 +1,7 @@
+## 20.2.0 2021-04-23
+
+* Determines shelving order for existing items during tenant upgrade (MODINVSTOR-521)
+
 ## 20.1.1 2021-04-22
 
 * Adds full-text index for classifications field in instance table (MODINVSTOR-716)
