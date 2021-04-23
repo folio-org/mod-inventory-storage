@@ -94,7 +94,9 @@ public class ItemService {
     @SuppressWarnings("all")
     final List<Future> setHridFutures = items.stream()
       .map(item -> {
-        item.getStatus().setDate(itemStatusDate);
+        if (item.getStatus().getDate() == null) {
+          item.getStatus().setDate(itemStatusDate);
+        }
         return setHrid(item);
       }).collect(toList());
 
@@ -110,6 +112,10 @@ public class ItemService {
         return postSyncResult.future()
           .compose(domainEventService.publishCreatedOrUpdated(batchOperation));
       });
+  }
+
+  public Future<Response> updateItems(List<Item> items) {
+    return createItems(items, true);
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
