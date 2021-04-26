@@ -393,12 +393,6 @@
           "removeAccents": true
         },
         {
-          "fieldName": "classifications",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "subjects",
           "tOps": "DELETE",
           "caseSensitive": false,
@@ -462,6 +456,11 @@
         }
       ],
       "fullTextIndex": [
+        {
+          "fieldName": "classifications",
+          "arraySubfield" : "classificationNumber",
+          "arrayModifiers": ["classificationTypeId"]
+        },
         {
           "fieldName": "keyword",
           "multiFieldNames": "title,contributors[*].name,identifiers[*].value"

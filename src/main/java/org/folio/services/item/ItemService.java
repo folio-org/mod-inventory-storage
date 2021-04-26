@@ -77,7 +77,9 @@ public class ItemService {
 
   public Future<Response> createItems(List<Item> items, boolean upsert) {
     final Date itemStatusDate = new java.util.Date();
-    items.forEach(item -> item.getStatus().setDate(itemStatusDate));
+    items.stream()
+      .filter(item -> item.getStatus().getDate() == null)
+      .forEach(item -> item.getStatus().setDate(itemStatusDate));
 
     return hridManager.populateHridForItems(items)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
@@ -91,6 +93,10 @@ public class ItemService {
         return postSyncResult.future()
           .compose(domainEventService.publishCreatedOrUpdated(batchOperation));
       });
+  }
+
+  public Future<Response> updateItems(List<Item> items) {
+    return createItems(items, true);
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
