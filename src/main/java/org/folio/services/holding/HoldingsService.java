@@ -1,13 +1,6 @@
 package org.folio.services.holding;
 
-import static io.vertx.core.CompositeFuture.all;
-import static io.vertx.core.Future.failedFuture;
-import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
-import static java.lang.String.format;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
@@ -19,32 +12,28 @@ import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import javax.ws.rs.core.Response;
-
-import org.apache.logging.log4j.Logger;
-import org.folio.persist.HoldingsRepository;
-import org.folio.rest.exceptions.BadRequestException;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
-import org.folio.rest.support.HridManager;
-import org.folio.services.batch.BatchOperationContext;
-import org.folio.services.domainevent.HoldingDomainEventPublisher;
-import org.folio.services.domainevent.ItemDomainEventPublisher;
-import org.folio.services.item.ItemService;
-import org.folio.validator.CommonValidators;
+import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
+import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import java.util.List;
+import java.util.Map;
+import javax.ws.rs.core.Response;
+import org.apache.logging.log4j.Logger;
+import org.folio.persist.HoldingsRepository;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.support.HridManager;
+import org.folio.services.domainevent.HoldingDomainEventPublisher;
+import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.services.item.ItemService;
+import org.folio.validator.CommonValidators;
 
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
@@ -88,7 +77,7 @@ public class HoldingsService {
 
   public Future<Response> createHolding(HoldingsRecord entity) {
     entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
-    return setHrid(entity)
+    return hridManager.populateHrid(entity)
       .compose(hr -> {
         final Promise<Response> postResponse = promise();
 
@@ -102,8 +91,8 @@ public class HoldingsService {
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
-    log.info("updated location: " + newHoldings.getEffectiveLocationId());
-    return refuseIfHridChanged(oldHoldings, newHoldings)
+
+    return refuseWhenHridChanged(oldHoldings, newHoldings)
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
 
@@ -134,18 +123,13 @@ public class HoldingsService {
   }
 
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert) {
-    
     for (HoldingsRecord record : holdings) {
       record.setEffectiveLocationId(calculateEffectiveLocation(record));
     }
 
-    @SuppressWarnings("all")
-    final List<Future> setHridFutures = holdings.stream()
-      .map(this::setHrid)
-      .collect(toList());
-
-    return all(setHridFutures)
-      .compose(result -> buildBatchOperationContext(upsert, holdings))
+    return hridManager.populateHridForHoldings(holdings)
+      .compose(result -> buildBatchOperationContext(upsert, holdings,
+        holdingsRepository, HoldingsRecord::getId))
       .compose(batchOperation -> {
         final Promise<Response> postSyncResult = promise();
 
@@ -194,42 +178,7 @@ public class HoldingsService {
     };
   }
 
-  private Future<HoldingsRecord> refuseIfHridChanged(
-    HoldingsRecord oldHolding, HoldingsRecord newHolding) {
-
-    if (Objects.equals(oldHolding.getHrid(), newHolding.getHrid())) {
-      return succeededFuture(oldHolding);
-    } else {
-      return failedFuture(new BadRequestException(format(
-        "The hrid field cannot be changed: new=%s, old=%s", newHolding.getHrid(),
-        oldHolding.getHrid())));
-    }
-  }
-
   private boolean holdingsRecordFound(HoldingsRecord holdingsRecord) {
     return holdingsRecord != null;
-  }
-
-  private Future<HoldingsRecord> setHrid(HoldingsRecord entity) {
-    return isBlank(entity.getHrid())
-      ? hridManager.getNextHoldingsHrid().map(entity::withHrid)
-      : succeededFuture(entity);
-  }
-
-  private Future<BatchOperationContext<HoldingsRecord>> buildBatchOperationContext(
-    boolean upsert, List<HoldingsRecord> allHrs) {
-
-    if (!upsert) {
-      return succeededFuture(new BatchOperationContext<>(allHrs, emptyList()));
-    }
-
-    return holdingsRepository.getById(allHrs, HoldingsRecord::getId)
-      .map(foundHrs -> {
-        final var hrsToBeCreated = allHrs.stream()
-          .filter(hr -> !foundHrs.containsKey(hr.getId()))
-          .collect(toList());
-
-        return new BatchOperationContext<>(hrsToBeCreated, foundHrs.values());
-      });
   }
 }

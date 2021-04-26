@@ -20,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,9 +64,6 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.either;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -2117,8 +2113,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
-        is("duplicate key value violates unique constraint \"instance_hrid_idx_unique\": " +
-          "Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists."));
+        is("lower(f_unaccent(jsonb ->> 'hrid'::text)) value already " +
+          "exists in table instance: in00000000001"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateHRID");
   }
@@ -2568,8 +2564,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
-        is("duplicate key value violates unique constraint \"instance_matchkey_idx_unique\": " +
-          "Key (lower(f_unaccent(jsonb ->> 'matchKey'::text)))=(match_key) already exists."));
+        is("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already " +
+          "exists in table instance: match_key"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateMatchKey");
   }
