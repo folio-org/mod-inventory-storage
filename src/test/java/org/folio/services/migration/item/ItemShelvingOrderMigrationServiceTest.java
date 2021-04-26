@@ -6,9 +6,9 @@ import static org.mockito.Mockito.mock;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.services.item.ItemService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -16,7 +16,7 @@ import org.junit.runner.RunWith;
 public class ItemShelvingOrderMigrationServiceTest {
   private final PostgresClientFuturized postgresClient = mock(PostgresClientFuturized.class);
   private final ItemShelvingOrderMigrationService migrationService =
-    new ItemShelvingOrderMigrationService(postgresClient, mock(ItemService.class));
+    new ItemShelvingOrderMigrationService(postgresClient, mock(ItemRepository.class));
 
   @Parameters({
     "18.2.3, 19.2.0",
