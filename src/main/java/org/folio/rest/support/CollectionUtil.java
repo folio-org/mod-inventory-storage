@@ -27,12 +27,8 @@ public final class CollectionUtil {
   }
 
   public static <T> T getFirst(Collection<T> collection) {
-    if (collection == null) {
-      return null;
-    }
-
-    return collection.stream()
-      .findFirst().orElse(null);
+    return collection != null && collection.size() > 0
+      ? collection.iterator().next() : null;
   }
 
   /**
