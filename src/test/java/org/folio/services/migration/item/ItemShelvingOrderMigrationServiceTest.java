@@ -22,6 +22,7 @@ public class ItemShelvingOrderMigrationServiceTest {
     "18.2.3, 19.2.0",
     "19.1.1, 20.0.0",
     "20.1.10, 20.2.0",
+    "20.2.0, 20.2.1",
   })
   @Test
   public void shouldTriggerMigration(String from, String to) {
@@ -30,7 +31,7 @@ public class ItemShelvingOrderMigrationServiceTest {
   }
 
   @Parameters({
-    "20.2.0, 20.2.1",
+    "20.2.1, 20.2.2",
     "20.2.1, 20.2.2",
     "20.3.0, 20.3.2",
     "21.0.0, 21.0.1",
