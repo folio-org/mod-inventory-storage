@@ -33,7 +33,6 @@ public class ItemShelvingOrderMigrationServiceTest {
 
   @Parameters({
     "20.2.1, 20.2.2",
-    "20.2.1, 20.2.2",
     "20.3.0, 20.3.2",
     "21.0.0, 21.0.1",
   })
