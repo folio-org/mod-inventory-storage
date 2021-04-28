@@ -4,6 +4,7 @@ import static io.vertx.core.MultiMap.caseInsensitiveMultiMap;
 import static java.util.UUID.fromString;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -28,55 +29,56 @@ import static org.junit.Assert.assertEquals;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.producer.KafkaHeader;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.folio.services.kafka.KafkaMessage;
 
 public final class DomainEventAssertions {
   private DomainEventAssertions() {}
 
-  private static void assertCreateEvent(KafkaMessage<JsonObject> createEvent, JsonObject newRecord) {
-    assertThat(createEvent.getPayload().getString("type"), is("CREATE"));
-    assertThat(createEvent.getPayload().getString("tenant"), is(TENANT_ID));
-    assertThat(createEvent.getPayload().getJsonObject("old"), nullValue());
-    assertThat(createEvent.getPayload().getJsonObject("new"), is(newRecord));
+  private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {
+    assertThat(createEvent.value().getString("type"), is("CREATE"));
+    assertThat(createEvent.value().getString("tenant"), is(TENANT_ID));
+    assertThat(createEvent.value().getJsonObject("old"), nullValue());
+    assertThat(createEvent.value().getJsonObject("new"), is(newRecord));
 
-    assertHeaders(createEvent.getHeaders());
+    assertHeaders(createEvent.headers());
   }
 
-  private static void assertRemoveEvent(KafkaMessage<JsonObject> deleteEvent, JsonObject record) {
-    assertThat(deleteEvent.getPayload().getString("type"), is("DELETE"));
-    assertThat(deleteEvent.getPayload().getString("tenant"), is(TENANT_ID));
-    assertThat(deleteEvent.getPayload().getJsonObject("new"), nullValue());
-    assertThat(deleteEvent.getPayload().getJsonObject("old"), is(record));
+  private static void assertRemoveEvent(KafkaConsumerRecord<String, JsonObject> deleteEvent, JsonObject record) {
+    assertThat(deleteEvent.value().getString("type"), is("DELETE"));
+    assertThat(deleteEvent.value().getString("tenant"), is(TENANT_ID));
+    assertThat(deleteEvent.value().getJsonObject("new"), nullValue());
+    assertThat(deleteEvent.value().getJsonObject("old"), is(record));
 
-    assertHeaders(deleteEvent.getHeaders());
+    assertHeaders(deleteEvent.headers());
   }
 
-  private static void assertRemoveAllEvent(KafkaMessage<JsonObject> deleteEvent) {
-    assertThat(deleteEvent.getPayload().getString("type"), is("DELETE_ALL"));
-    assertThat(deleteEvent.getPayload().getString("tenant"), is(TENANT_ID));
-    assertThat(deleteEvent.getPayload().getJsonObject("new"), nullValue());
-    assertThat(deleteEvent.getPayload().getJsonObject("old"), nullValue());
+  private static void assertRemoveAllEvent(KafkaConsumerRecord<String, JsonObject> deleteEvent) {
+    assertThat(deleteEvent.value().getString("type"), is("DELETE_ALL"));
+    assertThat(deleteEvent.value().getString("tenant"), is(TENANT_ID));
+    assertThat(deleteEvent.value().getJsonObject("new"), nullValue());
+    assertThat(deleteEvent.value().getJsonObject("old"), nullValue());
 
-    assertHeaders(deleteEvent.getHeaders());
+    assertHeaders(deleteEvent.headers());
   }
 
   public static void assertUpdateEvent(
-    KafkaMessage<JsonObject> updateEvent, JsonObject oldRecord, JsonObject newRecord) {
+          KafkaConsumerRecord<String, JsonObject> updateEvent, JsonObject oldRecord, JsonObject newRecord) {
 
-    assertThat(updateEvent.getPayload().getString("type"), is("UPDATE"));
-    assertThat(updateEvent.getPayload().getString("tenant"), is(TENANT_ID));
-    assertThat(updateEvent.getPayload().getJsonObject("old"), is(oldRecord));
-    assertThat(updateEvent.getPayload().getJsonObject("new"), is(newRecord));
+    assertThat(updateEvent.value().getString("type"), is("UPDATE"));
+    assertThat(updateEvent.value().getString("tenant"), is(TENANT_ID));
+    assertThat(updateEvent.value().getJsonObject("old"), is(oldRecord));
+    assertThat(updateEvent.value().getJsonObject("new"), is(newRecord));
 
-    assertHeaders(updateEvent.getHeaders());
+    assertHeaders(updateEvent.headers());
   }
 
-  private static void assertHeaders(Map<String, String> headers) {
-    final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap().addAll(headers);
+  private static void assertHeaders(List<KafkaHeader> headers) {
+    final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap()
+      .addAll(kafkaHeadersToMap(headers));
 
     assertEquals(caseInsensitiveMap.size(), 2);
     assertEquals(caseInsensitiveMap.get(TENANT), TENANT_ID);
@@ -87,7 +89,7 @@ public final class DomainEventAssertions {
     await().atLeast(1, SECONDS);
     await().until(() -> getInstanceEvents(instanceId).size() > 0);
 
-    final JsonObject updateMessage  = getLastInstanceEvent(instanceId).getPayload();
+    final JsonObject updateMessage  = getLastInstanceEvent(instanceId).value();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
@@ -95,7 +97,7 @@ public final class DomainEventAssertions {
     await().atLeast(1, SECONDS);
     await().until(() -> getHoldingsEvents(instanceId, hrId).size() > 0);
 
-    final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).getPayload();
+    final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).value();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
@@ -103,7 +105,7 @@ public final class DomainEventAssertions {
     await().atLeast(1, SECONDS);
     await().until(() -> getInstanceEvents(instanceId).size() > 0);
 
-    final JsonObject updateMessage  = getLastInstanceEvent(instanceId).getPayload();
+    final JsonObject updateMessage  = getLastInstanceEvent(instanceId).value();
     assertThat(updateMessage.getString("type"), not(is("DELETE")));
   }
 

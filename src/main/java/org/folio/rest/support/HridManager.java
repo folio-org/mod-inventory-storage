@@ -1,5 +1,9 @@
 package org.folio.rest.support;
 
+import static io.vertx.core.CompositeFuture.all;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -8,10 +12,14 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 
@@ -41,6 +49,45 @@ public class HridManager {
 
   public Future<String> getNextItemHrid() {
     return getNextHrid(hridSettings -> getNextHrid(hridSettings, InventoryType.Items));
+  }
+
+  public Future<Item> populateHrid(Item item) {
+    return isBlank(item.getHrid())
+      ? getNextItemHrid().map(item::withHrid)
+      : Future.succeededFuture(item);
+  }
+
+  public Future<Instance> populateHrid(Instance instance) {
+    return isBlank(instance.getHrid())
+      ? getNextInstanceHrid().map(instance::withHrid)
+      : Future.succeededFuture(instance);
+  }
+
+  public Future<HoldingsRecord> populateHrid(HoldingsRecord hr) {
+    return isBlank(hr.getHrid())
+      ? getNextHoldingsHrid().map(hr::withHrid)
+      : Future.succeededFuture(hr);
+  }
+
+  public Future<List<Instance>> populateHridForInstances(List<Instance> instances) {
+    return all(instances.stream()
+      .map(this::populateHrid)
+      .collect(toList()))
+      .map(notUsed -> instances);
+  }
+
+  public Future<List<Item>> populateHridForItems(List<Item> items) {
+    return all(items.stream()
+      .map(this::populateHrid)
+      .collect(toList()))
+      .map(notUsed -> items);
+  }
+
+  public Future<List<HoldingsRecord>> populateHridForHoldings(List<HoldingsRecord> hrs) {
+    return all(hrs.stream()
+      .map(this::populateHrid)
+      .collect(toList()))
+      .map(notUsed -> hrs);
   }
 
   public Future<HridSettings> getHridSettings() {

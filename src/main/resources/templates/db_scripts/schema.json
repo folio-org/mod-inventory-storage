@@ -393,12 +393,6 @@
           "removeAccents": true
         },
         {
-          "fieldName": "classifications",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "subjects",
           "tOps": "DELETE",
           "caseSensitive": false,
@@ -462,6 +456,11 @@
         }
       ],
       "fullTextIndex": [
+        {
+          "fieldName": "classifications",
+          "arraySubfield" : "classificationNumber",
+          "arrayModifiers": ["classificationTypeId"]
+        },
         {
           "fieldName": "keyword",
           "multiFieldNames": "title,contributors[*].name,identifiers[*].value"
@@ -649,6 +648,11 @@
         },
         {
           "fieldName": "temporaryLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "effectiveLocationId",
           "targetTable": "location",
           "tOps": "ADD"
         },
@@ -903,6 +907,11 @@
   ],
   "scripts": [
     {
+        "run":"after",
+        "snippetPath":"setPreviouslyHeldDefault.sql",
+        "fromModuleVersion":"20.2.0"
+    },
+    {
       "run": "before",
       "snippetPath": "populateRmbInternalIndex.sql",
       "fromModuleVersion": "19.1.1"
@@ -916,6 +925,11 @@
       "run": "before",
       "snippetPath": "createCallNumberNormalizationFunctions.sql",
       "fromModuleVersion": "19.2.0"
+    },
+    {
+      "run":"after",
+      "snippetPath":"setEffectiveHoldingsLocation.sql",
+      "fromModuleVersion":"20.1.0"
     },
     {
       "run": "after",
@@ -1016,6 +1030,11 @@
       "run": "after",
       "snippetPath": "instance-hr-item/instance-hr-item-view.sql",
       "fromModuleVersion": "19.5.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/addEffectiveHoldingsToItemsAndHoldingsView.sql",
+      "fromModuleVersion": "20.2.0"
     }
   ]
 }

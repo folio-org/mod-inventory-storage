@@ -21,7 +21,7 @@ public final class EffectiveCallNumberComponentsUtil {
     item.setEffectiveCallNumberComponents(buildComponents(item, hr));
   }
 
-  public static void calculateAndSetEffectiveShelvingOrder(Item item) {
+  public static Item calculateAndSetEffectiveShelvingOrder(Item item) {
     if (isNotBlank(item.getEffectiveCallNumberComponents().getCallNumber())) {
       Optional<String> shelfKey
         = CallNumberUtils.getShelfKeyFromCallNumber(
@@ -35,7 +35,6 @@ public final class EffectiveCallNumberComponentsUtil {
           .map(StringUtils::trim)
           .collect(Collectors.joining(" "))
       );
-//      String suffixValue = Objects.toString(item.getEffectiveCallNumberComponents().getSuffix(), "").trim();
       String suffixValue =
         Objects.toString(Optional.ofNullable(item.getEffectiveCallNumberComponents())
           .orElse(new EffectiveCallNumberComponents()).getSuffix(), "")
@@ -49,6 +48,8 @@ public final class EffectiveCallNumberComponentsUtil {
           .findFirst()
           .orElse(nonNullableSuffixValue));
     }
+
+    return item;
   }
 
   private static EffectiveCallNumberComponents buildComponents(Item item, HoldingsRecord holdings) {
