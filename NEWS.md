@@ -1,3 +1,7 @@
+## 20.2.1 2021-04-27
+
+* Does not send domain events for item shelving order migration (MODINVSTOR-521)
+
 ## 20.2.0 2021-04-23
 
 * Determines shelving order for existing items during tenant upgrade (MODINVSTOR-521)

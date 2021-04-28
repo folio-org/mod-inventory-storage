@@ -12,11 +12,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
-import org.folio.services.item.ItemService;
 import org.folio.services.migration.BaseMigrationService;
 import org.folio.services.migration.BatchedReadStream;
 
@@ -26,19 +26,19 @@ public class ItemShelvingOrderMigrationService extends BaseMigrationService {
     + "jsonb->>'effectiveShelvingOrder' IS NULL";
 
   private final PostgresClientFuturized postgresClient;
-  private final ItemService itemService;
+  private final ItemRepository itemRepository;
 
   public ItemShelvingOrderMigrationService(Context context, Map<String, String> okapiHeaders) {
     this(new PostgresClientFuturized(PgUtil.postgresClient(context, okapiHeaders)),
-      new ItemService(context, okapiHeaders));
+      new ItemRepository(context, okapiHeaders));
   }
 
   public ItemShelvingOrderMigrationService(
-    PostgresClientFuturized postgresClient, ItemService itemService) {
+    PostgresClientFuturized postgresClient, ItemRepository itemRepository) {
 
-    super("20.2.0");
+    super("20.2.1");
     this.postgresClient = postgresClient;
-    this.itemService = itemService;
+    this.itemRepository = itemRepository;
   }
 
   @Override
@@ -71,7 +71,7 @@ public class ItemShelvingOrderMigrationService extends BaseMigrationService {
 
         // Pause stream, so that updates is executed in sequence
         batchStream.pause();
-        itemService.updateItems(items)
+        itemRepository.update(items)
           .onSuccess(notUsed -> {
             log.info("Shelving order is populated for [{}] items so far",
               recordsUpdated.addAndGet(items.size()));
