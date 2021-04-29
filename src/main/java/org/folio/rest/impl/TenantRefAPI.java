@@ -4,9 +4,11 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
@@ -20,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -120,6 +124,27 @@ public class TenantRefAPI extends TenantAPI {
               .add("users", "service-points-users");
           }
           return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
-        });
+        }).compose(result -> runJavaMigrations(attributes, vertxContext, headers).map(result));
+  }
+
+  private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,
+    Map<String, String> okapiHeaders) {
+
+    log.info("About to start java migrations...");
+
+    List<BaseMigrationService> javaMigrations = List.of(
+      new ItemShelvingOrderMigrationService(context, okapiHeaders));
+
+    var startedMigrations = javaMigrations.stream()
+      .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
+      .peek(migration -> log.info(
+        "Following migration is to be executed [migration={}]", migration))
+      .map(BaseMigrationService::runMigration)
+      .collect(Collectors.toList());
+
+    return GenericCompositeFuture.all(startedMigrations)
+      .onSuccess(notUsed -> log.info("Java migrations has been completed"))
+      .onFailure(error -> log.error("Some java migrations failed", error))
+      .mapEmpty();
   }
 }

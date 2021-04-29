@@ -55,6 +55,11 @@
       "description": "Temporary location is the temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
       "$ref": "uuid.json"
     },
+    "effectiveLocationId": {
+      "type": "string",
+      "description": "Effective location is calculated by the system based on the values in the permanent and temporary locationId fields.",
+      "$ref": "uuid.json"
+    },
     "electronicAccess": {
       "description": "List of electronic access items",
       "type": "array",

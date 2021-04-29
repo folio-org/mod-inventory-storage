@@ -3,7 +3,6 @@ package org.folio.services.kafka.topic;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.services.kafka.KafkaProperties.getProducerProperties;
 import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
 
 import java.util.List;
@@ -11,6 +10,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Logger;
+import org.folio.kafka.KafkaConfig;
+import org.folio.services.kafka.KafkaProperties;
 import org.folio.util.ResourceUtil;
 
 import io.vertx.core.Future;
@@ -26,7 +27,10 @@ public class KafkaAdminClientService {
   private final Supplier<KafkaAdminClient> clientFactory;
 
   public KafkaAdminClientService(Vertx vertx) {
-    this(() -> create(vertx, getProducerProperties()));
+    this(() -> create(vertx, KafkaConfig.builder()
+      .kafkaHost(KafkaProperties.getHost())
+      .kafkaPort(KafkaProperties.getPort())
+      .build().getProducerProps()));
   }
 
   public KafkaAdminClientService(Supplier<KafkaAdminClient> clientFactory) {

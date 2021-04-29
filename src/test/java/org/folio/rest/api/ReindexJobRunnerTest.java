@@ -8,6 +8,7 @@ import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
@@ -17,8 +18,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.AsyncResult;
@@ -32,14 +31,18 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.persist.ReindexJobRepository;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.services.domainevent.InstanceDomainEventPublisher;
+import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
 import org.junit.Test;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
+  private final CommonDomainEventPublisher<Instance> eventPublisher =
+    new CommonDomainEventPublisher<>(getContext(), Map.of(TENANT, TENANT_ID),
+      INVENTORY_INSTANCE);
 
   @Test
   public void canReindexInstances() {
@@ -47,20 +50,14 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = reindexJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
-    var publisher = mock(InstanceDomainEventPublisher.class);
 
     doReturn(succeededFuture(rowStream))
       .when(postgresClientFuturized).selectStream(any(), anyString());
-    when(publisher.publishInstanceReindex(any(), any()))
-      .thenReturn(Future.succeededFuture());
-
-    var runner = new ReindexJobRunner(publisher, postgresClientFuturized,
-      repository, getContext());
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    runner.startReindex(reindexJob);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
@@ -70,8 +67,6 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getPublished(), is(numberOfRecords));
     assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
     assertThat(job.getSubmittedDate(), notNullValue());
-
-    verify(publisher, times(numberOfRecords)).publishInstanceReindex(any(), any());
   }
 
   @Test
@@ -79,20 +74,14 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var rowStream = new TestRowStream(10_000_000);
     var reindexJob = reindexJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
-    var publisher = mock(InstanceDomainEventPublisher.class);
 
     doReturn(succeededFuture(rowStream))
       .when(postgresClientFuturized).selectStream(any(), anyString());
-    when(publisher.publishInstanceReindex(any(), any()))
-      .thenReturn(Future.succeededFuture());
-
-    var runner = new ReindexJobRunner(publisher, postgresClientFuturized,
-      repository, getContext());
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    runner.startReindex(reindexJob);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     instanceReindex.cancelReindexJob(reindexJob.getId());
 
@@ -103,6 +92,11 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
     assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
+  }
+
+  private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
+    return new ReindexJobRunner(postgresClientFuturized,
+      repository, getContext(), eventPublisher, TENANT_ID);
   }
 
   private static ReindexJob reindexJob() {
@@ -129,7 +123,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     return new ReindexJobRepository(getContext(), okapiHeaders());
   }
 
-  private static class TestRowStream implements RowStream<Row> {
+  public static class TestRowStream implements RowStream<Row> {
     private final int numberOfRecords;
 
     private Handler<Throwable> errorHandler;

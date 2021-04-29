@@ -26,6 +26,11 @@ public final class CollectionUtil {
       .collect(Collectors.toList());
   }
 
+  public static <T> T getFirst(Collection<T> collection) {
+    return collection != null && collection.size() > 0
+      ? collection.iterator().next() : null;
+  }
+
   /**
    * @throws IllegalArgumentException - if can not serialize/deserialize to/from json
    */

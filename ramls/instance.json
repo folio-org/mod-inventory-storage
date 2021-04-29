@@ -347,7 +347,8 @@
     },
     "previouslyHeld": {
       "type": "boolean",
-      "description": "Records the fact that the resource was previously held by the library for things like Hathi access, etc."
+      "description": "Records the fact that the resource was previously held by the library for things like Hathi access, etc.",
+      "default":"false"
     },
     "staffSuppress": {
       "type": "boolean",
