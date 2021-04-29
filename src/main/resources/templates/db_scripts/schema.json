@@ -393,12 +393,6 @@
           "removeAccents": true
         },
         {
-          "fieldName": "classifications",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "subjects",
           "tOps": "DELETE",
           "caseSensitive": false,
@@ -462,6 +456,11 @@
         }
       ],
       "fullTextIndex": [
+        {
+          "fieldName": "classifications",
+          "arraySubfield" : "classificationNumber",
+          "arrayModifiers": ["classificationTypeId"]
+        },
         {
           "fieldName": "keyword",
           "multiFieldNames": "title,contributors[*].name,identifiers[*].value"
@@ -945,7 +944,7 @@
     },
     {
       "run":"after",
-      "snippetPath":"setEffectiveLocation.sql",
+      "snippetPath":"setEffectiveHoldingsLocation.sql",
       "fromModuleVersion":"20.1.0"
     },
     {
@@ -1047,6 +1046,11 @@
       "run": "after",
       "snippetPath": "instance-hr-item/instance-hr-item-view.sql",
       "fromModuleVersion": "19.5.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/addEffectiveHoldingsToItemsAndHoldingsView.sql",
+      "fromModuleVersion": "20.2.0"
     }
   ]
 }

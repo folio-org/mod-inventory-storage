@@ -7,7 +7,7 @@ import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -24,8 +24,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
-  @Before
-  public void beforeEach() {
+  @After
+  public void afterEach() {
     deleteBoundWithParts();
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));

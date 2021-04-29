@@ -20,7 +20,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,9 +64,6 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.either;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -473,6 +469,36 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(secondInstance.getJsonArray("identifiers").size(), is(1));
     assertThat(secondInstance.getJsonArray("identifiers"),
       hasItem(identifierMatches(UUID_ASIN.toString(), "B01D1PLMDO")));
+  }
+
+  @Test
+  public void canSearchByClassificationNumberWithArrayModifier()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+    
+    createInstancesWithClassificationNumbers();
+
+    JsonObject allInstances = searchForInstances("classifications =/@classificationNumber \"K1 .M385\"");
+
+    assertThat(allInstances.getInteger("totalRecords"), is(1));
+    assertThat(allInstances.getJsonArray("instances").getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
+  }
+
+  @Test
+  public void canSearchByClassificationNumberWithoutArrayModifier()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+    
+    createInstancesWithClassificationNumbers();
+
+    JsonObject allInstances = searchForInstances("classifications =\"K1 .M385\"");
+
+    assertThat(allInstances.getInteger("totalRecords"), is(1));
+    assertThat(allInstances.getJsonArray("instances").getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
   }
 
   @Test
@@ -2087,8 +2113,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
-        is("duplicate key value violates unique constraint \"instance_hrid_idx_unique\": " +
-          "Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists."));
+        is("lower(f_unaccent(jsonb ->> 'hrid'::text)) value already " +
+          "exists in table instance: in00000000001"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateHRID");
   }
@@ -2538,8 +2564,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
-        is("duplicate key value violates unique constraint \"instance_matchkey_idx_unique\": " +
-          "Key (lower(f_unaccent(jsonb ->> 'matchKey'::text)))=(match_key) already exists."));
+        is("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already " +
+          "exists in table instance: match_key"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateMatchKey");
   }
@@ -2650,6 +2676,32 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         .map(IndividualResource::getId)
         .collect(Collectors.toList()),
       containsInAnyOrder(notSuppressedInstance.getId(), notSuppressedInstanceDefault.getId()));
+  }
+
+  private void createInstancesWithClassificationNumbers() throws InterruptedException,
+    ExecutionException, TimeoutException{
+
+    UUID firstInstanceId = UUID.randomUUID();
+    UUID secondInstanceId = UUID.randomUUID();
+    UUID classificationTypeId = UUID.randomUUID();
+
+    JsonObject firstClassifications = new JsonObject();
+    firstClassifications.put("classificationTypeId", classificationTypeId.toString());
+    firstClassifications.put("classificationNumber", "K1 .M385");
+
+    JsonObject secondClassifications = new JsonObject();
+    secondClassifications.put("classificationTypeId", classificationTypeId.toString());
+    secondClassifications.put("classificationNumber", "KB1 .A437");
+
+    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId)
+    .put("classifications", new JsonArray()
+    .add(firstClassifications));
+    JsonObject secondInstanceToCreate = nod(secondInstanceId)
+    .put("classifications", new JsonArray()
+    .add(secondClassifications));
+
+    createInstance(firstInstanceToCreate);
+    createInstance(secondInstanceToCreate);
   }
 
   private JsonObject createRequestForMultipleInstances(Integer numberOfInstances) {
@@ -2777,12 +2829,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private JsonObject nod(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ASIN, "B01D1PLMDO"));
-
     JsonArray contributors = new JsonArray();
     contributors.add(contributor(UUID_PERSONAL_NAME, "Barnes, Adrian"));
-
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
+
     return createInstanceRequest(id, "TEST", "Nod",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }

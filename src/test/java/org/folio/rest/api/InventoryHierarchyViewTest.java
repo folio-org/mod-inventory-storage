@@ -8,6 +8,10 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyItemsAndHoldings;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyUpdatedInstanceIds;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasEffectiveLocationCodeForHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasEffectiveLocationForHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationCodeForHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasAggregatedNumberOfHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasAggregatedNumberOfItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasCallNumberForItems;
@@ -120,6 +124,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       instancesData.get(0),
       allOf(
         hasIdForHoldings(predefinedHoldings.getString("id")),
+        hasEffectiveLocationForHoldings("d:Main Library"),
+        hasEffectiveLocationCodeForHoldings("TestBaseWI/M"),
         hasPermanentLocationForHoldings("d:Main Library"),
         hasPermanentLocationCodeForHoldings("TestBaseWI/M"),
         hasAggregatedNumberOfHoldings(1)
@@ -127,6 +133,31 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     );
   }
 
+  @Test
+  public void holdingsEffectiveLocationIsTemporaryLocationWhenTempLocationSet() 
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    JsonObject record = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
+    record.put("temporaryLocationId", annexLibraryLocationId.toString());
+    holdingsClient.replace(holdingsRecordIdPredefined, record);
+
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
+    // then
+    assertThat(
+      instancesData.get(0),
+      allOf(
+        hasIdForHoldings(predefinedHoldings.getString("id")),
+        hasTemporaryLocationForHoldings("d:Annex Library"),
+        hasTemporaryLocationCodeForHoldings("TestBaseWI/A"),
+        hasEffectiveLocationForHoldings("d:Annex Library"),
+        hasEffectiveLocationCodeForHoldings("TestBaseWI/A"),
+        hasPermanentLocationForHoldings("d:Main Library"),
+        hasPermanentLocationCodeForHoldings("TestBaseWI/M"),
+        hasAggregatedNumberOfHoldings(1)
+      )
+    );
+  }
   @Test
   public void canRequestInventoryHierarchyItemsWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
     // given

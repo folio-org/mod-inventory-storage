@@ -80,10 +80,11 @@ import org.testcontainers.utility.DockerImageName;
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
   InventoryViewTest.class,
+  BoundWithStorageTest.class,
   ReindexJobRunnerTest.class,
   EffectiveLocationMigrationTest.class,
   PreviouslyHeldDataUpgradeTest.class,
-  BoundWithStorageTest.class
+  ItemShelvingOrderMigrationServiceApiTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
@@ -294,6 +295,10 @@ public class StorageTestSuite {
 
       failureMessage = String.format("Tenant get failed: %s: %s",
           response.getStatusCode(), response.getBody());
+
+      if (response.getStatusCode() == 200 && response.getJson().containsKey("error")) {
+        throw new IllegalStateException(response.getJson().getString("error"));
+      }
 
       assertThat(failureMessage, response.getStatusCode(), is(200));
     } else {

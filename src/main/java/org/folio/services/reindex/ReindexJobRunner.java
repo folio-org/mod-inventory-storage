@@ -1,7 +1,7 @@
 package org.folio.services.reindex;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.impl.InstanceStorageAPI.INSTANCE_TABLE;
+import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
