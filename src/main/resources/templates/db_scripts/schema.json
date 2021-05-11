@@ -1035,6 +1035,11 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/addEffectiveHoldingsToItemsAndHoldingsView.sql",
       "fromModuleVersion": "20.2.0"
+    },
+	{
+      "run": "after",
+      "snippetPath": addInstanceFormatsAudioBelt.sql",
+      "fromModuleVersion": "20.2.1"
     }
   ]
 }
