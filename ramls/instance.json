@@ -215,6 +215,25 @@
             "type": "string",
             "description": "Date (year YYYY) of publication, distribution, etc."
           },
+          "publicationYear": {
+            "type": "integer",
+            "description": "Publication year"
+          },
+          "publicationPeriod": {
+            "type": "object",
+            "description": "Publication period",
+            "properties": {
+              "start": {
+                "type": "integer",
+                "description": "Publication start year"
+              },
+              "end": {
+                "type": "integer",
+                "description": "Publication end year"
+              }
+            },
+            "additionalProperties": false
+          },
           "role": {
             "type": "string",
             "description": "The role of the publisher, distributor, etc."
