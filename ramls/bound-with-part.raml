@@ -23,11 +23,11 @@ resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
   collection-item: !include raml-util/rtypes/item-collection.raml
 
-/bound-with-parts:
+/inventory-storage/bound-with-parts:
   type:
     collection:
-      exampleCollection: !include examples/boundwithparts.json
-      exampleItem: !include examples/boundwithpart.json
+      exampleCollection: !include examples/bound-with-parts.json
+      exampleItem: !include examples/bound-with-part.json
       schemaCollection: boundWithParts
       schemaItem: boundWithPart
   get:
@@ -43,6 +43,6 @@ resourceTypes:
     description: "Pass in the bound with part id"
     type:
       collection-item:
-        exampleItem: !include examples/boundwithpart.json
+        exampleItem: !include examples/bound-with-part.json
         schema: boundWithPart
 

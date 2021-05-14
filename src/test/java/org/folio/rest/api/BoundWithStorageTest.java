@@ -7,6 +7,7 @@ import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.http.ResourceClient;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,8 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(JUnitParamsRunner.class)
 public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
-
-  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
+  static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(client);
 
   @After
   public void afterEach() {

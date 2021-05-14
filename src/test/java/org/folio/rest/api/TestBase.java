@@ -50,7 +50,6 @@ public abstract class TestBase {
   static ResourceClient precedingSucceedingTitleClient;
   static ResourceClient instanceRelationshipsClient;
   static ResourceClient instanceRelationshipTypesClient;
-  static ResourceClient boundWithPartsClient;
   static ResourceClient instancesStorageSyncClient;
   static ResourceClient itemsStorageSyncClient;
   static ResourceClient instancesStorageBatchInstancesClient;
@@ -107,7 +106,6 @@ public abstract class TestBase {
     instanceRelationshipsClient = ResourceClient.forInstanceRelationships(client);
     instanceRelationshipTypesClient = ResourceClient.forInstanceRelationshipTypes(client);
     precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(client);
-    boundWithPartsClient = ResourceClient.forBoundWithParts(client);
     instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(client);
     itemsStorageSyncClient = ResourceClient.forItemsStorageSync(client);
     inventoryViewClient = ResourceClient.forInventoryView(client);

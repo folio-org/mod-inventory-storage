@@ -1057,28 +1057,28 @@
       ]
     },
     {
-      "id": "bound-with-parts",
+      "id": "bound-with-parts-storage",
       "version": "1.0",
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/bound-with-parts",
+          "pathPattern": "/inventory-storage/bound-with-parts",
           "permissionsRequired": ["inventory-storage.bound-with-parts.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/bound-with-parts/{id}",
+          "pathPattern": "/inventory-storage/bound-with-parts/{id}",
           "permissionsRequired": ["inventory-storage.bound-with-parts.item.get"]
         }, {
           "methods": ["POST"],
-          "pathPattern": "/bound-with-parts",
+          "pathPattern": "/inventory-storage/bound-with-parts",
           "permissionsRequired": ["inventory-storage.bound-with-parts.item.post"]
         }, {
           "methods": ["PUT"],
-          "pathPattern": "/bound-with-parts/{id}",
+          "pathPattern": "/inventory-storage/bound-with-parts/{id}",
           "permissionsRequired": ["inventory-storage.bound-with-parts.item.put"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/bound-with-parts/{id}",
+          "pathPattern": "/inventory-storage/bound-with-parts/{id}",
           "permissionsRequired": ["inventory-storage.bound-with-parts.item.delete"]
         }
       ]

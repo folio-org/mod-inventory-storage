@@ -13,39 +13,36 @@ import javax.validation.constraints.Pattern;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
-public class BoundWithPartAPI implements org.folio.rest.jaxrs.resource.BoundWithParts {
+public class BoundWithPartAPI implements org.folio.rest.jaxrs.resource.InventoryStorageBoundWithParts {
   private static final String BOUND_WITH_TABLE = "bound_with_part";
 
   @Override
-  public void getBoundWithParts(String query, @Min(0) @Max(2147483647) int offset, @Min(0) @Max(2147483647) int limit, @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getInventoryStorageBoundWithParts(String query, @Min(0) @Max(2147483647) int offset, @Min(0) @Max(2147483647) int limit, @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.get(BOUND_WITH_TABLE, BoundWithPart.class, BoundWithParts.class, query, offset, limit,
-      okapiHeaders, vertxContext, org.folio.rest.jaxrs.resource.BoundWithParts.GetBoundWithPartsResponse.class, asyncResultHandler);
+      okapiHeaders, vertxContext, org.folio.rest.jaxrs.resource.InventoryStorageBoundWithParts.GetInventoryStorageBoundWithPartsResponse.class, asyncResultHandler);
   }
 
   @Override
-  public void postBoundWithParts(@Pattern(regexp = "[a-zA-Z]{2}") String lang, BoundWithPart entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void postInventoryStorageBoundWithParts(@Pattern(regexp = "[a-zA-Z]{2}") String lang, BoundWithPart entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.post(BOUND_WITH_TABLE, entity, okapiHeaders, vertxContext,
-      PostBoundWithPartsResponse.class, asyncResultHandler);
-
+      PostInventoryStorageBoundWithPartsResponse.class, asyncResultHandler);
   }
 
   @Override
-  public void getBoundWithPartsById(String id, @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getInventoryStorageBoundWithPartsById(String id, @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(BOUND_WITH_TABLE, BoundWithPart.class, id,
-      okapiHeaders, vertxContext, GetBoundWithPartsByIdResponse.class, asyncResultHandler);
+      okapiHeaders, vertxContext, GetInventoryStorageBoundWithPartsByIdResponse.class, asyncResultHandler);
   }
 
   @Override
-  public void deleteBoundWithPartsById(String id, @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteInventoryStorageBoundWithPartsById(String id, @Pattern(regexp = "[a-zA-Z]{2}") String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.deleteById(BOUND_WITH_TABLE, id, okapiHeaders, vertxContext,
-      DeleteBoundWithPartsByIdResponse.class, asyncResultHandler);
-
+      DeleteInventoryStorageBoundWithPartsByIdResponse.class, asyncResultHandler);
   }
 
   @Override
-  public void putBoundWithPartsById(String id, @Pattern(regexp = "[a-zA-Z]{2}") String lang, BoundWithPart entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putInventoryStorageBoundWithPartsById(String id, @Pattern(regexp = "[a-zA-Z]{2}") String lang, BoundWithPart entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.put(BOUND_WITH_TABLE, entity, id, okapiHeaders, vertxContext,
-      PutBoundWithPartsByIdResponse.class, asyncResultHandler);
-
+      PutInventoryStorageBoundWithPartsByIdResponse.class, asyncResultHandler);
   }
 }

@@ -67,7 +67,7 @@ public class InterfaceUrls {
   }
 
   public static URL boundWithStorageUrl(String subPath) {
-    return StorageTestSuite.storageUrl("/bound-with-parts" + subPath);
+    return StorageTestSuite.storageUrl("/inventory-storage/bound-with-parts" + subPath);
   }
 
   public static URL contributorTypesUrl(String subPath) {
