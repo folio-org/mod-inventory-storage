@@ -9,7 +9,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "boundwithpart.json"
+        "$ref": "bound-with-part.json"
       }
     },
     "totalRecords": {
