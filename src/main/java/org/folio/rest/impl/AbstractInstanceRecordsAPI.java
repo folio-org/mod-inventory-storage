@@ -101,8 +101,8 @@ public abstract class AbstractInstanceRecordsAPI {
         rowStream
         .exceptionHandler(e -> {
           respondWithError(response, e, asyncResultHandler);
-          //database connection must be explicitly closed when an error is thrown or it will be left in an open
-          //aborted state.
+          //database connections must be explicitly closed when an error is thrown 
+          //or it will be left in an open aborted state.
           postgresClient.endTx(tx, h -> {
             if (h.failed()) {
               log.error("Unable to close database connection: " + h.cause().getMessage());
