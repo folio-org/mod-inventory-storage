@@ -1039,7 +1039,7 @@
 	{
       "run": "after",
       "snippetPath": "addInstanceFormatsAudioBelt.sql",
-      "fromModuleVersion": "20.2.1"
+      "fromModuleVersion": "20.3.0"
     }
   ]
 }
