@@ -132,7 +132,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
-    instanceToCreate.put("publicationPeriod", List.of(JsonObject.mapFrom(publicationPeriod)));
+    instanceToCreate.put("publicationPeriod", JsonObject.mapFrom(publicationPeriod));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -182,8 +182,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
     assertCreateEventForInstance(instanceFromGet);
 
-    var storedPublicationPeriod = instance.getJsonArray("publicationPeriod")
-      .getJsonObject(0).mapTo(PublicationPeriod.class);
+    var storedPublicationPeriod = instance.getJsonObject("publicationPeriod")
+      .mapTo(PublicationPeriod.class);
     assertThat(storedPublicationPeriod.getStart(), is(2000));
     assertThat(storedPublicationPeriod.getEnd(), is(2001));
   }
