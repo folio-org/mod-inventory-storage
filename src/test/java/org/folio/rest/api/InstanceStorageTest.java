@@ -129,7 +129,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .toArray(String[]::new);
 
     var publication = new Publication()
-      .withPublicationYear(2012)
       .withPublicationPeriod(new PublicationPeriod().withStart(2000).withEnd(2001));
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
@@ -186,7 +185,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var storedPublication = instance.getJsonArray("publication")
       .getJsonObject(0).mapTo(Publication.class);
-    assertThat(storedPublication.getPublicationYear(), is(2012));
     assertThat(storedPublication.getPublicationPeriod().getStart(), is(2000));
     assertThat(storedPublication.getPublicationPeriod().getEnd(), is(2001));
   }

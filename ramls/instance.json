@@ -215,10 +215,6 @@
             "type": "string",
             "description": "Date (year YYYY) of publication, distribution, etc."
           },
-          "publicationYear": {
-            "type": "integer",
-            "description": "Publication year"
-          },
           "publicationPeriod": {
             "type": "object",
             "description": "Publication period",
