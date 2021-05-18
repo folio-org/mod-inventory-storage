@@ -18,6 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
+
 import com.google.common.collect.Iterables;
 
 import io.vertx.core.AsyncResult;
@@ -90,6 +92,7 @@ public abstract class AbstractInstanceRecordsAPI {
       log.debug("postgres params: {}", params);
 
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+      ConnectionErrorHandler handleError = new ConnectionErrorHandler(postgresClient);
 
       postgresClient.startTx(tx -> postgresClient.selectStream(tx, sql, params, ar -> {
         if (ar.failed()) {
@@ -100,15 +103,7 @@ public abstract class AbstractInstanceRecordsAPI {
         RowStream<Row> rowStream = ar.result();
         rowStream
         .exceptionHandler(e -> {
-          respondWithError(response, e, asyncResultHandler);
-          //database connections must be explicitly closed when an error is thrown 
-          //or it will be left in an open aborted state.
-          postgresClient.endTx(tx, h -> {
-            if (h.failed()) {
-              log.error("Unable to close database connection: " + h.cause().getMessage());
-              return;
-            }
-          });
+          handleError.writeErrorAndCloseConn(e, tx, response, asyncResultHandler);
         })
         .endHandler(end -> {
           postgresClient.endTx(tx, h -> {
@@ -138,6 +133,16 @@ public abstract class AbstractInstanceRecordsAPI {
       boolean skipSuppressedFromDiscoveryRecords) {
 
     return createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords, empty -> {});
+  }
+
+  public void closeConnectionAndWriteOutErrorOnFailure(Throwable t, PostgresClient client, AsyncResult<SQLConnection> conn, HttpServerResponse response, Handler<AsyncResult<Response>> asyncResultHandler) {
+    respondWithError(response, t, asyncResultHandler);
+    client.endTx(conn, h -> {
+      if (h.failed()) {
+        log.error("Unable to close database connection: " + h.cause().getMessage());
+      }
+    });
+    return;
   }
 
   protected Tuple createPostgresParams(String startDate, String endDate, boolean deletedRecordSupport,

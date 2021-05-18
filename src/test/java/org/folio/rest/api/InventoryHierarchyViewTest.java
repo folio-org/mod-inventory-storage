@@ -96,6 +96,18 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void correctErrorWrittenOutOnDatabaseError() throws InterruptedException, ExecutionException, TimeoutException {
+
+    setFaultyStatisticalCode();    
+
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    List<JsonObject> instancesData = getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(500)));
+
+    removeFaultyStatisticalCode();
+
+  }
+
+  @Test
   public void canRequestInventoryHierarchyInstanceWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
@@ -411,6 +423,27 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     }
 
     return results;
+  }
+
+  private void setFaultyStatisticalCode() {
+    String sql = "UPDATE item SET jsonb=jsonb_set(jsonb, '{statisticalCodeIds}', '[\"5t632 ytbg vnc\"]', true);";
+    
+    postgresClient.execute(sql, handler -> {
+      if (handler.failed()) {
+        log.error("Error updating database: " + handler.cause().getMessage());
+      }
+    });
+  }
+
+  private void removeFaultyStatisticalCode() {
+    String sql = "UPDATE item SET jsonb=jsonb_set(jsonb, '{statisticalCodeIds}', '[]', true);";
+    
+    postgresClient.selectSingle(sql, handler -> {
+      if (handler.failed()) {
+        log.error("Error updating database: " + handler.cause().getMessage());
+      }
+    });
+
   }
 
   private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap)
