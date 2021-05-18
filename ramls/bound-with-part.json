@@ -5,7 +5,8 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "unique ID of the recorded bound-with relation; a UUID"
+      "description": "unique ID of the recorded bound-with relation; a UUID",
+      "$ref": "uuid.json"
     },
     "holdingsRecordId": {
       "type": "string",
