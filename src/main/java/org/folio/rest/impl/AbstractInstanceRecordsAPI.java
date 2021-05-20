@@ -135,16 +135,6 @@ public abstract class AbstractInstanceRecordsAPI {
     return createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords, empty -> {});
   }
 
-  public void closeConnectionAndWriteOutErrorOnFailure(Throwable t, PostgresClient client, AsyncResult<SQLConnection> conn, HttpServerResponse response, Handler<AsyncResult<Response>> asyncResultHandler) {
-    respondWithError(response, t, asyncResultHandler);
-    client.endTx(conn, h -> {
-      if (h.failed()) {
-        log.error("Unable to close database connection: " + h.cause().getMessage());
-      }
-    });
-    return;
-  }
-
   protected Tuple createPostgresParams(String startDate, String endDate, boolean deletedRecordSupport,
       boolean skipSuppressedFromDiscoveryRecords, Consumer<Tuple> applyExtraParams) {
 
