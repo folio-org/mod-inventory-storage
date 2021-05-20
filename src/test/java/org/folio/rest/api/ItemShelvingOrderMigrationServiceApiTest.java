@@ -37,7 +37,8 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
   @Test
   public void shouldStopProcessingWhenCannotConvertItem() throws Exception {
     var item = createItem(0);
-    executeSql("UPDATE item SET jsonb = '{\"a\":\"b\"}'::jsonb WHERE id = '" + item.getId() + "'");
+    removeShelvingOrder(List.of(item));
+    executeSql("UPDATE item SET jsonb = jsonb || '{\"a\":\"b\"}'::jsonb WHERE id = '" + item.getId() + "'");
 
     var ta = getTenantAttributes();
 
