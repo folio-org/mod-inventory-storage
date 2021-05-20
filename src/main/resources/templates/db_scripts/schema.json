@@ -903,6 +903,11 @@
       "tableName": "reindex_job",
       "withMetadata": false,
       "withAuditing": false
+    },
+    {
+      "tableName": "notification_sending_error",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [
