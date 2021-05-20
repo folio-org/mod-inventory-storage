@@ -96,13 +96,21 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void correctErrorWrittenOutOnDatabaseError() throws InterruptedException, ExecutionException, TimeoutException {
+  public void ServerErrorWrittenOutOnDatabaseError() throws InterruptedException, ExecutionException, TimeoutException {
 
     setFaultyStatisticalCode();    
 
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
-    List<JsonObject> instancesData = getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(500)));
 
+    List<JsonObject> instances = requestInventoryHierarchyViewUpdatedInstanceIds(params, response -> assertThat(response.getStatusCode(), is(200)));
+    UUID[] instanceIds = instances.stream()
+      .map(json -> UUID.fromString(json.getString("instanceId")))
+      .toArray(UUID[]::new);
+    
+    List<JsonObject> instancesData = requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> assertThat(response.getStatusCode(), is(500)));
+
+    JsonObject error = instancesData.get(0);
+    assertThat(error.getString("message"), is("invalid input syntax for type uuid: \"5t632 ytbg vnc\""));
     removeFaultyStatisticalCode();
 
   }
