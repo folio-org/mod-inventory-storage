@@ -1,3 +1,7 @@
+## 21.0.0 IN-PROGRESS
+* Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-725, MODINVSTOR-726)
+* Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-725, MODINVSTOR-726)
+
 ## 20.3.0 IN-PROGRESS
 
 * Adds full-text index for classifications field in instance table (MODINVSTOR-716)
