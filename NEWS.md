@@ -7,8 +7,8 @@
 * Provides `instance-storage 8.0`
 * Provides `instance-storage-batch 1.0`
 * Provides `instance-storage-batch-sync 1.0`
-* Upgrades to RAML Module Builder 33.0.0-pre4 (MODINVSTOR-725, MODINVSTOR-726)
-* Upgrades to Vert.x 4.1.0.Beta1 (MODINVSTOR-725, MODINVSTOR-726)
+* Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-725, MODINVSTOR-726)
+* Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-725, MODINVSTOR-726)
 
 ## 20.3.0 IN-PROGRESS
 
