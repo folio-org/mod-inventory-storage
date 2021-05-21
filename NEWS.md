@@ -1,3 +1,15 @@
+## 21.0.0 IN-PROGRESS
+* Enables failOnConflict for optimistic locking for item, holdings, instance (MODINVSTOR-713)
+* Provides `item-storage 9.0`
+* Provides `item-storage-batch-sync 1.0`
+* Provides `holdings-storage 5.0`
+* Provides `holdings-storage-batch-sync 1.0`
+* Provides `instance-storage 8.0`
+* Provides `instance-storage-batch 1.0`
+* Provides `instance-storage-batch-sync 1.0`
+* Upgrades to RAML Module Builder 33.0.0-pre4 (MODINVSTOR-725, MODINVSTOR-726)
+* Upgrades to Vert.x 4.1.0.Beta1 (MODINVSTOR-725, MODINVSTOR-726)
+
 ## 20.3.0 IN-PROGRESS
 
 * Adds full-text index for classifications field in instance table (MODINVSTOR-716)
