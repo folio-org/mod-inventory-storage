@@ -918,6 +918,12 @@
           "targetTable": "holdings_record",
           "tOps": "ADD"
         }
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "itemId, holdingsRecordId",
+          "tOps": "ADD"
+        }
       ]
     }
   ],
