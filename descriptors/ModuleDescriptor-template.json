@@ -88,7 +88,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "7.7",
+      "version": "7.8",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1053,6 +1053,33 @@
           "methods": ["DELETE"],
           "pathPattern": "/holdings-sources/{id}",
           "permissionsRequired": ["inventory-storage.holdings-sources.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "bound-with-parts-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/bound-with-parts",
+          "permissionsRequired": ["inventory-storage.bound-with-parts.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/bound-with-parts/{id}",
+          "permissionsRequired": ["inventory-storage.bound-with-parts.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/inventory-storage/bound-with-parts",
+          "permissionsRequired": ["inventory-storage.bound-with-parts.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/inventory-storage/bound-with-parts/{id}",
+          "permissionsRequired": ["inventory-storage.bound-with-parts.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/inventory-storage/bound-with-parts/{id}",
+          "permissionsRequired": ["inventory-storage.bound-with-parts.item.delete"]
         }
       ]
     },
@@ -2149,6 +2176,31 @@
       "description": "delete individual holdings-source from storage"
     },
     {
+      "permissionName": "inventory-storage.bound-with-parts.collection.get",
+      "displayName":    "inventory storage - get parts of bound-with(s)",
+      "description":    "get holdings-records associated with bound-with items"
+    },
+    {
+      "permissionName": "inventory-storage.bound-with-parts.item.get",
+      "displayName":    "inventory storage - get a part of a bound-with",
+      "description":    "get a holdings-record id associated with a bound-with item"
+    },
+    {
+      "permissionName": "inventory-storage.bound-with-parts.item.post",
+      "displayName":    "inventory storage - add a part to a bound-with",
+      "description":    "add a holdings record to a bound-with by associating it with the bound-with item"
+    },
+    {
+      "permissionName": "inventory-storage.bound-with-parts.item.put",
+      "displayName":    "inventory storage - modify a bound-with part",
+      "description":    "replace a holdings-record of a bound-with or move it to a different bound-with"
+    },
+    {
+      "permissionName": "inventory-storage.bound-with-parts.item.delete",
+      "displayName":    "inventory storage - remove part of a bound-with",
+      "description":    "remove a holdings-record from a bound-with"
+    },
+    {
       "permissionName": "inventory-storage.instance.reindex.item.delete",
       "displayName": "inventory storage - cancel reindex job",
       "description": "cancel a running reindexing job"
@@ -2369,6 +2421,11 @@
         "inventory-storage.holdings-sources.post",
         "inventory-storage.holdings-sources.put",
         "inventory-storage.holdings-sources.delete",
+        "inventory-storage.bound-with-parts.collection.get",
+        "inventory-storage.bound-with-parts.item.get",
+        "inventory-storage.bound-with-parts.item.post",
+        "inventory-storage.bound-with-parts.item.put",
+        "inventory-storage.bound-with-parts.item.delete",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
         "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
         "inventory-storage.inventory-view.instances.collection.get",

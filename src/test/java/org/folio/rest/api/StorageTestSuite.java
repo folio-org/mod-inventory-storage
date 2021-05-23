@@ -80,6 +80,7 @@ import org.testcontainers.utility.DockerImageName;
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
   InventoryViewTest.class,
+  BoundWithStorageTest.class,
   ReindexJobRunnerTest.class,
   EffectiveLocationMigrationTest.class,
   PreviouslyHeldDataUpgradeTest.class,
