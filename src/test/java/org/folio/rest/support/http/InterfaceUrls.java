@@ -66,6 +66,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/instance-relationship-types" + subPath);
   }
 
+  public static URL boundWithStorageUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/inventory-storage/bound-with-parts" + subPath);
+  }
+
   public static URL contributorTypesUrl(String subPath) {
     return StorageTestSuite.storageUrl("/contributor-types" + subPath);
   }

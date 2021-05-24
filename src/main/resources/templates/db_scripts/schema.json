@@ -905,6 +905,28 @@
       "withAuditing": false
     },
     {
+      "tableName": "bound_with_part",
+      "withMetadata": true,
+      "foreignKeys": [
+        {
+          "fieldName": "itemId",
+          "targetTable": "item",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "holdingsRecordId",
+          "targetTable": "holdings_record",
+          "tOps": "ADD"
+        }
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "itemId, holdingsRecordId",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "notification_sending_error",
       "withMetadata": false,
       "withAuditing": false

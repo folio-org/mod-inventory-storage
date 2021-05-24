@@ -1,0 +1,48 @@
+#%RAML 1.0
+title: Bound-With API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Bound-With API
+    content: This documents the API calls that can be made to query and manage parts of bound-withs
+
+types:
+  boundWithPart: !include bound-with-part.json
+  boundWithParts: !include bound-with-parts.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/inventory-storage/bound-with-parts:
+  type:
+    collection:
+      exampleCollection: !include examples/bound-with-parts.json
+      exampleItem: !include examples/bound-with-part.json
+      schemaCollection: boundWithParts
+      schemaItem: boundWithPart
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "itemId=aaa"},
+      pageable
+    ]
+    description: Return a list of parts of bound-withs
+  post:
+    description: Add a new part to a bound-with item
+    is: [validate]
+  /{id}:
+    description: "Pass in the bound with part id"
+    type:
+      collection-item:
+        exampleItem: !include examples/bound-with-part.json
+        schema: boundWithPart
+
