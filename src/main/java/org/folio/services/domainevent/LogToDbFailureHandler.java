@@ -11,14 +11,14 @@ import java.util.UUID;
 import org.folio.persist.NotificationSendingErrorRepository;
 import org.folio.persist.entity.NotificationSendingError;
 
-public class LogToDbFailureHandler implements FailureHandler {
+final class LogToDbFailureHandler implements FailureHandler {
   private final NotificationSendingErrorRepository repository;
 
-  public LogToDbFailureHandler(NotificationSendingErrorRepository repository) {
+  LogToDbFailureHandler(NotificationSendingErrorRepository repository) {
     this.repository = repository;
   }
 
-  public LogToDbFailureHandler(Context context, Map<String, String> okapiHeaders) {
+  LogToDbFailureHandler(Context context, Map<String, String> okapiHeaders) {
     this(new NotificationSendingErrorRepository(postgresClient(context, okapiHeaders)));
   }
 
