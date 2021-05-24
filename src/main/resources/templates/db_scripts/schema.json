@@ -925,6 +925,11 @@
           "tOps": "ADD"
         }
       ]
+    },
+    {
+      "tableName": "notification_sending_error",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [
