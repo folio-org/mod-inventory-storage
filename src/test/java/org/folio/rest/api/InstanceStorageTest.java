@@ -15,6 +15,8 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
+import org.folio.rest.jaxrs.model.Publication;
+import org.folio.rest.jaxrs.model.PublicationPeriod;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
@@ -126,9 +128,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .map(NatureOfContentTerm::getId)
       .toArray(String[]::new);
 
+    var publicationPeriod = new PublicationPeriod().withStart(2000).withEnd(2001);
+
     JsonObject instanceToCreate = smallAngryPlanet(id);
-    instanceToCreate.put("natureOfContentTermIds", Arrays
-      .asList(natureOfContentIds));
+    instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
+    instanceToCreate.put("publicationPeriod", JsonObject.mapFrom(publicationPeriod));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -177,6 +181,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
     assertCreateEventForInstance(instanceFromGet);
+
+    var storedPublicationPeriod = instance.getJsonObject("publicationPeriod")
+      .mapTo(PublicationPeriod.class);
+    assertThat(storedPublicationPeriod.getStart(), is(2000));
+    assertThat(storedPublicationPeriod.getEnd(), is(2001));
   }
 
   @Test
@@ -477,7 +486,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     InterruptedException,
     ExecutionException,
     TimeoutException {
-    
+
     createInstancesWithClassificationNumbers();
 
     JsonObject allInstances = searchForInstances("classifications =/@classificationNumber \"K1 .M385\"");
@@ -492,7 +501,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     InterruptedException,
     ExecutionException,
     TimeoutException {
-    
+
     createInstancesWithClassificationNumbers();
 
     JsonObject allInstances = searchForInstances("classifications =\"K1 .M385\"");
