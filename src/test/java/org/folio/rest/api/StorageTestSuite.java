@@ -152,7 +152,7 @@ public class StorageTestSuite {
     kafkaContainer.stop();
     vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
     vertx = null; // declare it dead but also for TestBase.testBaseBeforeClass.
-    PostgresClient.stopPostgresTester();
+    // PostgresClient.stopPostgresTester();
   }
 
   static void deleteAll(URL rootUrl) {

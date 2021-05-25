@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.support.IndividualResource;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase {
@@ -34,6 +35,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
     }
   }
 
+  @Ignore
   @Test
   public void shouldStopProcessingWhenCannotConvertItem() throws Exception {
     var item = createItem(0);
