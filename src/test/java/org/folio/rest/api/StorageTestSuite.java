@@ -14,6 +14,7 @@ import org.folio.postgres.testing.PostgresTesterContainer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -153,7 +154,7 @@ public class StorageTestSuite {
     kafkaContainer.stop();
     vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
     vertx = null; // declare it dead but also for TestBase.testBaseBeforeClass.
-    PostgresClient.stopEmbeddedPostgres();
+    PostgresClient.stopPostgresTester();
   }
 
   static void deleteAll(URL rootUrl) {
