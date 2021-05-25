@@ -29,7 +29,8 @@ public class ConnectionErrorHandler {
     });
   }
 
-  private static void respondWithError(HttpServerResponse dataResponse, Throwable t, Handler<AsyncResult<Response>> asyncResultHandler) {
+  private static void respondWithError(HttpServerResponse dataResponse, Throwable t, 
+    Handler<AsyncResult<Response>> asyncResultHandler) {
     log.error(t);
     if (dataResponse.headWritten()) {
       log.error("HTTP head has already been written, closing TCP connection to signal error");
