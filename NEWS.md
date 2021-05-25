@@ -1,6 +1,6 @@
 ## 20.3.0 IN-PROGRESS
 
-* Added code to close database connections when encountering errors from the /inventory-hierarchy endpoint (MODINVSTOR-677)
+* Closes database connections when encountering errors in the /inventory-hierarchy endpoint (MODINVSTOR-677)
 * Adds full-text index for classifications field in instance table (MODINVSTOR-716)
 * Adds `effective location` attribute to holdings record and inventory-hierarchy API (MODINVSTOR-669, MODINVSTOR-670)
 * Defaults instance.previouslyHeld to false (MODINVSTOR-454)
