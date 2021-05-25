@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Records the relationship between a part of a bound-with (a holdings-record) and the bound-with as a whole (the circulatable item)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "unique ID of the recorded bound-with relation; a UUID",
+      "$ref": "uuid.json"
+    },
+    "holdingsRecordId": {
+      "type": "string",
+      "description": "the ID of the holdings record representing a part of a bound-with; a UUID"
+    },
+    "itemId" : {
+      "type": "string",
+      "description": "the ID of the item representing the bind; a UUID"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "holdingsRecordId",
+    "itemId"
+  ]
+}

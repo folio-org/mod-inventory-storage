@@ -1,5 +1,5 @@
 ## 21.0.0 IN-PROGRESS
-* Enables failOnConflict for optimistic locking for item, holdings, instance (MODINVSTOR-713)
+* Enables failOnConflict for optimistic locking for item, holdings, instance (MODINVSTOR-713, MODINVSTOR-726)
 * Provides `item-storage 9.0`
 * Provides `item-storage-batch-sync 1.0`
 * Provides `holdings-storage 5.0`
@@ -7,15 +7,17 @@
 * Provides `instance-storage 8.0`
 * Provides `instance-storage-batch 1.0`
 * Provides `instance-storage-batch-sync 1.0`
-* Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-725, MODINVSTOR-726)
-* Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-725, MODINVSTOR-726)
+* Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-728)
+* Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-728)
+* shouldStopProcessingWhenCannotConvertItem depends on other test (MODINVSTOR-725)
 
 ## 20.3.0 IN-PROGRESS
 
+* Provides `bound-with-parts-storage 1.0`  (MODINVSTOR-702)
 * Adds full-text index for classifications field in instance table (MODINVSTOR-716)
 * Adds `effective location` attribute to holdings record and inventory-hierarchy API (MODINVSTOR-669, MODINVSTOR-670)
 * Defaults instance.previouslyHeld to false (MODINVSTOR-454)
-* Provides `holdings-storage 4.6` (MODINVSTOR-669
+* Provides `holdings-storage 4.6` (MODINVSTOR-669)
 * Provides `instance-storage 7.7`
 * Provides `inventory-hierarchy 0.2` (MODINVSTOR-670)
 
