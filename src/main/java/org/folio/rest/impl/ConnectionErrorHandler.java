@@ -19,7 +19,8 @@ public class ConnectionErrorHandler {
     this.client = Pgclient;
   }
 
-  public void writeErrorAndCloseConn(Throwable t, AsyncResult<SQLConnection> conn, HttpServerResponse dataResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
+  public void writeErrorAndCloseConn(Throwable t, 
+      AsyncResult<SQLConnection> conn, HttpServerResponse dataResponse, Handler<AsyncResult<Response>> asyncResultHandler) {
     respondWithError(dataResponse, t, asyncResultHandler);
     client.endTx(conn, h -> {
       if (h.failed()) {
