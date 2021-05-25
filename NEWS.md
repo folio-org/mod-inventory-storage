@@ -4,10 +4,11 @@
 
 ## 20.3.0 IN-PROGRESS
 
+* Provides `bound-with-parts-storage 1.0`  (MODINVSTOR-702)
 * Adds full-text index for classifications field in instance table (MODINVSTOR-716)
 * Adds `effective location` attribute to holdings record and inventory-hierarchy API (MODINVSTOR-669, MODINVSTOR-670)
 * Defaults instance.previouslyHeld to false (MODINVSTOR-454)
-* Provides `holdings-storage 4.6` (MODINVSTOR-669
+* Provides `holdings-storage 4.6` (MODINVSTOR-669)
 * Provides `instance-storage 7.7`
 * Provides `inventory-hierarchy 0.2` (MODINVSTOR-670)
 

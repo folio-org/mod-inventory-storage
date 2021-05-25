@@ -80,6 +80,11 @@ public class ResourceClient {
       "preceding succeeding titles", "precedingSucceedingTitles");
   }
 
+  public static ResourceClient forBoundWithParts(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::boundWithStorageUrl,
+      "bound with parts", "boundWithParts");
+  }
+
   public static ResourceClient forLoanTypes(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::loanTypesStorageUrl,
       "loan types", "loantypes");

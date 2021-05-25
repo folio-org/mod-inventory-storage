@@ -37,19 +37,22 @@ public class CommonDomainEventPublisher<T> {
   private final Map<String, String> okapiHeaders;
   private final KafkaTopic kafkaTopic;
   private final KafkaProducerManager producerManager;
+  private final FailureHandler failureHandler;
 
   CommonDomainEventPublisher(Map<String, String> okapiHeaders, KafkaTopic kafkaTopic,
-    KafkaProducerManager kafkaProducerManager) {
+    KafkaProducerManager kafkaProducerManager, FailureHandler failureHandler) {
 
     this.okapiHeaders = okapiHeaders;
     this.kafkaTopic = kafkaTopic;
     this.producerManager = kafkaProducerManager;
+    this.failureHandler = failureHandler;
   }
 
   public CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
     KafkaTopic kafkaTopic) {
 
-    this(okapiHeaders, kafkaTopic, createProducerManager(vertxContext));
+    this(okapiHeaders, kafkaTopic, createProducerManager(vertxContext),
+      new LogToDbFailureHandler(vertxContext, okapiHeaders));
   }
 
   Future<Void> publishRecordUpdated(String instanceId, T oldRecord, T newRecord) {
@@ -115,6 +118,8 @@ public class CommonDomainEventPublisher<T> {
         kafkaProducer.send(producerRecord)
           .onFailure(error -> {
             log.error("Unable to send event [{}]", producerRecord.value(), error);
+
+            failureHandler.handleFailure(error, producerRecord);
             recordsProcessed.decrementAndGet();
           });
 
@@ -154,6 +159,8 @@ public class CommonDomainEventPublisher<T> {
         if (result.failed()) {
           log.error("Unable to send domain event [{}], payload - [{}]",
             key, value, result.cause());
+
+          failureHandler.handleFailure(result.cause(), producerRecord);
         }
       });
   }
