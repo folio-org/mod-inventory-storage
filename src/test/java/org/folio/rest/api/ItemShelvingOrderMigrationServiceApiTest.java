@@ -3,7 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.tenantOp;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThrows;
 
@@ -44,7 +44,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
     var ta = getTenantAttributes();
 
     assertThat(assertThrows(Throwable.class, () -> tenantOp(TENANT_ID, ta)).getMessage(),
-      is("Unrecognized field \"a\" (class org.folio.rest.jaxrs.model.Item), not marked as ignorable"));
+      containsString("Unrecognized field \"a\" (class org.folio.rest.jaxrs.model.Item), not marked as ignorable"));
   }
 
   private JsonObject getTenantAttributes() {

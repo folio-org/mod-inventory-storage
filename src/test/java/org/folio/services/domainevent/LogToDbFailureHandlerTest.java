@@ -1,5 +1,6 @@
 package org.folio.services.domainevent;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,7 +40,7 @@ public class LogToDbFailureHandlerTest {
     assertThat(notificationSendingError.getTopicName(), is("topic"));
     assertThat(notificationSendingError.getPartitionKey(), is("key"));
     assertThat(notificationSendingError.getPayload(), is("value"));
-    assertThat(notificationSendingError.getError(), is(("IllegalArgumentException: null")));
+    assertThat(notificationSendingError.getError(), containsString("IllegalArgumentException: null"));
     assertThat(notificationSendingError.getIncidentDateTime(), is(greaterThanOrEqualTo(startDate)));
     assertThat(notificationSendingError.getIncidentDateTime(), is(lessThanOrEqualTo(new Date())));
   }
