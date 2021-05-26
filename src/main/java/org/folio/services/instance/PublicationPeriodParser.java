@@ -27,7 +27,7 @@ public final class PublicationPeriodParser {
       return null;
     }
 
-    var endYearToUse = startBeforeEnd(startYear, endYear) || startYear == null ? endYear : null;
+    var endYearToUse = startYear == null || startBeforeEnd(startYear, endYear) ? endYear : null;
     return new PublicationPeriod().withStart(startYear).withEnd(endYearToUse);
   }
 
