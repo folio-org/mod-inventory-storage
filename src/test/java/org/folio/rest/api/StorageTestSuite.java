@@ -14,6 +14,7 @@ import org.folio.postgres.testing.PostgresTesterContainer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -80,10 +81,12 @@ import org.testcontainers.utility.DockerImageName;
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
   InventoryViewTest.class,
+  BoundWithStorageTest.class,
   ReindexJobRunnerTest.class,
   EffectiveLocationMigrationTest.class,
   PreviouslyHeldDataUpgradeTest.class,
-  ItemShelvingOrderMigrationServiceApiTest.class
+  ItemShelvingOrderMigrationServiceApiTest.class,
+  NotificationSendingErrorRepositoryTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
@@ -151,7 +154,7 @@ public class StorageTestSuite {
     kafkaContainer.stop();
     vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
     vertx = null; // declare it dead but also for TestBase.testBaseBeforeClass.
-    PostgresClient.stopEmbeddedPostgres();
+    PostgresClient.stopPostgresTester();
   }
 
   static void deleteAll(URL rootUrl) {
