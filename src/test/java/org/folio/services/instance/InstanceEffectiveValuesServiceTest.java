@@ -100,7 +100,7 @@ public class InstanceEffectiveValuesServiceTest {
 
     service.populateEffectiveValues(newInstance, oldInstance);
 
-    assertThat(newInstance.getPublicationPeriod(), nullValue());
+    assertThat(newInstance.getPublicationPeriod(), notNullValue());
     assertThat(newInstance.getPublicationPeriod().getStart(), is(2019));
     assertThat(newInstance.getPublicationPeriod().getEnd(), is(2021));
   }
