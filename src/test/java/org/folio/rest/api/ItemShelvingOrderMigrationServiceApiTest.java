@@ -5,6 +5,7 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.tenantOp;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 import io.vertx.core.json.JsonObject;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.folio.rest.support.IndividualResource;
 import org.junit.Test;
 
 public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase {
+  private static final String EFFECTIVE_SHELVING_ORDER = "effectiveShelvingOrder";
   private final AtomicInteger nextPatch = new AtomicInteger(1);
 
   @Test
@@ -29,8 +31,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
 
     for (IndividualResource item : items) {
       var updatedItem = itemsClient.getById(item.getId());
-      assertThat(updatedItem.getJson()
-        .getString("effectiveShelvingOrder"), notNullValue());
+      assertThat(updatedItem.getJson().getString(EFFECTIVE_SHELVING_ORDER), notNullValue());
     }
   }
 
@@ -58,7 +59,9 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
 
   private void removeShelvingOrder(List<IndividualResource> items) throws Exception {
     for (IndividualResource item : items) {
-      unsetJsonbProperty("item", item.getId(), "effectiveShelvingOrder");
+      unsetJsonbProperty("item", item.getId(), EFFECTIVE_SHELVING_ORDER);
+      assertThat(itemsClient.getById(item.getId()).getJson()
+        .getJsonObject(EFFECTIVE_SHELVING_ORDER), nullValue());
     }
   }
 

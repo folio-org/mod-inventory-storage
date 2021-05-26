@@ -1,6 +1,9 @@
 package org.folio.services.domainevent;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
@@ -21,7 +24,6 @@ public class LogToDbFailureHandlerTest {
 
   @Test
   public void canHandleFailure() {
-    var startDate = new Date();
     var handler = new LogToDbFailureHandler(repository);
     handler.handleFailure(new IllegalArgumentException("null"),
       new KafkaProducerRecordImpl<>("topic", "key", "value"));
@@ -30,11 +32,13 @@ public class LogToDbFailureHandlerTest {
     verify(repository).save(any(), errorArgumentCaptor.capture());
 
     var notificationSendingError = errorArgumentCaptor.getValue();
-    assertThat(notificationSendingError.getId()).isNotBlank();
-    assertThat(notificationSendingError.getTopicName()).isEqualTo("topic");
-    assertThat(notificationSendingError.getPartitionKey()).isEqualTo("key");
-    assertThat(notificationSendingError.getPayload()).isEqualTo("value");
-    assertThat(notificationSendingError.getError()).contains("IllegalArgumentException: null");
-    assertThat(notificationSendingError.getIncidentDateTime()).isBetween(startDate, new Date());
+    assertThat(notificationSendingError.getId(), notNullValue());
+    assertThat(notificationSendingError.getTopicName(), is("topic"));
+    assertThat(notificationSendingError.getPartitionKey(), is("key"));
+    assertThat(notificationSendingError.getPayload(), is("value"));
+    assertThat(notificationSendingError.getError(),
+      containsString("IllegalArgumentException: null"));
+    assertThat(notificationSendingError.getIncidentDateTime()
+      .before(new Date()), is(true));
   }
 }

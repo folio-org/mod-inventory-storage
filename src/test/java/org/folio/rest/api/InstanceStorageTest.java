@@ -128,11 +128,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .map(NatureOfContentTerm::getId)
       .toArray(String[]::new);
 
-    var publicationPeriod = new PublicationPeriod().withStart(2000).withEnd(2001);
+    var publication = new Publication().withDateOfPublication("2000-2001");
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
-    instanceToCreate.put("publicationPeriod", JsonObject.mapFrom(publicationPeriod));
+    instanceToCreate.put("publication", new JsonArray().add(JsonObject.mapFrom(publication)));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
