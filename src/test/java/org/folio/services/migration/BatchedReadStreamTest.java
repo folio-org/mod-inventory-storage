@@ -1,10 +1,10 @@
 package org.folio.services.migration;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.TestBase.get;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -45,18 +45,18 @@ public class BatchedReadStreamTest {
     ArgumentCaptor<List<Row>> captor = ArgumentCaptor.forClass(List.class);
     verify(handler, times(numberOfBatches)).handle(captor.capture());
 
-    assertThat(captor.getAllValues()).hasSize(numberOfBatches);
-    assertThat(captor.getAllValues().get(4)).hasSize(10);
+    assertThat(captor.getAllValues().size(), is(numberOfBatches));
+    assertThat(captor.getAllValues().get(4).size(), is(10));
     captor.getAllValues().stream().limit(numberOfBatches - 1)
-      .forEach(list -> assertThat(list).hasSize(batchSize));
+      .forEach(list -> assertThat(list.size(), is(batchSize)));
 
 
     var ids = new HashSet<UUID>(numberOfRecords);
     captor.getAllValues().forEach(
       list -> list.forEach(
-        // Make sure all IDS are unique so that batch doe not produce
+        // Make sure all IDS are unique so that batch does not produce
         // duplicate records
-        row -> assertThat(ids.add(row.getUUID("id"))).isTrue()));
+        row -> assertThat(ids.add(row.getUUID("id")), is(true))));
   }
 
   @Test

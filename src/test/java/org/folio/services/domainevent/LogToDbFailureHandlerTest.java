@@ -1,6 +1,12 @@
 package org.folio.services.domainevent;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
+import static org.hamcrest.number.OrderingComparison.lessThanOrEqualTo;
+import static org.hamcrest.text.IsBlankString.blankOrNullString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
@@ -30,11 +36,12 @@ public class LogToDbFailureHandlerTest {
     verify(repository).save(any(), errorArgumentCaptor.capture());
 
     var notificationSendingError = errorArgumentCaptor.getValue();
-    assertThat(notificationSendingError.getId()).isNotBlank();
-    assertThat(notificationSendingError.getTopicName()).isEqualTo("topic");
-    assertThat(notificationSendingError.getPartitionKey()).isEqualTo("key");
-    assertThat(notificationSendingError.getPayload()).isEqualTo("value");
-    assertThat(notificationSendingError.getError()).contains("IllegalArgumentException: null");
-    assertThat(notificationSendingError.getIncidentDateTime()).isBetween(startDate, new Date());
+    assertThat(notificationSendingError.getId(), is(not(blankOrNullString())));
+    assertThat(notificationSendingError.getTopicName(), is("topic"));
+    assertThat(notificationSendingError.getPartitionKey(), is("key"));
+    assertThat(notificationSendingError.getPayload(), is("value"));
+    assertThat(notificationSendingError.getError(), containsString("IllegalArgumentException: null"));
+    assertThat(notificationSendingError.getIncidentDateTime(), is(greaterThanOrEqualTo(startDate)));
+    assertThat(notificationSendingError.getIncidentDateTime(), is(lessThanOrEqualTo(new Date())));
   }
 }
