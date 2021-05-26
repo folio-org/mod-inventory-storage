@@ -37,6 +37,7 @@ public class InstanceService {
   private final InstanceRepository instanceRepository;
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
+  private final InstanceEffectiveValuesService effectiveValuesService;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -48,10 +49,12 @@ public class InstanceService {
     instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
+    effectiveValuesService = new InstanceEffectiveValuesService();
   }
 
   public Future<Response> createInstance(Instance entity) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
+    effectiveValuesService.populateEffectiveValues(entity);
 
     return hridManager.populateHrid(entity)
       .compose(instance -> {
@@ -75,6 +78,7 @@ public class InstanceService {
       .compose(batchOperation -> {
         final Promise<Response> postResult = promise();
 
+        effectiveValuesService.populateEffectiveValues(instances, batchOperation);
         // Can use instances list here directly because the class is stateful
         postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, okapiHeaders,
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class, postResult);
@@ -91,6 +95,7 @@ public class InstanceService {
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
 
+        effectiveValuesService.populateEffectiveValues(newInstance, oldInstance);
         put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
 
