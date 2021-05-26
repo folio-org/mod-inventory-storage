@@ -5,6 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import junitparams.converters.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -18,10 +19,7 @@ public class TenantRefAPITest {
     "1.22.4, 1.22.3, false",
   })
   @Test
-  public void isNew(String migratingFromVersion, String featureVersion, boolean expected) {
-    if ("null".equals(migratingFromVersion)) {
-      migratingFromVersion = null;
-    }
+  public void isNew(@Nullable String migratingFromVersion, String featureVersion, boolean expected) {
     assertThat(new TenantRefAPI.ModuleFrom(migratingFromVersion).isNew(featureVersion), is(expected));
     assertThat(new TenantRefAPI.ModuleFrom("mod-foo-" + migratingFromVersion).isNew(featureVersion), is(expected));
   }
