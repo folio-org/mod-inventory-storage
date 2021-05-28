@@ -1,8 +1,9 @@
 package org.folio.rest.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.getVertx;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Date;
 import java.util.Map;
@@ -22,12 +23,11 @@ public class NotificationSendingErrorRepositoryTest extends TestBaseWithInventor
     get(repository.save(originalError.getId(), originalError));
 
     var savedNotification = get(repository.getById(originalError.getId()));
-    assertThat(savedNotification.getTopicName()).isEqualTo("topic");
-    assertThat(savedNotification.getPartitionKey()).isEqualTo("key");
-    assertThat(savedNotification.getPayload()).isEqualTo("value");
-    assertThat(savedNotification.getError()).isEqualTo("error\nerror2");
-    assertThat(savedNotification.getIncidentDateTime())
-      .isEqualTo(originalError.getIncidentDateTime());
+    assertThat(savedNotification.getTopicName(), is("topic"));
+    assertThat(savedNotification.getPartitionKey(), is("key"));
+    assertThat(savedNotification.getPayload(), is("value"));
+    assertThat(savedNotification.getError(), is("error\nerror2"));
+    assertThat(savedNotification.getIncidentDateTime(), is(originalError.getIncidentDateTime()));
   }
 
   private NotificationSendingErrorRepository createRepository() {
