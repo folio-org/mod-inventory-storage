@@ -18,6 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
+
 import com.google.common.collect.Iterables;
 
 import io.vertx.core.AsyncResult;
@@ -90,6 +92,7 @@ public abstract class AbstractInstanceRecordsAPI {
       log.debug("postgres params: {}", params);
 
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+      ConnectionErrorHandler handleError = new ConnectionErrorHandler(postgresClient);
 
       postgresClient.startTx(tx -> postgresClient.selectStream(tx, sql, params, ar -> {
         if (ar.failed()) {
@@ -99,7 +102,9 @@ public abstract class AbstractInstanceRecordsAPI {
 
         RowStream<Row> rowStream = ar.result();
         rowStream
-        .exceptionHandler(e -> respondWithError(response, e, asyncResultHandler))
+        .exceptionHandler(e -> {
+          handleError.writeErrorAndCloseConn(e, tx, response, asyncResultHandler);
+        })
         .endHandler(end -> {
           postgresClient.endTx(tx, h -> {
             if (h.failed()) {

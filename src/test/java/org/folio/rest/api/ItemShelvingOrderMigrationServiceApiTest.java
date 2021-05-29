@@ -1,10 +1,11 @@
 package org.folio.rest.api;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.tenantOp;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThrows;
 
 import io.vertx.core.json.JsonObject;
 import java.util.List;
@@ -42,9 +43,8 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
 
     var ta = getTenantAttributes();
 
-    assertThatThrownBy(() -> tenantOp(TENANT_ID, ta))
-      .hasMessageContaining("Unrecognized field \"a\" " +
-        "(class org.folio.rest.jaxrs.model.Item), not marked as ignorable");
+    assertThat(assertThrows(Throwable.class, () -> tenantOp(TENANT_ID, ta)).getMessage(),
+      containsString("Unrecognized field \"a\" (class org.folio.rest.jaxrs.model.Item), not marked as ignorable"));
   }
 
   private JsonObject getTenantAttributes() {
