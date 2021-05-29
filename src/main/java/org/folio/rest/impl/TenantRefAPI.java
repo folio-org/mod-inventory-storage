@@ -8,9 +8,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.Versioned;
 import org.folio.okapi.common.GenericCompositeFuture;
-import org.folio.okapi.common.ModuleId;
-import org.folio.okapi.common.SemVer;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
@@ -83,49 +82,20 @@ public class TenantRefAPI extends TenantAPI {
     return res;
   }
 
-  /**
-   * TODO: Move to okapi-common for re-use
-   */
-  static class ModuleFrom {
-    private final SemVer semVer;
-
-    /**
-     * The module version we upgrade from, null if installing from scratch
-     */
-    public ModuleFrom(String moduleFrom) {
-      if (moduleFrom == null) {
-        semVer = null;
-      } else if (Character.isDigit(moduleFrom.charAt(0))) {
-        semVer = new SemVer(moduleFrom);
-      } else {
-        semVer = new ModuleId(moduleFrom).getSemVer();
-      }
-    }
-
-    /**
-     * Do we need to install a feature that has been introduced with the given version?
-     */
-    public boolean isNew(String version) {
-      if (semVer == null) {
-        return true;
-      }
-      return semVer.compareTo(new SemVer(version)) < 0;
-    }
-  };
-
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
                            Map<String, String> headers, Context vertxContext) {
 
-    var moduleFrom = new ModuleFrom(attributes.getModuleFrom());
+    var moduleFrom = new Versioned() {};
+    moduleFrom.setFromModuleVersion(attributes.getModuleFrom());
 
     // create topics before loading data
     Future<Integer> future = new KafkaAdminClientService(vertxContext.owner())
         .createKafkaTopics()
         .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext));
 
-    if (moduleFrom.isNew("20.0.0")) {
+    if (moduleFrom.isNewForThisInstall("20.0.0")) {
       try {
         List<URL> urls = TenantLoading.getURLsFromClassPathDir(
           REFERENCE_LEAD + "/service-points");
