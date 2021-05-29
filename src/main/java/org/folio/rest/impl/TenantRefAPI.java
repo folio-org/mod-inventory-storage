@@ -82,20 +82,29 @@ public class TenantRefAPI extends TenantAPI {
     return res;
   }
 
+  /**
+   * Returns attributes.getModuleFrom() < featureVersion or attributes.getModuleFrom() is null.
+   */
+  static boolean isNew(TenantAttributes attributes, String featureVersion) {
+    if (attributes.getModuleFrom() == null) {
+      return true;
+    }
+    var since = new Versioned() {};
+    since.setFromModuleVersion(featureVersion);
+    return since.isNewForThisInstall(attributes.getModuleFrom());
+  }
+
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
                            Map<String, String> headers, Context vertxContext) {
-
-    var moduleFrom = new Versioned() {};
-    moduleFrom.setFromModuleVersion(attributes.getModuleFrom());
 
     // create topics before loading data
     Future<Integer> future = new KafkaAdminClientService(vertxContext.owner())
         .createKafkaTopics()
         .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext));
 
-    if (moduleFrom.isNewForThisInstall("20.0.0")) {
+    if (isNew(attributes, "20.0.0")) {
       try {
         List<URL> urls = TenantLoading.getURLsFromClassPathDir(
           REFERENCE_LEAD + "/service-points");
