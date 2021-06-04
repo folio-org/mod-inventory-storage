@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.Versioned;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -82,50 +83,65 @@ public class TenantRefAPI extends TenantAPI {
     return res;
   }
 
+  /**
+   * Returns attributes.getModuleFrom() < featureVersion or attributes.getModuleFrom() is null.
+   */
+  static boolean isNew(TenantAttributes attributes, String featureVersion) {
+    if (attributes.getModuleFrom() == null) {
+      return true;
+    }
+    var since = new Versioned() {};
+    since.setFromModuleVersion(featureVersion);
+    return since.isNewForThisInstall(attributes.getModuleFrom());
+  }
+
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
                            Map<String, String> headers, Context vertxContext) {
-    // create topics before loading data
-    return
-      new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics()
-        .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext))
-        .compose(superRecordsLoaded -> {
-          try {
-            List<URL> urls = TenantLoading.getURLsFromClassPathDir(
-              REFERENCE_LEAD + "/service-points");
-            servicePoints = new LinkedList<>();
-            for (URL url : urls) {
-              InputStream stream = url.openStream();
-              String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
-              stream.close();
-              servicePoints.add(new JsonObject(content));
-            }
-          } catch (URISyntaxException | IOException ex) {
-            return Future.failedFuture(ex.getMessage());
-          }
-          TenantLoading tl = new TenantLoading();
 
-          tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
-          tl.withIdContent();
-          for (String p : refPaths) {
-            tl.add(p);
-          }
-          tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
-          tl.add("instances", "instance-storage/instances");
-          tl.withIdContent();
-          tl.add("holdingsrecords", "holdings-storage/holdings");
-          tl.add("items", "item-storage/items");
-          tl.add("instance-relationships", "instance-storage/instance-relationships");
-          if (servicePoints != null) {
-            tl.withFilter(this::servicePointUserFilter)
-              .withPostOnly()
-              .withAcceptStatus(422)
-              .add("users", "service-points-users");
-          }
-          return tl.perform(attributes, headers, vertxContext, superRecordsLoaded);
-        }).compose(result -> runJavaMigrations(attributes, vertxContext, headers).map(result));
+    // create topics before loading data
+    Future<Integer> future = new KafkaAdminClientService(vertxContext.owner())
+        .createKafkaTopics()
+        .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext));
+
+    if (isNew(attributes, "20.0.0")) {
+      try {
+        List<URL> urls = TenantLoading.getURLsFromClassPathDir(
+          REFERENCE_LEAD + "/service-points");
+        servicePoints = new LinkedList<>();
+        for (URL url : urls) {
+          InputStream stream = url.openStream();
+          String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
+          stream.close();
+          servicePoints.add(new JsonObject(content));
+        }
+      } catch (URISyntaxException | IOException ex) {
+        return Future.failedFuture(ex);
+      }
+      TenantLoading tl = new TenantLoading();
+
+      tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
+      tl.withIdContent();
+      for (String p : refPaths) {
+        tl.add(p);
+      }
+      tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+      tl.add("instances", "instance-storage/instances");
+      tl.withIdContent();
+      tl.add("holdingsrecords", "holdings-storage/holdings");
+      tl.add("items", "item-storage/items");
+      tl.add("instance-relationships", "instance-storage/instance-relationships");
+      if (servicePoints != null) {
+        tl.withFilter(this::servicePointUserFilter)
+          .withPostOnly()
+          .withAcceptStatus(422)
+          .add("users", "service-points-users");
+      }
+      future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+    }
+
+    return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers).map(result));
   }
 
   private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,

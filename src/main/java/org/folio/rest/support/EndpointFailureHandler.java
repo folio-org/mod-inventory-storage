@@ -13,7 +13,7 @@ import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
-
+import org.folio.rest.persist.PgExceptionUtil;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
@@ -61,6 +61,8 @@ public final class EndpointFailureHandler {
       } else if (error instanceof ValidationException) {
         final Errors errors = ((ValidationException) error).getErrors();
         responseToReturn = failedValidationResponse(errors);
+      } else if (PgExceptionUtil.isVersionConflict(error)) {
+        responseToReturn = textPlainResponse(409, error);
       } else {
         responseToReturn = textPlainResponse(500, error);
       }
