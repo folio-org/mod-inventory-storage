@@ -1,4 +1,6 @@
 ## 21.0.0 IN-PROGRESS
+
+* `embed_postgres` command line option is no longer supported (MODINVSTOR-728)
 * Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-728)
 * Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-728)
 
