@@ -1,18 +1,19 @@
-## 21.0.0 IN-PROGRESS
+## 21.0.0 2021-06-10
 
-* `embed_postgres` command line option is no longer supported (MODINVSTOR-728)
-* Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-728)
-* Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-728)
-
-## 20.3.0 IN-PROGRESS
-
-* Closes database connections when encountering errors in the /inventory-hierarchy endpoint (MODINVSTOR-677)
-* Adds full-text index for classifications field in instance table (MODINVSTOR-716)
+* Introduces `publication period` for `instances` (MODINVSTOR-723)
+* Determines `publication year` based upon `publication period` (MODINVSTOR-724)
+* Introduces `bound with parts` record type (MODINVSTOR-702)
 * Adds `effective location` attribute to holdings record and inventory-hierarchy API (MODINVSTOR-669, MODINVSTOR-670)
 * Defaults instance.previouslyHeld to false (MODINVSTOR-454)
+* Adds full-text index for classifications field in instance table (MODINVSTOR-716)
+* Closes database connections when encountering errors in the /inventory-hierarchy endpoint (MODINVSTOR-677)
+* `embed_postgres` command line option is no longer supported (MODINVSTOR-728)
+* Logs when messages cannot be published to Kafka (MODINVSTOR-663)
+* Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-728)
+* Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-728)
 * Provides `bound-with-parts-storage 1.0`  (MODINVSTOR-702)
 * Provides `holdings-storage 4.6` (MODINVSTOR-669)
-* Provides `instance-storage 7.7`
+* Provides `instance-storage 7.8` (MODINVSTOR-723)
 * Provides `inventory-hierarchy 0.2` (MODINVSTOR-670)
 
 ## 20.2.0 2021-04-23
