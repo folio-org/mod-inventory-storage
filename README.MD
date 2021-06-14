@@ -87,7 +87,7 @@ In the root of this repository, execute `docker compose up -d` to deploy the mod
 
 In the root of this repository, execute `docker compose down` to undeploy the module
 
-## Start the infrastructure
+## Stop the infrastructure
 
 Navigate to the folder `infrastructure/local` directory within the clone of the folio-tools repository
 
