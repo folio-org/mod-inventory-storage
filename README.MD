@@ -15,6 +15,7 @@ Provides PostgreSQL based storage to complement the [inventory module](http://gi
 
 - Java 11 JDK
 - Maven 3.3.9
+- Docker ([minimum requirements](https://www.testcontainers.org/supported_docker_environment/))
 - Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
 - Kafka 2.6 (running and listening on localhost:9092)
 - Node 6.4.0 (for API linting and documentation generation)
@@ -63,6 +64,34 @@ This property has fixed value - `50`.
 run `mvn install` from the root directory.
 
 To run the tests against both embedded and external databases, run `./build.sh` from the root directory.
+
+# Local Deployment using Docker
+
+## Preparation
+
+Execute `mvn clean package` to build the jar artefact needed for building a Docker image
+
+## Start the infrastructure
+
+Clone `https://github.com/folio-org/folio-tools/`
+
+Navigate to the folder `infrastructure/local` directory within the cloned repository
+
+Execute `docker compose up -d` to start the infrastructure containers needed to run the module
+
+## Start the Module
+
+In the root of this repository, execute `docker compose up -d` to deploy the module
+
+## Stop the Module
+
+In the root of this repository, execute `docker compose down` to undeploy the module
+
+## Stop the infrastructure
+
+Navigate to the folder `infrastructure/local` directory within the clone of the folio-tools repository
+
+Execute `docker compose down` to stop the infrastructure containers
 
 # Running
 
