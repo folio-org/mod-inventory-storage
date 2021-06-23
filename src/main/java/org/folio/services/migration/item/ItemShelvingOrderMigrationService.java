@@ -1,27 +1,21 @@
 package org.folio.services.migration.item;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.dbschema.ObjectMapperTool.readValue;
-
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import org.apache.logging.log4j.Logger;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.folio.services.migration.BaseMigrationService;
-import org.folio.services.migration.BatchedReadStream;
 
 public class ItemShelvingOrderMigrationService extends BaseMigrationService {
-  private static final Logger log = getLogger(ItemShelvingOrderMigrationService.class);
   private static final String SELECT_SQL = "SELECT jsonb FROM %s WHERE "
     + "jsonb->>'effectiveShelvingOrder' IS NULL";
 
@@ -36,59 +30,24 @@ public class ItemShelvingOrderMigrationService extends BaseMigrationService {
   public ItemShelvingOrderMigrationService(
     PostgresClientFuturized postgresClient, ItemRepository itemRepository) {
 
-    super("20.2.1");
+    super("20.2.1", postgresClient);
     this.postgresClient = postgresClient;
     this.itemRepository = itemRepository;
   }
 
   @Override
-  public Future<Void> runMigration() {
-    log.info("Starting item shelving order migration... ");
-
-    return postgresClient.startTx()
-      .compose(con -> postgresClient.selectStream(con, selectSql())
-        .compose(this::handleUpdate)
-        .onSuccess(records -> log.info(
-          "Shelving order migration has been completed [recordsProcessed={}]", records))
-        .onFailure(error -> log.error("Unable to complete shelving order migration", error))
-        .onComplete(result -> postgresClient.endTx(con)))
-      .mapEmpty();
+  protected Future<RowStream<Row>> openStream(SQLConnection connection) {
+    return postgresClient.selectStream(connection, selectSql());
   }
 
-  private Future<Integer> handleUpdate(RowStream<Row> stream) {
-    var batchStream = new BatchedReadStream<>(stream);
-    var promise = Promise.<Integer>promise();
-    var recordsUpdated = new AtomicInteger(0);
+  @Override
+  protected Future<Integer> updateBatch(List<Row> batch) {
+    var items = batch.stream()
+      .map(row -> rowToClass(row, Item.class))
+      .map(EffectiveCallNumberComponentsUtil::calculateAndSetEffectiveShelvingOrder)
+      .collect(Collectors.toList());
 
-    batchStream
-      .endHandler(notUsed -> promise.tryComplete(recordsUpdated.get()))
-      .exceptionHandler(promise::tryFail)
-      .handler(rows -> {
-        var items = rows.stream()
-          .map(this::rowToItem)
-          .map(EffectiveCallNumberComponentsUtil::calculateAndSetEffectiveShelvingOrder)
-          .collect(Collectors.toList());
-
-        // Pause stream, so that updates is executed in sequence
-        batchStream.pause();
-        itemRepository.update(items)
-          .onSuccess(notUsed -> {
-            log.info("Shelving order is populated for [{}] items so far",
-              recordsUpdated.addAndGet(items.size()));
-
-            batchStream.resume();
-          })
-          .onFailure(error -> {
-            log.error("Unable to perform update for items", error);
-            promise.tryFail(error);
-          });
-      });
-
-    return promise.future().onComplete(notUsed -> stream.close());
-  }
-
-  private Item rowToItem(Row row) {
-    return readValue(row.getValue("jsonb").toString(), Item.class);
+    return itemRepository.update(items).map(notUsed -> items.size());
   }
 
   private String selectSql() {

@@ -1,0 +1,15 @@
+{
+  "boundWithParts": [
+    {
+      "id": "f90ee7fb-3805-4e9b-91a2-68b5410b9f3e",
+      "holdingsRecordId": "af8f136b-93ea-4007-988e-d2b17851a357",
+      "itemId": "5e9eb5b6-34e0-4714-9f30-a538626c6af5"
+    },
+    {
+      "id": "de0d2126-884b-4e4e-a09a-d7d03c14ca8b",
+      "holdingsRecordId": "bc803e99-c5fd-4bd6-aae4-998d12f8fcf5",
+      "itemId": "5e9eb5b6-34e0-4714-9f30-a538626c6af5"
+    }
+  ],
+  "totalRecords": 2
+}
