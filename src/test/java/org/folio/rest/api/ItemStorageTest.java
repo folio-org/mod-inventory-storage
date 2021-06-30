@@ -1287,7 +1287,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(item.getStatus().getName().value(), is("Checked out"));
 
-    assertThat(item.getStatus().getDate().toInstant(), withinSecondsBeforeNow(seconds(2)));
+    assertThat(item.getStatus().getDate().toInstant(), withinSecondsBeforeNow(seconds(5)));
   }
 
   @Test
@@ -1359,7 +1359,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     Instant itemStatusDate = resultItem.getStatus().getDate().toInstant();
 
-    assertThat(itemStatusDate, withinSecondsBeforeNow(seconds(2)));
+    assertThat(itemStatusDate, withinSecondsBeforeNow(seconds(5)));
 
     assertThat(itemStatusDate, not(changedStatusDate));
   }
@@ -1380,7 +1380,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Checked out"));
-    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(2)));
+    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(3)));
 
     JsonObject itemWithUpdatedStatusDate = updatedItemResponse.getJson().copy();
     itemWithUpdatedStatusDate.getJsonObject("status")
@@ -1438,7 +1438,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Checked out"));
-    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(2)));
+    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(3)));
 
     JsonObject itemWithUpdatedCallNumber = updatedItemResponse.getJson().copy()
       .put("itemLevelCallNumber", "newItemLevelCallNumber");
