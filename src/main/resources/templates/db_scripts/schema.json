@@ -1071,7 +1071,7 @@
     {
       "run": "after",
       "snippetPath": "dropLegacyItemEffectiveLocationFunctions.sql",
-      "fromModuleVersion": "21.0.0"
+      "fromModuleVersion": "21.1.0"
     }
   ]
 }

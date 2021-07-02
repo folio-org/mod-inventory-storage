@@ -1380,7 +1380,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Checked out"));
-    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(3)));
+    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(5)));
 
     JsonObject itemWithUpdatedStatusDate = updatedItemResponse.getJson().copy();
     itemWithUpdatedStatusDate.getJsonObject("status")
