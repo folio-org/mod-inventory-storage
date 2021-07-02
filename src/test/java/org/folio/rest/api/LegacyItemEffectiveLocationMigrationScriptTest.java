@@ -5,11 +5,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.Test;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import lombok.SneakyThrows;
 
 public class LegacyItemEffectiveLocationMigrationScriptTest extends MigrationTestBase {
 
@@ -29,9 +27,8 @@ public class LegacyItemEffectiveLocationMigrationScriptTest extends MigrationTes
     assertThat(doesFunctionExist("update_effective_location_on_holding_update"), is(false));
 
   }
-
-  private Boolean doesFunctionExist(String functionName) throws 
-      InterruptedException, ExecutionException, TimeoutException {
+  @SneakyThrows
+  private Boolean doesFunctionExist(String functionName) {
 
     String query = "SELECT * FROM pg_proc WHERE proname LIKE '" + functionName + "';";
     RowSet<Row> results = executeSelect(query);
