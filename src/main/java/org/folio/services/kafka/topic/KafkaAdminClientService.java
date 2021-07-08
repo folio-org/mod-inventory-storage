@@ -8,6 +8,7 @@ import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.KafkaConfig;
@@ -55,12 +56,14 @@ public class KafkaAdminClientService {
   }
 
   private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient) {
-    final List<NewTopic> expectedTopics = readTopics();
+    final List<NewTopic> expectedTopics = readTopics()
+      .map(this::prefixWithEnvironment)
+      .collect(Collectors.toList());
 
     return kafkaAdminClient.listTopics().compose(existingTopics -> {
       final List<NewTopic> topicsToCreate = expectedTopics.stream()
-        .filter(newTopic -> !existingTopics.contains(newTopic.getName()))
-        .map(newTopic -> newTopic.setReplicationFactor(getReplicationFactor()))
+        .filter(topic -> !existingTopics.contains(topic.getName()))
+        .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
         .collect(Collectors.toList());
 
       if (topicsToCreate.isEmpty()) {
@@ -73,12 +76,17 @@ public class KafkaAdminClientService {
     });
   }
 
-  private List<NewTopic> readTopics() {
+  private NewTopic prefixWithEnvironment(NewTopic topic) {
+    final var environmentName = System.getenv().getOrDefault("ENV", "folio");
+
+    return topic.setName(environmentName + "." + topic.getName());
+  }
+
+  private Stream<NewTopic> readTopics() {
     final JsonObject topics = new JsonObject(ResourceUtil.asString(KAFKA_TOPICS_FILE));
 
     return topics.getJsonArray("topics", new JsonArray()).stream()
       .map(obj -> (JsonObject) obj)
-      .map(NewTopic::new)
-      .collect(Collectors.toList());
+      .map(NewTopic::new);
   }
 }
