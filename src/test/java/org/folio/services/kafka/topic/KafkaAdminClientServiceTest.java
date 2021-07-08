@@ -34,6 +34,9 @@ public class KafkaAdminClientServiceTest {
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
     when(mockClient.listTopics()).thenReturn(succeededFuture(allTopics));
+    // Still mock this even though no invocations are expected
+    // in order to make diagnosis of failures easier
+    when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
