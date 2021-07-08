@@ -34,6 +34,7 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
+      .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
         verify(mockClient, times(0)).createTopics(anyList());
         verify(mockClient, times(1)).close();
@@ -48,7 +49,9 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
+      .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
+
         @SuppressWarnings("unchecked")
         final ArgumentCaptor<List<NewTopic>> createTopicsCaptor = forClass(List.class);
 
