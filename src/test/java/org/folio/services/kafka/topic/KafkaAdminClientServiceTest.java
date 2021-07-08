@@ -9,18 +9,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+
 import io.vertx.core.Future;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
@@ -60,6 +62,9 @@ public class KafkaAdminClientServiceTest {
 
         testContext.assertEquals(1, createTopicsCaptor.getAllValues().size());
         testContext.assertEquals(allTopics.size(), createTopicsCaptor.getAllValues().get(0).size());
+        testContext.assertEquals("inventory.instance", createTopicsCaptor.getAllValues().get(0).get(0).getName());
+        testContext.assertEquals("inventory.item", createTopicsCaptor.getAllValues().get(0).get(1).getName());
+        testContext.assertEquals("inventory.holdings-record", createTopicsCaptor.getAllValues().get(0).get(2).getName());
       }));
   }
 
