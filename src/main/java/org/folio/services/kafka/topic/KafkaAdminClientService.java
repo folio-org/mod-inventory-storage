@@ -55,11 +55,11 @@ public class KafkaAdminClientService {
   }
 
   private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient) {
-    final List<NewTopic> newTopics = readTopics();
+    final List<NewTopic> expectedTopics = readTopics();
 
-    return kafkaAdminClient.listTopics().compose(topics -> {
-      final List<NewTopic> topicsToCreate = newTopics.stream()
-        .filter(newTopic -> !topics.contains(newTopic.getName()))
+    return kafkaAdminClient.listTopics().compose(existingTopics -> {
+      final List<NewTopic> topicsToCreate = expectedTopics.stream()
+        .filter(newTopic -> !existingTopics.contains(newTopic.getName()))
         .map(newTopic -> newTopic.setReplicationFactor(getReplicationFactor()))
         .collect(Collectors.toList());
 
