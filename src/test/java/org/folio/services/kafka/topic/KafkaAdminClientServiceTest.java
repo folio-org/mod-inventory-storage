@@ -27,8 +27,8 @@ import io.vertx.kafka.admin.NewTopic;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
-  private final Set<String> allTopics = Set.of("inventory.instance",
-    "inventory.holdings-record", "inventory.item");
+  private final Set<String> allTopics = Set.of("folio.inventory.instance",
+    "folio.inventory.holdings-record", "folio.inventory.item");
 
   @Test
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
