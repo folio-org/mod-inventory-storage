@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,8 +27,8 @@ import io.vertx.kafka.admin.NewTopic;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
-  private final Set<String> allTopics = Stream.of(KafkaTopic.values())
-    .map(KafkaTopic::getTopicName).collect(Collectors.toSet());
+  private final Set<String> allTopics = Set.of("inventory.instance",
+    "inventory.holdings-record", "inventory.item");
 
   @Test
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
@@ -63,8 +62,7 @@ public class KafkaAdminClientServiceTest {
         verify(mockClient, times(1)).close();
 
         // Only these items are expected, so implicitly checks size of list
-        assertThat(getTopicNames(createTopicsCaptor), containsInAnyOrder(
-          "inventory.instance", "inventory.holdings-record", "inventory.item"));
+        assertThat(getTopicNames(createTopicsCaptor), containsInAnyOrder(allTopics.toArray()));
       }));
   }
 
