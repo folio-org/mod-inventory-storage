@@ -38,7 +38,7 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class DomainEventAssertions {
-  private DomainEventAssertions() {}
+  private DomainEventAssertions() { }
 
   private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {
     assertThat(createEvent.value().getString("type"), is("CREATE"));
@@ -89,7 +89,8 @@ public final class DomainEventAssertions {
 
   public static void assertNoUpdateEvent(String instanceId) {
     await().atLeast(1, SECONDS);
-    await().until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
 
     final JsonObject updateMessage  = getLastInstanceEvent(instanceId).value();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
@@ -97,7 +98,8 @@ public final class DomainEventAssertions {
 
   public static void assertNoUpdateEventForHolding(String instanceId, String hrId) {
     await().atLeast(1, SECONDS);
-    await().until(() -> getHoldingsEvents(instanceId, hrId).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getHoldingsEvents(instanceId, hrId).size(), greaterThan(0));
 
     final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).value();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
@@ -105,7 +107,8 @@ public final class DomainEventAssertions {
 
   public static void assertNoRemoveEvent(String instanceId) {
     await().atLeast(1, SECONDS);
-    await().until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
 
     final JsonObject updateMessage  = getLastInstanceEvent(instanceId).value();
     assertThat(updateMessage.getString("type"), not(is("DELETE")));
@@ -120,7 +123,8 @@ public final class DomainEventAssertions {
   public static void assertCreateEventForInstance(JsonObject instance) {
     final String instanceId = instance.getString("id");
 
-    await().until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
 
     assertCreateEvent(getFirstInstanceEvent(instanceId), instance);
   }
@@ -141,13 +145,15 @@ public final class DomainEventAssertions {
   public static void assertRemoveEventForInstance(JsonObject instance) {
     final String instanceId = instance.getString("id");
 
-    await().until(() -> getInstanceEvents(instanceId).size(), greaterThan(1));
+    await().atMost(1, SECONDS)
+      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(1));
 
     assertRemoveEvent(getLastInstanceEvent(instanceId), instance);
   }
 
   public static void assertRemoveAllEventForInstance() {
-    await().until(() -> getInstanceEvents(NULL_INSTANCE_ID).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getInstanceEvents(NULL_INSTANCE_ID).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastInstanceEvent(NULL_INSTANCE_ID));
   }
@@ -155,7 +161,8 @@ public final class DomainEventAssertions {
   public static void assertUpdateEventForInstance(JsonObject oldInstance, JsonObject newInstance) {
     final String instanceId = oldInstance.getString("id");
 
-    await().until(() -> getInstanceEvents(instanceId).size(), greaterThan(1));
+    await().atMost(1, SECONDS)
+      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(1));
 
     assertUpdateEvent(getLastInstanceEvent(instanceId), oldInstance, newInstance);
   }
@@ -164,7 +171,8 @@ public final class DomainEventAssertions {
     final String itemId = item.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(item);
 
-    await().until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(0));
 
     // Domain event for item has an extra 'instanceId' property for
     // old/new object, the property does not exist in schema,
@@ -177,7 +185,8 @@ public final class DomainEventAssertions {
     final String itemId = item.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(item);
 
-    await().until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(1));
+    await().atMost(1, SECONDS)
+      .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(1));
 
     // Domain event for item has an extra 'instanceId' property for
     // old/new object, the property does not exist in schema,
@@ -187,7 +196,8 @@ public final class DomainEventAssertions {
   }
 
   public static void assertRemoveAllEventForItem() {
-    await().until(() -> getItemEvents(NULL_INSTANCE_ID, null).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getItemEvents(NULL_INSTANCE_ID, null).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastItemEvent(NULL_INSTANCE_ID, null));
   }
@@ -196,7 +206,8 @@ public final class DomainEventAssertions {
     final String itemId = newItem.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(newItem);
 
-    await().until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(1));
+    await().atMost(1, SECONDS)
+      .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(1));
 
     // Domain event for item has an extra 'instanceId' property for
     // old/new object, the property does not exist in schema,
@@ -210,7 +221,8 @@ public final class DomainEventAssertions {
     final String id = hr.getString("id");
     final String instanceId = hr.getString("instanceId");
 
-    await().until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(0));
 
     assertCreateEvent(getFirstHoldingEvent(instanceId, id), hr);
   }
@@ -219,13 +231,15 @@ public final class DomainEventAssertions {
     final String id = hr.getString("id");
     final String instanceId = hr.getString("instanceId");
 
-    await().until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(1));
+    await().atMost(1, SECONDS)
+      .until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(1));
 
     assertRemoveEvent(getLastHoldingEvent(instanceId, id), hr);
   }
 
   public static void assertRemoveAllEventForHolding() {
-    await().until(() -> getHoldingsEvents(NULL_INSTANCE_ID, null).size(), greaterThan(0));
+    await().atMost(1, SECONDS)
+      .until(() -> getHoldingsEvents(NULL_INSTANCE_ID, null).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastHoldingEvent(NULL_INSTANCE_ID, null));
   }
@@ -234,7 +248,8 @@ public final class DomainEventAssertions {
     final String id = newHr.getString("id");
     final String instanceId = newHr.getString("instanceId");
 
-    await().until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(1));
+    await().atMost(1, SECONDS)
+      .until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(1));
 
     assertUpdateEvent(getLastHoldingEvent(instanceId, id), oldHr, newHr);
   }
