@@ -463,7 +463,7 @@
         },
         {
           "fieldName": "keyword",
-          "multiFieldNames": "title,contributors[*].name,identifiers[*].value"
+          "multiFieldNames": "title,indexTitle,alternativeTitles[*].alternativeTitle,series,contributors[*].name,identifiers[*].value"
         },
         {
           "fieldName": "allTitles",
