@@ -34,9 +34,9 @@ public final class FakeKafkaConsumer {
     // These definitions are deliberately separate to the production definitions
     // This is so these can be changed independently to demonstrate
     // tests failing for the right reason prior to changing the production code
-    final var INSTANCE_TOPIC_NAME = "inventory.instance";
-    final var HOLDINGS_TOPIC_NAME = "inventory.holdings-record";
-    final var ITEM_TOPIC_NAME = "inventory.item";
+    final var INSTANCE_TOPIC_NAME = "folio.inventory.instance";
+    final var HOLDINGS_TOPIC_NAME = "folio.inventory.holdings-record";
+    final var ITEM_TOPIC_NAME = "folio.inventory.item";
 
     consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME));
     consumer.handler(message -> {
