@@ -1,23 +1,19 @@
 package org.folio.services.kafka.topic;
 
-public enum KafkaTopic {
-  INVENTORY_INSTANCE("inventory.instance"),
-  INVENTORY_ITEM("inventory.item"),
-  INVENTORY_HOLDINGS_RECORD("inventory.holdings-record");
-
-  private final String topicName;
-
+public class KafkaTopic {
   public static KafkaTopic instance() {
-    return INVENTORY_INSTANCE;
+    return new KafkaTopic("inventory.instance");
   }
 
   public static KafkaTopic holdingsRecord() {
-    return INVENTORY_HOLDINGS_RECORD;
+    return new KafkaTopic("inventory.holdings-record");
   }
 
   public static KafkaTopic item() {
-    return INVENTORY_ITEM;
+    return new KafkaTopic("inventory.item");
   }
+
+  private final String topicName;
 
   KafkaTopic(String topicName) {
     this.topicName = topicName;
