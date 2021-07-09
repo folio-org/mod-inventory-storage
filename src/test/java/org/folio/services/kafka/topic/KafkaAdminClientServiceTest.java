@@ -27,19 +27,20 @@ import io.vertx.kafka.admin.NewTopic;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
-  private final Set<String> allTopics = Set.of("folio.inventory.instance",
-    "folio.inventory.holdings-record", "folio.inventory.item");
+  private final String TENANT_ID = "foo-tenant";
+  private final Set<String> allExpectedTopics = Set.of("folio.foo-tenant.inventory.instance",
+    "folio.foo-tenant.inventory.holdings-record", "folio.foo-tenant.inventory.item");
 
   @Test
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
-    when(mockClient.listTopics()).thenReturn(succeededFuture(allTopics));
+    when(mockClient.listTopics()).thenReturn(succeededFuture(allExpectedTopics));
     // Still mock this even though no invocations are expected
     // in order to make diagnosis of failures easier
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
-    createKafkaTopicsAsync(mockClient)
+    createKafkaTopicsAsync(TENANT_ID, mockClient)
       .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
         verify(mockClient, times(0)).createTopics(anyList());
@@ -50,11 +51,11 @@ public class KafkaAdminClientServiceTest {
   @Test
   public void shouldCreateTopicIfNotExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
-    when(mockClient.listTopics()).thenReturn(succeededFuture(of("inventory.some-another-topic")));
+    when(mockClient.listTopics()).thenReturn(succeededFuture(of()));
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
-    createKafkaTopicsAsync(mockClient)
+    createKafkaTopicsAsync(TENANT_ID, mockClient)
       .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
 
@@ -65,7 +66,7 @@ public class KafkaAdminClientServiceTest {
         verify(mockClient, times(1)).close();
 
         // Only these items are expected, so implicitly checks size of list
-        assertThat(getTopicNames(createTopicsCaptor), containsInAnyOrder(allTopics.toArray()));
+        assertThat(getTopicNames(createTopicsCaptor), containsInAnyOrder(allExpectedTopics.toArray()));
       }));
   }
 
@@ -75,7 +76,7 @@ public class KafkaAdminClientServiceTest {
       .collect(Collectors.toList());
   }
 
-  private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient) {
-    return new KafkaAdminClientService(() -> mockClient).createKafkaTopics();
+  private Future<Void> createKafkaTopicsAsync(String tenant, KafkaAdminClient client) {
+    return new KafkaAdminClientService(() -> client).createKafkaTopics(tenant);
   }
 }
