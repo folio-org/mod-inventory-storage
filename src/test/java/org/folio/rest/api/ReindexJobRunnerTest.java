@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -45,7 +46,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
   private final CommonDomainEventPublisher<Instance> eventPublisher =
     new CommonDomainEventPublisher<>(getContext(), Map.of(TENANT, TENANT_ID),
-      KafkaTopic.instance());
+      KafkaTopic.instance(TENANT_ID));
 
   @Test
   public void canReindexInstances() {
@@ -75,7 +76,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getSubmittedDate(), notNullValue());
 
     // Should be a single reindex message for each instance ID generated in the row stream
-    assertThat(FakeKafkaConsumer.getAllPublishedInstanceIdsCount(), is(numberOfRecords));
+    await().atMost(5, SECONDS)
+      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, is(numberOfRecords));
   }
 
   @Test
