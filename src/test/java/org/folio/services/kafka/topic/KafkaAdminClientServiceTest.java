@@ -2,6 +2,7 @@ package org.folio.services.kafka.topic;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Set.of;
+import static org.folio.Environment.environmentName;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentCaptor.forClass;
@@ -27,7 +28,6 @@ import io.vertx.kafka.admin.NewTopic;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
-  private final String TENANT_ID = "foo-tenant";
   private final Set<String> allExpectedTopics = Set.of("folio.foo-tenant.inventory.instance",
     "folio.foo-tenant.inventory.holdings-record", "folio.foo-tenant.inventory.item");
 
@@ -40,7 +40,7 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
-    createKafkaTopicsAsync(TENANT_ID, mockClient)
+    createKafkaTopicsAsync(mockClient)
       .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
         verify(mockClient, times(0)).createTopics(anyList());
@@ -55,7 +55,7 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
-    createKafkaTopicsAsync(TENANT_ID, mockClient)
+    createKafkaTopicsAsync(mockClient)
       .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
 
@@ -76,7 +76,8 @@ public class KafkaAdminClientServiceTest {
       .collect(Collectors.toList());
   }
 
-  private Future<Void> createKafkaTopicsAsync(String tenant, KafkaAdminClient client) {
-    return new KafkaAdminClientService(() -> client).createKafkaTopics(tenant);
+  private Future<Void> createKafkaTopicsAsync(KafkaAdminClient client) {
+    return new KafkaAdminClientService(() -> client)
+      .createKafkaTopics("foo-tenant", environmentName());
   }
 }
