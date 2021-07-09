@@ -577,6 +577,42 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canSearchAlternateTitlesUsingKeywordIndexAll()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    UUID firstInstanceId = UUID.randomUUID();
+    UUID alternativeTitleId = UUID.randomUUID();
+
+    JsonObject instanceToCreate = smallAngryPlanet(firstInstanceId);
+    JsonObject alternativeTitles = new JsonObject();
+    
+    alternativeTitles.put("alternativeTitleTypeId", alternativeTitleId);
+    alternativeTitles.put("alternativeTitle", "xyza");
+
+    JsonArray altTitlesArray = new JsonArray("[" + alternativeTitles.toString() + "]");
+    
+    instanceToCreate.put("alternativeTitles", altTitlesArray);
+
+    createInstance(instanceToCreate);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    client.get(instancesStorageUrl("?query=keyword%20all%20%22xyza%22"), StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(getCompleted));
+
+    Response response = getCompleted.get(5, TimeUnit.SECONDS);
+
+    JsonObject responseBody = response.getJson();
+
+    JsonArray allInstances = responseBody.getJsonArray("instances");
+
+    assertThat(allInstances.size(), is(1));
+  }
+
+  @Test
   public void canSearchUsingDateOfPublication() throws Exception {
 
     JsonObject instance1 = smallAngryPlanet(null)
