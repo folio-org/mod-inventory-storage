@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.Environment.environmentName;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -90,7 +92,7 @@ public class TenantRefAPI extends TenantAPI {
     // create topics before loading data
     return
       new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics(tenantId)
+        .createKafkaTopics(tenantId, environmentName())
         .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext))
         .compose(superRecordsLoaded -> {
           try {

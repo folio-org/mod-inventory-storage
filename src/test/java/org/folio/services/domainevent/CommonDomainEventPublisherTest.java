@@ -3,6 +3,7 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
+import static org.folio.Environment.environmentName;
 import static org.folio.rest.api.TestBase.get;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -42,7 +43,7 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      Map.of(), KafkaTopic.instance(""), producerManager, failureHandler);
+      Map.of(), KafkaTopic.instance("", environmentName()), producerManager, failureHandler);
   }
 
   @Test

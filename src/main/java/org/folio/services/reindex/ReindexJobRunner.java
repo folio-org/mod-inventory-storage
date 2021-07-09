@@ -1,6 +1,7 @@
 package org.folio.services.reindex;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.Environment.environmentName;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
@@ -45,7 +46,7 @@ public class ReindexJobRunner {
       new ReindexJobRepository(vertxContext, okapiHeaders),
       vertxContext,
       new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        KafkaTopic.instance(tenantId(okapiHeaders))),
+        KafkaTopic.instance(tenantId(okapiHeaders), environmentName())),
       tenantId(okapiHeaders));
   }
 

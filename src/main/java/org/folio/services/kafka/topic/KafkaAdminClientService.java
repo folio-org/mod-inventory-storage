@@ -3,7 +3,6 @@ package org.folio.services.kafka.topic;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.Environment.getEnvironmentName;
 import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
 
 import java.util.List;
@@ -39,27 +38,30 @@ public class KafkaAdminClientService {
     this.clientFactory = clientFactory;
   }
 
-  public Future<Void> createKafkaTopics(String tenant) {
+  public Future<Void> createKafkaTopics(String tenantId, String environmentName) {
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
-    return createKafkaTopics(tenant, kafkaAdminClient).onComplete(result -> {
-      if (result.succeeded()) {
-        log.info("Topics created successfully");
-      } else {
-        log.error("Unable to create topics", result.cause());
-      }
-
-      kafkaAdminClient.close().onComplete(closeResult -> {
-        if (closeResult.failed()) {
-          log.error("Failed to close kafka admin client", closeResult.cause());
+    return createKafkaTopics(tenantId, environmentName, kafkaAdminClient)
+      .onComplete(result -> {
+        if (result.succeeded()) {
+          log.info("Topics created successfully");
+        } else {
+          log.error("Unable to create topics", result.cause());
         }
-      });
+
+        kafkaAdminClient.close().onComplete(closeResult -> {
+          if (closeResult.failed()) {
+            log.error("Failed to close kafka admin client", closeResult.cause());
+          }
+        });
     });
   }
 
-  private Future<Void> createKafkaTopics(String tenantId, KafkaAdminClient kafkaAdminClient) {
+  private Future<Void> createKafkaTopics(String tenantId, String environmentName,
+    KafkaAdminClient kafkaAdminClient) {
+
     final List<NewTopic> expectedTopics = readTopics()
       .map(topic -> prefixWith(tenantId, topic))
-      .map(topic -> prefixWith(getEnvironmentName(), topic))
+      .map(topic -> prefixWith(environmentName, topic))
       .collect(Collectors.toList());
 
     return kafkaAdminClient.listTopics().compose(existingTopics -> {
