@@ -44,7 +44,8 @@ public class ReindexJobRunner {
     this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
       new ReindexJobRepository(vertxContext, okapiHeaders),
       vertxContext,
-      new CommonDomainEventPublisher<>(vertxContext, okapiHeaders, KafkaTopic.instance()),
+      new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
+        KafkaTopic.instance(tenantId(okapiHeaders))),
       tenantId(okapiHeaders));
   }
 

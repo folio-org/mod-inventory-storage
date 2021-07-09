@@ -2,6 +2,7 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,7 +23,8 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
 
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new InstanceRepository(context, okapiHeaders),
-      new CommonDomainEventPublisher<>(context, okapiHeaders, KafkaTopic.instance()));
+      new CommonDomainEventPublisher<>(context, okapiHeaders,
+        KafkaTopic.instance(tenantId(okapiHeaders))));
   }
 
   public Future<Void> publishInstancesCreated(List<Instance> instances) {
