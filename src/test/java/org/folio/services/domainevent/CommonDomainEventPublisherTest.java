@@ -4,9 +4,8 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.TestBase.get;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,19 +15,22 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.vertx.core.Handler;
-import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.Map;
+
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.rest.api.ReindexJobRunnerTest;
 import org.folio.rest.api.entities.Instance;
 import org.folio.services.kafka.InventoryProducerRecordBuilder;
+import org.folio.services.kafka.topic.KafkaTopic;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import io.vertx.core.Handler;
+import io.vertx.kafka.client.producer.KafkaProducer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommonDomainEventPublisherTest {
@@ -40,7 +42,7 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      Map.of(), INVENTORY_INSTANCE, producerManager, failureHandler);
+      Map.of(), KafkaTopic.instance(), producerManager, failureHandler);
   }
 
   @Test

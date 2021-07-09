@@ -5,6 +5,10 @@ public enum KafkaTopic {
   INVENTORY_ITEM("inventory.item"),
   INVENTORY_HOLDINGS_RECORD("inventory.holdings-record");
 
+  public static KafkaTopic instance() {
+    return INVENTORY_INSTANCE;
+  }
+
   private final String topicName;
 
   KafkaTopic(String topicName) {

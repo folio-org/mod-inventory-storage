@@ -8,7 +8,6 @@ import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
@@ -20,6 +19,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
+
+import org.folio.persist.ReindexJobRepository;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.ReindexJob;
+import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.services.domainevent.CommonDomainEventPublisher;
+import org.folio.services.kafka.topic.KafkaTopic;
+import org.folio.services.reindex.ReindexJobRunner;
+import org.junit.Test;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -27,22 +39,12 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
-import org.folio.persist.ReindexJobRepository;
-import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.ReindexJob;
-import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.services.domainevent.CommonDomainEventPublisher;
-import org.folio.services.reindex.ReindexJobRunner;
-import org.junit.Test;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
   private final CommonDomainEventPublisher<Instance> eventPublisher =
     new CommonDomainEventPublisher<>(getContext(), Map.of(TENANT, TENANT_ID),
-      INVENTORY_INSTANCE);
+      KafkaTopic.instance());
 
   @Test
   public void canReindexInstances() {
