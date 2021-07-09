@@ -65,10 +65,14 @@ public final class FakeKafkaConsumer {
     return this;
   }
 
-  public void removeAllEvents() {
+  public static void removeAllEvents() {
     itemEvents.clear();
     instanceEvents.clear();
     holdingsEvents.clear();
+  }
+
+  public static int getAllPublishedInstanceIdsCount() {
+    return instanceEvents.size();
   }
 
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getInstanceEvents(
