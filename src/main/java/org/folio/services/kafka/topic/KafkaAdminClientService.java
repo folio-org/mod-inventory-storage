@@ -3,6 +3,7 @@ package org.folio.services.kafka.topic;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.Environment.getEnvironmentName;
 import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
 
 import java.util.List;
@@ -57,8 +58,8 @@ public class KafkaAdminClientService {
 
   private Future<Void> createKafkaTopics(String tenantId, KafkaAdminClient kafkaAdminClient) {
     final List<NewTopic> expectedTopics = readTopics()
-      .map(topic -> prefixWithTenant(topic, tenantId))
-      .map(this::prefixWithEnvironment)
+      .map(topic -> prefixWith(tenantId, topic))
+      .map(topic -> prefixWith(getEnvironmentName(), topic))
       .collect(Collectors.toList());
 
     return kafkaAdminClient.listTopics().compose(existingTopics -> {
@@ -77,14 +78,8 @@ public class KafkaAdminClientService {
     });
   }
 
-  private NewTopic prefixWithTenant(NewTopic topic, String tenantId) {
-    return topic.setName(tenantId + "." + topic.getName());
-  }
-
-  private NewTopic prefixWithEnvironment(NewTopic topic) {
-    final var environmentName = System.getenv().getOrDefault("ENV", "folio");
-
-    return topic.setName(environmentName + "." + topic.getName());
+  private NewTopic prefixWith(String value, NewTopic topic) {
+    return topic.setName(value + "." + topic.getName());
   }
 
   private Stream<NewTopic> readTopics() {
