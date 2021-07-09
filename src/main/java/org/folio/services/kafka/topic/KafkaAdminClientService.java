@@ -38,9 +38,9 @@ public class KafkaAdminClientService {
     this.clientFactory = clientFactory;
   }
 
-  public Future<Void> createKafkaTopics() {
+  public Future<Void> createKafkaTopics(String tenant) {
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
-    return createKafkaTopics(kafkaAdminClient).onComplete(result -> {
+    return createKafkaTopics(tenant, kafkaAdminClient).onComplete(result -> {
       if (result.succeeded()) {
         log.info("Topics created successfully");
       } else {
@@ -55,8 +55,9 @@ public class KafkaAdminClientService {
     });
   }
 
-  private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient) {
+  private Future<Void> createKafkaTopics(String tenantId, KafkaAdminClient kafkaAdminClient) {
     final List<NewTopic> expectedTopics = readTopics()
+      .map(topic -> prefixWithTenant(topic, tenantId))
       .map(this::prefixWithEnvironment)
       .collect(Collectors.toList());
 
@@ -74,6 +75,10 @@ public class KafkaAdminClientService {
       log.info("Creating topics {}", topicsToCreate);
       return kafkaAdminClient.createTopics(topicsToCreate);
     });
+  }
+
+  private NewTopic prefixWithTenant(NewTopic topic, String tenantId) {
+    return topic.setName(tenantId + "." + topic.getName());
   }
 
   private NewTopic prefixWithEnvironment(NewTopic topic) {
