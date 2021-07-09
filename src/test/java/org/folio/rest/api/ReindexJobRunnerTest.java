@@ -27,6 +27,7 @@ import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.kafka.topic.KafkaTopic;
 import org.folio.services.reindex.ReindexJobRunner;
@@ -59,6 +60,9 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
+    // Make sure no events are left over from test preparation
+    FakeKafkaConsumer.removeAllEvents();
+
     jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
@@ -69,6 +73,9 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getPublished(), is(numberOfRecords));
     assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
     assertThat(job.getSubmittedDate(), notNullValue());
+
+    // Should be a single reindex message for each instance ID generated in the row stream
+    assertThat(FakeKafkaConsumer.getAllPublishedInstanceIdsCount(), is(numberOfRecords));
   }
 
   @Test
