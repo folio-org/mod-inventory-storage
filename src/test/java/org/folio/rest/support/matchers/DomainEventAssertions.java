@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -41,6 +42,7 @@ public final class DomainEventAssertions {
   private DomainEventAssertions() { }
 
   private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {
+    assertThat("Create event should be present", createEvent.value(), is(notNullValue()));
     assertThat(createEvent.value().getString("type"), is("CREATE"));
     assertThat(createEvent.value().getString("tenant"), is(TENANT_ID));
     assertThat(createEvent.value().getJsonObject("old"), nullValue());
