@@ -2,18 +2,15 @@ package org.folio.services.kafka.topic;
 
 public class KafkaTopic {
   public static KafkaTopic instance(String tenantId, String environmentName) {
-    return new KafkaTopic(prefixWith(environmentName,
-      prefixWith(tenantId, "inventory.instance")));
+    return new KafkaTopic(qualifyName("inventory.instance", environmentName, tenantId));
   }
 
   public static KafkaTopic holdingsRecord(String tenantId, String environmentName) {
-    return new KafkaTopic(prefixWith(environmentName,
-      prefixWith(tenantId, "inventory.holdings-record")));
+    return new KafkaTopic(qualifyName("inventory.holdings-record", environmentName, tenantId));
   }
 
   public static KafkaTopic item(String tenantId, String environmentName) {
-    return new KafkaTopic(prefixWith(environmentName,
-      prefixWith(tenantId, "inventory.item")));
+    return new KafkaTopic(qualifyName("inventory.item", environmentName, tenantId));
   }
 
   private final String topicName;
@@ -26,7 +23,7 @@ public class KafkaTopic {
     return topicName;
   }
 
-  private static String prefixWith(String value, String topicName) {
-    return value + "." + topicName;
+  private static String qualifyName(String name, String environmentName, String tenantId) {
+    return String.join(".", environmentName, tenantId, name);
   }
 }
