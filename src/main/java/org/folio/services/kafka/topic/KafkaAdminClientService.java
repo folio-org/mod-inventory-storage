@@ -60,8 +60,7 @@ public class KafkaAdminClientService {
     KafkaAdminClient kafkaAdminClient) {
 
     final List<NewTopic> expectedTopics = readTopics()
-      .map(topic -> prefixWith(tenantId, topic))
-      .map(topic -> prefixWith(environmentName, topic))
+      .map(topic -> qualifyName(topic, environmentName, tenantId))
       .collect(Collectors.toList());
 
     return kafkaAdminClient.listTopics().compose(existingTopics -> {
@@ -80,8 +79,8 @@ public class KafkaAdminClientService {
     });
   }
 
-  private NewTopic prefixWith(String value, NewTopic topic) {
-    return topic.setName(value + "." + topic.getName());
+  private NewTopic qualifyName(NewTopic topic, String environmentName, String tenantId) {
+    return topic.setName(String.join(".", environmentName, tenantId, topic.getName()));
   }
 
   private Stream<NewTopic> readTopics() {
