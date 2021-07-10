@@ -43,7 +43,8 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      Map.of(), KafkaTopic.instance("", environmentName()), producerManager, failureHandler);
+      Map.of(), KafkaTopic.instance("foo-tenant", environmentName()),
+        producerManager, failureHandler);
   }
 
   @Test
