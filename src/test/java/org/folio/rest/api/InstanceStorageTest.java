@@ -577,7 +577,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchAlternateTitlesUsingKeywordIndexAll()
+  public void canSearchForAlternateTitlesUsingKeywordIndexAll()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
