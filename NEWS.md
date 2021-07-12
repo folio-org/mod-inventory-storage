@@ -1,4 +1,4 @@
-## 21.0.0 IN-PROGRESS
+## 21.0.0 2021-06-10
 
 * Introduces `publication period` for `instances` (MODINVSTOR-723)
 * Determines `publication year` based upon `publication period` (MODINVSTOR-724)
