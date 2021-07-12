@@ -1,6 +1,9 @@
-## 21.0.0 2021-06-10
+## 21.1.0 IN-PROGRESS
 
 * Keyword searches now search alternate title fields (MODINVSTOR-719)
+
+## 21.0.0 2021-06-10
+
 * Introduces `publication period` for `instances` (MODINVSTOR-723)
 * Determines `publication year` based upon `publication period` (MODINVSTOR-724)
 * Introduces `bound with parts` record type (MODINVSTOR-702)
