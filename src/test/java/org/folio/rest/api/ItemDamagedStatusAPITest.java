@@ -23,7 +23,6 @@ import org.junit.Test;
 import io.vertx.core.json.JsonObject;
 
 public class ItemDamagedStatusAPITest extends TestBase {
-
   public static final String TEST_TENANT = "test_tenant";
 
   @Before
