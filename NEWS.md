@@ -1,10 +1,7 @@
 ## 22.0.0 IN-PROGRESS
 
 * Keyword searches now search alternate title fields (MODINVSTOR-719)
-
-## 21.0.1 2021-07-12
-
-* Keyword searches now search alternate title fields (MODINVSTOR-719)
+* Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
 
 ## 21.0.0 2021-06-10
 

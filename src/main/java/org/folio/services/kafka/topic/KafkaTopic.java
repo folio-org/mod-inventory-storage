@@ -1,11 +1,17 @@
 package org.folio.services.kafka.topic;
 
-import java.util.stream.Stream;
+public class KafkaTopic {
+  public static KafkaTopic instance(String tenantId, String environmentName) {
+    return new KafkaTopic(qualifyName("inventory.instance", environmentName, tenantId));
+  }
 
-public enum KafkaTopic {
-  INVENTORY_INSTANCE("inventory.instance"),
-  INVENTORY_ITEM("inventory.item"),
-  INVENTORY_HOLDINGS_RECORD("inventory.holdings-record");
+  public static KafkaTopic holdingsRecord(String tenantId, String environmentName) {
+    return new KafkaTopic(qualifyName("inventory.holdings-record", environmentName, tenantId));
+  }
+
+  public static KafkaTopic item(String tenantId, String environmentName) {
+    return new KafkaTopic(qualifyName("inventory.item", environmentName, tenantId));
+  }
 
   private final String topicName;
 
@@ -17,10 +23,7 @@ public enum KafkaTopic {
     return topicName;
   }
 
-  public static KafkaTopic forName(String name) {
-    return Stream.of(values())
-      .filter(value -> value.getTopicName().equals(name))
-      .findFirst()
-      .orElse(null);
+  private static String qualifyName(String name, String environmentName, String tenantId) {
+    return String.join(".", environmentName, tenantId, name);
   }
 }

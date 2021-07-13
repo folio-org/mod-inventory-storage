@@ -2,25 +2,30 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
+import static org.folio.Environment.environmentName;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.services.kafka.topic.KafkaTopic;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 
 public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<Instance, Instance> {
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
 
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new InstanceRepository(context, okapiHeaders),
-      new CommonDomainEventPublisher<>(context, okapiHeaders, INVENTORY_INSTANCE));
+      new CommonDomainEventPublisher<>(context, okapiHeaders,
+        KafkaTopic.instance(tenantId(okapiHeaders), environmentName())));
   }
 
   public Future<Void> publishInstancesCreated(List<Instance> instances) {
