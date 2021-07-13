@@ -1,4 +1,8 @@
-## 21.0.1 IN-PROGRESS
+## 21.0.2 IN-PROGRESS
+
+* Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
+
+## 21.0.1 2021-07-12
 
 * Keyword searches now search alternate title fields (MODINVSTOR-719)
 
