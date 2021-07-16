@@ -1,3 +1,7 @@
+## 20.2.2 2021-07-16
+
+* Kafka Topics should use ENV variable and tenant id in their naming convention (MODINVSTOR-738)
+
 ## 20.2.1 2021-04-27
 
 * Does not send domain events for item shelving order migration (MODINVSTOR-521)
