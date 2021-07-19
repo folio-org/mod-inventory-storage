@@ -9,18 +9,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+
 import io.vertx.core.Future;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
@@ -34,6 +36,7 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
+      .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
         verify(mockClient, times(0)).createTopics(anyList());
         verify(mockClient, times(1)).close();
@@ -48,6 +51,7 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
+      .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
         @SuppressWarnings("unchecked")
         final ArgumentCaptor<List<NewTopic>> createTopicsCaptor = forClass(List.class);
