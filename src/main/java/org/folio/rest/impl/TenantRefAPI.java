@@ -91,7 +91,7 @@ public class TenantRefAPI extends TenantAPI {
     // create topics before loading data
     return
       new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics(environmentName())
+        .createKafkaTopics(environmentName(), tenantId)
         .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext))
         .compose(superRecordsLoaded -> {
           try {

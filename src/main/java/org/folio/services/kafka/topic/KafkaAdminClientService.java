@@ -34,9 +34,9 @@ public class KafkaAdminClientService {
     this.clientFactory = clientFactory;
   }
 
-  public Future<Void> createKafkaTopics(String environmentName) {
+  public Future<Void> createKafkaTopics(String environmentName, String tenantId) {
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
-    return createKafkaTopics(kafkaAdminClient, environmentName).onComplete(result -> {
+    return createKafkaTopics(kafkaAdminClient, environmentName, tenantId).onComplete(result -> {
       if (result.succeeded()) {
         log.info("Topics created successfully");
       } else {
@@ -52,10 +52,10 @@ public class KafkaAdminClientService {
   }
 
   private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient,
-    String environmentName) {
+    String environmentName, String tenantId) {
 
     final var expectedTopics = readTopics()
-      .map(expectedTopic -> qualifyName(expectedTopic, environmentName))
+      .map(expectedTopic -> qualifyName(expectedTopic, environmentName, tenantId))
       .collect(Collectors.toList());
 
     return kafkaAdminClient.listTopics().compose(existingTopics -> {
@@ -74,8 +74,8 @@ public class KafkaAdminClientService {
     });
   }
 
-  private NewTopic qualifyName(NewTopic topic, String environmentName) {
-    return topic.setName(String.join(".", environmentName, topic.getName()));
+  private NewTopic qualifyName(NewTopic topic, String environmentName, String tenantId) {
+    return topic.setName(String.join(".", environmentName, tenantId, topic.getName()));
   }
 
   private Stream<NewTopic> readTopics() {

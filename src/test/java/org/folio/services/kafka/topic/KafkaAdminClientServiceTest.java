@@ -27,8 +27,9 @@ import io.vertx.kafka.admin.NewTopic;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
-  private final Set<String> allTopics = Set.of("folio.inventory.instance",
-    "folio.inventory.holdings-record", "folio.inventory.item");
+  private final String TENANT_ID = "foo-tenant";
+  private final Set<String> allTopics = Set.of("folio.foo-tenant.inventory.instance",
+    "folio.foo-tenant.inventory.holdings-record", "folio.foo-tenant.inventory.item");
 
   @Test
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
@@ -39,7 +40,7 @@ public class KafkaAdminClientServiceTest {
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
-    createKafkaTopicsAsync(mockClient)
+    createKafkaTopicsAsync(TENANT_ID, mockClient)
       .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
         verify(mockClient, times(0)).createTopics(anyList());
@@ -50,11 +51,11 @@ public class KafkaAdminClientServiceTest {
   @Test
   public void shouldCreateTopicIfNotExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
-    when(mockClient.listTopics()).thenReturn(succeededFuture(of("folio.inventory.some-another-topic")));
+    when(mockClient.listTopics()).thenReturn(succeededFuture(of("folio.foo-tenant.inventory.some-another-topic")));
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
-    createKafkaTopicsAsync(mockClient)
+    createKafkaTopicsAsync(TENANT_ID, mockClient)
       .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
         @SuppressWarnings("unchecked")
@@ -74,7 +75,9 @@ public class KafkaAdminClientServiceTest {
       .collect(Collectors.toList());
   }
 
-  private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient) {
-    return new KafkaAdminClientService(() -> mockClient).createKafkaTopics("folio");
+  private Future<Void> createKafkaTopicsAsync(String tenantId,
+    KafkaAdminClient mockClient) {
+    return new KafkaAdminClientService(() -> mockClient)
+      .createKafkaTopics("folio", tenantId);
   }
 }
