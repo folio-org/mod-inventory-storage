@@ -1,6 +1,7 @@
 package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.Environment.environmentName;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,7 +24,8 @@ public class HoldingDomainEventPublisher extends AbstractDomainEventPublisher<Ho
 
   public HoldingDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new HoldingsRepository(context, okapiHeaders),
-    new CommonDomainEventPublisher<>(context, okapiHeaders, KafkaTopic.holdingsRecord()));
+    new CommonDomainEventPublisher<>(context, okapiHeaders,
+      KafkaTopic.holdingsRecord(environmentName())));
   }
 
   @Override

@@ -1,16 +1,16 @@
 package org.folio.services.kafka.topic;
 
 public class KafkaTopic {
-  public static KafkaTopic instance() {
-    return new KafkaTopic("inventory.instance");
+  public static KafkaTopic instance(String environmentName) {
+    return new KafkaTopic(qualifyName("inventory.instance", environmentName));
   }
 
-  public static KafkaTopic holdingsRecord() {
-    return new KafkaTopic("inventory.holdings-record");
+  public static KafkaTopic holdingsRecord(String environmentName) {
+    return new KafkaTopic(qualifyName("inventory.holdings-record", environmentName));
   }
 
-  public static KafkaTopic item() {
-    return new KafkaTopic("inventory.item");
+  public static KafkaTopic item(String environmentName) {
+    return new KafkaTopic(qualifyName("inventory.item", environmentName));
   }
 
   private final String topicName;
@@ -21,5 +21,9 @@ public class KafkaTopic {
 
   public String getTopicName() {
     return topicName;
+  }
+
+  private static String qualifyName(String name, String environmentName) {
+    return String.join(".", environmentName, name);
   }
 }

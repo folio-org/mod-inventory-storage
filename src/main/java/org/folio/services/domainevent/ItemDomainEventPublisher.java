@@ -2,6 +2,7 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.Environment.environmentName;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +32,9 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
 
   public ItemDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new ItemRepository(context, okapiHeaders),
-      new CommonDomainEventPublisher<>(context, okapiHeaders, KafkaTopic.item()));
+      new CommonDomainEventPublisher<>(context, okapiHeaders,
+        KafkaTopic.item(environmentName())));
+
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
   }
 

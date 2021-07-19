@@ -2,6 +2,7 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.Environment.environmentName;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.services.domainevent.DomainEvent.reindexEvent;
 
@@ -36,7 +37,7 @@ public class InstanceDomainEventPublisher {
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     instanceRepository = new InstanceRepository(context, okapiHeaders);
     domainEventService = new CommonDomainEventPublisher<>(context, okapiHeaders,
-      KafkaTopic.instance());
+      KafkaTopic.instance(environmentName()));
   }
 
   public Future<Void> publishInstanceUpdated(Instance oldRecord, Instance newRecord) {
