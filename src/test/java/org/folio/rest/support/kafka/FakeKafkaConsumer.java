@@ -2,9 +2,6 @@ package org.folio.rest.support.kafka;
 
 import static io.vertx.kafka.client.consumer.KafkaConsumer.create;
 import static java.util.Collections.emptyList;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_HOLDINGS_RECORD;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_ITEM;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.folio.services.kafka.KafkaMessage;
 import org.folio.services.kafka.KafkaProperties;
@@ -27,10 +23,6 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class FakeKafkaConsumer {
-  private static final Set<String> TOPIC_NAMES = Stream.of(INVENTORY_INSTANCE,
-    INVENTORY_ITEM, INVENTORY_HOLDINGS_RECORD)
-    .map(KafkaTopic::getTopicName).collect(Collectors.toSet());
-
   private final static Map<String, List<KafkaMessage<JsonObject>>> itemEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaMessage<JsonObject>>> instanceEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaMessage<JsonObject>>> holdingsEvents = new ConcurrentHashMap<>();
@@ -38,21 +30,29 @@ public final class FakeKafkaConsumer {
   public final FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, String> consumer = create(vertx, consumerProperties());
 
-    consumer.subscribe(TOPIC_NAMES);
+    // These definitions are deliberately separate to the production definitions
+    // This is so these can be changed independently to demonstrate
+    // tests failing for the right reason prior to changing the production code
+    final var INSTANCE_TOPIC_NAME = "inventory.instance";
+    final var HOLDINGS_TOPIC_NAME = "inventory.holdings-record";
+    final var ITEM_TOPIC_NAME = "inventory.item";
+
+    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME));
+
     consumer.handler(message -> {
       final KafkaMessage<JsonObject> kafkaMessage = kafkaRecordToKafkaMessage(message);
       final List<KafkaMessage<JsonObject>> storageList;
 
-      switch (kafkaMessage.getTopic()) {
-        case INVENTORY_ITEM:
+      switch (kafkaMessage.getTopicName()) {
+        case ITEM_TOPIC_NAME:
           storageList = itemEvents.computeIfAbsent(instanceAndIdKey(kafkaMessage),
             k -> new ArrayList<>());
           break;
-        case INVENTORY_INSTANCE:
+        case INSTANCE_TOPIC_NAME:
           storageList = instanceEvents.computeIfAbsent(kafkaMessage.getKey(),
             k -> new ArrayList<>());
           break;
-        case INVENTORY_HOLDINGS_RECORD:
+        case HOLDINGS_TOPIC_NAME:
           storageList = holdingsEvents.computeIfAbsent(instanceAndIdKey(kafkaMessage),
             k -> new ArrayList<>());
           break;
@@ -145,7 +145,6 @@ public final class FakeKafkaConsumer {
   }
 
   private KafkaMessage<JsonObject> kafkaRecordToKafkaMessage(KafkaConsumerRecord<String, String> kafkaRecord) {
-    final KafkaTopic kafkaTopic = KafkaTopic.forName(kafkaRecord.topic());
     final JsonObject payload = new JsonObject(kafkaRecord.value());
     final Map<String, String> headers = kafkaRecord.headers().stream()
       .collect(Collectors.toMap(KafkaHeader::key, header -> header.value().toString()));
@@ -153,7 +152,7 @@ public final class FakeKafkaConsumer {
     return KafkaMessage.<JsonObject>builder()
       .key(kafkaRecord.key())
       .payload(payload)
-      .topic(kafkaTopic)
+      .topicName(kafkaRecord.topic())
       .headers(headers)
       .build();
   }

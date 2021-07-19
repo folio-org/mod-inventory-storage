@@ -12,19 +12,21 @@ import static org.folio.services.domainevent.DomainEvent.deleteEvent;
 import static org.folio.services.domainevent.DomainEvent.updateEvent;
 import static org.folio.services.kafka.KafkaProducerServiceFactory.getKafkaProducerService;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 import org.folio.services.kafka.KafkaMessage;
 import org.folio.services.kafka.topic.KafkaTopic;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 
 public class CommonDomainEventPublisher<T> {
   private static final Set<String> FORWARDER_HEADERS = Set.of(URL.toLowerCase(),
@@ -101,7 +103,7 @@ public class CommonDomainEventPublisher<T> {
 
     var kafkaMessage = KafkaMessage.builder()
       .key(instanceId).payload(domainEvent)
-      .topic(kafkaTopic)
+      .topicName(kafkaTopic.getTopicName())
       .headers(headersToForward);
 
     additionalHeaders.forEach(kafkaMessage::header);
