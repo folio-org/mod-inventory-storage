@@ -43,7 +43,7 @@ public final class FakeKafkaConsumer {
       final KafkaMessage<JsonObject> kafkaMessage = kafkaRecordToKafkaMessage(message);
       final List<KafkaMessage<JsonObject>> storageList;
 
-      switch (kafkaMessage.getTopic()){
+      switch (kafkaMessage.getTopic()) {
         case INVENTORY_ITEM:
           storageList = itemEvents.computeIfAbsent(instanceAndIdKey(kafkaMessage),
             k -> new ArrayList<>());

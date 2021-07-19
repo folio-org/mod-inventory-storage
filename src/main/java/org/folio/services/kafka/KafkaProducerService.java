@@ -5,12 +5,14 @@ import static io.vertx.core.Promise.promise;
 import static io.vertx.kafka.client.producer.KafkaProducerRecord.create;
 import static org.folio.dbschema.ObjectMapperTool.getMapper;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.RecordMetadata;
-import java.util.Map;
 
 public class KafkaProducerService {
   private final KafkaProducer<String, String> kafkaProducer;
@@ -25,7 +27,7 @@ public class KafkaProducerService {
   public Future<Void> sendMessage(KafkaMessage<?> message) {
     try {
       final String payload = getMapper().writeValueAsString(message.getPayload());
-      return sendMessageInternal(message.getTopic().getTopicName(),
+      return sendMessageInternal(message.getTopicName(),
         message.getKey(), payload, message.getHeaders());
     } catch (JsonProcessingException ex) {
       return failedFuture(new IllegalArgumentException("Unable to deserialize message", ex));
