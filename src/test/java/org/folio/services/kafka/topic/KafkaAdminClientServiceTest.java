@@ -2,6 +2,8 @@ package org.folio.services.kafka.topic;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Set.of;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
@@ -59,9 +61,16 @@ public class KafkaAdminClientServiceTest {
         verify(mockClient, times(1)).createTopics(createTopicsCaptor.capture());
         verify(mockClient, times(1)).close();
 
-        testContext.assertEquals(1, createTopicsCaptor.getAllValues().size());
-        testContext.assertEquals(allTopics.size(), createTopicsCaptor.getAllValues().get(0).size());
+        // Only these items are expected, so implicitly checks size of list
+        assertThat(getTopicNames(createTopicsCaptor), containsInAnyOrder(
+          "inventory.instance", "inventory.holdings-record", "inventory.item"));
       }));
+  }
+
+  private List<String> getTopicNames(ArgumentCaptor<List<NewTopic>> createTopicsCaptor) {
+    return createTopicsCaptor.getAllValues().get(0).stream()
+      .map(NewTopic::getName)
+      .collect(Collectors.toList());
   }
 
   private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient) {
