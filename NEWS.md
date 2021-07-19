@@ -1,3 +1,7 @@
+## 20.2.2 2021-07-19
+
+* Kafka topic names now include environment and tenant ID (MODINVSTOR-744)
+
 ## 20.2.1 2021-04-27
 
 * Does not send domain events for item shelving order migration (MODINVSTOR-521)
