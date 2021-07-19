@@ -18,7 +18,8 @@ public class KafkaProducerServiceTest {
     final var producer = new KafkaProducerService(mock(KafkaProducer.class));
 
     final KafkaMessage<Object> message = KafkaMessage.builder()
-      .key("id").payload(new Object()).topicName(KafkaTopic.instance("folio").getTopicName()).build();
+      .key("id").payload(new Object()).topicName(
+        KafkaTopic.instance("folio", "foo-tenant").getTopicName()).build();
 
     assertThrows("Unable to deserialize message", ExecutionException.class,
       () -> producer.sendMessage(message).toCompletionStage().toCompletableFuture()
