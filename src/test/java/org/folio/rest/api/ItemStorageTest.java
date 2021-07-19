@@ -55,7 +55,6 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -81,7 +80,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.matchers.DomainEventAssertions;
-import org.folio.services.CallNumberUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -197,7 +195,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(itemFromPost.getString("effectiveShelvingOrder"), is(desiredShelvingOrder));
   }
-
 
   @Test
   public void canCreateAnItemViaCollectionResource()
