@@ -4,7 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.services.domainevent.DomainEvent.reindexEvent;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.services.batch.BatchOperationContext;
+import org.folio.services.kafka.topic.KafkaTopic;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -36,7 +36,7 @@ public class InstanceDomainEventPublisher {
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     instanceRepository = new InstanceRepository(context, okapiHeaders);
     domainEventService = new CommonDomainEventPublisher<>(context, okapiHeaders,
-      INVENTORY_INSTANCE);
+      KafkaTopic.instance());
   }
 
   public Future<Void> publishInstanceUpdated(Instance oldRecord, Instance newRecord) {

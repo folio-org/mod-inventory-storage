@@ -7,6 +7,10 @@ public enum KafkaTopic {
 
   private final String topicName;
 
+  public static KafkaTopic instance() {
+    return INVENTORY_INSTANCE;
+  }
+
   KafkaTopic(String topicName) {
     this.topicName = topicName;
   }
