@@ -9,6 +9,7 @@ import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
 import org.folio.util.ResourceUtil;
@@ -33,9 +34,9 @@ public class KafkaAdminClientService {
     this.clientFactory = clientFactory;
   }
 
-  public Future<Void> createKafkaTopics() {
+  public Future<Void> createKafkaTopics(String environmentName) {
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
-    return createKafkaTopics(kafkaAdminClient).onComplete(result -> {
+    return createKafkaTopics(kafkaAdminClient, environmentName).onComplete(result -> {
       if (result.succeeded()) {
         log.info("Topics created successfully");
       } else {
@@ -50,8 +51,12 @@ public class KafkaAdminClientService {
     });
   }
 
-  private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient) {
-    final List<NewTopic> expectedTopics = readTopics();
+  private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient,
+    String environmentName) {
+
+    final var expectedTopics = readTopics()
+      .map(expectedTopic -> qualifyName(expectedTopic, environmentName))
+      .collect(Collectors.toList());
 
     return kafkaAdminClient.listTopics().compose(existingTopics -> {
       final List<NewTopic> topicsToCreate = expectedTopics.stream()
@@ -69,12 +74,15 @@ public class KafkaAdminClientService {
     });
   }
 
-  private List<NewTopic> readTopics() {
+  private NewTopic qualifyName(NewTopic topic, String environmentName) {
+    return topic.setName(String.join(".", environmentName, topic.getName()));
+  }
+
+  private Stream<NewTopic> readTopics() {
     final JsonObject topics = new JsonObject(ResourceUtil.asString(KAFKA_TOPICS_FILE));
 
     return topics.getJsonArray("topics", new JsonArray()).stream()
       .map(obj -> (JsonObject) obj)
-      .map(NewTopic::new)
-      .collect(Collectors.toList());
+      .map(NewTopic::new);
   }
 }

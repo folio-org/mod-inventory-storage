@@ -1,18 +1,6 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import java.util.stream.Collectors;
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.folio.okapi.common.GenericCompositeFuture;
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.tools.utils.TenantLoading;
-import org.folio.services.kafka.topic.KafkaAdminClientService;
+import static org.folio.Environment.environmentName;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,8 +10,23 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.GenericCompositeFuture;
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.services.kafka.topic.KafkaAdminClientService;
 import org.folio.services.migration.BaseMigrationService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -88,7 +91,7 @@ public class TenantRefAPI extends TenantAPI {
     // create topics before loading data
     return
       new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics()
+        .createKafkaTopics(environmentName())
         .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext))
         .compose(superRecordsLoaded -> {
           try {

@@ -27,8 +27,8 @@ import io.vertx.kafka.admin.NewTopic;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
-  private final Set<String> allTopics = Set.of("inventory.instance",
-    "inventory.holdings-record", "inventory.item");
+  private final Set<String> allTopics = Set.of("folio.inventory.instance",
+    "folio.inventory.holdings-record", "folio.inventory.item");
 
   @Test
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
@@ -50,7 +50,7 @@ public class KafkaAdminClientServiceTest {
   @Test
   public void shouldCreateTopicIfNotExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
-    when(mockClient.listTopics()).thenReturn(succeededFuture(of("inventory.some-another-topic")));
+    when(mockClient.listTopics()).thenReturn(succeededFuture(of("folio.inventory.some-another-topic")));
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
@@ -75,6 +75,6 @@ public class KafkaAdminClientServiceTest {
   }
 
   private Future<Void> createKafkaTopicsAsync(KafkaAdminClient mockClient) {
-    return new KafkaAdminClientService(() -> mockClient).createKafkaTopics();
+    return new KafkaAdminClientService(() -> mockClient).createKafkaTopics("folio");
   }
 }
