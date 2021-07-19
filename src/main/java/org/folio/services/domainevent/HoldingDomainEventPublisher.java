@@ -1,7 +1,6 @@
 package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_HOLDINGS_RECORD;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,6 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.folio.persist.HoldingsRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.services.kafka.topic.KafkaTopic;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -23,7 +23,7 @@ public class HoldingDomainEventPublisher extends AbstractDomainEventPublisher<Ho
 
   public HoldingDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new HoldingsRepository(context, okapiHeaders),
-    new CommonDomainEventPublisher<>(context, okapiHeaders, INVENTORY_HOLDINGS_RECORD));
+    new CommonDomainEventPublisher<>(context, okapiHeaders, KafkaTopic.holdingsRecord()));
   }
 
   @Override

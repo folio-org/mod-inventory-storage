@@ -11,6 +11,10 @@ public enum KafkaTopic {
     return INVENTORY_INSTANCE;
   }
 
+  public static KafkaTopic holdingsRecord() {
+    return INVENTORY_HOLDINGS_RECORD;
+  }
+
   KafkaTopic(String topicName) {
     this.topicName = topicName;
   }
