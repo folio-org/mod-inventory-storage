@@ -1,4 +1,4 @@
-## 21.0.2 IN-PROGRESS
+## 21.0.2 2021-07-20
 
 * Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
 
