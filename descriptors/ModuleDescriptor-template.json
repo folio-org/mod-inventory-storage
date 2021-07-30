@@ -111,6 +111,10 @@
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.delete"]
         }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-storage/instances/{id}/preceding-succeeding-titles",
+          "permissionsRequired": ["inventory-storage.instances.preceding-succeeding-titles.collection.put"]
+        }, {
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instances/{id}/source-record",
           "permissionsRequired": ["inventory-storage.instances.source-record.delete"]
@@ -1304,6 +1308,11 @@
       "description": "delete individual instance from storage"
     },
     {
+      "permissionName": "inventory-storage.instances.preceding-succeeding-titles.collection.put",
+      "displayName": "inventory storage - update preceding/succeeding titles related to instance",
+      "description": "update preceding/succeeding titles related to instance from storage"
+    },
+    {
       "permissionName": "inventory-storage.instances.batch.post",
       "displayName": "inventory storage - create a number of instances",
       "description": "create a number of instances in storage"
@@ -2244,6 +2253,7 @@
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
         "inventory-storage.instances.item.delete",
+        "inventory-storage.instances.preceding-succeeding-titles.collection.put",
         "inventory-storage.instances.source-record.delete",
         "inventory-storage.instances.source-record.marc-json.get",
         "inventory-storage.instances.source-record.marc-json.put",

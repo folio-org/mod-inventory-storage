@@ -2757,7 +2757,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canUpdatePrecedingSucceedingTitleCollection() throws Exception {
-
     IndividualResource instance1Resource = createInstance("Title One");
     String instance1Id = instance1Resource.getId().toString();
 
@@ -2782,7 +2781,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       CompletableFuture<Response> putCompleted = new CompletableFuture<>();
       client.put(instancesStorageUrl("/" + instance1Id + "/preceding-succeeding-titles"), titles.getJson(),
         TENANT_ID, ResponseHandler.empty(putCompleted));
-      Response response = putCompleted.get(100, SECONDS);
+      Response response = putCompleted.get(10, SECONDS);
       assertThat(response.getStatusCode(), is(204));
       var existedTitles = precedingSucceedingTitleClient
         .getByQuery(
@@ -2809,7 +2808,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(instancesStorageUrl("/" + missedInstanceId + "/preceding-succeeding-titles"), titles.getJson(),
       TENANT_ID, ResponseHandler.any(putCompleted));
-    Response response = putCompleted.get(100, SECONDS);
+    Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(404));
     assertThat(response.getBody(), is("Instance not found"));
   }
@@ -2825,7 +2824,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     client.put(instancesStorageUrl("/" + instanceId + "/preceding-succeeding-titles"), titles.getJson(),
       TENANT_ID, ResponseHandler.any(putCompleted));
-    Response response = putCompleted.get(100, SECONDS);
+    Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(422));
     assertThat(response.getBody(),
       containsString("The precedingInstanceId or succeedingInstanceId should contain instanceId"));
