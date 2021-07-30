@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class PrecedingSucceedingTitleAPI implements org.folio.rest.jaxrs.resource.PrecedingSucceedingTitles {
 
-  private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
+  public static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
 
   @Validate
   @Override

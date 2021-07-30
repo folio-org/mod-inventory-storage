@@ -14,11 +14,14 @@ types:
   marcJson: !include marc.json
   instanceRelationship: !include instancerelationship.json
   instanceRelationships: !include instancerelationships.json
+  precedingSucceedingTitles: !include instanceprecedingsucceedingtitles.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
   language: !include raml-util/traits/language.raml
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
@@ -92,6 +95,36 @@ resourceTypes:
           Instances are stored and accessed by a hash of key properties. The rules which govern
           how instance hashes are computed are business rules and defined in the service layer.
           the storage layer only knows how to insert or retrieve instance records by ID.
+      /preceding-succeeding-titles:
+        put:
+          description: Update preceding/succeeding titles related to the instance
+          is: [validate]
+          body:
+            application/json:
+              type: precedingSucceedingTitles
+              example:
+                strict: false
+                value: !include examples/precedingsucceedingtitles_get.json
+          responses:
+            204:
+              description: "Successfully updated"
+            404:
+              description: "Instance with a given ID not found"
+              body:
+                text/plain:
+                  example: |
+                    "Instance with a given ID not found"
+            400:
+              description: "Bad request: malformed request body"
+              body:
+                text/plain:
+                  example: |
+                    "unable to update preceding/succeeding titles"
+            500:
+              description: "Internal server error, e.g. due to misconfiguration"
+              body:
+                text/plain:
+                  example: "internal server error, contact administrator"
       /source-record:
         delete:
           is: [language]
