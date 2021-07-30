@@ -37,7 +37,6 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
-import static org.folio.rest.support.http.InterfaceUrls.precedingSucceedingTitleUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
@@ -125,7 +124,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
-    StorageTestSuite.deleteAll(precedingSucceedingTitleUrl(""));
 
     natureOfContentIdsToRemoveAfterTest.clear();
   }
@@ -2759,6 +2757,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canUpdatePrecedingSucceedingTitleCollection() throws Exception {
+
     IndividualResource instance1Resource = createInstance("Title One");
     String instance1Id = instance1Resource.getId().toString();
 
@@ -2778,19 +2777,22 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     precedingSucceedingTitle2.put(PRECEDING_INSTANCE_ID_KEY, null);
     precedingSucceedingTitle2.put(SUCCEEDING_INSTANCE_ID_KEY, instance1Id);
 
-    var titles =
-      new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
-    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(instancesStorageUrl("/" + instance1Id + "/preceding-succeeding-titles"), titles.getJson(),
-      TENANT_ID, ResponseHandler.empty(putCompleted));
-    Response response = putCompleted.get(100, SECONDS);
-    assertThat(response.getStatusCode(), is(204));
-    var existedTitles = precedingSucceedingTitleClient
-      .getByQuery(String.format("?query=succeedingInstanceId==(%s)+or+precedingInstanceId==(%s)", instance1Id, instance1Id));
-    existedTitles.forEach(entry -> {
-      assertThat(entry.getString("succeedingInstanceId"), equalTo(instance1Id));
-      assertThat(entry.getString("precedingInstanceId"), nullValue());
-    });
+      var titles =
+        new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
+      CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+      client.put(instancesStorageUrl("/" + instance1Id + "/preceding-succeeding-titles"), titles.getJson(),
+        TENANT_ID, ResponseHandler.empty(putCompleted));
+      Response response = putCompleted.get(100, SECONDS);
+      assertThat(response.getStatusCode(), is(204));
+      var existedTitles = precedingSucceedingTitleClient
+        .getByQuery(
+          String.format("?query=succeedingInstanceId==(%s)+or+precedingInstanceId==(%s)", instance1Id, instance1Id));
+      existedTitles.forEach(entry -> {
+        assertThat(entry.getString("succeedingInstanceId"), equalTo(instance1Id));
+        assertThat(entry.getString("precedingInstanceId"), nullValue());
+      });
+    precedingSucceedingTitleClient.delete(UUID.fromString(existedTitles.get(0).getString("id")));
+    precedingSucceedingTitleClient.delete(UUID.fromString(existedTitles.get(1).getString("id")));
   }
 
   @Test
