@@ -465,9 +465,6 @@ public class InstanceStorageAPI implements InstanceStorage {
       PgUtil.delete(PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery, okapiHeaders, vertxContext,
           PutInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceIdResponse.class)
         .compose(response -> saveCollection(titles, okapiHeaders, vertxContext))
-        .onComplete(event -> {
-          System.out.println(event);
-        })
         .onComplete(asyncResultHandler);
     }
   }
