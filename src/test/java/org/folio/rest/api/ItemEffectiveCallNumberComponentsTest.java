@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 
 import static org.awaitility.Awaitility.await;
-import static org.folio.rest.api.ItemStorageTest.nod;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
@@ -86,7 +85,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     );
 
     IndividualResource createdItem = itemsClient.create(
-      nod(null, holdings.getId())
+      nod(holdings.getId())
         .put(callNumberProperties.itemPropertyName, itemPropertyValue)
     );
     assertThat(createdItem.getJson()
@@ -227,7 +226,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     );
 
     IndividualResource createdItem = itemsClient.create(
-      nod(null, holdings.getId())
+      nod(holdings.getId())
         .put(itemPropertyName, itemInitValue)
     );
 
@@ -286,6 +285,15 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     assertThat(holdings.getJson().getString(propertyName), is(propertyValue));
 
     return holdings;
+  }
+
+  /**
+   * ItemStorageTest.nod with random id and without barcode
+   */
+  private JsonObject nod(UUID holdingsRecordId) {
+    JsonObject nod = ItemStorageTest.nod(holdingsRecordId);
+    nod.remove("barcode");
+    return nod;
   }
 
   private JsonObject getById(JsonObject origin) {

@@ -2,13 +2,13 @@ package org.folio.rest.api;
 
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
-import static org.folio.rest.api.ItemStorageTest.nod;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertTrue;
 
+import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -106,6 +106,13 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       assertTrue(returnedInstance.getInstanceId().equals(instanceOne.getId().toString())
         || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
     }
+  }
+
+  /**
+   * nod without barcode to allow multiple items
+   */
+  static JsonObject nod(UUID holdingsRecordId) {
+    return ItemStorageTest.removeBarcode(ItemStorageTest.nod(holdingsRecordId));
   }
 
   private List<UUID> getHoldingIds(InventoryViewInstance instance) {
