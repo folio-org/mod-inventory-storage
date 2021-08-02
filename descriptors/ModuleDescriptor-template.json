@@ -88,7 +88,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "7.9",
+      "version": "7.8",
       "handlers": [
         {
           "methods": ["GET"],
@@ -110,10 +110,6 @@
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.delete"]
-        }, {
-          "methods": ["PUT"],
-          "pathPattern": "/instance-storage/instances/{id}/preceding-succeeding-titles",
-          "permissionsRequired": ["inventory-storage.instances.preceding-succeeding-titles.collection.put"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instances/{id}/source-record",
@@ -159,7 +155,7 @@
     },
     {
       "id": "instance-preceding-succeeding-titles",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -181,6 +177,10 @@
           "methods": ["DELETE"],
           "pathPattern": "/preceding-succeeding-titles/{id}",
           "permissionsRequired": ["inventory-storage.preceding-succeeding-titles.item.delete"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-storage/instances/{id}/preceding-succeeding-titles",
+          "permissionsRequired": ["inventory-storage.instances.preceding-succeeding-titles.collection.put"]
         }
       ]
     },

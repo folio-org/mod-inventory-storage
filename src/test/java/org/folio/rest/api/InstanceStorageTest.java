@@ -11,7 +11,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.either;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -22,8 +21,6 @@ import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.fail;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.entities.PrecedingSucceedingTitle.PRECEDING_INSTANCE_ID_KEY;
-import static org.folio.rest.api.entities.PrecedingSucceedingTitle.SUCCEEDING_INSTANCE_ID_KEY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -85,8 +82,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.folio.HttpStatus;
-import org.folio.rest.api.entities.PrecedingSucceedingTitle;
-import org.folio.rest.api.entities.PrecedingSucceedingTitles;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.MarcJson;
@@ -2753,88 +2748,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         .map(IndividualResource::getId)
         .collect(Collectors.toList()),
       containsInAnyOrder(notSuppressedInstance.getId(), notSuppressedInstanceDefault.getId()));
-  }
-
-  @Test
-  public void canUpdatePrecedingSucceedingTitleCollection() throws Exception {
-    IndividualResource instance1Resource = createInstance("Title One");
-    String instance1Id = instance1Resource.getId().toString();
-
-    PrecedingSucceedingTitle precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
-      instance1Id, null, null, null, null);
-
-    precedingSucceedingTitleClient.create(precedingSucceedingTitle1.getJson());
-
-    PrecedingSucceedingTitle precedingSucceedingTitle2 = new PrecedingSucceedingTitle(
-      instance1Id, null, null, null, null);
-
-    precedingSucceedingTitleClient.create(precedingSucceedingTitle2.getJson());
-
-    precedingSucceedingTitle1.put(PRECEDING_INSTANCE_ID_KEY, null);
-    precedingSucceedingTitle1.put(SUCCEEDING_INSTANCE_ID_KEY, instance1Id);
-
-    precedingSucceedingTitle2.put(PRECEDING_INSTANCE_ID_KEY, null);
-    precedingSucceedingTitle2.put(SUCCEEDING_INSTANCE_ID_KEY, instance1Id);
-
-      var titles =
-        new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
-      CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-      client.put(instancesStorageUrl("/" + instance1Id + "/preceding-succeeding-titles"), titles.getJson(),
-        TENANT_ID, ResponseHandler.empty(putCompleted));
-      Response response = putCompleted.get(10, SECONDS);
-      assertThat(response.getStatusCode(), is(204));
-      var existedTitles = precedingSucceedingTitleClient
-        .getByQuery(
-          String.format("?query=succeedingInstanceId==(%s)+or+precedingInstanceId==(%s)", instance1Id, instance1Id));
-      existedTitles.forEach(entry -> {
-        assertThat(entry.getString("succeedingInstanceId"), equalTo(instance1Id));
-        assertThat(entry.getString("precedingInstanceId"), nullValue());
-      });
-    precedingSucceedingTitleClient.delete(UUID.fromString(existedTitles.get(0).getString("id")));
-    precedingSucceedingTitleClient.delete(UUID.fromString(existedTitles.get(1).getString("id")));
-  }
-
-  @Test
-  public void failedUpdatePrecedingSucceedingTitleCollectionWhenInstanceIsMissing() throws Exception {
-    String missedInstanceId = UUID.randomUUID().toString();
-    PrecedingSucceedingTitle precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
-      missedInstanceId, null, null, null, null);
-
-    PrecedingSucceedingTitle precedingSucceedingTitle2 = new PrecedingSucceedingTitle(
-      null, missedInstanceId, null, null, null);
-
-    var titles =
-      new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
-    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(instancesStorageUrl("/" + missedInstanceId + "/preceding-succeeding-titles"), titles.getJson(),
-      TENANT_ID, ResponseHandler.any(putCompleted));
-    Response response = putCompleted.get(10, SECONDS);
-    assertThat(response.getStatusCode(), is(404));
-    assertThat(response.getBody(), is("Instance not found"));
-  }
-
-  @Test
-  public void failedUpdatePrecedingSucceedingTitleCollectionWhenTitleNotContainsInstanceId() throws Exception {
-    String instanceId = UUID.randomUUID().toString();
-    PrecedingSucceedingTitle precedingSucceedingTitle = new PrecedingSucceedingTitle(
-      null, null, null, null, null);
-
-    var titles =
-      new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle));
-    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(instancesStorageUrl("/" + instanceId + "/preceding-succeeding-titles"), titles.getJson(),
-      TENANT_ID, ResponseHandler.any(putCompleted));
-    Response response = putCompleted.get(10, SECONDS);
-    assertThat(response.getStatusCode(), is(422));
-    assertThat(response.getBody(),
-      containsString("The precedingInstanceId or succeedingInstanceId should contain instanceId"));
-  }
-
-  private IndividualResource createInstance(String title) {
-    JsonObject instanceRequest = createInstanceRequest(UUID.randomUUID(), "TEST",
-      title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, new JsonArray());
-
-    return instancesClient.create(instanceRequest);
   }
 
   private void createInstancesWithClassificationNumbers() throws InterruptedException,

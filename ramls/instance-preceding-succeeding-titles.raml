@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Preceding/succeeding Titles API
-version: v0.1
+version: v0.2
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -67,6 +67,40 @@ resourceTypes:
           body:
             text/plain:
               example: "Internal server error, contact administrator"
+    put:
+      description: Update preceding/succeeding titles related to the instance
+      queryParameters:
+        instanceId:
+          type: string
+          required: true
+          pattern: "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"
+      is: [validate]
+      body:
+        application/json:
+          type: precedingSucceedingTitles
+          example:
+            strict: false
+            value: !include examples/precedingsucceedingtitles_get.json
+      responses:
+        204:
+          description: "Successfully updated"
+        404:
+          description: "Instance with a given ID not found"
+          body:
+            text/plain:
+              example: |
+                "Instance with a given ID not found"
+        400:
+          description: "Bad request: malformed request body"
+          body:
+            text/plain:
+              example: |
+                "unable to update preceding/succeeding titles"
+        500:
+          description: "Internal server error, e.g. due to misconfiguration"
+          body:
+            text/plain:
+              example: "internal server error, contact administrator"
     /{precedingSucceedingTitleId}:
       type:
         collection-item:

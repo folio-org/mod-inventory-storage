@@ -5,10 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.persist.InstanceMarcRepository.INSTANCE_SOURCE_MARC_TABLE;
 import static org.folio.persist.InstanceRelationshipRepository.INSTANCE_RELATIONSHIP_TABLE;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
-import static org.folio.rest.impl.PrecedingSucceedingTitleAPI.PRECEDING_SUCCEEDING_TITLE_TABLE;
-import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
-import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import java.util.List;
 import java.util.Map;
@@ -24,10 +21,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,8 +32,6 @@ import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
-import org.folio.rest.jaxrs.model.PrecedingSucceedingTitle;
-import org.folio.rest.jaxrs.model.PrecedingSucceedingTitles;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -49,9 +41,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.rest.tools.utils.TenantTool;
-import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.services.instance.InstanceService;
 
 public class InstanceStorageAPI implements InstanceStorage {
@@ -449,77 +439,6 @@ public class InstanceStorageAPI implements InstanceStorage {
            .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
-  }
-
-  @Override
-  public void putInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceId(@NotNull String instanceId,
-                                                                               PrecedingSucceedingTitles entity,
-                                                                               Map<String, String> okapiHeaders,
-                                                                               Handler<AsyncResult<Response>> asyncResultHandler,
-                                                                               Context vertxContext) {
-
-    var titles = entity.getPrecedingSucceedingTitles();
-    boolean areValidTitles = validatePrecedingSucceedingTitles(titles, instanceId, asyncResultHandler);
-    if (areValidTitles) {
-      var cqlQuery = String.format("succeedingInstanceId==(%s) or precedingInstanceId==(%s)", instanceId, instanceId);
-      PgUtil.delete(PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery, okapiHeaders, vertxContext,
-          PutInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceIdResponse.class)
-        .compose(response -> saveCollection(titles, okapiHeaders, vertxContext))
-        .onComplete(asyncResultHandler);
-    }
-  }
-
-  private boolean validatePrecedingSucceedingTitles(List<PrecedingSucceedingTitle> precedingSucceedingTitles,
-                                                    String instanceId,
-                                                    Handler<AsyncResult<Response>> asyncResultHandler) {
-    boolean areValidTitles = true;
-    for (PrecedingSucceedingTitle precedingSucceedingTitle : precedingSucceedingTitles) {
-      if (titleIsLinkedToInstanceId(precedingSucceedingTitle, instanceId)) {
-        var validationErrorMessage =
-          createValidationErrorMessage("precedingInstanceId or succeedingInstanceId", "",
-            String.format("The precedingInstanceId or succeedingInstanceId should contain instanceId [%s]", instanceId));
-        asyncResultHandler.handle(
-          Future.succeededFuture(PutInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceIdResponse
-            .respond422WithApplicationJson(validationErrorMessage)));
-        areValidTitles = false;
-      }
-    }
-    return areValidTitles;
-  }
-
-  private boolean titleIsLinkedToInstanceId(PrecedingSucceedingTitle precedingSucceedingTitle, String instanceId) {
-    return !instanceId.equals(precedingSucceedingTitle.getPrecedingInstanceId()) && !instanceId.equals(
-      precedingSucceedingTitle.getSucceedingInstanceId());
-  }
-
-  private Future<Response> saveCollection(List<PrecedingSucceedingTitle> entities,
-                                          Map<String, String> okapiHeaders, Context vertxContext) {
-    Promise<Response> promise = Promise.promise();
-
-    try {
-      MetadataUtil.populateMetadata(entities, okapiHeaders);
-      PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
-      Handler<AsyncResult<RowSet<Row>>> replyHandler = result -> {
-        if (result.failed()) {
-          var errorMessage = result.cause().getMessage();
-          PutInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceIdResponse response;
-          if (ValidationHelper.isFKViolation(errorMessage)) {
-            response = PutInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceIdResponse
-              .respond404WithTextPlain("Instance not found");
-          } else {
-            response = PutInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceIdResponse
-              .respond500WithTextPlain(errorMessage);
-          }
-          promise.complete(response);
-        } else {
-          promise.complete(PutInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceIdResponse.respond204());
-        }
-      };
-      postgresClient.saveBatch(PRECEDING_SUCCEEDING_TITLE_TABLE, entities, replyHandler);
-    } catch (ReflectiveOperationException e) {
-      promise.complete(PutInstanceStorageInstancesPrecedingSucceedingTitlesByInstanceIdResponse.respond500WithTextPlain(e.getMessage()));
-    }
-    return promise.future();
   }
 
   static class PreparedCQL {
