@@ -27,7 +27,7 @@ import org.folio.rest.tools.utils.ValidationHelper;
 
 public class PrecedingSucceedingTitleAPI implements org.folio.rest.jaxrs.resource.PrecedingSucceedingTitles {
 
-  public static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
+  private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
 
   @Validate
   @Override
