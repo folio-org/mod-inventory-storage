@@ -2,12 +2,14 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.update_effective_location
     RETURNS void
     LANGUAGE sql
     as $$
-	    SELECT * FROM pg_proc;
+      BEGIN
+      END;
     $$;
 
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.update_effective_location_on_holding_update()
     RETURNS void
     LANGUAGE sql
     as $$
-	    SELECT * FROM pg_proc;
+      BEGIN
+      END;
     $$;
