@@ -26,6 +26,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
@@ -90,33 +91,32 @@ public final class DomainEventAssertions {
   }
 
   public static void assertNoUpdateEvent(String instanceId) {
-    await().atLeast(1, SECONDS)
-      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
+    await()
+      .until(() -> getInstanceEvents(instanceId), is(not(empty())));
 
     final JsonObject updateMessage  = getLastInstanceEvent(instanceId).value();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
   public static void assertNoUpdateEventForHolding(String instanceId, String hrId) {
-    await().atLeast(1, SECONDS)
-      .until(() -> getHoldingsEvents(instanceId, hrId).size(), greaterThan(0));
+    await()
+      .until(() -> getHoldingsEvents(instanceId, hrId), is(not(empty())));
 
     final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).value();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
   public static void assertNoRemoveEvent(String instanceId) {
-    await().atLeast(1, SECONDS)
-      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
+    await()
+      .until(() -> getInstanceEvents(instanceId), is(not(empty())));
 
     final JsonObject updateMessage  = getLastInstanceEvent(instanceId).value();
     assertThat(updateMessage.getString("type"), not(is("DELETE")));
   }
 
-  public static void assertNoCreateEvent(String instanceId) {
-    await().atLeast(1, SECONDS);
-
-    assertThat(getInstanceEvents(instanceId).size(), is(0));
+  public static void assertNoEvent(String instanceId) {
+    await().during(1, SECONDS)
+      .until(() -> getInstanceEvents(instanceId), is(empty()));
   }
 
   public static void assertCreateEventForInstance(JsonObject instance) {
