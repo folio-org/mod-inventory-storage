@@ -43,7 +43,6 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -81,7 +80,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.matchers.DomainEventAssertions;
-import org.folio.services.CallNumberUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -819,6 +817,35 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         is("The hrid field cannot be changed: new=null, old=it00000000001"));
 
     log.info("Finished cannotUpdateAnItemWithRemovedHRID");
+  }
+
+  @Test
+  public void cannotCreateItemWithNonUuidStatisticalCodes() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject nod = nod(holdingsRecordId).put("statisticalCodeIds", new JsonArray().add("07"));
+    assertThat(itemsClient.attemptToCreate(nod), hasValidationError(
+        "elements in list must match pattern", "statisticalCodeIds", "[07]"));
+  }
+
+  @Test
+  public void cannotCreateItemSyncWithNonUuidStatisticalCodes() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject nod = nod(holdingsRecordId).put("statisticalCodeIds",
+        new JsonArray().add("00000000-0000-4444-8888-000000000000").add("12345678"));
+    JsonObject items = new JsonObject().put("items", new JsonArray().add(nod));
+    assertThat(itemsStorageSyncClient.attemptToCreate(items), hasValidationError(
+        "elements in list must match pattern", "items[0].statisticalCodeIds",
+        "[00000000-0000-4444-8888-000000000000, 12345678]"));
+  }
+
+  @Test
+  public void cannotUpdateItemWithNonUuidStatisticalCodes() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject nod = createItem(nod(holdingsRecordId));
+    nod.put("statisticalCodeIds", new JsonArray().add("1234567890123456789012345678901234567890"));
+    assertThat(itemsClient.attemptToReplace(nod.getString("id"), nod), hasValidationError(
+        "elements in list must match pattern", "statisticalCodeIds",
+        "[1234567890123456789012345678901234567890]"));
   }
 
   @Test
