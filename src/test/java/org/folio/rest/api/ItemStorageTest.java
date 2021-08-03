@@ -952,9 +952,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       holdingRequestBuilder -> holdingRequestBuilder.withCallNumber("hrCallNumber"));
 
     return new JsonArray()
-        .add(removeBarcode(nod(holdingsRecordId)))
-        .add(removeBarcode(smallAngryPlanet(holdingsRecordId)))
-        .add(removeBarcode(interestingTimes(holdingsRecordId)));
+        .add(nod(holdingsRecordId).put("barcode", UUID.randomUUID().toString()))
+        .add(smallAngryPlanet(holdingsRecordId).put("barcode", UUID.randomUUID().toString()))
+        .add(interestingTimes(holdingsRecordId).put("barcode", UUID.randomUUID().toString()));
   }
 
   private Response postSynchronousBatch(JsonArray itemsArray) {
