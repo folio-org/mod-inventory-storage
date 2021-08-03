@@ -48,15 +48,16 @@ public class PrecedingSucceedingTitleAPI implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void putPrecedingSucceedingTitles(String instanceId, PrecedingSucceedingTitles entity,
-                                           Map<String, String> okapiHeaders,
-                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putPrecedingSucceedingTitlesInstancesByInstanceId(String instanceId, PrecedingSucceedingTitles entity,
+                                                                Map<String, String> okapiHeaders,
+                                                                Handler<AsyncResult<Response>> asyncResultHandler,
+                                                                Context vertxContext) {
     var titles = entity.getPrecedingSucceedingTitles();
     boolean areValidTitles = validatePrecedingSucceedingTitles(titles, instanceId, asyncResultHandler);
     if (areValidTitles) {
       var cqlQuery = String.format("succeedingInstanceId==(%s) or precedingInstanceId==(%s)", instanceId, instanceId);
       PgUtil.delete(PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery, okapiHeaders, vertxContext,
-          PutPrecedingSucceedingTitlesResponse.class)
+          PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.class)
         .compose(response -> saveCollection(titles, okapiHeaders, vertxContext))
         .onComplete(asyncResultHandler);
     }
@@ -99,7 +100,7 @@ public class PrecedingSucceedingTitleAPI implements org.folio.rest.jaxrs.resourc
         var validationErrorMessage =
           createValidationErrorMessage("precedingInstanceId or succeedingInstanceId", "",
             String.format("The precedingInstanceId or succeedingInstanceId should contain instanceId [%s]", instanceId));
-        asyncResultHandler.handle(Future.succeededFuture(PutPrecedingSucceedingTitlesResponse
+        asyncResultHandler.handle(Future.succeededFuture(PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse
           .respond422WithApplicationJson(validationErrorMessage)));
         return false;
       }
@@ -118,17 +119,17 @@ public class PrecedingSucceedingTitleAPI implements org.folio.rest.jaxrs.resourc
       MetadataUtil.populateMetadata(entities, okapiHeaders);
       return postgresClient(vertxContext, okapiHeaders)
         .saveBatch(PRECEDING_SUCCEEDING_TITLE_TABLE, entities)
-        .<Response>map(x -> PutPrecedingSucceedingTitlesResponse.respond204())
+        .<Response>map(x -> PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.respond204())
         .otherwise(cause -> {
           var errorMessage = cause.getMessage();
           if (ValidationHelper.isFKViolation(errorMessage)) {
-            return PutPrecedingSucceedingTitlesResponse.respond404WithTextPlain("Instance not found");
+            return PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.respond404WithTextPlain("Instance not found");
           } else {
-            return PutPrecedingSucceedingTitlesResponse.respond500WithTextPlain(errorMessage);
+            return PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.respond500WithTextPlain(errorMessage);
           }
         });
     } catch (Throwable e) {
-      return Future.succeededFuture(PutPrecedingSucceedingTitlesResponse.respond500WithTextPlain(e.getMessage()));
+      return Future.succeededFuture(PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.respond500WithTextPlain(e.getMessage()));
     }
   }
 

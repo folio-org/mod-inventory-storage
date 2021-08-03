@@ -267,7 +267,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     var titles =
       new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(precedingSucceedingTitleUrl("?instanceId=" + instanceId), titles.getJson(),
+    client.put(precedingSucceedingTitleUrl("/instances/" + instanceId), titles.getJson(),
       TENANT_ID, ResponseHandler.empty(putCompleted));
     Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(204));
@@ -294,7 +294,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     var titles =
       new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(precedingSucceedingTitleUrl("?instanceId=" + missedInstanceId), titles.getJson(),
+    client.put(precedingSucceedingTitleUrl("/instances/" + missedInstanceId), titles.getJson(),
       TENANT_ID, ResponseHandler.any(putCompleted));
     Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(404));
@@ -310,7 +310,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     var titles =
       new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle));
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(precedingSucceedingTitleUrl("?instanceId=" + instanceId), titles.getJson(),
+    client.put(precedingSucceedingTitleUrl("/instances/" + instanceId), titles.getJson(),
       TENANT_ID, ResponseHandler.any(putCompleted));
     Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(422));
