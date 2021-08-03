@@ -65,6 +65,9 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
     }
   }
 
+  /**
+   * Create an item, the index is used for the barcode and the call number components
+   */
   private IndividualResource createItem(int index) {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 

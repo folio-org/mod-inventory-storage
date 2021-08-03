@@ -1007,7 +1007,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray2.getJsonObject(2).put("barcode", "new2");
     String existingId = itemsArray1.getJsonObject(1).getString("id");
     itemsArray2.getJsonObject(1).put("id", existingId);
+    // create the three item of itemsArray1
     assertThat(postSynchronousBatch(subPath, itemsArray1), statusCodeIs(HttpStatus.HTTP_CREATED));
+    // itemsArray2 has new items at position 0 and 2, but the same old item at position 1
     return postSynchronousBatch(subPath, itemsArray2);
   }
 
@@ -2421,6 +2423,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   static JsonObject nod(UUID holdingsRecordId) {
     return nod(UUID.randomUUID(), holdingsRecordId);
+  }
+
+  static JsonObject nodWithNoBarcode(UUID holdingsRecordId) {
+    return removeBarcode(nod(holdingsRecordId));
   }
 
   private static JsonObject uprooted(UUID itemId, UUID holdingsRecordId) {

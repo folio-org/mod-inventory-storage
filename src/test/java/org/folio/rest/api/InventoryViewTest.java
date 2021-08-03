@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -8,7 +9,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertTrue;
 
-import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,8 +29,8 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       createHolding(instanceOne.getId(), secondFloorLocationId, null)
     );
     var itemsForOne = List.of(
-      createItem(nod(holdingsForOne.get(0))).getString("id"),
-      createItem(nod(holdingsForOne.get(1))).getString("id")
+      createItem(nodWithNoBarcode(holdingsForOne.get(0))).getString("id"),
+      createItem(nodWithNoBarcode(holdingsForOne.get(1))).getString("id")
     );
 
     var instanceTwo = instancesClient.create(instance(randomUUID()));
@@ -39,10 +39,10 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       createHolding(instanceTwo.getId(), secondFloorLocationId, null),
       createHolding(instanceTwo.getId(), fourthFloorLocationId, null));
     var itemsForTwo = List.of(
-      createItem(nod(holdingsForTwo.get(0))).getString("id"),
-      createItem(nod(holdingsForTwo.get(0))).getString("id"),
-      createItem(nod(holdingsForTwo.get(1))).getString("id"),
-      createItem(nod(holdingsForTwo.get(2))).getString("id"));
+      createItem(nodWithNoBarcode(holdingsForTwo.get(0))).getString("id"),
+      createItem(nodWithNoBarcode(holdingsForTwo.get(0))).getString("id"),
+      createItem(nodWithNoBarcode(holdingsForTwo.get(1))).getString("id"),
+      createItem(nodWithNoBarcode(holdingsForTwo.get(2))).getString("id"));
 
     var instances = inventoryViewClient.getMany("id==(%s or %s)",
       instanceTwo.getId(), instanceOne.getId());
@@ -106,13 +106,6 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       assertTrue(returnedInstance.getInstanceId().equals(instanceOne.getId().toString())
         || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
     }
-  }
-
-  /**
-   * nod without barcode to allow multiple items
-   */
-  static JsonObject nodWithNoBarcode(UUID holdingsRecordId) {
-    return ItemStorageTest.removeBarcode(ItemStorageTest.nod(holdingsRecordId));
   }
 
   private List<UUID> getHoldingIds(InventoryViewInstance instance) {
