@@ -3,7 +3,6 @@ package org.folio.rest.support.matchers;
 import static io.vertx.core.MultiMap.caseInsensitiveMultiMap;
 import static java.util.UUID.fromString;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
@@ -32,7 +31,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -41,6 +41,16 @@ import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class DomainEventAssertions {
   private DomainEventAssertions() { }
+
+  /**
+   * Awaitility.await() with a default timeout of 2 seconds.
+   *
+   * <p>1 second is too short:
+   * <a href="https://issues.folio.org/browse/MODINVSTOR-754">MODINVSTOR-754</a>
+   */
+  private static ConditionFactory await() {
+    return Awaitility.await().atMost(2, SECONDS);
+  }
 
   private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {
     assertThat("Create event should be present", createEvent.value(), is(notNullValue()));
