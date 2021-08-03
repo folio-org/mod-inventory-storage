@@ -290,7 +290,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   /**
    * ItemStorageTest.nod with random id and without barcode
    */
-  private JsonObject nod(UUID holdingsRecordId) {
+  private JsonObject nodWithNoBarcode(UUID holdingsRecordId) {
     JsonObject nod = ItemStorageTest.nod(holdingsRecordId);
     nod.remove("barcode");
     return nod;

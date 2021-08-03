@@ -111,7 +111,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   /**
    * nod without barcode to allow multiple items
    */
-  static JsonObject nod(UUID holdingsRecordId) {
+  static JsonObject nodWithNoBarcode(UUID holdingsRecordId) {
     return ItemStorageTest.removeBarcode(ItemStorageTest.nod(holdingsRecordId));
   }
 
