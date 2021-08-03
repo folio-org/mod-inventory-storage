@@ -952,9 +952,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       holdingRequestBuilder -> holdingRequestBuilder.withCallNumber("hrCallNumber"));
 
     return new JsonArray()
-        .add(nod(holdingsRecordId))
-        .add(smallAngryPlanet(holdingsRecordId))
-        .add(interestingTimes(holdingsRecordId));
+        .add(removeBarcode(nod(holdingsRecordId)))
+        .add(removeBarcode(smallAngryPlanet(holdingsRecordId)))
+        .add(removeBarcode(interestingTimes(holdingsRecordId)));
   }
 
   private Response postSynchronousBatch(JsonArray itemsArray) {
@@ -1003,8 +1003,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public Response postSynchronousBatchWithExistingId(String subPath) {
     JsonArray itemsArray1 = threeItems();
     JsonArray itemsArray2 = threeItems();
-    itemsArray2.getJsonObject(0).put("barcode", "new0");
-    itemsArray2.getJsonObject(2).put("barcode", "new2");
     String existingId = itemsArray1.getJsonObject(1).getString("id");
     itemsArray2.getJsonObject(1).put("id", existingId);
     // create the three item of itemsArray1
