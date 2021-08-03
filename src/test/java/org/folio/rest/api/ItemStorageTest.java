@@ -2463,7 +2463,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
 
     Response response = searchCompleted.get(5, TimeUnit.SECONDS);
+    
     assertThat(response.getStatusCode(), is(200));
+    
     return response.getJson().mapTo(Items.class);
   }
 
