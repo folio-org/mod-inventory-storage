@@ -6,6 +6,7 @@ instance_storage_address=http://localhost:9130/instance-storage/instances
 instance_relationship_storage_address=http://localhost:9130/instance-storage/instance-relationships
 holdings_storage_address=http://localhost:9130/holdings-storage/holdings
 preceding_succeeding_title_storage_address=http://localhost:9130/preceding-succeeding-titles
+bound_with_part_storage_address=http://localhost:9130/inventory-storage/bound-with-parts
 
 for f in ./instances/*.json; do
     curl -w '\n' -X POST -D - \
@@ -45,4 +46,36 @@ for f in ./preceding-succeeding-titles/*.json; do
          -H "X-Okapi-Tenant: ${tenant}" \
          -d @$f \
          "${preceding_succeeding_title_storage_address}"
+done
+
+for f in ./bound-with/instances/*.json; do
+    curl -v -w '\n' -X POST -D - \
+         -H "Content-type: application/json" \
+         -H "X-Okapi-Tenant: ${tenant}" \
+         -d @$f \
+         "${instance_storage_address}"
+done
+
+for f in ./bound-with/holdingsrecords/*.json; do
+    curl -v -w '\n' -X POST -D - \
+         -H "Content-type: application/json" \
+         -H "X-Okapi-Tenant: ${tenant}" \
+         -d @$f \
+         "${holdings_storage_address}"
+done
+
+for f in ./bound-with/items/*.json; do
+    curl -v -w '\n' -X POST -D - \
+         -H "Content-type: application/json" \
+         -H "X-Okapi-Tenant: ${tenant}" \
+         -d @$f \
+         "${item_storage_address}"
+done
+
+for f in ./bound-with/bound-with-parts/*.json; do
+    curl -v -w '\n' -X POST -D - \
+         -H "Content-type: application/json" \
+         -H "X-Okapi-Tenant: ${tenant}" \
+         -d @$f \
+         "${bound_with_part_storage_address}"
 done
