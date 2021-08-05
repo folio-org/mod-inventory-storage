@@ -1,0 +1,12 @@
+{
+  "id" : "f4b8c3d1-f461-4551-aa7b-5f45e64f236c",
+  "hrid" : "BW-ITEM-1",
+  "status" : {
+    "name" : "Available"
+  },
+  "holdingsRecordId" : "9e8dc8ce-68f3-4e75-8479-d548ce521157",
+  "barcode" : "BW-ITEM-1",
+  "notes" : [ ],
+  "materialTypeId" : "d9acad2f-2aac-4b48-9097-e6ab85906b25",
+  "permanentLoanTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe27"
+}

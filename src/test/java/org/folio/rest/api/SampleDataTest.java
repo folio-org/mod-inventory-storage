@@ -4,10 +4,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipsUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -54,22 +51,27 @@ public class SampleDataTest extends TestBase {
 
   @Test
   public void instanceCount() {
-    assertCount(instancesStorageUrl("?limit=100"), "instances", 29);
+    assertCount(instancesStorageUrl("?limit=100"), "instances", 32);
   }
 
   @Test
   public void holdingsCount() {
-    assertCount(holdingsStorageUrl("?limit=100"), "holdingsRecords", 12);
+    assertCount(holdingsStorageUrl("?limit=100"), "holdingsRecords", 15);
   }
 
   @Test
   public void itemCount() {
-    assertCount(itemsStorageUrl("?limit=100"), "items", 17);
+    assertCount(itemsStorageUrl("?limit=100"), "items", 18);
   }
 
   @Test
   public void instanceRelationshipsCount() {
     assertCount(instanceRelationshipsUrl("?limit=100"), "instanceRelationships", 5);
+  }
+
+  @Test
+  public void boundWithPartsCount() {
+    assertCount(boundWithStorageUrl("?limit=100"), "boundWithParts", 3);
   }
 
   private JsonObject get(URL url) {
