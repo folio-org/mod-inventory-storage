@@ -65,7 +65,11 @@ public class TenantRefAPI extends TenantAPI {
     "holdings-note-types",
     "item-note-types",
     "item-damaged-statuses",
-    "holdings-sources"
+    "holdings-sources",
+    "bound-with/instances",
+    "bound-with/holdingsrecords",
+    "bound-with/items",
+    "bound-with/bound-with-parts"
   };
 
   List<JsonObject> servicePoints = null;
@@ -121,6 +125,10 @@ public class TenantRefAPI extends TenantAPI {
           tl.add("holdingsrecords", "holdings-storage/holdings");
           tl.add("items", "item-storage/items");
           tl.add("instance-relationships", "instance-storage/instance-relationships");
+          tl.add("bound-with/instances", "instance-storage/instances");
+          tl.add("bound-with/holdingsrecords", "holdings-storage/holdings");
+          tl.add("bound-with/items", "item-storage/items");
+          tl.add("bound-with/bound-with-parts", "inventory-storage/bound-with-parts");
           if (servicePoints != null) {
             tl.withFilter(this::servicePointUserFilter)
               .withPostOnly()
