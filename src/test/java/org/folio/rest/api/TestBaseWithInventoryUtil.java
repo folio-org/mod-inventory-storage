@@ -80,6 +80,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   public static void beforeAny() {
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+    StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
