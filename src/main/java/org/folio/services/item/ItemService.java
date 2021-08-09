@@ -3,6 +3,7 @@ package org.folio.services.item;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.util.stream.Collectors.toList;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.ItemStorage.DeleteItemStorageItemsByItemIdResponse;
@@ -30,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
+
+import org.apache.logging.log4j.Logger;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
@@ -38,9 +41,12 @@ import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.services.holding.HoldingsService;
 import org.folio.validator.CommonValidators;
 
 public class ItemService {
+  private static final Logger log = getLogger(ItemService.class);
+
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
   private final Context vertxContext;
@@ -140,7 +146,7 @@ public class ItemService {
   public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
     HoldingsRecord holdingsRecord) {
 
-    return itemRepository.getItemsForHoldingRecord(holdingsRecord.getId())
+    return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
         // have to make deep clone of the items because the items are stateful
         // so that domain events will have proper 'old' item state.
