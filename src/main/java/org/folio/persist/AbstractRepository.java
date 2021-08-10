@@ -21,6 +21,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import org.folio.rest.persist.interfaces.Results;
 
 public abstract class AbstractRepository<T> {
   protected final PostgresClientFuturized postgresClientFuturized;
@@ -47,6 +48,14 @@ public abstract class AbstractRepository<T> {
 
   public Future<List<T>> get(Criterion criterion) {
     return postgresClientFuturized.get(tableName, recordType, criterion);
+  }
+
+  public Future<List<T>> get(AsyncResult<SQLConnection> connection, Criterion criterion) {
+    final Promise<Results<T>> getItemsResult = promise();
+
+    postgresClient.get(connection, tableName, recordType, criterion, false, true, getItemsResult);
+
+    return getItemsResult.future().map(Results::getResults);
   }
 
   public Future<Map<String, T>> getById(Collection<String> ids) {
