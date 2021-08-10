@@ -56,12 +56,12 @@ public class SampleDataTest extends TestBase {
 
   @Test
   public void holdingsCount() {
-    assertCount(holdingsStorageUrl("?limit=100"), "holdingsRecords", 15);
+    assertCount(holdingsStorageUrl("?limit=100"), "holdingsRecords", 16);
   }
 
   @Test
   public void itemCount() {
-    assertCount(itemsStorageUrl("?limit=100"), "items", 18);
+    assertCount(itemsStorageUrl("?limit=100"), "items", 19);
   }
 
   @Test
