@@ -1,3 +1,7 @@
+## 21.0.3 IN-PROGRESS
+
+* Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
+
 ## 21.0.2 2021-07-20
 
 * Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
