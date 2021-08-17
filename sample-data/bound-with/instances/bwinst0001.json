@@ -1,0 +1,36 @@
+{
+  "id" : "ce9dd893-c812-49d5-8973-d55d018894c4",
+  "hrid" : "bwinst0001",
+  "source" : "FOLIO",
+  "title" : "Rapport från inspektionsresa till svenska betongdammar i augusti 1939, med särskild hänsyn till sprickbildningsfrågan och användandet av specialcement / av S. Giertz-Hedström",
+  "series" : [ "Svenska Vattenkraftforeningens Publikationer ; 354 (1942:16)" ],
+  "identifiers" : [ ],
+  "contributors" : [ {
+    "contributorNameTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe2a",
+    "name" : "Giertz-Hedström, S.",
+    "contributorTypeId" : "6e09d47d-95e2-4d8a-831b-f777b8ef6d81",
+    "contributorTypeText" : "",
+    "primary" : true
+  } ],
+  "publication" : [ {
+    "publisher" : "Svenska Vattenkraftföreningen",
+    "place" : "Stockholm",
+    "dateOfPublication" : "1942",
+    "role" : null
+  } ],
+  "instanceTypeId" : "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
+  "physicalDescriptions" : [ "16 p." ],
+  "languages" : [ "swe" ],
+  "modeOfIssuanceId" : "9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
+  "previouslyHeld" : false,
+  "discoverySuppress" : false,
+  "statisticalCodeIds" : [ ],
+  "statusId" : "9634a5ab-9228-4703-baf2-4d12ebc77d56",
+  "tags" : {
+    "tagList" : [ "bound-with" ]
+  },
+  "natureOfContentTermIds" : [ ],
+  "publicationPeriod" : {
+    "start" : 1942
+  }
+}

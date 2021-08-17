@@ -113,7 +113,7 @@ To deactivate and unregister the module, run `./stop-managed-demo.sh` from the r
 
 ## Tenant Initialization
 
-The module supports v1.2 of the Okapi `_tenant` interface. This version of the interface allows Okapi to pass tenant initialization parameters using the `tenantParameters` key. Currently, the only parameter supported is the `loadReference` key, which will cause the module to load reference data for the tenant if set to `true`. Here is an example of passing the parameter to the module via Okapi's `/_/proxy/tenants/<tenantId>/install` endpoint:
+The module supports v1.2 of the Okapi `_tenant` interface. This version of the interface allows Okapi to pass tenant initialization parameters using the `tenantParameters` key. Currently, the only parameters supported are the `loadReference` and `loadSample` keys, which will cause the module to load reference data and sample data respectively for the tenant if set to `true`.  Here is an example of passing the `loadReference` parameter to the module via Okapi's `/_/proxy/tenants/<tenantId>/install` endpoint:
 
     curl -w '\n' -X POST -d '[ { "id": "mod-inventory-storage-14.1.0", "action": "enable" } ]' http://localhost:9130/_/proxy/tenants/my-test-tenant/install?tenantParameters=loadReference%3Dtrue
 
@@ -135,9 +135,13 @@ See the section [Install modules per tenant|https://github.com/folio-org/okapi/b
 
 ## Sample Data
 
-Importing/ingesting of sample data is done via Okapi, so modules must be registered prior to importing.
+To load some sample data, the `loadSample` tenant initialization parameter can be passed when installing the module:
 
-To load some sample data run `./import-sample-data.sh` from the root directory.
+    curl -w '\n' -X POST -d '[ { "id": "mod-inventory-storage-14.1.0", "action": "enable" } ]' http://localhost:9130/_/proxy/tenants/my-test-tenant/install?tenantParameters=loadReference%3Dtrue%2CloadSample%3Dtrue
+
+Please note that loading sample data will not work without also loading reference data.
+
+The sample data that would be loaded can be found in the `sample-data/` folder in the root directory.
 
 # Making Requests
 
@@ -159,8 +163,6 @@ http://localhost:9130/item-storage
 Most of the development for these modules, thus far, has been performed on OS X, with some on Ubuntu. Feedback for these, and particularly other operating systems is very welcome.
 
 # Additional Information
-
-The guide and other [documentation](doc) for this module.
 
 Other [modules](https://dev.folio.org/source-code/#server-side).
 
