@@ -1573,16 +1573,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(secondPage.getInteger("totalRecords"), is(5));
   }
 
-  /**
-   * Assert that the cql query returns items with the expected barcodes.
-   */
-  private void assertCqlFindsBarcodes(String cql, String ... expectedBarcodes) throws Exception {
-    Items items = findItems(cql);
-    String [] barcodes = items.getItems().stream().map(Item::getBarcode).toArray(String []::new);
-    assertThat(cql, barcodes, is(expectedBarcodes));
-    assertThat(cql, items.getTotalRecords(), is(barcodes.length));
-  }
-
   @Test
   public void canCreateMultipleItemsWithoutBarcode() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
@@ -2463,9 +2453,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
 
     Response response = searchCompleted.get(5, TimeUnit.SECONDS);
-    
+
     assertThat(response.getStatusCode(), is(200));
-    
+
     return response.getJson().mapTo(Items.class);
   }
 
@@ -2494,6 +2484,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private void assertHRIDRange(Response response, String minHRID, String maxHRID) {
     assertThat(response.getJson().getString("hrid"),
         is(both(greaterThanOrEqualTo(minHRID)).and(lessThanOrEqualTo(maxHRID))));
+  }
+
+  /**
+   * Assert that the cql query returns items with the expected barcodes.
+   */
+  private void assertCqlFindsBarcodes(String cql, String ... expectedBarcodes) throws Exception {
+    Items items = findItems(cql);
+    String [] barcodes = items.getItems().stream().map(Item::getBarcode).toArray(String []::new);
+    assertThat(cql, barcodes, is(expectedBarcodes));
+    assertThat(cql, items.getTotalRecords(), is(barcodes.length));
   }
 
   private JsonObject addTags(String tagValue, UUID holdingsRecordId) {
