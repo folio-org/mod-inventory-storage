@@ -463,7 +463,7 @@
         },
         {
           "fieldName": "keyword",
-          "multiFieldNames": "title,contributors[*].name,identifiers[*].value"
+          "multiFieldNames": "title,indexTitle,alternativeTitles[*].alternativeTitle,series,contributors[*].name,identifiers[*].value"
         },
         {
           "fieldName": "allTitles",
@@ -1061,12 +1061,17 @@
     {
       "run": "after",
       "snippetPath": "inventory-hierarchy/addEffectiveHoldingsToItemsAndHoldingsView.sql",
-      "fromModuleVersion": "20.2.0"
-	},
-	{
+      "fromModuleVersion": "20.3.0"
+  	},
+	  {
       "run": "after",
       "snippetPath": "addInstanceFormatsAudioBelt.sql",
       "fromModuleVersion": "20.3.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "dropLegacyItemEffectiveLocationFunctions.sql",
+      "fromModuleVersion": "21.1.0"
     }
   ]
 }

@@ -1,6 +1,7 @@
 package org.folio.services.reindex;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.Environment.environmentName;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
@@ -8,14 +9,9 @@ import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAIL
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.reindexEvent;
-import static org.folio.services.kafka.topic.KafkaTopic.INVENTORY_INSTANCE;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.WorkerExecutor;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowStream;
 import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.ReindexJobRepository;
@@ -26,6 +22,13 @@ import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.kafka.InventoryProducerRecordBuilder;
+import org.folio.services.kafka.topic.KafkaTopic;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.WorkerExecutor;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowStream;
 
 public class ReindexJobRunner {
   public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
@@ -42,7 +45,8 @@ public class ReindexJobRunner {
     this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
       new ReindexJobRepository(vertxContext, okapiHeaders),
       vertxContext,
-      new CommonDomainEventPublisher<>(vertxContext, okapiHeaders, INVENTORY_INSTANCE),
+      new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
+        KafkaTopic.instance(tenantId(okapiHeaders), environmentName())),
       tenantId(okapiHeaders));
   }
 

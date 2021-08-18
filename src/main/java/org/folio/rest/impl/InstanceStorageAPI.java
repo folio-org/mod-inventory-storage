@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+
 import static org.folio.persist.InstanceMarcRepository.INSTANCE_SOURCE_MARC_TABLE;
 import static org.folio.persist.InstanceRelationshipRepository.INSTANCE_RELATIONSHIP_TABLE;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
@@ -8,37 +9,39 @@ import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import java.util.List;
 import java.util.Map;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.InstanceRelationship;
-import org.folio.rest.jaxrs.model.InstanceRelationships;
-import org.folio.rest.jaxrs.model.Instances;
-import org.folio.rest.jaxrs.model.MarcJson;
-import org.folio.rest.jaxrs.resource.InstanceStorage;
-import org.folio.rest.persist.PgExceptionUtil;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.messages.MessageConsts;
-import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
-import org.folio.cql2pgjson.exception.FieldException;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstanceRelationship;
+import org.folio.rest.jaxrs.model.InstanceRelationships;
+import org.folio.rest.jaxrs.model.Instances;
+import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.jaxrs.resource.InstanceStorage;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
+import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.messages.MessageConsts;
+import org.folio.rest.tools.messages.Messages;
+import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.instance.InstanceService;
 
 public class InstanceStorageAPI implements InstanceStorage {

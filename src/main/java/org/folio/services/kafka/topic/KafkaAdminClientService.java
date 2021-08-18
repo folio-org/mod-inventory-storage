@@ -8,6 +8,7 @@ import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.KafkaConfig;
@@ -37,30 +38,35 @@ public class KafkaAdminClientService {
     this.clientFactory = clientFactory;
   }
 
-  public Future<Void> createKafkaTopics() {
+  public Future<Void> createKafkaTopics(String tenantId, String environmentName) {
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
-    return createKafkaTopics(kafkaAdminClient).onComplete(result -> {
-      if (result.succeeded()) {
-        log.info("Topics created successfully");
-      } else {
-        log.error("Unable to create topics", result.cause());
-      }
-
-      kafkaAdminClient.close().onComplete(closeResult -> {
-        if (closeResult.failed()) {
-          log.error("Failed to close kafka admin client", closeResult.cause());
+    return createKafkaTopics(tenantId, environmentName, kafkaAdminClient)
+      .onComplete(result -> {
+        if (result.succeeded()) {
+          log.info("Topics created successfully");
+        } else {
+          log.error("Unable to create topics", result.cause());
         }
-      });
+
+        kafkaAdminClient.close().onComplete(closeResult -> {
+          if (closeResult.failed()) {
+            log.error("Failed to close kafka admin client", closeResult.cause());
+          }
+        });
     });
   }
 
-  private Future<Void> createKafkaTopics(KafkaAdminClient kafkaAdminClient) {
-    final List<NewTopic> newTopics = readTopics();
+  private Future<Void> createKafkaTopics(String tenantId, String environmentName,
+    KafkaAdminClient kafkaAdminClient) {
 
-    return kafkaAdminClient.listTopics().compose(topics -> {
-      final List<NewTopic> topicsToCreate = newTopics.stream()
-        .filter(newTopic -> !topics.contains(newTopic.getName()))
-        .map(newTopic -> newTopic.setReplicationFactor(getReplicationFactor()))
+    final List<NewTopic> expectedTopics = readTopics()
+      .map(topic -> qualifyName(topic, environmentName, tenantId))
+      .collect(Collectors.toList());
+
+    return kafkaAdminClient.listTopics().compose(existingTopics -> {
+      final List<NewTopic> topicsToCreate = expectedTopics.stream()
+        .filter(topic -> !existingTopics.contains(topic.getName()))
+        .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
         .collect(Collectors.toList());
 
       if (topicsToCreate.isEmpty()) {
@@ -73,12 +79,15 @@ public class KafkaAdminClientService {
     });
   }
 
-  private List<NewTopic> readTopics() {
+  private NewTopic qualifyName(NewTopic topic, String environmentName, String tenantId) {
+    return topic.setName(String.join(".", environmentName, tenantId, topic.getName()));
+  }
+
+  private Stream<NewTopic> readTopics() {
     final JsonObject topics = new JsonObject(ResourceUtil.asString(KAFKA_TOPICS_FILE));
 
     return topics.getJsonArray("topics", new JsonArray()).stream()
       .map(obj -> (JsonObject) obj)
-      .map(NewTopic::new)
-      .collect(Collectors.toList());
+      .map(NewTopic::new);
   }
 }

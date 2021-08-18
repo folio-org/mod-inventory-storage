@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.Environment.environmentName;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -24,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.instance.PublicationPeriodMigrationService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
 public class TenantRefAPI extends TenantAPI {
@@ -62,7 +65,11 @@ public class TenantRefAPI extends TenantAPI {
     "holdings-note-types",
     "item-note-types",
     "item-damaged-statuses",
-    "holdings-sources"
+    "holdings-sources",
+    "bound-with/instances",
+    "bound-with/holdingsrecords",
+    "bound-with/items",
+    "bound-with/bound-with-parts"
   };
 
   List<JsonObject> servicePoints = null;
@@ -101,7 +108,7 @@ public class TenantRefAPI extends TenantAPI {
 
     // create topics before loading data
     Future<Integer> future = new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics()
+        .createKafkaTopics(tenantId, environmentName())
         .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext));
 
     if (isNew(attributes, "20.0.0")) {
@@ -131,6 +138,10 @@ public class TenantRefAPI extends TenantAPI {
       tl.add("holdingsrecords", "holdings-storage/holdings");
       tl.add("items", "item-storage/items");
       tl.add("instance-relationships", "instance-storage/instance-relationships");
+      tl.add("bound-with/instances", "instance-storage/instances");
+      tl.add("bound-with/holdingsrecords", "holdings-storage/holdings");
+      tl.add("bound-with/items", "item-storage/items");
+      tl.add("bound-with/bound-with-parts", "inventory-storage/bound-with-parts");
       if (servicePoints != null) {
         tl.withFilter(this::servicePointUserFilter)
           .withPostOnly()
@@ -149,7 +160,8 @@ public class TenantRefAPI extends TenantAPI {
     log.info("About to start java migrations...");
 
     List<BaseMigrationService> javaMigrations = List.of(
-      new ItemShelvingOrderMigrationService(context, okapiHeaders));
+      new ItemShelvingOrderMigrationService(context, okapiHeaders),
+      new PublicationPeriodMigrationService(context, okapiHeaders));
 
     var startedMigrations = javaMigrations.stream()
       .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))

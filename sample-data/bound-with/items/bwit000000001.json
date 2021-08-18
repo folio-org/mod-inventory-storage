@@ -1,0 +1,14 @@
+{
+  "id" : "6c7196d2-0c2a-4707-a196-ff6b9e84a75e",
+  "hrid" : "bwit000000001",
+  "status" : {
+    "name" : "Available"
+  },
+  "holdingsRecordId" : "13767c78-f8d0-425e-801d-cc5bd475856a",
+  "barcode" : "12",
+  "materialTypeId" : "d9acad2f-2aac-4b48-9097-e6ab85906b25",
+  "permanentLoanTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe27",
+  "tags" : {
+    "tagList" : [ "bound-with" ]
+  }
+}

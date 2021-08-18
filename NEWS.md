@@ -1,4 +1,8 @@
-## 21.0.0 IN-PROGRESS
+## 22.0.0 IN-PROGRESS
+* Keyword searches now search alternate title fields (MODINVSTOR-719)
+* Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
+* Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
+* shouldStopProcessingWhenCannotConvertItem depends on other test (MODINVSTOR-725)
 * Enables failOnConflict for optimistic locking for item, holdings, instance (MODINVSTOR-713, MODINVSTOR-726)
 * Provides `item-storage 9.0`
 * Provides `item-storage-batch-sync 1.0`
@@ -7,19 +11,23 @@
 * Provides `instance-storage 8.0`
 * Provides `instance-storage-batch 1.0`
 * Provides `instance-storage-batch-sync 1.0`
-* Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-728)
-* Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-728)
-* shouldStopProcessingWhenCannotConvertItem depends on other test (MODINVSTOR-725)
 
-## 20.3.0 IN-PROGRESS
+## 21.0.0 2021-06-10
 
-* Closes database connections when encountering errors in the /inventory-hierarchy endpoint (MODINVSTOR-677)
-* Adds full-text index for classifications field in instance table (MODINVSTOR-716)
+* Introduces `publication period` for `instances` (MODINVSTOR-723)
+* Determines `publication year` based upon `publication period` (MODINVSTOR-724)
+* Introduces `bound with parts` record type (MODINVSTOR-702)
 * Adds `effective location` attribute to holdings record and inventory-hierarchy API (MODINVSTOR-669, MODINVSTOR-670)
 * Defaults instance.previouslyHeld to false (MODINVSTOR-454)
+* Adds full-text index for classifications field in instance table (MODINVSTOR-716)
+* Closes database connections when encountering errors in the /inventory-hierarchy endpoint (MODINVSTOR-677)
+* `embed_postgres` command line option is no longer supported (MODINVSTOR-728)
+* Logs when messages cannot be published to Kafka (MODINVSTOR-663)
+* Upgrades to RAML Module Builder 33.0.0 (MODINVSTOR-728)
+* Upgrades to Vert.x 4.1.0.CR1 (MODINVSTOR-728)
 * Provides `bound-with-parts-storage 1.0`  (MODINVSTOR-702)
 * Provides `holdings-storage 4.6` (MODINVSTOR-669)
-* Provides `instance-storage 7.7`
+* Provides `instance-storage 7.8` (MODINVSTOR-723)
 * Provides `inventory-hierarchy 0.2` (MODINVSTOR-670)
 
 ## 20.2.0 2021-04-23
