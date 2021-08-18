@@ -3,6 +3,9 @@
 * Keyword searches now search alternate title fields (MODINVSTOR-719)
 * Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
 * Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
+* Reject non-UUID statistical code IDs (MODINVSTOR-755)
+* Provides `item-storage 9.0` (MODINVSTOR-755)
+* Provides `item-storage-batch-sync 1.0` (MODINVSTOR-755)
 
 ## 21.0.0 2021-06-10
 

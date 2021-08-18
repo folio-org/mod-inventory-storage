@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage",
-      "version": "8.9",
+      "version": "9.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -35,7 +35,7 @@
     },
     {
       "id": "item-storage-batch-sync",
-      "version": "0.6",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
