@@ -38,7 +38,7 @@ import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoCreateEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
@@ -615,12 +615,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject instanceToCreate = smallAngryPlanet(firstInstanceId);
     JsonObject alternativeTitles = new JsonObject();
-    
+
     alternativeTitles.put("alternativeTitleTypeId", alternativeTitleId);
     alternativeTitles.put("alternativeTitle", "xyza");
 
     JsonArray altTitlesArray = new JsonArray("[" + alternativeTitles.toString() + "]");
-    
+
     instanceToCreate.put("alternativeTitles", altTitlesArray);
 
     createInstance(instanceToCreate);
@@ -1827,8 +1827,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertNotSuppressedFromDiscovery(instances);
     assertCreateEventForInstances(instances);
 
-    assertNoCreateEvent(firstErrorInstance.getString("id"));
-    assertNoCreateEvent(secondErrorInstance.getString("id"));
+    assertNoEvent(firstErrorInstance.getString("id"));
+    assertNoEvent(secondErrorInstance.getString("id"));
   }
 
   @Test
