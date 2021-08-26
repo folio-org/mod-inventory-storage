@@ -3,6 +3,15 @@
   "name": "Inventory Storage Module",
   "provides": [
     {
+      "id": "item-storage-dereferenced",
+      "version": "0.1",
+      "handlers": [{
+        "methods": ["GET"],
+        "pathPattern": "/item-storage-dereferenced/items",
+        "permissionsRequired": ["inventory-storage.items.collection.get"]
+      }]
+    },
+    {
       "id": "item-storage",
       "version": "8.9",
       "handlers": [
