@@ -9,6 +9,10 @@
         "methods": ["GET"],
         "pathPattern": "/item-storage-dereferenced/items",
         "permissionsRequired": ["inventory-storage.items.collection.get"]
+      },{
+        "methods": ["GET"],
+        "pathPattern": "/item-storage-dereferenced/items/{id}",
+        "permissionsRequired": ["inventory-storage.items.item.get"]
       }]
     },
     {
