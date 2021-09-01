@@ -3,31 +3,31 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.impl.InstanceStorageAPI.PreparedCQL;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.resource.ItemStorage;
+import org.folio.rest.jaxrs.model.Itemdereferenced;
 import org.folio.rest.jaxrs.resource.ItemStorageDereferenced;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.cql2pgjson.exception.CQLFeatureUnsupportedException;
-import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.cql2pgjson.exception.QueryValidationException;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -44,11 +44,32 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
   private static final Logger logger = LogManager.getLogger("okapi");
   public static final String ITEM_TABLE = "item";
   private static final String JSON_COLUMN = "jsonb";
-  private String sqlQuery= "SELECT item.jsonb as itemrecord, holdingstable.jsonb as holdingsrecord,\n" + 
-  "instancetable.jsonb as instancerecord, materialtypetable.jsonb as materialtyperecord,\n" + 
-  "locationtable.jsonb as permlocation, locationtabletemp.jsonb as templocation, locationtableeffective.jsonb as effectivelocation,\n"+
-  "loantable.jsonb as permloantype, loantabletemp.jsonb as temploantype\n"+
-  "FROM item\n"+
+  private static Map<String, String> fields = new HashMap<>();
+  private static List<String> idFields = new ArrayList<String>();
+  static{
+    fields.put("instance", "instanceRecord");
+    fields.put("holdings", "holdingsRecord");
+    fields.put("materialtype", "materialType");
+    fields.put("permloan", "permanentLoanType");
+    fields.put("temploan", "temporaryLoanType");
+    fields.put("permloc", "permanentLocation");
+    fields.put("temploc", "temporaryLocation");
+    fields.put("effloc", "effectiveLocation");
+    idFields.add("holdingsrecordid");
+    idFields.add("instanceid");
+    idFields.add("materialtypeid");
+    idFields.add("permanentlocationid");
+    idFields.add("temporarylocationid");
+    idFields.add("effectivelocationid");
+    idFields.add("permanentloantypeid");
+    idFields.add("temporaryloantypeid");
+  }
+  private String sqlQuery= "SELECT item.jsonb as item, holdingstable.jsonb as " + fields.get("holdings") + ",\n" + 
+  "instancetable.jsonb as " + fields.get("instance") + ", materialtypetable.jsonb as " + fields.get("materialtype") + ",\n" + 
+  "locationtable.jsonb as " + fields.get("permloc") + ", locationtabletemp.jsonb as " + fields.get("temploc") + ",\n" + 
+  "locationtableeffective.jsonb as " + fields.get("effloc") + ",\n"+
+  "loantable.jsonb as " + fields.get("permloan") + ", loantabletemp.jsonb as " + fields.get("temploc") + "\n"+
+  "FROM " + ITEM_TABLE + "\n"+
   "INNER JOIN holdings_record as holdingstable on item.holdingsrecordid=holdingstable.id\n"+
   "INNER JOIN instance as instancetable on holdingstable.instanceid=instancetable.id\n"+
   "INNER JOIN material_type as materialtypetable on item.materialtypeid=materialtypetable.id\n"+
@@ -65,9 +86,8 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-
+    JsonArray mappedResults = new JsonArray();
     String whereClause = "";
-    logger.info("query is: " + query);
     if (query != null) {
       try {
         CQLWrapper wrapper = new CQLWrapper(new CQL2PgJSON(ITEM_TABLE + "." + JSON_COLUMN), query, limit, offset);
@@ -90,10 +110,12 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
       if (result.size() == 0) {
         GetItemStorageDereferencedItemsResponse.respond404WithTextPlain("No records found matching search criteria.");
       }
-
       logger.info("result is " + result.size() + " entries.");
-      logger.info("Retrived rows: ");
-      result.forEach(row -> logger.info(row.deepToString()));
+      
+      result.forEach(row -> {mappedResults.add(mapToJson(row));});
+      logger.info("mapped results: " + mappedResults.toString());
+    
+      //GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(mappedResults);
     });
   }
 
@@ -103,8 +125,31 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
       String itemId, String lang, java.util.Map<String, String> okapiHeaders,
       io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
   }
+
+  private HttpServerResponse getResponse(RoutingContext routingContext) {
+    final HttpServerResponse response = routingContext.response();
+    response.setChunked(true);
+    response.putHeader("Content-Type", "application/json");
+    return response;
+  }
+
+ private JsonObject mapToJson(Row row) {
+   JsonObject item = (JsonObject) row.getJson("item");
+   idFields.forEach(fieldName -> {
+     if (item.containsKey(fieldName)) {
+      item.remove(fieldName);
+     }
+   });   
+   List<String> fieldList = new ArrayList<String>(fields.values());
+   fieldList.forEach(fieldName -> {
+     int pos = row.getColumnIndex(fieldName);
+     if (row.getJson(pos) != null) {
+       item.put(fieldName, row.getJson(pos));
+     }
+   });
+   return item;
+ }
 
 
 }
