@@ -5,11 +5,11 @@
   "properties": {
     "items": {
       "description": "List of dereferenced item records",
-      "id": "items",
+      "id": "itemsdereferenced",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "item-dereferenced.json"
+        "$ref": "itemdereferenced.json"
       }
     },
     "totalRecords": {
