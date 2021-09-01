@@ -1,0 +1,72 @@
+#%RAML 1.0
+title: Iterate instances
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Instance iteration
+    content: Iterate instances by generating domain events for them
+
+types:
+  iterationJobParams: !include instance-iteration/iteration-job-params.json
+  iterationJob: !include instance-iteration/iteration-job.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+/instance-storage/instances/iteration:
+  displayName: Iterate instances
+  post:
+    description: Submit an iteration job
+    body:
+      application/json:
+        description: Iteration job parameters
+        type: iterationJobParams
+    responses:
+      200:
+        description: Iteration job has been submitted
+        body:
+          application/json:
+            type: iterationJob
+      500:
+        description: Internal server error
+        body:
+          text/plain:
+            example: Internal server error
+  /{id}:
+    get:
+      description: Get iteration job by id
+      responses:
+        200:
+          description: Iteration job has returned
+          body:
+            application/json:
+              type: iterationJob
+        404:
+          description: Iteration job with id not found
+          body:
+            text/plain:
+              example: Not found
+        500:
+          description: Internal server error
+          body:
+            text/plain:
+              example: Internal server error
+    delete:
+      description: Cancel iteration job by id
+      responses:
+        204:
+          description: Iteration job has been cancelled
+        404:
+          description: Iteration job with id not found
+          body:
+            text/plain:
+              example: Not found
+        500:
+          description: Internal server error
+          body:
+            text/plain:
+              example: Internal server error
