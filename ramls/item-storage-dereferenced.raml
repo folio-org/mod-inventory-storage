@@ -9,8 +9,8 @@ documentation:
     content: <b>Get dereferenced items data from inventory</b>
 
 types:
-  item: !include itemdereferenced.json
-  items: !include itemsdereferenced.json
+  dereferencedItem: !include dereferenceditem.json
+  dereferencedItems: !include dereferenceditems.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -25,13 +25,12 @@ resourceTypes:
 
 /item-storage-dereferenced:
   /items:
-    displayName: Items
     type:
       collection:
-        exampleCollection: !include  examples/items_get.json
-        schemaCollection: items
-        schemaItem: item
-        exampleItem: !include  examples/item_get.json
+        exampleCollection: !include examples/items_dereferenced_get.json
+        schemaCollection: dereferencedItems
+        schemaItem: dereferencedItem
+        exampleItem: !include examples/item_dereferenced_get.json
     get:
       is: [pageable,
          searchable: {description: "using CQL (indexes for item and material type)",
@@ -40,6 +39,6 @@ resourceTypes:
     /{itemId}:
       type:
         collection-item:
-          exampleItem: !include examples/item_get.json
-          schema: item
+          exampleItem: !include examples/item_dereferenced_get.json
+          schema: dereferencedItem
       get:

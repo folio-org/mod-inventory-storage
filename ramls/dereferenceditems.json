@@ -3,25 +3,21 @@
   "description": "A collection of dereferenced item records",
   "type": "object",
   "properties": {
-    "items": {
+    "dereferencedItems": {
       "description": "List of dereferenced item records",
-      "id": "itemsdereferenced",
+      "id": "dereferencedItems",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "itemdereferenced.json"
+        "$ref": "dereferenceditem.json"
       }
     },
     "totalRecords": {
       "type": "integer"
-    },
-    "resultInfo": {
-      "$ref": "raml-util/schemas/resultInfo.schema",
-      "readonly": true
     }
   },
   "required": [
-    "items",
+    "dereferencedItems",
     "totalRecords"
   ]
 }

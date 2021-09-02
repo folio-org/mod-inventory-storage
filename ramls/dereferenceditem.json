@@ -399,6 +399,7 @@
   "additionalProperties": false,
   "required": [
     "materialType",
+    "instanceRecord",
     "permanentLoanType",
     "holdingsRecord",
     "status"
