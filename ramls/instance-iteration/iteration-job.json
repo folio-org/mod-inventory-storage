@@ -29,6 +29,11 @@
       "description": "Timestamp when the job has been submitted",
       "type": "string",
       "format": "date-time"
+    },
+    "jobParams" : {
+      "description": "Job parameters",
+      "type": "object",
+      "$ref": "iteration-job-params.json"
     }
   },
   "additionalProperties": false

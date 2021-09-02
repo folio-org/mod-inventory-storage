@@ -1,6 +1,7 @@
 package org.folio.services.kafka.topic;
 
 public class KafkaTopic {
+
   public static KafkaTopic instance(String tenantId, String environmentName) {
     return new KafkaTopic(qualifyName("inventory.instance", environmentName, tenantId));
   }
@@ -11,6 +12,10 @@ public class KafkaTopic {
 
   public static KafkaTopic item(String tenantId, String environmentName) {
     return new KafkaTopic(qualifyName("inventory.item", environmentName, tenantId));
+  }
+
+  public static KafkaTopic forName(String name, String tenantId, String environmentName) {
+    return new KafkaTopic(qualifyName(name, environmentName, tenantId));
   }
 
   private final String topicName;
