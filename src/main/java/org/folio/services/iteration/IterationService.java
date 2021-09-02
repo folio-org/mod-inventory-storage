@@ -1,54 +1,55 @@
 package org.folio.services.iteration;
 
+import static java.util.UUID.randomUUID;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.PENDING_CANCEL;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Date;
 import java.util.Map;
-import static java.util.UUID.randomUUID;
-import org.folio.persist.ReindexJobRepository;
+import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
-import org.folio.rest.jaxrs.model.ReindexJob;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
-import org.folio.services.reindex.ReindexJobRunner;
 
 public final class IterationService {
 
-  private final ReindexJobRepository reindexJobRepository;
-  private final ReindexJobRunner jobRunner;
+  private final IterationJobRepository repository;
+  private final IterationJobRunner jobRunner;
 
   public IterationService(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(new ReindexJobRepository(vertxContext, okapiHeaders),
-      new ReindexJobRunner(vertxContext, okapiHeaders));
+    this(new IterationJobRepository(vertxContext, okapiHeaders),
+      new IterationJobRunner(vertxContext, okapiHeaders));
   }
 
-  public IterationService(ReindexJobRepository repository, ReindexJobRunner runner) {
-    this.reindexJobRepository = repository;
+  public IterationService(IterationJobRepository repository, IterationJobRunner runner) {
+    this.repository = repository;
     this.jobRunner = runner;
   }
 
   public Future<IterationJob> submitIteration(IterationJobParams jobParams) {
-    var iterationJob = buildInitialJob();
+    var job = buildInitialJob(jobParams);
 
-    /*return reindexJobRepository.save(reindexResponse.getId(), reindexResponse)
+    return repository.save(job.getId(), job)
       .map(notUsed -> {
-        jobRunner.startReindex(reindexResponse);
+        jobRunner.startIteration(job);
 
-        return reindexResponse;
-      });*/
-    return Future.succeededFuture(iterationJob);
+        return job;
+      });
   }
 
-  public Future<ReindexJob> cancelIteration(String jobId) {
-    return reindexJobRepository.fetchAndUpdate(jobId,
-      resp -> resp.withJobStatus(PENDING_CANCEL));
+  public Future<Void> cancelIteration(String jobId) {
+    return repository.fetchAndUpdate(jobId,
+      resp -> resp.withJobStatus(PENDING_CANCEL)).mapEmpty();
   }
 
-  private IterationJob buildInitialJob() {
+  private IterationJob buildInitialJob(IterationJobParams jobParams) {
     return new IterationJob()
-      .withJobStatus(IterationJob.JobStatus.IN_PROGRESS)
+      .withJobParams(jobParams)
+      .withJobStatus(IN_PROGRESS)
       .withPublished(0)
       .withSubmittedDate(new Date())
       .withId(randomUUID().toString());
   }
+
 }

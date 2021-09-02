@@ -11,6 +11,10 @@
     {
       "name": "inventory.holdings-record",
       "numPartitions": 50
+    },
+    {
+      "name": "inventory.instance-contribution",
+      "numPartitions": 50
     }
   ]
 }
