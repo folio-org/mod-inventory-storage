@@ -1,7 +1,25 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.jaxrs.model.DereferencedItem;
+import org.folio.rest.jaxrs.model.DereferencedItems;
+import org.folio.rest.jaxrs.resource.ItemStorageDereferenced;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+
+import static org.folio.dbschema.ObjectMapperTool.readValue;
+
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,26 +28,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Itemdereferenced;
-import org.folio.rest.jaxrs.resource.ItemStorageDereferenced;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.cql2pgjson.CQL2PgJSON;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 
@@ -55,14 +53,14 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     fields.put("permloc", "permanentLocation");
     fields.put("temploc", "temporaryLocation");
     fields.put("effloc", "effectiveLocation");
-    idFields.add("holdingsrecordid");
-    idFields.add("instanceid");
-    idFields.add("materialtypeid");
-    idFields.add("permanentlocationid");
-    idFields.add("temporarylocationid");
-    idFields.add("effectivelocationid");
-    idFields.add("permanentloantypeid");
-    idFields.add("temporaryloantypeid");
+    idFields.add("holdingsRecordId");
+    idFields.add("instanceId");
+    idFields.add("materialTypeId");
+    idFields.add("permanentLocationId");
+    idFields.add("temporaryLocationId");
+    idFields.add("effectiveLocationId");
+    idFields.add("permanentLoanTypeId");
+    idFields.add("temporaryLoanTypeId");
   }
   private String sqlQuery= "SELECT item.jsonb as item, holdingstable.jsonb as " + fields.get("holdings") + ",\n" + 
   "instancetable.jsonb as " + fields.get("instance") + ", materialtypetable.jsonb as " + fields.get("materialtype") + ",\n" + 
@@ -86,15 +84,18 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    JsonArray mappedResults = new JsonArray();
+    List<DereferencedItem> mappedResults = new ArrayList<>();
     String whereClause = "";
     if (query != null) {
       try {
-        CQLWrapper wrapper = new CQLWrapper(new CQL2PgJSON(ITEM_TABLE + "." + JSON_COLUMN), query, limit, offset);
+        CQLWrapper wrapper = new CQLWrapper(
+          new CQL2PgJSON(ITEM_TABLE + "." + JSON_COLUMN), query, limit, offset);
         logger.info("translated SQL query: " + wrapper.toString());
         whereClause = wrapper.toString();
       } catch(Exception e) {
-        GetItemStorageDereferencedItemsResponse.respond400WithTextPlain("Invalid CQL query: " + e.getMessage());
+         asyncResultHandler.handle(Future.succeededFuture(
+           GetItemStorageDereferencedItemsResponse.respond400WithTextPlain(
+             "Invalid CQL query: " + e.getMessage())));
       }
     } else {
       whereClause = "LIMIT " + limit + " OFFSET " + offset;
@@ -104,18 +105,25 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     postgresClient.select(sqlQuery + whereClause, asyncResult -> {
       if (asyncResult.failed()) {
         String failureMessage = asyncResult.cause().getMessage();
-        GetItemStorageDereferencedItemsResponse.respond500WithTextPlain("Unable to retrieve data from database: " + failureMessage);
+        asyncResultHandler.handle(Future.succeededFuture(
+          GetItemStorageDereferencedItemsResponse.respond500WithTextPlain(
+            "Unable to retrieve data from database: " + failureMessage)));
+        return;
       }
       RowSet<Row> result = asyncResult.result();
       if (result.size() == 0) {
-        GetItemStorageDereferencedItemsResponse.respond404WithTextPlain("No records found matching search criteria.");
+        asyncResultHandler.handle(Future.succeededFuture(
+          GetItemStorageDereferencedItemsResponse.respond404WithTextPlain(
+            "No records found matching search criteria.")));
       }
-      logger.info("result is " + result.size() + " entries.");
-      
-      result.forEach(row -> {mappedResults.add(mapToJson(row));});
-      logger.info("mapped results: " + mappedResults.toString());
-    
-      //GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(mappedResults);
+      result.forEach(row -> {mappedResults.add(mapToDereferencedItem(row));});
+      DereferencedItems itemCollection = new DereferencedItems();
+      itemCollection.setDereferencedItems(mappedResults);
+      itemCollection.setTotalRecords(mappedResults.size());
+
+      asyncResultHandler.handle(Future.succeededFuture(
+        GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(itemCollection)));
+      return;
     });
   }
 
@@ -127,29 +135,23 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
       Context vertxContext) {
   }
 
-  private HttpServerResponse getResponse(RoutingContext routingContext) {
-    final HttpServerResponse response = routingContext.response();
-    response.setChunked(true);
-    response.putHeader("Content-Type", "application/json");
-    return response;
+  private DereferencedItem mapToDereferencedItem(Row row) {
+    
+    JsonObject itemJson = (JsonObject) row.getJson("item");
+    idFields.forEach(fieldName -> {
+      if (itemJson.containsKey(fieldName)) {
+        itemJson.remove(fieldName);
+      }
+    });   
+    List<String> fieldList = new ArrayList<String>(fields.values());
+    fieldList.forEach(fieldName -> {
+      int pos = row.getColumnIndex(fieldName.toLowerCase());
+      if (row.getJson(pos) != null) {
+        itemJson.put(fieldName, row.getJson(pos));
+      }
+    });
+
+    DereferencedItem item = readValue(itemJson.toString(), DereferencedItem.class);
+    return item;
   }
-
- private JsonObject mapToJson(Row row) {
-   JsonObject item = (JsonObject) row.getJson("item");
-   idFields.forEach(fieldName -> {
-     if (item.containsKey(fieldName)) {
-      item.remove(fieldName);
-     }
-   });   
-   List<String> fieldList = new ArrayList<String>(fields.values());
-   fieldList.forEach(fieldName -> {
-     int pos = row.getColumnIndex(fieldName);
-     if (row.getJson(pos) != null) {
-       item.put(fieldName, row.getJson(pos));
-     }
-   });
-   return item;
- }
-
-
 }
