@@ -1,5 +1,5 @@
 package org.folio.services.domainevent;
 
 public enum DomainEventType {
-  UPDATE, DELETE, CREATE, DELETE_ALL, REINDEX
+  UPDATE, DELETE, CREATE, DELETE_ALL, REINDEX, ITERATE
 }
