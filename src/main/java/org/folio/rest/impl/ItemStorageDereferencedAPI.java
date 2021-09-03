@@ -5,6 +5,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.util.UuidUtil;
 import org.folio.rest.jaxrs.model.DereferencedItem;
 import org.folio.rest.jaxrs.model.DereferencedItems;
 import org.folio.rest.jaxrs.resource.ItemStorageDereferenced;
@@ -84,8 +85,10 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
     List<DereferencedItem> mappedResults = new ArrayList<>();
     String whereClause = "";
+
     if (query != null) {
       try {
         CQLWrapper wrapper = new CQLWrapper(
@@ -93,9 +96,7 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
         logger.info("translated SQL query: " + wrapper.toString());
         whereClause = wrapper.toString();
       } catch(Exception e) {
-         asyncResultHandler.handle(Future.succeededFuture(
-           GetItemStorageDereferencedItemsResponse.respond400WithTextPlain(
-             "Invalid CQL query: " + e.getMessage())));
+        respondWith400Error("Invalid CQL query: " + e.getMessage(), asyncResultHandler);
       }
     } else {
       whereClause = "LIMIT " + limit + " OFFSET " + offset;
@@ -103,36 +104,75 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
 
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
     postgresClient.select(sqlQuery + whereClause, asyncResult -> {
-      if (asyncResult.failed()) {
-        String failureMessage = asyncResult.cause().getMessage();
-        asyncResultHandler.handle(Future.succeededFuture(
-          GetItemStorageDereferencedItemsResponse.respond500WithTextPlain(
-            "Unable to retrieve data from database: " + failureMessage)));
-        return;
-      }
-      RowSet<Row> result = asyncResult.result();
-      if (result.size() == 0) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          GetItemStorageDereferencedItemsResponse.respond404WithTextPlain(
-            "No records found matching search criteria.")));
-      }
-      result.forEach(row -> {mappedResults.add(mapToDereferencedItem(row));});
+
+      handleSelectFailure(asyncResult, asyncResultHandler);
+
+      asyncResult.result().forEach(row -> {mappedResults.add(mapToDereferencedItem(row));});
+
       DereferencedItems itemCollection = new DereferencedItems();
       itemCollection.setDereferencedItems(mappedResults);
       itemCollection.setTotalRecords(mappedResults.size());
 
       asyncResultHandler.handle(Future.succeededFuture(
         GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(itemCollection)));
-      return;
     });
   }
 
   @Validate
   @Override
   public void getItemStorageDereferencedItemsByItemId(
-      String itemId, String lang, java.util.Map<String, String> okapiHeaders,
-      io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
-      Context vertxContext) {
+    String itemId, String lang, java.util.Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+    logger.info("id number: " + itemId);
+    if (!UuidUtil.isUuid(itemId)) {
+      respondWith400Error("Invalid UUID", asyncResultHandler);
+    }
+    String whereClause = "WHERE item.id='" + itemId + "'";
+    PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+    postgresClient.select(sqlQuery + whereClause, asyncResult -> {
+      handleSelectFailure(asyncResult, asyncResultHandler);
+      Row row = asyncResult.result().iterator().next();
+      DereferencedItem item = mapToDereferencedItem(row);
+      asyncResultHandler.handle(Future.succeededFuture(
+        GetItemStorageDereferencedItemsByItemIdResponse.respond200WithApplicationJson(item)));
+    });
+  }
+
+  private void handleSelectFailure(
+    AsyncResult<RowSet<Row>> asynchResult,
+    Handler<AsyncResult<Response>> asyncResultHandler) {
+    
+    if (asynchResult.failed()) {
+      respondWith500Error("Can't retrive item records: ", asyncResultHandler);
+    }
+    if (asynchResult.result().size() == 0) {
+      respondWith404Error("No item records found.", asyncResultHandler);
+    }
+  }
+
+  private void respondWith500Error(
+    String message, Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    asyncResultHandler.handle(
+      Future.succeededFuture(
+        GetItemStorageDereferencedItemsResponse.respond500WithTextPlain(message)));
+  }
+
+  private void respondWith404Error(
+    String message, Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    asyncResultHandler.handle(
+      Future.succeededFuture(
+        GetItemStorageDereferencedItemsResponse.respond404WithTextPlain(message)));
+  }
+
+  private void respondWith400Error(
+    String message, Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    asyncResultHandler.handle(
+      Future.succeededFuture(
+        GetItemStorageDereferencedItemsResponse.respond400WithTextPlain(message)));
   }
 
   private DereferencedItem mapToDereferencedItem(Row row) {
