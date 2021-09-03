@@ -1,6 +1,7 @@
 ## 21.0.3 2021-08-16
 
 * Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
+* Enforce item barcode uniqueness (MODINVSTOR-523)
 
 ## 21.0.2 2021-07-20
 

@@ -43,7 +43,6 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -81,7 +80,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.matchers.DomainEventAssertions;
-import org.folio.services.CallNumberUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -954,9 +952,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       holdingRequestBuilder -> holdingRequestBuilder.withCallNumber("hrCallNumber"));
 
     return new JsonArray()
-        .add(nod(holdingsRecordId))
-        .add(smallAngryPlanet(holdingsRecordId))
-        .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+        .add(nod(holdingsRecordId).put("barcode", UUID.randomUUID().toString()))
+        .add(smallAngryPlanet(holdingsRecordId).put("barcode", UUID.randomUUID().toString()))
+        .add(interestingTimes(holdingsRecordId).put("barcode", UUID.randomUUID().toString()));
   }
 
   private Response postSynchronousBatch(JsonArray itemsArray) {
@@ -1007,7 +1005,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonArray itemsArray2 = threeItems();
     String existingId = itemsArray1.getJsonObject(1).getString("id");
     itemsArray2.getJsonObject(1).put("id", existingId);
+    // create the three item of itemsArray1
     assertThat(postSynchronousBatch(subPath, itemsArray1), statusCodeIs(HttpStatus.HTTP_CREATED));
+    // itemsArray2 has new items at position 0 and 2, but the same old item at position 1
     return postSynchronousBatch(subPath, itemsArray2);
   }
 
@@ -1029,12 +1029,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final JsonArray itemsArray1 = new JsonArray()
       .add(nod(existingItemId, holdingsRecordId))
       .add(smallAngryPlanet(holdingsRecordId))
-      .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+      .add(interestingTimes(holdingsRecordId));
 
     final JsonArray itemsArray2 = new JsonArray()
       .add(nod(existingItemId, holdingsRecordId))
-      .add(smallAngryPlanet(holdingsRecordId))
-      .add(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+      .add(temeraire(holdingsRecordId))
+      .add(uprooted(holdingsRecordId));
 
     final var firstResponse = postSynchronousBatch("?upsert=true", itemsArray1);
     final var existingItemBeforeUpdate = getById(existingItemId).getJson();
@@ -1574,77 +1574,63 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchForItemsByBarcodeWithLeadingZero()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void canCreateMultipleItemsWithoutBarcode() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
-
-    createItem(nod(holdingsRecordId));
-    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
-    createItem(smallAngryPlanet(holdingsRecordId).put("barcode", "036000291452"));
-    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
-    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
-
-    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-
-    String url = itemsStorageUrl("") + "?query=barcode==036000291452";
-
-    client.get(url,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-
-    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(searchResponse.getStatusCode(), is(200));
-
-    JsonObject searchBody = searchResponse.getJson();
-
-    JsonArray foundItems = searchBody.getJsonArray("items");
-
-    assertThat(foundItems.size(), is(1));
-    assertThat(searchBody.getInteger("totalRecords"), is(1));
-
-    assertThat(foundItems.getJsonObject(0).getString("barcode"),
-      is("036000291452"));
+    createItem(removeBarcode(nod(holdingsRecordId)));
+    createItem(removeBarcode(uprooted(holdingsRecordId)));
+    createItem(temeraire(holdingsRecordId).put("barcode", null));
+    createItem(interestingTimes(holdingsRecordId).put("barcode", null));
+    assertCqlFindsBarcodes("id==*", null, null, null, null);
   }
 
   @Test
-  public void canSearchForItemsByBarcode()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void cannotCreateItemWithDuplicateBarcode() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    createItem(nod(holdingsRecordId).put("barcode", "9876a"));
+    assertThat(itemsClient.attemptToCreate(uprooted(holdingsRecordId).put("barcode", "9876a")),
+        hasValidationError("9876a"));
+    assertThat(itemsClient.attemptToCreate(uprooted(holdingsRecordId).put("barcode", "9876A")),
+        hasValidationError("9876a"));
+  }
 
+  @Test
+  public void cannotUpdateItemWithDuplicateBarcode() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    createItem(uprooted(holdingsRecordId).put("barcode", "9876a"));
+    UUID nodId = UUID.randomUUID();
+    JsonObject nod = createItem(nod(nodId, holdingsRecordId).put("barcode", "123"));
+
+    Response response = itemsClient.attemptToReplace(nodId, nod.put("barcode", "9876A"));
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString("already exists in table item: 9876a"));
+  }
+
+  public void canSearchForItemsByBarcodeWithLeadingZero() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     createItem(nod(holdingsRecordId));
-    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
+    createItem(uprooted(holdingsRecordId).put("barcode", "36000291452"));
+    createItem(temeraire(holdingsRecordId).put("barcode", "036000291452"));
+    createItem(smallAngryPlanet(holdingsRecordId));
+    createItem(interestingTimes(holdingsRecordId));
+    assertCqlFindsBarcodes("barcode==036000291452", "036000291452");
+    assertCqlFindsBarcodes("barcode==36000291452", "36000291452");
+  }
+
+  @Test
+  public void canSearchForItemsByBarcode() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    createItem(nod(holdingsRecordId).put("barcode", "123456a"));
+    createItem(uprooted(holdingsRecordId).put("barcode", "123456ä"));
     createItem(smallAngryPlanet(holdingsRecordId).put("barcode", "673274826203"));
-    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
-    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
-
-    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-
-    String url = itemsStorageUrl("") + "?query=barcode==673274826203";
-
-    client.get(url,
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-
-    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
-
-    assertThat(searchResponse.getStatusCode(), is(200));
-
-    JsonObject searchBody = searchResponse.getJson();
-
-    JsonArray foundItems = searchBody.getJsonArray("items");
-
-    assertThat(foundItems.size(), is(1));
-    assertThat(searchBody.getInteger("totalRecords"), is(1));
-
-    assertThat(foundItems.getJsonObject(0).getString("barcode"),
-      is("673274826203"));
+    createItem(temeraire(holdingsRecordId));
+    createItem(interestingTimes(holdingsRecordId));
+    assertCqlFindsBarcodes("barcode==673274826203", "673274826203");
+    // respect accents, ignore case
+    assertCqlFindsBarcodes("barcode==123456a", "123456a");
+    assertCqlFindsBarcodes("barcode==123456A", "123456a");
+    assertCqlFindsBarcodes("barcode==123456ä", "123456ä");
+    assertCqlFindsBarcodes("barcode==123456Ä", "123456ä");
+    assertCqlFindsBarcodes("barcode==123456* sortBy barcode", "123456a", "123456ä");
   }
 
   @Test
@@ -2247,11 +2233,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
 
     final IndividualResource suppressedItem = itemsClient.create(
-      smallAngryPlanet(holdingsId).put(DISCOVERY_SUPPRESS, true));
+      nod(holdingsId).put(DISCOVERY_SUPPRESS, true));
     final IndividualResource notSuppressedItem = itemsClient.create(
       smallAngryPlanet(holdingsId).put(DISCOVERY_SUPPRESS, false));
     final IndividualResource notSuppressedItemDefault = itemsClient.create(
-      smallAngryPlanet(holdingsId));
+      uprooted(holdingsId));
 
     final List<IndividualResource> suppressedItems = itemsClient
       .getMany("%s==true", DISCOVERY_SUPPRESS);
@@ -2357,7 +2343,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final IndividualResource firstItem = itemsClient.create(
       smallAngryPlanet(holdingsId).put("purchaseOrderLineIdentifier", "poli-1"));
 
-    itemsClient.create(smallAngryPlanet(holdingsId)
+    itemsClient.create(nod(holdingsId)
       .put("purchaseOrderLineIdentifier", "poli-2"));
 
     final List<IndividualResource> poli1Items = itemsClient
@@ -2427,16 +2413,37 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     return nod(UUID.randomUUID(), holdingsRecordId);
   }
 
+  static JsonObject nodWithNoBarcode(UUID holdingsRecordId) {
+    return removeBarcode(nod(holdingsRecordId));
+  }
+
   private static JsonObject uprooted(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "657670342075");
+  }
+
+  private static JsonObject uprooted(UUID holdingsRecordId) {
+    return uprooted(UUID.randomUUID(), holdingsRecordId);
   }
 
   private static JsonObject temeraire(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "232142443432");
   }
 
+  private static JsonObject temeraire(UUID holdingsRecordId) {
+    return temeraire(UUID.randomUUID(), holdingsRecordId);
+  }
+
   private static JsonObject interestingTimes(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "56454543534");
+  }
+
+  private static JsonObject interestingTimes(UUID holdingsRecordId) {
+    return interestingTimes(UUID.randomUUID(), holdingsRecordId);
+  }
+
+  static JsonObject removeBarcode(JsonObject item) {
+    item.remove("barcode");
+    return item;
   }
 
   private Items findItems(String searchQuery) throws Exception {
@@ -2445,8 +2452,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     client.get(itemsStorageUrl("?query=") + urlEncode(searchQuery),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    return searchCompleted.get(5, TimeUnit.SECONDS).getJson()
-      .mapTo(Items.class);
+    Response response = searchCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(200));
+
+    return response.getJson().mapTo(Items.class);
   }
 
   private Response getById(String id) {
@@ -2474,6 +2484,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private void assertHRIDRange(Response response, String minHRID, String maxHRID) {
     assertThat(response.getJson().getString("hrid"),
         is(both(greaterThanOrEqualTo(minHRID)).and(lessThanOrEqualTo(maxHRID))));
+  }
+
+  /**
+   * Assert that the cql query returns items with the expected barcodes.
+   */
+  private void assertCqlFindsBarcodes(String cql, String ... expectedBarcodes) throws Exception {
+    Items items = findItems(cql);
+    String [] barcodes = items.getItems().stream().map(Item::getBarcode).toArray(String []::new);
+    assertThat(cql, barcodes, is(expectedBarcodes));
+    assertThat(cql, items.getTotalRecords(), is(barcodes.length));
   }
 
   private JsonObject addTags(String tagValue, UUID holdingsRecordId) {
