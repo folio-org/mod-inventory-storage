@@ -8,7 +8,6 @@ import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.ID_PUBLISHING_CA
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.ID_PUBLISHING_FAILED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.PENDING_CANCEL;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.services.domainevent.DomainEvent.reindexEvent;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -25,6 +24,8 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
+import org.folio.services.domainevent.DomainEvent;
+import org.folio.services.domainevent.DomainEventType;
 import org.folio.services.kafka.InventoryProducerRecordBuilder;
 import org.folio.services.kafka.topic.KafkaTopic;
 
@@ -37,34 +38,27 @@ public class IterationJobRunner {
   private static final int UPDATE_PUBLISHED_EVERY = 1000;
   private static volatile WorkerExecutor workerExecutor;
 
+  private final Context vertxContext;
+  private final Map<String, String> okapiHeaders;
   private final PostgresClientFuturized postgresClient;
   private final IterationJobRepository repository;
-  private final CommonDomainEventPublisher<Instance> eventPublisher;
-  private final String tenantId;
+  private CommonDomainEventPublisher<Instance> eventPublisher;
 
 
   public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
-      new IterationJobRepository(vertxContext, okapiHeaders),
-      vertxContext,
-      new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        KafkaTopic.instance(tenantId(okapiHeaders), environmentName())),
-      tenantId(okapiHeaders));
-  }
+    this.vertxContext = vertxContext;
+    this.okapiHeaders = okapiHeaders;
 
-  public IterationJobRunner(PostgresClientFuturized postgresClient, IterationJobRepository repository,
-                            Context vertxContext, CommonDomainEventPublisher<Instance> domainEventPublisher,
-                            String tenantId) {
-
-    this.postgresClient = postgresClient;
-    this.repository = repository;
-    this.eventPublisher = domainEventPublisher;
-    this.tenantId = tenantId;
+    this.postgresClient = new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders));
+    this.repository = new IterationJobRepository(vertxContext, okapiHeaders);
 
     initWorker(vertxContext);
   }
 
   public void startIteration(IterationJob job) {
+    eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
+        KafkaTopic.forName(job.getJobParams().getTopicName(), tenantId(okapiHeaders), environmentName()));
+
     workerExecutor.executeBlocking(
       promise -> streamInstanceIds(new IterationContext(job))
         .map(notUsed -> null)
@@ -146,8 +140,12 @@ public class IterationJobRunner {
   private InventoryProducerRecordBuilder rowToProducerRecord(Row row, IterationContext context) {
     return new InventoryProducerRecordBuilder()
       .key(row.getUUID("id").toString())
-      .value(reindexEvent(tenantId))
+      .value(iterationEvent(context.getEventType()))
       .header(ITERATION_JOB_ID_HEADER, context.getJobId());
+  }
+
+  private DomainEvent<Object> iterationEvent(String eventType) {
+    return new DomainEvent<>(null, null, DomainEventType.valueOf(eventType), tenantId(okapiHeaders));
   }
 
   private static void initWorker(Context vertxContext) {
@@ -184,6 +182,11 @@ public class IterationJobRunner {
     private String getJobId() {
       return job.getId();
     }
+
+    private String getEventType() {
+      return job.getJobParams().getEventType();
+    }
+
   }
 
 }
