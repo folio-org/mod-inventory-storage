@@ -1,4 +1,4 @@
-## 21.0.4 2021-09-02
+## 21.0.4 2021-09-06
 
 * Enforce item barcode uniqueness (MODINVSTOR-523)
 
