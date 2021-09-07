@@ -36,6 +36,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
@@ -111,7 +112,7 @@ public class ItemService {
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
       .compose(oldItem -> {
         var oldDestServicePointId = oldItem.getInTransitDestinationServicePointId();
-        if (oldDestServicePointId != null &&
+        if (newItem.getStatus().getName() == Status.Name.IN_TRANSIT &&
           newItem.getInTransitDestinationServicePointId() == null) {
 
           newItem.setInTransitDestinationServicePointId(oldDestServicePointId);
