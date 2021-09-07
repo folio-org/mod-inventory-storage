@@ -5,7 +5,7 @@
   "properties": {
     "dereferencedItems": {
       "description": "List of dereferenced item records",
-      "id": "dereferencedItems",
+      "id": "items",
       "type": "array",
       "items": {
         "type": "object",

@@ -140,13 +140,14 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
   }
 
   private void handleSelectFailure(
-    AsyncResult<RowSet<Row>> asynchResult,
+    AsyncResult<RowSet<Row>> asyncResult,
     Handler<AsyncResult<Response>> asyncResultHandler) {
     
-    if (asynchResult.failed()) {
-      respondWith500Error("Can't retrive item records: ", asyncResultHandler);
+    if (asyncResult.failed()) {
+      String errorMessage = asyncResult.cause().getMessage();
+      respondWith500Error("Can't retrive item records: " + errorMessage, asyncResultHandler);
     }
-    if (asynchResult.result().size() == 0) {
+    if (asyncResult.result().size() == 0) {
       respondWith404Error("No item records found.", asyncResultHandler);
     }
   }
