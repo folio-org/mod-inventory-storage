@@ -789,6 +789,12 @@
       ],
       "uniqueIndex": [
         {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
           "fieldName": "hrid",
           "tOps": "ADD"
         }
@@ -799,12 +805,6 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
-        },
-        {
-          "fieldName": "barcode",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
         },
         {
           "fieldName": "status.name",
@@ -847,12 +847,6 @@
       ],
       "ginIndex": [
         {
-          "fieldName": "barcode",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "status.name",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -860,10 +854,6 @@
         }
       ],
       "fullTextIndex": [
-        {
-          "fieldName": "barcode",
-          "tOps": "ADD"
-        },
         {
           "fieldName": "callNumberAndSuffixNormalized",
           "sqlExpression" : "normalize_item_call_number_and_suffix(jsonb)",
