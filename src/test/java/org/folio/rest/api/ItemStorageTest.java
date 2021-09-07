@@ -2353,6 +2353,41 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(poli1Items.get(0).getId(), is(firstItem.getId()));
   }
 
+  @Test
+  public void canUpdateAnItemInTransitWithExistingInTransitDestinationServicePointId()
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    UUID id = UUID.randomUUID();
+    final String inTransitServicePointId = UUID.randomUUID().toString();
+
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
+      .put("hrid", "testHRID")
+      .put("status", new JsonObject().put("name", "In transit"))
+      .put("inTransitDestinationServicePointId", inTransitServicePointId)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    createItem(itemToCreate);
+
+    JsonObject updatedItem = itemToCreate.copy()
+      .put("inTransitDestinationServicePointId", null);
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+    client.put(itemsStorageUrl(String.format("/%s", id)), updatedItem,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    Response putResponse = replaceCompleted.get(5, TimeUnit.SECONDS);
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getResponse = getById(id);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject item = getResponse.getJson();
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getJsonObject("status").getString("name"),
+      is("In transit"));
+    assertThat(item.getString("inTransitDestinationServicePointId"),
+      is(inTransitServicePointId));
+  }
+
   private Response getById(UUID id) throws InterruptedException,
     ExecutionException, TimeoutException {
 

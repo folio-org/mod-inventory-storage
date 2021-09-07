@@ -109,6 +109,16 @@ public class ItemService {
     return itemRepository.getById(itemId)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
+      .compose(oldItem -> {
+        var oldDestServicePointId = oldItem.getInTransitDestinationServicePointId();
+        if (oldDestServicePointId != null &&
+          newItem.getInTransitDestinationServicePointId() == null) {
+
+          newItem.setInTransitDestinationServicePointId(oldDestServicePointId);
+        }
+
+        return succeededFuture(oldItem);
+      })
       .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
         .compose(notUsed -> {
           final Promise<Response> putResult = promise();
