@@ -124,6 +124,7 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     String itemId, String lang, java.util.Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+    
     logger.info("id number: " + itemId);
     if (!UuidUtil.isUuid(itemId)) {
       respondWith400Error("Invalid UUID", asyncResultHandler);
