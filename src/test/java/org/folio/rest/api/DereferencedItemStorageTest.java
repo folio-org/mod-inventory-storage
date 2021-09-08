@@ -36,7 +36,6 @@ import junitparams.JUnitParamsRunner;
 public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static final UUID smallAngryPlanetId = UUID.randomUUID();
 
-  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
 
   @BeforeClass
   public static void beforeTests() throws InterruptedException, ExecutionException, TimeoutException {
