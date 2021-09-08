@@ -49,7 +49,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject nod = nod(UUID.randomUUID(), holdingsRecordId);
     JsonObject uprooted = uprooted(UUID.randomUUID(), holdingsRecordId);
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     getCompleted = client.post(itemsStorageUrl(""), smallAngryPlanet, StorageTestSuite.TENANT_ID);
     Response response = getCompleted.get(5, SECONDS);
     assertThat(response.getStatusCode(), is(201));
