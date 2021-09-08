@@ -45,7 +45,7 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
   private static final String JSON_COLUMN = "jsonb";
   private static Map<String, String> fields = new HashMap<>();
   private static List<String> idFields = new ArrayList<String>();
-  static{
+  static {
     fields.put("instance", "instanceRecord");
     fields.put("holdings", "holdingsRecord");
     fields.put("materialtype", "materialType");
