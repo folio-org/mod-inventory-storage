@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
 
 
 @RunWith(JUnitParamsRunner.class)
@@ -49,16 +50,9 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject nod = nod(UUID.randomUUID(), holdingsRecordId);
     JsonObject uprooted = uprooted(UUID.randomUUID(), holdingsRecordId);
 
-    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
-    getCompleted = client.post(itemsStorageUrl(""), smallAngryPlanet, StorageTestSuite.TENANT_ID);
-    Response response = getCompleted.get(5, SECONDS);
-    assertThat(response.getStatusCode(), is(201));
-    getCompleted = client.post(itemsStorageUrl(""), nod, StorageTestSuite.TENANT_ID);
-    response = getCompleted.get(5, SECONDS);
-    assertThat(response.getStatusCode(), is(201));
-    getCompleted = client.post(itemsStorageUrl(""), uprooted, StorageTestSuite.TENANT_ID);
-    response = getCompleted.get(5, SECONDS);
-    assertThat(response.getStatusCode(), is(201));
+    postItem(smallAngryPlanet);
+    postItem(nod);
+    postItem(uprooted);
   }
 
   @AfterClass
@@ -68,7 +62,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
-  @Test
+  
   public void CanGetRecordByCQLSearch() {
     String queryString = "barcode=036000291452";
     
@@ -84,14 +78,17 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getPermanentLoanType().getName(), is("Can Circulate"));
     assertThat(item.getMaterialType().getName(), is("journal"));
     assertThat(item.getHoldingsRecord().getInstanceId(), is(item.getInstanceRecord().getId()));
+    assertThat(item.getPermanentLocation().getName(), is("Annex Library"));
   }
 
+  @Test
   public void ResturnsAllRecordsWhenNoCQLQuery() {
     DereferencedItems items = getAll();
 
     assertThat(items.getTotalRecords(), is(3));
   }
 
+  @Test
   public void Returns404WhenNoItemsFound() {
     String queryString = "barcode=647671342075";
     
@@ -100,6 +97,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(404));
   }
 
+  @Test
   public void Returns400WhenCqlSearchInvalid() {
     String queryString = "barcode&647671342075";
     
@@ -108,6 +106,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(400));
   }
 
+  @Test
   public void CanGetRecordById() {
     DereferencedItem item = findById(smallAngryPlanetId.toString());
 
@@ -117,8 +116,10 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getPermanentLoanType().getName(), is("Can Circulate"));
     assertThat(item.getMaterialType().getName(), is("journal"));
     assertThat(item.getHoldingsRecord().getInstanceId(), is(item.getInstanceRecord().getId()));
+    assertThat(item.getPermanentLocation().getName(), is("Annex Library"));
   }
 
+  @Test
   public void Returns404WhenNoItemFoundForId() {
     String Id = UUID.randomUUID().toString();
     
@@ -127,6 +128,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(404));
   }
 
+  @Test
   public void Returns400WhenInvalidUUID() {
     String Id = "w325b3dc4";
     
@@ -135,20 +137,22 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(400));
   }
 
+  @SneakyThrows
+  private static void postItem(JsonObject itemRecord) {
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
+    postCompleted = client.post(itemsStorageUrl(""), itemRecord, StorageTestSuite.TENANT_ID);
+    Response response = postCompleted.get(5, SECONDS);
+    assertThat(response.getStatusCode(), is(201));
+  }
 
-  private static JsonObject createItemRequest(
-      UUID id,
-      UUID holdingsRecordId,
-      String barcode) {
+
+  private static JsonObject createItemRequest(UUID id, UUID holdingsRecordId, String barcode) {
 
     return createItemRequest(id, holdingsRecordId, barcode, journalMaterialTypeID);
   }
 
   private static JsonObject createItemRequest(
-    UUID id,
-    UUID holdingsRecordId,
-    String barcode,
-    String materialType) {
+    UUID id, UUID holdingsRecordId, String barcode, String materialType) {
 
     JsonObject itemToCreate = new JsonObject();
 
@@ -161,7 +165,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("materialTypeId", materialType);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", annexLibraryLocationId.toString());
+    itemToCreate.put("permanentLocationId", annexLibraryLocationId.toString());
     itemToCreate.put("_version", 1);
 
     return itemToCreate;
@@ -183,62 +187,50 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     return createItemRequest(itemId, holdingsRecordId, "657670342075");
   }
 
+  @SneakyThrows
   private Response attemptFindByCql(String badSearchQuery) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-
     client.get(dereferencedItemStorage("?query=") + urlEncode(badSearchQuery),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-    try{
-      return searchCompleted.get(5, TimeUnit.SECONDS);
-    } catch(Exception e) {
-      throw new RuntimeException(e);
-    }
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
+
+    return searchCompleted.get(5, TimeUnit.SECONDS);
   }
 
+  @SneakyThrows
   private Response attemptFindById(String badId) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-
     client.get(dereferencedItemStorage("/") + urlEncode(badId),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-    try{
-      return searchCompleted.get(5, TimeUnit.SECONDS);
-    } catch(Exception e) {
-      throw new RuntimeException(e);
-    }
+      StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
+
+    return searchCompleted.get(5, TimeUnit.SECONDS);
   }
 
+  @SneakyThrows
   private DereferencedItems findByCql(String searchQuery) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-
     client.get(dereferencedItemStorage("?query=") + urlEncode(searchQuery),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-    try{
-      return searchCompleted.get(5, TimeUnit.SECONDS).getJson()
+
+    return searchCompleted.get(5, TimeUnit.SECONDS).getJson()
       .mapTo(DereferencedItems.class);
-    } catch(Exception e) {
-      throw new RuntimeException(e);
-    }
   }
 
+  @SneakyThrows
   private DereferencedItem findById(String id) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(dereferencedItemStorage("/" + id), TENANT_ID, json(getCompleted));
-    try {
-      return getCompleted.get(5, SECONDS).getJson()
+
+    return getCompleted.get(5, SECONDS).getJson()
       .mapTo(DereferencedItem.class);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
   }
+
+  @SneakyThrows
   private DereferencedItems getAll() {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(dereferencedItemStorage(""), TENANT_ID, json(getCompleted));
-    try {
-      return getCompleted.get(5, SECONDS).getJson()
+
+    return getCompleted.get(5, SECONDS).getJson()
       .mapTo(DereferencedItems.class);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
   }
 
 }
