@@ -10,7 +10,7 @@ import static org.folio.rest.support.http.InterfaceUrls.dereferencedItemStorage;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-
+import static org.junit.Assert.assertNull;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +36,7 @@ import lombok.SneakyThrows;
 @RunWith(JUnitParamsRunner.class)
 public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static final UUID smallAngryPlanetId = UUID.randomUUID();
+  private static final UUID uprootedId = UUID.randomUUID();
 
 
   @BeforeClass
@@ -48,7 +49,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject smallAngryPlanet = smallAngryPlanet(smallAngryPlanetId, holdingsRecordId);
     JsonObject nod = nod(UUID.randomUUID(), holdingsRecordId);
-    JsonObject uprooted = uprooted(UUID.randomUUID(), holdingsRecordId);
+    JsonObject uprooted = uprooted(uprootedId, holdingsRecordId);
 
     postItem(smallAngryPlanet);
     postItem(nod);
@@ -65,6 +66,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   
   public void CanGetRecordByCQLSearch() {
     String queryString = "barcode=036000291452";
+    String queryStringOptionalFields = "657670342075";
     
     DereferencedItems items = findByCql(queryString);
 
@@ -72,13 +74,15 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
     DereferencedItem item = items.getDereferencedItems().get(0);
 
-    assertThat(item.getBarcode(), is("036000291452"));
-    assertThat(item.getId(), is(smallAngryPlanetId.toString()));
-    assertThat(item.getInstanceRecord().getTitle(), is("Long Way to a Small Angry Planet"));
-    assertThat(item.getPermanentLoanType().getName(), is("Can Circulate"));
-    assertThat(item.getMaterialType().getName(), is("journal"));
-    assertThat(item.getHoldingsRecord().getInstanceId(), is(item.getInstanceRecord().getId()));
-    assertThat(item.getPermanentLocation().getName(), is("Annex Library"));
+    testSmallAngryPlanet(item);
+
+    items = findByCql(queryStringOptionalFields);
+
+    assertThat(items.getTotalRecords(), is(1));
+
+    item = items.getDereferencedItems().get(0);
+
+    testUprooted(item);
   }
 
   @Test
@@ -108,15 +112,10 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void CanGetRecordById() {
-    DereferencedItem item = findById(smallAngryPlanetId.toString());
 
-    assertThat(item.getBarcode(), is("036000291452"));
-    assertThat(item.getId(), is(smallAngryPlanetId.toString()));
-    assertThat(item.getInstanceRecord().getTitle(), is("Long Way to a Small Angry Planet"));
-    assertThat(item.getPermanentLoanType().getName(), is("Can Circulate"));
-    assertThat(item.getMaterialType().getName(), is("journal"));
-    assertThat(item.getHoldingsRecord().getInstanceId(), is(item.getInstanceRecord().getId()));
-    assertThat(item.getPermanentLocation().getName(), is("Annex Library"));
+    testSmallAngryPlanet(findById(smallAngryPlanetId.toString()));
+
+    testUprooted(findById(uprootedId.toString()));
   }
 
   @Test
@@ -137,6 +136,32 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(400));
   }
 
+  private void testSmallAngryPlanet(DereferencedItem item) {
+    assertThat(item.getBarcode(), is("036000291452"));
+    assertThat(item.getId(), is(smallAngryPlanetId.toString()));
+    assertThat(item.getInstanceRecord().getTitle(), is("Long Way to a Small Angry Planet"));
+    assertThat(item.getPermanentLoanType().getName(), is("Can Circulate"));
+    assertThat(item.getMaterialType().getName(), is("journal"));
+    assertThat(item.getHoldingsRecord().getInstanceId(), is(item.getInstanceRecord().getId()));
+    assertThat(item.getPermanentLocation().getName(), is("Annex Library"));
+    assertNull(item.getTemporaryLocation());
+    assertThat(item.getEffectiveLocation().getName(), is(item.getPermanentLocation().getName()));
+    assertNull(item.getTemporaryLoanType());
+  }
+
+  private void testUprooted(DereferencedItem item) {
+    assertThat(item.getBarcode(), is("657670342075"));
+    assertThat(item.getId(), is(uprootedId.toString()));
+    assertThat(item.getInstanceRecord().getTitle(), is("Long Way to a Small Angry Planet"));
+    assertThat(item.getPermanentLoanType().getName(), is("Can Circulate"));
+    assertThat(item.getMaterialType().getName(), is("journal"));
+    assertThat(item.getHoldingsRecord().getInstanceId(), is(item.getInstanceRecord().getId()));
+    assertThat(item.getPermanentLocation().getName(), is("Annex Library"));
+    assertThat(item.getTemporaryLocation().getName(), is("Second Floor"));
+    assertThat(item.getEffectiveLocation().getName(), is(item.getTemporaryLocation().getName()));
+    assertThat(item.getTemporaryLoanType().getName(), is("Non-Circulating"));
+  }
+
   @SneakyThrows
   private static void postItem(JsonObject itemRecord) {
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
@@ -146,13 +171,15 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
 
-  private static JsonObject createItemRequest(UUID id, UUID holdingsRecordId, String barcode) {
+  private static JsonObject createItemRequest(
+    UUID id, UUID holdingsRecordId, String barcode, Boolean includeOptionalFields) {
 
-    return createItemRequest(id, holdingsRecordId, barcode, journalMaterialTypeID);
+    return createItemRequest(id, holdingsRecordId, barcode, journalMaterialTypeID, includeOptionalFields);
   }
 
   private static JsonObject createItemRequest(
-    UUID id, UUID holdingsRecordId, String barcode, String materialType) {
+    UUID id, UUID holdingsRecordId, String barcode, 
+    String materialType, Boolean includeOptionalFields) {
 
     JsonObject itemToCreate = new JsonObject();
 
@@ -168,15 +195,22 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("permanentLocationId", annexLibraryLocationId.toString());
     itemToCreate.put("_version", 1);
 
+    if (includeOptionalFields) {
+      itemToCreate.put("temporaryLoanTypeId", nonCirculatingLoanTypeID);
+      itemToCreate.put("temporaryLocationId", secondFloorLocationId);
+    }
+
     return itemToCreate;
   }
 
+
+
   private static JsonObject smallAngryPlanet(UUID itemId, UUID holdingsRecordId) {
-    return createItemRequest(itemId, holdingsRecordId, "036000291452");
+    return createItemRequest(itemId, holdingsRecordId, "036000291452", false);
   }
 
   static JsonObject nod(UUID itemId, UUID holdingsRecordId) {
-    return createItemRequest(itemId, holdingsRecordId, "565578437802");
+    return createItemRequest(itemId, holdingsRecordId, "565578437802", false);
   }
 
   static JsonObject nod(UUID holdingsRecordId) {
@@ -184,7 +218,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private static JsonObject uprooted(UUID itemId, UUID holdingsRecordId) {
-    return createItemRequest(itemId, holdingsRecordId, "657670342075");
+    return createItemRequest(itemId, holdingsRecordId, "657670342075", true);
   }
 
   @SneakyThrows

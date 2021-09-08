@@ -20,17 +20,12 @@ import io.vertx.sqlclient.RowSet;
 
 import static org.folio.dbschema.ObjectMapperTool.readValue;
 
-import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
-
-import org.apache.logging.log4j.LogManager;
-
 
 /**
  * CRUD for Dereferenced Items.
@@ -40,7 +35,6 @@ import org.apache.logging.log4j.LogManager;
  * checkout/checkin operations.
  */
 public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
-  private static final Logger logger = LogManager.getLogger("okapi");
   public static final String ITEM_TABLE = "item";
   private static final String JSON_COLUMN = "jsonb";
   private static Map<String, String> fields = new HashMap<>();
@@ -67,7 +61,7 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
   "instancetable.jsonb as " + fields.get("instance") + ", materialtypetable.jsonb as " + fields.get("materialtype") + ",\n" + 
   "locationtable.jsonb as " + fields.get("permloc") + ", locationtabletemp.jsonb as " + fields.get("temploc") + ",\n" + 
   "locationtableeffective.jsonb as " + fields.get("effloc") + ",\n"+
-  "loantable.jsonb as " + fields.get("permloan") + ", loantabletemp.jsonb as " + fields.get("temploc") + "\n"+
+  "loantable.jsonb as " + fields.get("permloan") + ", loantabletemp.jsonb as " + fields.get("temploan") + "\n"+
   "FROM " + ITEM_TABLE + "\n"+
   "INNER JOIN holdings_record as holdingstable on item.holdingsrecordid=holdingstable.id\n"+
   "INNER JOIN instance as instancetable on holdingstable.instanceid=instancetable.id\n"+
@@ -93,7 +87,6 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
       try {
         CQLWrapper wrapper = new CQLWrapper(
           new CQL2PgJSON(ITEM_TABLE + "." + JSON_COLUMN), query, limit, offset);
-        logger.info("translated SQL query: " + wrapper.toString());
         whereClause = wrapper.toString();
       } catch(Exception e) {
         respondWith400Error("Invalid CQL query: " + e.getMessage(), asyncResultHandler);
@@ -125,7 +118,6 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     
-    logger.info("id number: " + itemId);
     if (!UuidUtil.isUuid(itemId)) {
       respondWith400Error("Invalid UUID", asyncResultHandler);
     }
@@ -134,6 +126,7 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     postgresClient.select(sqlQuery + whereClause, asyncResult -> {
       handleSelectFailure(asyncResult, asyncResultHandler);
       Row row = asyncResult.result().iterator().next();
+
       DereferencedItem item = mapToDereferencedItem(row);
       asyncResultHandler.handle(Future.succeededFuture(
         GetItemStorageDereferencedItemsByItemIdResponse.respond200WithApplicationJson(item)));
