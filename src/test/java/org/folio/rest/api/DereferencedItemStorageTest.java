@@ -33,7 +33,6 @@ import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 
 
-@RunWith(JUnitParamsRunner.class)
 public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static final UUID smallAngryPlanetId = UUID.randomUUID();
   private static final UUID uprootedId = UUID.randomUUID();
