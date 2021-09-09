@@ -202,9 +202,6 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
     return itemToCreate;
   }
-
-
-
   private static JsonObject smallAngryPlanet(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "036000291452", false);
   }
