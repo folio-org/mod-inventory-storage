@@ -3,6 +3,7 @@
 * Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
 * Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
 * shouldStopProcessingWhenCannotConvertItem depends on other test (MODINVSTOR-725)
+* Enforce item barcode uniqueness (MODINVSTOR-523)
 * Enables failOnConflict for optimistic locking for item, holdings, instance (MODINVSTOR-713, MODINVSTOR-726)
 * Provides `item-storage 9.0`
 * Provides `item-storage-batch-sync 1.0`

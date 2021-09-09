@@ -2,7 +2,7 @@ package org.folio.rest.api;
 
 
 import static org.awaitility.Awaitility.await;
-import static org.folio.rest.api.ItemStorageTest.nod;
+import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
@@ -86,7 +86,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     );
 
     IndividualResource createdItem = itemsClient.create(
-      nod(null, holdings.getId())
+      nodWithNoBarcode(holdings.getId())
         .put(callNumberProperties.itemPropertyName, itemPropertyValue)
     );
     assertThat(createdItem.getJson()
@@ -123,17 +123,17 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
     final UUID thirdHoldingsId = createInstanceAndHolding(mainLibraryLocationId);
 
-    final JsonObject useFirstHoldingsComponents = nod(firstHoldingsId);
-    final JsonObject useOwnCallNumber = nod(secondHoldingsId)
+    final JsonObject useFirstHoldingsComponents = nodWithNoBarcode(firstHoldingsId);
+    final JsonObject useOwnCallNumber = nodWithNoBarcode(secondHoldingsId)
       .put("itemLevelCallNumber", "ownCallNumber");
-    final JsonObject useFirstHoldingsAndOwnSuffix = nod(firstHoldingsId)
+    final JsonObject useFirstHoldingsAndOwnSuffix = nodWithNoBarcode(firstHoldingsId)
       .put("itemLevelCallNumberSuffix", "ownSuffix");
-    final JsonObject useAllOwnComponentsSharedHoldings = nod(firstHoldingsId)
+    final JsonObject useAllOwnComponentsSharedHoldings = nodWithNoBarcode(firstHoldingsId)
       .put("itemLevelCallNumber", "allOwnComponentsCN")
       .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
       .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP")
       .put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
-    final JsonObject useAllOwnComponents = nod(thirdHoldingsId)
+    final JsonObject useAllOwnComponents = nodWithNoBarcode(thirdHoldingsId)
       .put("itemLevelCallNumber", "allOwnComponentsCN2")
       .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS2")
       .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP2")
@@ -186,7 +186,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   @Test
   public void shouldCalculatePropertyWhenHoldingsIsNotRetrieved() {
     final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
-    final JsonObject useAllOwnComponents = nod(holdingsId)
+    final JsonObject useAllOwnComponents = nodWithNoBarcode(holdingsId)
       .put("itemLevelCallNumber", "allOwnComponentsCN")
       .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
       .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP")
@@ -227,7 +227,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     );
 
     IndividualResource createdItem = itemsClient.create(
-      nod(null, holdings.getId())
+      nodWithNoBarcode(holdings.getId())
         .put(itemPropertyName, itemInitValue)
     );
 
