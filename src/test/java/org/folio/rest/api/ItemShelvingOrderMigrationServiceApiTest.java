@@ -38,7 +38,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
 
   @Test
   public void shouldStopProcessingWhenCannotConvertItem() throws Exception {
-    var item = createItem(0);
+    var item = createItem(300);
     removeShelvingOrder(List.of(item));
     executeSql("UPDATE " + getSchemaName() + ".item SET jsonb = jsonb || '{\"a\":\"b\"}'::jsonb WHERE id = '" + item.getId() + "'");
 
@@ -65,6 +65,9 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
     }
   }
 
+  /**
+   * Create an item, the index is used for the barcode and the call number components
+   */
   private IndividualResource createItem(int index) {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 

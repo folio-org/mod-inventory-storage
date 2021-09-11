@@ -98,7 +98,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void ServerErrorWrittenOutOnDatabaseError() throws InterruptedException, ExecutionException, TimeoutException {
 
-    setFaultyStatisticalCode();    
+    setFaultyStatisticalCode();
 
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
 
@@ -106,7 +106,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     UUID[] instanceIds = instances.stream()
       .map(json -> UUID.fromString(json.getString("instanceId")))
       .toArray(UUID[]::new);
-    
+
     List<JsonObject> instancesData = requestInventoryHierarchyItemsAndHoldingsViewInstance(
       instanceIds, false, response -> assertThat(response.getStatusCode(), is(500)));
 
@@ -155,7 +155,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void holdingsEffectiveLocationIsTemporaryLocationWhenTempLocationSet() 
+  public void holdingsEffectiveLocationIsTemporaryLocationWhenTempLocationSet()
     throws InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject record = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
@@ -327,7 +327,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   public void canGetFromInventoryHierarchyViewShowingSuppressedRecords() throws Exception {
     // given
     // one instance, 1 holding, 2 not suppressed items, 1 suppressed item
-    super.createItem(createItemRequest(thirdFloorLocationId, "item barcode 2", "item effective call number 3", bookMaterialTypeId)
+    super.createItem(createItemRequest(thirdFloorLocationId, "item barcode 3", "item effective call number 3", bookMaterialTypeId)
       .withDiscoverySuppress(true));
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
@@ -436,7 +436,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   private void setFaultyStatisticalCode() {
     String sql = "UPDATE item SET jsonb=jsonb_set(jsonb, '{statisticalCodeIds}', '[\"5t632 ytbg vnc\"]', true);";
-    
+
     postgresClient.execute(sql, handler -> {
       if (handler.failed()) {
         log.error("Error updating database: " + handler.cause().getMessage());
@@ -446,7 +446,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   private void removeFaultyStatisticalCode() {
     String sql = "UPDATE item SET jsonb=jsonb_set(jsonb, '{statisticalCodeIds}', '[]', true);";
-    
+
     postgresClient.selectSingle(sql, handler -> {
       if (handler.failed()) {
         log.error("Error updating database: " + handler.cause().getMessage());
