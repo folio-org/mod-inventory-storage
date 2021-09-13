@@ -107,7 +107,6 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void CanGetRecordById() {
-
     testSmallAngryPlanet(findById(smallAngryPlanetId.toString()));
 
     testUprooted(findById(uprootedId.toString()));
