@@ -25,13 +25,9 @@ import org.folio.rest.support.ResponseHandler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
 
 import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-
 
 public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static final UUID smallAngryPlanetId = UUID.randomUUID();
@@ -62,10 +58,10 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
-  
-  public void CanGetRecordByCQLSearch() {
-    String queryString = "barcode=036000291452";
-    String queryStringOptionalFields = "657670342075";
+  @Test
+  public void CanGetRecordByBarcode() {
+    String queryString = "barcode==036000291452";
+    String queryString2 = "barcode==657670342075";
     
     DereferencedItems items = findByCql(queryString);
 
@@ -75,7 +71,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
     testSmallAngryPlanet(item);
 
-    items = findByCql(queryStringOptionalFields);
+    items = findByCql(queryString2);
 
     assertThat(items.getTotalRecords(), is(1));
 
@@ -92,12 +88,12 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void Returns404WhenNoItemsFound() {
-    String queryString = "barcode=647671342075";
+  public void ReturnsEmptyCollectionWhenNoItemsFound() {
+    String queryString = "barcode==647671342075";
     
-    Response response = attemptFindByCql(queryString);
+    DereferencedItems items = findByCql(queryString);
 
-    assertThat(response.getStatusCode(), is(404));
+    assertThat(items.getTotalRecords(), is(0));
   }
 
   @Test
@@ -182,7 +178,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject itemToCreate = new JsonObject();
 
-    if(id != null) {
+    if (id != null) {
       itemToCreate.put("id", id.toString());
     }
 

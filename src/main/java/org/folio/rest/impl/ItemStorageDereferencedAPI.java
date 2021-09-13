@@ -90,6 +90,7 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
         whereClause = wrapper.toString();
       } catch(Exception e) {
         respondWith400Error("Invalid CQL query: " + e.getMessage(), asyncResultHandler);
+        return;
       }
     } else {
       whereClause = "LIMIT " + limit + " OFFSET " + offset;
@@ -98,10 +99,12 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
     postgresClient.select(sqlQuery + whereClause, asyncResult -> {
 
-      handleSelectFailure(asyncResult, asyncResultHandler);
-
-      asyncResult.result().forEach(row -> {mappedResults.add(mapToDereferencedItem(row));});
-
+      if (handleSelectFailure(asyncResult, asyncResultHandler)) {
+        return;
+      }
+      if (asyncResult.result().size() != 0) {
+        asyncResult.result().forEach(row -> {mappedResults.add(mapToDereferencedItem(row));});
+      } 
       DereferencedItems itemCollection = new DereferencedItems();
       itemCollection.setDereferencedItems(mappedResults);
       itemCollection.setTotalRecords(mappedResults.size());
@@ -120,11 +123,18 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     
     if (!UuidUtil.isUuid(itemId)) {
       respondWith400Error("Invalid UUID", asyncResultHandler);
+      return;
     }
     String whereClause = "WHERE item.id='" + itemId + "'";
     PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
     postgresClient.select(sqlQuery + whereClause, asyncResult -> {
-      handleSelectFailure(asyncResult, asyncResultHandler);
+      if (handleSelectFailure(asyncResult, asyncResultHandler)) {
+        return;
+      };
+      if (asyncResult.result().size() == 0) {
+        respondWith404Error("No item records found matching provided UUID.", asyncResultHandler);
+        return;
+      }
       Row row = asyncResult.result().iterator().next();
 
       DereferencedItem item = mapToDereferencedItem(row);
@@ -133,17 +143,16 @@ public class ItemStorageDereferencedAPI implements ItemStorageDereferenced {
     });
   }
 
-  private void handleSelectFailure(
+  private Boolean handleSelectFailure(
     AsyncResult<RowSet<Row>> asyncResult,
     Handler<AsyncResult<Response>> asyncResultHandler) {
     
     if (asyncResult.failed()) {
       String errorMessage = asyncResult.cause().getMessage();
       respondWith500Error("Can't retrive item records: " + errorMessage, asyncResultHandler);
+      return true;
     }
-    if (asyncResult.result().size() == 0) {
-      respondWith404Error("No item records found.", asyncResultHandler);
-    }
+    return false;
   }
 
   private void respondWith500Error(

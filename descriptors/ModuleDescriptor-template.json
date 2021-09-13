@@ -2493,7 +2493,7 @@
       { "name": "DB_QUERYTIMEOUT", "value": "60000" },
       { "name": "DB_CHARSET", "value": "UTF-8" },
       { "name": "DB_MAXPOOLSIZE", "value": "5" },
-      { "name": "KAFKA_HOST", "value": "kafka" },
+      { "name": "KAFKA_HOST", "value": "localhost" },
       { "name": "KAFKA_PORT", "value": "9092" },
       { "name": "REPLICATION_FACTOR", "value": "1" }
     ]
