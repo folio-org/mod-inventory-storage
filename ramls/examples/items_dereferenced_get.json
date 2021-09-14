@@ -1,0 +1,73 @@
+{
+  "items": [
+    {
+      "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
+      "instanceRecord": {
+        "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+        "source": "Local: MARC",
+        "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
+        "contributors": [
+          {
+            "name": "Sigal, Ari",
+            "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
+            "primary": true
+          }
+        ],
+        "identifiers": [
+          {
+            "identifierTypeId": "2e48e713-17f3-4c13-a9f8-23845bb210af",
+            "value": "9781466636897"
+          },
+          {
+            "identifierTypeId": "6051f95c-028e-4c6a-8a9e-ee689dd51453",
+            "value": "1"
+          }
+        ],
+        "instanceTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2c",
+        "tags" : {
+          "tagList" : [
+            "important"
+          ]
+        }
+      },
+      "holdingsRecord": {
+        "id": "65cb2bf0-d4c2-4886-8ad0-b76f1ba75d61",
+        "instanceId": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+        "permanentLocationId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
+        "holdingsStatements": [
+          {
+            "statement": "Line 1",
+            "note": "Note to line 1"
+          },
+          {
+            "statement": "Line 2",
+            "note": "Note to line2"
+          }
+        ],
+        "tags" : {
+          "tagList" : [
+            "important"
+          ]
+        }
+      },
+      "barcode": "645398607547",
+      "status": {
+        "name": "In transit"
+      },
+      "materialType": {
+        "name": "book"
+      },
+      "permanentLoanType": {
+        "id": "2b94c631-fca9-4892-a730-03ee529ffe27",
+        "name": "Can circulate"
+      },
+      "inTransitDestinationServicePointId": "5b31ec8c-95a7-4b91-95cc-b551a74b91ca",
+      "tags" : {
+        "tagList" : [
+          "important"
+        ]
+      }
+    }
+  ],
+  "totalRecords": 1
+}

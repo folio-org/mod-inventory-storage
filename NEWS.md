@@ -4,6 +4,7 @@
 * Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
 * Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
 * Enforce item barcode uniqueness (MODINVSTOR-523)
+* Implement a new endpoint for dereferenced item records (MODINVSTOR-769)
 
 ## 21.0.0 2021-06-10
 
