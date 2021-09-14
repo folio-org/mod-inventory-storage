@@ -8,6 +8,7 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -35,17 +36,16 @@ public class UpcIsmnMigrationScriptTest extends MigrationTestBase {
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 
-    JsonObject response = getIdentifierTypes().getJson();
-
     for (var identifier: ids.entrySet()) {
-      assertThat(response.getString(identifier.getKey()), is(identifier.getValue()));
-
+      Response response = getIdentifier(identifier.getValue());
+      assertThat(response.getStatusCode(), is(200));
+      assertThat(response.getJson().getString("name"), is(identifier.getKey()));
     }
   }
 
-  private Response getIdentifierTypes() throws Exception  {
+  private Response getIdentifier(String id) throws Exception  {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-    String url = identifierTypesUrl("?limit=100").toString();
+    String url = identifierTypesUrl("/" + id).toString();
     client.get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
     Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
     return searchResponse;
