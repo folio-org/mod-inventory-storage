@@ -5,21 +5,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.folio.rest.support.http.InterfaceUrls.identifierTypesUrl;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.util.HashMap;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.support.Response;
 
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonObject;
 
 public class UpcIsmnMigrationScriptTest extends MigrationTestBase {
   private static final String MIGRATION_SCRIPT = loadScript("addIdentifierTypesUpcIsmn.sql");

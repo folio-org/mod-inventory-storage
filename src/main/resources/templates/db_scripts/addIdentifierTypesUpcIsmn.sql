@@ -17,7 +17,3 @@ INSERT INTO ${myuniversity}_${mymodule}.identifier_type (id, jsonb)
 VALUES ('1795ea23-6856-48a5-a772-f356e16a8a6c',
         json_build_object('id','1795ea23-6856-48a5-a772-f356e16a8a6c', 'name', 'UPC',  'source', 'folio'))
 ON CONFLICT DO NOTHING;
-
-
-
-
