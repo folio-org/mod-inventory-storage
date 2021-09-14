@@ -1,0 +1,44 @@
+#%RAML 1.0
+title: Item Storage Dereferenced
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Item Retrieval API
+    content: <b>Get dereferenced items data from inventory</b>
+
+types:
+  dereferencedItem: !include dereferenceditem.json
+  dereferencedItems: !include dereferenceditems.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection-get.raml
+  collection-item: !include raml-util/rtypes/item-collection-get.raml
+
+/item-storage-dereferenced:
+  /items:
+    type:
+      collection:
+        exampleCollection: !include examples/items_dereferenced_get.json
+        schemaCollection: dereferencedItems
+        schemaItem: dereferencedItem
+        exampleItem: !include examples/item_dereferenced_get.json
+    get:
+      is: [pageable,
+         searchable: {description: "using CQL (indexes for item and material type)",
+                        example: "title=\"*uproot*\""},
+          ]
+    /{itemId}:
+      type:
+        collection-item:
+          exampleItem: !include examples/item_dereferenced_get.json
+          schema: dereferencedItem
+      get:
