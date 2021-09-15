@@ -1,5 +1,6 @@
 ## 22.0.0 IN-PROGRESS
 
+* Added new identifiers for ISMN and UPC (MODINVSTOR-770)
 * Keyword searches now search alternate title fields (MODINVSTOR-719)
 * Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
 * Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
