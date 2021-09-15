@@ -49,6 +49,7 @@ import org.testcontainers.utility.DockerImageName;
   RecordBulkTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
+  DereferencedItemStorageTest.class,
   HoldingsTypeTest.class,
   LoanTypeTest.class,
   MaterialTypeTest.class,
