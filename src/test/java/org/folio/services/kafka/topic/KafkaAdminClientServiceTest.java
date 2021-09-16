@@ -16,20 +16,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-
 import io.vertx.core.Future;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
   private final Set<String> allExpectedTopics = Set.of("folio.foo-tenant.inventory.instance",
-    "folio.foo-tenant.inventory.holdings-record", "folio.foo-tenant.inventory.item");
+    "folio.foo-tenant.inventory.holdings-record", "folio.foo-tenant.inventory.item",
+    "folio.foo-tenant.inventory.instance-contribution");
 
   @Test
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
