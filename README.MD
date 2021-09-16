@@ -93,6 +93,55 @@ Navigate to the folder `infrastructure/local` directory within the clone of the 
 
 Execute `docker compose down` to stop the infrastructure containers
 
+# Local Deployment with java -jar
+
+## Start PostgreSQL, Kafka and Zookeeper
+
+This starts them as Docker containers.
+
+    cd run-locally
+    docker-compose up -d
+    cd ..
+
+## Build jar
+
+    mvn clean package -DskipTests
+
+## Set environment variables
+
+    export DB_DATABASE=folio
+    export DB_PASSWORD=folio
+    export DB_USERNAME=folio
+    export KAFKA_PORT=29092
+
+## Run the jar
+
+    java -jar target/mod-inventory-storage-fat.jar
+
+## Install a tenant with sample data
+
+In a new shell:
+
+    OUT=`curl -w"\n" -s -S -D - -H "Content-type: application/json" -H "x-okapi-url-to: http://localhost:8081" -H "x-okapi-tenant: diku" -d '{
+      "module_to": "mod-inventory-storage-999.0.0",
+      "parameters": [{ "key": "loadReference", "value": "true" },
+                     { "key": "loadSample",    "value": "true" } ]}
+      ' http://localhost:8081/_/tenant`
+
+    echo "$OUT"
+    LOCATION=`echo "$OUT" | grep "^Location: " | cut -d" " -f 2 | tr -d "\n\r"`
+
+    curl -w"\n" -s -S -D - -H "x-okapi-tenant: diku" "http://localhost:8081$LOCATION?wait=30000"
+
+## Get some items
+
+    curl -w"\n" -s -S -D - -H "x-okapi-tenant: diku" http://localhost:8081/item-storage/items
+
+## Stop PostgreSQL, Kafka and Zookeeper
+
+    cd run-locally
+    docker-compose down
+
 # Running
 
 ## Preparation
