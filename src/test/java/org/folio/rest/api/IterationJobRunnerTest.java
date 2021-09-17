@@ -3,12 +3,11 @@ package org.folio.rest.api;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
-import static org.folio.Environment.environmentName;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IDS_PUBLISHED;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.ID_PUBLISHING_CANCELLED;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -24,51 +23,53 @@ import java.util.Map;
 import java.util.UUID;
 
 import io.vertx.core.Context;
-import org.folio.persist.ReindexJobRepository;
-import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.ReindexJob;
+import org.folio.persist.IterationJobRepository;
+import org.folio.rest.jaxrs.model.IterationJob;
+import org.folio.rest.jaxrs.model.IterationJobParams;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
-import org.folio.services.domainevent.CommonDomainEventPublisher;
-import org.folio.services.kafka.topic.KafkaTopic;
-import org.folio.services.reindex.ReindexJobRunner;
+import org.folio.services.iteration.IterationJobRunner;
 import org.junit.Test;
 
-public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
-  private final ReindexJobRepository repository = getRepository();
-  private final CommonDomainEventPublisher<Instance> eventPublisher =
-    new CommonDomainEventPublisher<>(getContext(), Map.of(TENANT, TENANT_ID),
-      KafkaTopic.instance(TENANT_ID, environmentName()));
+public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
+
+  // use usual instance topic for testing purposes, because it doesn't matter
+  // what the topic is for testing. this also prevents from adding changes to
+  // FakeKafkaConsumer
+  private static final String TEST_TOPIC = "inventory.instance";
+
+  private final IterationJobRepository repository = getRepository();
+
 
   @Test
-  public void canReindexInstances() {
+  public void canIterateInstances() {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob();
+    var iterationJob = iterationJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
       .when(postgresClientFuturized).selectStream(any(), anyString());
 
-    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+    get(repository.save(iterationJob.getId(), iterationJob).toCompletionStage()
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
     FakeKafkaConsumer.removeAllEvents();
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+    jobRunner(postgresClientFuturized).startIteration(iterationJob);
 
-    await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
+    await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
 
-    var job = instanceReindex.getReindexJob(reindexJob.getId());
+    var job = instanceIteration.getIterationJob(iterationJob.getId());
 
     assertThat(job.getPublished(), is(numberOfRecords));
     assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
-    // Should be a single reindex message for each instance ID generated in the row stream
+    // Should be a single iteration message for each instance ID generated in the row stream
     await().atMost(5, SECONDS)
       .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, is(numberOfRecords));
   }
@@ -76,38 +77,41 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCancelReindex() {
     var rowStream = new TestRowStream(10_000_000);
-    var reindexJob = reindexJob();
+    var iterationJob = iterationJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
       .when(postgresClientFuturized).selectStream(any(), anyString());
 
-    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+    get(repository.save(iterationJob.getId(), iterationJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+    jobRunner(postgresClientFuturized).startIteration(iterationJob);
 
-    instanceReindex.cancelReindexJob(reindexJob.getId());
+    instanceIteration.cancelIterationJob(iterationJob.getId());
 
-    await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
+    await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
       .getJobStatus() == ID_PUBLISHING_CANCELLED);
 
-    var job = instanceReindex.getReindexJob(reindexJob.getId());
+    var job = instanceIteration.getIterationJob(iterationJob.getId());
 
     assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
     assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
   }
 
-  private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
-    return new ReindexJobRunner(postgresClientFuturized,
-      repository, getContext(), eventPublisher, TENANT_ID);
+  private IterationJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
+    return new IterationJobRunner(postgresClientFuturized,
+      repository, getContext(), okapiHeaders());
   }
 
-  private static ReindexJob reindexJob() {
-    return new ReindexJob()
-      .withJobStatus(IN_PROGRESS)
+  private static IterationJob iterationJob() {
+    return new IterationJob()
       .withId(UUID.randomUUID().toString())
-      .withSubmittedDate(new Date());
+      .withJobStatus(IN_PROGRESS)
+      .withSubmittedDate(new Date())
+      .withJobParams(
+        new IterationJobParams().withTopicName(TEST_TOPIC)
+      );
   }
 
   private static Map<String, String> okapiHeaders() {
@@ -123,8 +127,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     return new PostgresClientFuturized(postgresClient);
   }
 
-  private ReindexJobRepository getRepository() {
-    return new ReindexJobRepository(getContext(), okapiHeaders());
+  private IterationJobRepository getRepository() {
+    return new IterationJobRepository(getContext(), okapiHeaders());
   }
 
 }

@@ -11,14 +11,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.Row;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-import org.folio.rest.api.ReindexJobRunnerTest;
+import org.folio.rest.support.sql.TestRowStream;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -29,7 +30,7 @@ public class BatchedReadStreamTest {
     var numberOfRecords = 410;
     var batchSize = 100;
     var numberOfBatches = 5;
-    var rowStream = new ReindexJobRunnerTest.TestRowStream(numberOfRecords);
+    var rowStream = new TestRowStream(numberOfRecords);
     var batchedReadStream = new BatchedReadStream<>(rowStream, batchSize);
     var promise = Promise.promise();
     Handler<List<Row>> handler = mock(Handler.class);
@@ -92,7 +93,7 @@ public class BatchedReadStreamTest {
   @Test
   @SuppressWarnings("unchecked")
   public void shouldHandleErrorWhenOccurredOnRemainingChunk() {
-    var delegate = new ReindexJobRunnerTest.TestRowStream(1);
+    var delegate = new TestRowStream(1);
     var batchedReadStream = new BatchedReadStream<>(delegate);
     Handler<Void> endHandler = mock(Handler.class);
     Handler<List<Row>> handler = mock(Handler.class);

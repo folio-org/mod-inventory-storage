@@ -9,12 +9,13 @@ import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.ID_PUBLISHING_FA
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.PENDING_CANCEL;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import java.util.Map;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
-import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.IterationJobRepository;
@@ -46,11 +47,19 @@ public class IterationJobRunner {
 
 
   public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
+    this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
+      new IterationJobRepository(vertxContext, okapiHeaders),
+      vertxContext,
+      okapiHeaders);
+  }
+
+  public IterationJobRunner(PostgresClientFuturized postgresClient, IterationJobRepository repository,
+                          Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
-    this.postgresClient = new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders));
-    this.repository = new IterationJobRepository(vertxContext, okapiHeaders);
+    this.postgresClient = postgresClient;
+    this.repository = repository;
 
     initWorker(vertxContext);
   }
