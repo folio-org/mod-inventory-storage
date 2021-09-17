@@ -67,6 +67,10 @@ To run the tests against both embedded and external databases, run `./build.sh` 
 
 # Local Deployment using Docker
 
+This deployment runs a Docker container that contains the mod-inventory-storage-fat.jar.
+For a deployment that directly runs mod-inventory-storage-fat.jar without wrapping it into
+a Docker container see "Local Deployment with java -jar" below.
+
 ## Preparation
 
 Execute `mvn clean package` to build the jar artefact needed for building a Docker image
@@ -94,6 +98,11 @@ Navigate to the folder `infrastructure/local` directory within the clone of the 
 Execute `docker compose down` to stop the infrastructure containers
 
 # Local Deployment with java -jar
+
+This deployment directly runs mod-inventory-storage-fat.jar.
+
+For a deployment that runs a Docker container that wraps mod-inventory-storage-fat.jar
+see "Local Deployment using Docker" above.
 
 ## Start PostgreSQL, Kafka and Zookeeper
 
