@@ -47,11 +47,16 @@ import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.isNotNull;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
@@ -92,6 +97,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
@@ -1261,8 +1267,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
         .put("hrid", "testHRID");
 
-    createItem(itemToCreate);
-
+    Item initialItem = createItem(itemToCreate).mapTo(Item.class);
+    Instant initialStatusDate = initialItem.getStatus().getDate().toInstant();
+    
     JsonObject replacement = itemToCreate.copy();
 
     replacement
@@ -1282,12 +1289,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     Item item = getResponse.getJson().mapTo(Item.class);
+    Instant finalStatusDate = item.getStatus().getDate().toInstant();
 
     assertThat(item.getId(), is(id.toString()));
 
     assertThat(item.getStatus().getName().value(), is("Checked out"));
 
-    assertThat(item.getStatus().getDate().toInstant(), withinSecondsBeforeNow(seconds(5)));
+    assertThat(finalStatusDate.isAfter(initialStatusDate), is(true));
   }
 
   @Test
@@ -1359,9 +1367,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     Instant itemStatusDate = resultItem.getStatus().getDate().toInstant();
 
-    assertThat(itemStatusDate, withinSecondsBeforeNow(seconds(5)));
-
     assertThat(itemStatusDate, not(changedStatusDate));
+
+    assertThat(itemStatusDate.isAfter(changedStatusDate), is(true));
   }
 
   @Test
@@ -1369,7 +1377,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
-    createItem(itemToCreate);
+    JsonObject createdItem = createItem(itemToCreate);
+    String initalDateTime = createdItem.getJsonObject("status").getString("date");
 
     JsonObject itemWithUpdatedStatus = getById(id).getJson().copy()
       .put("status", new JsonObject().put("name", "Checked out"));
@@ -1380,7 +1389,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Checked out"));
-    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(5)));
+    assertThat(isBefore(initalDateTime, updatedStatus.getString("date")), is(true));
 
     JsonObject itemWithUpdatedStatusDate = updatedItemResponse.getJson().copy();
     itemWithUpdatedStatusDate.getJsonObject("status")
@@ -1427,7 +1436,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
-    createItem(itemToCreate);
+    JsonObject createdItem = createItem(itemToCreate);
+    String initialStatusDate = createdItem.getJsonObject("status").getString("date");
 
     JsonObject itemWithUpdatedStatus = getById(id).getJson().copy()
       .put("status", new JsonObject().put("name", "Checked out"));
@@ -1438,7 +1448,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Checked out"));
-    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(3)));
+    assertThat(isBefore(initialStatusDate, updatedStatus.getString("date")), is(true));
 
     JsonObject itemWithUpdatedCallNumber = updatedItemResponse.getJson().copy()
       .put("itemLevelCallNumber", "newItemLevelCallNumber");
@@ -2530,6 +2540,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     return item.getJsonObject("tags").getJsonArray("tagList").stream()
       .map(Object::toString)
       .collect(Collectors.toList());
+  }
+
+  @SneakyThrows
+  private Boolean isBefore(String dateTime, String secondDateTime) {
+    ZonedDateTime firstTime = ZonedDateTime.parse(dateTime);
+    ZonedDateTime secondTime = ZonedDateTime.parse(secondDateTime);
+    
+    return secondTime.isAfter(firstTime);
   }
 
   private List<UUID> searchByCallNumberEyeReadable(String searchTerm)

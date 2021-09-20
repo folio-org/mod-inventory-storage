@@ -78,7 +78,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     // Should be a single reindex message for each instance ID generated in the row stream
     await().atMost(5, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, is(numberOfRecords));
+      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
   }
 
   @Test
