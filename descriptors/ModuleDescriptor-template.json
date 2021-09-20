@@ -3,6 +3,19 @@
   "name": "Inventory Storage Module",
   "provides": [
     {
+      "id": "item-storage-dereferenced",
+      "version": "0.1",
+      "handlers": [{
+        "methods": ["GET"],
+        "pathPattern": "/item-storage-dereferenced/items",
+        "permissionsRequired": ["inventory-storage-dereferenced.items.collection.get"]
+      },{
+        "methods": ["GET"],
+        "pathPattern": "/item-storage-dereferenced/items/{id}",
+        "permissionsRequired": ["inventory-storage-dereferenced.items.item.get"]
+      }]
+    },
+    {
       "id": "item-storage",
       "version": "9.0",
       "handlers": [
@@ -1223,6 +1236,16 @@
       "description": "get individual item from storage"
     },
     {
+      "permissionName": "inventory-storage-dereferenced.items.item.get",
+      "displayName": "inventory storage - get dereferenced version of individual item",
+      "description": "get dereferenced individual item from storage"
+    },
+    {
+      "permissionName":"inventory-storage-dereferenced.items.collection.get",
+      "displayName": "inventory storage - get collection of dereferenced item records",
+      "description": "get dereferenced item collections from storage"
+    },
+    {
       "permissionName": "inventory-storage.items.item.post",
       "displayName": "inventory storage - create individual item",
       "description": "create individual item in storage"
@@ -2234,6 +2257,8 @@
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
       "subPermissions": [
+        "inventory-storage-dereferenced.items.item.get",
+        "inventory-storage-dereferenced.items.collection.get",
         "inventory-storage.items.collection.get",
         "inventory-storage.items.item.get",
         "inventory-storage.items.item.post",

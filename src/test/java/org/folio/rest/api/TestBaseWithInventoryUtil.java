@@ -56,6 +56,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static String bookMaterialTypeID;
   protected static UUID   canCirculateLoanTypeId;
   protected static String canCirculateLoanTypeID;
+  protected static UUID   nonCirculatingLoanTypeId;
+  protected static String nonCirculatingLoanTypeID;
 
   // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
   // that JUnit calls *before* the @BeforeClass beforeAny() method.
@@ -104,6 +106,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     LoanTypesClient loanTypesClient = new LoanTypesClient(client, loanTypesStorageUrl(""));
     canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
     canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
+    nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating");
+    nonCirculatingLoanTypeId = UUID.fromString(nonCirculatingLoanTypeID);
 
     LocationsTest.createLocUnits(true);
     LocationsTest.createLocation(mainLibraryLocationId,  MAIN_LIBRARY_LOCATION,  "TestBaseWI/M");
