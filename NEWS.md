@@ -1,3 +1,7 @@
+## 21.0.5 2021-09-21
+
+* Disable item barcode uniqueness check for R2 2021/Juniper (MODINVSTOR-782)
+
 ## 21.0.4 2021-09-06
 
 * Enforce item barcode uniqueness (MODINVSTOR-523)
