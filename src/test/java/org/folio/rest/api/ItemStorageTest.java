@@ -84,6 +84,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -1583,6 +1584,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertCqlFindsBarcodes("id==*", null, null, null, null);
   }
 
+  @Ignore("Uniqueness check disabled for v21.* (R2 2021 Juniper) MODINVSTOR-782")
   @Test
   public void cannotCreateItemWithDuplicateBarcode() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
@@ -1593,6 +1595,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         hasValidationError("9876a"));
   }
 
+  @Ignore("Uniqueness check disabled for v21.* (R2 2021 Juniper) MODINVSTOR-782")
   @Test
   public void cannotUpdateItemWithDuplicateBarcode() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
