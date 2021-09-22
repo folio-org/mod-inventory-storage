@@ -1,4 +1,4 @@
-
+-- Creates function returned instance identifiers with holdings and items by specified instances ids
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_items_and_holdings_view(instanceIds                        uuid[],
                                                                                    skipSuppressedFromDiscoveryRecords bool DEFAULT TRUE)
     RETURNS TABLE
@@ -248,3 +248,4 @@ FROM viewInstances vi
 		      ON viah.instId = vi.instId
 
 $BODY$ LANGUAGE sql;
+
