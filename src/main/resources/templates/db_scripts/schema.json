@@ -790,7 +790,7 @@
       "uniqueIndex": [
         {
           "fieldName": "barcode",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": false
         },
@@ -805,6 +805,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
         },
         {
           "fieldName": "status.name",
