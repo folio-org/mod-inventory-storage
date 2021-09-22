@@ -853,6 +853,12 @@
       ],
       "ginIndex": [
         {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
           "fieldName": "status.name",
           "tOps": "ADD",
           "caseSensitive": false,
@@ -860,6 +866,10 @@
         }
       ],
       "fullTextIndex": [
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD"
+        },
         {
           "fieldName": "callNumberAndSuffixNormalized",
           "sqlExpression" : "normalize_item_call_number_and_suffix(jsonb)",

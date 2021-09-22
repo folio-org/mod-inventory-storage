@@ -1628,11 +1628,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(temeraire(holdingsRecordId));
     createItem(interestingTimes(holdingsRecordId));
     assertCqlFindsBarcodes("barcode==673274826203", "673274826203");
-    // respect accents, ignore case
-    assertCqlFindsBarcodes("barcode==123456a", "123456a");
-    assertCqlFindsBarcodes("barcode==123456A", "123456a");
-    assertCqlFindsBarcodes("barcode==123456ä", "123456ä");
-    assertCqlFindsBarcodes("barcode==123456Ä", "123456ä");
+    // ignore accents, ignore case
+    assertCqlFindsBarcodes("barcode==123456a sortBy barcode", "123456a", "123456ä");
+    assertCqlFindsBarcodes("barcode==123456A sortBy barcode", "123456a", "123456ä");
     assertCqlFindsBarcodes("barcode==123456* sortBy barcode", "123456a", "123456ä");
   }
 
