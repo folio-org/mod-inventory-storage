@@ -1,3 +1,7 @@
+## 21.0.6 2021-09-22
+
+* Completely revert MODINVSTOR-523 shipped with v21.0.4 (MODINVSTOR-783)
+
 ## 21.0.5 2021-09-22
 
 * Disable item barcode uniqueness check for R2 2021/Juniper (MODINVSTOR-782)
