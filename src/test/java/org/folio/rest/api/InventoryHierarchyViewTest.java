@@ -55,6 +55,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,11 +82,6 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   @Before
   public void setUp() {
-    deleteAll(itemsStorageUrl(""));
-    deleteAll(holdingsStorageUrl(""));
-    deleteAll(instancesStorageUrl(""));
-    clearAuditTables();
-
     params = new HashMap<>();
 
     holdingsRecordIdPredefined = createInstanceAndHolding(mainLibraryLocationId);
@@ -95,6 +91,14 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     createItem(mainLibraryLocationId, "item barcode", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
+  }
+
+  @After
+  public void clean() {
+    deleteAll(itemsStorageUrl(""));
+    deleteAll(holdingsStorageUrl(""));
+    deleteAll(instancesStorageUrl(""));
+    clearAuditTables();
   }
 
   @Test
@@ -391,9 +395,10 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     UUID instanceId = UUID.fromString(predefinedInstance.getString("id"));
     UUID holdingId = createHolding(instanceId, mainLibraryLocationId, null);
-    JsonObject item = new ItemRequestBuilder().forHolding(holdingId).withBarcode("barcode")
+    JsonObject item = new ItemRequestBuilder().forHolding(holdingId)
+      .withBarcode("21734")
       .withTemporaryLocation(mainLibraryLocationId)
-      .withItemLevelCallNumber("some call number")
+      .withItemLevelCallNumber("item suppressed call number")
       .withMaterialType(journalMaterialTypeId)
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withDiscoverySuppress(true).create();
