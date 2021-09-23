@@ -402,9 +402,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
-    UUID[] instanceIds = {instanceId};
-    JsonObject instancesData = requestInventoryHierarchyItemsAndHoldingsViewInstance(
-      instanceIds, true, response -> assertThat(response.getStatusCode(), is(200))).get(0);
+    JsonObject instancesData = getInventoryHierarchyInstances(params).get(0);
     JsonArray holdings  = (JsonArray)instancesData.getValue("holdings");
     JsonArray items = (JsonArray)instancesData.getValue("items");
 
