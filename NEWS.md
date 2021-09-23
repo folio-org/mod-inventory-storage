@@ -1,10 +1,22 @@
+## 21.0.6 2021-09-23
+
+* Completely revert MODINVSTOR-523 shipped with v21.0.4 (MODINVSTOR-783).
+
 ## 21.0.5 2021-09-22
 
-* Disable item barcode uniqueness check for R2 2021/Juniper (MODINVSTOR-782)
+* Disable item barcode uniqueness check that v21.0.4 has installed (MODINVSTOR-782).
+  Item barcode respects accents and is case insensitive and has a non-unique field index.
+  All other database indexes for item barcode are removed:
+  non-unique fullTextIndex, non-unique ginIndex -
+  these indexes are case insensitive but incorrectly ignore accents
 
 ## 21.0.4 2021-09-06
 
-* Enforce item barcode uniqueness (MODINVSTOR-523)
+* Enforce item barcode uniqueness (MODINVSTOR-523).
+  The uniqueness check respects accents and is case insensitive.
+  All other database indexes for item barcode are removed:
+  non-unique field index, non-unique fullTextIndex, non-unique ginIndex -
+  these indexes are case insensitive but incorrectly ignore accents
 
 ## 21.0.3 2021-08-16
 
