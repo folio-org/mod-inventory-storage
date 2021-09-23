@@ -75,7 +75,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCancelReindex() {
+  public void canCancelIteration() {
     var rowStream = new TestRowStream(10_000_000);
     var iterationJob = iterationJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
@@ -87,6 +87,9 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     jobRunner(postgresClientFuturized).startIteration(iterationJob);
+
+    await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
+      .getMessagesPublished() >= 1000);
 
     instanceIteration.cancelIterationJob(iterationJob.getId());
 

@@ -19,6 +19,7 @@ import java.util.function.UnaryOperator;
 
 import io.vertx.core.Future;
 import org.folio.persist.IterationJobRepository;
+import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,4 +69,31 @@ public class IterationServiceTest {
 
     assertThat(result, nullValue());
   }
+
+  @Test
+  public void canGetIteration() {
+    var jobId = UUID.randomUUID().toString();
+    IterationJob existing = new IterationJob().withId(jobId);
+
+    when(repository.getById(eq(jobId)))
+      .thenReturn(Future.succeededFuture(existing));
+
+    var job = get(service.getIteration(jobId));
+
+    assertThat(job.isPresent(), is(true));
+    assertThat(job.get(), is(existing));
+  }
+
+  @Test
+  public void canGetEmptyIteration() {
+    var jobId = UUID.randomUUID().toString();
+
+    when(repository.getById(eq(jobId)))
+      .thenReturn(Future.succeededFuture(null));
+
+    var job = get(service.getIteration(jobId));
+
+    assertThat(job.isPresent(), is(false));
+  }
+
 }

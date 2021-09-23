@@ -6,6 +6,7 @@ import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -26,6 +27,10 @@ public final class IterationService {
   public IterationService(IterationJobRepository repository, IterationJobRunner runner) {
     this.repository = repository;
     this.jobRunner = runner;
+  }
+
+  public Future<Optional<IterationJob>> getIteration(String jobId) {
+    return repository.getById(jobId).map(Optional::ofNullable);
   }
 
   public Future<IterationJob> submitIteration(IterationJobParams jobParams) {
