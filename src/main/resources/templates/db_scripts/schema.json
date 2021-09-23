@@ -1071,7 +1071,7 @@
     {
       "run": "after",
       "snippetPath": "inventory-hierarchy/addHoldingsIfItemsSuppressedItemsAndHoldingsView.sql",
-      "fromModuleVersion": "21.1.0"
+      "fromModuleVersion": "22.0.0"
     }
   ]
 }
