@@ -3,15 +3,15 @@ package org.folio.services.kafka.topic;
 public class KafkaTopic {
 
   public static KafkaTopic instance(String tenantId, String environmentName) {
-    return new KafkaTopic(qualifyName("inventory.instance", environmentName, tenantId));
+    return forName("inventory.instance", tenantId, environmentName);
   }
 
   public static KafkaTopic holdingsRecord(String tenantId, String environmentName) {
-    return new KafkaTopic(qualifyName("inventory.holdings-record", environmentName, tenantId));
+    return forName("inventory.holdings-record", tenantId, environmentName);
   }
 
   public static KafkaTopic item(String tenantId, String environmentName) {
-    return new KafkaTopic(qualifyName("inventory.item", environmentName, tenantId));
+    return forName("inventory.item", tenantId, environmentName);
   }
 
   public static KafkaTopic forName(String name, String tenantId, String environmentName) {

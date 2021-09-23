@@ -54,7 +54,7 @@ public class IterationJobRunner {
   }
 
   public IterationJobRunner(PostgresClientFuturized postgresClient, IterationJobRepository repository,
-                          Context vertxContext, Map<String, String> okapiHeaders) {
+      Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
