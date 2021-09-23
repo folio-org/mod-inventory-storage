@@ -2,12 +2,13 @@ package org.folio.rest.impl;
 
 import static org.folio.rest.persist.PgUtil.getById;
 
+import javax.ws.rs.core.Response;
+import java.util.Map;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import java.util.Map;
-import javax.ws.rs.core.Response;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
@@ -22,7 +23,7 @@ public class InstanceIterationAPI implements InstanceStorageInstancesIteration {
 
     new IterationService(vertxContext, okapiHeaders).submitIteration(jobParams)
       .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(
-          PostInstanceStorageInstancesIterationResponse.respond200WithApplicationJson(response))))
+          PostInstanceStorageInstancesIterationResponse.respond201WithApplicationJson(response))))
       .onFailure(error -> asyncResultHandler.handle(Future.succeededFuture(
           PostInstanceStorageInstancesIterationResponse.respond500WithTextPlain(error.getMessage()))));
   }

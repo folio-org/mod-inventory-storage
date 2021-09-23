@@ -3,10 +3,10 @@ package org.folio.services.iteration;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.Environment.environmentName;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
-import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IDS_PUBLISHED;
-import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.ID_PUBLISHING_CANCELLED;
-import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.ID_PUBLISHING_FAILED;
-import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.PENDING_CANCEL;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.FAILED;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Map;
@@ -106,8 +106,8 @@ public class IterationJobRunner {
 
   private void logReindexCompleted(Long recordsPublished, IterationContext context) {
     repository.fetchAndUpdate(context.getJobId(),
-      job -> job.withPublished(recordsPublished.intValue())
-        .withJobStatus(IDS_PUBLISHED));
+      job -> job.withMessagesPublished(recordsPublished.intValue())
+        .withJobStatus(COMPLETED));
   }
 
   private Future<Long> processStream(IterationContext context) {
@@ -122,9 +122,9 @@ public class IterationJobRunner {
     }
 
     return repository
-      .fetchAndUpdate(context.getJobId(), job -> job.withPublished(records.intValue()))
+      .fetchAndUpdate(context.getJobId(), job -> job.withMessagesPublished(records.intValue()))
       .map(job -> {
-        if (job.getJobStatus() == PENDING_CANCEL) {
+        if (job.getJobStatus() == CANCELLATION_PENDING) {
           throw new IllegalStateException("The job has been cancelled");
         }
         return job;
@@ -138,9 +138,9 @@ public class IterationJobRunner {
   private void logFailedJob(IterationContext context) {
     repository.fetchAndUpdate(context.getJobId(),
       resp -> {
-        var finalStatus = resp.getJobStatus() == PENDING_CANCEL
-          ? ID_PUBLISHING_CANCELLED
-          : ID_PUBLISHING_FAILED;
+        var finalStatus = resp.getJobStatus() == CANCELLATION_PENDING
+          ? CANCELLED
+          : FAILED;
 
         return resp.withJobStatus(finalStatus);
       });

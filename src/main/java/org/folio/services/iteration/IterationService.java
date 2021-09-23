@@ -1,13 +1,14 @@
 package org.folio.services.iteration;
 
 import static java.util.UUID.randomUUID;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
-import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.PENDING_CANCEL;
+
+import java.util.Date;
+import java.util.Map;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import java.util.Date;
-import java.util.Map;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
@@ -40,14 +41,14 @@ public final class IterationService {
 
   public Future<Void> cancelIteration(String jobId) {
     return repository.fetchAndUpdate(jobId,
-      resp -> resp.withJobStatus(PENDING_CANCEL)).mapEmpty();
+      resp -> resp.withJobStatus(CANCELLED)).mapEmpty();
   }
 
   private IterationJob buildInitialJob(IterationJobParams jobParams) {
     return new IterationJob()
       .withJobParams(jobParams)
       .withJobStatus(IN_PROGRESS)
-      .withPublished(0)
+      .withMessagesPublished(0)
       .withSubmittedDate(new Date())
       .withId(randomUUID().toString());
   }

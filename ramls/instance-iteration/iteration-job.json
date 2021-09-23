@@ -8,8 +8,8 @@
       "type": "string",
       "$ref": "../raml-util/schemas/uuid.schema"
     },
-    "published": {
-      "description": "Number of records that was published so far",
+    "messagesPublished": {
+      "description": "Number of messages that was published so far",
       "type": "integer",
       "minimum": 0,
       "default": 0
@@ -19,10 +19,10 @@
       "type": "string",
       "enum": [
         "In progress",
-        "Id publishing failed",
-        "Ids published",
-        "Pending cancel",
-        "Id publishing cancelled"
+        "Failed",
+        "Completed",
+        "Cancellation pending",
+        "Cancelled"
       ]
     },
     "submittedDate": {

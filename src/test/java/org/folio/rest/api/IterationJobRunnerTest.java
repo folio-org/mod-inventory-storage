@@ -5,8 +5,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IDS_PUBLISHED;
-import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.ID_PUBLISHING_CANCELLED;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
+import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -61,12 +61,12 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     jobRunner(postgresClientFuturized).startIteration(iterationJob);
 
     await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
-      .getJobStatus() == IDS_PUBLISHED);
+      .getJobStatus() == COMPLETED);
 
     var job = instanceIteration.getIterationJob(iterationJob.getId());
 
-    assertThat(job.getPublished(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
+    assertThat(job.getMessagesPublished(), is(numberOfRecords));
+    assertThat(job.getJobStatus(), is(COMPLETED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
     // Should be a single iteration message for each instance ID generated in the row stream
@@ -91,12 +91,12 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     instanceIteration.cancelIterationJob(iterationJob.getId());
 
     await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
-      .getJobStatus() == ID_PUBLISHING_CANCELLED);
+      .getJobStatus() == CANCELLED);
 
     var job = instanceIteration.getIterationJob(iterationJob.getId());
 
-    assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
-    assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
+    assertThat(job.getJobStatus(), is(CANCELLED));
+    assertThat(job.getMessagesPublished(), greaterThanOrEqualTo(1000));
   }
 
   private IterationJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {

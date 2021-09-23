@@ -49,7 +49,7 @@ public class IterationServiceTest {
 
     assertThat(job.getId(), notNullValue());
     assertThat(job.getJobStatus(), is(IN_PROGRESS));
-    assertThat(job.getPublished(), is(0));
+    assertThat(job.getMessagesPublished(), is(0));
     assertThat(job.getSubmittedDate(), notNullValue());
     assertThat(job.getJobParams(), is(jobParams));
 
