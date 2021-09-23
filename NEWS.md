@@ -1,6 +1,4 @@
 ## 22.0.0 IN-PROGRESS
-<<<<<<< HEAD
-=======
 
 * Added new identifiers for ISMN and UPC (MODINVSTOR-770)
 * Keyword searches now search alternate title fields (MODINVSTOR-719)
