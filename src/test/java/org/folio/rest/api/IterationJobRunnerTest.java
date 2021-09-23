@@ -1,36 +1,36 @@
 package org.folio.rest.api;
 
+import io.vertx.core.Context;
 import static io.vertx.core.Future.succeededFuture;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
+import org.folio.persist.IterationJobRepository;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import org.folio.rest.jaxrs.model.IterationJob;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
+import org.folio.rest.jaxrs.model.IterationJobParams;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.support.fixtures.InstanceIterationFixture;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
+import org.folio.rest.support.sql.TestRowStream;
+import org.folio.services.iteration.IterationJobRunner;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
-
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
-
-import io.vertx.core.Context;
-import org.folio.persist.IterationJobRepository;
-import org.folio.rest.jaxrs.model.IterationJob;
-import org.folio.rest.jaxrs.model.IterationJobParams;
-import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
-import org.folio.rest.support.sql.TestRowStream;
-import org.folio.services.iteration.IterationJobRunner;
-import org.junit.Test;
 
 public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
@@ -39,8 +39,15 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   // FakeKafkaConsumer
   private static final String TEST_TOPIC = "inventory.instance";
 
+  private static InstanceIterationFixture instanceIteration;
+
   private final IterationJobRepository repository = getRepository();
 
+
+  @BeforeClass
+  public static void beforeClass() throws Exception {
+    instanceIteration = new InstanceIterationFixture(client);
+  }
 
   @Test
   public void canIterateInstances() {
