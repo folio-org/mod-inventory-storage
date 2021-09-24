@@ -2,7 +2,6 @@ package org.folio.services.iteration;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.Environment.environmentName;
-import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
@@ -18,6 +17,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.IterationJob;
@@ -42,24 +42,27 @@ public class IterationJobRunner {
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClientFuturized postgresClient;
-  private final IterationJobRepository repository;
+  private final IterationJobRepository jobRepository;
+  private final InstanceRepository instanceRepository;
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
 
   public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
     this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
       new IterationJobRepository(vertxContext, okapiHeaders),
+      new InstanceRepository(vertxContext, okapiHeaders),
       vertxContext,
       okapiHeaders);
   }
 
   public IterationJobRunner(PostgresClientFuturized postgresClient, IterationJobRepository repository,
-      Context vertxContext, Map<String, String> okapiHeaders) {
+      InstanceRepository instanceRepository, Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
     this.postgresClient = postgresClient;
-    this.repository = repository;
+    this.jobRepository = repository;
+    this.instanceRepository = instanceRepository;
 
     initWorker(vertxContext);
   }
@@ -100,12 +103,11 @@ public class IterationJobRunner {
   }
 
   private Future<RowStream<Row>> selectInstanceIds(IterationContext ctx) {
-    return postgresClient.selectStream(ctx.connection,
-      "SELECT id FROM " + postgresClient.getFullTableName(INSTANCE_TABLE));
+    return instanceRepository.getAllIds(ctx.connection);
   }
 
   private void logReindexCompleted(Long recordsPublished, IterationContext context) {
-    repository.fetchAndUpdate(context.getJobId(),
+    jobRepository.fetchAndUpdate(context.getJobId(),
       job -> job.withMessagesPublished(recordsPublished.intValue())
         .withJobStatus(COMPLETED));
   }
@@ -121,7 +123,7 @@ public class IterationJobRunner {
       return succeededFuture(context.job);
     }
 
-    return repository
+    return jobRepository
       .fetchAndUpdate(context.getJobId(), job -> job.withMessagesPublished(records.intValue()))
       .map(job -> {
         if (job.getJobStatus() == CANCELLATION_PENDING) {
@@ -136,7 +138,7 @@ public class IterationJobRunner {
   }
 
   private void logFailedJob(IterationContext context) {
-    repository.fetchAndUpdate(context.getJobId(),
+    jobRepository.fetchAndUpdate(context.getJobId(),
       resp -> {
         var finalStatus = resp.getJobStatus() == CANCELLATION_PENDING
           ? CANCELLED
