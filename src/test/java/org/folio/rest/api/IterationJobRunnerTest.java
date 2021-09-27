@@ -10,13 +10,13 @@ import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.Map;
@@ -32,6 +32,7 @@ import org.folio.rest.support.fixtures.InstanceIterationFixture;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.iteration.IterationJobRunner;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -44,7 +45,9 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
   private static InstanceIterationFixture instanceIteration;
 
-  private final IterationJobRepository repository = getJobRepository();
+  private IterationJobRepository jobRepository;
+  private InstanceRepository instanceRepository;
+  private IterationJobRunner jobRunner;
 
 
   @BeforeClass
@@ -52,22 +55,31 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     instanceIteration = new InstanceIterationFixture(client);
   }
 
+  @Before
+  public void setUp() {
+    jobRepository = new IterationJobRepository(getContext(), okapiHeaders());
+    instanceRepository = mock(InstanceRepository.class);
+
+    var postgresClient = postgresClient(getContext(), okapiHeaders());
+    jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
+        jobRepository, instanceRepository, getContext(), okapiHeaders());
+
+    // Make sure no events are left over from previous runs
+    FakeKafkaConsumer.removeAllEvents();
+  }
+
   @Test
   public void canIterateInstances() {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
     var iterationJob = iterationJob();
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
 
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+    when(instanceRepository.getAllIds(any()))
+        .thenReturn(succeededFuture(rowStream));
 
-    get(repository.save(iterationJob.getId(), iterationJob));
+    get(jobRepository.save(iterationJob.getId(), iterationJob));
 
-    // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.removeAllEvents();
-
-    jobRunner(postgresClientFuturized).startIteration(iterationJob);
+    jobRunner.startIteration(iterationJob);
 
     await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
       .getJobStatus() == COMPLETED);
@@ -80,21 +92,20 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
     // Should be a single iteration message for each instance ID generated in the row stream
     await().atMost(5, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
+      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, equalTo(numberOfRecords));
   }
 
   @Test
   public void canCancelIteration() {
     var rowStream = new TestRowStream(10_000_000);
     var iterationJob = iterationJob();
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
 
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+    when(instanceRepository.getAllIds(any()))
+        .thenReturn(succeededFuture(rowStream));
 
-    get(repository.save(iterationJob.getId(), iterationJob));
+    get(jobRepository.save(iterationJob.getId(), iterationJob));
 
-    jobRunner(postgresClientFuturized).startIteration(iterationJob);
+    jobRunner.startIteration(iterationJob);
 
     await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
       .getMessagesPublished() >= 1000);
@@ -108,11 +119,6 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
     assertThat(job.getJobStatus(), is(CANCELLED));
     assertThat(job.getMessagesPublished(), greaterThanOrEqualTo(1000));
-  }
-
-  private IterationJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
-    return new IterationJobRunner(postgresClientFuturized,
-      repository, getInstanceRepository(), getContext(), okapiHeaders());
   }
 
   private static IterationJob iterationJob() {
@@ -131,19 +137,6 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
   private static Context getContext() {
     return StorageTestSuite.getVertx().getOrCreateContext();
-  }
-
-  private PostgresClientFuturized getPostgresClientFuturized() {
-    var postgresClient = postgresClient(getContext(), okapiHeaders());
-    return new PostgresClientFuturized(postgresClient);
-  }
-
-  private IterationJobRepository getJobRepository() {
-    return new IterationJobRepository(getContext(), okapiHeaders());
-  }
-
-  private InstanceRepository getInstanceRepository() {
-    return new InstanceRepository(getContext(), okapiHeaders());
   }
 
 }
