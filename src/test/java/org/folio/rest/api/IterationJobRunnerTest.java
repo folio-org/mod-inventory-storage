@@ -10,7 +10,6 @@ import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -92,7 +91,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
     // Should be a single iteration message for each instance ID generated in the row stream
     await().atMost(5, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, equalTo(numberOfRecords));
+      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
   }
 
   @Test
