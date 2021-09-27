@@ -97,7 +97,7 @@ public class IterationJobRunner {
           var published = recordsPublished.result();
           log.info("Instance iteration completed: totalRecords = {}", published);
 
-          logReindexCompleted(published, context);
+          logIterationCompleted(published, context);
         }
       });
   }
@@ -106,7 +106,7 @@ public class IterationJobRunner {
     return instanceRepository.getAllIds(ctx.connection);
   }
 
-  private void logReindexCompleted(Long recordsPublished, IterationContext context) {
+  private void logIterationCompleted(Long recordsPublished, IterationContext context) {
     jobRepository.fetchAndUpdate(context.getJobId(),
       job -> job.withMessagesPublished(recordsPublished.intValue())
         .withJobStatus(COMPLETED));
