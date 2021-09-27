@@ -1067,6 +1067,11 @@
       "run": "after",
       "snippetPath": "addIdentifierTypesUpcIsmn.sql",
       "fromModuleVersion": "21.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/addHoldingsIfItemsSuppressedItemsAndHoldingsView.sql",
+      "fromModuleVersion": "22.0.0"
     }
   ]
 }
