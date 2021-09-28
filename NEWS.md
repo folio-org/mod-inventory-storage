@@ -4,8 +4,17 @@
 * Keyword searches now search alternate title fields (MODINVSTOR-719)
 * Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
 * Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
+* shouldStopProcessingWhenCannotConvertItem depends on other test (MODINVSTOR-725)
 * Enforce item barcode uniqueness (MODINVSTOR-523)
 * Implement a new endpoint for dereferenced item records (MODINVSTOR-769)
+* Enables failOnConflict for optimistic locking for item, holdings, instance (MODINVSTOR-713, MODINVSTOR-726)
+* Provides `item-storage 9.0`
+* Provides `item-storage-batch-sync 1.0`
+* Provides `holdings-storage 5.0`
+* Provides `holdings-storage-batch-sync 1.0`
+* Provides `instance-storage 8.0`
+* Provides `instance-storage-batch 1.0`
+* Provides `instance-storage-batch-sync 1.0`
 
 ## 21.0.0 2021-06-10
 

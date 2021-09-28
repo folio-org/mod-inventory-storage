@@ -17,7 +17,7 @@
     },
     {
       "id": "item-storage",
-      "version": "8.9",
+      "version": "9.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -48,7 +48,7 @@
     },
     {
       "id": "item-storage-batch-sync",
-      "version": "0.6",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -59,7 +59,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "4.6",
+      "version": "5.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -90,7 +90,7 @@
     },
     {
       "id": "holdings-storage-batch-sync",
-      "version": "0.3",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -101,7 +101,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "7.8",
+      "version": "8.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -199,7 +199,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "0.3",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -210,7 +210,7 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "0.3",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
