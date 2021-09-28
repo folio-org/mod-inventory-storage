@@ -211,9 +211,14 @@ public class InterfaceUrls {
 
   public static URL instanceReindex(String path) {
     return StorageTestSuite.storageUrl("/instance-storage/reindex" + path);
-  }
 
+  }
   public static URL dereferencedItemStorage(String path) {
     return StorageTestSuite.storageUrl("/item-storage-dereferenced/items" + path);
   }
+
+  public static URL instanceIteration(String path) {
+    return StorageTestSuite.storageUrl("/instance-storage/instances/iteration" + path);
+  }
+
 }

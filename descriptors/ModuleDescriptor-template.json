@@ -1192,6 +1192,27 @@
           "permissionsRequired": ["inventory-storage.instance.reindex.item.delete"]
         }
       ]
+    },
+    {
+      "id": "instance-iteration",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances/iteration",
+          "permissionsRequired": ["inventory-storage.instance.iteration.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instances/iteration/{id}",
+          "permissionsRequired": ["inventory-storage.instance.iteration.item.get"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/instances/iteration/{id}",
+          "permissionsRequired": ["inventory-storage.instance.iteration.item.delete"]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -2248,6 +2269,21 @@
       "description": "submit reindex instance job"
     },
     {
+      "permissionName": "inventory-storage.instance.iteration.post",
+      "displayName": "inventory storage - submit iteration instance job",
+      "description": "submit iteration instance job"
+    },
+    {
+      "permissionName": "inventory-storage.instance.iteration.item.get",
+      "displayName": "inventory storage - get iteration job by id",
+      "description": "get iteration job by id"
+    },
+    {
+      "permissionName": "inventory-storage.instance.iteration.item.delete",
+      "displayName": "inventory storage - cancel iteration job",
+      "description": "cancel running iteration job"
+    },
+    {
       "permissionName": "inventory-storage.inventory-view.instances.collection.get",
       "displayName": "inventory view - get instances by query with their holdings and items",
       "description": "get instances by query with their holdings and items"
@@ -2467,7 +2503,10 @@
         "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
         "inventory-storage.instance.reindex.item.delete",
         "inventory-storage.instance.reindex.item.get",
-        "inventory-storage.instance.reindex.post"
+        "inventory-storage.instance.reindex.post",
+        "inventory-storage.instance.iteration.post",
+        "inventory-storage.instance.iteration.item.get",
+        "inventory-storage.instance.iteration.item.delete"
       ]
     }
   ],

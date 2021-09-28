@@ -18,9 +18,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
+import io.vertx.core.Handler;
+import io.vertx.kafka.client.producer.KafkaProducer;
 import org.folio.kafka.KafkaProducerManager;
-import org.folio.rest.api.ReindexJobRunnerTest;
 import org.folio.rest.api.entities.Instance;
+import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.kafka.InventoryProducerRecordBuilder;
 import org.folio.services.kafka.topic.KafkaTopic;
 import org.junit.Before;
@@ -29,9 +31,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import io.vertx.core.Handler;
-import io.vertx.kafka.client.producer.KafkaProducer;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommonDomainEventPublisherTest {
@@ -49,7 +48,7 @@ public class CommonDomainEventPublisherTest {
 
   @Test
   public void shouldPauseStreamWhenProducerIsFull() {
-    var stream = spy(new ReindexJobRunnerTest.TestRowStream(6));
+    var stream = spy(new TestRowStream(6));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
     when(producer.writeQueueFull()).thenReturn(false, false, false, true, false, true);
@@ -68,7 +67,7 @@ public class CommonDomainEventPublisherTest {
 
   @Test
   public void shouldStopProcessingIfProgressThrowsError() {
-    var stream = spy(new ReindexJobRunnerTest.TestRowStream(6));
+    var stream = spy(new TestRowStream(6));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
     when(producer.send(any())).thenReturn(succeededFuture());
@@ -90,7 +89,7 @@ public class CommonDomainEventPublisherTest {
   @Test
   @SuppressWarnings("unchecked")
   public void shouldAdjustRecordCountWhenSomeFailed() {
-    var stream = spy(new ReindexJobRunnerTest.TestRowStream(4));
+    var stream = spy(new TestRowStream(4));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
     when(producer.send(any()))
@@ -105,7 +104,7 @@ public class CommonDomainEventPublisherTest {
 
   @Test
   public void shouldStopProcessingIfErrorOccurred() {
-    var stream = spy(new ReindexJobRunnerTest.TestRowStream(4));
+    var stream = spy(new TestRowStream(4));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
     when(producer.send(any())).thenThrow(new IllegalStateException("server error"));
