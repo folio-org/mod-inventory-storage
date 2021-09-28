@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Iteration job",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Job id",
+      "type": "string",
+      "$ref": "../raml-util/schemas/uuid.schema"
+    },
+    "messagesPublished": {
+      "description": "Number of messages that was published so far",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "jobStatus": {
+      "description": "Overall job status",
+      "type": "string",
+      "enum": [
+        "In progress",
+        "Failed",
+        "Completed",
+        "Cancellation pending",
+        "Cancelled"
+      ]
+    },
+    "submittedDate": {
+      "description": "Timestamp when the job has been submitted",
+      "type": "string",
+      "format": "date-time"
+    },
+    "jobParams" : {
+      "description": "Job parameters",
+      "type": "object",
+      "$ref": "iteration-job-params.json"
+    }
+  },
+  "additionalProperties": false
+}

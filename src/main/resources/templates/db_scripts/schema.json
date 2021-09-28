@@ -920,6 +920,11 @@
       "tableName": "notification_sending_error",
       "withMetadata": false,
       "withAuditing": false
+    },
+    {
+      "tableName": "iteration_job",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [

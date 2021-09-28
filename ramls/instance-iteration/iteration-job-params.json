@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Iteration job parameters",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.IterationJobParams",
+  "properties":
+  {
+    "eventType":
+    {
+      "description": "Type of events to be published",
+      "type": "string",
+      "default": "ITERATE"
+    },
+    "topicName":
+    {
+      "description": "Name of Kafka topic to publish events to",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "topicName"
+  ]
+}
