@@ -26,7 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.folio.services.migration.BaseMigrationService;
-import org.folio.services.migration.instance.PublicationPeriodMigrationService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
 public class TenantRefAPI extends TenantAPI {
@@ -160,8 +159,7 @@ public class TenantRefAPI extends TenantAPI {
     log.info("About to start java migrations...");
 
     List<BaseMigrationService> javaMigrations = List.of(
-      new ItemShelvingOrderMigrationService(context, okapiHeaders),
-      new PublicationPeriodMigrationService(context, okapiHeaders));
+      new ItemShelvingOrderMigrationService(context, okapiHeaders));
 
     var startedMigrations = javaMigrations.stream()
       .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
