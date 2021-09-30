@@ -1,3 +1,7 @@
+## 21.0.7 2021-09-30
+
+* Removes publication period defaulting during upgrade (MODINVSTOR-806)
+
 ## 21.0.6 2021-09-23
 
 * Completely revert MODINVSTOR-523 shipped with v21.0.4 (MODINVSTOR-783).
