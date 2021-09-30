@@ -85,6 +85,7 @@ import org.testcontainers.utility.DockerImageName;
   PreviouslyHeldDataUpgradeTest.class,
   ItemShelvingOrderMigrationServiceApiTest.class,
   NotificationSendingErrorRepositoryTest.class,
+  PublicationPeriodMigrationTest.class,
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   IterationJobRunnerTest.class
 })
