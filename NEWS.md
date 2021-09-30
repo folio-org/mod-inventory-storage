@@ -1,6 +1,6 @@
-## 21.0.7 2021-09-30
+## 21.0.8 2021-09-30
 
-* Removes publication period defaulting during upgrade (MODINVSTOR-774)
+* Adds sql migration for publication period (MODINVSTOR-774)
 
 ## 21.0.7 2021-09-30
 
