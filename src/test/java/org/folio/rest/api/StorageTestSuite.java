@@ -85,6 +85,7 @@ import lombok.SneakyThrows;
   PreviouslyHeldDataUpgradeTest.class,
   ItemShelvingOrderMigrationServiceApiTest.class,
   NotificationSendingErrorRepositoryTest.class,
+  PublicationPeriodMigrationTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

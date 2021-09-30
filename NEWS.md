@@ -1,5 +1,9 @@
 ## 21.0.7 2021-09-30
 
+* Removes publication period defaulting during upgrade (MODINVSTOR-774)
+
+## 21.0.7 2021-09-30
+
 * Removes publication period defaulting during upgrade (MODINVSTOR-806)
 
 ## 21.0.6 2021-09-23
