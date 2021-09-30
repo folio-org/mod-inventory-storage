@@ -143,6 +143,7 @@ public class CommonDomainEventPublisher<T> {
       });
 
     return promise.future()
+      .onComplete(e -> kafkaProducer.end(ear -> kafkaProducer.close()))
       .onSuccess(records -> log.info("Total records published from stream {}", records));
   }
 
@@ -153,9 +154,13 @@ public class CommonDomainEventPublisher<T> {
       .key(key).value(value).topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders)
       .build();
 
-    return getOrCreateProducer().send(producerRecord)
+    KafkaProducer<String, String> producer = getOrCreateProducer();
+
+    return producer.send(producerRecord)
       .<Void>map(notUsed -> null)
       .onComplete(result -> {
+        producer.end(par -> producer.close());
+
         if (result.failed()) {
           log.error("Unable to send domain event [{}], payload - [{}]",
             key, value, result.cause());
