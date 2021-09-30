@@ -1,3 +1,7 @@
+## 21.0.8 2021-09-30
+
+* Fix database memory bug by updating RMB to 33.1.1 and Vert.x to 4.1.4 (MODINVSTOR-793, MODINVSTOR-795)
+
 ## 21.0.7 2021-09-30
 
 * Removes publication period defaulting during upgrade (MODINVSTOR-806)
