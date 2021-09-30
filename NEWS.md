@@ -7,6 +7,7 @@
 * shouldStopProcessingWhenCannotConvertItem depends on other test (MODINVSTOR-725)
 * Enforce item barcode uniqueness (MODINVSTOR-523)
 * Implement a new endpoint for dereferenced item records (MODINVSTOR-769)
+* Update RMB to 33.1.1 and Vert.x to 4.1.4 (MODINVSTOR-793)
 * Enables failOnConflict for optimistic locking for item, holdings, instance (MODINVSTOR-713, MODINVSTOR-726)
 * Provides `item-storage 9.0`
 * Provides `item-storage-batch-sync 1.0`
