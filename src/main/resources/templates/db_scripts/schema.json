@@ -1082,7 +1082,7 @@
     {
       "run": "after",
       "snippetPath": "populatePublicationPeriod.sql",
-      "fromModuleVersion": "21.0.7"
+      "fromModuleVersion": "21.0.9"
     }
   ]
 }
