@@ -1,6 +1,10 @@
-## 21.0.8 2021-09-30
+## 21.0.9
 
 * Adds sql migration for publication period (MODINVSTOR-774)
+
+## 21.0.8 2021-09-30
+
+* Fix database memory bug by updating RMB to 33.1.1 and Vert.x to 4.1.4 (MODINVSTOR-793, MODINVSTOR-795)
 
 ## 21.0.7 2021-09-30
 
