@@ -36,15 +36,21 @@ CREATE OR REPLACE FUNCTION parse_publication_period(jsonb) RETURNS jsonb AS $$
   END;
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
-ALTER TABLE instance DISABLE TRIGGER USER;
-
 UPDATE instance
-SET jsonb = jsonb || jsonb_build_object(
-  'publicationPeriod', parse_publication_period(jsonb),
-  '_version', to_jsonb(coalesce((jsonb->>'_version')::numeric + 1, 1)))
+SET jsonb = jsonb_set(jsonb, '{publicationPeriod}', parse_publication_period(jsonb))
 WHERE jsonb->>'publicationPeriod' IS NULL AND parse_publication_period(jsonb) IS NOT NULL;
 
-ALTER TABLE instance ENABLE TRIGGER USER;
+-- You may disable triggers if you are sure that no other process updates instance records:
+--
+-- ALTER TABLE instance DISABLE TRIGGER USER;
+--
+-- UPDATE instance
+-- SET jsonb = jsonb || jsonb_build_object(
+--   'publicationPeriod', parse_publication_period(jsonb),
+--   '_version', to_jsonb(coalesce((jsonb->>'_version')::numeric + 1, 1)))
+-- WHERE jsonb->>'publicationPeriod' IS NULL AND parse_publication_period(jsonb) IS NOT NULL;
+--
+-- ALTER TABLE instance ENABLE TRIGGER USER;
 
 DROP FUNCTION
   parse_start_year(jsonb),
