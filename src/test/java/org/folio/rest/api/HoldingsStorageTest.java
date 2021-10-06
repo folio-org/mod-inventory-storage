@@ -14,6 +14,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.*;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.junit.After;
 import org.junit.Before;
@@ -620,7 +621,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(update(holding).getStatusCode(), is(204));
     holding.put(PERMANENT_LOCATION_ID_KEY, secondFloorLocationId);
     // updating with outdated _version 1 fails, current _version is 2
-    assertThat(update(holding).getStatusCode(), is(409));
+    int expected = OptimisticLocking.hasFailOnConflict("holdings_record") ? 409 : 204;
+    assertThat(update(holding).getStatusCode(), is(expected));
   }
 
   @Test

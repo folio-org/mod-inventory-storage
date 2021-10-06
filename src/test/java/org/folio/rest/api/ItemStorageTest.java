@@ -78,6 +78,7 @@ import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -369,7 +370,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(update(item).getStatusCode(), is(204));
     item.put(PERMANENT_LOCATION_ID_KEY, secondFloorLocationId);
     // updating with outdated _version 1 fails, current _version is 2
-    assertThat(update(item).getStatusCode(), is(409));
+    int expected = OptimisticLocking.hasFailOnConflict("item") ? 409 : 204;
+    assertThat(update(item).getStatusCode(), is(expected));
   }
 
   @Test
@@ -1277,7 +1279,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     Item initialItem = createItem(itemToCreate).mapTo(Item.class);
     Instant initialStatusDate = initialItem.getStatus().getDate().toInstant();
-    
+
     JsonObject replacement = itemToCreate.copy();
 
     replacement
@@ -2555,7 +2557,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private Boolean isBefore(String dateTime, String secondDateTime) {
     ZonedDateTime firstTime = ZonedDateTime.parse(dateTime);
     ZonedDateTime secondTime = ZonedDateTime.parse(secondDateTime);
-    
+
     return secondTime.isAfter(firstTime);
   }
 

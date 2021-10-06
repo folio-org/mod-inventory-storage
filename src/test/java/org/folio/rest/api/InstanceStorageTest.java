@@ -98,6 +98,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.db.OptimisticLocking;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
@@ -323,7 +324,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(update(instance).getStatusCode(), is(204));
     instance.put("title", "bar");
     // updating with outdated _version 1 fails, current _version is 2
-    assertThat(update(instance).getStatusCode(), is(409));
+    int expected = OptimisticLocking.hasFailOnConflict("instance") ? 409 : 204;
+    assertThat(update(instance).getStatusCode(), is(expected));
   }
 
   @Test
