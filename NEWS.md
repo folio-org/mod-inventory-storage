@@ -1,21 +1,23 @@
-## 22.0.0 IN-PROGRESS
+## 22.0.0 2021-10-06
 
 * Added new identifiers for ISMN and UPC (MODINVSTOR-770)
 * Keyword searches now search alternate title fields (MODINVSTOR-719)
 * Kafka topic names now include environment and tenant ID (MODINVSTOR-738)
 * Includes missing changes to `get_items_and_holdings_view` function during upgrade (MODINVSTOR-759)
-* shouldStopProcessingWhenCannotConvertItem depends on other test (MODINVSTOR-725)
 * Enforce item barcode uniqueness (MODINVSTOR-523)
+* Provides endpoint to update all preceding / succeeding titles together (MODINVSTOR-742)
+* Provides an endpoint for iterating through all instances (MODINVSTOR-763)
 * Implement a new endpoint for dereferenced item records (MODINVSTOR-769)
 * Update RMB to 33.1.1 and Vert.x to 4.1.4 (MODINVSTOR-793)
-* Enables failOnConflict for optimistic locking for item, holdings, instance (MODINVSTOR-713, MODINVSTOR-726)
 * Provides `item-storage 9.0`
 * Provides `item-storage-batch-sync 1.0`
 * Provides `holdings-storage 5.0`
 * Provides `holdings-storage-batch-sync 1.0`
 * Provides `instance-storage 8.0`
+* Provides `instance-preceding-succeeding-titles 0.2`
 * Provides `instance-storage-batch 1.0`
 * Provides `instance-storage-batch-sync 1.0`
+* Provides `instance-iteration 0.1`
 
 ## 21.0.0 2021-06-10
 
