@@ -1,13 +1,21 @@
+-- This populationPeriod migration script does NOT run automatically
+-- to keep the time for upgrading the module short.
+-- Institutions need to run it manually.
+-- Append an id range to the UPDATE to change only a small chunk of instances:
+-- AND id >= '26b00000-0000-0000-0000-000000000000' AND id < '26c00000-0000-0000-0000-000000000000';
+
+SET search_path TO ${myuniversity}_${mymodule};
+
 START TRANSACTION;
 
-CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.parse_start_year(jsonb) RETURNS int AS $$
+CREATE OR REPLACE FUNCTION parse_start_year(jsonb) RETURNS int AS $$
   SELECT COALESCE(
     (regexp_match($1->'publication'->0->>'dateOfPublication', '(\d{4})\w{0,2}(?:\s?-|\sand|\s?,)'))[1],
     (regexp_match($1->'publication'->0->>'dateOfPublication', '\d{4}'))[1]
   )::int;
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
-CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.parse_end_year(jsonb) RETURNS int AS $$
+CREATE OR REPLACE FUNCTION parse_end_year(jsonb) RETURNS int AS $$
   SELECT COALESCE(
     (regexp_match($1->'publication'->-1->>'dateOfPublication', '(?:-\s?|and\s|,\s?)\w{0,2}(\d{4})'))[1],
     (regexp_match($1->'publication'->-1->>'dateOfPublication', '\d{4}'))[1],
@@ -16,7 +24,7 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.parse_end_year(jsonb) RET
   )::int;
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
-CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.parse_publication_period(jsonb) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION parse_publication_period(jsonb) RETURNS jsonb AS $$
   SELECT CASE
     WHEN $1->'publication' IS NULL THEN NULL
     WHEN jsonb_array_length($1->'publication') = 0 THEN NULL
@@ -28,19 +36,25 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.parse_publication_period(
   END;
 $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
 
-ALTER TABLE ${myuniversity}_${mymodule}.instance DISABLE TRIGGER USER;
-
-UPDATE ${myuniversity}_${mymodule}.instance
-SET jsonb = jsonb || jsonb_build_object(
-  'publicationPeriod', parse_publication_period(jsonb),
-  '_version', to_jsonb(coalesce((jsonb->>'_version')::numeric + 1, 1)))
+UPDATE instance
+SET jsonb = jsonb_set(jsonb, '{publicationPeriod}', parse_publication_period(jsonb))
 WHERE jsonb->>'publicationPeriod' IS NULL AND parse_publication_period(jsonb) IS NOT NULL;
 
-ALTER TABLE ${myuniversity}_${mymodule}.instance ENABLE TRIGGER USER;
+-- You may disable triggers if you are sure that no other process updates instance records:
+--
+-- ALTER TABLE instance DISABLE TRIGGER USER;
+--
+-- UPDATE instance
+-- SET jsonb = jsonb || jsonb_build_object(
+--   'publicationPeriod', parse_publication_period(jsonb),
+--   '_version', to_jsonb(coalesce((jsonb->>'_version')::numeric + 1, 1)))
+-- WHERE jsonb->>'publicationPeriod' IS NULL AND parse_publication_period(jsonb) IS NOT NULL;
+--
+-- ALTER TABLE instance ENABLE TRIGGER USER;
 
 DROP FUNCTION
-  ${myuniversity}_${mymodule}.parse_start_year(jsonb),
-  ${myuniversity}_${mymodule}.parse_end_year(jsonb),
-  ${myuniversity}_${mymodule}.parse_publication_period(jsonb);
+  parse_start_year(jsonb),
+  parse_end_year(jsonb),
+  parse_publication_period(jsonb);
 
 END TRANSACTION;
