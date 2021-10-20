@@ -16,6 +16,7 @@ import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.InstanceID;
 import org.folio.rest.support.RecordID;
 
 import javax.ws.rs.core.Response;
@@ -43,13 +44,14 @@ public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
         Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
         Context vertxContext) {
     try {
+      Class<?> clazz = getClass(field);
       if (recordType.toString().equalsIgnoreCase(HOLDING_TYPE)) {
         CQLWrapper wrapper = getCQL(query, HOLDING_TABLE, limit, offset);
-        PgUtil.streamGet(HOLDING_TABLE, RecordID.class, wrapper, null,
+        PgUtil.streamGet(HOLDING_TABLE, clazz, wrapper, null,
           "ids", routingContext, okapiHeaders, vertxContext);
       } else {
         CQLWrapper wrapper = getCQL(query, INSTANCE_TABLE, limit, offset);
-        PgUtil.streamGet(INSTANCE_TABLE, RecordID.class, wrapper, null,
+        PgUtil.streamGet(INSTANCE_TABLE, clazz, wrapper, null,
           "ids", routingContext, okapiHeaders, vertxContext);
       }
     } catch (Exception e) {
@@ -58,4 +60,15 @@ public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
         .respond500WithTextPlain(e.getMessage())));
     }
   }
+
+  private Class<?> getClass(RecordBulkIdsGetField field) {
+    if(field.name().equals("id")) {
+      return RecordID.class;
+    } else if(field.name().equals("instanceId")) {
+      return InstanceID.class;
+    } else {
+      throw new IllegalArgumentException("Invalid record field specified: " + field.name());
+    }
+  }
+
 }
