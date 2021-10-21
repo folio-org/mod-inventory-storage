@@ -22,11 +22,11 @@ public class InstanceID {
     instanceId = "";
   }
 
-  public String getId() {
+  public String getInstanceId() {
     return instanceId;
   }
 
-  public void setId(String id) {
-    this.instanceId = id;
+  public void setInstanceId(String instanceId) {
+    this.instanceId = instanceId;
   }
 }

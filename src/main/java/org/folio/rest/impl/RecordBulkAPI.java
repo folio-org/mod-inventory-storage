@@ -5,6 +5,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
@@ -39,19 +40,19 @@ public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
   @Validate
   @Override
   public void getRecordBulkIds(RecordBulkIdsGetField field,
-        RecordBulkIdsGetRecordType recordType, int limit, String query,
-        int offset, String lang, RoutingContext routingContext,
-        Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
-        Context vertxContext) {
+                               RecordBulkIdsGetRecordType recordType, int limit, String query,
+                               int offset, String lang, RoutingContext routingContext,
+                               Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                               Context vertxContext) {
     try {
-      Class<?> clazz = getClass(field);
       if (recordType.toString().equalsIgnoreCase(HOLDING_TYPE)) {
+        Class<?> clazz = getClass(field);
         CQLWrapper wrapper = getCQL(query, HOLDING_TABLE, limit, offset);
         PgUtil.streamGet(HOLDING_TABLE, clazz, wrapper, null,
           "ids", routingContext, okapiHeaders, vertxContext);
       } else {
         CQLWrapper wrapper = getCQL(query, INSTANCE_TABLE, limit, offset);
-        PgUtil.streamGet(INSTANCE_TABLE, clazz, wrapper, null,
+        PgUtil.streamGet(INSTANCE_TABLE, RecordID.class, wrapper, null,
           "ids", routingContext, okapiHeaders, vertxContext);
       }
     } catch (Exception e) {
@@ -62,13 +63,10 @@ public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
   }
 
   private Class<?> getClass(RecordBulkIdsGetField field) {
-    if(field.name().equals("id")) {
-      return RecordID.class;
-    } else if(field.name().equals("instanceId")) {
+    if (field.equals(RecordBulkIdsGetField.INSTANCEID)) {
       return InstanceID.class;
-    } else {
-      throw new IllegalArgumentException("Invalid record field specified: " + field.name());
     }
+    return RecordID.class;
   }
 
 }
