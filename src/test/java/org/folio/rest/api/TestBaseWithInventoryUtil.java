@@ -14,6 +14,7 @@ import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -128,6 +129,13 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
     return createHolding(instanceId, holdingsPermanentLocationId, holdingsTemporaryLocationId);
+  }
+
+  protected static Map.Entry<UUID, UUID> createInstanceWithHolding(UUID holdingsPermanentLocationId) {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(instance(instanceId));
+    UUID holdingId = createHolding(instanceId, holdingsPermanentLocationId, null);
+    return Map.entry(instanceId, holdingId);
   }
 
   static UUID createInstanceAndHoldingWithBuilder(
