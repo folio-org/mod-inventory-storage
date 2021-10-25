@@ -14,6 +14,7 @@ import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -56,6 +57,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static String bookMaterialTypeID;
   protected static UUID   canCirculateLoanTypeId;
   protected static String canCirculateLoanTypeID;
+  protected static UUID   nonCirculatingLoanTypeId;
+  protected static String nonCirculatingLoanTypeID;
 
   // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
   // that JUnit calls *before* the @BeforeClass beforeAny() method.
@@ -104,6 +107,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     LoanTypesClient loanTypesClient = new LoanTypesClient(client, loanTypesStorageUrl(""));
     canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
     canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
+    nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating");
+    nonCirculatingLoanTypeId = UUID.fromString(nonCirculatingLoanTypeID);
 
     LocationsTest.createLocUnits(true);
     LocationsTest.createLocation(mainLibraryLocationId,  MAIN_LIBRARY_LOCATION,  "TestBaseWI/M");
@@ -124,6 +129,13 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
     return createHolding(instanceId, holdingsPermanentLocationId, holdingsTemporaryLocationId);
+  }
+
+  protected static Map.Entry<UUID, UUID> createInstanceWithHolding(UUID holdingsPermanentLocationId) {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(instance(instanceId));
+    UUID holdingId = createHolding(instanceId, holdingsPermanentLocationId, null);
+    return Map.entry(instanceId, holdingId);
   }
 
   static UUID createInstanceAndHoldingWithBuilder(

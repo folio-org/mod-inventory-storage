@@ -10,10 +10,18 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.folio.postgres.testing.PostgresTesterContainer;
 
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
@@ -29,16 +37,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import lombok.SneakyThrows;
-
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -49,6 +47,7 @@ import org.testcontainers.utility.DockerImageName;
   RecordBulkTest.class,
   HoldingsStorageTest.class,
   ItemStorageTest.class,
+  DereferencedItemStorageTest.class,
   HoldingsTypeTest.class,
   LoanTypeTest.class,
   MaterialTypeTest.class,
@@ -86,8 +85,9 @@ import org.testcontainers.utility.DockerImageName;
   PreviouslyHeldDataUpgradeTest.class,
   ItemShelvingOrderMigrationServiceApiTest.class,
   NotificationSendingErrorRepositoryTest.class,
-  PublicationPeriodMigrationServiceApiTest.class,
-  LegacyItemEffectiveLocationMigrationScriptTest.class
+  PublicationPeriodMigrationTest.class,
+  LegacyItemEffectiveLocationMigrationScriptTest.class,
+  IterationJobRunnerTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

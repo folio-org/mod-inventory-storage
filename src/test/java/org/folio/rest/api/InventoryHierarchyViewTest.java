@@ -26,6 +26,7 @@ import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -43,6 +44,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.vertx.core.json.JsonArray;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
@@ -380,6 +382,33 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     params.put("endDate", "invalidDate");
     // then
     getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
+  }
+
+  @Test
+  public void canGetHoldingWhenAllItemForItAreSuppressed() throws InterruptedException, ExecutionException, TimeoutException {
+    // given
+    // one instance, 1 holding with 2 not suppressed items, 1 holding with 1 suppressed item
+
+    UUID instanceId = UUID.fromString(predefinedInstance.getString("id"));
+    UUID holdingId = createHolding(instanceId, mainLibraryLocationId, null);
+    JsonObject item = new ItemRequestBuilder().forHolding(holdingId)
+      .withBarcode("21734")
+      .withTemporaryLocation(mainLibraryLocationId)
+      .withItemLevelCallNumber("item suppressed call number")
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withDiscoverySuppress(true).create();
+    super.createItem(item);
+
+    // when
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
+    JsonObject instancesData = getInventoryHierarchyInstances(params).get(0);
+    JsonArray holdings  = (JsonArray)instancesData.getValue("holdings");
+    JsonArray items = (JsonArray)instancesData.getValue("items");
+
+    // then
+    assertEquals(2, holdings.getList().size());
+    assertEquals(2, items.getList().size());
   }
 
   private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId) {

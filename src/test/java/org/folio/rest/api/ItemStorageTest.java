@@ -14,14 +14,13 @@ import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
+import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
-import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNowAsString;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
@@ -43,7 +42,6 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -52,6 +50,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -79,6 +78,7 @@ import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -92,6 +92,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
@@ -357,6 +358,20 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedItemResponse = itemsClient.getById(id).getJson();
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
     assertUpdateEventForItem(createdItem, getById(id).getJson());
+  }
+
+  @Test
+  public void optimisticLockingVersion() {
+    UUID itemId = UUID.randomUUID();
+    UUID holdingId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject item = createItem(nod(itemId, holdingId));
+    item.put(PERMANENT_LOCATION_ID_KEY, annexLibraryLocationId);
+    // updating with current _version 1 succeeds and increments _version to 2
+    assertThat(update(item).getStatusCode(), is(204));
+    item.put(PERMANENT_LOCATION_ID_KEY, secondFloorLocationId);
+    // updating with outdated _version 1 fails, current _version is 2
+    int expected = OptimisticLocking.hasFailOnConflict("item") ? 409 : 204;
+    assertThat(update(item).getStatusCode(), is(expected));
   }
 
   @Test
@@ -737,6 +752,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("hrid", "testHRID");
     createItem(itemToCreate);
 
+    itemToCreate = getById(itemId).getJson();
     itemToCreate.put("materialTypeId", UUID.randomUUID().toString());
 
     CompletableFuture<Response> completed = new CompletableFuture<>();
@@ -1290,7 +1306,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
         .put("hrid", "testHRID");
 
-    createItem(itemToCreate);
+    Item initialItem = createItem(itemToCreate).mapTo(Item.class);
+    Instant initialStatusDate = initialItem.getStatus().getDate().toInstant();
 
     JsonObject replacement = itemToCreate.copy();
 
@@ -1311,12 +1328,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     Item item = getResponse.getJson().mapTo(Item.class);
+    Instant finalStatusDate = item.getStatus().getDate().toInstant();
 
     assertThat(item.getId(), is(id.toString()));
 
     assertThat(item.getStatus().getName().value(), is("Checked out"));
 
-    assertThat(item.getStatus().getDate().toInstant(), withinSecondsBeforeNow(seconds(5)));
+    assertThat(finalStatusDate.isAfter(initialStatusDate), is(true));
   }
 
   @Test
@@ -1362,7 +1380,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     Instant changedStatusDate = item.getStatus().getDate().toInstant();
 
-    JsonObject secondReplacement = itemToCreate.copy();
+    JsonObject secondReplacement = getResponse.getJson().copy();
 
     secondReplacement
       .put("status", new JsonObject().put("name", "Available"));
@@ -1388,9 +1406,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     Instant itemStatusDate = resultItem.getStatus().getDate().toInstant();
 
-    assertThat(itemStatusDate, withinSecondsBeforeNow(seconds(5)));
-
     assertThat(itemStatusDate, not(changedStatusDate));
+
+    assertThat(itemStatusDate.isAfter(changedStatusDate), is(true));
   }
 
   @Test
@@ -1398,7 +1416,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
-    createItem(itemToCreate);
+    JsonObject createdItem = createItem(itemToCreate);
+    String initalDateTime = createdItem.getJsonObject("status").getString("date");
 
     JsonObject itemWithUpdatedStatus = getById(id).getJson().copy()
       .put("status", new JsonObject().put("name", "Checked out"));
@@ -1409,7 +1428,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Checked out"));
-    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(5)));
+    assertThat(isBefore(initalDateTime, updatedStatus.getString("date")), is(true));
 
     JsonObject itemWithUpdatedStatusDate = updatedItemResponse.getJson().copy();
     itemWithUpdatedStatusDate.getJsonObject("status")
@@ -1456,7 +1475,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
-    createItem(itemToCreate);
+    JsonObject createdItem = createItem(itemToCreate);
+    String initialStatusDate = createdItem.getJsonObject("status").getString("date");
 
     JsonObject itemWithUpdatedStatus = getById(id).getJson().copy()
       .put("status", new JsonObject().put("name", "Checked out"));
@@ -1467,7 +1487,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedStatus = updatedItemResponse.getJson().getJsonObject("status");
 
     assertThat(updatedStatus.getString("name"), is("Checked out"));
-    assertThat(updatedStatus.getString("date"), withinSecondsBeforeNowAsString(seconds(3)));
+    assertThat(isBefore(initialStatusDate, updatedStatus.getString("date")), is(true));
 
     JsonObject itemWithUpdatedCallNumber = updatedItemResponse.getJson().copy()
       .put("itemLevelCallNumber", "newItemLevelCallNumber");
@@ -2382,19 +2402,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(poli1Items.get(0).getId(), is(firstItem.getId()));
   }
 
-  private Response getById(UUID id) throws InterruptedException,
-    ExecutionException, TimeoutException {
-
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", id));
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(getItemUrl, StorageTestSuite.TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    return getCompleted.get(5, TimeUnit.SECONDS);
-  }
-
   private static JsonObject createItemRequest(
       UUID id,
       UUID holdingsRecordId,
@@ -2498,6 +2505,20 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     }
   }
 
+  private Response getById(UUID id) {
+    return getById(id.toString());
+  }
+
+  private Response update(JsonObject item) {
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + item.getString("id")), item, TENANT_ID, empty(completed));
+    try {
+      return completed.get(5, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private void assertExists(JsonObject expectedItem) {
     Response response = getById(expectedItem.getString("id"));
     assertExists(response, expectedItem);
@@ -2559,6 +2580,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     return item.getJsonObject("tags").getJsonArray("tagList").stream()
       .map(Object::toString)
       .collect(Collectors.toList());
+  }
+
+  @SneakyThrows
+  private Boolean isBefore(String dateTime, String secondDateTime) {
+    ZonedDateTime firstTime = ZonedDateTime.parse(dateTime);
+    ZonedDateTime secondTime = ZonedDateTime.parse(secondDateTime);
+
+    return secondTime.isAfter(firstTime);
   }
 
   private List<UUID> searchByCallNumberEyeReadable(String searchTerm)

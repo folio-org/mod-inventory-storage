@@ -321,3 +321,48 @@ x-okapi-url: <okapi-url>
   "tenant": "<the-tenant-name>"
 }
 ```
+
+## Iteration of instances
+
+There are business cases when the whole instance collection should be traversed to obtain existing instances 
+(and potentially related items/holdings) and processing them in asynchronous manner. Examples of such cases are:
+* creating search indices;
+* contributing instance catalog to external system.
+
+To support the above there is _"Instance Iteration API"_ available via `/instance-storage/instances/iteration` URL.
+It is similar to `instance-reindex` API but avoids some limitations of this API by:
+* allowing to specify a target Kafka topic for produced events;
+* allowing simultaneous execution of several jobs with different event types to serve the needs of 
+different business processes;
+* making the interface client agnostic (naming says nothing about business intention of the caller, like re-indexing).
+
+It's expected that Instance Iteration API will substitute Instance Reindex API in the future.
+
+Iteration API provides the following methods:
+* to start a new iteration job: `POST /instance-storage/instances/iteration`
+* to get status of a running job by its id: `GET /instance-storage/instances/iteration/{jobId}`
+* to cancel a job: `DELETE /instance-storage/instances/iteration/{jobId}`
+
+When an iteration job is being submitted the client can specify target topic and event type (optional): 
+```javascript
+{
+  "eventType": "<event-type>",
+  "topicName": "<target-topic-name>"
+}
+```
+If event type is missing in the request it will be defaulted to `ITERATE`.
+
+Once iteration job has been started, it initiates streaming of all instance IDs and publishing domain events for them. 
+The domain event has the following structure:
+* Topic: <target-topic-name>
+* Partition key: `The instance id`
+* Payload:
+```javascript
+x-okapi-tenant: <tenant-id>
+x-okapi-url: <okapi-url>
+iteration-job-id: <job-id>
+{
+  "type": "<event-type>",
+  "tenant": "<the-tenant-name>"
+}
+```

@@ -15,6 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -219,7 +220,27 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(5, SECONDS);
-    validateHoldingsResponse(response, holdingIds, 5);
+    validateHoldingsResponse(response, holdingIds, 5, "id");
+  }
+
+  @Test
+  public void shouldReturnBulkOfInstanceIdsWithInstanceIdOfHoldingRecordSpecifiedInQuery()
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    int totalHoldingsIds = 1;
+    Map<String, String> instanceToHoldingIdsMap = createHoldingsAndGetInstancesIds(totalHoldingsIds);
+    Map.Entry<String, String> instanceIdToHoldingIdEntry = instanceToHoldingIdsMap.entrySet().iterator().next();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    URL getInstanceUrl = recordBulkUrl("/ids?field=instanceId&recordType=HOLDING&limit=5&query=id==" + instanceIdToHoldingIdEntry.getValue());
+
+    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+
+    Response response = getCompleted.get(5, SECONDS);
+    validateHoldingsResponse(response, Collections.singletonList(instanceIdToHoldingIdEntry.getKey()), 1, "instanceId");
   }
 
   private void validateMoonsResponseWithTotal(Response response, int expectedMatches,
@@ -257,13 +278,13 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private void validateHoldingsResponse(Response response, List<String> holdingsIds,
-     int expectedMatches) {
+     int expectedMatches, String jsonKey) {
     JsonArray ids = response.getJson().getJsonArray("ids");
     assertThat(response.getStatusCode(), is(HTTP_OK));
     assertThat(ids.size(), is(expectedMatches));
     for (Object id : ids) {
       JsonObject idObject = (JsonObject) id;
-      assertThat(holdingsIds.contains(idObject.getString("id")), is(true));
+      assertThat(holdingsIds.contains(idObject.getString(jsonKey)), is(true));
     }
   }
 
@@ -332,6 +353,15 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
       holdingIds.add(id);
     }
     return holdingIds;
+  }
+
+  private Map<String, String> createHoldingsAndGetInstancesIds(int totalCount) {
+    Map<String, String> instanceIdToHoldingIdMap = new HashMap<>();
+    for (int i = 0; i < totalCount; i++) {
+      Map.Entry<UUID, UUID> instanceIdToHoldingIdEntry = createInstanceWithHolding(mainLibraryLocationId);
+      instanceIdToHoldingIdMap.put(instanceIdToHoldingIdEntry.getKey().toString(), instanceIdToHoldingIdEntry.getValue().toString());
+    }
+    return instanceIdToHoldingIdMap;
   }
 
   private static JsonObject createInstanceRequest(
