@@ -4,7 +4,7 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string",
+      "$ref": "uuid.json",
       "description": "unique ID of the item note type; a UUID"
     },
     "name": {
