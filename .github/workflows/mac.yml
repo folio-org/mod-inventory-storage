@@ -1,0 +1,57 @@
+name: macOS
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        postgres: [postgresql@12, postgresql@13, postgres]
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - uses: actions/setup-java@v2.3.1
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+        cache: maven
+    - run: mvn clean install -DskipTests
+    - run: brew install ${{ matrix.postgres }}
+    - run: (echo "local all all trust"; echo "host all all all md5") > /usr/local/var/${{ matrix.postgres }}/pg_hba.conf
+    - run: brew services start ${{ matrix.postgres }}
+    - run: brew install zookeeper
+    - run: brew services start zookeeper
+    - run: brew install kafka
+    - run: brew services start kafka
+    - run: brew install elasticsearch
+    - run: brew services start elasticsearch
+    - run: >
+        psql postgres
+        -c "CREATE ROLE folio WITH PASSWORD 'folio123' LOGIN SUPERUSER"
+        -c "CREATE DATABASE folio WITH OWNER folio"
+    - run: |
+        export DB_HOST=localhost
+        export DB_PORT=5432
+        export DB_USERNAME=folio
+        export DB_PASSWORD=folio123
+        export DB_DATABASE=postgres
+        ( java -jar -Dstorage=postgres target/mod-inventory-storage-fat.jar > log ) &
+    - run: curl --retry 6 --retry-connrefused -sS http://localhost:8081/admin/health
+    - run: 'curl -sS -D -
+        -H "Content-type: application/json"
+        -H "x-okapi-url-to: http://localhost:8081"
+        -H "x-okapi-tenant: diku"
+        -d ''{ "module_to": "mod-inventory-storage-22.0.0",
+               "parameters": [ { "key":"loadSample", "value":"true" },
+                               { "key": "loadReference", "value": "true" } ] }''
+        http://localhost:8081/_/tenant
+        | tee out'
+    - run: 'cat out | grep "^Location: " | tr : = | tr -d " \n\r" >> $GITHUB_ENV'
+    - run: echo $Location
+    - run: "curl -sS -D - -H 'x-okapi-tenant: diku' http://localhost:8081${Location}?wait=100000"
+    - run: "curl -sS -H 'x-okapi-tenant: diku' http://localhost:8081/item-storage/items | tee out"
+    - run: sleep 5; cat log
+    - run: cat out | jq '.items | length' | grep 10   # expect 10, the default limit of /items API
+
