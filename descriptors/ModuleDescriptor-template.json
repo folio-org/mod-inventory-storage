@@ -869,6 +869,33 @@
       ]
     },
     {
+      "id": "authority-note-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-note-types",
+          "permissionsRequired": ["inventory-storage.authority-note-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-note-types",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "instance-note-types",
       "version": "1.0",
       "handlers": [
@@ -2065,7 +2092,31 @@
       "displayName": "inventory storage - delete individual instance-note-type",
       "description": "delete individual instance-note-type from storage"
     },
-
+    {
+      "permissionName": "inventory-storage.authority-note-types.collection.get",
+      "displayName": "inventory storage - get authority-note-type collection",
+      "description": "get authority-note-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.get",
+      "displayName": "inventory storage - get individual authority-note-type",
+      "description": "get individual authority-note-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.post",
+      "displayName": "inventory storage - create individual authority-note-type",
+      "description": "create individual authority-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.put",
+      "displayName": "inventory storage - modify authority-note-type",
+      "description": "modify authority-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.delete",
+      "displayName": "inventory storage - delete individual authority-note-type",
+      "description": "delete individual authority-note-type from storage"
+    },
     {
       "permissionName": "inventory-storage.holdings-note-types.collection.get",
       "displayName": "inventory storage - get holdings-note-type collection",
@@ -2447,6 +2498,11 @@
         "inventory-storage.call-number-types.item.post",
         "inventory-storage.call-number-types.item.put",
         "inventory-storage.call-number-types.item.delete",
+        "inventory-storage.authority-note-types.collection.get",
+        "inventory-storage.authority-note-types.item.get",
+        "inventory-storage.authority-note-types.item.post",
+        "inventory-storage.authority-note-types.item.put",
+        "inventory-storage.authority-note-types.item.delete",
         "inventory-storage.instance-note-types.collection.get",
         "inventory-storage.instance-note-types.item.get",
         "inventory-storage.instance-note-types.item.post",

@@ -7,6 +7,7 @@
 * Enforce item barcode uniqueness (MODINVSTOR-523)
 * Provides endpoint to update all preceding / succeeding titles together (MODINVSTOR-742)
 * Provides an endpoint for iterating through all instances (MODINVSTOR-763)
+* Provides `authority-note-types` interface version 1.0 (MODINVSTOR-818)
 * Implement a new endpoint for dereferenced item records (MODINVSTOR-769)
 * Update RMB to 33.1.1 and Vert.x to 4.1.4 (MODINVSTOR-793)
 * Provides `item-storage 9.0`
