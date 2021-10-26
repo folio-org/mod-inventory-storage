@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of Authority note types",
+  "type": "object",
+  "properties": {
+    "authorityNoteTypes": {
+      "description": "List of Authority note types",
+      "id": "authorityNoteType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "authoritynotetype.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "authorityNoteTypes",
+    "totalRecords"
+  ]
+}
+
