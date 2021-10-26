@@ -571,6 +571,17 @@
       ]
     },
     {
+      "tableName": "authority_note_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "instance_note_type",
       "withMetadata": true,
       "withAuditing": false,

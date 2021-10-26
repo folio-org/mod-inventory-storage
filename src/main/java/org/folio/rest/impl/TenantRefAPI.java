@@ -60,6 +60,7 @@ public class TenantRefAPI extends TenantAPI {
     "ill-policies",
     "holdings-types",
     "call-number-types",
+    "authority-note-types",
     "instance-note-types",
     "holdings-note-types",
     "item-note-types",
