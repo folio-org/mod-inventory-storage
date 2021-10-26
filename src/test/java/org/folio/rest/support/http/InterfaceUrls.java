@@ -123,6 +123,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/nature-of-content-terms" + subPath);
   }
 
+  public static URL authorityNoteTypesUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/authority-note-types" + subPath);
+  }
+
   public static URL instanceNoteTypesUrl(String subPath) {
     return StorageTestSuite.storageUrl("/instance-note-types" + subPath);
   }
