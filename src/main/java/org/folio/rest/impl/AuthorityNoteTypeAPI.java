@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
 
@@ -34,6 +35,8 @@ public class AuthorityNoteTypeAPI implements org.folio.rest.jaxrs.resource.Autho
   private static final String LOCATION_PREFIX = "/authority-note-types/";
   private static final Logger log             = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
+
+  private static final String INTERNAL_SERVER_ERROR_MESSAGE = "Internal server problem: Error message missing";
 
   @Override
   public void getAuthorityNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -77,9 +80,8 @@ public class AuthorityNoteTypeAPI implements org.folio.rest.jaxrs.resource.Autho
     vertxContext.runOnContext(v -> {
       try {
         String id = entity.getId();
-        if (id == null) {
-          id = UUID.randomUUID().toString();
-          entity.setId(id);
+        if (Objects.isNull(id)) {
+          entity.setId(UUID.randomUUID().toString());
         }
 
         String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -92,7 +94,7 @@ public class AuthorityNoteTypeAPI implements org.folio.rest.jaxrs.resource.Autho
                 .respond201WithApplicationJson(entity, PostAuthorityNoteTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
             } else {
               String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-              msg = (msg == null) ? "Internal server problem: Error message missing" : msg;
+              msg = (msg == null) ? INTERNAL_SERVER_ERROR_MESSAGE : msg;
               log.info(msg);
               asyncResultHandler.handle(Future.succeededFuture(PostAuthorityNoteTypesResponse
                 .respond400WithTextPlain(msg)));
@@ -121,7 +123,7 @@ public class AuthorityNoteTypeAPI implements org.folio.rest.jaxrs.resource.Autho
           reply -> {
             if (reply.failed()) {
               String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-              msg =  (msg == null) ? "Internal server problem: Error message missing" : msg;
+              msg =  (msg == null) ? INTERNAL_SERVER_ERROR_MESSAGE : msg;
               log.info(msg);
               asyncResultHandler.handle(Future.succeededFuture(DeleteAuthorityNoteTypesByIdResponse
                 .respond400WithTextPlain((msg))));
@@ -165,7 +167,7 @@ public class AuthorityNoteTypeAPI implements org.folio.rest.jaxrs.resource.Autho
               }
             } else {
               String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-              msg =  (msg == null) ? "Internal server problem: Error message missing" : msg;
+              msg =  (msg == null) ? INTERNAL_SERVER_ERROR_MESSAGE : msg;
               log.info(msg);
               asyncResultHandler.handle(Future.succeededFuture(PutAuthorityNoteTypesByIdResponse
                 .respond400WithTextPlain(msg)));
