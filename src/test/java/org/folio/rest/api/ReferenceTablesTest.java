@@ -883,7 +883,7 @@ public class ReferenceTablesTest extends TestBase {
     entity.put("id", entityId);
     Response postResponse1 = createReferenceRecord(path, entity);
     if (Arrays.asList("/electronic-access-relationships", "/instance-statuses",
-      "/modes-of-issuance", "/statistical-code-types", "/holdings-types").contains(path)) {
+      "/modes-of-issuance", "/statistical-code-types", "/holdings-types", "/authority-note-types").contains(path)) {
       assertThat(postResponse1.getStatusCode(), is(422));
     } else {
       assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
@@ -916,7 +916,7 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put("id", "baduuid");
     Response postResponse2 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/instance-note-types", "/nature-of-content-terms").contains(path)) {
+    if (Arrays.asList("/instance-note-types", "/authority-note-types", "/nature-of-content-terms").contains(path)) {
       assertThat(postResponse2.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
     } else {
       assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
