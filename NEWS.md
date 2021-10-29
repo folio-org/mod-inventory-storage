@@ -1,3 +1,6 @@
+## 22.0.§ 2021-10-29
+* Improved way to populate publication period field
+
 ## 22.0.0 2021-10-06
 
 * Added new identifiers for ISMN and UPC (MODINVSTOR-770)
