@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An authority record",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Authority UUID",
+      "$ref": "../uuid.json"
+    },
+    "_version": {
+      "type": "integer",
+      "description": "Record version for optimistic locking"
+    },
+    "personalName": {
+      "type": "string",
+      "description": "Heading personal name"
+    },
+    "sftPersonalName": {
+      "type": "array",
+      "description": "See from tracing personal name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftPersonalName": {
+      "type": "array",
+      "description": "See also from tracing personal name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "corporateName": {
+      "type": "string",
+      "description": "Heading corporate name"
+    },
+    "sftCorporateName": {
+      "type": "array",
+      "description": "See from tracing corporate name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftCorporateName": {
+      "type": "array",
+      "description": "See also from tracing corporate name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "meetingName": {
+      "type": "array",
+      "description": "Heading meeting name"
+    },
+    "sftMeetingName": {
+      "type": "array",
+      "description": "See from tracing meeting name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftMeetingName": {
+      "type": "array",
+      "description": "See also from tracing meeting name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "uniformTitle": {
+      "type": "string",
+      "description": "Heading uniform title"
+    },
+    "sftUniformTitle": {
+      "type": "array",
+      "description": "See from tracing uniform title",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftUniformTitle": {
+      "type": "array",
+      "description": "See also from tracing uniform title",
+      "items": {
+        "type": "string"
+      }
+    },
+    "topicalTerm": {
+      "type": "string",
+      "description": "Heading topical term"
+    },
+    "sftTopicalTerm": {
+      "type": "array",
+      "description": "See from tracing topical term",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftTopicalTerm": {
+      "type": "array",
+      "description": "See also from tracing topical term",
+      "items": {
+        "type": "string"
+      }
+    },
+    "subjectHeadings": {
+      "type": "string",
+      "description": "Children's subject headings"
+    },
+    "geographicName": {
+      "type": "string",
+      "description": "Heading geographic name"
+    },
+    "sftGeographicTerm": {
+      "type": "array",
+      "description": "See from tracing geographic name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftGeographicTerm": {
+      "type": "array",
+      "description": "See also from tracing geographic name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "genre": {
+      "type": "object",
+      "description": "Genre/form term",
+      "properties": {
+        "hGenreTerm": {
+          "type": "string",
+          "description": "Heading genre/form term"
+        },
+        "sftGenreTerm": {
+          "type": "array",
+          "description": "See from tracing genre/form term",
+          "items": {
+            "type": "string"
+          }
+        },
+        "saftGenreTerm": {
+          "type": "array",
+          "description": "See also from tracing genre/form term",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "identifiers": {
+      "type": "array",
+      "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Resource identifier value"
+          },
+          "identifierTypeId": {
+            "type": "string",
+            "description": "Resource identifier type (e.g. Control number, LCCN, Other standard identifier, System control number)",
+            "$ref": "../uuid.json"
+          }
+        },
+        "required": [
+          "value",
+          "identifierTypeId"
+        ]
+      }
+    },
+    "notes": {
+      "type": "array",
+      "description": "Notes (e.g. nonpublic general note)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "noteTypeId": {
+            "description": "ID of the type of note",
+            "$ref": "../uuid.json"
+          },
+          "note": {
+            "type": "string",
+            "description": "Text content of the note"
+          }
+        },
+        "required": [
+          "note",
+          "noteTypeId"
+        ]
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Creater, updater, creation date, last updated date",
+      "$ref": "../raml-util/schemas/metadata.schema"
+    }
+  }
+}

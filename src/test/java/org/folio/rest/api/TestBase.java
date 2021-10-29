@@ -43,6 +43,7 @@ public abstract class TestBase {
   protected static ResourceClient instancesClient;
   public static ResourceClient holdingsClient;
   protected static ResourceClient itemsClient;
+  protected static ResourceClient authoritiesClient;
   static ResourceClient locationsClient;
   static ResourceClient callNumberTypesClient;
   static ResourceClient modesOfIssuanceClient;
@@ -99,6 +100,7 @@ public abstract class TestBase {
     instancesClient = ResourceClient.forInstances(client);
     holdingsClient = ResourceClient.forHoldings(client);
     itemsClient = ResourceClient.forItems(client);
+    authoritiesClient = ResourceClient.forAuthorities(client);
     locationsClient = ResourceClient.forLocations(client);
     callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
     modesOfIssuanceClient = ResourceClient.forModesOfIssuance(client);

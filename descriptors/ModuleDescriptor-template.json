@@ -16,6 +16,37 @@
       }]
     },
     {
+      "id": "authority-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/authorities",
+          "permissionsRequired": ["inventory-storage.authorities.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-storage/authorities",
+          "permissionsRequired": ["inventory-storage.authorities.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-storage/authorities",
+          "permissionsRequired": ["inventory-storage.authorities.collection.delete"]
+        }
+      ]
+    },
+    {
       "id": "item-storage",
       "version": "9.0",
       "handlers": [
@@ -1242,6 +1273,48 @@
       "description": "delete an instance relationship"
     },
     {
+      "permissionName": "inventory-storage.authorities.collection.get",
+      "displayName": "inventory storage - get authority collection",
+      "description": "get authority collection from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.collection.delete",
+      "displayName": "inventory storage - delete entire authority collection",
+      "description": "delete entire authority collection from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.get",
+      "displayName": "inventory storage - get individual authority record",
+      "description": "get individual authority record from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.post",
+      "displayName": "inventory storage - create individual authority record",
+      "description": "create individual authority record in the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.put",
+      "displayName": "inventory storage - modify authority record",
+      "description": "modify authority record in the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.delete",
+      "displayName": "inventory storage - delete individual authority record",
+      "description": "delete individual authority record from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.all",
+      "displayName": "inventory storage module - all authorities permissions",
+      "description": "Entire set of permissions needed to use authorities in the inventory storage module",
+      "subPermissions": [
+        "inventory-storage.authorities.item.get",
+        "inventory-storage.authorities.item.post",
+        "inventory-storage.authorities.item.put",
+        "inventory-storage.authorities.item.delete",
+        "inventory-storage.authorities.collection.delete"
+      ]
+    },
+    {
       "permissionName": "inventory-storage.items.collection.get",
       "displayName": "inventory storage - get item collection",
       "description": "get item collection from storage"
@@ -2302,6 +2375,12 @@
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
         "inventory-storage.items.batch.post",
+        "inventory-storage.authorities.collection.get",
+        "inventory-storage.authorities.item.get",
+        "inventory-storage.authorities.item.post",
+        "inventory-storage.authorities.item.put",
+        "inventory-storage.authorities.item.delete",
+        "inventory-storage.authorities.collection.delete",
         "inventory-storage.holdings.collection.get",
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",
