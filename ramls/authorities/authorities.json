@@ -23,5 +23,6 @@
   "required": [
     "authorities",
     "totalRecords"
-  ]
+  ],
+  "additionalProperties": false
 }

@@ -196,5 +196,6 @@
       "description": "Creater, updater, creation date, last updated date",
       "$ref": "../raml-util/schemas/metadata.schema"
     }
-  }
+  },
+  "additionalProperties": false
 }
