@@ -124,28 +124,22 @@
         "type": "string"
       }
     },
-    "genre": {
-      "type": "object",
-      "description": "Genre/form term",
-      "properties": {
-        "hGenreTerm": {
-          "type": "string",
-          "description": "Heading genre/form term"
-        },
-        "sftGenreTerm": {
-          "type": "array",
-          "description": "See from tracing genre/form term",
-          "items": {
-            "type": "string"
-          }
-        },
-        "saftGenreTerm": {
-          "type": "array",
-          "description": "See also from tracing genre/form term",
-          "items": {
-            "type": "string"
-          }
-        }
+    "hGenreTerm": {
+      "type": "string",
+      "description": "Heading genre/form term"
+    },
+    "sftGenreTerm": {
+      "type": "array",
+      "description": "See from tracing genre/form term",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftGenreTerm": {
+      "type": "array",
+      "description": "See also from tracing genre/form term",
+      "items": {
+        "type": "string"
       }
     },
     "identifiers": {
