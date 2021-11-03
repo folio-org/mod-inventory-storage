@@ -50,7 +50,10 @@
     },
     "meetingName": {
       "type": "array",
-      "description": "Heading meeting name"
+      "description": "Heading meeting name",
+      "items": {
+        "type": "string"
+      }
     },
     "sftMeetingName": {
       "type": "array",
