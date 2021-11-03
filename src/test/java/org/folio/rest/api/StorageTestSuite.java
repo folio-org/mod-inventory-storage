@@ -87,7 +87,8 @@ import org.testcontainers.utility.DockerImageName;
   NotificationSendingErrorRepositoryTest.class,
   PublicationPeriodMigrationTest.class,
   LegacyItemEffectiveLocationMigrationScriptTest.class,
-  IterationJobRunnerTest.class
+  IterationJobRunnerTest.class,
+  AuthorityStorageTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

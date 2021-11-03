@@ -26,6 +26,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/item-storage/items" + subPath);
   }
 
+  public static URL authoritiesStorageUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/authority-storage/authorities" + subPath);
+  }
+
   public static URL itemsStorageSyncUrl(String subPath) {
     return StorageTestSuite.storageUrl("/item-storage/batch/synchronous" + subPath);
   }
