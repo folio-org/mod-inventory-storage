@@ -28,7 +28,7 @@ public class AuthorityDomainEventPublisher extends AbstractDomainEventPublisher<
   @Override
   protected Future<List<Pair<String, Authority>>> getInstanceIds(Collection<Authority> authorities) {
     return succeededFuture(authorities.stream()
-      .map(authority -> pair(EMPTY, authority))
+      .map(authority -> pair(authority.getId(), authority))
       .collect(Collectors.toList()));
   }
 

@@ -17,6 +17,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.authoritiesStorageUrl;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForAuthority;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForAuthority;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForAuthority;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForAuthority;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitParamsRunner.class)
@@ -44,6 +49,7 @@ public class AuthorityStorageTest extends TestBase {
     assertEquals(1, response.size());
     var response2 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
     assertEquals("personalName0", response2.getJson().getString("personalName"));
+    assertCreateEventForAuthority(response2.getJson());
   }
 
   @Test
@@ -62,6 +68,7 @@ public class AuthorityStorageTest extends TestBase {
     authoritiesClient.deleteAll();
     response = authoritiesClient.getAll();
     assertEquals(0, response.size());
+    assertRemoveAllEventForAuthority();
   }
 
   @Test
@@ -71,8 +78,9 @@ public class AuthorityStorageTest extends TestBase {
     var response = authoritiesClient.getAll();
     assertEquals(1, response.size());
     authoritiesClient.delete(UUID.fromString(response.get(0).getString("id")));
-    response = authoritiesClient.getAll();
-    assertEquals(0, response.size());
+    var response2 = authoritiesClient.getAll();
+    assertEquals(0, response2.size());
+    assertRemoveEventForAuthority(response.get(0));
   }
 
   @Test
@@ -96,11 +104,12 @@ public class AuthorityStorageTest extends TestBase {
     createAuthRecords(1);
     var response = authoritiesClient.getAll();
     assertEquals(1, response.size());
-    JsonObject object = response.get(0);
+    JsonObject object = new JsonObject(response.get(0).encode());
     object.put("personalName", "changed");
     authoritiesClient.replace(UUID.fromString(object.getString("id")), object);
     var response2 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
     assertEquals(object.getString("personalName"), response2.getJson().getString("personalName"));
+    assertUpdateEventForAuthority(response.get(0), response2.getJson());
   }
 
   @Test

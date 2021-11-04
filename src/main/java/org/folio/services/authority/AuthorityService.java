@@ -44,14 +44,14 @@ public class AuthorityService {
                                           Authority newAuthority) {
     return authorityRepository.getById(authorityId)
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(notUsed -> {
+      .compose(oldRecord -> {
         final Promise<Response> putResult = promise();
 
         put(AUTHORITY_TABLE, newAuthority, authorityId, okapiHeaders, vertxContext,
           AuthorityStorage.PutAuthorityStorageAuthoritiesByAuthorityIdResponse.class, putResult);
 
         return putResult.future()
-          .compose(domainEventService.publishUpdated(newAuthority));
+          .compose(domainEventService.publishUpdated(oldRecord));
       });
   }
 

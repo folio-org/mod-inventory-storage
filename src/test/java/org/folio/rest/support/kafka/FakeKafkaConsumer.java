@@ -27,6 +27,8 @@ public final class FakeKafkaConsumer {
     new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> holdingsEvents =
     new ConcurrentHashMap<>();
+  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> authorityEvents =
+    new ConcurrentHashMap<>();
 
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
@@ -37,8 +39,9 @@ public final class FakeKafkaConsumer {
     final var INSTANCE_TOPIC_NAME = "folio.test_tenant.inventory.instance";
     final var HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
     final var ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
+    final var AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
 
-    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME));
+    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME));
     consumer.handler(message -> {
       final List<KafkaConsumerRecord<String, JsonObject>> storageList;
 
@@ -53,6 +56,10 @@ public final class FakeKafkaConsumer {
           break;
         case HOLDINGS_TOPIC_NAME:
           storageList = holdingsEvents.computeIfAbsent(instanceAndIdKey(message),
+            k -> new ArrayList<>());
+          break;
+        case AUTHORITY_TOPIC_NAME:
+          storageList = authorityEvents.computeIfAbsent(message.key(),
             k -> new ArrayList<>());
           break;
         default:
@@ -79,6 +86,12 @@ public final class FakeKafkaConsumer {
     String instanceId) {
 
     return instanceEvents.getOrDefault(instanceId, emptyList());
+  }
+
+  public static Collection<KafkaConsumerRecord<String, JsonObject> > getAuthorityEvents(
+    String authorityId) {
+
+    return authorityEvents.getOrDefault(authorityId, emptyList());
   }
 
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getItemEvents(
@@ -111,10 +124,22 @@ public final class FakeKafkaConsumer {
     return getLastEvent(getInstanceEvents(instanceId));
   }
 
+  public static KafkaConsumerRecord<String, JsonObject> getLastAuthorityEvent(
+    String id) {
+
+    return getLastEvent(getAuthorityEvents(id));
+  }
+
   public static KafkaConsumerRecord<String, JsonObject>  getFirstInstanceEvent(
     String instanceId) {
 
     return getFirstEvent(getInstanceEvents(instanceId));
+  }
+
+  public static KafkaConsumerRecord<String, JsonObject>  getFirstAuthorityEvent(
+    String authorityId) {
+
+    return getFirstEvent(getAuthorityEvents(authorityId));
   }
 
   public static KafkaConsumerRecord<String, JsonObject>  getLastItemEvent(
