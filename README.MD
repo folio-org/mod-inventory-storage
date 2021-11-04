@@ -93,6 +93,11 @@ Navigate to the folder `infrastructure/local` directory within the clone of the 
 
 Execute `docker compose down` to stop the infrastructure containers
 
+# Local Deployment using Homebrew on macOS
+
+The GitHub Actions file [.github/workflows/mac.yml](.github/workflows/mac.yml) for macOS uses Homebrew
+to setup the infrastructure, run the module, and install and check sample data.
+
 # Running
 
 ## Preparation
