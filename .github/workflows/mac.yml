@@ -50,7 +50,7 @@ jobs:
         | tee out'
     - run: 'cat out | grep "^Location: " | tr : = | tr -d " \n\r" >> $GITHUB_ENV'
     - run: echo $Location
-    - run: "curl -sS -D - -H 'x-okapi-tenant: diku' http://localhost:8081${Location}?wait=100000"
+    - run: "curl -sS -D - -H 'x-okapi-tenant: diku' http://localhost:8081${Location}?wait=200000"
     - run: "curl -sS -H 'x-okapi-tenant: diku' http://localhost:8081/item-storage/items | tee out"
     - run: sleep 5; cat log
     - run: cat out | jq '.items | length' | grep 10   # expect 10, the default limit of /items API
