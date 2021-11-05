@@ -12,6 +12,12 @@
       "type": "integer",
       "description": "Record version for optimistic locking"
     },
+    "source": {
+      "type": "string",
+      "description": "The metadata source of the underlying record to the authority record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in data-import)",
+      "enum": ["MARC", "FOLIO"],
+      "readonly": true
+    },
     "personalName": {
       "type": "string",
       "description": "Heading personal name"
@@ -49,7 +55,7 @@
       }
     },
     "meetingName": {
-      "type": "array",
+      "type": "string",
       "description": "Heading meeting name"
     },
     "sftMeetingName": {
