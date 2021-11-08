@@ -29,7 +29,7 @@ import org.mockito.ArgumentCaptor;
 public class KafkaAdminClientServiceTest {
   private final Set<String> allExpectedTopics = Set.of("folio.foo-tenant.inventory.instance",
     "folio.foo-tenant.inventory.holdings-record", "folio.foo-tenant.inventory.item",
-    "folio.foo-tenant.inventory.instance-contribution");
+    "folio.foo-tenant.inventory.instance-contribution", "folio.foo-tenant.inventory.authority");
 
   @Test
   public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {

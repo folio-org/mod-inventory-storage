@@ -14,6 +14,10 @@ public class KafkaTopic {
     return forName("inventory.item", tenantId, environmentName);
   }
 
+  public static KafkaTopic authority(String tenantId, String environmentName) {
+    return forName("inventory.authority", tenantId, environmentName);
+  }
+
   public static KafkaTopic forName(String name, String tenantId, String environmentName) {
     return new KafkaTopic(qualifyName(name, environmentName, tenantId));
   }
