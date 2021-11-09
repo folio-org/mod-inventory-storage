@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.StatisticalCodeType;
 import org.folio.rest.jaxrs.model.StatisticalCodeTypes;
 import org.folio.rest.persist.Criteria.Limit;
@@ -37,6 +38,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
   private static final Logger LOG = LogManager.getLogger();
   private static final Messages MESSAGES = Messages.getInstance();
 
+  @Validate
   @Override
   public void deleteStatisticalCodeTypes(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -66,6 +68,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
     }
   }
 
+  @Validate
   @Override
   public void getStatisticalCodeTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -107,6 +110,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
     });
   }
 
+  @Validate
   @Override
   public void postStatisticalCodeTypes(String lang, StatisticalCodeType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -154,12 +158,14 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
     });
   }
 
+  @Validate
   @Override
   public void getStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(RESOURCE_TABLE, StatisticalCodeType.class, statisticalCodeTypeId, okapiHeaders, vertxContext,
         GetStatisticalCodeTypesByStatisticalCodeTypeIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -196,6 +202,7 @@ public class StatisticalCodeTypeAPI implements org.folio.rest.jaxrs.resource.Sta
     });
   }
 
+  @Validate
   @Override
   public void putStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang, StatisticalCodeType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

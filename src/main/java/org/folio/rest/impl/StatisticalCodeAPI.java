@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.StatisticalCode;
 import org.folio.rest.jaxrs.model.StatisticalCodes;
 import org.folio.rest.persist.Criteria.Limit;
@@ -37,6 +38,7 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
   private static final Logger LOG = LogManager.getLogger();
   private static final Messages MESSAGES = Messages.getInstance();
 
+  @Validate
   @Override
   public void getStatisticalCodes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
@@ -82,6 +84,7 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
 
   }
 
+  @Validate
   @Override
   public void postStatisticalCodes(String lang, StatisticalCode entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -121,12 +124,14 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
     });
   }
 
+  @Validate
   @Override
   public void getStatisticalCodesByStatisticalCodeId(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, StatisticalCode.class, id, okapiHeaders, vertxContext,
         GetStatisticalCodesByStatisticalCodeIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteStatisticalCodesByStatisticalCodeId(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -167,6 +172,7 @@ public class StatisticalCodeAPI implements org.folio.rest.jaxrs.resource.Statist
     });
   }
 
+  @Validate
   @Override
   public void putStatisticalCodesByStatisticalCodeId(String id, String lang, StatisticalCode entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

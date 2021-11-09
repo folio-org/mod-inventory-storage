@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSource;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSource.Source;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSources;
@@ -27,18 +28,21 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
   private static final Logger log = LogManager.getLogger();
   private final Messages messages = Messages.getInstance();
 
+  @Validate
   @Override
   public void getHoldingsSources(String query, int offset, int limit, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
       PgUtil.get(REFERENCE_TABLE, HoldingsRecordsSource.class, HoldingsRecordsSources.class, query, offset, limit, okapiHeaders, vertxContext, GetHoldingsSourcesResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postHoldingsSources(String lang, HoldingsRecordsSource entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
       PgUtil.post(REFERENCE_TABLE, entity, okapiHeaders, vertxContext, PostHoldingsSourcesResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void getHoldingsSourcesById(String id, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -46,6 +50,7 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
         vertxContext, GetHoldingsSourcesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteHoldingsSourcesById(String id, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -79,6 +84,7 @@ public class HoldingsRecordsSourceAPI implements org.folio.rest.jaxrs.resource.H
     });
   }
 
+  @Validate
   @Override
   public void putHoldingsSourcesById(String id, String lang,
     HoldingsRecordsSource entity, Map<String, String> okapiHeaders,
