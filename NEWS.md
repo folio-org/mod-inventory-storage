@@ -1,3 +1,7 @@
+## 23.0.0 in progress
+
+* Introduces validation against RAML API specs for 147 APIs (MODINVSTOR-24)
+
 ## 22.0.0 2021-10-06
 
 * Added new identifiers for ISMN and UPC (MODINVSTOR-770)
