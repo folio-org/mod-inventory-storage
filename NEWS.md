@@ -1,4 +1,4 @@
-## 22.0.2 IN-PROGRESS
+## 22.0.2 2021-11-11
 
 * Removes unused parameters from RAML (MODINVSTOR-824)
 
