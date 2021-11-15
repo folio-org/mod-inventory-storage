@@ -1,12 +1,11 @@
 package org.folio.rest.impl;
 
-import static org.folio.Environment.environmentName;
-
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +14,12 @@ import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
+import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.kafka.topic.KafkaAdminClientService;
+import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -25,8 +28,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.folio.services.migration.BaseMigrationService;
-import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
+import java.util.stream.Collectors;
+
+import static org.folio.Environment.environmentName;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -96,7 +100,8 @@ public class TenantRefAPI extends TenantAPI {
     if (attributes.getModuleFrom() == null) {
       return true;
     }
-    var since = new Versioned() {};
+    var since = new Versioned() {
+    };
     since.setFromModuleVersion(featureVersion);
     return since.isNewForThisInstall(attributes.getModuleFrom());
   }
@@ -108,8 +113,8 @@ public class TenantRefAPI extends TenantAPI {
 
     // create topics before loading data
     Future<Integer> future = new KafkaAdminClientService(vertxContext.owner())
-        .createKafkaTopics(tenantId, environmentName())
-        .compose(x ->super.loadData(attributes, tenantId, headers, vertxContext));
+      .createKafkaTopics(tenantId, environmentName())
+      .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext));
 
     if (isNew(attributes, "20.0.0")) {
       try {
@@ -154,8 +159,19 @@ public class TenantRefAPI extends TenantAPI {
     return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers).map(result));
   }
 
+  @Validate
+  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
+                         Handler<AsyncResult<Response>> handler, Context context) {
+    // delete Kafka topics if tenant purged
+    Future.succeededFuture()
+      .compose(x -> tenantAttributes.getPurge()
+        ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(TenantTool.tenantId(headers), environmentName())
+        : Future.succeededFuture())
+      .onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
+  }
+
   private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,
-    Map<String, String> okapiHeaders) {
+                                         Map<String, String> okapiHeaders) {
 
     log.info("About to start java migrations...");
 
