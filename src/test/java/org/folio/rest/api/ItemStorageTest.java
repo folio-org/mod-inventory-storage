@@ -51,6 +51,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -78,6 +79,7 @@ import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.builders.StatisticalCodeBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.joda.time.DateTime;
@@ -107,6 +109,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    statisticalCodeFixture.removeTestStatisticalCodes();
   }
 
   @After
@@ -2371,6 +2374,54 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(poli1Items.size(), is(1));
     assertThat(poli1Items.get(0).getId(), is(firstItem.getId()));
+  }
+
+  @Test
+  public void canCreateItemWithStatisticalCodeId() throws Exception {
+    final var statisticalCodeBuilder = new StatisticalCodeBuilder()
+      .withCode("stcone")
+      .withName("Statistical code 1");
+
+    final var statisticalCode = statisticalCodeFixture.createSerialManagementCode(statisticalCodeBuilder);
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID statisticalCodeId = UUID.fromString(
+      statisticalCode.getJson().getString("id")
+    );
+    final String status = "Available";
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withStatus(status)
+      .withStatisticalCodeIds(Arrays.asList(statisticalCodeId))
+      .create();
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    assertThat(createdItem.getStatusCode(), is(201));
+  }
+
+  @Test
+  public void cannotCreateItemWithNonExistentStatisticalCodeId() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID nonExistentStatisticalCodeId = UUID.randomUUID();
+    final String status = "Available";
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withStatus(status)
+      .withStatisticalCodeIds(Arrays.asList(nonExistentStatisticalCodeId))
+      .create();
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    assertThat(createdItem, hasValidationError(
+      "Statistical code does not exist", "statisticalCodeIds",
+      nonExistentStatisticalCodeId.toString()));
   }
 
   private static JsonObject createItemRequest(
