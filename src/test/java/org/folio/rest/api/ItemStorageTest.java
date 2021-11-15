@@ -2400,7 +2400,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
-    assertThat(createdItem.getStatusCode(), is(201));
+    assertThat(createdItem.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
   }
 
   @Test
@@ -2422,6 +2422,73 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(createdItem, hasValidationError(
       "Statistical code does not exist", "statisticalCodeIds",
       nonExistentStatisticalCodeId.toString()));
+  }
+
+  @Test
+  public void canUpdateItemWithStatisticalCodeId()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+    final var statisticalCodeBuilder = new StatisticalCodeBuilder()
+      .withCode("stcone")
+      .withName("Statistical code 1");
+
+    final var statisticalCode = statisticalCodeFixture.createSerialManagementCode(statisticalCodeBuilder);
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID statisticalCodeId = UUID.fromString(
+      statisticalCode.getJson().getString("id")
+    );
+
+    JsonObject item = new JsonObject();
+    String itemId = UUID.randomUUID().toString();
+    item.put("id", itemId);
+    item.put("status", new JsonObject().put("name", "Available"));
+    item.put("holdingsRecordId", holdingsRecordId.toString());
+    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    item.put("materialTypeId", bookMaterialTypeID);
+    item.put("hrid", "testHRID");
+    createItem(item);
+
+    item = getById(itemId).getJson();
+
+    item.put("statisticalCodeIds", Arrays.asList(statisticalCodeId));
+
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + itemId), item, StorageTestSuite.TENANT_ID,
+        ResponseHandler.empty(completed));
+    Response response = completed.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  @Test
+  public void cannotUpdateItemWithNonExistentStatisticalCodeId()
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject item = new JsonObject();
+    String itemId = UUID.randomUUID().toString();
+    item.put("id", itemId);
+    item.put("status", new JsonObject().put("name", "Available"));
+    item.put("holdingsRecordId", holdingsRecordId.toString());
+    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    item.put("materialTypeId", bookMaterialTypeID);
+    item.put("hrid", "testHRID");
+    createItem(item);
+
+    item = getById(itemId).getJson();
+
+    item.put("statisticalCodeIds", Arrays.asList(UUID.randomUUID()));
+
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + itemId), item, StorageTestSuite.TENANT_ID,
+        ResponseHandler.json(completed));
+    Response response = completed.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getBody(),
+        containsString("Statistical code does not exist"));
   }
 
   private static JsonObject createItemRequest(

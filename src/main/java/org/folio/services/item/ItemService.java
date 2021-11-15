@@ -75,8 +75,8 @@ public class ItemService {
   public Future<Response> createItem(Item entity) {
     entity.getStatus().setDate(new Date());
 
-    return hridManager.populateHrid(entity)
-      .compose(this::refuseWhenServicePointIdDoesNotExist)
+    return this.refuseWhenServicePointIdDoesNotExist(entity)
+      .compose(item -> hridManager.populateHrid(item))
       .compose(effectiveValuesService::populateEffectiveValues)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
@@ -114,7 +114,8 @@ public class ItemService {
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
-    return itemRepository.getById(itemId)
+    return this.refuseWhenServicePointIdDoesNotExist(newItem)
+      .compose(item -> itemRepository.getById(itemId))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
       .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
@@ -185,7 +186,7 @@ public class ItemService {
     return connection -> itemRepository.update(connection, item.getId(), item);
   }
 
-  private Future<Item> refuseWhenServicePointIdDoesNotExist(Item item) {
+  private Future<Item> refuseWhenServicePointIdDoesNotExist(final Item item) {
     if (item.getStatisticalCodeIds().isEmpty()) {
       return succeededFuture(item);
     }
