@@ -2378,16 +2378,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateItemWithStatisticalCodeId() throws Exception {
-    final var statisticalCodeBuilder = new StatisticalCodeBuilder()
-      .withCode("stcone")
-      .withName("Statistical code 1");
-
-    final var statisticalCode = statisticalCodeFixture.createSerialManagementCode(statisticalCodeBuilder);
+    final var statisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
 
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
     final UUID statisticalCodeId = UUID.fromString(
       statisticalCode.getJson().getString("id")
     );
+
     final String status = "Available";
 
     final JsonObject itemToCreate = new ItemRequestBuilder()
@@ -2425,16 +2426,88 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateItemWithStatisticalCodeId()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-    final var statisticalCodeBuilder = new StatisticalCodeBuilder()
-      .withCode("stcone")
-      .withName("Statistical code 1");
+  public void canCreateItemWithMultipleStatisticalCodeIds() throws Exception {
+    final var firstStatisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
 
-    final var statisticalCode = statisticalCodeFixture.createSerialManagementCode(statisticalCodeBuilder);
+    final var secondStatisticalCode = statisticalCodeFixture
+      .attemptCreateSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stctwo")
+        .withName("Statistical code 2"));
 
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final UUID firstStatisticalCodeId = UUID.fromString(
+      firstStatisticalCode.getJson().getString("id")
+    );
+    final UUID secondStatisticalCodeId = UUID.fromString(
+      secondStatisticalCode.getJson().getString("id")
+    );
+
+    final String status = "Available";
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withStatus(status)
+      .withStatisticalCodeIds(Arrays.asList(
+        firstStatisticalCodeId,
+        secondStatisticalCodeId
+      ))
+      .create();
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    assertThat(createdItem.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void cannotCreateItemWithAllNonExistentStatisticalCodeId() throws Exception {
+    final var statisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
+
+    final UUID nonExistentStatisticalCodeId = UUID.randomUUID();
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final UUID statisticalCodeId = UUID.fromString(
+      statisticalCode.getJson().getString("id")
+    );
+
+    final String status = "Available";
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withStatus(status)
+      .withStatisticalCodeIds(Arrays.asList(
+        statisticalCodeId,
+        nonExistentStatisticalCodeId
+      ))
+      .create();
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    assertThat(createdItem, hasValidationError(
+      "Statistical code does not exist", "statisticalCodeIds",
+      nonExistentStatisticalCodeId.toString()));
+  }
+
+  @Test
+  public void canUpdateItemWithStatisticalCodeId() throws Exception {
+    final var statisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
     final UUID statisticalCodeId = UUID.fromString(
       statisticalCode.getJson().getString("id")
     );
@@ -2462,9 +2535,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateItemWithNonExistentStatisticalCodeId()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+  public void cannotUpdateItemWithNonExistentStatisticalCodeId() throws Exception {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     JsonObject item = new JsonObject();
