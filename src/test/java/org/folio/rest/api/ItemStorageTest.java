@@ -213,6 +213,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     final String inTransitServicePointId = UUID.randomUUID().toString();
 
+    final var statisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
+    final UUID statisticalCodeId = UUID.fromString(
+      statisticalCode.getJson().getString("id")
+    );
+
     JsonObject itemToCreate = new JsonObject();
 
     itemToCreate.put("id", id.toString());
@@ -229,6 +237,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
     itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
     itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+
+    itemToCreate.put("statisticalCodeIds", Arrays.asList(statisticalCodeId));
 
 
     //TODO: Replace with real service point when validated
@@ -292,6 +302,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
     assertCreateEventForItem(itemFromGet);
     assertThat(itemFromGet.getString("effectiveShelvingOrder"), is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
+
+    assertThat(itemFromGet.getJsonArray("statisticalCodeIds"), hasItem(statisticalCodeId.toString()));
   }
 
   @Test
@@ -2374,34 +2386,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(poli1Items.size(), is(1));
     assertThat(poli1Items.get(0).getId(), is(firstItem.getId()));
-  }
-
-  @Test
-  public void canCreateItemWithStatisticalCodeId() throws Exception {
-    final var statisticalCode = statisticalCodeFixture
-      .createSerialManagementCode(new StatisticalCodeBuilder()
-        .withCode("stcone")
-        .withName("Statistical code 1"));
-
-    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
-
-    final UUID statisticalCodeId = UUID.fromString(
-      statisticalCode.getJson().getString("id")
-    );
-
-    final String status = "Available";
-
-    final JsonObject itemToCreate = new ItemRequestBuilder()
-      .forHolding(holdingsRecordId)
-      .withMaterialType(journalMaterialTypeId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withStatus(status)
-      .withStatisticalCodeIds(Arrays.asList(statisticalCodeId))
-      .create();
-
-    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
-
-    assertThat(createdItem.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
   }
 
   @Test
