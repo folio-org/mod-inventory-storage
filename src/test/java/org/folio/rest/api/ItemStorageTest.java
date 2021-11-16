@@ -2465,7 +2465,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateItemWithAllNonExistentStatisticalCodeId() throws Exception {
+  public void cannotCreateItemWithAtLeastOneNonExistentStatisticalCodeId() throws Exception {
     final var statisticalCode = statisticalCodeFixture
       .createSerialManagementCode(new StatisticalCodeBuilder()
         .withCode("stcone")
