@@ -2413,8 +2413,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     );
 
     assertThat(createdItem, hasValidationError(
-      expectedMessage, "item",
-      itemId));
+      expectedMessage,
+      "item",
+      itemId
+    ));
   }
 
   @Test
@@ -2495,8 +2497,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     );
 
     assertThat(createdItem, hasValidationError(
-      expectedMessage, "item",
-      itemId));
+      expectedMessage,
+      "item",
+      itemId
+    ));
   }
 
   @Test
@@ -2554,7 +2558,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> completed = new CompletableFuture<>();
     client.put(itemsStorageUrl("/" + itemId), item, StorageTestSuite.TENANT_ID,
-        ResponseHandler.json(completed));
+        ResponseHandler.text(completed));
     Response response = completed.get(5, TimeUnit.SECONDS);
 
     String expectedResponseBody = String.format(
