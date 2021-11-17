@@ -1,6 +1,5 @@
 package org.folio.services.item;
 
-import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.util.stream.Collectors.toList;
@@ -17,7 +16,6 @@ import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
-import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
@@ -29,17 +27,13 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.ItemRepository;
-import org.folio.persist.StatisticalCodeRepository;
-import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
@@ -47,6 +41,7 @@ import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.services.holding.HoldingsService;
 import org.folio.validator.CommonValidators;
 
 public class ItemService {
@@ -58,7 +53,6 @@ public class ItemService {
   private final Map<String, String> okapiHeaders;
   private final ItemDomainEventPublisher domainEventService;
   private final ItemRepository itemRepository;
-  private final StatisticalCodeRepository statisticalCodeRepository;
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -69,14 +63,12 @@ public class ItemService {
     effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
-    statisticalCodeRepository = new StatisticalCodeRepository(vertxContext, okapiHeaders);
   }
 
   public Future<Response> createItem(Item entity) {
     entity.getStatus().setDate(new Date());
 
-    return this.refuseWhenStatisticalCodeIdDoesNotExist(entity)
-      .compose(item -> hridManager.populateHrid(item))
+    return hridManager.populateHrid(entity)
       .compose(effectiveValuesService::populateEffectiveValues)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
@@ -114,8 +106,7 @@ public class ItemService {
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
-    return this.refuseWhenStatisticalCodeIdDoesNotExist(newItem)
-      .compose(item -> itemRepository.getById(itemId))
+    return itemRepository.getById(itemId)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
       .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
@@ -185,27 +176,4 @@ public class ItemService {
   private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(Item item) {
     return connection -> itemRepository.update(connection, item.getId(), item);
   }
-
-  private Future<Item> refuseWhenStatisticalCodeIdDoesNotExist(final Item item) {
-    if (item.getStatisticalCodeIds().isEmpty()) {
-      return succeededFuture(item);
-    }
-
-    return statisticalCodeRepository.getById(item.getStatisticalCodeIds())
-      .compose(statCodeMap -> {
-        if (statCodeMap.size() == item.getStatisticalCodeIds().size()) {
-          return succeededFuture(item);
-        }
-
-        Set<String> statisticalCodes = new HashSet<>(item.getStatisticalCodeIds());
-        statisticalCodes.removeIf(statCodeMap.keySet()::contains);
-
-        return failedFuture(new ValidationException(createValidationErrorMessage(
-          "statisticalCodeIds",
-          statisticalCodes.iterator().next(),
-          "Statistical code does not exist"
-        )));
-      });
-  }
-
 }
