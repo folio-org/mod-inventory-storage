@@ -51,6 +51,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -78,6 +79,7 @@ import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.builders.StatisticalCodeBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.joda.time.DateTime;
@@ -117,6 +119,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("item");
+  }
+
+  @After
+  public void removeStatisticalCodes() {
+    statisticalCodeFixture.removeTestStatisticalCodes();
   }
 
   @Parameters({
@@ -210,6 +217,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     final String inTransitServicePointId = UUID.randomUUID().toString();
 
+    final var statisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
+    final UUID statisticalCodeId = UUID.fromString(
+      statisticalCode.getJson().getString("id")
+    );
+
     JsonObject itemToCreate = new JsonObject();
 
     itemToCreate.put("id", id.toString());
@@ -226,6 +241,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
     itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
     itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+
+    itemToCreate.put("statisticalCodeIds", Arrays.asList(statisticalCodeId));
 
 
     //TODO: Replace with real service point when validated
@@ -289,6 +306,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
     assertCreateEventForItem(itemFromGet);
     assertThat(itemFromGet.getString("effectiveShelvingOrder"), is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
+
+    assertThat(itemFromGet.getJsonArray("statisticalCodeIds"), hasItem(statisticalCodeId.toString()));
   }
 
   @Test
@@ -2371,6 +2390,190 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(poli1Items.size(), is(1));
     assertThat(poli1Items.get(0).getId(), is(firstItem.getId()));
+  }
+
+  @Test
+  public void cannotCreateItemWithNonExistentStatisticalCodeId() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID nonExistentStatisticalCodeId = UUID.randomUUID();
+    final String status = "Available";
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withStatus(status)
+      .withStatisticalCodeIds(Arrays.asList(nonExistentStatisticalCodeId))
+      .create();
+
+    final String itemId = itemToCreate.getString("id");
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    String expectedMessage = String.format(
+      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
+      nonExistentStatisticalCodeId.toString(),
+      itemId
+    );
+
+    assertThat(createdItem, hasValidationError(
+      expectedMessage,
+      "item",
+      itemId
+    ));
+  }
+
+  @Test
+  public void canCreateItemWithMultipleStatisticalCodeIds() throws Exception {
+    final var firstStatisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
+
+    final var secondStatisticalCode = statisticalCodeFixture
+      .attemptCreateSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stctwo")
+        .withName("Statistical code 2"));
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final UUID firstStatisticalCodeId = UUID.fromString(
+      firstStatisticalCode.getJson().getString("id")
+    );
+    final UUID secondStatisticalCodeId = UUID.fromString(
+      secondStatisticalCode.getJson().getString("id")
+    );
+
+    final String status = "Available";
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withStatus(status)
+      .withStatisticalCodeIds(Arrays.asList(
+        firstStatisticalCodeId,
+        secondStatisticalCodeId
+      ))
+      .create();
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    assertThat(createdItem.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void cannotCreateItemWithAtLeastOneNonExistentStatisticalCodeId() throws Exception {
+    final var statisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
+
+    final UUID nonExistentStatisticalCodeId = UUID.randomUUID();
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final UUID statisticalCodeId = UUID.fromString(
+      statisticalCode.getJson().getString("id")
+    );
+
+    final String status = "Available";
+
+    final JsonObject itemToCreate = new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withStatus(status)
+      .withStatisticalCodeIds(Arrays.asList(
+        statisticalCodeId,
+        nonExistentStatisticalCodeId
+      ))
+      .create();
+
+    final String itemId = itemToCreate.getString("id");
+
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+
+    String expectedMessage = String.format(
+      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
+      nonExistentStatisticalCodeId.toString(),
+      itemId
+    );
+
+    assertThat(createdItem, hasValidationError(
+      expectedMessage,
+      "item",
+      itemId
+    ));
+  }
+
+  @Test
+  public void canUpdateItemWithStatisticalCodeId() throws Exception {
+    final var statisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode("stcone")
+        .withName("Statistical code 1"));
+
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    final UUID statisticalCodeId = UUID.fromString(
+      statisticalCode.getJson().getString("id")
+    );
+
+    JsonObject item = new JsonObject();
+    String itemId = UUID.randomUUID().toString();
+    item.put("id", itemId);
+    item.put("status", new JsonObject().put("name", "Available"));
+    item.put("holdingsRecordId", holdingsRecordId.toString());
+    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    item.put("materialTypeId", bookMaterialTypeID);
+    item.put("hrid", "testHRID");
+    createItem(item);
+
+    item = getById(itemId).getJson();
+
+    item.put("statisticalCodeIds", Arrays.asList(statisticalCodeId));
+
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + itemId), item, StorageTestSuite.TENANT_ID,
+        ResponseHandler.empty(completed));
+    Response response = completed.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  @Test
+  public void cannotUpdateItemWithNonExistentStatisticalCodeId() throws Exception {
+    UUID nonExistentStatisticalCodeId = UUID.randomUUID();
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject item = new JsonObject();
+    String itemId = UUID.randomUUID().toString();
+    item.put("id", itemId);
+    item.put("status", new JsonObject().put("name", "Available"));
+    item.put("holdingsRecordId", holdingsRecordId.toString());
+    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    item.put("materialTypeId", bookMaterialTypeID);
+    item.put("hrid", "testHRID");
+    createItem(item);
+
+    item = getById(itemId).getJson();
+
+    item.put("statisticalCodeIds", Arrays.asList(nonExistentStatisticalCodeId.toString()));
+
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    client.put(itemsStorageUrl("/" + itemId), item, StorageTestSuite.TENANT_ID,
+        ResponseHandler.text(completed));
+    Response response = completed.get(5, TimeUnit.SECONDS);
+
+    String expectedResponseBody = String.format(
+      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
+      nonExistentStatisticalCodeId.toString(),
+      itemId
+    );
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    assertThat(response.getBody(),
+        is(expectedResponseBody));
   }
 
   private static JsonObject createItemRequest(
