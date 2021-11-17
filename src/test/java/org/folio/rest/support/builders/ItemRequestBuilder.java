@@ -85,10 +85,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     put(itemRequest, "itemLevelCallNumberSuffix", itemLevelCallNumberSuffix);
     put(itemRequest, "itemLevelCallNumberTypeId", itemLevelCallNumberTypeId);
     put(itemRequest, "discoverySuppress", discoverySuppress);
-
-    JsonArray statisticalCodeIds = new JsonArray();
-    this.statisticalCodeIds.forEach(statCodeId -> statisticalCodeIds.add(statCodeId));
-    put(itemRequest, "statisticalCodeIds", statisticalCodeIds);
+    put(itemRequest, "statisticalCodeIds", new JsonArray(statisticalCodeIds));
 
     return itemRequest;
   }
