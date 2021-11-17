@@ -109,7 +109,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
-    statisticalCodeFixture.removeTestStatisticalCodes();
   }
 
   @After
@@ -120,6 +119,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @After
   public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("item");
+  }
+
+  @After
+  public void removeStatisticalCodes() {
+    statisticalCodeFixture.removeTestStatisticalCodes();
   }
 
   @Parameters({
