@@ -2404,8 +2404,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
+    final String createdItemId = createdItem.getJson().getString("id");
+
+    String expectedMessage = String.format(
+      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
+      nonExistentStatisticalCodeId.toString(),
+      createdItemId
+    );
+
     assertThat(createdItem, hasValidationError(
-      "Statistical code does not exist", "statisticalCodeIds",
+      expectedMessage, "item",
       nonExistentStatisticalCodeId.toString()));
   }
 
@@ -2478,8 +2486,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
+    final String itemId = createdItem.getJson().getString("id");
+
+    String expectedMessage = String.format(
+      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
+      nonExistentStatisticalCodeId.toString(),
+      itemId
+    );
+
     assertThat(createdItem, hasValidationError(
-      "Statistical code does not exist", "statisticalCodeIds",
+      expectedMessage, "item",
       nonExistentStatisticalCodeId.toString()));
   }
 
@@ -2520,7 +2536,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotUpdateItemWithNonExistentStatisticalCodeId() throws Exception {
-
+    UUID nonExistentStatisticalCodeId = UUID.randomUUID();
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     JsonObject item = new JsonObject();
     String itemId = UUID.randomUUID().toString();
@@ -2534,16 +2550,22 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     item = getById(itemId).getJson();
 
-    item.put("statisticalCodeIds", Arrays.asList(UUID.randomUUID()));
+    item.put("statisticalCodeIds", Arrays.asList(nonExistentStatisticalCodeId.toString()));
 
     CompletableFuture<Response> completed = new CompletableFuture<>();
     client.put(itemsStorageUrl("/" + itemId), item, StorageTestSuite.TENANT_ID,
         ResponseHandler.json(completed));
     Response response = completed.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(422));
+    String expectedResponseBody = String.format(
+      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
+      nonExistentStatisticalCodeId.toString(),
+      itemId
+    );
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-        containsString("Statistical code does not exist"));
+        is(expectedResponseBody));
   }
 
   private static JsonObject createItemRequest(
