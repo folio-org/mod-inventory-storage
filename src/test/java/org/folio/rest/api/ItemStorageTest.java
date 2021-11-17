@@ -2402,19 +2402,19 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .withStatisticalCodeIds(Arrays.asList(nonExistentStatisticalCodeId))
       .create();
 
-    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+    final String itemId = itemToCreate.getString("id");
 
-    final String createdItemId = createdItem.getJson().getString("id");
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
     String expectedMessage = String.format(
       "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
       nonExistentStatisticalCodeId.toString(),
-      createdItemId
+      itemId
     );
 
     assertThat(createdItem, hasValidationError(
       expectedMessage, "item",
-      nonExistentStatisticalCodeId.toString()));
+      itemId));
   }
 
   @Test
@@ -2484,9 +2484,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       ))
       .create();
 
-    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
+    final String itemId = itemToCreate.getString("id");
 
-    final String itemId = createdItem.getJson().getString("id");
+    final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
     String expectedMessage = String.format(
       "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
@@ -2496,7 +2496,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(createdItem, hasValidationError(
       expectedMessage, "item",
-      nonExistentStatisticalCodeId.toString()));
+      itemId));
   }
 
   @Test
