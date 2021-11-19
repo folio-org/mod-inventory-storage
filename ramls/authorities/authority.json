@@ -36,6 +36,24 @@
         "type": "string"
       }
     },
+    "personalNameTitle": {
+      "type": "string",
+      "description": "Heading personal name title"
+    },
+    "sftPersonalNameTitle": {
+      "type": "array",
+      "description": "See from tracing personal name title",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftPersonalNameTitle": {
+      "type": "array",
+      "description": "See also from tracing personal name title",
+      "items": {
+        "type": "string"
+      }
+    },
     "corporateName": {
       "type": "string",
       "description": "Heading corporate name"
@@ -54,6 +72,24 @@
         "type": "string"
       }
     },
+    "corporateNameTitle": {
+      "type": "string",
+      "description": "Heading corporate name title"
+    },
+    "sftCorporateNameTitle": {
+      "type": "array",
+      "description": "See from tracing corporate name title",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftCorporateNameTitle": {
+      "type": "array",
+      "description": "See also from tracing corporate name title",
+      "items": {
+        "type": "string"
+      }
+    },
     "meetingName": {
       "type": "string",
       "description": "Heading meeting name"
@@ -68,6 +104,24 @@
     "saftMeetingName": {
       "type": "array",
       "description": "See also from tracing meeting name",
+      "items": {
+        "type": "string"
+      }
+    },
+    "meetingNameTitle": {
+      "type": "string",
+      "description": "Heading meeting name title"
+    },
+    "sftMeetingNameTitle": {
+      "type": "array",
+      "description": "See from tracing meeting name title",
+      "items": {
+        "type": "string"
+      }
+    },
+    "saftMeetingNameTitle": {
+      "type": "array",
+      "description": "See also from tracing meeting name title",
       "items": {
         "type": "string"
       }
