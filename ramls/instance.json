@@ -331,7 +331,7 @@
     },
     "notes": {
       "type": "array",
-      "description": "Bibliographic notes (e.g. general notes, specialized notes), and administrative notes",
+      "description": "Bibliographic notes (e.g. general notes, specialized notes)",
       "items": {
         "type": "object",
         "properties": {
@@ -349,6 +349,14 @@
             "default": false
           }
         }
+      }
+    },
+    "adminNotes":{
+      "type": "array",
+      "description": "Administrative notes",
+      "minItems": 0,
+      "items": {
+        "type": "string"
       }
     },
     "modeOfIssuanceId": {

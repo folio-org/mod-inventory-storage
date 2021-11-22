@@ -157,10 +157,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .toArray(String[]::new);
 
     var publication = new Publication().withDateOfPublication("2000-2001");
+    String adminNote = "Administrative note";
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
     instanceToCreate.put("publication", new JsonArray().add(JsonObject.mapFrom(publication)));
+    instanceToCreate.put("adminNotes", new JsonArray().add(adminNote));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -176,6 +178,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instance.getString("id"), is(id.toString()));
     assertThat(instance.getString("title"), is("Long Way to a Small Angry Planet"));
     assertThat(instance.getBoolean("previouslyHeld"), is(false));
+    assertThat(instance.getJsonArray("adminNotes").contains(adminNote), is(true));
 
     JsonArray identifiers = instance.getJsonArray("identifiers");
     assertThat(identifiers.size(), is(1));
@@ -379,10 +382,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
+    String adminNote = "An Admin note";
     final IndividualResource createdInstance = createInstance(smallAngryPlanet(id));
 
     JsonObject replacement = createdInstance.copyJson();
     replacement.put("title", "A Long Way to a Small Angry Planet");
+    replacement.put("adminNotes", new JsonArray().add(adminNote));
 
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
@@ -406,6 +411,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       is(replacement.getString(STATUS_UPDATED_DATE_PROPERTY)));
     assertThat(itemFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
     assertUpdateEventForInstance(createdInstance.getJson(), updatedInstance.getJson());
+    assertThat(itemFromGet.getJsonArray("adminNotes").contains(adminNote), is(true));
   }
 
   @Test
