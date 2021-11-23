@@ -163,11 +163,10 @@ public class TenantRefAPI extends TenantAPI {
   public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
                          Handler<AsyncResult<Response>> handler, Context context) {
     // delete Kafka topics if tenant purged
-    Future.succeededFuture()
-      .compose(x -> tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
-        ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(TenantTool.tenantId(headers), environmentName())
-        : Future.succeededFuture())
-      .onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
+    Future<Void> result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
+      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(TenantTool.tenantId(headers), environmentName())
+      : Future.succeededFuture();
+    result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
   }
 
   private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,

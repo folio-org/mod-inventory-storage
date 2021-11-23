@@ -13,6 +13,7 @@ import org.folio.services.kafka.KafkaProperties;
 import org.folio.util.ResourceUtil;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,28 +58,21 @@ public class KafkaAdminClientService {
   }
 
   public Future<Void> deleteKafkaTopics(String tenantId, String environmentName) {
-    Promise<Void> promise = Promise.promise();
-    Promise<Void> result = Promise.promise();
-    final KafkaAdminClient kafkaAdminClient = clientFactory.get();
     List<String> topicsToDelete = readTopics()
       .map(topic -> qualifyName(topic, environmentName, tenantId))
       .map(NewTopic::getName)
       .collect(Collectors.toList());
-    kafkaAdminClient.deleteTopics(topicsToDelete, promise);
-    promise.future().onComplete(res -> {
-      if (res.succeeded()) {
-        log.info("Topics deleted successfully");
-      } else {
-        log.error("Unable to delete topics", res.cause());
-      }
-      kafkaAdminClient.close().onComplete(closeResult -> {
-        if (closeResult.failed()) {
-          log.error("Failed to close kafka admin client", closeResult.cause());
-        }
-      });
-      result.complete();
-    });
-    return result.future();
+    return withKafkaAdminClient(kafkaAdminClient -> kafkaAdminClient.deleteTopics(topicsToDelete))
+      .onSuccess(x -> log.info("Topics deleted successfully"))
+      .onFailure(e -> log.error("Unable to delete topics", e));
+  }
+
+  private <T> Future<T> withKafkaAdminClient(Function<KafkaAdminClient, Future<T>> function) {
+    final KafkaAdminClient kafkaAdminClient = clientFactory.get();
+    return function.apply(kafkaAdminClient)
+      .eventually(x ->
+        kafkaAdminClient.close()
+          .onFailure(e -> log.error("Failed to close kafka admin client", e)));
   }
 
   private Future<Void> createKafkaTopics(String tenantId, String environmentName,
