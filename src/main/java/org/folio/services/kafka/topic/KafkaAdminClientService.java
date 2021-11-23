@@ -57,14 +57,15 @@ public class KafkaAdminClientService {
   }
 
   public Future<Void> deleteKafkaTopics(String tenantId, String environmentName) {
+    Promise<Void> promise = Promise.promise();
     Promise<Void> result = Promise.promise();
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
     List<String> topicsToDelete = readTopics()
       .map(topic -> qualifyName(topic, environmentName, tenantId))
       .map(NewTopic::getName)
       .collect(Collectors.toList());
-    kafkaAdminClient.deleteTopics(topicsToDelete, result);
-    result.future().onComplete(res -> {
+    kafkaAdminClient.deleteTopics(topicsToDelete, promise);
+    promise.future().onComplete(res -> {
       if (res.succeeded()) {
         log.info("Topics deleted successfully");
       } else {
@@ -75,6 +76,7 @@ public class KafkaAdminClientService {
           log.error("Failed to close kafka admin client", closeResult.cause());
         }
       });
+      result.complete();
     });
     return result.future();
   }

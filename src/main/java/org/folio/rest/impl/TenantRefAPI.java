@@ -164,7 +164,7 @@ public class TenantRefAPI extends TenantAPI {
                          Handler<AsyncResult<Response>> handler, Context context) {
     // delete Kafka topics if tenant purged
     Future.succeededFuture()
-      .compose(x -> tenantAttributes.getPurge()
+      .compose(x -> tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
         ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(TenantTool.tenantId(headers), environmentName())
         : Future.succeededFuture())
       .onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
