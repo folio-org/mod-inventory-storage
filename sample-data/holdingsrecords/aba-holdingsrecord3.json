@@ -22,6 +22,7 @@
  } ],
  "callNumber" : "K1 .M44",
  "notes" : [ ],
+ "administrativeNotes": ["cataloging note"],
  "holdingsStatements" : [ {
    "statement" : "1.2012 -"
  } ],
