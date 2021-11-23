@@ -1,6 +1,7 @@
 ## 22.1.0 IN-PROGRESS
 
 * Added Administrative notes to instance records (MODINVSTOR-832)
+* Added administrative notes to holdings records (MODINVSTOR-833)
 
 ## 22.0.0 2021-10-06
 
