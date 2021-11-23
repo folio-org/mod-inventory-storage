@@ -115,7 +115,7 @@ resourceTypes:
                   example: "Internal server error, contact administrator"
           description: |
             Delete the source record.
-            Note: The source records gets automatically deleted when its instance record is deleted.
+            Note: When the Inventory instance record is deleted, its source record in mod-inventory-storage is automatically deleted. If the Inventory instance record is linked to a corresponding record in mod-source-record-storage, that SRS record is NOT automatically deleted.
         /marc-json:
           displayName: MARC source record as JSON
           is: [language]
