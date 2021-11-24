@@ -1,26 +1,27 @@
 package org.folio.services.kafka.topic;
 
-import static io.vertx.core.Future.succeededFuture;
-import static io.vertx.kafka.admin.KafkaAdminClient.create;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
-
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.apache.logging.log4j.Logger;
-import org.folio.kafka.KafkaConfig;
-import org.folio.services.kafka.KafkaProperties;
-import org.folio.util.ResourceUtil;
-
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
+import org.apache.logging.log4j.Logger;
+import org.folio.kafka.KafkaConfig;
+import org.folio.services.kafka.KafkaProperties;
+import org.folio.util.ResourceUtil;
+
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static io.vertx.core.Future.succeededFuture;
+import static io.vertx.kafka.admin.KafkaAdminClient.create;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
 
 public class KafkaAdminClientService {
   private static final Logger log = getLogger(KafkaAdminClientService.class);
@@ -53,11 +54,29 @@ public class KafkaAdminClientService {
             log.error("Failed to close kafka admin client", closeResult.cause());
           }
         });
-    });
+      });
+  }
+
+  public Future<Void> deleteKafkaTopics(String tenantId, String environmentName) {
+    List<String> topicsToDelete = readTopics()
+      .map(topic -> qualifyName(topic, environmentName, tenantId))
+      .map(NewTopic::getName)
+      .collect(Collectors.toList());
+    return withKafkaAdminClient(kafkaAdminClient -> kafkaAdminClient.deleteTopics(topicsToDelete))
+      .onSuccess(x -> log.info("Topics deleted successfully"))
+      .onFailure(e -> log.error("Unable to delete topics", e));
+  }
+
+  private <T> Future<T> withKafkaAdminClient(Function<KafkaAdminClient, Future<T>> function) {
+    final KafkaAdminClient kafkaAdminClient = clientFactory.get();
+    return function.apply(kafkaAdminClient)
+      .eventually(x ->
+        kafkaAdminClient.close()
+          .onFailure(e -> log.error("Failed to close kafka admin client", e)));
   }
 
   private Future<Void> createKafkaTopics(String tenantId, String environmentName,
-    KafkaAdminClient kafkaAdminClient) {
+                                         KafkaAdminClient kafkaAdminClient) {
 
     final List<NewTopic> expectedTopics = readTopics()
       .map(topic -> qualifyName(topic, environmentName, tenantId))
