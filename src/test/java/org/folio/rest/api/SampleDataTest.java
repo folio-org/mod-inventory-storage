@@ -2,13 +2,12 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -23,16 +22,20 @@ import io.vertx.core.json.JsonObject;
 import junit.framework.AssertionFailedError;
 
 public class SampleDataTest extends TestBase {
-
   /**
-   * Remove tenant WITHOUT sample data,
-   * recreate tenant (with reference and) WITH sample data
-   * Omit update for now.. It hangs for unknown reasons when using Embedded Postgres MODINVSTOR-369
+   * Use a different TENANT_ID.
+   *
+   * Reason: Deleting the module and immediately recreating the module for the same tenant fails:
+   *
+   * "Unable to create topics
+   * org.apache.kafka.common.errors.TopicExistsException:
+   * Topic 'folio.test_tenant.inventory.instance' already exists."
    */
+  private static final String TENANT_ID = "SampleDataTestTenant";
+
   @BeforeClass
   public static void beforeAny() throws Exception {
-    StorageTestSuite.removeTenant(StorageTestSuite.TENANT_ID);
-    StorageTestSuite.prepareTenant(StorageTestSuite.TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
+    StorageTestSuite.prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
   }
 
   private void assertCount(URL url, String arrayName, int expectedCount) {
