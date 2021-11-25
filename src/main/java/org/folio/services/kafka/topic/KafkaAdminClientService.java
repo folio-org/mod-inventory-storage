@@ -73,20 +73,10 @@ public class KafkaAdminClientService {
       .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
       .collect(Collectors.toList());
 
-    log.info("Before topics {}", topics.size());
-    for (NewTopic topic : topics) {
-      log.info("{}", topic.getName());
-    }
     return kafkaAdminClient.createTopics(topics)
       .recover(x -> {
         if (x instanceof org.apache.kafka.common.errors.TopicExistsException) {
-          log.info("{}", x.getMessage());
-          return kafkaAdminClient.listTopics().onSuccess(newTopics -> {
-            log.info("After topics {}", newTopics.size());
-            for (String s : newTopics) {
-              log.info("{}", s);
-            }
-          }).mapEmpty();
+          return Future.succeededFuture();
         }
         log.error("Unable to create topics {}", x.getMessage(), x);
         return Future.failedFuture(x);
