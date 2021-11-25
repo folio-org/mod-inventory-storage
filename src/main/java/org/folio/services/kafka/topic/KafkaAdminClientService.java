@@ -42,19 +42,9 @@ public class KafkaAdminClientService {
   public Future<Void> createKafkaTopics(String tenantId, String environmentName) {
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
     return createKafkaTopics(tenantId, environmentName, kafkaAdminClient)
-      .onComplete(result -> {
-        if (result.succeeded()) {
-          log.info("Topics created successfully");
-        } else {
-          log.error("Unable to create topics", result.cause());
-        }
-
-        kafkaAdminClient.close().onComplete(closeResult -> {
-          if (closeResult.failed()) {
-            log.error("Failed to close kafka admin client", closeResult.cause());
-          }
-        });
-      });
+      .eventually(x -> kafkaAdminClient.close())
+      .onSuccess(result -> log.info("Topics created successfully"))
+      .onFailure(cause -> log.error("Unable to create topics", cause));
   }
 
   public Future<Void> deleteKafkaTopics(String tenantId, String environmentName) {
@@ -78,24 +68,29 @@ public class KafkaAdminClientService {
   private Future<Void> createKafkaTopics(String tenantId, String environmentName,
                                          KafkaAdminClient kafkaAdminClient) {
 
-    final List<NewTopic> expectedTopics = readTopics()
+    final List<NewTopic> topics = readTopics()
       .map(topic -> qualifyName(topic, environmentName, tenantId))
+      .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
       .collect(Collectors.toList());
 
-    return kafkaAdminClient.listTopics().compose(existingTopics -> {
-      final List<NewTopic> topicsToCreate = expectedTopics.stream()
-        .filter(topic -> !existingTopics.contains(topic.getName()))
-        .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
-        .collect(Collectors.toList());
-
-      if (topicsToCreate.isEmpty()) {
-        log.info("All topics already exists, skipping creation");
-        return succeededFuture();
-      }
-
-      log.info("Creating topics {}", topicsToCreate);
-      return kafkaAdminClient.createTopics(topicsToCreate);
-    });
+    log.info("Before topics {}", topics.size());
+    for (NewTopic topic : topics) {
+      log.info("{}", topic.getName());
+    }
+    return kafkaAdminClient.createTopics(topics)
+      .recover(x -> {
+        if (x instanceof org.apache.kafka.common.errors.TopicExistsException) {
+          log.info("{}", x.getMessage());
+          return kafkaAdminClient.listTopics().onSuccess(newTopics -> {
+            log.info("After topics {}", newTopics.size());
+            for (String s : newTopics) {
+              log.info("{}", s);
+            }
+          }).mapEmpty();
+        }
+        log.error("Unable to create topics {}", x.getMessage(), x);
+        return Future.failedFuture(x);
+      });
   }
 
   private NewTopic qualifyName(NewTopic topic, String environmentName, String tenantId) {

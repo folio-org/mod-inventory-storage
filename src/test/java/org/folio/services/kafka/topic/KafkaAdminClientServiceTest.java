@@ -43,7 +43,7 @@ public class KafkaAdminClientServiceTest {
     createKafkaTopicsAsync(mockClient)
       .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
-        verify(mockClient, times(0)).createTopics(anyList());
+        verify(mockClient, times(1)).createTopics(anyList());
         verify(mockClient, times(1)).close();
       }));
   }
