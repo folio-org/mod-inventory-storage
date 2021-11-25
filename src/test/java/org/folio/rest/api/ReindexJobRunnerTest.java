@@ -113,6 +113,38 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canStartAuthoritiesReindex() {
+    ReindexJob res = authorityReindex.postReindexJob(reindexJob());
+    assertThat(res, notNullValue());
+    assertThat(res.getId(), notNullValue());
+  }
+
+  @Test
+  public void canCancelAuthoritiesReindex() {
+    var rowStream = new TestRowStream(10_000_000);
+    var reindexJob = reindexJob();
+    var postgresClientFuturized = spy(getPostgresClientFuturized());
+
+    doReturn(succeededFuture(rowStream))
+      .when(postgresClientFuturized).selectStream(any(), anyString());
+
+    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+      .toCompletableFuture());
+
+    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
+
+    authorityReindex.cancelReindexJob(reindexJob.getId());
+
+    await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
+      .getJobStatus() == ID_PUBLISHING_CANCELLED);
+
+    var job = authorityReindex.getReindexJob(reindexJob.getId());
+
+    assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
+    assertThat(job.getPublished(), greaterThanOrEqualTo(500));
+  }
+
+  @Test
   public void canCancelReindex() {
     var rowStream = new TestRowStream(10_000_000);
     var reindexJob = reindexJob();

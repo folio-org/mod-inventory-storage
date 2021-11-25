@@ -31,4 +31,11 @@ public final class AuthorityReindexFixture {
       .thenApply(Response::getJson)
       .thenApply(json -> json.mapTo(ReindexJob.class)));
   }
+
+  @SneakyThrows
+  public ReindexJob postReindexJob(ReindexJob job) {
+    return get(client.post(authorityReindexUrl(""), job, TENANT_ID)
+      .thenApply(Response::getJson)
+      .thenApply(json -> json.mapTo(ReindexJob.class)));
+  }
 }
