@@ -25,12 +25,12 @@ public final class ReindexService {
     this.jobRunner = runner;
   }
 
-  public Future<ReindexJob> submitReindex() {
+  public Future<ReindexJob> submitReindex(ReindexResourceName reindexResourceName) {
     var reindexResponse = buildInitialJob();
 
     return reindexJobRepository.save(reindexResponse.getId(), reindexResponse)
       .map(notUsed -> {
-        jobRunner.startReindex(reindexResponse);
+        jobRunner.startReindex(reindexResponse, reindexResourceName);
 
         return reindexResponse;
       });
