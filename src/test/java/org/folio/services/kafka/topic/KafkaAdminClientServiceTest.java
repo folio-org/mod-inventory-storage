@@ -32,7 +32,7 @@ public class KafkaAdminClientServiceTest {
     "folio.foo-tenant.inventory.instance-contribution", "folio.foo-tenant.inventory.authority");
 
   @Test
-  public void shouldNotCreateTopicIfAlreadyExist(TestContext testContext) {
+  public void shouldCreateTopicIfAlreadyExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
     when(mockClient.listTopics()).thenReturn(succeededFuture(allExpectedTopics));
     // Still mock this even though no invocations are expected
