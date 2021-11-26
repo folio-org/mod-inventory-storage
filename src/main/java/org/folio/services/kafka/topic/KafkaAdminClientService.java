@@ -1,7 +1,7 @@
 package org.folio.services.kafka.topic;
 
+import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -11,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.kafka.KafkaConfig;
 import org.folio.services.kafka.KafkaProperties;
 import org.folio.util.ResourceUtil;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -39,29 +39,49 @@ public class KafkaAdminClientService {
   }
 
   public Future<Void> createKafkaTopics(String tenantId, String environmentName) {
+    final List<NewTopic> topics = readTopics()
+        .map(topic -> qualifyName(topic, environmentName, tenantId))
+        .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
+        .collect(Collectors.toList());
     final KafkaAdminClient kafkaAdminClient = clientFactory.get();
-    return createKafkaTopics(tenantId, environmentName, kafkaAdminClient)
+    return createKafkaTopics(1, topics, kafkaAdminClient)
       .eventually(x -> kafkaAdminClient.close())
       .onSuccess(result -> log.info("Topics created successfully"))
       .onFailure(cause -> log.error("Unable to create topics", cause));
   }
 
-  private Future<Void> createKafkaTopics(String tenantId, String environmentName,
-    KafkaAdminClient kafkaAdminClient) {
+  private Future<Void> createKafkaTopics(int attempt, List<NewTopic> topics,
+      KafkaAdminClient kafkaAdminClient) {
 
-    final List<NewTopic> topics = readTopics()
-      .map(topic -> qualifyName(topic, environmentName, tenantId))
-      .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
-      .collect(Collectors.toList());
+    return kafkaAdminClient.listTopics()
+        .compose(existingTopics -> {
+          final List<NewTopic> newTopics = new ArrayList<>(topics);
+          newTopics.removeIf(t -> existingTopics.contains(t.getName()));
+          if (newTopics.isEmpty()) {
+            return Future.succeededFuture();
+          }
+          return kafkaAdminClient.createTopics(newTopics);
+        })
+        .recover(e -> {
+          if (! (e instanceof org.apache.kafka.common.errors.TopicExistsException)) {
+            return Future.failedFuture(e);
+          }
+          if (attempt >= 30) {
+            log.error("attempt {} failed: {}", attempt, e.getMessage(), e);
+            return Future.failedFuture(e);
+          }
+          log.info("Create topic attempt {} failed, sleeping and trying next attempt.", attempt);
+          return sleep().compose(x -> createKafkaTopics(attempt + 1, topics, kafkaAdminClient));
+        });
+  }
 
-    return kafkaAdminClient.createTopics(topics)
-      .recover(x -> {
-        if (x instanceof org.apache.kafka.common.errors.TopicExistsException) {
-          log.info("Ignoring {}", x.getMessage());
-          return Future.succeededFuture();
-        }
-        return Future.failedFuture(x);
-      });
+  /**
+   * Sleep for 100 milliseconds.
+   */
+  private Future<Void> sleep() {
+    Context context = Vertx.currentContext();
+    Vertx vertx = context == null ? Vertx.vertx() : context.owner();
+    return Future.future(promise -> vertx.setTimer(100, x -> promise.tryComplete()));
   }
 
   public Future<Void> deleteKafkaTopics(String tenantId, String environmentName) {
