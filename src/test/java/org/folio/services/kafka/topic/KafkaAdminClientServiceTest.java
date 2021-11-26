@@ -5,6 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.Environment.environmentName;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
@@ -35,12 +36,32 @@ public class KafkaAdminClientServiceTest {
   @Test
   public void shouldCreateTopicIfAlreadyExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
-    when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new TopicExistsException("x")));
+    when(mockClient.createTopics(anyList()))
+      .thenReturn(failedFuture(new TopicExistsException("x")))
+      .thenReturn(failedFuture(new TopicExistsException("y")))
+      .thenReturn(failedFuture(new TopicExistsException("z")))
+      .thenReturn(succeededFuture());
+    when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
-        verify(mockClient, times(1)).createTopics(anyList());
+        verify(mockClient, times(4)).listTopics();
+        verify(mockClient, times(4)).createTopics(anyList());
+        verify(mockClient, times(1)).close();
+      }));
+  }
+
+  @Test
+  public void shouldFailIfExistExceptionIsPermanent(TestContext testContext) {
+    final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
+    when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new TopicExistsException("x")));
+    when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
+    when(mockClient.close()).thenReturn(succeededFuture());
+
+    createKafkaTopicsAsync(mockClient)
+      .onComplete(testContext.asyncAssertFailure(e -> {
+        assertThat(e, instanceOf(TopicExistsException.class));
         verify(mockClient, times(1)).close();
       }));
   }
@@ -49,6 +70,7 @@ public class KafkaAdminClientServiceTest {
   public void shouldNotCreateTopicOnOther(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
     when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new RuntimeException("err msg")));
+    when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
@@ -63,6 +85,7 @@ public class KafkaAdminClientServiceTest {
   public void shouldCreateTopicIfNotExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
+    when(mockClient.listTopics()).thenReturn(succeededFuture(Set.of("old")));
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
