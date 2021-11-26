@@ -49,11 +49,11 @@ public class KafkaTopicsExistsTest extends TestBase {
         new NewTopic("T1", 1, REPLICATION_FACTOR),
         new NewTopic("T3", 1, REPLICATION_FACTOR)
       ))
-    ).recover(x -> {
-      if (x instanceof org.apache.kafka.common.errors.TopicExistsException) {
-        return Future.succeededFuture();
+    ).otherwise(cause -> {
+      if (cause instanceof org.apache.kafka.common.errors.TopicExistsException) {
+        return null;
       }
-      return Future.failedFuture(x);
+      throw new RuntimeException(cause);
     });
     // test that T3 got inserted, while T1 already being present
     future.compose(x -> kafkaAdminClient.listTopics())
