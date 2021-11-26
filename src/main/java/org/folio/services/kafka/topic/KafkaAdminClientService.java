@@ -46,6 +46,24 @@ public class KafkaAdminClientService {
       .onFailure(cause -> log.error("Unable to create topics", cause));
   }
 
+  private Future<Void> createKafkaTopics(String tenantId, String environmentName,
+    KafkaAdminClient kafkaAdminClient) {
+
+    final List<NewTopic> topics = readTopics()
+      .map(topic -> qualifyName(topic, environmentName, tenantId))
+      .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
+      .collect(Collectors.toList());
+
+    return kafkaAdminClient.createTopics(topics)
+      .recover(x -> {
+        if (x instanceof org.apache.kafka.common.errors.TopicExistsException) {
+          log.info("Ignoring {}", x.getMessage());
+          return Future.succeededFuture();
+        }
+        return Future.failedFuture(x);
+      });
+  }
+
   public Future<Void> deleteKafkaTopics(String tenantId, String environmentName) {
     List<String> topicsToDelete = readTopics()
       .map(topic -> qualifyName(topic, environmentName, tenantId))
@@ -62,25 +80,6 @@ public class KafkaAdminClientService {
       .eventually(x ->
         kafkaAdminClient.close()
           .onFailure(e -> log.error("Failed to close kafka admin client", e)));
-  }
-
-  private Future<Void> createKafkaTopics(String tenantId, String environmentName,
-                                         KafkaAdminClient kafkaAdminClient) {
-
-    final List<NewTopic> topics = readTopics()
-      .map(topic -> qualifyName(topic, environmentName, tenantId))
-      .map(topic -> topic.setReplicationFactor(getReplicationFactor()))
-      .collect(Collectors.toList());
-
-    return kafkaAdminClient.createTopics(topics)
-      .recover(x -> {
-        if (x instanceof org.apache.kafka.common.errors.TopicExistsException) {
-          log.info("Ignoring {}", x.getMessage());
-          return Future.succeededFuture();
-        }
-        log.error("Unable to create topics {}", x.getMessage(), x);
-        return Future.failedFuture(x);
-      });
   }
 
   private NewTopic qualifyName(NewTopic topic, String environmentName, String tenantId) {
