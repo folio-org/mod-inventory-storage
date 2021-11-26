@@ -89,8 +89,7 @@ import org.testcontainers.utility.DockerImageName;
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
-  SampleDataTest.class,
-  KafkaTopicsExistsTest.class
+  SampleDataTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
