@@ -1,7 +1,7 @@
 package org.folio.services.kafka.topic;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.Set.of;
 import static org.folio.Environment.environmentName;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -21,6 +21,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -34,14 +35,10 @@ public class KafkaAdminClientServiceTest {
   @Test
   public void shouldCreateTopicIfAlreadyExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
-    when(mockClient.listTopics()).thenReturn(succeededFuture(allExpectedTopics));
-    // Still mock this even though no invocations are expected
-    // in order to make diagnosis of failures easier
-    when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
+    when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new TopicExistsException("x")));
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
-      .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
         verify(mockClient, times(1)).createTopics(anyList());
         verify(mockClient, times(1)).close();
@@ -49,14 +46,26 @@ public class KafkaAdminClientServiceTest {
   }
 
   @Test
+  public void shouldNotCreateTopicOnOther(TestContext testContext) {
+    final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
+    when(mockClient.createTopics(anyList())).thenReturn(failedFuture(new RuntimeException("err msg")));
+    when(mockClient.close()).thenReturn(succeededFuture());
+
+    createKafkaTopicsAsync(mockClient)
+      .onComplete(testContext.asyncAssertFailure(cause -> {
+          testContext.assertEquals("err msg", cause.getMessage());
+          verify(mockClient, times(1)).close();
+        }
+      ));
+  }
+
+  @Test
   public void shouldCreateTopicIfNotExist(TestContext testContext) {
     final KafkaAdminClient mockClient = mock(KafkaAdminClient.class);
-    when(mockClient.listTopics()).thenReturn(succeededFuture(of()));
     when(mockClient.createTopics(anyList())).thenReturn(succeededFuture());
     when(mockClient.close()).thenReturn(succeededFuture());
 
     createKafkaTopicsAsync(mockClient)
-      .onFailure(testContext::fail)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
 
         @SuppressWarnings("unchecked")
