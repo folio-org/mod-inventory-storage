@@ -1,4 +1,4 @@
-package org.folio.rest.api;
+package org.folio.services.kafka.topic;
 
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
@@ -6,6 +6,8 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 import org.folio.kafka.KafkaConfig;
+import org.folio.rest.api.StorageTestSuite;
+import org.folio.rest.api.TestBase;
 import org.folio.services.kafka.KafkaProperties;
 import org.junit.After;
 import org.junit.Before;

@@ -32,6 +32,7 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
 import org.folio.services.kafka.KafkaProperties;
+import org.folio.services.kafka.topic.KafkaTopicsExistsTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
