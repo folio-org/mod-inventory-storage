@@ -216,6 +216,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     UUID id = UUID.randomUUID();
     final String inTransitServicePointId = UUID.randomUUID().toString();
+    String adminNote = "an admin note";
 
     final var statisticalCode = statisticalCodeFixture
       .createSerialManagementCode(new StatisticalCodeBuilder()
@@ -226,7 +227,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     );
 
     JsonObject itemToCreate = new JsonObject();
-
+    itemToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
     itemToCreate.put("id", id.toString());
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("barcode", "565578437802");
@@ -262,6 +263,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemFromPost = postResponse.getJson();
 
     assertThat(itemFromPost.getString("id"), is(id.toString()));
+    assertThat(itemFromPost.getJsonArray("administrativeNotes").contains(adminNote), is(true));
     assertThat(itemFromPost.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(itemFromPost.getString("barcode"), is("565578437802"));
     assertThat(itemFromPost.getJsonObject("status").getString("name"),
@@ -285,6 +287,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemFromGet = getResponse.getJson();
 
     assertThat(itemFromGet.getString("id"), is(id.toString()));
+    assertThat(itemFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
     assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
@@ -362,6 +365,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     final UUID id = UUID.randomUUID();
     final String expectedCopyNumber = "copy1";
+    final String adminNote = "an admin note";
 
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
     createItem(itemToCreate);
@@ -371,12 +375,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject updatedItem = createdItem.copy()
       .put("copyNumber", expectedCopyNumber);
-
+    updatedItem.put("administrativeNotes", new JsonArray().add(adminNote));
     itemsClient.replace(id, updatedItem);
 
     JsonObject updatedItemResponse = itemsClient.getById(id).getJson();
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
     assertUpdateEventForItem(createdItem, getById(id).getJson());
+    assertThat(updatedItemResponse.getJsonArray("administrativeNotes").contains(adminNote), is(true));
   }
 
   @Test
