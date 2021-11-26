@@ -58,6 +58,6 @@ public class KafkaTopicsExistsTest extends TestBase {
       }).compose(x -> kafkaAdminClient.listTopics())
       .onComplete(context.asyncAssertSuccess(topics ->
         context.assertTrue(topics.containsAll(List.of("T1", "T2", "T3")))
-      )).mapEmpty();
+      ));
   }
 }
