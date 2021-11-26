@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.kafka.admin.KafkaAdminClient.create;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.services.kafka.KafkaProperties.getReplicationFactor;
@@ -76,6 +75,7 @@ public class KafkaAdminClientService {
     return kafkaAdminClient.createTopics(topics)
       .recover(x -> {
         if (x instanceof org.apache.kafka.common.errors.TopicExistsException) {
+          log.info("Ignoring {}", x.getMessage());
           return Future.succeededFuture();
         }
         log.error("Unable to create topics {}", x.getMessage(), x);
