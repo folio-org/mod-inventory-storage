@@ -97,7 +97,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
-      <version>2.3.1</version>
+      <version>2.4.0</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
