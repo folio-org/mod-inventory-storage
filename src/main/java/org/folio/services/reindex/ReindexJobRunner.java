@@ -83,6 +83,9 @@ public class ReindexJobRunner {
               streamInstanceIds(new ReindexContext(reindexJob))
                 .map(notUsed -> null)
                 .onComplete(promise);
+              break;
+            default:
+              throw new UnsupportedOperationException("Unknown resource name. Reindex job was not started for: " + reindexResourceName.name());
           }
         })
       .map(notUsed -> null);
