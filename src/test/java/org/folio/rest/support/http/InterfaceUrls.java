@@ -30,6 +30,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/authority-storage/authorities" + subPath);
   }
 
+  public static URL authorityReindexUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/authority-storage/reindex" + subPath);
+  }
+
   public static URL itemsStorageSyncUrl(String subPath) {
     return StorageTestSuite.storageUrl("/item-storage/batch/synchronous" + subPath);
   }
