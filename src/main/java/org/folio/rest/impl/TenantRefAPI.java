@@ -4,6 +4,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
@@ -13,11 +15,14 @@ import org.folio.dbschema.Versioned;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.kafka.topic.KafkaAdminClientService;
 import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.instance.InstancePublicationPeriodMigrationService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
+import org.folio.util.ResourceUtil;
 
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -28,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static org.folio.Environment.environmentName;
@@ -168,6 +174,26 @@ public class TenantRefAPI extends TenantAPI {
       ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(TenantTool.tenantId(headers), environmentName())
       : Future.succeededFuture();
     result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
+//    PostgresClient.getInstance(Vertx.vertx(), TenantTool.tenantId(headers))
+//      .runSQLFile(loadSqlFile("populatePublicationPeriod.sql", TenantTool.tenantId(headers), "instance"), true)
+//      .onFailure(f -> log.error("Error during migration. Publication period was not populated for instances", f.getCause()))
+//      .onSuccess(res->log.info("Migration was successfully finished. Publication period was populated for instances"));
+  }
+
+  private static String loadSqlFile(String scriptName, String tenantId, String tableName) {
+    return loadScript(scriptName,
+      res-> res.replace("${myuniversity}_${mymodule}", String.format("%s_%s", tenantId, PostgresClient.getModuleName())),
+      resource -> resource.replace("${table.tableName}", tableName)
+    );
+  }
+
+  @SafeVarargs
+  static String loadScript(String scriptName, UnaryOperator<String>... replacementFunctions) {
+    String resource = ResourceUtil.asString("/templates/db_scripts/" + scriptName);
+    for (UnaryOperator<String> replacementFunction : replacementFunctions) {
+      resource = replacementFunction.apply(resource);
+    }
+    return resource;
   }
 
   private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,
@@ -176,7 +202,8 @@ public class TenantRefAPI extends TenantAPI {
     log.info("About to start java migrations...");
 
     List<BaseMigrationService> javaMigrations = List.of(
-      new ItemShelvingOrderMigrationService(context, okapiHeaders));
+      new ItemShelvingOrderMigrationService(context, okapiHeaders),
+      new InstancePublicationPeriodMigrationService(context, okapiHeaders));
 
     var startedMigrations = javaMigrations.stream()
       .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
