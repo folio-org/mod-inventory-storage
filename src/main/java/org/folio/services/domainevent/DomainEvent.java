@@ -88,4 +88,8 @@ public class DomainEvent<T> {
   public static <T> DomainEvent<T> reindexEvent(String tenant) {
     return new DomainEvent<>(null, null, REINDEX, tenant);
   }
+
+  public static <T> DomainEvent<T> reindexEvent(String tenant, T newEntity) {
+    return new DomainEvent<>(null, newEntity, REINDEX, tenant);
+  }
 }

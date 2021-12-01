@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.Environment.environmentName;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 

@@ -10,6 +10,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 
@@ -46,7 +47,7 @@ public class TestRowStream implements RowStream<Row> {
             var row = mock(Row.class);
             var id = UUID.randomUUID();
             when(row.getUUID("id")).thenReturn(id);
-
+            when(row.getValue("jsonb")).thenReturn(new JsonObject());
             handler.handle(row);
           } else {
             synchronized (this) {

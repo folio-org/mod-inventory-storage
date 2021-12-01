@@ -25,21 +25,27 @@ import java.util.UUID;
 
 import io.vertx.core.Context;
 import org.folio.persist.ReindexJobRepository;
+import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
+import org.folio.services.domainevent.AuthorityDomainEventPublisher;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.kafka.topic.KafkaTopic;
 import org.folio.services.reindex.ReindexJobRunner;
+import org.folio.services.reindex.ReindexResourceName;
 import org.junit.Test;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
-  private final CommonDomainEventPublisher<Instance> eventPublisher =
+  private final CommonDomainEventPublisher<Instance> instanceEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), Map.of(TENANT, TENANT_ID),
       KafkaTopic.instance(TENANT_ID, environmentName()));
+  private final CommonDomainEventPublisher<Authority> authorityEventPublisher =
+    new CommonDomainEventPublisher(getContext(), Map.of(TENANT, TENANT_ID),
+      KafkaTopic.authority(TENANT_ID, environmentName()));
 
   @Test
   public void canReindexInstances() {
@@ -57,7 +63,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     // Make sure no events are left over from test preparation
     FakeKafkaConsumer.removeAllEvents();
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
@@ -76,6 +82,69 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canReindexAuthorities() {
+    var numberOfRecords = 500;
+    var rowStream = new TestRowStream(numberOfRecords);
+    var reindexJob = reindexJob();
+    var postgresClientFuturized = spy(getPostgresClientFuturized());
+
+    doReturn(succeededFuture(rowStream))
+      .when(postgresClientFuturized).selectStream(any(), anyString());
+
+    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+      .toCompletableFuture());
+
+    // Make sure no events are left over from test preparation
+    FakeKafkaConsumer.removeAllEvents();
+
+    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
+
+    await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
+      .getJobStatus() == IDS_PUBLISHED);
+
+    var job = authorityReindex.getReindexJob(reindexJob.getId());
+
+    assertThat(job.getPublished(), is(numberOfRecords));
+    assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
+    assertThat(job.getSubmittedDate(), notNullValue());
+
+    await().atMost(5, SECONDS)
+      .until(FakeKafkaConsumer::getAllPublishedAuthoritiesCount, greaterThanOrEqualTo(numberOfRecords));
+  }
+
+  @Test
+  public void canStartAuthoritiesReindex() {
+    ReindexJob res = authorityReindex.postReindexJob(reindexJob());
+    assertThat(res, notNullValue());
+    assertThat(res.getId(), notNullValue());
+  }
+
+  @Test
+  public void canCancelAuthoritiesReindex() {
+    var rowStream = new TestRowStream(10_000_000);
+    var reindexJob = reindexJob();
+    var postgresClientFuturized = spy(getPostgresClientFuturized());
+
+    doReturn(succeededFuture(rowStream))
+      .when(postgresClientFuturized).selectStream(any(), anyString());
+
+    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+      .toCompletableFuture());
+
+    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
+
+    authorityReindex.cancelReindexJob(reindexJob.getId());
+
+    await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
+      .getJobStatus() == ID_PUBLISHING_CANCELLED);
+
+    var job = authorityReindex.getReindexJob(reindexJob.getId());
+
+    assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
+    assertThat(job.getPublished(), greaterThanOrEqualTo(500));
+  }
+
+  @Test
   public void canCancelReindex() {
     var rowStream = new TestRowStream(10_000_000);
     var reindexJob = reindexJob();
@@ -87,7 +156,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
 
     instanceReindex.cancelReindexJob(reindexJob.getId());
 
@@ -102,7 +171,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
   private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
     return new ReindexJobRunner(postgresClientFuturized,
-      repository, getContext(), eventPublisher, TENANT_ID);
+      repository, getContext(), instanceEventPublisher, authorityEventPublisher, TENANT_ID);
   }
 
   private static ReindexJob reindexJob() {

@@ -74,6 +74,11 @@ public class SampleDataTest extends TestBase {
     assertCount(boundWithStorageUrl("?limit=100"), "boundWithParts", 3);
   }
 
+  @Test
+  public void authorities() {
+    assertCount(authoritiesStorageUrl("?limit=100"), "authorities", 4);
+  }
+
   private JsonObject get(URL url) {
     try {
       CompletableFuture<Response> getCompleted = new CompletableFuture<>();
