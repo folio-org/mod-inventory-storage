@@ -16,7 +16,7 @@ Provides PostgreSQL based storage to complement the [inventory module](http://gi
 - Java 11 JDK
 - Maven 3.3.9
 - Docker ([minimum requirements](https://www.testcontainers.org/supported_docker_environment/))
-- Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
+- Postgres 12 (running and listening on localhost:5432, logged in user must have admin rights)
 - Kafka 2.6 (running and listening on localhost:9092)
 - Node 6.4.0 (for API linting and documentation generation)
 - NPM 3.10.3 (for API linting and documentation generation)
