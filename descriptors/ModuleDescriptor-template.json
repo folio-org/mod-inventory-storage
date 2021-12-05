@@ -1351,17 +1351,17 @@
       "description": "delete individual authority record from the storage"
     },
     {
-      "permissionName": "inventory-storage.authority.reindex.item.delete",
+      "permissionName": "authority-storage.authority.reindex.item.delete",
       "displayName": "inventory storage - cancel reindex job",
       "description": "cancel a running reindexing job"
     },
     {
-      "permissionName": "inventory-storage.authority.reindex.item.get",
+      "permissionName": "authority-storage.authority.reindex.item.get",
       "displayName": "inventory storage - get reindex job by id",
       "description": "get reindex job by id"
     },
     {
-      "permissionName": "inventory-storage.authority.reindex.post",
+      "permissionName": "authority-storage.authority.reindex.post",
       "displayName": "inventory storage - submit reindex authority job",
       "description": "submit reindex authority job"
     },
@@ -1375,9 +1375,9 @@
         "inventory-storage.authorities.item.put",
         "inventory-storage.authorities.item.delete",
         "inventory-storage.authorities.collection.delete",
-        "inventory-storage.authority.reindex.post",
-        "inventory-storage.authority.reindex.item.get",
-        "inventory-storage.authority.reindex.item.delete"
+        "authority-storage.authority.reindex.post",
+        "authority-storage.authority.reindex.item.get",
+        "authority-storage.authority.reindex.item.delete"
       ]
     },
     {

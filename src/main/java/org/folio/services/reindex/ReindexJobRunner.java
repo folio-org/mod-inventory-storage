@@ -117,7 +117,7 @@ public class ReindexJobRunner {
     return postgresClient.startTx()
       .map(context::withConnection)
       .compose(ctx -> postgresClient.selectStream(ctx.connection,
-        "SELECT jsonb FROM " + postgresClient.getFullTableName(AUTHORITY_TABLE)))
+        "SELECT * FROM " + postgresClient.getFullTableName(AUTHORITY_TABLE)))
       .map(context::withStream)
       .compose(this::processAuthorityStream)
       .onComplete(recordsPublished -> {
