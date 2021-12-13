@@ -196,6 +196,7 @@ public class ItemService {
       .mapTo(Item.class);
 
     newItem.getStatus().setName(CHECKED_OUT);
+    newItem.setInTransitDestinationServicePointId(null);
 
     return updateExistingItem(item, newItem);
   }
