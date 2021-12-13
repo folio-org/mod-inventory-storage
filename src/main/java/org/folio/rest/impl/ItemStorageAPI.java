@@ -95,4 +95,14 @@ public class ItemStorageAPI implements ItemStorage {
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
+
+  @Override
+  @Validate
+  public void postItemStorageItemsCheckOutByItemId(String itemId, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
+    new ItemService(vertxContext, okapiHeaders).checkOutItem(itemId)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
+  }
 }

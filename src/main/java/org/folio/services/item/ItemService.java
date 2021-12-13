@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
+import static org.folio.rest.jaxrs.model.Status.Name.CHECKED_OUT;
 import static org.folio.rest.jaxrs.resource.ItemStorage.DeleteItemStorageItemsByItemIdResponse;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PostItemStorageItemsResponse;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PutItemStorageItemsByItemIdResponse;
@@ -23,6 +24,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.Collection;
@@ -41,8 +43,8 @@ import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
-import org.folio.services.holding.HoldingsService;
 import org.folio.validator.CommonValidators;
+import org.folio.validator.ItemValidator;
 
 public class ItemService {
   private static final Logger log = getLogger(ItemService.class);
@@ -108,17 +110,21 @@ public class ItemService {
   public Future<Response> updateItem(String itemId, Item newItem) {
     return itemRepository.getById(itemId)
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
-      .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
-        .compose(notUsed -> {
-          final Promise<Response> putResult = promise();
+      .compose(oldItem -> updateExistingItem(oldItem, newItem));
+  }
 
-          put(ITEM_TABLE, newItem, itemId, okapiHeaders, vertxContext,
-            PutItemStorageItemsByItemIdResponse.class, putResult);
+  private Future<Response> updateExistingItem(Item oldItem, Item newItem) {
+    return refuseWhenHridChanged(oldItem, newItem)
+      .compose(ignored -> effectiveValuesService.populateEffectiveValues(newItem)
+      .compose(notUsed -> {
+        final Promise<Response> putResult = promise();
 
-          return putResult.future()
-            .compose(domainEventService.publishUpdated(oldItem));
-        }));
+        put(ITEM_TABLE, newItem, oldItem.getId(), okapiHeaders, vertxContext,
+          PutItemStorageItemsByItemIdResponse.class, putResult);
+
+        return putResult.future()
+          .compose(domainEventService.publishUpdated(oldItem));
+      }));
   }
 
   public Future<Response> deleteItem(String itemId) {
@@ -154,6 +160,13 @@ public class ItemService {
         .map(items));
   }
 
+  public Future<Response> checkOutItem(String itemId) {
+    return itemRepository.getById(itemId)
+      .compose(CommonValidators::refuseIfNotFound)
+      .compose(ItemValidator::refuseIfAlreadyCheckedOut)
+      .compose(this::checkOutItem);
+  }
+
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
     AsyncResult<SQLConnection> connectionResult, Collection<Item> items, HoldingsRecord holdingsRecord) {
 
@@ -175,5 +188,15 @@ public class ItemService {
 
   private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(Item item) {
     return connection -> itemRepository.update(connection, item.getId(), item);
+  }
+
+  private Future<Response> checkOutItem(Item item) {
+    Item newItem = JsonObject.mapFrom(item)
+      .copy()
+      .mapTo(Item.class);
+
+    newItem.getStatus().setName(CHECKED_OUT);
+
+    return updateExistingItem(item, newItem);
   }
 }

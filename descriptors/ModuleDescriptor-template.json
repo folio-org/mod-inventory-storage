@@ -69,7 +69,7 @@
     },
     {
       "id": "item-storage",
-      "version": "9.0",
+      "version": "9.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -95,6 +95,11 @@
           "methods": ["DELETE"],
           "pathPattern": "/item-storage/items",
           "permissionsRequired": ["inventory-storage.items.collection.delete"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/item-storage/items/{id}/check-out",
+          "permissionsRequired": ["inventory-storage.items.item.check-out.post"]
         }
       ]
     },
@@ -1421,6 +1426,11 @@
       "description": "delete individual item from storage"
     },
     {
+      "permissionName": "inventory-storage.items.item.check-out.post",
+      "displayName": "inventory storage - check out an item",
+      "description": "check out an item"
+    },
+    {
       "permissionName": "inventory-storage.items.batch.post",
       "displayName": "inventory storage - create a number of items",
       "description": "create a number of items in storage"
@@ -2463,6 +2473,7 @@
         "inventory-storage.items.item.post",
         "inventory-storage.items.item.put",
         "inventory-storage.items.item.delete",
+        "inventory-storage.items.item.check-out.post",
         "inventory-storage.items.collection.delete",
         "inventory-storage.items.batch.post",
         "inventory-storage.authorities.collection.get",

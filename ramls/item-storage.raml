@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Item Storage
-version: v9.0
+version: v9.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -55,3 +55,24 @@ resourceTypes:
           exampleItem: !include examples/item_get.json
           schema: item
       get:
+      /check-out:
+        post:
+          description: "Update item record to mark it as checked out"
+          responses:
+            204:
+              description: "Item was updated successfully"
+            404:
+              description: "Item was not found"
+              body:
+                text/plain:
+                  example: "Item was not found"
+            422:
+              description: "Validation errors"
+              body:
+                application/json:
+                  type: errors
+            500:
+              description: "Internal server error"
+              body:
+                text/plain:
+                  example: "Internal server error"
