@@ -184,7 +184,7 @@
         "type": "string"
       }
     },
-    "hGenreTerm": {
+    "genreTerm": {
       "type": "string",
       "description": "Heading genre/form term"
     },
