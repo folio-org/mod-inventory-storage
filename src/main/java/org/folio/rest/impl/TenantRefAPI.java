@@ -17,6 +17,7 @@ import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.kafka.topic.KafkaAdminClientService;
 import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.instance.PublicationPeriodMigrationService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
 import javax.ws.rs.core.Response;
@@ -176,7 +177,8 @@ public class TenantRefAPI extends TenantAPI {
     log.info("About to start java migrations...");
 
     List<BaseMigrationService> javaMigrations = List.of(
-      new ItemShelvingOrderMigrationService(context, okapiHeaders));
+      new ItemShelvingOrderMigrationService(context, okapiHeaders),
+      new PublicationPeriodMigrationService(context, okapiHeaders));
 
     var startedMigrations = javaMigrations.stream()
       .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
