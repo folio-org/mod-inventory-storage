@@ -7,6 +7,8 @@ import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.jaxrs.model.Status.Name.AVAILABLE;
+import static org.folio.rest.jaxrs.model.Status.Name.CHECKED_OUT;
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
@@ -43,6 +45,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -71,6 +74,7 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.LastCheckIn;
+import org.folio.rest.jaxrs.model.Status;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
@@ -2581,6 +2585,44 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         is(expectedResponseBody));
   }
 
+  @Test
+  public void canCheckOutItem() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject item = createItem(nod(UUID.randomUUID(), holdingsRecordId))
+      .put("inTransitDestinationServicePointId", UUID.randomUUID().toString());
+    String itemId = item.getString("id");
+
+    assertItemStatusIs(item, AVAILABLE);
+
+    Response checkOutResponse = checkOutItem(itemId);
+    assertThat(checkOutResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    JsonObject updatedItem = getById(itemId).getJson();
+    assertItemStatusIs(updatedItem, CHECKED_OUT);
+    assertFalse(updatedItem.containsKey("inTransitDestinationServicePointId"));
+  }
+
+  @Test
+  public void cannotCheckOutNonExistentItem() {
+    Response checkOutResponse = checkOutItem(UUID.randomUUID().toString());
+    assertThat(checkOutResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void cannotCheckOutItemWhichIsAlreadyCheckedOut() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    IndividualResource item = createItem(
+      new ItemRequestBuilder()
+        .forHolding(holdingsRecordId)
+        .withMaterialType(journalMaterialTypeId)
+        .withPermanentLoanType(canCirculateLoanTypeId)
+        .withStatus("Checked out"));
+
+    Response checkOutResponse = checkOutItem(item.getId().toString());
+    assertThat(checkOutResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
   private static JsonObject createItemRequest(
       UUID id,
       UUID holdingsRecordId,
@@ -2778,5 +2820,20 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .stream()
       .map(IndividualResource::getId)
       .collect(Collectors.toList());
+  }
+
+  private static void assertItemStatusIs(JsonObject item, Status.Name status) {
+    assertThat(item.getJsonObject("status").getString("name"), is(status.value()));
+  }
+
+  private Response checkOutItem(String itemId) {
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
+    client.post(itemsStorageUrl("/" + itemId + "/check-out"), null,
+      StorageTestSuite.TENANT_ID, ResponseHandler.empty(postCompleted));
+    try {
+      return postCompleted.get(5, TimeUnit.SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
