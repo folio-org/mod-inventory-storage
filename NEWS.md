@@ -1,3 +1,7 @@
+## 21.0.10 IN-PROGRESS
+
+* Upgrade to RMB 33.1.3. (CVE-2021-44228) (MODINVSTOR-851)
+
 ## 21.0.9 2021-10-05
 
 * Fix memory leaks by closing Vertx Kafka producers (MODINVSTOR-794)
