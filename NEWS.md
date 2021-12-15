@@ -1,3 +1,7 @@
+## 22.0.4 2021-12-15
+
+* Upgrade to RMB 33.1.3. (CVE-2021-44228) (MODINVSTOR-851)
+
 ## 22.0.3 2021-11-11
 
 * Removed publication period migration
