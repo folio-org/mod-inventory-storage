@@ -32,7 +32,7 @@ public class PublicationPeriodMigrationService extends BaseMigrationService {
   public PublicationPeriodMigrationService(
     PostgresClientFuturized postgresClient, InstanceRepository instanceRepository) {
 
-    super("20.1.0", postgresClient);
+    super("22.1.0", postgresClient);
     this.postgresClient = postgresClient;
     this.instanceRepository = instanceRepository;
   }
