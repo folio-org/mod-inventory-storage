@@ -2826,14 +2826,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getJsonObject("status").getString("name"), is(status.value()));
   }
 
+  @SneakyThrows
   private Response checkOutItem(String itemId) {
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     client.post(itemsStorageUrl("/" + itemId + "/check-out"), null,
       StorageTestSuite.TENANT_ID, ResponseHandler.empty(postCompleted));
-    try {
-      return postCompleted.get(5, TimeUnit.SECONDS);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
+
+    return postCompleted.get(5, TimeUnit.SECONDS);
   }
 }
