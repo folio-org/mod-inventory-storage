@@ -1,6 +1,7 @@
 ## 22.1.0 IN-PROGRESS
 
 * Added administrative notes to item, instance, and holdings records (MODINVSTOR-834, MODINVSTOR-833, MODINVSTOR-832)
+* Upgrade to RMB 33.1.3. (CVE-2021-44228) (MODINVSTOR-851)
 
 ## 22.0.0 2021-10-06
 
