@@ -32,7 +32,9 @@ import java.util.Map;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
@@ -41,7 +43,6 @@ import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
-import org.folio.services.holding.HoldingsService;
 import org.folio.validator.CommonValidators;
 
 public class ItemService {
@@ -53,6 +54,7 @@ public class ItemService {
   private final Map<String, String> okapiHeaders;
   private final ItemDomainEventPublisher domainEventService;
   private final ItemRepository itemRepository;
+  private final HoldingsRepository holdingsRepository;
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -63,6 +65,7 @@ public class ItemService {
     effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
+    holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
   }
 
   public Future<Response> createItem(Item entity) {
@@ -109,16 +112,7 @@ public class ItemService {
     return itemRepository.getById(itemId)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
-      .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
-        .compose(notUsed -> {
-          final Promise<Response> putResult = promise();
-
-          put(ITEM_TABLE, newItem, itemId, okapiHeaders, vertxContext,
-            PutItemStorageItemsByItemIdResponse.class, putResult);
-
-          return putResult.future()
-            .compose(domainEventService.publishUpdated(oldItem));
-        }));
+      .compose(oldItem -> handleItemPut(oldItem, newItem));
   }
 
   public Future<Response> deleteItem(String itemId) {
@@ -175,5 +169,54 @@ public class ItemService {
 
   private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(Item item) {
     return connection -> itemRepository.update(connection, item.getId(), item);
+  }
+
+  private Future<Response> handleItemPut(Item oldItem, Item newItem) {
+    if (shouldRecalculateEffectiveValues(oldItem, newItem)) {   
+      return holdingsRepository.getById(newItem.getHoldingsRecordId())
+        .compose(holdingsRecord -> {
+          return putItemAndPublishResults(
+            oldItem, effectiveValuesService.populateEffectiveValues(newItem, holdingsRecord), holdingsRecord);     
+        }
+      );
+    } else {
+      return putItemAndPublishResults(oldItem, newItem, null);
+    }
+  }
+
+  private Boolean shouldRecalculateEffectiveValues(Item oldItem, Item newItem) {
+
+    if (StringUtils.compare(oldItem.getItemLevelCallNumberTypeId(), newItem.getItemLevelCallNumberTypeId()) != 0) {
+      return true;
+    }
+    if (StringUtils.compare(oldItem.getItemLevelCallNumberSuffix(), newItem.getItemLevelCallNumberSuffix()) != 0) {
+      return true;
+    }
+    if (StringUtils.compare(oldItem.getItemLevelCallNumberPrefix(), newItem.getItemLevelCallNumberPrefix()) != 0) {
+      return true;
+    }
+    if (StringUtils.compare(oldItem.getItemLevelCallNumber(), newItem.getItemLevelCallNumber()) != 0) {
+      return true;
+    }
+    if (StringUtils.compare(oldItem.getPermanentLocationId(), newItem.getPermanentLocationId()) != 0) {
+      return true;
+    }
+    if (StringUtils.compare(oldItem.getTemporaryLocationId(), newItem.getTemporaryLocationId()) != 0) {
+      return true;
+    }
+    if (StringUtils.compare(oldItem.getHoldingsRecordId(), newItem.getHoldingsRecordId()) != 0) {
+      return true;
+    }
+    return false; 
+  }
+
+  private Future<Response> putItemAndPublishResults(Item oldItem, Item newItem, HoldingsRecord holdingsRecord) {
+    final Promise<Response> putResult = promise();
+
+    put(ITEM_TABLE, newItem, newItem.getId(), okapiHeaders, vertxContext,
+      PutItemStorageItemsByItemIdResponse.class, putResult);
+    
+    return putResult.future()
+      .compose(domainEventService.publishUpdated(oldItem));
   }
 }
