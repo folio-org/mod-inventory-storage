@@ -44,12 +44,14 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.util.UuidUtil;
 import org.folio.validator.CommonValidators;
 
 public class ItemService {
@@ -180,7 +182,10 @@ public class ItemService {
     return connection -> itemRepository.update(connection, item.getId(), item);
   }
 
-  private Future<Response> handleItemPut(Item oldItem, Item newItem) {  
+  private Future<Response> handleItemPut(Item oldItem, Item newItem) {
+    if (! UuidUtil.isUuid(newItem.getId())) {
+      return Future.succeededFuture(PutItemStorageItemsByItemIdResponse.respond400WithTextPlain("Invalid UUid"));
+    }  
     return holdingsRepository.getById(newItem.getHoldingsRecordId())
       .compose(holdingsRecord -> {
         return putItemAndPublishResults(
@@ -190,6 +195,7 @@ public class ItemService {
   }
 
   private Future<Response> putItemAndPublishResults(Item newItem, Item oldItem, HoldingsRecord holdingsRecord) {
+
     JsonObject record;    
     try{
       record = pojo2JsonObject(newItem);
@@ -200,18 +206,36 @@ public class ItemService {
     } 
     String tableName = okapiHeaders.get("x-okapi-tenant") + "_mod_inventory_storage." + ITEM_TABLE;  
     Tuple tuple = Tuple.of(record, newItem.getId());
+    final Promise<Response> putResult = promise();
 
-    return postgresClient.execute("UPDATE " + tableName + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb", tuple)
-      .compose(rowSet -> {
+    postgresClient.execute("UPDATE " + tableName + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb", tuple)
+      .onFailure(result -> {
+        //for unknown reasons, if the error is an optimisitc locking error, the execute statement
+        //returns a throwable with an empty cause.  
+        JsonObject errorDetails = new JsonObject(result.getMessage());
+        log.info("Code is: " + errorDetails.getString("code"));
+        if (errorDetails.getString("code").equals("23F09"))
+          putResult.complete(
+            PutItemStorageItemsByItemIdResponse.respond409WithTextPlain(errorDetails.getString("message")));
+        else {
+          putResult.complete(
+            PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(errorDetails.getString("message")));
+        }
+
+      })
+      .onSuccess(rowSet -> {
         if (rowSet.size() != 1) {
-          return Future.succeededFuture(
-            PutItemStorageItemsByItemIdResponse.respond500WithTextPlain("Update of item record failed"));
+          putResult.complete(
+            PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Record not Found"));
         }
         Item finalItem = readValue(rowSet.iterator().next().getJson("jsonb").toString(), Item.class);
 
-        return domainEventService.publishUpdated(finalItem, oldItem, holdingsRecord)
-          .compose(notUsed -> {return Future.succeededFuture(PutItemStorageItemsByItemIdResponse.respond204());});
-
+        domainEventService.publishUpdated(finalItem, oldItem, holdingsRecord)
+          .onFailure(result -> {
+            putResult.complete(PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(result.getCause().getMessage()));
+          })
+          .onSuccess(notUsed -> {putResult.complete(PutItemStorageItemsByItemIdResponse.respond204());});
       });
+    return putResult.future();
   }
 }
