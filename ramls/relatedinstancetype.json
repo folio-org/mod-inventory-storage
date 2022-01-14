@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A type of relation between two Instance records",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "description": "label for the related instance type",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+     }
+  },
+  "required": [
+    "name"
+  ]
+}

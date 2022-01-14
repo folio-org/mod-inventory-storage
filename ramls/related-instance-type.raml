@@ -1,0 +1,49 @@
+#%RAML 1.0
+title: Related Instance Types API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Related Instance Types API
+    content: This documents the API calls that can be made to query and manage other versions of a work, referred to as a related instance.
+
+types:
+  relatedInstanceType: !include relatedinstancetype.json
+  relatedInstanceTypes: !include relatedinstancetypes.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
+
+/related-instance-types:
+  type:
+    collection:
+      exampleCollection: !include examples/relatedinstancetypes.json
+      exampleItem: !include examples/relatedinstancetype.json
+      schemaCollection: relatedInstanceTypes
+      schemaItem: relatedInstanceType
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields",
+                   example: "relatedInstanceTypeId==758f13db-ffb4-440e-bb10-8a364aa6cb4a"},
+      pageable
+    ]
+    description: Return a list of related instance types
+  post:
+    description: Create a new related instance type
+    is: [validate]
+  /{relatedInstanceTypeId}:
+    description: Pass in the related instance type id
+    type:
+      collection-item:
+        exampleItem: !include examples/relatedinstancetype.json
+        schema: relatedInstanceType
