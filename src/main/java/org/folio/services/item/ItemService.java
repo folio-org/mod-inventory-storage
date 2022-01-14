@@ -18,19 +18,25 @@ import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
+import static org.folio.dbschema.ObjectMapperTool.readValue;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -39,6 +45,7 @@ import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
+import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ItemEffectiveValuesService;
@@ -55,12 +62,14 @@ public class ItemService {
   private final ItemDomainEventPublisher domainEventService;
   private final ItemRepository itemRepository;
   private final HoldingsRepository holdingsRepository;
+  private final PostgresClient postgresClient;
+
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
-    final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
+    postgresClient = postgresClient(vertxContext, okapiHeaders);
     hridManager = new HridManager(vertxContext, postgresClient);
     effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
@@ -171,52 +180,38 @@ public class ItemService {
     return connection -> itemRepository.update(connection, item.getId(), item);
   }
 
-  private Future<Response> handleItemPut(Item oldItem, Item newItem) {
-    if (shouldRecalculateEffectiveValues(oldItem, newItem)) {   
-      return holdingsRepository.getById(newItem.getHoldingsRecordId())
-        .compose(holdingsRecord -> {
-          return putItemAndPublishResults(
-            oldItem, effectiveValuesService.populateEffectiveValues(newItem, holdingsRecord), holdingsRecord);     
+  private Future<Response> handleItemPut(Item oldItem, Item newItem) {  
+    return holdingsRepository.getById(newItem.getHoldingsRecordId())
+      .compose(holdingsRecord -> {
+        return putItemAndPublishResults(
+          effectiveValuesService.populateEffectiveValues(newItem, holdingsRecord), oldItem, holdingsRecord);     
+      }
+    );
+  }
+
+  private Future<Response> putItemAndPublishResults(Item newItem, Item oldItem, HoldingsRecord holdingsRecord) {
+    JsonObject record;    
+    try{
+      record = pojo2JsonObject(newItem);
+    } catch(Exception e) {
+      log.error("Cannot map item record to json: " + e.getMessage());
+      return Future.succeededFuture(
+        PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage()));
+    } 
+    String tableName = okapiHeaders.get("x-okapi-tenant") + "_mod_inventory_storage." + ITEM_TABLE;  
+    Tuple tuple = Tuple.of(record, newItem.getId());
+
+    return postgresClient.execute("UPDATE " + tableName + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb", tuple)
+      .compose(rowSet -> {
+        if (rowSet.size() != 1) {
+          return Future.succeededFuture(
+            PutItemStorageItemsByItemIdResponse.respond500WithTextPlain("Update of item record failed"));
         }
-      );
-    } else {
-      return putItemAndPublishResults(oldItem, newItem, null);
-    }
-  }
+        Item finalItem = readValue(rowSet.iterator().next().getJson("jsonb").toString(), Item.class);
 
-  private Boolean shouldRecalculateEffectiveValues(Item oldItem, Item newItem) {
+        return domainEventService.publishUpdated(finalItem, oldItem, holdingsRecord)
+          .compose(notUsed -> {return Future.succeededFuture(PutItemStorageItemsByItemIdResponse.respond204());});
 
-    if (StringUtils.compare(oldItem.getItemLevelCallNumberTypeId(), newItem.getItemLevelCallNumberTypeId()) != 0) {
-      return true;
-    }
-    if (StringUtils.compare(oldItem.getItemLevelCallNumberSuffix(), newItem.getItemLevelCallNumberSuffix()) != 0) {
-      return true;
-    }
-    if (StringUtils.compare(oldItem.getItemLevelCallNumberPrefix(), newItem.getItemLevelCallNumberPrefix()) != 0) {
-      return true;
-    }
-    if (StringUtils.compare(oldItem.getItemLevelCallNumber(), newItem.getItemLevelCallNumber()) != 0) {
-      return true;
-    }
-    if (StringUtils.compare(oldItem.getPermanentLocationId(), newItem.getPermanentLocationId()) != 0) {
-      return true;
-    }
-    if (StringUtils.compare(oldItem.getTemporaryLocationId(), newItem.getTemporaryLocationId()) != 0) {
-      return true;
-    }
-    if (StringUtils.compare(oldItem.getHoldingsRecordId(), newItem.getHoldingsRecordId()) != 0) {
-      return true;
-    }
-    return false; 
-  }
-
-  private Future<Response> putItemAndPublishResults(Item oldItem, Item newItem, HoldingsRecord holdingsRecord) {
-    final Promise<Response> putResult = promise();
-
-    put(ITEM_TABLE, newItem, newItem.getId(), okapiHeaders, vertxContext,
-      PutItemStorageItemsByItemIdResponse.class, putResult);
-    
-    return putResult.future()
-      .compose(domainEventService.publishUpdated(oldItem));
+      });
   }
 }
