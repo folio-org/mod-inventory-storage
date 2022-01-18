@@ -36,20 +36,19 @@ public class ItemEffectiveValuesService {
         .map(item -> populateEffectiveValues(item, holdingsRecordMap.get(item.getHoldingsRecordId())))
         .collect(Collectors.toList()));
   }
-  
+
   public Future<Item> populateEffectiveValues(Item item) {
     return populateEffectiveValues(Collections.singletonList(item))
       // item is stateful - ok to return the passed object
       .map(items -> item);
   }
-  
+
   public Item populateEffectiveValues(Item item, HoldingsRecord hr) {
     updateItemEffectiveLocation(item, hr);
     setCallNumberComponents(item, hr);
     calculateAndSetEffectiveShelvingOrder(item);
     return item;
   }
-  
 
   private Future<Map<String, HoldingsRecord>> getHoldingsRecordsForItems(List<Item> items) {
     final Set<String> holdingsIds = items.stream()

@@ -14,7 +14,6 @@ import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
@@ -36,15 +35,11 @@ import java.util.Map;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import org.folio.rest.persist.SQLConnection;
