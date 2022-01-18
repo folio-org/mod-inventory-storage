@@ -1,6 +1,10 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.relatedInstanceTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -17,6 +21,7 @@ import java.util.concurrent.TimeoutException;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.client.LoanTypesClient;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,7 +39,16 @@ public class RelatedInstanceTypeTest extends TestBaseWithInventoryUtil {
     TimeoutException,
     MalformedURLException {
 
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
     StorageTestSuite.deleteAll(relatedInstanceTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
+
+    canCirculateLoanTypeID = new LoanTypesClient(
+      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      loanTypesStorageUrl("")).create("Can Circulate");
   }
 
   @Test
@@ -249,8 +263,9 @@ public class RelatedInstanceTypeTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createRelatedInstanceType = new CompletableFuture<>();
     String createURL = relatedInstanceTypesStorageUrl("").toString();
+    JsonObject request = new JsonObject().put("name", name);
 
-    send(createURL, HttpMethod.POST, new JsonObject().put("name", name).toString(),
+    send(createURL, HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createRelatedInstanceType));
 
     return createRelatedInstanceType.get(5, TimeUnit.SECONDS);
@@ -263,12 +278,12 @@ public class RelatedInstanceTypeTest extends TestBaseWithInventoryUtil {
     TimeoutException {
 
     CompletableFuture<Response> createRelatedInstanceType = new CompletableFuture<>();
-
+    String createURL = relatedInstanceTypesStorageUrl("").toString();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", name);
 
-    send(relatedInstanceTypesStorageUrl("").toString(), HttpMethod.POST, request.toString(),
+    send(createURL, HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createRelatedInstanceType));
 
     return createRelatedInstanceType.get(5, TimeUnit.SECONDS);

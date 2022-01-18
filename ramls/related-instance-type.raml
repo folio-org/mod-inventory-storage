@@ -22,7 +22,6 @@ traits:
 resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
   collection-item: !include raml-util/rtypes/item-collection.raml
-  get-delete-only: !include raml-util/rtypes/get-delete.raml
 
 /related-instance-types:
   type:
@@ -41,6 +40,17 @@ resourceTypes:
   post:
     description: Create a new related instance type
     is: [validate]
+  delete:
+    description: "Delete all related instance types"
+    is: [language]
+    responses:
+      204:
+        description: "All related instance types deleted"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "Internal server error, contact administrator"
   /{relatedInstanceTypeId}:
     description: Pass in the related instance type id
     type:

@@ -4,15 +4,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.validation.constraints.Pattern;
 import javax.ws.rs.core.Response;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.RelatedInstanceType;
 import org.folio.rest.jaxrs.model.RelatedInstanceTypes;
-import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.Criteria.Limit;
@@ -22,6 +24,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -68,7 +71,7 @@ public class RelatedInstanceTypeAPI implements org.folio.rest.jaxrs.resource.Rel
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetRelatedInstanceTypesResponse.respond200WithApplicationJson(
                       instanceTypes)));
                 }
-                else{
+                else {
                   log.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetRelatedInstanceTypesResponse
                       .respond400WithTextPlain(reply.cause().getMessage())));
@@ -92,12 +95,6 @@ public class RelatedInstanceTypeAPI implements org.folio.rest.jaxrs.resource.Rel
     });
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PostRelatedInstanceTypesResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   @Validate
   @Override
   public void postRelatedInstanceTypes(String lang, RelatedInstanceType entity, Map<String, String> okapiHeaders,
@@ -105,38 +102,49 @@ public class RelatedInstanceTypeAPI implements org.folio.rest.jaxrs.resource.Rel
 
     vertxContext.runOnContext(v -> {
       try {
-        String id = entity.getId();
-        if (id == null) {
-          id = UUID.randomUUID().toString();
+        String id = UUID.randomUUID().toString();
+        if (entity.getId() == null) {
           entity.setId(id);
         }
+        else {
+          id = entity.getId();
+        }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
+        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
         PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
-            RELATED_INSTANCE_TYPE_TABLE, id, entity,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  String ret = reply.result();
-                  entity.setId(ret);
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostRelatedInstanceTypesResponse
-                    .respond201WithApplicationJson(entity, PostRelatedInstanceTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
-                } else {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PostRelatedInstanceTypesResponse
-                      .respond400WithTextPlain(msg)));
-                }
-              } catch (Exception e) {
-                internalServerErrorDuringPost(e, lang, asyncResultHandler);
+          RELATED_INSTANCE_TYPE_TABLE, id, entity,
+          reply -> {
+            try {
+              if (reply.succeeded()) {
+                String ret = reply.result();
+                entity.setId(ret);
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostRelatedInstanceTypesResponse
+                  .respond201WithApplicationJson(entity,
+                    PostRelatedInstanceTypesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
               }
-            });
+              else {
+                log.error(reply.cause().getMessage(), reply.cause());
+                if (isDuplicate(reply.cause().getMessage())) {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostRelatedInstanceTypesResponse
+                    .respond422WithApplicationJson(
+                      org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
+                        "name", entity.getName(), "Related Instance Type exists"))));
+                }
+                else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostRelatedInstanceTypesResponse
+                    .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                }
+              }
+            } catch (Exception e) {
+              log.error(e.getMessage(), e);
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostRelatedInstanceTypesResponse
+                .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+            }
+          });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostRelatedInstanceTypesResponse
+          .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -151,60 +159,14 @@ public class RelatedInstanceTypeAPI implements org.folio.rest.jaxrs.resource.Rel
         okapiHeaders, vertxContext, GetRelatedInstanceTypesByRelatedInstanceTypeIdResponse.class, asyncResultHandler);
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(DeleteRelatedInstanceTypesByRelatedInstanceTypeIdResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
-  }
-
   @Validate
   @Override
   public void deleteRelatedInstanceTypesByRelatedInstanceTypeId(String instanceTypeId, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(RELATED_INSTANCE_TYPE_TABLE, instanceTypeId,
-            reply -> {
-              try {
-                if (reply.failed()) {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteRelatedInstanceTypesByRelatedInstanceTypeIdResponse
-                      .respond400WithTextPlain(msg)));
-                  return;
-                }
-                int updated = reply.result().rowCount();
-                if (updated != 1) {
-                  String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
-                  log.error(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(DeleteRelatedInstanceTypesByRelatedInstanceTypeIdResponse
-                      .respond404WithTextPlain(msg)));
-                  return;
-                }
-                asyncResultHandler.handle(Future.succeededFuture(DeleteRelatedInstanceTypesByRelatedInstanceTypeIdResponse
-                        .respond204()));
-              } catch (Exception e) {
-                internalServerErrorDuringDelete(e, lang, asyncResultHandler);
-              }
-            });
-      } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
-      }
-    });
-  }
-
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
-    log.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
-        .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+    PgUtil.deleteById(RELATED_INSTANCE_TYPE_TABLE, instanceTypeId, okapiHeaders, vertxContext,
+      DeleteRelatedInstanceTypesByRelatedInstanceTypeIdResponse.class, asyncResultHandler);
   }
 
   @Validate
@@ -212,41 +174,80 @@ public class RelatedInstanceTypeAPI implements org.folio.rest.jaxrs.resource.Rel
   public void putRelatedInstanceTypesByRelatedInstanceTypeId(String instanceTypeId, String lang, RelatedInstanceType entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
-
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
+      String tenantId = TenantTool.calculateTenantId( okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT) );
       try {
         if (entity.getId() == null) {
           entity.setId(instanceTypeId);
         }
         PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-            RELATED_INSTANCE_TYPE_TABLE, entity, instanceTypeId,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  if (reply.result().rowCount() == 0) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
-                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
-                  } else{
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
-                        .respond204()));
-                  }
-                } else {
-                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                  if (msg == null) {
-                    internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
-                    return;
-                  }
-                  log.info(msg);
-                  asyncResultHandler.handle(Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
-                      .respond400WithTextPlain(msg)));
+          RELATED_INSTANCE_TYPE_TABLE, entity, instanceTypeId,
+          reply -> {
+            try {
+              if (reply.succeeded()) {
+                if (reply.result().rowCount() == 0) {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
+                    .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
                 }
-              } catch (Exception e) {
-                internalServerErrorDuringPut(e, lang, asyncResultHandler);
+                else {
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
+                    .respond204()));
+                }
               }
-            });
+              else {
+                log.error(reply.cause().getMessage());
+                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
+                  .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+              }
+            } catch (Exception e) {
+              log.error(e.getMessage(), e);
+              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
+                .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+            }
+          });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);      }
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutRelatedInstanceTypesByRelatedInstanceTypeIdResponse
+          .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      }
     });
+  }
+
+  @Override
+  public void deleteRelatedInstanceTypes(@Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    String tenantId = TenantTool.tenantId(okapiHeaders);
+
+    try {
+      vertxContext.runOnContext(v -> {
+        PostgresClient postgresClient = PostgresClient.getInstance(
+          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
+
+        postgresClient.execute(String.format("DELETE FROM %s_%s.%s",
+          tenantId, "mod_inventory_storage", RELATED_INSTANCE_TYPE_TABLE),
+          reply -> {
+            if (reply.succeeded()) {
+              asyncResultHandler.handle(Future.succeededFuture(
+                DeleteRelatedInstanceTypesResponse.noContent().build()));
+            } else {
+              asyncResultHandler.handle(Future.succeededFuture(
+                DeleteRelatedInstanceTypesResponse.respond500WithTextPlain(reply.cause().getMessage())));
+            }
+          });
+      });
+    }
+    catch(Exception e) {
+      asyncResultHandler.handle(Future.succeededFuture(
+        DeleteRelatedInstanceTypesResponse.respond500WithTextPlain(e.getMessage())));
+    }
+  }
+
+  private boolean isDuplicate(String errorMessage) {
+    if (errorMessage != null && errorMessage.contains("duplicate key value violates unique constraint")) {
+      return true;
+    }
+    return false;
   }
 }
