@@ -16,7 +16,7 @@ Provides PostgreSQL based storage to complement the [inventory module](http://gi
 - Java 11 JDK
 - Maven 3.3.9
 - Docker ([minimum requirements](https://www.testcontainers.org/supported_docker_environment/))
-- Postgres 9.6.1 (running and listening on localhost:5432, logged in user must have admin rights)
+- Postgres 12 (running and listening on localhost:5432, logged in user must have admin rights)
 - Kafka 2.6 (running and listening on localhost:9092)
 - Node 6.4.0 (for API linting and documentation generation)
 - NPM 3.10.3 (for API linting and documentation generation)
@@ -118,7 +118,7 @@ To deactivate and unregister the module, run `./stop-managed-demo.sh` from the r
 
 ## Tenant Initialization
 
-The module supports v1.2 of the Okapi `_tenant` interface. This version of the interface allows Okapi to pass tenant initialization parameters using the `tenantParameters` key. Currently, the only parameters supported are the `loadReference` and `loadSample` keys, which will cause the module to load reference data and sample data respectively for the tenant if set to `true`.  Here is an example of passing the `loadReference` parameter to the module via Okapi's `/_/proxy/tenants/<tenantId>/install` endpoint:
+The module supports v2.0 of the Okapi `_tenant` interface. This version of the interface allows Okapi to pass tenant initialization parameters using the `tenantParameters` key. Currently, the only parameters supported are the `loadReference` and `loadSample` keys, which will cause the module to load reference data and sample data respectively for the tenant if set to `true`.  Here is an example of passing the `loadReference` parameter to the module via Okapi's `/_/proxy/tenants/<tenantId>/install` endpoint:
 
     curl -w '\n' -X POST -d '[ { "id": "mod-inventory-storage-14.1.0", "action": "enable" } ]' http://localhost:9130/_/proxy/tenants/my-test-tenant/install?tenantParameters=loadReference%3Dtrue
 

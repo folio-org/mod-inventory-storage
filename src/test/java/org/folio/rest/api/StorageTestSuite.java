@@ -32,6 +32,7 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
 import org.folio.services.kafka.KafkaProperties;
+import org.folio.services.kafka.topic.KafkaTopicsExistsTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -63,7 +64,6 @@ import org.testcontainers.utility.DockerImageName;
   ItemDamagedStatusAPITest.class,
   ItemDamagedStatusAPIUnitTest.class,
   ItemEffectiveLocationTest.class,
-  SampleDataTest.class,
   HridSettingsStorageTest.class,
   HridSettingsStorageParameterizedTest.class,
   ItemCopyNumberMigrationScriptTest.class,
@@ -88,7 +88,8 @@ import org.testcontainers.utility.DockerImageName;
   PublicationPeriodMigrationTest.class,
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   IterationJobRunnerTest.class,
-  AuthorityStorageTest.class
+  AuthorityStorageTest.class,
+  SampleDataTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

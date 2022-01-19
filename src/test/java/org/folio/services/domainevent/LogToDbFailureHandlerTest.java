@@ -40,5 +40,5 @@ public class LogToDbFailureHandlerTest {
     assertThat(notificationSendingError.getPayload(), is("value"));
     assertThat(notificationSendingError.getError(), containsString("IllegalArgumentException: null"));
     assertThat(notificationSendingError.getIncidentDateTime()
-      .before(new Date()), Matchers.is(true));  }
+      .after(new Date()), Matchers.is(false));  }
 }

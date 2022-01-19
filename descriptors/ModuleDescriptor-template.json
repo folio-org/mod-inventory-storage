@@ -47,6 +47,27 @@
       ]
     },
     {
+      "id": "authority-reindex",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/authority-storage/reindex",
+          "permissionsRequired": ["authority-storage.authority.reindex.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/reindex/{id}",
+          "permissionsRequired": ["authority-storage.authority.reindex.item.get"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-storage/reindex/{id}",
+          "permissionsRequired": ["authority-storage.authority.reindex.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "item-storage",
       "version": "9.0",
       "handlers": [
@@ -1330,6 +1351,21 @@
       "description": "delete individual authority record from the storage"
     },
     {
+      "permissionName": "authority-storage.authority.reindex.item.delete",
+      "displayName": "inventory storage - cancel reindex job",
+      "description": "cancel a running reindexing job"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.item.get",
+      "displayName": "inventory storage - get reindex job by id",
+      "description": "get reindex job by id"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.post",
+      "displayName": "inventory storage - submit reindex authority job",
+      "description": "submit reindex authority job"
+    },
+    {
       "permissionName": "inventory-storage.authorities.all",
       "displayName": "inventory storage module - all authorities permissions",
       "description": "Entire set of permissions needed to use authorities in the inventory storage module",
@@ -1338,7 +1374,10 @@
         "inventory-storage.authorities.item.post",
         "inventory-storage.authorities.item.put",
         "inventory-storage.authorities.item.delete",
-        "inventory-storage.authorities.collection.delete"
+        "inventory-storage.authorities.collection.delete",
+        "authority-storage.authority.reindex.post",
+        "authority-storage.authority.reindex.item.get",
+        "authority-storage.authority.reindex.item.delete"
       ]
     },
     {
@@ -2432,6 +2471,9 @@
         "inventory-storage.authorities.item.put",
         "inventory-storage.authorities.item.delete",
         "inventory-storage.authorities.collection.delete",
+        "inventory-storage.authority.reindex.post",
+        "inventory-storage.authority.reindex.item.get",
+        "inventory-storage.authority.reindex.item.delete",
         "inventory-storage.holdings.collection.get",
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",

@@ -82,6 +82,10 @@ public final class FakeKafkaConsumer {
     return instanceEvents.size();
   }
 
+  public static int getAllPublishedAuthoritiesCount() {
+    return authorityEvents.size();
+  }
+
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getInstanceEvents(
     String instanceId) {
 

@@ -343,7 +343,7 @@
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
       "withAuditing": true,
-      "withOptimisticLocking": "logOnConflict",
+      "withOptimisticLocking": "failOnConflict",
       "auditingTableName": "audit_instance",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -648,7 +648,7 @@
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
       "withAuditing": true,
-      "withOptimisticLocking": "logOnConflict",
+      "withOptimisticLocking": "failOnConflict",
       "auditingTableName": "audit_holdings_record",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -755,7 +755,7 @@
       "withMetadata": true,
       "fromModuleVersion": "19.2.0",
       "withAuditing": true,
-      "withOptimisticLocking": "logOnConflict",
+      "withOptimisticLocking": "failOnConflict",
       "auditingTableName": "audit_item",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -1098,7 +1098,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "populatePublicationPeriod.sql",
+      "snippetPath": "itemStatisticalCodeReferenceCheckTrigger.sql",
       "fromModuleVersion": "22.1.0"
     }
   ]
