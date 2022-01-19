@@ -210,6 +210,7 @@ public class MaterialTypeAPI implements MaterialTypes {
     });
   }
 
+  @Validate
   @Override
   public void deleteMaterialTypes(String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {

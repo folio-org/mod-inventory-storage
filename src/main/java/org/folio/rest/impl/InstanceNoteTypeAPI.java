@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstanceNoteType;
 import org.folio.rest.jaxrs.model.InstanceNoteTypes;
 import org.folio.rest.persist.Criteria.Limit;
@@ -39,6 +40,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
   private static final Logger log             = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 
+  @Validate
   @Override
   public void getInstanceNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
@@ -76,6 +78,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
     });
   }
 
+  @Validate
   @Override
   public void postInstanceNoteTypes(String lang, InstanceNoteType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -109,6 +112,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
     });
   }
 
+  @Validate
   @Override
   public void getInstanceNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -117,6 +121,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
       vertxContext, GetInstanceNoteTypesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteInstanceNoteTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -151,6 +156,7 @@ public class InstanceNoteTypeAPI implements org.folio.rest.jaxrs.resource.Instan
     });
   }
 
+  @Validate
   @Override
   public void putInstanceNoteTypesById(String id, String lang, InstanceNoteType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

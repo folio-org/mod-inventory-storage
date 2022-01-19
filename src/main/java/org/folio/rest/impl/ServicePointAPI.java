@@ -10,6 +10,7 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.model.Servicepoints;
@@ -58,6 +59,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
     return false;
   }
 
+  @Validate
   @Override
   public void deleteServicePoints(String lang, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler,
@@ -90,6 +92,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
     });
   }
 
+  @Validate
   @Override
   public void getServicePoints(String query, int offset, int limit, String lang,
           Map<String, String> okapiHeaders,
@@ -100,6 +103,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
         query, offset, limit, okapiHeaders, vertxContext, GetServicePointsResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void postServicePoints(String lang, Servicepoint entity,
           Map<String, String> okapiHeaders,
@@ -155,6 +159,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
     });
   }
 
+  @Validate
   @Override
   public void getServicePointsByServicepointId(String servicepointId,
           String lang, Map<String, String> okapiHeaders,
@@ -165,6 +170,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
         GetServicePointsByServicepointIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteServicePointsByServicepointId(String servicepointId,
           String lang, Map<String, String> okapiHeaders,
@@ -214,6 +220,7 @@ public class ServicePointAPI implements org.folio.rest.jaxrs.resource.ServicePoi
     });
   }
 
+  @Validate
   @Override
   public void putServicePointsByServicepointId(String servicepointId,
           String lang, Servicepoint entity, Map<String, String> okapiHeaders,

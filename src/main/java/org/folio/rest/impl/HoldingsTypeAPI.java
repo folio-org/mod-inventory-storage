@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.HoldingsType;
@@ -45,6 +46,7 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
   private static final Logger log = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 
+  @Validate
   @Override
   public void getHoldingsTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
@@ -89,6 +91,7 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
     });
   }
 
+  @Validate
   @Override
   public void postHoldingsTypes(String lang,
                                 HoldingsType entity,
@@ -108,12 +111,14 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
       .onComplete(asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void getHoldingsTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, HoldingsType.class, id,
         okapiHeaders, vertxContext, GetHoldingsTypesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteHoldingsTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -154,6 +159,7 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
     });
   }
 
+  @Validate
   @Override
   public void putHoldingsTypesById(String id, String lang, HoldingsType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

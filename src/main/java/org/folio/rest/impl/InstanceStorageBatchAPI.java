@@ -18,6 +18,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -47,6 +48,7 @@ public class InstanceStorageBatchAPI implements InstanceStorageBatchInstances {
   private static final int PARALLEL_DB_CONNECTIONS_LIMIT = Integer.parseInt(
     MODULE_SPECIFIC_ARGS.getOrDefault(PARALLEL_DB_CONNECTIONS_LIMIT_KEY, "4"));
 
+  @Validate
   @Override
   public void postInstanceStorageBatchInstances(Instances entity,
                                                 Map<String, String> okapiHeaders,
