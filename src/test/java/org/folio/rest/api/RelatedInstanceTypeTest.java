@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 public class RelatedInstanceTypeTest extends TestBaseWithInventoryUtil {
 
@@ -271,11 +272,8 @@ public class RelatedInstanceTypeTest extends TestBaseWithInventoryUtil {
     return createRelatedInstanceType.get(5, TimeUnit.SECONDS);
   }
 
-  private Response createRelatedInstanceType(UUID id, String name)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  @SneakyThrows
+  private Response createRelatedInstanceType(UUID id, String name) {
 
     CompletableFuture<Response> createRelatedInstanceType = new CompletableFuture<>();
     String createURL = relatedInstanceTypesStorageUrl("").toString();
@@ -289,11 +287,8 @@ public class RelatedInstanceTypeTest extends TestBaseWithInventoryUtil {
     return createRelatedInstanceType.get(5, TimeUnit.SECONDS);
   }
 
-  private Response getById(UUID id)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  @SneakyThrows
+  private Response getById(UUID id) {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
