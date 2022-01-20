@@ -222,6 +222,7 @@ public class ItemService {
         if (rowSet.size() != 1) {
           putResult.complete(
             PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Record not Found"));
+            return;
         }
         Item finalItem = readValue(rowSet.iterator().next().getJson("jsonb").toString(), Item.class);
 
