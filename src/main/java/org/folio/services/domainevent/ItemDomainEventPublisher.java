@@ -5,14 +5,9 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.Environment.environmentName;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import org.folio.services.domainevent.ItemWithInstanceId;
-
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -21,8 +16,6 @@ import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.services.kafka.topic.KafkaTopic;
-import javax.ws.rs.core.Response;
-
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 
@@ -39,11 +32,11 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
   }
 
-  public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord record) {
-    ItemWithInstanceId oldItemWithId = new ItemWithInstanceId(oldItem, record.getId());
-    ItemWithInstanceId newItemWithId = new ItemWithInstanceId(newItem, record.getId());
-    
-    return domainEventService.publishRecordUpdated(record.getId(), oldItemWithId, newItemWithId);
+  public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord holdingsRecord) {
+    ItemWithInstanceId oldItemWithId = new ItemWithInstanceId(oldItem, holdingsRecord.getInstanceId());
+    ItemWithInstanceId newItemWithId = new ItemWithInstanceId(newItem, holdingsRecord.getInstanceId());
+
+    return domainEventService.publishRecordUpdated(holdingsRecord.getInstanceId(), oldItemWithId, newItemWithId);
   }
 
   public Future<Void> publishUpdated(HoldingsRecord hr, List<Item> oldItems) {
