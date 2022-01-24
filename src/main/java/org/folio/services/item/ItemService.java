@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.Logger;
@@ -40,7 +42,10 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.PostgresClientFuturized;
+
 import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
@@ -51,6 +56,10 @@ import org.folio.validator.CommonValidators;
 
 public class ItemService {
   private static final Logger log = getLogger(ItemService.class);
+  private static final Pattern KEY_ALREADY_EXISTS_PATTERN = Pattern.compile(
+      ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
+  private static final Pattern KEY_NOT_PRESENT_PATTERN = Pattern.compile(
+      ": Key \\(([^=]+)\\)=\\((.*)\\) is not present in table \"(.*)\".$");
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -180,58 +189,65 @@ public class ItemService {
   private Future<Response> handleItemPut(Item oldItem, Item newItem) {
     if (! UuidUtil.isUuid(newItem.getId())) {
       return Future.succeededFuture(PutItemStorageItemsByItemIdResponse.respond400WithTextPlain("Invalid UUid"));
-    }  
+    }
     return holdingsRepository.getById(newItem.getHoldingsRecordId())
       .compose(holdingsRecord -> {
         return putItemAndPublishResults(
-          effectiveValuesService.populateEffectiveValues(newItem, holdingsRecord), oldItem, holdingsRecord);     
+          effectiveValuesService.populateEffectiveValues(newItem, holdingsRecord), oldItem, holdingsRecord);
       }
     );
   }
 
   private Future<Response> putItemAndPublishResults(Item newItem, Item oldItem, HoldingsRecord holdingsRecord) {
 
-    JsonObject record;    
+    JsonObject record;
     try{
       record = pojo2JsonObject(newItem);
     } catch(Exception e) {
-      log.error("Cannot map item record to json: " + e.getMessage());
+      String msg = "Cannot map item record to json: " + e.getMessage();
+      log.error(msg);
       return Future.succeededFuture(
-        PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage()));
-    } 
-    String tableName = okapiHeaders.get("x-okapi-tenant") + "_mod_inventory_storage." + ITEM_TABLE;  
+        PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(msg));
+    }
+    String tableName = new PostgresClientFuturized(postgresClient).getFullTableName(ITEM_TABLE);
     Tuple tuple = Tuple.of(record, newItem.getId());
-    final Promise<Response> putResult = promise();
 
-    postgresClient.execute("UPDATE " + tableName + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb", tuple)
-      .onFailure(result -> {
-        //for unknown reasons, if the error is an optimisitc locking error, the execute statement
-        //returns a throwable with an empty cause.  
-        JsonObject errorDetails = new JsonObject(result.getMessage());
-        log.info("Code is: " + errorDetails.getString("code"));
-        if (errorDetails.getString("code").equals("23F09"))
-          putResult.complete(
-            PutItemStorageItemsByItemIdResponse.respond409WithTextPlain(errorDetails.getString("message")));
-        else {
-          putResult.complete(
-            PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(errorDetails.getString("message")));
-        }
-
-      })
-      .onSuccess(rowSet -> {
+    return postgresClient.execute("UPDATE " + tableName + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb", tuple)
+      .compose(rowSet -> {
         if (rowSet.size() != 1) {
-          putResult.complete(
-            PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Record not Found"));
-            return;
+          return Future.succeededFuture(
+              PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Record not Found"));
         }
         Item finalItem = readValue(rowSet.iterator().next().getJson("jsonb").toString(), Item.class);
 
-        domainEventService.publishUpdated(finalItem, oldItem, holdingsRecord)
-          .onFailure(result -> {
-            putResult.complete(PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(result.getCause().getMessage()));
-          })
-          .onSuccess(notUsed -> {putResult.complete(PutItemStorageItemsByItemIdResponse.respond204());});
-      });
-    return putResult.future();
+        return domainEventService.publishUpdated(finalItem, oldItem, holdingsRecord)
+            .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
+            .otherwise(e -> PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage()));
+      })
+      .otherwise(e -> putFailure(e));
+  }
+
+  private static Response putFailure(Throwable e) {
+    String msg = PgExceptionUtil.badRequestMessage(e);
+    if (msg == null) {
+      msg = e.getMessage();
+    }
+    if (PgExceptionUtil.isVersionConflict(e)) {
+      return PutItemStorageItemsByItemIdResponse.respond409WithTextPlain(msg);
+    }
+    Matcher matcher = KEY_NOT_PRESENT_PATTERN.matcher(msg);
+    if (matcher.find()) {
+      String field = matcher.group(1);
+      String value = matcher.group(2);
+      String refTable = matcher.group(3);
+      msg = "Cannot set item " + field + " = " + value
+          + " because it does not exist in " + refTable + ".id.";
+    } else {
+      matcher = KEY_ALREADY_EXISTS_PATTERN.matcher(msg);
+      if (matcher.find()) {
+        msg = matcher.group(1) + " value already exists in table item: " + matcher.group(2);
+      }
+    }
+    return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(msg);
   }
 }
