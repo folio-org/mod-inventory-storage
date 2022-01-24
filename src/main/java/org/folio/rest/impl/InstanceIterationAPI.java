@@ -10,6 +10,7 @@ import java.util.Optional;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
 import org.folio.rest.jaxrs.resource.InstanceStorageInstancesIteration;
@@ -17,6 +18,7 @@ import org.folio.services.iteration.IterationService;
 
 public class InstanceIterationAPI implements InstanceStorageInstancesIteration {
 
+  @Validate
   @Override
   public void postInstanceStorageInstancesIteration(IterationJobParams jobParams, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> resultHandler, Context vertxContext) {
@@ -27,6 +29,7 @@ public class InstanceIterationAPI implements InstanceStorageInstancesIteration {
       .onFailure(postFailed(resultHandler));
   }
 
+  @Validate
   @Override
   public void getInstanceStorageInstancesIterationById(String id, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> resultHandler, Context vertxContext) {
@@ -37,6 +40,7 @@ public class InstanceIterationAPI implements InstanceStorageInstancesIteration {
       .onFailure(getFailed(resultHandler));
   }
 
+  @Validate
   @Override
   public void deleteInstanceStorageInstancesIterationById(String id, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> resultHandler, Context vertxContext) {

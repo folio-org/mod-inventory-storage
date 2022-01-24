@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -97,21 +98,22 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void serverErrorWrittenOutOnDatabaseError() throws InterruptedException, ExecutionException, TimeoutException {
+  public void serverErrorWrittenOutOnDatabaseError() throws Exception {
 
-    setFaultyViewFunction();
-    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    withFaultyViewFunction(() -> {
+      params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
 
-    List<JsonObject> instances = requestInventoryHierarchyViewUpdatedInstanceIds(params, response -> assertThat(response.getStatusCode(), is(200)));
-    UUID[] instanceIds = instances.stream()
-        .map(json -> UUID.fromString(json.getString("instanceId")))
-        .toArray(UUID[]::new);
+      List<JsonObject> instances = requestInventoryHierarchyViewUpdatedInstanceIds(params, response -> assertThat(response.getStatusCode(), is(200)));
+      UUID[] instanceIds = instances.stream()
+          .map(json -> UUID.fromString(json.getString("instanceId")))
+          .toArray(UUID[]::new);
 
-    requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
-      undoFaultyViewFunction();
-      assertThat(response.getStatusCode(), is(500));
-      String message = new JsonObject(response.getBody()).getString("message");
-      assertThat(message, is("function get_items_and_holdings_view(unknown, unknown) does not exist"));
+      requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
+        assertThat(response.getStatusCode(), is(500));
+        String message = new JsonObject(response.getBody()).getString("message");
+        assertThat(message, is("function get_items_and_holdings_view(unknown, unknown) does not exist"));
+      });
+      return null;
     });
   }
 
@@ -460,24 +462,22 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     return results;
   }
 
-  private void setFaultyViewFunction() {
+  /**
+   * Make the view function faulty, run the callable, then always restore the view function.
+   */
+  private void withFaultyViewFunction(Callable<Void> callable) throws Exception {
     String sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.get_items_and_holdings_view RENAME TO x";
+    PostgresClient.getInstance(getVertx()).execute(sql)
+    .toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
 
-    PostgresClient.getInstance(getVertx()).execute(sql, result -> {
-      if (result.failed()) {
-        log.error("Error renaming view function: " + result.cause().getMessage());
-      }
-    });
-  }
-
-  private void undoFaultyViewFunction() {
-    String sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.x RENAME TO get_items_and_holdings_view";
-
-    PostgresClient.getInstance(getVertx()).execute(sql, handler -> {
-      if (handler.failed()) {
-        log.error("Error renaming view function: " + handler.cause().getMessage());
-      }
-    });
+    try {
+      callable.call();
+    }
+    finally {
+      sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.x RENAME TO get_items_and_holdings_view";
+      PostgresClient.getInstance(getVertx()).execute(sql)
+      .toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
+    }
   }
 
   private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap)

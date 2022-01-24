@@ -10,11 +10,6 @@ import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Response;
 
 import io.vertx.core.AsyncResult;
@@ -27,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
@@ -69,12 +65,13 @@ public class InstanceStorageAPI implements InstanceStorage {
       .setOffset(new Offset(offset));
   }
 
+  @Validate
   @Override
   public void getInstanceStorageInstances(
-    @DefaultValue("0") @Min(0L) @Max(1000L) int offset,
-    @DefaultValue("10") @Min(1L) @Max(100L) int limit,
+    int offset,
+    int limit,
     String query,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -97,9 +94,10 @@ public class InstanceStorageAPI implements InstanceStorage {
       "instances", routingContext, okapiHeaders, vertxContext);
   }
 
+  @Validate
   @Override
   public void postInstanceStorageInstances(
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     Instance entity,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -111,9 +109,10 @@ public class InstanceStorageAPI implements InstanceStorage {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
+  @Validate
   @Override
   public void deleteInstanceStorageInstances(
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String lang,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -125,10 +124,11 @@ public class InstanceStorageAPI implements InstanceStorage {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
+  @Validate
   @Override
   public void getInstanceStorageInstancesByInstanceId(
-    @NotNull String instanceId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String instanceId,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -196,10 +196,11 @@ public class InstanceStorageAPI implements InstanceStorage {
     }
   }
 
+  @Validate
   @Override
   public void deleteInstanceStorageInstancesByInstanceId(
-    @NotNull String instanceId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String instanceId,
+    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -210,10 +211,11 @@ public class InstanceStorageAPI implements InstanceStorage {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
+  @Validate
   @Override
   public void putInstanceStorageInstancesByInstanceId(
-    @NotNull String instanceId,
-    @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+    String instanceId,
+    String lang,
     Instance entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -225,10 +227,11 @@ public class InstanceStorageAPI implements InstanceStorage {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
+  @Validate
   @Override
   public void deleteInstanceStorageInstancesSourceRecordByInstanceId(
-      @NotNull String instanceId,
-      @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+      String instanceId,
+      String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
@@ -237,6 +240,7 @@ public class InstanceStorageAPI implements InstanceStorage {
         DeleteInstanceStorageInstancesSourceRecordByInstanceIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void getInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
       String instanceId, String lang, Map<String, String> okapiHeaders,
@@ -247,10 +251,11 @@ public class InstanceStorageAPI implements InstanceStorage {
       GetInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
-      @NotNull String instanceId,
-      @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+      String instanceId,
+      String lang,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
@@ -259,10 +264,11 @@ public class InstanceStorageAPI implements InstanceStorage {
         DeleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
-      @NotNull String instanceId,
-      @DefaultValue("en") @Pattern(regexp = "[a-zA-Z]{2}") String lang,
+      String instanceId,
+      String lang,
       MarcJson entity,
       Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler,
@@ -292,6 +298,7 @@ public class InstanceStorageAPI implements InstanceStorage {
   /**
    * Example stub showing how other formats might get implemented.
    */
+  @Validate
   @Override
   public void getInstanceStorageInstancesSourceRecordModsByInstanceId(
       String instanceId, String lang, Map<String, String> okapiHeaders,
@@ -305,6 +312,7 @@ public class InstanceStorageAPI implements InstanceStorage {
   /**
    * Example stub showing how other formats might get implemented.
    */
+  @Validate
   @Override
   public void putInstanceStorageInstancesSourceRecordModsByInstanceId(
       String instanceId, String lang, Map<String, String> okapiHeaders,
@@ -315,6 +323,7 @@ public class InstanceStorageAPI implements InstanceStorage {
         .respond500WithTextPlain("Not implemented yet.")));
   }
 
+  @Validate
   @Override
   public void getInstanceStorageInstanceRelationships(int offset, int limit, String query, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PostgresClient postgresClient =
@@ -370,17 +379,20 @@ public class InstanceStorageAPI implements InstanceStorage {
     }
   }
 
+  @Validate
   @Override
   public void postInstanceStorageInstanceRelationships(String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.post(INSTANCE_RELATIONSHIP_TABLE, entity, okapiHeaders, vertxContext,
         PostInstanceStorageInstanceRelationshipsResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void getInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 
+  @Validate
   @Override
   public void deleteInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PostgresClient postgresClient =
@@ -398,6 +410,7 @@ public class InstanceStorageAPI implements InstanceStorage {
     });
   }
 
+  @Validate
   @Override
   public void putInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang, InstanceRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

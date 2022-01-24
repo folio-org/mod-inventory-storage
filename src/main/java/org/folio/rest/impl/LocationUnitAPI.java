@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loccamp;
 import org.folio.rest.jaxrs.model.Loccamps;
 import org.folio.rest.jaxrs.model.Locinst;
@@ -31,6 +32,7 @@ public class LocationUnitAPI implements LocationUnits {
   public static final String URL_PREFIX_LIB = URL_PREFIX + "/libraries";
   private static final String MOD_NAME = "mod_inventory_storage";
 
+  @Validate
   @Override
   public void deleteLocationUnitsInstitutions(String lang,
     Map<String, String> okapiHeaders,
@@ -53,6 +55,7 @@ public class LocationUnitAPI implements LocationUnits {
         });
   }
 
+  @Validate
   @Override
   public void getLocationUnitsInstitutions(
     String query, int offset, int limit,
@@ -89,6 +92,7 @@ public class LocationUnitAPI implements LocationUnits {
         });
   }
 
+  @Validate
   @Override
   public void postLocationUnitsInstitutions(String lang,
     Locinst entity, Map<String, String> okapiHeaders,
@@ -128,6 +132,7 @@ public class LocationUnitAPI implements LocationUnits {
       });
   }
 
+  @Validate
   @Override
   public void getLocationUnitsInstitutionsById(String id,
     String lang, Map<String, String> okapiHeaders,
@@ -138,6 +143,7 @@ public class LocationUnitAPI implements LocationUnits {
         GetLocationUnitsInstitutionsByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteLocationUnitsInstitutionsById(String id,
     String lang, Map<String, String> okapiHeaders,
@@ -148,6 +154,7 @@ public class LocationUnitAPI implements LocationUnits {
         DeleteLocationUnitsInstitutionsByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putLocationUnitsInstitutionsById(
     String id,
@@ -168,6 +175,7 @@ public class LocationUnitAPI implements LocationUnits {
   }
 
   ////////////////////////////////////////////
+  @Validate
   @Override
   public void deleteLocationUnitsCampuses(String lang,
     Map<String, String> okapiHeaders,
@@ -191,6 +199,7 @@ public class LocationUnitAPI implements LocationUnits {
         });
   }
 
+  @Validate
   @Override
   public void getLocationUnitsCampuses(
     String query, int offset, int limit,
@@ -228,6 +237,7 @@ public class LocationUnitAPI implements LocationUnits {
           });
   }
 
+  @Validate
   @Override
   public void postLocationUnitsCampuses(String lang,
     Loccamp entity, Map<String, String> okapiHeaders,
@@ -265,6 +275,7 @@ public class LocationUnitAPI implements LocationUnits {
       });
   }
 
+  @Validate
   @Override
   public void getLocationUnitsCampusesById(String id,
     String lang, Map<String, String> okapiHeaders,
@@ -275,6 +286,7 @@ public class LocationUnitAPI implements LocationUnits {
         GetLocationUnitsCampusesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteLocationUnitsCampusesById(String id,
     String lang, Map<String, String> okapiHeaders,
@@ -284,6 +296,7 @@ public class LocationUnitAPI implements LocationUnits {
         DeleteLocationUnitsCampusesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putLocationUnitsCampusesById(
     String id,
@@ -302,6 +315,7 @@ public class LocationUnitAPI implements LocationUnits {
   }
 
   ////////////////////////////////////////////
+  @Validate
   @Override
   public void deleteLocationUnitsLibraries(String lang,
     Map<String, String> okapiHeaders,
@@ -326,6 +340,7 @@ public class LocationUnitAPI implements LocationUnits {
       });
   }
 
+  @Validate
   @Override
   public void getLocationUnitsLibraries(
     String query, int offset, int limit,
@@ -363,6 +378,7 @@ public class LocationUnitAPI implements LocationUnits {
         });
   }
 
+  @Validate
   @Override
   public void postLocationUnitsLibraries(String lang,
     Loclib entity, Map<String, String> okapiHeaders,
@@ -401,6 +417,7 @@ public class LocationUnitAPI implements LocationUnits {
       });
   }
 
+  @Validate
   @Override
   public void getLocationUnitsLibrariesById(String id,
     String lang, Map<String, String> okapiHeaders,
@@ -411,6 +428,7 @@ public class LocationUnitAPI implements LocationUnits {
         GetLocationUnitsLibrariesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteLocationUnitsLibrariesById(String id,
     String lang, Map<String, String> okapiHeaders,
@@ -420,6 +438,7 @@ public class LocationUnitAPI implements LocationUnits {
         DeleteLocationUnitsLibrariesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putLocationUnitsLibrariesById(
     String id,

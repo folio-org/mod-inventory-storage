@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.IssuanceMode;
 import org.folio.rest.jaxrs.model.IssuanceModes;
 import org.folio.rest.jaxrs.resource.ModesOfIssuance;
@@ -38,6 +39,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
   private static final Logger LOG = LogManager.getLogger();
   private static final Messages MESSAGES = Messages.getInstance();
 
+  @Validate
   @Override
   public void deleteModesOfIssuance(String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -69,6 +71,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
     }
   }
 
+  @Validate
   @Override
   public void getModesOfIssuance(String query, int offset, int limit, String lang,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
@@ -113,6 +116,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
     });
   }
 
+  @Validate
   @Override
   public void postModesOfIssuance(String lang, IssuanceMode entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -161,12 +165,14 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
     });
   }
 
+  @Validate
   @Override
   public void getModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(RESOURCE_TABLE, IssuanceMode.class, modeOfIssuanceId, okapiHeaders, vertxContext,
         GetModesOfIssuanceByModeOfIssuanceIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -203,6 +209,7 @@ public class ModeOfIssuanceAPI implements ModesOfIssuance {
     });
   }
 
+  @Validate
   @Override
   public void putModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, String lang, IssuanceMode entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsNoteType;
 import org.folio.rest.jaxrs.model.HoldingsNoteTypes;
 import org.folio.rest.persist.Criteria.Limit;
@@ -43,6 +44,7 @@ public class HoldingsNoteTypeAPI implements org.folio.rest.jaxrs.resource.Holdin
   private static final Logger log             = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 
+  @Validate
   @Override
   public void getHoldingsNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
@@ -87,6 +89,7 @@ public class HoldingsNoteTypeAPI implements org.folio.rest.jaxrs.resource.Holdin
     });
   }
 
+  @Validate
   @Override
   public void postHoldingsNoteTypes(String lang, HoldingsNoteType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -126,12 +129,14 @@ public class HoldingsNoteTypeAPI implements org.folio.rest.jaxrs.resource.Holdin
     });
   }
 
+  @Validate
   @Override
   public void getHoldingsNoteTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, HoldingsNoteType.class, id,
         okapiHeaders, vertxContext, GetHoldingsNoteTypesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteHoldingsNoteTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -172,6 +177,7 @@ public class HoldingsNoteTypeAPI implements org.folio.rest.jaxrs.resource.Holdin
     });
   }
 
+  @Validate
   @Override
   public void putHoldingsNoteTypesById(String id, String lang, HoldingsNoteType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

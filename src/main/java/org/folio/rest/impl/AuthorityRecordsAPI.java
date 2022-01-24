@@ -9,6 +9,7 @@ import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.resource.AuthorityStorage;
 import org.folio.rest.persist.PgUtil;
@@ -18,6 +19,7 @@ public class AuthorityRecordsAPI implements AuthorityStorage {
 
   public static final String AUTHORITY_TABLE = "authority";
 
+  @Validate
   @Override
   public void getAuthorityStorageAuthorities(int offset, int limit,
                                              String query, String lang,
@@ -29,6 +31,7 @@ public class AuthorityRecordsAPI implements AuthorityStorage {
       routingContext, okapiHeaders, vertxContext);
   }
 
+  @Validate
   @Override
   public void postAuthorityStorageAuthorities(String lang, Authority entity,
                                               RoutingContext routingContext,
@@ -40,6 +43,7 @@ public class AuthorityRecordsAPI implements AuthorityStorage {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
+  @Validate
   @Override
   public void deleteAuthorityStorageAuthorities(String lang,
                                                 RoutingContext routingContext,
@@ -52,6 +56,7 @@ public class AuthorityRecordsAPI implements AuthorityStorage {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
+  @Validate
   @Override
   public void getAuthorityStorageAuthoritiesByAuthorityId(String authorityId,
                                                           String lang,
@@ -62,6 +67,7 @@ public class AuthorityRecordsAPI implements AuthorityStorage {
       GetAuthorityStorageAuthoritiesByAuthorityIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteAuthorityStorageAuthoritiesByAuthorityId(String authorityId,
                                                              String lang,
@@ -73,6 +79,7 @@ public class AuthorityRecordsAPI implements AuthorityStorage {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
+  @Validate
   @Override
   public void putAuthorityStorageAuthoritiesByAuthorityId(String authorityId,
                                                           String lang,
