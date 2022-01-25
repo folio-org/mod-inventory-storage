@@ -84,7 +84,6 @@ public class InterfaceUrls {
 
   public static URL alternativeTitleTypesUrl(String subPath) {
     return StorageTestSuite.storageUrl("/alternative-title-types" + subPath);
-
   }
 
   public static URL callNumberTypesUrl(String subPath) {
@@ -223,14 +222,18 @@ public class InterfaceUrls {
 
   public static URL instanceReindex(String path) {
     return StorageTestSuite.storageUrl("/instance-storage/reindex" + path);
-
   }
+
   public static URL dereferencedItemStorage(String path) {
     return StorageTestSuite.storageUrl("/item-storage-dereferenced/items" + path);
   }
 
   public static URL instanceIteration(String path) {
     return StorageTestSuite.storageUrl("/instance-storage/instances/iteration" + path);
+  }
+
+  public static URL relatedInstanceTypesStorageUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/related-instance-types" + subPath);
   }
 
 }

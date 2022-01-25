@@ -89,6 +89,7 @@ import org.testcontainers.utility.DockerImageName;
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
+  RelatedInstanceTypeTest.class,
   SampleDataTest.class
 })
 public class StorageTestSuite {
