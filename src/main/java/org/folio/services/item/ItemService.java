@@ -126,7 +126,7 @@ public class ItemService {
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
     PutData putData = new PutData();
-    return getItemAndHolding(itemId, putData)
+    return getItemAndHolding(itemId, newItem.getHoldingsRecordId(), putData)
       .compose(x -> refuseWhenHridChanged(putData.item, newItem))
       .map(x -> effectiveValuesService.populateEffectiveValues(newItem, putData.holdingsRecord))
       .compose(x -> updateItem(newItem))
@@ -209,19 +209,24 @@ public class ItemService {
    * Fetch item with itemId and holdings record of that item from database
    * and save them in putData.
    */
-  private Future<Void> getItemAndHolding(String itemId, PutData putData) {
+  private Future<Void> getItemAndHolding(String itemId, String holdingsId, PutData putData) {
     String sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
         + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
         + "LEFT JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
-        + "  ON holdings_record.id=holdingsrecordid "
+        + "  ON holdings_record.id = $2 "
         + "WHERE item.id = $1";
-    return postgresClient.execute(sql, Tuple.of(itemId))
+    return postgresClient.execute(sql, Tuple.of(itemId, holdingsId))
         .compose(rowSet -> {
           if (rowSet.size() == 0) {
             return Future.failedFuture(new ResponseException(
                 PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Not found")));
           }
           var row = rowSet.iterator().next();
+          if (row.getString(1) == null) {
+            return Future.failedFuture(new ResponseException(
+                PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(
+                    "holdingsRecordId not found: " + holdingsId)));
+          }
           putData.item = readValue(row.getString(0), Item.class);
           putData.holdingsRecord = readValue(row.getString(1), HoldingsRecord.class);
           return Future.succeededFuture();
