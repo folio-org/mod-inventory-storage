@@ -943,6 +943,17 @@
       "tableName": "iteration_job",
       "withMetadata": false,
       "withAuditing": false
+    },
+    {
+      "tableName": "related_instance_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "scripts": [
@@ -1075,8 +1086,8 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/addEffectiveHoldingsToItemsAndHoldingsView.sql",
       "fromModuleVersion": "20.3.0"
-  	},
-	  {
+    },
+    {
       "run": "after",
       "snippetPath": "addInstanceFormatsAudioBelt.sql",
       "fromModuleVersion": "20.3.0"

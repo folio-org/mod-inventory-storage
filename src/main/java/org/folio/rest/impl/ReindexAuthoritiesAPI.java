@@ -5,6 +5,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import org.folio.persist.ReindexJobRepository;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.jaxrs.resource.AuthorityStorageReindex;
 import org.folio.services.reindex.ReindexResourceName;
@@ -17,6 +18,7 @@ import static org.folio.rest.persist.PgUtil.getById;
 
 public class ReindexAuthoritiesAPI implements AuthorityStorageReindex {
 
+  @Validate
   @Override
   public void postAuthorityStorageReindex(Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler,
@@ -29,6 +31,7 @@ public class ReindexAuthoritiesAPI implements AuthorityStorageReindex {
         PostAuthorityStorageReindexResponse.respond500WithTextPlain(error.getMessage()))));
   }
 
+  @Validate
   @Override
   public void getAuthorityStorageReindexById(String id, Map<String, String> okapiHeaders,
                                              Handler<AsyncResult<Response>> asyncResultHandler,
@@ -38,6 +41,7 @@ public class ReindexAuthoritiesAPI implements AuthorityStorageReindex {
       vertxContext, GetAuthorityStorageReindexByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteAuthorityStorageReindexById(String id, Map<String, String> okapiHeaders,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,

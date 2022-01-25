@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.jaxrs.model.NatureOfContentTerms;
 import org.folio.rest.persist.Criteria.Limit;
@@ -40,7 +41,7 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
   private static final Logger log             = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 
-
+  @Validate
   @Override
   public void getNatureOfContentTerms(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
@@ -78,6 +79,7 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
     });
   }
 
+  @Validate
   @Override
   public void postNatureOfContentTerms(String lang, NatureOfContentTerm entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -111,12 +113,14 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
     });
   }
 
+  @Validate
   @Override
   public void getNatureOfContentTermsById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, NatureOfContentTerm.class, id, okapiHeaders,
       vertxContext, GetNatureOfContentTermsByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteNatureOfContentTermsById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -151,6 +155,7 @@ public class NatureOfContentTermAPI implements org.folio.rest.jaxrs.resource.Nat
     });
   }
 
+  @Validate
   @Override
   public void putNatureOfContentTermsById(String id, String lang, NatureOfContentTerm entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

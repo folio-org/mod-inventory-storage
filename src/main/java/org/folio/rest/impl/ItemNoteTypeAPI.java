@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ItemNoteType;
 import org.folio.rest.jaxrs.model.ItemNoteTypes;
 import org.folio.rest.persist.Criteria.Limit;
@@ -38,6 +39,7 @@ public class ItemNoteTypeAPI implements org.folio.rest.jaxrs.resource.ItemNoteTy
   private static final Logger log             = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 
+  @Validate
   @Override
   public void getItemNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     /**
@@ -82,6 +84,7 @@ public class ItemNoteTypeAPI implements org.folio.rest.jaxrs.resource.ItemNoteTy
     });
   }
 
+  @Validate
   @Override
   public void postItemNoteTypes(String lang, ItemNoteType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -121,12 +124,14 @@ public class ItemNoteTypeAPI implements org.folio.rest.jaxrs.resource.ItemNoteTy
     });
   }
 
+  @Validate
   @Override
   public void getItemNoteTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, ItemNoteType.class, id,
         okapiHeaders, vertxContext, GetItemNoteTypesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteItemNoteTypesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -167,6 +172,7 @@ public class ItemNoteTypeAPI implements org.folio.rest.jaxrs.resource.ItemNoteTy
     });
   }
 
+  @Validate
   @Override
   public void putItemNoteTypesById(String id, String lang, ItemNoteType entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstanceStatus;
 import org.folio.rest.jaxrs.model.InstanceStatuses;
 import org.folio.rest.persist.Criteria.Limit;
@@ -39,6 +40,7 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
   private static final Logger LOG = LogManager.getLogger();
   private static final Messages MESSAGES = Messages.getInstance();
 
+  @Validate
   @Override
   public void deleteInstanceStatuses(String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -69,6 +71,7 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
     }
   }
 
+  @Validate
   @Override
   public void getInstanceStatuses(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -110,6 +113,7 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
     });
   }
 
+  @Validate
   @Override
   public void postInstanceStatuses(String lang, InstanceStatus entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -156,12 +160,14 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
     });
   }
 
+  @Validate
   @Override
   public void getInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(RESOURCE_TABLE, InstanceStatus.class, instanceStatusId,
         okapiHeaders, vertxContext, GetInstanceStatusesByInstanceStatusIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -198,6 +204,7 @@ public class InstanceStatusAPI implements org.folio.rest.jaxrs.resource.Instance
     });
   }
 
+  @Validate
   @Override
   public void putInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, InstanceStatus entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

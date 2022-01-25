@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.validation.constraints.Pattern;
 import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
@@ -48,7 +47,7 @@ public class OaiPmhViewInstancesAPI extends AbstractInstanceRecordsAPI implement
 
   @Validate
   @Override
-  public void getOaiPmhViewUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext,
+  public void getOaiPmhViewUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords, String lang, RoutingContext routingContext,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     fetchRecordsByQuery(SQL_UPDATED_INSTANCES_IDS,

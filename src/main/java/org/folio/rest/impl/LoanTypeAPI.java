@@ -234,6 +234,7 @@ public class LoanTypeAPI implements org.folio.rest.jaxrs.resource.LoanTypes {
     });
   }
 
+  @Validate
   @Override
   public void deleteLoanTypes(String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
