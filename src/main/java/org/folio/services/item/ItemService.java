@@ -126,7 +126,8 @@ public class ItemService {
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
     PutData putData = new PutData();
-    return getItemAndHolding(itemId, newItem.getHoldingsRecordId(), putData)
+    return getItemAndHolding(itemId, newItem.getHoldingsRecordId())
+      .onSuccess(putData::set)
       .compose(x -> refuseWhenHridChanged(putData.item, newItem))
       .map(x -> effectiveValuesService.populateEffectiveValues(newItem, putData.holdingsRecord))
       .compose(x -> updateItem(newItem))
@@ -203,13 +204,17 @@ public class ItemService {
   private static class PutData {
     private Item item;
     private HoldingsRecord holdingsRecord;
+    public void set(PutData other) {
+      item = other.item;
+      holdingsRecord = other.holdingsRecord;
+    }
   }
 
   /**
    * Fetch item with itemId and holdings record of that item from database
    * and save them in putData.
    */
-  private Future<Void> getItemAndHolding(String itemId, String holdingsId, PutData putData) {
+  private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
     String sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
         + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
         + "LEFT JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
@@ -227,9 +232,10 @@ public class ItemService {
                 PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(
                     "holdingsRecordId not found: " + holdingsId)));
           }
+          PutData putData = new PutData();
           putData.item = readValue(row.getString(0), Item.class);
           putData.holdingsRecord = readValue(row.getString(1), HoldingsRecord.class);
-          return Future.succeededFuture();
+          return Future.succeededFuture(putData);
         });
   }
 
