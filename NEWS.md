@@ -3,6 +3,7 @@
 * Added administrative notes to item, instance, and holdings records (MODINVSTOR-834, MODINVSTOR-833, MODINVSTOR-832)
 * Upgrade to RMB 33.1.3. (CVE-2021-44228) (MODINVSTOR-851)
 * Introduces validation against RAML API specs for 147 APIs (MODINVSTOR-24)
+* Upgrade to RMB 33.2.4  (MODINVSTOR-868)
 
 ## 22.0.0 2021-10-06
 
