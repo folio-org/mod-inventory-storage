@@ -210,10 +210,6 @@ public class ItemService {
     }
   }
 
-  /**
-   * Fetch item with itemId and holdings record of that item from database
-   * and save them in putData.
-   */
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
     String sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
         + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
