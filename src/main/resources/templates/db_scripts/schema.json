@@ -954,6 +954,11 @@
           "tOps": "ADD"
         }
       ]
+    },
+    {
+      "tableName": "async_migration_job",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [

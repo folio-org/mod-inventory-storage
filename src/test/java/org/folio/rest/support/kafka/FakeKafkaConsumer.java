@@ -29,6 +29,8 @@ public final class FakeKafkaConsumer {
     new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> authorityEvents =
     new ConcurrentHashMap<>();
+  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> migrationEvents =
+    new ConcurrentHashMap<>();
 
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
@@ -40,8 +42,9 @@ public final class FakeKafkaConsumer {
     final var HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
     final var ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
     final var AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
+    final var MIGRATION_TOPIC_NAME = "folio.test_tenant.inventory.async-migration";
 
-    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME));
+    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME, MIGRATION_TOPIC_NAME));
     consumer.handler(message -> {
       final List<KafkaConsumerRecord<String, JsonObject>> storageList;
 
@@ -60,6 +63,10 @@ public final class FakeKafkaConsumer {
           break;
         case AUTHORITY_TOPIC_NAME:
           storageList = authorityEvents.computeIfAbsent(message.key(),
+            k -> new ArrayList<>());
+          break;
+        case MIGRATION_TOPIC_NAME:
+          storageList = migrationEvents.computeIfAbsent(message.key(),
             k -> new ArrayList<>());
           break;
         default:
@@ -84,6 +91,10 @@ public final class FakeKafkaConsumer {
 
   public static int getAllPublishedAuthoritiesCount() {
     return authorityEvents.size();
+  }
+
+  public static int getAllPublishedMigrationsCount() {
+    return migrationEvents.size();
   }
 
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getInstanceEvents(
