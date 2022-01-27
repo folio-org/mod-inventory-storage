@@ -4,7 +4,9 @@ import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
+import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.ItemStorage.DeleteItemStorageItemsByItemIdResponse;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PostItemStorageItemsResponse;
@@ -14,7 +16,7 @@ import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
@@ -23,29 +25,41 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.ItemRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
+import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
-import org.folio.services.holding.HoldingsService;
 import org.folio.validator.CommonValidators;
 
 public class ItemService {
   private static final Logger log = getLogger(ItemService.class);
+  private static final Pattern KEY_ALREADY_EXISTS_PATTERN = Pattern.compile(
+      ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
+  private static final Pattern KEY_NOT_PRESENT_PATTERN = Pattern.compile(
+      ": Key \\(([^=]+)\\)=\\((.*)\\) is not present in table \"(.*)\".$");
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -53,12 +67,16 @@ public class ItemService {
   private final Map<String, String> okapiHeaders;
   private final ItemDomainEventPublisher domainEventService;
   private final ItemRepository itemRepository;
+  private final PostgresClient postgresClient;
+  private final PostgresClientFuturized postgresClientFuturized;
+
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
-    final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
+    postgresClient = postgresClient(vertxContext, okapiHeaders);
+    postgresClientFuturized = new PostgresClientFuturized(postgresClient);
     hridManager = new HridManager(vertxContext, postgresClient);
     effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
@@ -106,19 +124,25 @@ public class ItemService {
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
-    return itemRepository.getById(itemId)
-      .compose(CommonValidators::refuseIfNotFound)
-      .compose(oldItem -> refuseWhenHridChanged(oldItem, newItem))
-      .compose(oldItem -> effectiveValuesService.populateEffectiveValues(newItem)
-        .compose(notUsed -> {
-          final Promise<Response> putResult = promise();
-
-          put(ITEM_TABLE, newItem, itemId, okapiHeaders, vertxContext,
-            PutItemStorageItemsByItemIdResponse.class, putResult);
-
-          return putResult.future()
-            .compose(domainEventService.publishUpdated(oldItem));
-        }));
+    newItem.setId(itemId);
+    PutData putData = new PutData();
+    return getItemAndHolding(itemId, newItem.getHoldingsRecordId())
+      .onSuccess(putData::set)
+      .compose(x -> refuseWhenHridChanged(putData.item, newItem))
+      .map(x -> effectiveValuesService.populateEffectiveValues(newItem, putData.holdingsRecord))
+      .compose(x -> updateItem(newItem))
+      .compose(finalItem -> domainEventService.publishUpdated(finalItem, putData.item, putData.holdingsRecord))
+      .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
+      .otherwise(e -> {
+        if (e instanceof ResponseException) {
+          return ((ResponseException) e).getResponse();
+        }
+        if (e instanceof BadRequestException) {
+          return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(e.getMessage());
+        }
+        log.error(e.getMessage(), e);
+        return PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage());
+      });
   }
 
   public Future<Response> deleteItem(String itemId) {
@@ -175,5 +199,84 @@ public class ItemService {
 
   private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(Item item) {
     return connection -> itemRepository.update(connection, item.getId(), item);
+  }
+
+  private static class PutData {
+    private Item item;
+    private HoldingsRecord holdingsRecord;
+    public void set(PutData other) {
+      item = other.item;
+      holdingsRecord = other.holdingsRecord;
+    }
+  }
+
+  private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
+    String sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
+        + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
+        + "LEFT JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
+        + "  ON holdings_record.id = $2 "
+        + "WHERE item.id = $1";
+    return postgresClient.execute(sql, Tuple.of(itemId, holdingsId))
+        .compose(rowSet -> {
+          if (rowSet.size() == 0) {
+            return Future.failedFuture(new ResponseException(
+                PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Not found")));
+          }
+          var row = rowSet.iterator().next();
+          if (row.getString(1) == null) {
+            return Future.failedFuture(new ResponseException(
+                PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(
+                    "holdingsRecordId not found: " + holdingsId)));
+          }
+          PutData putData = new PutData();
+          putData.item = readValue(row.getString(0), Item.class);
+          putData.holdingsRecord = readValue(row.getString(1), HoldingsRecord.class);
+          return Future.succeededFuture(putData);
+        });
+  }
+
+  private Future<Item> updateItem(Item item) {
+    JsonObject record;
+    try{
+      record = pojo2JsonObject(item);
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
+    String tableName = postgresClientFuturized.getFullTableName(ITEM_TABLE);
+    Tuple tuple = Tuple.of(record, item.getId());
+
+    return postgresClient.execute("UPDATE " + tableName + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb::text", tuple)
+      .compose(rowSet -> {
+        if (rowSet.size() != 1) {
+          return Future.failedFuture(new ResponseException(
+              PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Record not Found")));
+        }
+        return Future.succeededFuture(readValue(rowSet.iterator().next().getString(0), Item.class));
+      })
+      .recover(e -> Future.failedFuture(new ResponseException(putFailure(e))));
+  }
+
+  private static Response putFailure(Throwable e) {
+    String msg = PgExceptionUtil.badRequestMessage(e);
+    if (msg == null) {
+      msg = e.getMessage();
+    }
+    if (PgExceptionUtil.isVersionConflict(e)) {
+      return PutItemStorageItemsByItemIdResponse.respond409WithTextPlain(msg);
+    }
+    Matcher matcher = KEY_NOT_PRESENT_PATTERN.matcher(msg);
+    if (matcher.find()) {
+      String field = matcher.group(1);
+      String value = matcher.group(2);
+      String refTable = matcher.group(3);
+      msg = "Cannot set item " + field + " = " + value
+          + " because it does not exist in " + refTable + ".id.";
+    } else {
+      matcher = KEY_ALREADY_EXISTS_PATTERN.matcher(msg);
+      if (matcher.find()) {
+        msg = matcher.group(1) + " value already exists in table item: " + matcher.group(2);
+      }
+    }
+    return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(msg);
   }
 }

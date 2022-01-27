@@ -785,8 +785,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response response = completed.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(),
-        containsString("Cannot set item.materialtypeid"));
+    assertThat(response.getBody(), allOf(
+        containsString("Cannot set item"), containsString("materialtypeid")));
   }
 
   @Test
@@ -2570,15 +2570,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         ResponseHandler.text(completed));
     Response response = completed.get(5, TimeUnit.SECONDS);
 
-    String expectedResponseBody = String.format(
-      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
-      nonExistentStatisticalCodeId.toString(),
-      itemId
-    );
-
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(),
-        is(expectedResponseBody));
+    assertThat(response.getBody(), allOf(
+        containsString("statistical code doesn't exist:"),
+        containsString(nonExistentStatisticalCodeId.toString()),
+        containsString("foreign key violation in statisticalCodeIds array of item"),
+        containsString(itemId)));
   }
 
   private static JsonObject createItemRequest(
