@@ -475,6 +475,8 @@
         }
       ]
     },
+    {},
+
     {
       "id": "identifier-types",
       "version": "1.2",
@@ -1290,6 +1292,33 @@
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instances/iteration/{id}",
           "permissionsRequired": ["inventory-storage.instance.iteration.item.delete"]
+        }
+      ]
+    },
+    {
+      "id":"related-instances",
+      "version":"1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/related-instances",
+          "permissionsRequired": ["inventory-storage.related-instances.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/related-instances/{id}",
+          "permissionsRequired": ["inventory-storage.related-instances.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/related-instances",
+          "permissionsRequired": ["inventory-storage.related-instances.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/related-instances/{id}",
+          "permissionsRequired": ["inventory-storage.related-instances.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/related-instances/{id}",
+          "permissionsRequired": ["inventory-storage.related-instances.item.delete"]
         }
       ]
     },
@@ -2477,6 +2506,31 @@
       "permissionName": "inventory-storage.inventory-view.instances.collection.get",
       "displayName": "inventory view - get instances by query with their holdings and items",
       "description": "get instances by query with their holdings and items"
+    },
+    {
+      "permissionName":"inventory-storage.related-instances.collection.get",
+      "displayName": "inventory storage - get related-instances collection",
+      "description": "get related-instances collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instances.item.get",
+      "displayName": "inventory storage - get individual related-instance",
+      "description": "get individual related-instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instances.item.post",
+      "displayName": "inventory storage - create individual related-instances",
+      "description": "create individual related-instances in storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instances.item.put",
+      "displayName": "inventory storage - modify related-instances",
+      "description": "modify related-instances in storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instances.item.delete",
+      "displayName": "inventory storage - delete individual related-instances",
+      "description": "delete individual related-instances from storage"
     },
     {
       "permissionName": "inventory-storage.related-instance-types.collection.get",
