@@ -3,6 +3,7 @@
 * Added administrative notes to item, instance, and holdings records (MODINVSTOR-834, MODINVSTOR-833, MODINVSTOR-832)
 * Upgrade to RMB 33.1.3. (CVE-2021-44228) (MODINVSTOR-851)
 * Introduces validation against RAML API specs for 147 APIs (MODINVSTOR-24)
+* Reject non-existing statistical code IDs (MODINVSTOR-676)
 * Reject non-UUID statistical code IDs (MODINVSTOR-755)
 * Provides `item-storage 10.0` (MODINVSTOR-755)
 * Provides `item-storage-batch-sync 2.0` (MODINVSTOR-755)
