@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.alternativeTitleTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.authorityNoteTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.callNumberTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.classificationTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.contributorNameTypesUrl;
@@ -40,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.api.entities.AlternativeTitleType;
+import org.folio.rest.api.entities.AuthorityNoteType;
 import org.folio.rest.api.entities.CallNumberType;
 import org.folio.rest.api.entities.ClassificationType;
 import org.folio.rest.api.entities.ContributorNameType;
@@ -615,6 +617,37 @@ public class ReferenceTablesTest extends TestBase {
     testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
+  @Test
+  public void authorityNoteTypesLoaded()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+    URL apiUrl = authorityNoteTypesUrl("");
+
+    Response searchResponse = getReferenceRecords(apiUrl);
+    validateNumberOfReferenceRecords("authority note types", searchResponse, 1, 10);
+  }
+
+  @Test
+  public void authorityNoteTypesBasicCrud()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+    String entityPath = "/authority-note-types";
+    AuthorityNoteType entity = new AuthorityNoteType("Test authority note type", "Test source");
+
+    Response postResponse = createReferenceRecord(entityPath, entity);
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    String updateProperty = AuthorityNoteType.NAME_KEY;
+
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+  }
 
   @Test
   public void modesOfIssuanceLoaded()
@@ -850,7 +883,7 @@ public class ReferenceTablesTest extends TestBase {
     entity.put("id", entityId);
     Response postResponse1 = createReferenceRecord(path, entity);
     if (Arrays.asList("/electronic-access-relationships", "/instance-statuses",
-      "/modes-of-issuance", "/statistical-code-types", "/holdings-types").contains(path)) {
+      "/modes-of-issuance", "/statistical-code-types", "/holdings-types", "/authority-note-types").contains(path)) {
       assertThat(postResponse1.getStatusCode(), is(422));
     } else {
       assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
@@ -883,7 +916,7 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put("id", "baduuid");
     Response postResponse2 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/instance-note-types", "/nature-of-content-terms").contains(path)) {
+    if (Arrays.asList("/instance-note-types", "/authority-note-types", "/nature-of-content-terms").contains(path)) {
       assertThat(postResponse2.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
     } else {
       assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));

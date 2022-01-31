@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationship;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationships;
 import org.folio.rest.persist.Criteria.Limit;
@@ -42,6 +43,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
   private static final Logger LOG = LogManager.getLogger();
   private static final Messages MESSAGES = Messages.getInstance();
 
+  @Validate
   @Override
   public void getElectronicAccessRelationships(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -83,6 +85,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
     });
   }
 
+  @Validate
   @Override
   public void postElectronicAccessRelationships(String lang, ElectronicAccessRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -129,12 +132,14 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
     });
   }
 
+  @Validate
   @Override
   public void getElectronicAccessRelationshipsByElectronicAccessRelationshipId(String electronicAccessRelationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(RESOURCE_TABLE, ElectronicAccessRelationship.class, electronicAccessRelationshipId,
         okapiHeaders, vertxContext, GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteElectronicAccessRelationshipsByElectronicAccessRelationshipId(String electronicAccessRelationshipId, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -171,6 +176,7 @@ public class ElectronicAccessRelationshipAPI implements org.folio.rest.jaxrs.res
     });
   }
 
+  @Validate
   @Override
   public void putElectronicAccessRelationshipsByElectronicAccessRelationshipId(String electronicAccessRelationshipId, String lang, ElectronicAccessRelationship entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

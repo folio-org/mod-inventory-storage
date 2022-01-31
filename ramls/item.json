@@ -144,6 +144,14 @@
       "description": "Date and time when the item was damaged.",
       "type": "string"
     },
+    "administrativeNotes":{
+      "type": "array",
+      "description": "Administrative notes",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
     "notes": {
       "type": "array",
       "description": "Notes about action, copy, binding etc.",

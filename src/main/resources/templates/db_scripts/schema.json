@@ -1,6 +1,13 @@
 {
   "tables": [
     {
+      "tableName": "authority",
+      "fromModuleVersion": "22.1.0",
+      "withMetadata": true,
+      "withAuditing": false,
+      "withOptimisticLocking": "logOnConflict"
+    },
+    {
       "tableName": "loan_type",
       "withMetadata": true,
       "withAuditing": false,
@@ -336,7 +343,7 @@
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
       "withAuditing": true,
-      "withOptimisticLocking": "logOnConflict",
+      "withOptimisticLocking": "failOnConflict",
       "auditingTableName": "audit_instance",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -571,6 +578,17 @@
       ]
     },
     {
+      "tableName": "authority_note_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "instance_note_type",
       "withMetadata": true,
       "withAuditing": false,
@@ -630,7 +648,7 @@
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
       "withAuditing": true,
-      "withOptimisticLocking": "logOnConflict",
+      "withOptimisticLocking": "failOnConflict",
       "auditingTableName": "audit_holdings_record",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -737,7 +755,7 @@
       "withMetadata": true,
       "fromModuleVersion": "19.2.0",
       "withAuditing": true,
-      "withOptimisticLocking": "logOnConflict",
+      "withOptimisticLocking": "failOnConflict",
       "auditingTableName": "audit_item",
       "auditingFieldName": "record",
       "customSnippetPath": "audit-delete-trigger.sql",
@@ -925,6 +943,17 @@
       "tableName": "iteration_job",
       "withMetadata": false,
       "withAuditing": false
+    },
+    {
+      "tableName": "related_instance_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "scripts": [
@@ -1057,8 +1086,8 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/addEffectiveHoldingsToItemsAndHoldingsView.sql",
       "fromModuleVersion": "20.3.0"
-  	},
-	  {
+    },
+    {
       "run": "after",
       "snippetPath": "addInstanceFormatsAudioBelt.sql",
       "fromModuleVersion": "20.3.0"
@@ -1080,7 +1109,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "populatePublicationPeriod.sql",
+      "snippetPath": "itemStatisticalCodeReferenceCheckTrigger.sql",
       "fromModuleVersion": "22.1.0"
     }
   ]

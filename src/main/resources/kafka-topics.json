@@ -13,6 +13,10 @@
       "numPartitions": 50
     },
     {
+      "name": "inventory.authority",
+      "numPartitions": 50
+    },
+    {
       "name": "inventory.instance-contribution",
       "numPartitions": 50
     }

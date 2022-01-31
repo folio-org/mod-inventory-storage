@@ -21,6 +21,7 @@ import io.vertx.sqlclient.RowSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
 import org.folio.rest.jaxrs.model.ItemDamageStatuses;
 import org.folio.rest.jaxrs.resource.ItemDamagedStatuses;
@@ -38,6 +39,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
   private final Messages messages = Messages.getInstance();
   private PostgresClientFactory pgClientFactory = new PostgresClientFactory();
 
+  @Validate
   @Override
   public void getItemDamagedStatuses(
     String query,
@@ -91,6 +93,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
         .withTotalRecords(results.getResultInfo().getTotalRecords()));
   }
 
+  @Validate
   @Override
   public void postItemDamagedStatuses(
     String lang,
@@ -128,6 +131,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
         .map(entity::withId);
   }
 
+  @Validate
   @Override
   public void getItemDamagedStatusesById(
     String id,
@@ -166,6 +170,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
         .getById(REFERENCE_TABLE, id, ItemDamageStatus.class, promise));
   }
 
+  @Validate
   @Override
   public void deleteItemDamagedStatusesById(
     String id,
@@ -224,6 +229,7 @@ public class ItemDamagedStatusAPI implements ItemDamagedStatuses {
         .map(RowSet<Row>::rowCount);
   }
 
+  @Validate
   @Override
   public void putItemDamagedStatusesById(
     String id,

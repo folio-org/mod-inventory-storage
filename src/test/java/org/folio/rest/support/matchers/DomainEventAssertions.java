@@ -9,12 +9,15 @@ import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.api.TestBase.holdingsClient;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getAuthorityEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstAuthorityEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstItemEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getItemEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastAuthorityEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
@@ -49,7 +52,7 @@ public final class DomainEventAssertions {
    * <a href="https://issues.folio.org/browse/MODINVSTOR-754">MODINVSTOR-754</a>
    */
   private static ConditionFactory await() {
-    return Awaitility.await().atMost(2, SECONDS);
+    return Awaitility.await().atMost(5, SECONDS);
   }
 
   private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {
@@ -138,6 +141,15 @@ public final class DomainEventAssertions {
     assertCreateEvent(getFirstInstanceEvent(instanceId), instance);
   }
 
+  public static void assertCreateEventForAuthority(JsonObject authority) {
+    final String id = authority.getString("id");
+
+    await()
+      .until(() -> getAuthorityEvents(id).size(), greaterThan(0));
+
+    assertCreateEvent(getFirstAuthorityEvent(id), authority);
+  }
+
   public static void assertCreateEventForInstances(JsonArray instances) {
     assertCreateEventForInstances(instances.stream()
       .map(obj -> (JsonObject) obj)
@@ -167,6 +179,22 @@ public final class DomainEventAssertions {
     assertRemoveAllEvent(getLastInstanceEvent(NULL_INSTANCE_ID));
   }
 
+  public static void assertRemoveEventForAuthority(JsonObject authority) {
+    final String id = authority.getString("id");
+
+    await()
+      .until(() -> getAuthorityEvents(id).size(), greaterThan(1));
+
+    assertRemoveEvent(getLastAuthorityEvent(id), authority);
+  }
+
+  public static void assertRemoveAllEventForAuthority() {
+    await()
+      .until(() -> getAuthorityEvents(NULL_INSTANCE_ID).size(), greaterThan(0));
+
+    assertRemoveAllEvent(getLastAuthorityEvent(NULL_INSTANCE_ID));
+  }
+
   public static void assertUpdateEventForInstance(JsonObject oldInstance, JsonObject newInstance) {
     final String instanceId = oldInstance.getString("id");
 
@@ -174,6 +202,15 @@ public final class DomainEventAssertions {
       .until(() -> getInstanceEvents(instanceId).size(), greaterThan(1));
 
     assertUpdateEvent(getLastInstanceEvent(instanceId), oldInstance, newInstance);
+  }
+
+  public static void assertUpdateEventForAuthority(JsonObject oldAuthority, JsonObject newAuthority) {
+    final String id = oldAuthority.getString("id");
+
+    await()
+      .until(() -> getAuthorityEvents(id).size(), greaterThan(1));
+
+    assertUpdateEvent(getLastAuthorityEvent(id), oldAuthority, newAuthority);
   }
 
   public static void assertCreateEventForItem(JsonObject item) {

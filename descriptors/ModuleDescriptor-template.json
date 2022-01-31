@@ -16,6 +16,58 @@
       }]
     },
     {
+      "id": "authority-storage",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/authorities",
+          "permissionsRequired": ["inventory-storage.authorities.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-storage/authorities",
+          "permissionsRequired": ["inventory-storage.authorities.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-storage/authorities/{id}",
+          "permissionsRequired": ["inventory-storage.authorities.item.delete"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-storage/authorities",
+          "permissionsRequired": ["inventory-storage.authorities.collection.delete"]
+        }
+      ]
+    },
+    {
+      "id": "authority-reindex",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/authority-storage/reindex",
+          "permissionsRequired": ["authority-storage.authority.reindex.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-storage/reindex/{id}",
+          "permissionsRequired": ["authority-storage.authority.reindex.item.get"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-storage/reindex/{id}",
+          "permissionsRequired": ["authority-storage.authority.reindex.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "item-storage",
       "version": "10.0",
       "handlers": [
@@ -869,6 +921,33 @@
       ]
     },
     {
+      "id": "authority-note-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-note-types",
+          "permissionsRequired": ["inventory-storage.authority-note-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-note-types",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-note-types/{id}",
+          "permissionsRequired": ["inventory-storage.authority-note-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "instance-note-types",
       "version": "1.0",
       "handlers": [
@@ -1213,6 +1292,33 @@
           "permissionsRequired": ["inventory-storage.instance.iteration.item.delete"]
         }
       ]
+    },
+    {
+      "id": "related-instance-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/related-instance-types",
+          "permissionsRequired": ["inventory-storage.related-instance-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/related-instance-types/{id}",
+          "permissionsRequired": ["inventory-storage.related-instance-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/related-instance-types",
+          "permissionsRequired": ["inventory-storage.related-instance-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/related-instance-types/{id}",
+          "permissionsRequired": ["inventory-storage.related-instance-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/related-instance-types/{id}",
+          "permissionsRequired": ["inventory-storage.related-instance-types.item.delete"]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -1240,6 +1346,66 @@
       "permissionName": "inventory-storage.instance-relationships.item.delete",
       "displayName": "inventory storage - delete an instance relationship",
       "description": "delete an instance relationship"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.collection.get",
+      "displayName": "inventory storage - get authority collection",
+      "description": "get authority collection from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.collection.delete",
+      "displayName": "inventory storage - delete entire authority collection",
+      "description": "delete entire authority collection from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.get",
+      "displayName": "inventory storage - get individual authority record",
+      "description": "get individual authority record from the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.post",
+      "displayName": "inventory storage - create individual authority record",
+      "description": "create individual authority record in the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.put",
+      "displayName": "inventory storage - modify authority record",
+      "description": "modify authority record in the storage"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.item.delete",
+      "displayName": "inventory storage - delete individual authority record",
+      "description": "delete individual authority record from the storage"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.item.delete",
+      "displayName": "inventory storage - cancel reindex job",
+      "description": "cancel a running reindexing job"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.item.get",
+      "displayName": "inventory storage - get reindex job by id",
+      "description": "get reindex job by id"
+    },
+    {
+      "permissionName": "authority-storage.authority.reindex.post",
+      "displayName": "inventory storage - submit reindex authority job",
+      "description": "submit reindex authority job"
+    },
+    {
+      "permissionName": "inventory-storage.authorities.all",
+      "displayName": "inventory storage module - all authorities permissions",
+      "description": "Entire set of permissions needed to use authorities in the inventory storage module",
+      "subPermissions": [
+        "inventory-storage.authorities.item.get",
+        "inventory-storage.authorities.item.post",
+        "inventory-storage.authorities.item.put",
+        "inventory-storage.authorities.item.delete",
+        "inventory-storage.authorities.collection.delete",
+        "authority-storage.authority.reindex.post",
+        "authority-storage.authority.reindex.item.get",
+        "authority-storage.authority.reindex.item.delete"
+      ]
     },
     {
       "permissionName": "inventory-storage.items.collection.get",
@@ -2065,7 +2231,31 @@
       "displayName": "inventory storage - delete individual instance-note-type",
       "description": "delete individual instance-note-type from storage"
     },
-
+    {
+      "permissionName": "inventory-storage.authority-note-types.collection.get",
+      "displayName": "inventory storage - get authority-note-type collection",
+      "description": "get authority-note-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.get",
+      "displayName": "inventory storage - get individual authority-note-type",
+      "description": "get individual authority-note-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.post",
+      "displayName": "inventory storage - create individual authority-note-type",
+      "description": "create individual authority-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.put",
+      "displayName": "inventory storage - modify authority-note-type",
+      "description": "modify authority-note-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-note-types.item.delete",
+      "displayName": "inventory storage - delete individual authority-note-type",
+      "description": "delete individual authority-note-type from storage"
+    },
     {
       "permissionName": "inventory-storage.holdings-note-types.collection.get",
       "displayName": "inventory storage - get holdings-note-type collection",
@@ -2202,8 +2392,8 @@
       "permissionName": "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
       "displayName": "inventory storage - get instances holdings and items for inventory storage",
       "description": "get instances holdings and items for inventory storage"
-	},
-	{
+  },
+  {
       "permissionName": "inventory-storage.holdings-sources.collection.get",
       "displayName": "inventory storage - get holdings-source collection",
       "description": "get holdings-records-source collection from storage"
@@ -2289,6 +2479,31 @@
       "description": "get instances by query with their holdings and items"
     },
     {
+      "permissionName": "inventory-storage.related-instance-types.collection.get",
+      "displayName": "inventory storage - get related-instance-type collection",
+      "description": "get related-instance-type collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instance-types.item.get",
+      "displayName": "inventory storage - get individual related-instance-type",
+      "description": "get individual related-instance-type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instance-types.item.post",
+      "displayName": "inventory storage - create individual related-instance-type",
+      "description": "create individual related-instance-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instance-types.item.put",
+      "displayName": "inventory storage - modify related-instance-type",
+      "description": "modify related-instance-type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instance-types.item.delete",
+      "displayName": "inventory storage - delete individual related-instance-type",
+      "description": "delete individual related-instance-type from storage"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2302,6 +2517,15 @@
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
         "inventory-storage.items.batch.post",
+        "inventory-storage.authorities.collection.get",
+        "inventory-storage.authorities.item.get",
+        "inventory-storage.authorities.item.post",
+        "inventory-storage.authorities.item.put",
+        "inventory-storage.authorities.item.delete",
+        "inventory-storage.authorities.collection.delete",
+        "inventory-storage.authority.reindex.post",
+        "inventory-storage.authority.reindex.item.get",
+        "inventory-storage.authority.reindex.item.delete",
         "inventory-storage.holdings.collection.get",
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",
@@ -2447,6 +2671,11 @@
         "inventory-storage.call-number-types.item.post",
         "inventory-storage.call-number-types.item.put",
         "inventory-storage.call-number-types.item.delete",
+        "inventory-storage.authority-note-types.collection.get",
+        "inventory-storage.authority-note-types.item.get",
+        "inventory-storage.authority-note-types.item.post",
+        "inventory-storage.authority-note-types.item.put",
+        "inventory-storage.authority-note-types.item.delete",
         "inventory-storage.instance-note-types.collection.get",
         "inventory-storage.instance-note-types.item.get",
         "inventory-storage.instance-note-types.item.post",

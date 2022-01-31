@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.validation.constraints.Pattern;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +38,7 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
   @Validate
   @Override
   public void getInventoryHierarchyUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords,
-      boolean onlyInstanceUpdateDate, @Pattern(regexp = "[a-zA-Z]{2}") String lang, RoutingContext routingContext, Map<String, String> okapiHeaders,
+      boolean onlyInstanceUpdateDate, String lang, RoutingContext routingContext, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     if(StringUtils.isEmpty(startDate) && StringUtils.isEmpty(endDate)) {
       String sql = SQL_INITIAL_LOAD;

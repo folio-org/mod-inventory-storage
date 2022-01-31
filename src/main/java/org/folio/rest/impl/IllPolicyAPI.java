@@ -90,7 +90,7 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
     });
   }
 
-
+  @Validate
   @Override
   public void postIllPolicies(String lang, IllPolicy entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -130,12 +130,14 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
     });
   }
 
+  @Validate
   @Override
   public void getIllPoliciesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, IllPolicy.class, id,
         okapiHeaders, vertxContext, GetIllPoliciesByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putIllPoliciesById(String id, String lang, IllPolicy entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -174,6 +176,7 @@ public class IllPolicyAPI implements org.folio.rest.jaxrs.resource.IllPolicies {
     });
   }
 
+  @Validate
   @Override
   public void deleteIllPoliciesById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {

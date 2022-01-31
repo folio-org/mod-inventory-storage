@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +59,6 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
@@ -98,24 +98,23 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void ServerErrorWrittenOutOnDatabaseError() throws InterruptedException, ExecutionException, TimeoutException {
+  public void serverErrorWrittenOutOnDatabaseError() throws Exception {
 
-    setFaultyStatisticalCode();
+    withFaultyViewFunction(() -> {
+      params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
 
-    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+      List<JsonObject> instances = requestInventoryHierarchyViewUpdatedInstanceIds(params, response -> assertThat(response.getStatusCode(), is(200)));
+      UUID[] instanceIds = instances.stream()
+          .map(json -> UUID.fromString(json.getString("instanceId")))
+          .toArray(UUID[]::new);
 
-    List<JsonObject> instances = requestInventoryHierarchyViewUpdatedInstanceIds(params, response -> assertThat(response.getStatusCode(), is(200)));
-    UUID[] instanceIds = instances.stream()
-      .map(json -> UUID.fromString(json.getString("instanceId")))
-      .toArray(UUID[]::new);
-
-    List<JsonObject> instancesData = requestInventoryHierarchyItemsAndHoldingsViewInstance(
-      instanceIds, false, response -> assertThat(response.getStatusCode(), is(500)));
-
-    JsonObject error = instancesData.get(0);
-    assertThat(error.getString("message"), is("invalid input syntax for type uuid: \"5t632 ytbg vnc\""));
-    removeFaultyStatisticalCode();
-
+      requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
+        assertThat(response.getStatusCode(), is(500));
+        String message = new JsonObject(response.getBody()).getString("message");
+        assertThat(message, is("function get_items_and_holdings_view(unknown, unknown) does not exist"));
+      });
+      return null;
+    });
   }
 
   @Test
@@ -463,25 +462,22 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     return results;
   }
 
-  private void setFaultyStatisticalCode() {
-    String sql = "UPDATE item SET jsonb=jsonb_set(jsonb, '{statisticalCodeIds}', '[\"5t632 ytbg vnc\"]', true);";
+  /**
+   * Make the view function faulty, run the callable, then always restore the view function.
+   */
+  private void withFaultyViewFunction(Callable<Void> callable) throws Exception {
+    String sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.get_items_and_holdings_view RENAME TO x";
+    PostgresClient.getInstance(getVertx()).execute(sql)
+    .toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
 
-    postgresClient.execute(sql, handler -> {
-      if (handler.failed()) {
-        log.error("Error updating database: " + handler.cause().getMessage());
-      }
-    });
-  }
-
-  private void removeFaultyStatisticalCode() {
-    String sql = "UPDATE item SET jsonb=jsonb_set(jsonb, '{statisticalCodeIds}', '[]', true);";
-
-    postgresClient.selectSingle(sql, handler -> {
-      if (handler.failed()) {
-        log.error("Error updating database: " + handler.cause().getMessage());
-      }
-    });
-
+    try {
+      callable.call();
+    }
+    finally {
+      sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.x RENAME TO get_items_and_holdings_view";
+      PostgresClient.getInstance(getVertx()).execute(sql)
+      .toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
+    }
   }
 
   private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap)

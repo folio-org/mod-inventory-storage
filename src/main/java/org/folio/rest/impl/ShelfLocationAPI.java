@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import org.apache.commons.lang3.NotImplementedException;
 import static org.folio.rest.impl.LocationAPI.LOCATION_TABLE;
 import static org.folio.rest.impl.StorageHelper.*;
+
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Location;
 
 /**
@@ -39,6 +41,7 @@ public class ShelfLocationAPI implements ShelfLocations {
    * Get a list of the new locations, and fake old kind of shelf-locations out
    * of them.
    */
+  @Validate
   @Override
   public void getShelfLocations(
         String query,
@@ -91,6 +94,7 @@ public class ShelfLocationAPI implements ShelfLocations {
    * Get a new-kind of Location object, and convert it to old-style
    * shelf-location.
    */
+  @Validate
   @Override
   public void getShelfLocationsById(
     String id,
@@ -117,6 +121,7 @@ public class ShelfLocationAPI implements ShelfLocations {
         });
   }
 
+  @Validate
   @Override
   public void postShelfLocations(
           String lang,
@@ -127,6 +132,7 @@ public class ShelfLocationAPI implements ShelfLocations {
     throw new NotImplementedException("Creating shelf-locations is DEPRECATED. " + USE_NEW);
   }
 
+  @Validate
   @Override
   public void deleteShelfLocations(
     String lang,
@@ -136,6 +142,7 @@ public class ShelfLocationAPI implements ShelfLocations {
     throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. " + USE_NEW);
   }
 
+  @Validate
   @Override
   public void deleteShelfLocationsById(
           String id,
@@ -145,6 +152,7 @@ public class ShelfLocationAPI implements ShelfLocations {
     throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. " + USE_NEW);
   }
 
+  @Validate
   @Override
   public void putShelfLocationsById(
           String id,

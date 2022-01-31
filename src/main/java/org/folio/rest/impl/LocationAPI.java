@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Locations;
 import org.folio.rest.persist.PgUtil;
@@ -41,6 +42,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
   public static final String SERVICEPOINT_IDS = "servicePointIds";
   public static final String PRIMARY_SERVICEPOINT = "primaryServicePoint";
 
+  @Validate
   @Override
   public void deleteLocations(String lang,
           Map<String, String> okapiHeaders,
@@ -65,6 +67,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 
   // Note, this is the way to get rid of unnecessary try-catch blocks. Use the
   // same everywhere!
+  @Validate
   @Override
   public void getLocations(
     String query,
@@ -105,6 +108,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
         });
   }
 
+  @Validate
   @Override
   public void postLocations(
     String lang,
@@ -154,6 +158,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
 
   }
 
+  @Validate
   @Override
   public void getLocationsById(
     String id,
@@ -166,6 +171,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
         GetLocationsByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteLocationsById(
     String id,
@@ -178,6 +184,7 @@ public class LocationAPI implements org.folio.rest.jaxrs.resource.Locations {
         DeleteLocationsByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void putLocationsById(
     String id,

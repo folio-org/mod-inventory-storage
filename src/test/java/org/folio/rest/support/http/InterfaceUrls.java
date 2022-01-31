@@ -26,6 +26,14 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/item-storage/items" + subPath);
   }
 
+  public static URL authoritiesStorageUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/authority-storage/authorities" + subPath);
+  }
+
+  public static URL authorityReindexUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/authority-storage/reindex" + subPath);
+  }
+
   public static URL itemsStorageSyncUrl(String subPath) {
     return StorageTestSuite.storageUrl("/item-storage/batch/synchronous" + subPath);
   }
@@ -76,7 +84,6 @@ public class InterfaceUrls {
 
   public static URL alternativeTitleTypesUrl(String subPath) {
     return StorageTestSuite.storageUrl("/alternative-title-types" + subPath);
-
   }
 
   public static URL callNumberTypesUrl(String subPath) {
@@ -121,6 +128,10 @@ public class InterfaceUrls {
 
   public static URL natureOfContentTermsUrl(String subPath) {
     return StorageTestSuite.storageUrl("/nature-of-content-terms" + subPath);
+  }
+
+  public static URL authorityNoteTypesUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/authority-note-types" + subPath);
   }
 
   public static URL instanceNoteTypesUrl(String subPath) {
@@ -211,14 +222,18 @@ public class InterfaceUrls {
 
   public static URL instanceReindex(String path) {
     return StorageTestSuite.storageUrl("/instance-storage/reindex" + path);
-
   }
+
   public static URL dereferencedItemStorage(String path) {
     return StorageTestSuite.storageUrl("/item-storage-dereferenced/items" + path);
   }
 
   public static URL instanceIteration(String path) {
     return StorageTestSuite.storageUrl("/instance-storage/instances/iteration" + path);
+  }
+
+  public static URL relatedInstanceTypesStorageUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/related-instance-types" + subPath);
   }
 
 }

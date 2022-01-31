@@ -19,6 +19,7 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.fixtures.AuthorityReindexFixture;
 import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
@@ -43,6 +44,7 @@ public abstract class TestBase {
   protected static ResourceClient instancesClient;
   public static ResourceClient holdingsClient;
   protected static ResourceClient itemsClient;
+  protected static ResourceClient authoritiesClient;
   static ResourceClient locationsClient;
   static ResourceClient callNumberTypesClient;
   static ResourceClient modesOfIssuanceClient;
@@ -58,6 +60,7 @@ public abstract class TestBase {
   static StatisticalCodeFixture statisticalCodeFixture;
   static FakeKafkaConsumer kafkaConsumer;
   static InstanceReindexFixture instanceReindex;
+  static AuthorityReindexFixture authorityReindex;
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -99,6 +102,7 @@ public abstract class TestBase {
     instancesClient = ResourceClient.forInstances(client);
     holdingsClient = ResourceClient.forHoldings(client);
     itemsClient = ResourceClient.forItems(client);
+    authoritiesClient = ResourceClient.forAuthorities(client);
     locationsClient = ResourceClient.forLocations(client);
     callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
     modesOfIssuanceClient = ResourceClient.forModesOfIssuance(client);
@@ -117,6 +121,7 @@ public abstract class TestBase {
     kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
     kafkaConsumer.removeAllEvents();
     instanceReindex = new InstanceReindexFixture(client);
+    authorityReindex = new AuthorityReindexFixture(client);
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 

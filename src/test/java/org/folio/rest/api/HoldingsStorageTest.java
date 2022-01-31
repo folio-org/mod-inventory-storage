@@ -103,18 +103,24 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     setHoldingsSequence(1);
 
     UUID holdingId = UUID.randomUUID();
+    String adminNote = "An admin note";
 
-    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+    JsonObject holdingToCreate = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withPermanentLocation(mainLibraryLocationId)
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create();
+
+    holdingToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
+
+    JsonObject holding = holdingsClient.create(holdingToCreate).getJson();
 
     assertThat(holding.getString("id"), is(holdingId.toString()));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
     assertThat(holding.getString("hrid"), is("ho00000000001"));
     assertThat(holding.getString("effectiveLocationId"), is(mainLibraryLocationId.toString()));
+    assertThat(holding.getJsonArray("administrativeNotes").contains(adminNote), is(true));
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -126,6 +132,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(mainLibraryLocationId.toString()));
     assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
+    assertThat(holdingFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
 
     List<String> tags = getTags(holdingFromGet);
 
@@ -283,7 +290,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
-
+    String adminNote = "an admin note";
     setHoldingsSequence(1);
 
     IndividualResource holdingResource = holdingsClient.create(new HoldingRequestBuilder()
@@ -295,7 +302,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject replacement = holdingResource.copyJson()
       .put("permanentLocationId", annexLibraryLocationId.toString())
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(NEW_TEST_TAG)));
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(NEW_TEST_TAG)))
+      .put("administrativeNotes", new JsonArray().add(adminNote));
 
     holdingsClient.replace(holdingId, replacement);
 
@@ -309,6 +317,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(annexLibraryLocationId.toString()));
     assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
+    assertThat(holdingFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
 
     List<String> tags = getTags(holdingFromGet);
 

@@ -126,6 +126,14 @@
       "type": "string",
       "description": "Receipt status (e.g. pending, awaiting receipt, partially received, fully received, receipt not required, and cancelled)"
     },
+    "administrativeNotes":{
+      "type": "array",
+      "description": "Administrative notes",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
     "notes": {
       "type": "array",
       "description": "Notes about action, copy, binding etc.",

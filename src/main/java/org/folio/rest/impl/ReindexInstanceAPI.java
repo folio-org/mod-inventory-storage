@@ -9,22 +9,26 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.persist.ReindexJobRepository;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.jaxrs.resource.InstanceStorageReindex;
+import org.folio.services.reindex.ReindexResourceName;
 import org.folio.services.reindex.ReindexService;
 
 public class ReindexInstanceAPI implements InstanceStorageReindex {
+  @Validate
   @Override
   public void postInstanceStorageReindex(Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    new ReindexService(vertxContext, okapiHeaders).submitReindex()
+    new ReindexService(vertxContext, okapiHeaders).submitReindex(ReindexResourceName.INSTANCE)
       .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(
         PostInstanceStorageReindexResponse.respond200WithApplicationJson(response))))
       .onFailure(error -> asyncResultHandler.handle(Future.succeededFuture(
         PostInstanceStorageReindexResponse.respond500WithTextPlain(error.getMessage()))));
   }
 
+  @Validate
   @Override
   public void getInstanceStorageReindexById(String id, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
@@ -33,6 +37,7 @@ public class ReindexInstanceAPI implements InstanceStorageReindex {
       vertxContext, GetInstanceStorageReindexByIdResponse.class, asyncResultHandler);
   }
 
+  @Validate
   @Override
   public void deleteInstanceStorageReindexById(String id, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {

@@ -331,7 +331,7 @@
     },
     "notes": {
       "type": "array",
-      "description": "Bibliographic notes (e.g. general notes, specialized notes), and administrative notes",
+      "description": "Bibliographic notes (e.g. general notes, specialized notes)",
       "items": {
         "type": "object",
         "properties": {
@@ -351,6 +351,14 @@
         }
       }
     },
+    "administrativeNotes":{
+      "type": "array",
+      "description": "Administrative notes",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
     "modeOfIssuanceId": {
       "type": "string",
       "description": "UUID of the RDA mode of issuance, a categorization reflecting whether a resource is issued in one or more parts, the way it is updated, and whether its termination is predetermined or not (e.g. monograph,  sequential monograph, serial; integrating Resource, other)",
@@ -363,7 +371,7 @@
     "previouslyHeld": {
       "type": "boolean",
       "description": "Records the fact that the resource was previously held by the library for things like Hathi access, etc.",
-      "default":"false"
+      "default": false
     },
     "staffSuppress": {
       "type": "boolean",
