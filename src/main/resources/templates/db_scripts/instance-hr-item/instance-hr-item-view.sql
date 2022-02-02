@@ -7,6 +7,12 @@ SELECT instance.id as id, JSONB_BUILD_OBJECT(
 	                      WHERE holdings_record.instanceId = instance.id),
 	  'items',           (SELECT jsonb_agg(item.jsonb) FROM ${myuniversity}_${mymodule}.holdings_record as hr
 	                      JOIN ${myuniversity}_${mymodule}.item
-	                        ON item.holdingsRecordId=hr.id AND hr.instanceId = instance.id)
+	                        ON item.holdingsRecordId=hr.id AND hr.instanceId = instance.id),
+    'isBoundWith',     (SELECT EXISTS(SELECT 1 FROM diku_mod_inventory_storage.bound_with_part as bw
+                        JOIN diku_mod_inventory_storage.item as it
+                          ON it.id = bw.itemid
+                        JOIN diku_mod_inventory_storage.holdings_record as hr
+                          ON hr.id = bw.holdingsrecordid
+                        WHERE hr.instanceId = instance.id LIMIT 1))
 	) AS jsonb
   FROM ${myuniversity}_${mymodule}.instance;
