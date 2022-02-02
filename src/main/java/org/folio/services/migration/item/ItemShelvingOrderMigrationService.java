@@ -50,6 +50,11 @@ public class ItemShelvingOrderMigrationService extends BaseMigrationService {
     return itemRepository.update(items).map(notUsed -> items.size());
   }
 
+  @Override
+  public String getMigrationName() {
+    return "itemShelvingOrderMigration";
+  }
+
   private String selectSql() {
     return String.format(SELECT_SQL, postgresClient.getFullTableName("item"));
   }

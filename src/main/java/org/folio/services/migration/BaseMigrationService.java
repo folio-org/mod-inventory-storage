@@ -8,7 +8,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.Versioned;
@@ -20,6 +23,7 @@ public abstract class BaseMigrationService {
   private static final Logger log = getLogger(BaseMigrationService.class);
   private final Versioned version;
   private final PostgresClientFuturized postgresClient;
+  private Set<String> idsForMigration = new HashSet<>();
 
   protected BaseMigrationService(String fromVersion, PostgresClientFuturized client) {
     this.version = versioned(fromVersion);
@@ -45,9 +49,20 @@ public abstract class BaseMigrationService {
       .mapEmpty();
   }
 
+  public Future<Void> runMigrationForIds(Set<String> ids){
+    idsForMigration = ids;
+    return runMigration();
+  }
+
+  protected Set<String> getIdsForMigration(){
+    return idsForMigration;
+  }
+
   protected abstract Future<RowStream<Row>> openStream(SQLConnection connection);
 
   protected abstract Future<Integer> updateBatch(List<Row> batch);
+
+  public abstract String getMigrationName();
 
   private Future<Integer> handleUpdate(RowStream<Row> stream) {
     var batchStream = new BatchedReadStream<>(stream);

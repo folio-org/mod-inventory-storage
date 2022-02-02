@@ -8,13 +8,13 @@ import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.resource.InventoryStorageMigrations;
-import org.folio.services.migration.async.AsyncMigrationService;
+import org.folio.services.migration.async.AsyncMigrationJobService;
 
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
 import static org.folio.rest.persist.PgUtil.getById;
-import static org.folio.services.migration.async.AsyncMigrationService.getAvailableMigrations;
+import static org.folio.services.migration.async.AsyncMigrationJobService.getAvailableMigrations;
 
 public class InventoryStorageMigrationsAPI implements InventoryStorageMigrations {
 
@@ -33,7 +33,7 @@ public class InventoryStorageMigrationsAPI implements InventoryStorageMigrations
                                                  Handler<AsyncResult<Response>> asyncResultHandler,
                                                  Context vertxContext) {
 
-    new AsyncMigrationService(vertxContext, okapiHeaders).submitAsyncMigration(entity)
+    new AsyncMigrationJobService(vertxContext, okapiHeaders).submitAsyncMigration(entity)
       .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(
         PostInventoryStorageMigrationsJobsResponse.respond200WithApplicationJson(response))))
       .onFailure(error -> asyncResultHandler.handle(Future.succeededFuture(
@@ -54,7 +54,7 @@ public class InventoryStorageMigrationsAPI implements InventoryStorageMigrations
                                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                                        Context vertxContext) {
 
-    new AsyncMigrationService(vertxContext, okapiHeaders).cancelAsyncMigration(id)
+    new AsyncMigrationJobService(vertxContext, okapiHeaders).cancelAsyncMigration(id)
       .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(
         DeleteInventoryStorageMigrationsJobsByIdResponse.respond204())))
       .onFailure(error -> asyncResultHandler.handle(Future.succeededFuture(

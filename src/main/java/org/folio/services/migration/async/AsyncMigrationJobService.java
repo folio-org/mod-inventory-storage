@@ -17,16 +17,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.IDS_PUBLISHED;
+import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.ID_PUBLISHING_CANCELLED;
+import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.ID_PUBLISHING_FAILED;
+import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.PENDING_CANCEL;
 
-public final class AsyncMigrationService {
+public final class AsyncMigrationJobService {
   private static final List<AsyncMigrationJobRunner> migrationJobRunners = List.of(new PublicationPeriodMigrationJobRunner());
 
   private final AsyncMigrationJobRepository migrationJobRepository;
   private final AsyncMigrationContext migrationContext;
 
-  public AsyncMigrationService(Context vertxContext, Map<String, String> okapiHeaders) {
+  public AsyncMigrationJobService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.migrationJobRepository = new AsyncMigrationJobRepository(vertxContext, okapiHeaders);
     var postgresClient = new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders));
     this.migrationContext = new AsyncMigrationContext(vertxContext, okapiHeaders, postgresClient);
@@ -68,12 +73,13 @@ public final class AsyncMigrationService {
   }
 
   private Optional<AsyncMigrationJobRunner> getMigrationJobRunnerByName(String name) {
-    return migrationJobRunners.stream().filter(runners -> runners.getMigrationName().equals(name)).findFirst();
+    return migrationJobRunners.stream()
+      .filter(runners -> runners.getMigrationName().equals(name))
+      .findFirst();
   }
 
   private boolean isJobAvailable(AsyncMigrationJobRequest jobRequest) {
-    return getAvailableMigrations().getAsyncMigrations()
-      .stream()
+    return getAvailableMigrations().getAsyncMigrations().stream()
       .anyMatch(v -> v.getName().equals(jobRequest.getName()));
   }
 
@@ -91,5 +97,39 @@ public final class AsyncMigrationService {
       .withSubmittedDate(new Date())
       .withAffectedEntities(affectedEntities)
       .withId(randomUUID().toString());
+  }
+
+  public void logJobFail(String jobId) {
+    migrationJobRepository.fetchAndUpdate(jobId,
+      resp -> {
+        var finalStatus = resp.getJobStatus() == PENDING_CANCEL
+          ? ID_PUBLISHING_CANCELLED : ID_PUBLISHING_FAILED;
+        return resp.withJobStatus(finalStatus);
+      });
+  }
+
+  public void logPublishingCompleted(Long recordsPublished, String jobId) {
+    migrationJobRepository
+      .fetchAndUpdate(jobId, job -> job
+        .withPublished(recordsPublished.intValue())
+        .withJobStatus(IDS_PUBLISHED));
+  }
+
+  public Future<AsyncMigrationJob> logJobDetails(AsyncMigrationJob migrationJob, Long records) {
+    if (!shouldLogJobDetails(records)) {
+      return succeededFuture(migrationJob);
+    }
+    return migrationJobRepository
+      .fetchAndUpdate(migrationJob.getId(), job -> job.withPublished(records.intValue()))
+      .map(job -> {
+        if (job.getJobStatus() == AsyncMigrationJob.JobStatus.PENDING_CANCEL) {
+          throw new IllegalStateException("The job has been cancelled");
+        }
+        return job;
+      });
+  }
+
+  private boolean shouldLogJobDetails(long records) {
+    return records % 1000 == 0;
   }
 }
