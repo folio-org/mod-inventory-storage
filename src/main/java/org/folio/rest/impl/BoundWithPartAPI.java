@@ -6,26 +6,32 @@ import io.vertx.core.Handler;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.BoundWithPart;
 import org.folio.rest.jaxrs.model.BoundWithParts;
+import org.folio.rest.jaxrs.resource.InventoryStorageBoundWithParts;
 import org.folio.rest.persist.PgUtil;
+import org.folio.services.instance.BoundWithPartService;
 
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+
 public class BoundWithPartAPI implements org.folio.rest.jaxrs.resource.InventoryStorageBoundWithParts {
-  private static final String BOUND_WITH_TABLE = "bound_with_part";
+  public static final String BOUND_WITH_TABLE = "bound_with_part";
 
   @Validate
   @Override
   public void getInventoryStorageBoundWithParts(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.get(BOUND_WITH_TABLE, BoundWithPart.class, BoundWithParts.class, query, offset, limit,
-      okapiHeaders, vertxContext, org.folio.rest.jaxrs.resource.InventoryStorageBoundWithParts.GetInventoryStorageBoundWithPartsResponse.class, asyncResultHandler);
+      okapiHeaders, vertxContext, InventoryStorageBoundWithParts.GetInventoryStorageBoundWithPartsResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void postInventoryStorageBoundWithParts(String lang, BoundWithPart entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.post(BOUND_WITH_TABLE, entity, okapiHeaders, vertxContext,
-      PostInventoryStorageBoundWithPartsResponse.class, asyncResultHandler);
+    new BoundWithPartService(vertxContext, okapiHeaders).create(entity)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -38,14 +44,16 @@ public class BoundWithPartAPI implements org.folio.rest.jaxrs.resource.Inventory
   @Validate
   @Override
   public void deleteInventoryStorageBoundWithPartsById(String id, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.deleteById(BOUND_WITH_TABLE, id, okapiHeaders, vertxContext,
-      DeleteInventoryStorageBoundWithPartsByIdResponse.class, asyncResultHandler);
+    new BoundWithPartService(vertxContext, okapiHeaders).delete(id)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
   @Override
   public void putInventoryStorageBoundWithPartsById(String id, String lang, BoundWithPart entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.put(BOUND_WITH_TABLE, entity, id, okapiHeaders, vertxContext,
-      PutInventoryStorageBoundWithPartsByIdResponse.class, asyncResultHandler);
+    new BoundWithPartService(vertxContext, okapiHeaders).update(entity, id)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 }

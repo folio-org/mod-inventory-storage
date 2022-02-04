@@ -7,6 +7,10 @@
       "description": "Instance id",
       "$ref": "uuid.json"
     },
+    "isBoundWith": {
+      "description": "Records the relationship between a part of a bound-with (a holdings-record) and the bound-with as a whole (the circulatable item)",
+      "type": "boolean"
+    },
     "instance": {
       "description": "Instance record",
       "$ref": "instance.json"
