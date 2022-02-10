@@ -236,4 +236,8 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/related-instance-types" + subPath);
   }
 
+  public static URL relatedInstanceStorageUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/related-instances" + subPath);
+  }
+
 }

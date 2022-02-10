@@ -34,11 +34,6 @@ public class RelatedInstanceService {
   private final RelatedInstanceRepository relatedInstanceRepository;
   private final PostgresClient postgresClient;
   private final String RELATED_INSTANCE_TABLE = "related_instance";
-  private final String RELATED_INSTANCE_ENTRY_NOT_FOUND = "No related instance entry found with provided id.";
-  private final String INSTANCE_ID_NOT_FOUND = "InstanceId type not found.";
-  private final String RELATED_INSTANCE_ID_NOT_FOUND = "RelatedInstanceId not found.";
-  private final String RELATED_INSTANCE_TYPE_NOT_FOUND = "relatedInstanceType not found.";
-
 
   public RelatedInstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -51,13 +46,13 @@ public class RelatedInstanceService {
   }
 
   public Future<Response> createRelatedInstance(RelatedInstance entity) {
-
+    String relatedInstanceType = entity.getRelatedInstanceType().toString();
     return instanceRepository.getById(entity.getInstanceId())
-      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, INSTANCE_ID_NOT_FOUND))
+      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
       .compose(instance -> instanceRepository.getById(entity.getRelatedInstanceId()))
-      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, RELATED_INSTANCE_ID_NOT_FOUND))
+      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
       .compose(instance -> instanceTypeRepository.getById(entity.getRelatedInstanceType()))
-      .compose(instanceTypeRecord -> refuseIfNotFound(instanceTypeRecord, RELATED_INSTANCE_TYPE_NOT_FOUND))
+      .compose(instanceTypeRecord -> refuseIfNotFound(instanceTypeRecord, instanceTypeNotFoundMessage(relatedInstanceType)))
       .compose(instanceType -> {
         final Promise<Response> postResponse = promise();
 
@@ -69,14 +64,15 @@ public class RelatedInstanceService {
   }
 
   public Future<Response> updateRelatedInstance(RelatedInstance entity) {
+    String relatedInstanceType = entity.getRelatedInstanceType().toString();
     return relatedInstanceRepository.getById(entity.getId())
-      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, RELATED_INSTANCE_ENTRY_NOT_FOUND))
+      .compose(CommonValidators::refuseIfNotFound)
       .compose(relatedInstance -> instanceRepository.getById(entity.getInstanceId())
-      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, INSTANCE_ID_NOT_FOUND))
+      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
       .compose(instance -> instanceRepository.getById(entity.getRelatedInstanceId()))
-      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, RELATED_INSTANCE_ID_NOT_FOUND))
+      .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
       .compose(instance -> instanceTypeRepository.getById(entity.getRelatedInstanceType()))
-      .compose(instanceType -> refuseIfNotFound(instanceType, RELATED_INSTANCE_TYPE_NOT_FOUND))
+      .compose(instanceTypeRecord -> refuseIfNotFound(instanceTypeRecord, instanceTypeNotFoundMessage(relatedInstanceType)))
       .compose(instanceType -> {
         final Promise<Response> postResponse = promise();
 
@@ -87,7 +83,15 @@ public class RelatedInstanceService {
     }));
   }
 
-  public static <T> Future<T> refuseIfNotFound(T record, String errorMessage) {
+  private String instanceNotFoundMessage(String instanceId) {
+    return "Instance with UUID " + instanceId + " not found.";
+  }
+
+  private String instanceTypeNotFoundMessage(String instanceId) {
+    return "Instance type with id " + instanceId + " not found.";
+  }
+
+  private static <T> Future<T> refuseIfNotFound(T record, String errorMessage) {
     return record != null ? succeededFuture(record) : failedFuture(new BadRequestException(errorMessage));
   }
 }

@@ -90,6 +90,7 @@ import org.testcontainers.utility.DockerImageName;
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
   RelatedInstanceTypeTest.class,
+  RelatedInstanceTest.class,
   SampleDataTest.class
 })
 public class StorageTestSuite {

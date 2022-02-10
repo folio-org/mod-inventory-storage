@@ -35,8 +35,7 @@ public class RelatedInstanceAPI implements org.folio.rest.jaxrs.resource.Related
   public void postRelatedInstances(String lang, RelatedInstance entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     if (checkInstanceRelatedToSelf(entity)) {
-      asyncResultHandler.handle(Future.succeededFuture(GetRelatedInstancesResponse
-      .respond400WithTextPlain("Instance cannot be related to itself.")));
+      asyncResultHandler.handle(cannotBeRelatedToSelf());
       return;
     }
 
@@ -69,8 +68,7 @@ public class RelatedInstanceAPI implements org.folio.rest.jaxrs.resource.Related
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
     if (checkInstanceRelatedToSelf(entity)) {
-        asyncResultHandler.handle(Future.succeededFuture(PutRelatedInstancesByRelatedInstanceIdResponse
-        .respond400WithTextPlain("Instance cannot be related to itself.")));
+        asyncResultHandler.handle(cannotBeRelatedToSelf());
         return;
     }
     new RelatedInstanceService(vertxContext, okapiHeaders)
@@ -86,6 +84,10 @@ public class RelatedInstanceAPI implements org.folio.rest.jaxrs.resource.Related
 
     PgUtil.delete(RELATED_INSTANCE_TABLE, "id=*", okapiHeaders, vertxContext,
       DeleteRelatedInstancesByRelatedInstanceIdResponse.class, asyncResultHandler);
+  }
+  private Future<Response> cannotBeRelatedToSelf() {
+    return Future.succeededFuture(PutRelatedInstancesByRelatedInstanceIdResponse
+    .respond400WithTextPlain("Instance cannot be related to itself."));
   }
 
   private boolean checkInstanceRelatedToSelf(RelatedInstance entity) {
