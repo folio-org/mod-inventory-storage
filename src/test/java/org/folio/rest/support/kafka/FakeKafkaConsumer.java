@@ -44,8 +44,8 @@ public final class FakeKafkaConsumer {
     final var AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
     final var BOUND_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME,
-      AUTHORITY_TOPIC_NAME, BOUND_TOPIC_NAME));
+    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME, BOUND_TOPIC_NAME));
+
     consumer.handler(message -> {
       final List<KafkaConsumerRecord<String, JsonObject>> storageList;
 

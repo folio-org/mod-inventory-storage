@@ -1,20 +1,21 @@
 package org.folio.services.migration;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.dbschema.ObjectMapperTool.readValue;
-
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.Versioned;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.dbschema.ObjectMapperTool.readValue;
 
 public abstract class BaseMigrationService {
   private static final Logger log = getLogger(BaseMigrationService.class);
@@ -48,6 +49,8 @@ public abstract class BaseMigrationService {
   protected abstract Future<RowStream<Row>> openStream(SQLConnection connection);
 
   protected abstract Future<Integer> updateBatch(List<Row> batch);
+
+  public abstract String getMigrationName();
 
   private Future<Integer> handleUpdate(RowStream<Row> stream) {
     var batchStream = new BatchedReadStream<>(stream);
