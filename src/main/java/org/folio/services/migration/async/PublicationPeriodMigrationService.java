@@ -20,23 +20,19 @@ public class PublicationPeriodMigrationService extends AsyncBaseMigrationService
     + "id in (%s)";
   private final PostgresClientFuturized postgresClient;
   private final InstanceRepository instanceRepository;
-  private final AsyncMigrationJobService migrationJobService;
   private final InstanceEffectiveValuesService valuesService = new InstanceEffectiveValuesService();
 
   public PublicationPeriodMigrationService(Context context, Map<String, String> okapiHeaders) {
     this(new PostgresClientFuturized(PgUtil.postgresClient(context, okapiHeaders)),
-      new InstanceRepository(context, okapiHeaders),
-      new AsyncMigrationJobService(context, okapiHeaders));
+      new InstanceRepository(context, okapiHeaders));
   }
 
   public PublicationPeriodMigrationService(PostgresClientFuturized postgresClient,
-                                           InstanceRepository instanceRepository,
-                                           AsyncMigrationJobService migrationJobService) {
+                                           InstanceRepository instanceRepository) {
 
     super("23.0.0", postgresClient);
     this.postgresClient = postgresClient;
     this.instanceRepository = instanceRepository;
-    this.migrationJobService = migrationJobService;
   }
 
   @Override
