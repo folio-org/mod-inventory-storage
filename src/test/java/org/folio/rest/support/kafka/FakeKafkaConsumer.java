@@ -29,8 +29,6 @@ public final class FakeKafkaConsumer {
     new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> authorityEvents =
     new ConcurrentHashMap<>();
-  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> migrationEvents =
-    new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> boundWith =
     new ConcurrentHashMap<>();
 
@@ -45,9 +43,8 @@ public final class FakeKafkaConsumer {
     final var ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
     final var AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
     final var BOUND_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
-    final var MIGRATION_TOPIC_NAME = "folio.test_tenant.inventory.async-migration";
-    
-    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME, BOUND_TOPIC_NAME, MIGRATION_TOPIC_NAME));
+
+    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME, BOUND_TOPIC_NAME));
 
     consumer.handler(message -> {
       final List<KafkaConsumerRecord<String, JsonObject>> storageList;
@@ -67,10 +64,6 @@ public final class FakeKafkaConsumer {
           break;
         case AUTHORITY_TOPIC_NAME:
           storageList = authorityEvents.computeIfAbsent(message.key(),
-            k -> new ArrayList<>());
-          break;
-        case MIGRATION_TOPIC_NAME:
-          storageList = migrationEvents.computeIfAbsent(message.key(),
             k -> new ArrayList<>());
           break;
         case BOUND_TOPIC_NAME:
@@ -105,10 +98,6 @@ public final class FakeKafkaConsumer {
 
   public static int getAllPublishedAuthoritiesCount() {
     return authorityEvents.size();
-  }
-
-  public static int getAllPublishedMigrationsCount() {
-    return migrationEvents.size();
   }
 
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getInstanceEvents(

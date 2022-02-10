@@ -11,7 +11,6 @@ import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.migration.async.AsyncMigrationContext;
 import org.folio.services.migration.async.PublicationPeriodMigrationJobRunner;
@@ -28,7 +27,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -47,16 +45,6 @@ import static org.mockito.Mockito.spy;
 public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   private final AsyncMigrationJobRepository repository = getRepository();
-
-  @Test
-  public void canCreateMigrationJob() {
-    FakeKafkaConsumer.removeAllEvents();
-    var job = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest().withName("publicationPeriodMigration"));
-    assertNotNull(job.getId());
-
-    await().until(() -> asyncMigration.getMigrationJob(job.getId())
-      .getJobStatus() == IDS_PUBLISHED);
-  }
 
   @Test
   public void canMigrateInstances() {
@@ -81,8 +69,6 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     await().atMost(5, SECONDS)
       .until(() -> instancesClient.getByQuery("?query=publicationPeriod.start==2018").isEmpty());
 
-    FakeKafkaConsumer.removeAllEvents();
-
     var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest().withName("publicationPeriodMigration"));
 
     await().atMost(20, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
@@ -94,9 +80,6 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     assertThat(job.getProcessed(), is(numberOfRecords));
     assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
     assertThat(job.getSubmittedDate(), notNullValue());
-
-    await().atMost(5, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedMigrationsCount, greaterThanOrEqualTo(numberOfRecords));
 
     postgresClient(getContext(), okapiHeaders()).delete("instances", new Criterion().addCriterion(new Criteria().addField("title").setOperation("like").setVal("test%"))).result();
   }
