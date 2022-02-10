@@ -3,7 +3,7 @@ package org.folio.rest.api;
 import io.vertx.core.Context;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import junitparams.JUnitParamsRunner;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
@@ -43,7 +43,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-@RunWith(VertxUnitRunner.class)
+@RunWith(JUnitParamsRunner.class)
 public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   private final AsyncMigrationJobRepository repository = getRepository();

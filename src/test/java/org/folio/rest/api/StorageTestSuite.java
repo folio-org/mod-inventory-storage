@@ -90,7 +90,8 @@ import org.testcontainers.utility.DockerImageName;
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
   RelatedInstanceTypeTest.class,
-  SampleDataTest.class
+  SampleDataTest.class,
+  AsyncMigrationTest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
