@@ -44,7 +44,7 @@ public class AsyncMigrationUtils {
               .filter(javaMigration -> shouldProcessIdsForJob(javaMigration, migrationJob))
               .peek(javaMigration -> log.info(
                 "Following migration is to be executed [migration={}] for ids [idsCount={}]", javaMigration, ids.size()))
-              .map(javaMigration -> javaMigration.runMigrationForIds(ids, migrationJob)
+              .map(javaMigration -> javaMigration.runMigrationForIds(ids)
                 .onSuccess(notUsed -> jobService.logJobProcessed(migrationJob, ids.size()))
                 .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId())))
               .collect(Collectors.toList());

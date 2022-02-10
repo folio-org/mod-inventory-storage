@@ -10,15 +10,13 @@ import java.util.Set;
 
 public abstract class AsyncBaseMigrationService extends BaseMigrationService {
   private volatile Set<String> idsForMigration = new HashSet<>();
-  private volatile AsyncMigrationJob migrationJob;
 
   protected AsyncBaseMigrationService(String fromVersion, PostgresClientFuturized client) {
     super(fromVersion, client);
   }
 
-  public Future<Void> runMigrationForIds(Set<String> ids, AsyncMigrationJob job) {
+  public Future<Void> runMigrationForIds(Set<String> ids) {
     this.idsForMigration = ids;
-    this.migrationJob = job;
     return runMigration();
   }
 
@@ -26,7 +24,4 @@ public abstract class AsyncBaseMigrationService extends BaseMigrationService {
     return idsForMigration;
   }
 
-  protected AsyncMigrationJob getMigrationJob() {
-    return migrationJob;
-  }
 }
