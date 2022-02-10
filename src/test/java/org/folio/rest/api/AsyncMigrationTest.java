@@ -1,10 +1,14 @@
 package org.folio.rest.api;
 
 import io.vertx.core.Context;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
@@ -15,6 +19,7 @@ import org.junit.Test;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -53,19 +58,32 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   @Test
   public void canMigrateInstances() {
     var numberOfRecords = 1100;
-    var rowStream = new TestRowStream(numberOfRecords);
+    IntStream.range(0, numberOfRecords).parallel().forEach(v ->
+      instancesClient.create(new JsonObject()
+        .put("title", "test" + v)
+        .put("source", "MARC")
+        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")
+        .put("publication", new JsonArray()
+          .add(new JsonObject()
+            .put("role", "Publication")
+            .put("place", "New York, NY, United States of America")
+            .put("publisher", "Oxford University Press")
+            .put("dateOfPublication", "[2018]"))
+          .add(new JsonObject()
+            .put("dateOfPublication", "©2018"))
+        )));
+
+    String sql = "update " + getPostgresClientFuturized().getFullTableName("instance") + " set jsonb = jsonb - 'publicationPeriod' where jsonb->> 'title' like 'test%'";
+    postgresClient(getContext(), okapiHeaders()).execute(sql);
+    await().atMost(5, SECONDS)
+      .until(() -> instancesClient.getByQuery("?query=publicationPeriod.start==2018").isEmpty());
+
     var migrationJob = migrationJob();
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
-
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
-
     get(repository.save(migrationJob.getId(), migrationJob).toCompletionStage()
       .toCompletableFuture());
 
-
     FakeKafkaConsumer.removeAllEvents();
-    jobRunner().startAsyncMigration(migrationJob, new AsyncMigrationContext(getContext(), okapiHeaders(), postgresClientFuturized));
+    jobRunner().startAsyncMigration(migrationJob, new AsyncMigrationContext(getContext(), okapiHeaders(), getPostgresClientFuturized()));
 
     await().atMost(20, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
       .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
@@ -79,6 +97,8 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
     await().atMost(5, SECONDS)
       .until(FakeKafkaConsumer::getAllPublishedMigrationsCount, greaterThanOrEqualTo(numberOfRecords));
+
+    postgresClient(getContext(), okapiHeaders()).delete("instances", new Criterion().addCriterion(new Criteria().addField("title").setOperation("like").setVal("test%"))).result();
   }
 
   @Test
