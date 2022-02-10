@@ -3,8 +3,8 @@ package org.folio.services.relatedInstance;
 import static io.vertx.core.Promise.promise;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
-import org.folio.rest.jaxrs.resource.RelatedInstances.PostRelatedInstancesResponse;
-import org.folio.rest.jaxrs.resource.RelatedInstances.PutRelatedInstancesByRelatedInstanceIdResponse;
+import org.folio.rest.jaxrs.resource.InstanceStorageRelatedInstances.PostInstanceStorageRelatedInstancesResponse;
+import org.folio.rest.jaxrs.resource.InstanceStorageRelatedInstances.PutInstanceStorageRelatedInstancesByRelatedInstanceIdResponse;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -57,7 +57,7 @@ public class RelatedInstanceService {
         final Promise<Response> postResponse = promise();
 
         post(RELATED_INSTANCE_TABLE, entity, okapiHeaders, vertxContext,
-        PostRelatedInstancesResponse.class, postResponse);
+        PostInstanceStorageRelatedInstancesResponse.class, postResponse);
 
         return postResponse.future();
       });
@@ -77,7 +77,7 @@ public class RelatedInstanceService {
         final Promise<Response> postResponse = promise();
 
         put(RELATED_INSTANCE_TABLE, entity, entity.getId(), okapiHeaders, vertxContext,
-        PutRelatedInstancesByRelatedInstanceIdResponse.class, postResponse);
+        PutInstanceStorageRelatedInstancesByRelatedInstanceIdResponse.class, postResponse);
 
         return postResponse.future();
     }));

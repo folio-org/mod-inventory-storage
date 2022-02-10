@@ -1,10 +1,8 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.relatedInstanceTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.relatedInstanceStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
@@ -12,17 +10,12 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.client.LoanTypesClient;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,24 +28,14 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
+  @SneakyThrows
   @Before
-  public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void beforeEach() {
     StorageTestSuite.deleteAll(relatedInstanceStorageUrl(""));
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
     StorageTestSuite.deleteAll(relatedInstanceTypesStorageUrl(""));
-    
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-
-    canCirculateLoanTypeID = new LoanTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
-      loanTypesStorageUrl("")).create("Can Circulate");
   }
 
   @SneakyThrows
@@ -268,6 +251,38 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
+  @Test
+  public void canDeleteRelationship() {
+    UUID smallAngryUuid = UUID.randomUUID();
+    UUID nodUuid = UUID.randomUUID();
+    UUID relatedInstanceTypeId = UUID.randomUUID();
+
+    Response response = createRelatedInstanceSetup(smallAngryUuid, nodUuid, relatedInstanceTypeId);
+    String relatedInstanceId = response.getJson().getString("id");
+
+    response = deleteRelation(relatedInstanceId);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    response = getById(relatedInstanceId);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @SneakyThrows
+  private Response deleteRelation(String relationId) {
+
+    CompletableFuture<Response> deleteRelatedInstance = new CompletableFuture<>();
+
+    String relatedInstanceUrl = relatedInstanceStorageUrl("/" + relationId).toString();
+
+    send(relatedInstanceUrl, HttpMethod.DELETE, null,
+    SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteRelatedInstance));
+
+    return deleteRelatedInstance.get(5, TimeUnit.SECONDS);
+  }
+
+  @SneakyThrows
   private Response createRelatedInstanceSetup(UUID instanceId, UUID relatedInstanceId, UUID relatedInstanceTypeUuid) {
     createRelatedInstanceType(relatedInstanceTypeUuid, "Reenactment of");
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -279,15 +294,13 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
       relatedInstanceTypeUuid.toString());
   }
 
+  @SneakyThrows
   private Response updateRelatedInstance(
     String existingRecordUuid,
     String instanceId, 
     String relatedInstanceId, 
-    String relatedInstanceTypeId)
-  throws MalformedURLException,
-  InterruptedException,
-  ExecutionException,
-  TimeoutException {
+    String relatedInstanceTypeId) {
+
     CompletableFuture<Response> updateRelatedInstance = new CompletableFuture<>();
     String relatedInstanceUrl = relatedInstanceStorageUrl("/" + existingRecordUuid.toString()).toString();
     JsonObject request = new JsonObject()
@@ -302,14 +315,12 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     return updateRelatedInstance.get(5, TimeUnit.SECONDS);
   }
 
+  @SneakyThrows
   private Response createRelatedInstance(
     String instanceId, 
     String relatedInstanceId, 
-    String relatedInstanceTypeId)
-  throws MalformedURLException,
-  InterruptedException,
-  ExecutionException,
-  TimeoutException {
+    String relatedInstanceTypeId) {
+
     CompletableFuture<Response> createRelatedInstance = new CompletableFuture<>();
     String createRelatedInstanceUrl = relatedInstanceStorageUrl("").toString();
     JsonObject request = new JsonObject()
@@ -322,12 +333,8 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
 
     return createRelatedInstance.get(5, TimeUnit.SECONDS);
   }
-
-  private Response createRelatedInstanceType(String name)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  @SneakyThrows
+  private Response createRelatedInstanceType(String name) {
 
     CompletableFuture<Response> createRelatedInstanceType = new CompletableFuture<>();
     String createURL = relatedInstanceTypesStorageUrl("").toString();
@@ -360,7 +367,7 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     send(relatedInstanceStorageUrl("/" + id).toString(), HttpMethod.GET,
-      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
 
     return getCompleted.get(5, TimeUnit.SECONDS);
   }

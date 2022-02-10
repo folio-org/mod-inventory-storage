@@ -475,8 +475,6 @@
         }
       ]
     },
-    {},
-
     {
       "id": "identifier-types",
       "version": "1.2",
@@ -1301,23 +1299,23 @@
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/related-instances",
+          "pathPattern": "/instance-storage/related-instances",
           "permissionsRequired": ["inventory-storage.related-instances.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/related-instances/{id}",
+          "pathPattern": "/instance-storage/related-instances/{id}",
           "permissionsRequired": ["inventory-storage.related-instances.item.get"]
         }, {
           "methods": ["POST"],
-          "pathPattern": "/related-instances",
+          "pathPattern": "/instance-storage/related-instances",
           "permissionsRequired": ["inventory-storage.related-instances.item.post"]
         }, {
           "methods": ["PUT"],
-          "pathPattern": "/related-instances/{id}",
+          "pathPattern": "/instance-storage/related-instances/{id}",
           "permissionsRequired": ["inventory-storage.related-instances.item.put"]
         }, {
           "methods": ["DELETE"],
-          "pathPattern": "/related-instances/{id}",
+          "pathPattern": "/instance-storage/related-instances/{id}",
           "permissionsRequired": ["inventory-storage.related-instances.item.delete"]
         }
       ]
@@ -2807,7 +2805,7 @@
         "value": "-XX:MaxRAMPercentage=66.0"
       },
       { "name": "ENV", "value": "folio" },
-      { "name": "DB_HOST", "value": "postgres" },
+      { "name": "DB_HOST", "value": "localhost" },
       { "name": "DB_PORT", "value": "5432" },
       { "name": "DB_USERNAME", "value": "folio_admin" },
       { "name": "DB_PASSWORD", "value": "folio_admin" },
@@ -2815,7 +2813,7 @@
       { "name": "DB_QUERYTIMEOUT", "value": "60000" },
       { "name": "DB_CHARSET", "value": "UTF-8" },
       { "name": "DB_MAXPOOLSIZE", "value": "5" },
-      { "name": "KAFKA_HOST", "value": "kafka" },
+      { "name": "KAFKA_HOST", "value": "localhost" },
       { "name": "KAFKA_PORT", "value": "9092" },
       { "name": "REPLICATION_FACTOR", "value": "1" }
     ]

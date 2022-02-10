@@ -237,7 +237,7 @@ public class InterfaceUrls {
   }
 
   public static URL relatedInstanceStorageUrl(String subPath) {
-    return StorageTestSuite.storageUrl("/related-instances" + subPath);
+    return StorageTestSuite.storageUrl("/instance-storage/related-instances" + subPath);
   }
 
 }
