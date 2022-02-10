@@ -5,6 +5,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
@@ -43,15 +44,13 @@ public class RecordBulkAPI implements org.folio.rest.jaxrs.resource.RecordBulk {
         Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
         Context vertxContext) {
     try {
-      if (recordType.toString().equalsIgnoreCase(HOLDING_TYPE)) {
-        CQLWrapper wrapper = getCQL(query, HOLDING_TABLE, limit, offset);
-        PgUtil.streamGet(HOLDING_TABLE, RecordID.class, wrapper, null,
-          "ids", routingContext, okapiHeaders, vertxContext);
-      } else {
-        CQLWrapper wrapper = getCQL(query, INSTANCE_TABLE, limit, offset);
-        PgUtil.streamGet(INSTANCE_TABLE, RecordID.class, wrapper, null,
-          "ids", routingContext, okapiHeaders, vertxContext);
+      if (StringUtils.isNotBlank(query)) {
+        query = query.replace("items.effectiveLocationId", "item.effectiveLocationId");
       }
+      var tableName = recordType.toString().equalsIgnoreCase(HOLDING_TYPE) ? HOLDING_TABLE : INSTANCE_TABLE;
+      var wrapper = getCQL(query, tableName, limit, offset);
+      PgUtil.streamGet(tableName, RecordID.class, wrapper, null,
+        "ids", routingContext, okapiHeaders, vertxContext);
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
       asyncResultHandler.handle(Future.succeededFuture(GetRecordBulkIdsResponse
