@@ -38,7 +38,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(relatedInstanceTypesStorageUrl(""));
   }
 
-  @SneakyThrows
   @Test
   public void canCreateRelatedInstance() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -61,7 +60,7 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(response.getJson().getString("relatedInstanceId"), is(nodUuid.toString()));
     assertThat(response.getJson().getString("relatedInstanceType"), is(relatedInstanceTypeId.toString()));
   }
-  @SneakyThrows
+ 
   @Test
   public void cannotRelateInstanceToSelf() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -78,7 +77,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
-  @SneakyThrows
   @Test
   public void creationFailsWithInvalidInstanceIds() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -102,7 +100,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
-  @SneakyThrows
   @Test
   public void CreationFailsWithInvalidRelationTypeId() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -120,7 +117,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
-  @SneakyThrows
   @Test
   public void canUpdateRelatedInstance() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -154,7 +150,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
 
   }
 
-  @SneakyThrows
   @Test
   public void cannotSetInstanceRelationToSelf() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -176,7 +171,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
 
   }
 
-  @SneakyThrows
   @Test
   public void updateFailsWithInvalidInstanceIds() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -207,7 +201,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
 
   }
 
-  @SneakyThrows
   @Test
   public void updateFailsWithInvalidRelationTypeId() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -229,7 +222,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(updateOperation.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
-  @SneakyThrows
   @Test
   public void updateFailsIfRelationNotFound() {
     UUID smallAngryUuid = UUID.randomUUID();
@@ -250,7 +242,6 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(updateOperation.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
-  @SneakyThrows
   @Test
   public void canDeleteRelationship() {
     UUID smallAngryUuid = UUID.randomUUID();
