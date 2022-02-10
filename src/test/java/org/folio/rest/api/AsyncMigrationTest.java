@@ -78,12 +78,9 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     await().atMost(5, SECONDS)
       .until(() -> instancesClient.getByQuery("?query=publicationPeriod.start==2018").isEmpty());
 
-    var migrationJob = migrationJob();
-    get(repository.save(migrationJob.getId(), migrationJob).toCompletionStage()
-      .toCompletableFuture());
-
     FakeKafkaConsumer.removeAllEvents();
-    jobRunner().startAsyncMigration(migrationJob, new AsyncMigrationContext(getContext(), okapiHeaders(), getPostgresClientFuturized()));
+
+    var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest().withName("publicationPeriodMigration"));
 
     await().atMost(20, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
       .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
