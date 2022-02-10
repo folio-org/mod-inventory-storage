@@ -17,7 +17,8 @@ import static java.lang.String.format;
 
 public class PublicationPeriodMigrationJobRunner extends AbstractAsyncMigrationJobRunner implements AsyncMigrationJobRunner {
 
-  private static final String SELECT_SQL = "SELECT id FROM %s WHERE jsonb->>'publicationPeriod' IS NULL";
+  private static final String SELECT_SQL = "SELECT id FROM %s " +
+    "WHERE jsonb->>'publicationPeriod' IS NULL AND parse_publication_period(jsonb) IS NOT NULL";
   private static final Logger log = LogManager.getLogger(PublicationPeriodMigrationJobRunner.class);
 
   @Override

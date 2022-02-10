@@ -27,6 +27,7 @@ import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.PENDING_CAN
 
 public final class AsyncMigrationJobService {
   private static final List<AsyncMigrationJobRunner> migrationJobRunners = List.of(new PublicationPeriodMigrationJobRunner());
+  private final static List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List.of(AsyncMigrationJob.JobStatus.IN_PROGRESS, IDS_PUBLISHED);
 
   private final AsyncMigrationJobRepository migrationJobRepository;
   private final AsyncMigrationContext migrationContext;
@@ -121,6 +122,25 @@ public final class AsyncMigrationJobService {
     }
     return migrationJobRepository
       .fetchAndUpdate(migrationJob.getId(), job -> job.withPublished(records.intValue()))
+      .map(job -> {
+        if (job.getJobStatus() == AsyncMigrationJob.JobStatus.PENDING_CANCEL) {
+          throw new IllegalStateException("The job has been cancelled");
+        }
+        return job;
+      });
+  }
+
+  public Future<AsyncMigrationJob> logJobProcessed(AsyncMigrationJob migrationJob, Integer records) {
+    return migrationJobRepository
+      .fetchAndUpdate(migrationJob.getId(), job -> {
+        job.setProcessed(job.getProcessed() + records);
+        if (ACCEPTABLE_STATUSES.contains(migrationJob.getJobStatus())) {
+          job.setJobStatus(job.getProcessed() >= job.getPublished()
+            ? AsyncMigrationJob.JobStatus.COMPLETED
+            : AsyncMigrationJob.JobStatus.IN_PROGRESS);
+        }
+        return job;
+      })
       .map(job -> {
         if (job.getJobStatus() == AsyncMigrationJob.JobStatus.PENDING_CANCEL) {
           throw new IllegalStateException("The job has been cancelled");

@@ -67,13 +67,14 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     FakeKafkaConsumer.removeAllEvents();
     jobRunner().startAsyncMigration(migrationJob, new AsyncMigrationContext(getContext(), okapiHeaders(), postgresClientFuturized));
 
-    await().atMost(5, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
-      .getJobStatus() == AsyncMigrationJob.JobStatus.IDS_PUBLISHED);
+    await().atMost(20, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
+      .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
 
     var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
     assertThat(job.getPublished(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.IDS_PUBLISHED));
+    assertThat(job.getProcessed(), is(numberOfRecords));
+    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
     await().atMost(5, SECONDS)

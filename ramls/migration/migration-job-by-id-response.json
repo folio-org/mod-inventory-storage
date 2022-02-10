@@ -25,6 +25,12 @@
       "minimum": 0,
       "default": 0
     },
+    "processed": {
+      "description": "Number of records that was processed",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
     "jobStatus": {
       "description": "Overall job status",
       "type": "string",
@@ -33,7 +39,8 @@
         "Id publishing failed",
         "Ids published",
         "Pending cancel",
-        "Id publishing cancelled"
+        "Id publishing cancelled",
+        "Completed"
       ]
     },
     "submittedDate": {

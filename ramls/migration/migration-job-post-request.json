@@ -11,7 +11,7 @@
       "description": "List of affected entities by particular migration",
       "type": "array",
       "items": {
-        "type": "object",
+        "type": "string",
         "enum": ["INSTANCE"]
       }
     }

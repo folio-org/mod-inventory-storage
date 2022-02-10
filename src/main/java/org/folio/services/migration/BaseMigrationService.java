@@ -1,29 +1,26 @@
 package org.folio.services.migration;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.dbschema.ObjectMapperTool.readValue;
-
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.Versioned;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.dbschema.ObjectMapperTool.readValue;
+
 public abstract class BaseMigrationService {
   private static final Logger log = getLogger(BaseMigrationService.class);
   private final Versioned version;
   private final PostgresClientFuturized postgresClient;
-  private Set<String> idsForMigration = new HashSet<>();
 
   protected BaseMigrationService(String fromVersion, PostgresClientFuturized client) {
     this.version = versioned(fromVersion);
@@ -47,15 +44,6 @@ public abstract class BaseMigrationService {
           getClass(), error))
         .onComplete(result -> postgresClient.endTx(con)))
       .mapEmpty();
-  }
-
-  public Future<Void> runMigrationForIds(Set<String> ids){
-    idsForMigration = ids;
-    return runMigration();
-  }
-
-  protected Set<String> getIdsForMigration(){
-    return idsForMigration;
   }
 
   protected abstract Future<RowStream<Row>> openStream(SQLConnection connection);
