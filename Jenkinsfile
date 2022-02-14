@@ -2,7 +2,7 @@
 
 buildMvn {
   publishModDescriptor = 'yes'
-  publishAPI = 'yes'
+  doApiDoc = 'yes'
   mvnDeploy = 'yes'
   runLintRamlCop = 'yes'
   doKubeDeploy = true
