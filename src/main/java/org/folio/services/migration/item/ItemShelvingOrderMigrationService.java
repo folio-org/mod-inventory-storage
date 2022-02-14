@@ -41,13 +41,13 @@ public class ItemShelvingOrderMigrationService extends BaseMigrationService {
   }
 
   @Override
-  protected Future<Integer> updateBatch(List<Row> batch) {
+  protected Future<Integer> updateBatch(List<Row> batch, SQLConnection connection) {
     var items = batch.stream()
       .map(row -> rowToClass(row, Item.class))
       .map(EffectiveCallNumberComponentsUtil::calculateAndSetEffectiveShelvingOrder)
       .collect(Collectors.toList());
 
-    return itemRepository.update(items).map(notUsed -> items.size());
+    return itemRepository.updateBatch(items, connection).map(notUsed -> items.size());
   }
 
   @Override

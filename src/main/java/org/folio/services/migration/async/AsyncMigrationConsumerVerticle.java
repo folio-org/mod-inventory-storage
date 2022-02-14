@@ -40,7 +40,7 @@ public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
       .<String, JsonObject>create(vertx, getKafkaConsumerProperties(tenantId,
         topicName + "_group"))
       .subscribe(topicName, startPromise);
-    vertx.setPeriodic(800L, v ->
+    vertx.setPeriodic(1000L, v ->
       pollAsyncMigrationsMessages(consumer, headers, vertx.getOrCreateContext()));
   }
 
