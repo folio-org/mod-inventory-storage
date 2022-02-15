@@ -1346,6 +1346,32 @@
           "permissionsRequired": ["inventory-storage.related-instance-types.item.delete"]
         }
       ]
+    },
+    {
+      "id": "async-migration",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/inventory-storage/migrations/jobs",
+          "permissionsRequired": ["inventory-storage.migration.job.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/migrations",
+          "permissionsRequired": ["inventory-storage.migration.item.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/migrations/jobs/{id}",
+          "permissionsRequired": ["inventory-storage.migration.job.item.get"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/inventory-storage/migrations/jobs/{id}",
+          "permissionsRequired": ["inventory-storage.migration.job.item.delete"]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -2555,6 +2581,28 @@
       "displayName": "inventory storage - delete individual related-instance-type",
       "description": "delete individual related-instance-type from storage"
     },
+
+    {
+      "permissionName": "inventory-storage.migration.job.item.delete",
+      "displayName": "inventory storage - cancel migration job",
+      "description": "cancel a running migration job"
+    },
+    {
+      "permissionName": "inventory-storage.migration.job.item.get",
+      "displayName": "inventory storage - get migration job by id",
+      "description": "get migration job by id"
+    },
+    {
+      "permissionName": "inventory-storage.migration.item.get",
+      "displayName": "inventory storage - get list of available migrations",
+      "description": "get list of available migrations"
+    },
+    {
+      "permissionName": "inventory-storage.migration.job.post",
+      "displayName": "inventory storage - submit migration job",
+      "description": "submit migration instance job"
+    },
+
     {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
@@ -2787,7 +2835,11 @@
         "inventory-storage.instance.reindex.post",
         "inventory-storage.instance.iteration.post",
         "inventory-storage.instance.iteration.item.get",
-        "inventory-storage.instance.iteration.item.delete"
+        "inventory-storage.instance.iteration.item.delete",
+        "inventory-storage.migration.job.item.delete",
+        "inventory-storage.migration.job.post",
+        "inventory-storage.migration.job.item.get",
+        "inventory-storage.migration.item.get"
       ]
     }
   ],

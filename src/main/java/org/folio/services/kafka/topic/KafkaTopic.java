@@ -18,6 +18,10 @@ public class KafkaTopic {
     return forName("inventory.authority", tenantId, environmentName);
   }
 
+  public static KafkaTopic asyncMigration(String tenantId, String environmentName) {
+    return forName("inventory.async-migration", tenantId, environmentName);
+  }
+
   public static KafkaTopic boundWith(String tenantId, String environmentName) {
     return forName("inventory.bound-with", tenantId, environmentName);
   }

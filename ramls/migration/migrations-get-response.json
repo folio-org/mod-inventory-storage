@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Post migration job request",
+  "type": "object",
+  "properties": {
+    "asyncMigrations": {
+      "description": "List of available migrations",
+      "id": "asyncMigration",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "migration-job-post-request.json"
+      }
+    },
+    "totalRecords": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "migrations",
+    "totalRecords"
+  ]
+}
