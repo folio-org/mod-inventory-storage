@@ -48,7 +48,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canMigrateInstances() {
-    var numberOfRecords = 1100;
+    var numberOfRecords = 600;
     IntStream.range(0, numberOfRecords).parallel().forEach(v ->
       instancesClient.create(new JsonObject()
         .put("title", "test" + v)

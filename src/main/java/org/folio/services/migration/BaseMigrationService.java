@@ -37,7 +37,7 @@ public abstract class BaseMigrationService {
 
     return postgresClient.startTx()
       .compose(con -> openStream(con)
-        .compose(this::handleUpdate)
+        .compose(rows-> handleUpdate(rows, con))
         .onSuccess(records -> log.info("Migration for the class has been " +
           "completed [class={}, recordsProcessed={}]", getClass(), records))
         .onFailure(error -> log.error("Unable to complete migration for class [class={}]",
@@ -48,11 +48,11 @@ public abstract class BaseMigrationService {
 
   protected abstract Future<RowStream<Row>> openStream(SQLConnection connection);
 
-  protected abstract Future<Integer> updateBatch(List<Row> batch);
+  protected abstract Future<Integer> updateBatch(List<Row> batch, SQLConnection connection);
 
   public abstract String getMigrationName();
 
-  private Future<Integer> handleUpdate(RowStream<Row> stream) {
+  private Future<Integer> handleUpdate(RowStream<Row> stream, SQLConnection connection) {
     var batchStream = new BatchedReadStream<>(stream);
     var promise = Promise.<Integer>promise();
     var recordsUpdated = new AtomicInteger(0);
@@ -63,7 +63,7 @@ public abstract class BaseMigrationService {
       .handler(rows -> {
         // Pause stream, so that updates is executed in sequence
         batchStream.pause();
-        updateBatch(rows)
+        updateBatch(rows, connection)
           .onSuccess(updatedNumber -> {
             log.info("Batch of records has been processed [recordsProcessed={}, class={}]",
               recordsUpdated.addAndGet(updatedNumber), getClass());

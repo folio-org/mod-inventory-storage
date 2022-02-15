@@ -42,6 +42,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+  AsyncMigrationTest.class,
+  PublicationPeriodMigrationTest.class,
   CallNumberUtilsTest.class,
   InstanceStorageTest.class,
   RecordBulkTest.class,
@@ -84,8 +86,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
   PreviouslyHeldDataUpgradeTest.class,
   ItemShelvingOrderMigrationServiceApiTest.class,
   NotificationSendingErrorRepositoryTest.class,
-  AsyncMigrationTest.class,
-  PublicationPeriodMigrationTest.class,
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
