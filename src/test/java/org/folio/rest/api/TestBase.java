@@ -19,6 +19,7 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.fixtures.AsyncMigrationFixture;
 import org.folio.rest.support.fixtures.AuthorityReindexFixture;
 import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
@@ -62,6 +63,7 @@ public abstract class TestBase {
   static FakeKafkaConsumer kafkaConsumer;
   static InstanceReindexFixture instanceReindex;
   static AuthorityReindexFixture authorityReindex;
+  static AsyncMigrationFixture asyncMigration;
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -124,6 +126,7 @@ public abstract class TestBase {
     kafkaConsumer.removeAllEvents();
     instanceReindex = new InstanceReindexFixture(client);
     authorityReindex = new AuthorityReindexFixture(client);
+    asyncMigration = new AsyncMigrationFixture(client);
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 

@@ -1,0 +1,85 @@
+#%RAML 1.0
+title: Async migrations API
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Async migrations API
+    content: Running async migrations proceses for inventory enteties
+
+types:
+  asyncMigrationJob: !include migration/migration-job-by-id-response.json
+  asyncMigrations: !include migration/migrations-get-response.json
+  asyncMigrationJobRequest: !include migration/migration-job-post-request.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+/inventory-storage/migrations:
+  displayName: Async migrations
+  get:
+    description: Avalilible async migrations for the inventory-storage
+    responses:
+      200:
+        body:
+          application/json:
+            type: asyncMigrations
+      500:
+        description: Internal server error
+        body:
+          text/plain:
+            example: Internal server error
+  /jobs:
+    post:
+      description: Submit a migration job
+      body:
+        application/json:
+          type: asyncMigrationJobRequest
+      responses:
+        200:
+          description: Migration job has been submitted
+          body:
+            application/json:
+              type: asyncMigrationJob
+        500:
+          description: Internal server error
+          body:
+            text/plain:
+              example: Internal server error
+    /{id}:
+      get:
+        description: Get migration job by id
+        responses:
+          200:
+            description: Migration job has returned
+            body:
+              application/json:
+                type: asyncMigrationJob
+          404:
+            description: Migration job with id not found
+            body:
+              text/plain:
+                example: Not found
+          500:
+            description: Internal server error
+            body:
+              text/plain:
+                example: Internal server error
+      delete:
+        description: Cancell migration job by id
+        responses:
+          204:
+            description: Migration job has been cancelled
+          404:
+            description: Migration job with id not found
+            body:
+              text/plain:
+                example: Not found
+          500:
+            description: Internal server error
+            body:
+              text/plain:
+                example: Internal server error
