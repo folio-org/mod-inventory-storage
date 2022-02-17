@@ -13,10 +13,12 @@ import java.util.regex.Pattern;
 
 import static org.folio.Environment.environmentName;
 import static org.folio.services.kafka.KafkaProperties.getKafkaConsumerProperties;
+import static org.folio.services.migration.async.AsyncMigrationsConsumerUtils.pollAsyncMigrationsMessages;
 
 public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
   private static final Logger log = LogManager.getLogger(AsyncMigrationConsumerVerticle.class);
   private static final Long PERIOD = 1000L;
+
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     var topicName = KafkaTopic.asyncMigration(environmentName()).getTopicName();
@@ -34,6 +36,6 @@ public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
 
     vertx.setPeriodic(PERIOD, v ->
       consumer.poll(Duration.ofMillis(100))
-        .onSuccess(new AsyncMigrationsConsumerUtils().pollAsyncMigrationsMessages(consumer, vertx.getOrCreateContext())));
+        .onSuccess(pollAsyncMigrationsMessages(consumer, vertx.getOrCreateContext())));
   }
 }
