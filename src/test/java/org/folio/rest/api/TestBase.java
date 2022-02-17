@@ -57,6 +57,7 @@ public abstract class TestBase {
   static ResourceClient instanceTypesClient;
   static ResourceClient illPoliciesClient;
   static ResourceClient inventoryViewClient;
+  static ResourceClient statisticalCodeClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static FakeKafkaConsumer kafkaConsumer;
   static InstanceReindexFixture instanceReindex;
@@ -112,6 +113,7 @@ public abstract class TestBase {
     instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(client);
     itemsStorageSyncClient = ResourceClient.forItemsStorageSync(client);
     inventoryViewClient = ResourceClient.forInventoryView(client);
+    statisticalCodeClient = ResourceClient.forStatisticalCodes(client);
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(client);
     instanceTypesClient = ResourceClient

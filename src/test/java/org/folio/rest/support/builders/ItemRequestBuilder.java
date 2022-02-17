@@ -98,6 +98,24 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return withStatus(AVAILABLE_STATUS);
   }
 
+  public ItemRequestBuilder withId(UUID id) {
+    return new ItemRequestBuilder(
+      id,
+      this.holdingId,
+      this.barcode,
+      this.status,
+      this.temporaryLocationId,
+      this.materialTypeId,
+      this.permanentLoanTypeId,
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
+      this.itemLevelCallNumberTypeId,
+      this.discoverySuppress,
+      this.statisticalCodeIds);
+  }
+
   public ItemRequestBuilder withStatus(String status) {
     return new ItemRequestBuilder(
       this.id,
@@ -187,6 +205,24 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.temporaryLocationId,
       materialTypeId,
       this.permanentLoanTypeId,
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
+      this.itemLevelCallNumberTypeId,
+      this.discoverySuppress,
+      this.statisticalCodeIds);
+  }
+
+  public ItemRequestBuilder withPermanentLoanTypeId(UUID permanentLoanTypeId) {
+    return new ItemRequestBuilder(
+      this.id,
+      this.holdingId,
+      this.barcode,
+      this.status,
+      this.temporaryLocationId,
+      this.materialTypeId,
+      permanentLoanTypeId,
       this.temporaryLoanTypeId,
       this.itemLevelCallNumberPrefix,
       this.itemLevelCallNumber,
