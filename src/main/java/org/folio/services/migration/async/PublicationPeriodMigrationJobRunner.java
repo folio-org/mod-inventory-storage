@@ -24,7 +24,6 @@ public class PublicationPeriodMigrationJobRunner extends AbstractAsyncMigrationJ
   @Override
   public void startAsyncMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
     context.getVertxContext().executeBlocking(v -> {
-      log.info("Starting async migration for class [class={}]", getClass());
       startMigration(migrationJob, context)
         .onComplete(result -> v.complete());
     });
