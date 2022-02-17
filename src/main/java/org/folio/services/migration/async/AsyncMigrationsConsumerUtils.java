@@ -23,7 +23,7 @@ public class AsyncMigrationsConsumerUtils {
   private static final String TENANT_HEADER = "x-okapi-tenant";
   private static final Logger log = LogManager.getLogger(AsyncMigrationsConsumerUtils.class);
 
-  public Handler<KafkaConsumerRecords<String, JsonObject>> pollAsyncMigrationsMessages(KafkaConsumer<String, JsonObject> consumer,
+  public static Handler<KafkaConsumerRecords<String, JsonObject>> pollAsyncMigrationsMessages(KafkaConsumer<String, JsonObject> consumer,
                                                                                               Context vertxContext) {
     return records -> {
       var eventsByTenant = buildTenantRecords(records);
@@ -59,14 +59,14 @@ public class AsyncMigrationsConsumerUtils {
     };
   }
 
-  private boolean shouldProcessIdsForJob(PublicationPeriodMigrationService javaMigration,
+  private static boolean shouldProcessIdsForJob(PublicationPeriodMigrationService javaMigration,
                                                 AsyncMigrationJob migrationJob) {
     return javaMigration.getMigrationName().equals(migrationJob.getName())
       && (migrationJob.getJobStatus().equals(AsyncMigrationJob.JobStatus.IN_PROGRESS)
       || migrationJob.getJobStatus().equals(AsyncMigrationJob.JobStatus.IDS_PUBLISHED));
   }
 
-  private Map<AsyncMigrationJob, Set<String>> buildIdsForMigrations(Set<ConsumerRecord<String, JsonObject>> records) {
+  private static Map<AsyncMigrationJob, Set<String>> buildIdsForMigrations(Set<ConsumerRecord<String, JsonObject>> records) {
     Map<AsyncMigrationJob, Set<String>> result = new HashMap<>();
     records.forEach(record -> {
       String id = record.key();
@@ -84,7 +84,7 @@ public class AsyncMigrationsConsumerUtils {
     return result;
   }
 
-  private Map<String, Set<ConsumerRecord<String, JsonObject>>> buildTenantRecords(KafkaConsumerRecords<String, JsonObject> records) {
+  private static Map<String, Set<ConsumerRecord<String, JsonObject>>> buildTenantRecords(KafkaConsumerRecords<String, JsonObject> records) {
     var result = new HashMap<String, Set<ConsumerRecord<String, JsonObject>>>();
     records.records().iterator().forEachRemaining(record -> {
       var iterator = record.headers().headers(TENANT_HEADER).iterator();
@@ -104,7 +104,7 @@ public class AsyncMigrationsConsumerUtils {
     return result;
   }
 
-  private AsyncMigrationJob getMigrationJobFromMessage(ConsumerRecord<String, JsonObject> message) {
+  private static AsyncMigrationJob getMigrationJobFromMessage(ConsumerRecord<String, JsonObject> message) {
     final JsonObject payload = message.value();
     final var oldOrNew = payload.containsKey("new")
       ? payload.getJsonObject("new") : payload.getJsonObject("old");
