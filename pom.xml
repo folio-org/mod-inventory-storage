@@ -31,7 +31,7 @@
   </pluginRepositories>
 
   <properties>
-    <vertx.version>4.1.4</vertx.version>
+    <vertx.version>4.2.4</vertx.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
