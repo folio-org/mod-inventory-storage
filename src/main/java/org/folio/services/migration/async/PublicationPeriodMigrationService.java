@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class PublicationPeriodMigrationService extends AsyncBaseMigrationService {
   private static final String SELECT_SQL = "SELECT jsonb FROM %s WHERE "
-    + "id in (%s)";
+    + "id in (%s) FOR UPDATE";
   private final PostgresClientFuturized postgresClient;
   private final InstanceRepository instanceRepository;
   private final InstanceEffectiveValuesService valuesService = new InstanceEffectiveValuesService();
@@ -41,12 +41,12 @@ public class PublicationPeriodMigrationService extends AsyncBaseMigrationService
   }
 
   @Override
-  protected Future<Integer> updateBatch(List<Row> batch) {
+  protected Future<Integer> updateBatch(List<Row> batch, SQLConnection connection) {
     var instances = batch.stream()
       .map(row -> rowToClass(row, Instance.class))
       .peek(valuesService::populatePublicationPeriod)
       .collect(Collectors.toList());
-    return instanceRepository.update(instances)
+    return instanceRepository.updateBatch(instances, connection)
       .map(notUsed -> instances.size());
   }
 

@@ -105,7 +105,7 @@ public final class AsyncMigrationJobService {
       resp -> {
         var finalStatus = resp.getJobStatus() == PENDING_CANCEL
           ? ID_PUBLISHING_CANCELLED : ID_PUBLISHING_FAILED;
-        return resp.withJobStatus(finalStatus);
+        return resp.withJobStatus(finalStatus).withFinishedDate(new Date());
       });
   }
 
@@ -138,6 +138,9 @@ public final class AsyncMigrationJobService {
           job.setJobStatus(job.getProcessed() >= job.getPublished()
             ? AsyncMigrationJob.JobStatus.COMPLETED
             : AsyncMigrationJob.JobStatus.IN_PROGRESS);
+        }
+        if (job.getJobStatus().equals(AsyncMigrationJob.JobStatus.COMPLETED)) {
+          job.setFinishedDate(new Date());
         }
         return job;
       })
