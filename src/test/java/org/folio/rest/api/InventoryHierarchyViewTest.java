@@ -67,8 +67,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
 
-import javax.ws.rs.core.MediaType;
-
 @RunWith(VertxUnitRunner.class)
 public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
@@ -114,8 +112,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
       requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
         assertThat(response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()));
-        assertThat(response.getContentType(), is(MediaType.TEXT_PLAIN));
         String message = response.getBody();
+        log.error(String.format("serverErrorWrittenOutOnDatabaseError : \n %s", message));
         assertThat(message, containsString("function get_items_and_holdings_view(unknown, unknown) does not exist"));
       });
       return null;
