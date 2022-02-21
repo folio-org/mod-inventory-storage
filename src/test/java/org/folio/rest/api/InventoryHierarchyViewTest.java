@@ -454,6 +454,10 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     client.post(inventoryHierarchyItemsAndHoldings(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));
 
     final Response response = future.get(2, TimeUnit.SECONDS);
+    log.error("response status {}", response.getStatusCode());
+    log.error("response body {}", response.getBody());
+    log.error("response content type {}", response.getContentType());
+    log.error("response json {}", response.getJson());
     responseMatcher.handle(response);
     log.info("\nResponse from inventory instance ids view: " + response);
 
