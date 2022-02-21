@@ -112,9 +112,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
       requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
         assertThat(response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()));
-        String message = response.getBody();
-        log.error(String.format("serverErrorWrittenOutOnDatabaseError : \n %s", message));
-        assertThat(message, containsString("function get_items_and_holdings_view(unknown, unknown) does not exist"));
+        assertThat(response.getBody(), containsString("function get_items_and_holdings_view(unknown, unknown) does not exist"));
       });
       return null;
     });
@@ -454,15 +452,11 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     client.post(inventoryHierarchyItemsAndHoldings(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));
 
     final Response response = future.get(2, TimeUnit.SECONDS);
-    log.error("response status {}", response.getStatusCode());
-    log.error("response body {}", response.getBody());
-    log.error("response content type {}", response.getContentType());
-    log.error("response json {}", response.getJson());
     responseMatcher.handle(response);
     log.info("\nResponse from inventory instance ids view: " + response);
 
     final String body = response.getBody();
-    if (StringUtils.isNotEmpty(body)) {
+    if (StringUtils.isNotEmpty(body) && response.getStatusCode() != HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()) {
       results.add(new JsonObject(body));
     }
 
