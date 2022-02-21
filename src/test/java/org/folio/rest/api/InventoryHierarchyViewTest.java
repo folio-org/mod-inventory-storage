@@ -113,7 +113,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
           .toArray(UUID[]::new);
 
       requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
-        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()));
         assertThat(response.getContentType(), is(MediaType.TEXT_PLAIN));
         String message = response.getBody();
         assertThat(message, containsString("function get_items_and_holdings_view(unknown, unknown) does not exist"));
