@@ -25,6 +25,7 @@ import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.isDeleted;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
@@ -50,6 +51,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
@@ -109,9 +111,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
           .toArray(UUID[]::new);
 
       requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
-        assertThat(response.getStatusCode(), is(500));
-        String message = new JsonObject(response.getBody()).getString("message");
-        assertThat(message, is("function get_items_and_holdings_view(unknown, unknown) does not exist"));
+        assertThat(response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()));
+        assertThat(response.getBody(), containsString("function get_items_and_holdings_view(unknown, unknown) does not exist"));
       });
       return null;
     });
@@ -455,7 +456,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     log.info("\nResponse from inventory instance ids view: " + response);
 
     final String body = response.getBody();
-    if (StringUtils.isNotEmpty(body)) {
+    if (StringUtils.isNotEmpty(body) && response.getStatusCode() != HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()) {
       results.add(new JsonObject(body));
     }
 

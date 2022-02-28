@@ -2,10 +2,8 @@ package org.folio.rest.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
@@ -19,7 +17,6 @@ import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.kafka.topic.KafkaAdminClientService;
 import org.folio.services.migration.BaseMigrationService;
-import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
 import javax.ws.rs.core.Response;
@@ -28,7 +25,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -109,27 +105,6 @@ public class TenantRefAPI extends TenantAPI {
     return since.isNewForThisInstall(attributes.getModuleFrom());
   }
 
-  private Future<Void> initAsyncMigrationVerticle(Map<String, String> headers, Context vertxContext) {
-    Promise<Void> promise = Promise.promise();
-    long startTime = System.currentTimeMillis();
-    DeploymentOptions options = new DeploymentOptions();
-    options.setConfig(new JsonObject(new HashMap<>(headers)));
-    options.setWorker(true);
-    options.setInstances(1);
-
-    vertxContext.owner().deployVerticle(AsyncMigrationConsumerVerticle.class, options, result -> {
-      if (result.succeeded()) {
-        long elapsedTime = System.currentTimeMillis() - startTime;
-        log.info(String.format(
-          "%s deployed in %s milliseconds", AsyncMigrationConsumerVerticle.class.getName(), elapsedTime));
-        promise.complete();
-      } else {
-        promise.fail(result.cause());
-      }
-    });
-    return promise.future();
-  }
-
   @Validate
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
@@ -180,12 +155,8 @@ public class TenantRefAPI extends TenantAPI {
       future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
     }
 
-    return future.compose(result ->
-        initAsyncMigrationVerticle(headers, vertxContext)
-          .map(result))
-      .compose(result ->
-        runJavaMigrations(attributes, vertxContext, headers)
-          .map(result));
+    return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
+      .map(result));
   }
 
   @Validate
