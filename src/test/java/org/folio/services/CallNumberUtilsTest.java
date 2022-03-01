@@ -1,5 +1,8 @@
 package org.folio.services;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import junit.framework.TestCase;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -8,9 +11,6 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(JUnitParamsRunner.class)
 public class CallNumberUtilsTest extends TestCase {
@@ -34,7 +34,11 @@ public class CallNumberUtilsTest extends TestCase {
     "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5,,,1992,,",
     "PR 3919 L33 41990,PR 3919 .L33 41990,,PR919 .L33 1990,,,,,",
     "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,",
-    "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
+    "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,",
+    "3341.7 258 221,,,341.7/58 / 21,,,,,",
+    "3341.7 258 221,,T1,341.7/58 / 21,,,,,",
+    "3394.1 O41 B,,,394.1 O41b,,,,,",
+    "3621.56 W91 M V 13 NO 12 41999,,,621.56 W91m,v.3,no. 2,1999,,",
   })
   @Test
   public void inputForShelvingNumber(
@@ -62,6 +66,6 @@ public class CallNumberUtilsTest extends TestCase {
     EffectiveCallNumberComponentsUtil.setCallNumberComponents(item,holdingsRecord);
     EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder(item);
 
-    assertThat(item.getEffectiveShelvingOrder(),is (desiredShelvingOrder));
+    assertThat(item.getEffectiveShelvingOrder(), is(desiredShelvingOrder));
   }
 }
