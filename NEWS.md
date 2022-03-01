@@ -1,3 +1,7 @@
+## 23.1.0 IN-PROGRESS
+
+* Add related instances record API (MODINVSTOR-861)
+
 ## 23.0.0 2022-02-22
 
 * Added administrative notes to item, instance, and holdings records (MODINVSTOR-834, MODINVSTOR-833, MODINVSTOR-832)
