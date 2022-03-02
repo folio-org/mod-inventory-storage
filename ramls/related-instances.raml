@@ -1,0 +1,59 @@
+#%RAML 1.0
+title: Related Instances API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Related Instance API
+    content: This documents the API calls that can be made to query and manage other versions of a work, referred to as a related instance.
+
+types:
+  relatedInstance: !include relatedinstance.json
+  relatedInstances: !include relatedinstances.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/instance-storage/related-instances:
+  type:
+    collection:
+      exampleCollection: !include examples/relatedinstances.json
+      exampleItem: !include examples/relatedinstance.json
+      schemaCollection: relatedInstances
+      schemaItem: relatedInstance
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields",
+                   example: "relatedInstanceId==758f13db-ffb4-440e-bb10-8a364aa6cb4a"},
+      pageable
+    ]
+    description: Return a list of related instances
+  post:
+    description: Create a new related instance
+    is: [validate]
+  delete:
+    description: "Delete all related instances"
+    is: [language]
+    responses:
+      204:
+        description: "All related instances deleted"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "Internal server error, contact administrator"
+  /{relatedInstanceId}:
+    description: Pass in the related instance id
+    type:
+      collection-item:
+        exampleItem: !include examples/relatedinstance.json
+        schema: relatedInstance
