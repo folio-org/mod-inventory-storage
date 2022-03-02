@@ -55,16 +55,16 @@ public class RelatedInstanceAPI implements org.folio.rest.jaxrs.resource.Instanc
   }
 
   @Override
-  public void deleteInstanceStorageRelatedInstancesByRelatedInstanceId(String instanceId, String lang,
+  public void deleteInstanceStorageRelatedInstancesByRelatedInstanceId(String id, String lang,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
 
-    PgUtil.deleteById(RELATED_INSTANCE_TABLE, instanceId, okapiHeaders, vertxContext,
+    PgUtil.deleteById(RELATED_INSTANCE_TABLE, id, okapiHeaders, vertxContext,
       DeleteInstanceStorageRelatedInstancesByRelatedInstanceIdResponse.class, asyncResultHandler);
   }
 
   @Override
-  public void putInstanceStorageRelatedInstancesByRelatedInstanceId(String instanceId, String lang, RelatedInstance entity,
+  public void putInstanceStorageRelatedInstancesByRelatedInstanceId(String id, String lang, RelatedInstance entity,
       Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
       Context vertxContext) {
     if (checkInstanceRelatedToSelf(entity)) {

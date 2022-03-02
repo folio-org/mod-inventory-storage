@@ -2608,6 +2608,7 @@
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
       "subPermissions": [
+        "inventory-storage.related-instances.collection.get",
         "inventory-storage-dereferenced.items.item.get",
         "inventory-storage-dereferenced.items.collection.get",
         "inventory-storage.items.collection.get",
