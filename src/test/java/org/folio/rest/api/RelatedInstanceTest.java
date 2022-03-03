@@ -260,6 +260,25 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
+  @Test
+  public void cannotDeleteRelationshipWithInvalidId() {
+    UUID smallAngryUuid = UUID.randomUUID();
+    String invalidId = UUID.randomUUID().toString();
+    UUID nodUuid = UUID.randomUUID();
+    UUID relatedInstanceTypeId = UUID.randomUUID();
+
+    Response response = createRelatedInstanceSetup(smallAngryUuid, nodUuid, relatedInstanceTypeId);
+    String relatedInstanceId = response.getJson().getString("id");
+    response = deleteRelation(invalidId);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+
+    response = getById(relatedInstanceId);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+  }
+
   @SneakyThrows
   private Response deleteRelation(String relationId) {
 
