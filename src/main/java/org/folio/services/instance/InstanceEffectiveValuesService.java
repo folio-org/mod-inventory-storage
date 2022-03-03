@@ -22,7 +22,7 @@ public class InstanceEffectiveValuesService {
 
   public void populateEffectiveValues(Instance newInstance, Instance oldInstance) {
     if (instancePublicationsChanged(newInstance, oldInstance)) {
-      populateEffectiveValues(newInstance);
+      populatePublicationPeriod(newInstance);
     }
   }
 

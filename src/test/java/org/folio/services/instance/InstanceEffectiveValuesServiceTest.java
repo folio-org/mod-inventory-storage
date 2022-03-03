@@ -106,6 +106,18 @@ public class InstanceEffectiveValuesServiceTest {
   }
 
   @Test
+  public void shouldPopulatePeriodWhenDateOfPublicationChanged() {
+    var newInstance = createInstance("2019");
+    var oldInstance = createInstance("2020");
+
+    service.populateEffectiveValues(newInstance, oldInstance);
+
+    assertThat(newInstance.getPublicationPeriod(), notNullValue());
+    assertThat(newInstance.getPublicationPeriod().getStart(), is(2019));
+    assertThat(newInstance.getPublicationPeriod().getEnd(), is(nullValue()));
+  }
+
+  @Test
   public void shouldPopulatePeriodWhenLastDateOfPublicationChanged() {
     var newInstance = createInstance("2020", "2023");
     var oldInstance = createInstance("2020", "2021");
