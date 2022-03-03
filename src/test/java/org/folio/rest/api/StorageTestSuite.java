@@ -90,6 +90,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
   RelatedInstanceTypeTest.class,
+  RelatedInstanceTest.class,
   SampleDataTest.class
 })
 public class StorageTestSuite {
