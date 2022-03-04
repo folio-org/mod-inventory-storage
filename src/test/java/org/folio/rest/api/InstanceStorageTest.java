@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -53,6 +54,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -76,6 +78,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.jaxrs.model.Instance;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -2725,6 +2728,21 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertSuppressedFromDiscovery(instance.getId().toString());
     assertUpdateEventForInstance(instance.getJson(), updateInstance.getJson());
+  }
+
+  @Test
+  public void canUpdateInstanceWithPublicationPeriod() throws Exception {
+    var entity = smallAngryPlanet(UUID.randomUUID()).mapTo(Instance.class)
+      .withPublication(Collections.singletonList(new Publication().withDateOfPublication("1997")));
+
+    IndividualResource instance = createInstance(JsonObject.mapFrom(entity));
+    entity = instance.getJson().mapTo(Instance.class)
+      .withPublication(Collections.singletonList(new Publication().withDateOfPublication("2006")));
+
+    final IndividualResource updateInstance = updateInstance(JsonObject.mapFrom(entity));
+
+    assertEquals(Integer.valueOf(2006), updateInstance.getJson().mapTo(Instance.class).getPublicationPeriod().getStart());
+
   }
 
   @Test
