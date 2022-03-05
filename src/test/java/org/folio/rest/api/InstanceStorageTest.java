@@ -529,21 +529,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByClassificationNumberWithArrayModifier()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    createInstancesWithClassificationNumbers();
-
-    JsonObject allInstances = searchForInstances("classifications =/@classificationNumber \"K1 .M385\"");
-
-    assertThat(allInstances.getInteger("totalRecords"), is(1));
-    assertThat(allInstances.getJsonArray("instances").getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
-  }
-
-  @Test
   public void canSearchByClassificationNumberWithoutArrayModifier()
     throws MalformedURLException,
     InterruptedException,
@@ -556,129 +541,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(allInstances.getInteger("totalRecords"), is(1));
     assertThat(allInstances.getJsonArray("instances").getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
-  }
-
-  @Test
-  public void canSearchUsingKeywordIndex()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    UUID firstInstanceId = UUID.randomUUID();
-
-    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
-
-    createInstance(firstInstanceToCreate);
-
-    UUID secondInstanceId = UUID.randomUUID();
-
-    JsonObject secondInstanceToCreate = nod(secondInstanceId);
-
-    createInstance(secondInstanceToCreate);
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(instancesStorageUrl("?query=keyword%3D%22Long%20Way%20to%20a%20Small%20Angry%20Planet%20Chambers%2C%20Becky%209781473619777%22"), StorageTestSuite.TENANT_ID,
-        ResponseHandler.json(getCompleted));
-
-    Response response = getCompleted.get(5, TimeUnit.SECONDS);
-
-    JsonObject responseBody = response.getJson();
-
-    JsonArray allInstances = responseBody.getJsonArray("instances");
-
-    assertThat(allInstances.size(), is(1));
-  }
-
-  @Test
-  public void canSearchUsingKeywordIndexAll()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    UUID firstInstanceId = UUID.randomUUID();
-
-    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
-
-    createInstance(firstInstanceToCreate);
-
-    UUID secondInstanceId = UUID.randomUUID();
-
-    JsonObject secondInstanceToCreate = nod(secondInstanceId);
-
-    createInstance(secondInstanceToCreate);
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(instancesStorageUrl("?query=keyword%20all%20%22Long%20Way%20to%20a%20Small%20Angry%20Planet%20Chambers%2C%20Becky%209781473619777%22"), StorageTestSuite.TENANT_ID,
-        ResponseHandler.json(getCompleted));
-
-    Response response = getCompleted.get(5, TimeUnit.SECONDS);
-
-    JsonObject responseBody = response.getJson();
-
-    JsonArray allInstances = responseBody.getJsonArray("instances");
-
-    assertThat(allInstances.size(), is(1));
-  }
-
-  @Test
-  public void canSearchForAlternateTitlesUsingKeywordIndexAll()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    UUID firstInstanceId = UUID.randomUUID();
-    UUID alternativeTitleId = UUID.randomUUID();
-
-    JsonObject instanceToCreate = smallAngryPlanet(firstInstanceId);
-    JsonObject alternativeTitles = new JsonObject();
-
-    alternativeTitles.put("alternativeTitleTypeId", alternativeTitleId);
-    alternativeTitles.put("alternativeTitle", "xyza");
-
-    JsonArray altTitlesArray = new JsonArray("[" + alternativeTitles.toString() + "]");
-
-    instanceToCreate.put("alternativeTitles", altTitlesArray);
-
-    createInstance(instanceToCreate);
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    client.get(instancesStorageUrl("?query=keyword%20all%20%22xyza%22"), StorageTestSuite.TENANT_ID,
-        ResponseHandler.json(getCompleted));
-
-    Response response = getCompleted.get(5, TimeUnit.SECONDS);
-
-    JsonObject responseBody = response.getJson();
-
-    JsonArray allInstances = responseBody.getJsonArray("instances");
-
-    assertThat(allInstances.size(), is(1));
-  }
-
-  @Test
-  public void canSearchUsingDateOfPublication() throws Exception {
-
-    JsonObject instance1 = smallAngryPlanet(null)
-        .put("publication", new JsonArray()
-            .add(new JsonObject().put("dateOfPublication", "1910")));
-    createInstance(instance1);
-
-    JsonObject instance2 = nod(null)
-        .put("publication", new JsonArray()
-            .add(new JsonObject().put("dateOfPublication", "2020"))
-            .add(new JsonObject().put("dateOfPublication", "1910")));
-    createInstance(instance2);
-
-    JsonArray instances2020 = searchForInstances("dateOfPublication = 2020").getJsonArray("instances");
-    assertThat(instances2020.size(), is(1));
-
-    JsonArray instances1910 = searchForInstances("dateOfPublication = 1910").getJsonArray("instances");
-    assertThat(instances1910.size(), is(2));
   }
 
   @Test
@@ -1221,31 +1083,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void arrayModifierfsContributors1() {
-    canSort("contributors = /@name novik sortBy title ", "Temeraire", "Uprooted" );
-  }
-
-  @Test
-  public void arrayModifierfsContributors2() {
-    canSort("contributors = /@contributorNameTypeId = " + UUID_PERSONAL_NAME + " novik sortBy title", "Temeraire", "Uprooted");
-  }
-
-  @Test
-  public void arrayModifierfsIdentifiers1() {
-    canSort("identifiers = /@value 9781447294146", "Uprooted");
-  }
-
-  @Test
-  public void arrayModifierfsIdentifiers2() {
-    canSort("identifiers = /@identifierTypeId = " + UUID_ISBN + " 9781447294146", "Uprooted");
-  }
-
-  @Test
-  public void arrayModifierfsIdentifiers3() {
-    canSort("identifiers = /@identifierTypeId " + UUID_ASIN, "Nod");
-  }
-
-  @Test
   public void canSearchWithoutSqlInjection() {
     create5instances();
 
@@ -1414,7 +1251,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       mainLibraryLocationId),
       "Long Way to a Small Angry Planet");
 
-    canSort(String.format("((contributors =/@name \"becky\") and holdingsRecords.permanentLocationId=\"%s\")",mainLibraryLocationId),"Long Way to a Small Angry Planet" );
+    canSort(String.format("holdingsRecords.permanentLocationId=\"%s\" sortBy title/sort.descending",mainLibraryLocationId),"Long Way to a Small Angry Planet", "Nod");
     System.out.println("canSearchByBarcodeAndPermanentLocation");
 
   }
@@ -1482,33 +1319,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       secondInstance.isPresent(), is(true));
   }
 
-  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
-
-  @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphens() {
-    canSort("isbn = 0-552-16754-1",      "Interesting Times");
-  }
-
-  @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
-    canSort("isbn = 05-5*",              "Interesting Times");
-  }
-
-  @Test
-  public void canSearchForSecondIsbnWithMissingHyphens() {
-    canSort("isbn = 9780552167543",      "Interesting Times");
-  }
-
-  @Test
-  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
-    canSort("isbn = 9780* sortBy title", "Interesting Times", "Temeraire");
-  }
-
-  @Test
-  public void canSearchForSecondIsbnWithAlteredHyphens() {
-    canSort("isbn = 9-7-8-055-2167-543", "Interesting Times");
-  }
-
   @Test
   public void cannotFindIsbnWithTailString() {
     canSort("isbn = 552-16754-3");
@@ -1517,14 +1327,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void cannotFindIsbnWithInnerStringAndTruncation() {
     canSort("isbn = 552*");
-  }
-
-  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
-  // and an invalid ISBNs: 1-2-3-4-5
-
-  @Test
-  public void canFindFirstInvalidIsbn() {
-    canSort("invalidIsbn = 12345", "Interesting Times");
   }
 
   @Test
