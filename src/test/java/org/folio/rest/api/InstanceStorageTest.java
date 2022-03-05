@@ -1251,7 +1251,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       mainLibraryLocationId),
       "Long Way to a Small Angry Planet");
 
-    canSort(String.format("holdingsRecords.permanentLocationId=\"%s\" sortBy title/sort.descending",mainLibraryLocationId),"Long Way to a Small Angry Planet", "Nod");
+    canSort(String.format("holdingsRecords.permanentLocationId=\"%s\" sortBy title/sort.descending", mainLibraryLocationId),"Nod", "Long Way to a Small Angry Planet");
     System.out.println("canSearchByBarcodeAndPermanentLocation");
 
   }
