@@ -7,7 +7,7 @@ buildMvn {
   doApiLint = true
   apiTypes = 'RAML'
   apiDirectories = 'ramls'
-  apiExcludes = 'instance-storage.raml', 'holdings-storage.raml'
+  apiExcludes = 'instance-storage.raml holdings-storage.raml'
 
   mvnDeploy = 'yes'
   runLintRamlCop = 'yes'
