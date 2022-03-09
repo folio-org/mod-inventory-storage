@@ -2,10 +2,13 @@
 
 buildMvn {
   publishModDescriptor = 'yes'
+
   doApiDoc = true
   doApiLint = true
   apiTypes = 'RAML'
   apiDirectories = 'ramls'
+  apiExcludes = 'instance-storage.raml', 'holdings-storage.raml'
+
   mvnDeploy = 'yes'
   runLintRamlCop = 'yes'
   doKubeDeploy = true
