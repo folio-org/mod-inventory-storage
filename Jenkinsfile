@@ -2,7 +2,10 @@
 
 buildMvn {
   publishModDescriptor = 'yes'
-  doApiDoc = 'yes'
+  doApiDoc = true
+  doApiLint = true
+  apiTypes = 'RAML'
+  apiDirectories = 'ramls'
   mvnDeploy = 'yes'
   runLintRamlCop = 'yes'
   doKubeDeploy = true
