@@ -14,6 +14,7 @@ import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.migration.async.AsyncMigrationContext;
 import org.folio.services.migration.async.PublicationPeriodMigrationJobRunner;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -93,6 +94,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  @Ignore
   public void canCancelMigration() {
     var rowStream = new TestRowStream(10_000_000);
     var migrationJob = migrationJob();
