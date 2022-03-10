@@ -1294,6 +1294,33 @@
       ]
     },
     {
+      "id":"related-instances",
+      "version":"1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/related-instances",
+          "permissionsRequired": ["inventory-storage.related-instances.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/related-instances/{id}",
+          "permissionsRequired": ["inventory-storage.related-instances.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/related-instances",
+          "permissionsRequired": ["inventory-storage.related-instances.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-storage/related-instances/{id}",
+          "permissionsRequired": ["inventory-storage.related-instances.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-storage/related-instances/{id}",
+          "permissionsRequired": ["inventory-storage.related-instances.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "related-instance-types",
       "version": "1.0",
       "handlers": [
@@ -2505,6 +2532,31 @@
       "description": "get instances by query with their holdings and items"
     },
     {
+      "permissionName":"inventory-storage.related-instances.collection.get",
+      "displayName": "inventory storage - get related-instances collection",
+      "description": "get related-instances collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instances.item.get",
+      "displayName": "inventory storage - get individual related-instance",
+      "description": "get individual related-instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instances.item.post",
+      "displayName": "inventory storage - create individual related-instances",
+      "description": "create individual related-instances in storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instances.item.put",
+      "displayName": "inventory storage - modify related-instances",
+      "description": "modify related-instances in storage"
+    },
+    {
+      "permissionName": "inventory-storage.related-instances.item.delete",
+      "displayName": "inventory storage - delete individual related-instances",
+      "description": "delete individual related-instances from storage"
+    },
+    {
       "permissionName": "inventory-storage.related-instance-types.collection.get",
       "displayName": "inventory storage - get related-instance-type collection",
       "description": "get related-instance-type collection from storage"
@@ -2556,6 +2608,16 @@
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
       "subPermissions": [
+        "inventory-storage.related-instance-types.item.post",
+        "inventory-storage.related-instance-types.item.put",
+        "inventory-storage.related-instance-types.item.get",
+        "inventory-storage.related-instance-types.item.delete",
+        "inventory-storage.related-instance-types.collection.get",
+        "inventory-storage.related-instances.item.delete",
+        "inventory-storage.related-instances.item.put",
+        "inventory-storage.related-instances.item.post",
+        "inventory-storage.related-instances.item.get",
+        "inventory-storage.related-instances.collection.get",
         "inventory-storage-dereferenced.items.item.get",
         "inventory-storage-dereferenced.items.collection.get",
         "inventory-storage.items.collection.get",
