@@ -386,8 +386,7 @@
       "type": "array",
       "description": "List of statistical code IDs",
       "items": {
-        "type": "string",
-        "$ref": "uuid.json"
+        "type": "string"
       },
       "uniqueItems": true
     },
