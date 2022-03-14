@@ -1,6 +1,7 @@
 ## 23.1.0 IN-PROGRESS
 
 * Add related instances record API (MODINVSTOR-861)
+* Added integrity checks to statisticalCodeIds in instance records (MODINVSTOR-885)
 
 ## 23.0.0 2022-02-22
 
