@@ -1140,7 +1140,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "itemStatisticalCodeReferenceCheckTrigger.sql",
+      "snippetPath": "StatisticalCodeReferenceCheckTrigger.sql",
       "fromModuleVersion": "22.1.0"
     }
   ]

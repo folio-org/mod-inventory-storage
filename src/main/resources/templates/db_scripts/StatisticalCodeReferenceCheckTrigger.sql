@@ -29,9 +29,24 @@ CREATE TRIGGER check_statistical_code_references_on_insert
   WHEN (NEW.jsonb->'statisticalCodeIds' IS NOT NULL AND NEW.jsonb->'statisticalCodeIds' <> '[]')
   EXECUTE FUNCTION check_statistical_code_references();
 
+DROP TRIGGER IF EXISTS instance_check_statistical_code_references_on_insert ON instance CASCADE;
+CREATE TRIGGER instance_check_statistical_code_references_on_insert
+  BEFORE INSERT ON instance
+  FOR EACH ROW
+  WHEN (NEW.jsonb->'statisticalCodeIds' IS NOT NULL AND NEW.jsonb->'statisticalCodeIds' <> '[]')
+  EXECUTE FUNCTION check_statistical_code_references();
+
 DROP TRIGGER IF EXISTS check_statistical_code_references_on_update ON item CASCADE;
 CREATE TRIGGER check_statistical_code_references_on_update
   BEFORE UPDATE ON item
+  FOR EACH ROW
+  WHEN (NEW.jsonb->'statisticalCodeIds' IS NOT NULL AND NEW.jsonb->'statisticalCodeIds' <> '[]'
+             AND OLD.jsonb->'statisticalCodeIds' IS DISTINCT FROM NEW.jsonb->'statisticalCodeIds')
+  EXECUTE FUNCTION check_statistical_code_references();
+
+DROP TRIGGER IF EXISTS instance_check_statistical_code_references_on_update ON instance CASCADE;
+CREATE TRIGGER instance_check_statistical_code_references_on_update
+  BEFORE UPDATE ON instance
   FOR EACH ROW
   WHEN (NEW.jsonb->'statisticalCodeIds' IS NOT NULL AND NEW.jsonb->'statisticalCodeIds' <> '[]'
              AND OLD.jsonb->'statisticalCodeIds' IS DISTINCT FROM NEW.jsonb->'statisticalCodeIds')
