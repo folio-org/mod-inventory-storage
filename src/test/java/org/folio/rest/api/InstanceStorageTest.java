@@ -1080,9 +1080,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     canSort("title adj \"Upro*\"", "Uprooted");
   }
 
+
   @Test
   public void canSearchForInstancesUsingSimilarQueryToUILookAheadSearch() {
     canSort("title=\"upr*\" or contributors=\"name\": \"upr*\" or identifiers=\"value\": \"upr*\"", "Uprooted");
+  }
+  @Test
+  public void arrayModifierfsIdentifiers1() {
+    canSort("identifiers = /@value 9781447294146", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers2() {
+    canSort("identifiers = /@identifierTypeId = " + UUID_ISBN + " 9781447294146", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers3() {
+    canSort("identifiers = /@identifierTypeId " + UUID_ASIN, "Nod");
   }
 
   @Test
@@ -1322,6 +1337,33 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       secondInstance.isPresent(), is(true));
   }
 
+  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
+
+  @Test
+  public void canSearchForFirstIsbnWithAdditionalHyphens() {
+    canSort("isbn = 0-552-16754-1",      "Interesting Times");
+  }
+
+  @Test
+  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
+    canSort("isbn = 05-5*",              "Interesting Times");
+  }
+
+  @Test
+  public void canSearchForSecondIsbnWithMissingHyphens() {
+    canSort("isbn = 9780552167543",      "Interesting Times");
+  }
+
+  @Test
+  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
+    canSort("isbn = 9780* sortBy title", "Interesting Times", "Temeraire");
+  }
+
+  @Test
+  public void canSearchForSecondIsbnWithAlteredHyphens() {
+    canSort("isbn = 9-7-8-055-2167-543", "Interesting Times");
+  }
+
   @Test
   public void cannotFindIsbnWithTailString() {
     canSort("isbn = 552-16754-3");
@@ -1330,6 +1372,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void cannotFindIsbnWithInnerStringAndTruncation() {
     canSort("isbn = 552*");
+  }
+
+  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
+  // and an invalid ISBNs: 1-2-3-4-5
+
+  @Test
+  public void canFindFirstInvalidIsbn() {
+    canSort("invalidIsbn = 12345", "Interesting Times");
   }
 
   @Test

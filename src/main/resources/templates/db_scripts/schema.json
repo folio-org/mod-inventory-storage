@@ -375,6 +375,12 @@
         }
       ],
       "ginIndex": [
+        {
+          "fieldName": "identifiers",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
       ],
       "index": [
         {
@@ -433,6 +439,21 @@
         }
       ],
       "fullTextIndex": [
+        {
+          "fieldName": "identifiers",
+          "arraySubfield" : "value",
+          "arrayModifiers": ["identifierTypeId"]
+        },
+        {
+          "fieldName": "invalidIsbn",
+          "sqlExpression" : "normalize_invalid_isbns(jsonb->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
+        },
+        {
+          "fieldName": "isbn",
+          "sqlExpression" : "normalize_isbns(jsonb->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
+        }
       ]
     },
     {
@@ -853,7 +874,7 @@
           "fieldName": "relatedInstanceId",
           "targetTable": "instance",
           "tOps": "ADD"
-        },       
+        },
         {
           "fieldName": "relatedInstanceType",
           "targetTable": "related_instance_type",
