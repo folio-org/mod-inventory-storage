@@ -32,6 +32,7 @@
             "type": "string"
           },
           "count": {
+            "description": "Number of records that was published so far",
             "type": "integer",
             "minimum": 0,
             "default": 0
@@ -49,6 +50,7 @@
             "type": "string"
           },
           "count": {
+            "description": "Number of records that was processed",
             "type": "integer",
             "minimum": 0,
             "default": 0
