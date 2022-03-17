@@ -41,7 +41,11 @@ public class CallNumberUtilsTest extends TestCase {
     "3394.1 O41 B,,,394.1 O41b,,,,,",
     "3621.56 W91 M V 13 NO 12 41999,,,621.56 W91m,v.3,no. 2,1999,,",
     "221 E23,,,21 E23,,,,,",
-    "other,,,other,,,,,",
+    "11,,,00001,,,,,",
+    "3325 D A 41908 FREETOWN MAP,,,325-d A-1908 (Freetown) Map,,,,,",
+    "45001 MICROFILM,,,5001 Microfilm,,,,,",
+    "19 A2 C 6444218 MUSIC CD,,,9A2 C0444218 Music CD,,,,,",
+    "GROUP Smith,,,GROUP Smith,,,,,",
     "free-text,,,free-text,,,,,"
   })
   @Test
