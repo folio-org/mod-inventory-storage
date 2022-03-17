@@ -30,7 +30,7 @@ import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.PENDING_CAN
 public final class AsyncMigrationJobService {
   private static final List<AsyncMigrationJobRunner> migrationJobRunners = List
     .of(new PublicationPeriodMigrationJobRunner(), new ShelvingOrderMigrationJobRunner());
-  private final static List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List
+  private static final List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List
     .of(AsyncMigrationJob.JobStatus.IN_PROGRESS, IDS_PUBLISHED);
 
   private final AsyncMigrationJobRepository migrationJobRepository;
