@@ -17,10 +17,18 @@ import static org.folio.Environment.environmentName;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.asyncMigrationEvent;
 
-public abstract class AbstractAsyncMigrationJobRunner {
+public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJobRunner {
 
   public static final String ASYNC_MIGRATION_JOB_ID_HEADER = "async-migration-job-id";
+  public static final String ASYNC_MIGRATION_JOB_NAME = "async-migration-job-name";
   private final Logger log = LogManager.getLogger(getClass());
+
+  @Override
+  public void startAsyncMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
+    context.getVertxContext().executeBlocking(v ->
+      startMigration(migrationJob, context)
+        .onComplete(result -> v.complete()));
+  }
 
   protected Future<Void> startMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
     var migrationService = new AsyncMigrationJobService(context.getVertxContext(), context.getOkapiHeaders());
@@ -53,7 +61,8 @@ public abstract class AbstractAsyncMigrationJobRunner {
           context.getAsyncMigrationService().logJobFail(context.getJobId());
         } else {
           log.info("Publishing records for migration completed");
-          context.getAsyncMigrationService().logPublishingCompleted(recordsPublished.result(), context.getJobId());
+          context.getAsyncMigrationService()
+            .logPublishingCompleted(context.getMigrationContext().getMigrationName(), recordsPublished.result(), context.getJobId());
         }
       });
   }
@@ -61,14 +70,16 @@ public abstract class AbstractAsyncMigrationJobRunner {
   private Future<Long> processStream(StreamingContext context) {
     return context.getPublisher().publishStream(context.stream,
       row -> rowToProducerRecord(row, context),
-      recordsPublished -> context.getAsyncMigrationService().logJobDetails(context.job, recordsPublished));
+      recordsPublished -> context.getAsyncMigrationService()
+        .logJobDetails(context.getMigrationContext().getMigrationName(), context.getJob(), recordsPublished));
   }
 
   private InventoryProducerRecordBuilder rowToProducerRecord(Row row, StreamingContext context) {
     return new InventoryProducerRecordBuilder()
       .key(row.getUUID("id").toString())
       .value(asyncMigrationEvent(context.getJob(), TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders())))
-      .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId());
+      .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId())
+      .header(ASYNC_MIGRATION_JOB_NAME, context.getMigrationContext().getMigrationName());
   }
 
   private static class StreamingContext {
