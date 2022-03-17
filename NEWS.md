@@ -1,8 +1,15 @@
+## 23.0.1 2022-03-21
+MODINVSTOR-883 Migrate to use new api-lint and api-doc CI tools
+MODINVSTOR-880: Migration for effectiveShelvingOrder for Dewey and Other scheme call numbers
+MODINVSTOR-877 Add more unit tests
+MODINVSTOR-874 publicationPeriod not changed after record update
+MODINVSTOR-876 Store Shelving Order in item (Dewey call numbers)
+
 ## 23.0.0 2022-02-22
 
 * Added administrative notes to item, instance, and holdings records (MODINVSTOR-834, MODINVSTOR-833, MODINVSTOR-832)
 * Upgrade to RMB 33.1.3, 33.2.4 (CVE-2021-44228) (MODINVSTOR-851, MODINVSTOR-868)
-* Introduces validation against RAML API specs for 147 APIs (MODINVSTOR-24) 
+* Introduces validation against RAML API specs for 147 APIs (MODINVSTOR-24)
 
 ## 22.0.0 2021-10-06
 
