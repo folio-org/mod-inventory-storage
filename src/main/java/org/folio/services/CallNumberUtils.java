@@ -12,7 +12,9 @@ public class CallNumberUtils {
   public static Optional<String> getShelfKeyFromCallNumber(String callNumber) {
     return Optional.ofNullable(callNumber)
       .flatMap(cn -> getValidShelfKey(new LCCallNumber(cn))
-        .or(() -> getValidShelfKey(new DeweyCallNumber(cn))));
+        .or(() -> getValidShelfKey(new DeweyCallNumber(cn))))
+      .or(() -> Optional.ofNullable(callNumber))
+      .map(String::trim);
   }
 
   private static Optional<String> getValidShelfKey(CallNumber value) {

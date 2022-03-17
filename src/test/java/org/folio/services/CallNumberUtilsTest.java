@@ -35,10 +35,14 @@ public class CallNumberUtilsTest extends TestCase {
     "PR 3919 L33 41990,PR 3919 .L33 41990,,PR919 .L33 1990,,,,,",
     "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,",
     "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,",
+    "3341.7,,,341.7,,,,,",
     "3341.7 258 221,,,341.7/58 / 21,,,,,",
     "3341.7 258 221,,T1,341.7/58 / 21,,,,,",
     "3394.1 O41 B,,,394.1 O41b,,,,,",
     "3621.56 W91 M V 13 NO 12 41999,,,621.56 W91m,v.3,no. 2,1999,,",
+    "221 E23,,,21 E23,,,,,",
+    "other,,,other,,,,,",
+    "free-text,,,free-text,,,,,"
   })
   @Test
   public void inputForShelvingNumber(
