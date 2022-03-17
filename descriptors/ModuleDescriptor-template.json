@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage-dereferenced",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [{
         "methods": ["GET"],
         "pathPattern": "/item-storage-dereferenced/items",
@@ -111,7 +111,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "5.0",
+      "version": "5.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -142,7 +142,7 @@
     },
     {
       "id": "holdings-storage-batch-sync",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -251,7 +251,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -262,7 +262,7 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1242,7 +1242,7 @@
     },
     {
       "id": "inventory-view",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],

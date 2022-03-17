@@ -2,6 +2,14 @@
 
 * Add related instances record API (MODINVSTOR-861)
 * Added integrity checks to statisticalCodeIds in instance records (MODINVSTOR-885)
+* provides `item-storage-dereferenced 0.2`
+* provides `holdings-storage 5.1`
+* provides `holdings-storage-batch-sync 1.1`
+* provides `instance-storage 8.1`
+* provides `instance-storage-batch 1.1`
+* provides `instance-storage-batch-sync 1.1`
+* provides `inventory-view 1.1`
+
 
 ## 23.0.0 2022-02-22
 
