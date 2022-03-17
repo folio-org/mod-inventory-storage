@@ -8,9 +8,12 @@
       "type": "string",
       "$ref": "../raml-util/schemas/uuid.schema"
     },
-    "name": {
+    "migrations": {
       "description": "Name of migration procedure",
-      "type": "string"
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "affectedEntities": {
       "description": "List of affected entities by particular migration",
@@ -39,7 +42,7 @@
         "Id publishing failed",
         "Ids published",
         "Pending cancel",
-        "Id publishing cancelled",
+        "Cancelled",
         "Completed"
       ]
     },

@@ -11,23 +11,27 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.IDS_PUBLISHED;
-import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.ID_PUBLISHING_FAILED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.PENDING_CANCEL;
 
 public final class AsyncMigrationJobService {
-  private static final List<AsyncMigrationJobRunner> migrationJobRunners = List.of(new PublicationPeriodMigrationJobRunner());
-  private final static List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List.of(AsyncMigrationJob.JobStatus.IN_PROGRESS, IDS_PUBLISHED);
+  private static final List<AsyncMigrationJobRunner> migrationJobRunners = List
+    .of(new PublicationPeriodMigrationJobRunner(), new ShelvingOrderMigrationJobRunner());
+  private final static List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List
+    .of(AsyncMigrationJob.JobStatus.IN_PROGRESS, IDS_PUBLISHED);
 
   private final AsyncMigrationJobRepository migrationJobRepository;
   private final AsyncMigrationContext migrationContext;
@@ -44,14 +48,14 @@ public final class AsyncMigrationJobService {
       return migrationJobRepository.save(migrationJobResponse.getId(), migrationJobResponse)
         .map(notUsed -> {
           migrationJobRunners.stream()
-            .filter(v -> v.getMigrationName().equals(jobRequest.getName())).findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("This migration with is not available."))
-            .startAsyncMigration(migrationJobResponse, migrationContext);
+            .filter(v -> jobRequest.getMigrations().contains(v.getMigrationName()))
+            .forEach(v -> v.startAsyncMigration(migrationJobResponse, new AsyncMigrationContext(migrationContext, v.getMigrationName())));
           return migrationJobResponse;
         });
     } else {
       return Future.failedFuture(
-        new IllegalArgumentException(format("Migration with name %s is not available.", jobRequest.getName())));
+        new IllegalArgumentException(format("One or more migrations are not available. Migrations: %s",
+          String.join(" ", jobRequest.getMigrations()))));
     }
   }
 
@@ -64,7 +68,7 @@ public final class AsyncMigrationJobService {
     AsyncMigrations migrations = new AsyncMigrations();
     migrationJobRunners.stream()
       .map(jobs -> new AsyncMigration()
-        .withName(jobs.getMigrationName())
+        .withMigrations(Collections.singletonList(jobs.getMigrationName()))
         .withAffectedEntities(jobs.getAffectedEntities()))
       .forEach(migration -> {
         migrations.getAsyncMigrations().add(migration);
@@ -73,30 +77,32 @@ public final class AsyncMigrationJobService {
     return migrations;
   }
 
-  private Optional<AsyncMigrationJobRunner> getMigrationJobRunnerByName(String name) {
+  private List<AsyncMigrationJobRunner> getMigrationJobRunnersByName(List<String> migrationNames) {
     return migrationJobRunners.stream()
-      .filter(runners -> runners.getMigrationName().equals(name))
-      .findFirst();
+      .filter(runners -> migrationNames.contains(runners.getMigrationName()))
+      .collect(Collectors.toList());
   }
 
   private boolean isJobAvailable(AsyncMigrationJobRequest jobRequest) {
-    return getAvailableMigrations().getAsyncMigrations().stream()
-      .anyMatch(v -> v.getName().equals(jobRequest.getName()));
+    var availableMigrations = getAvailableMigrations().getAsyncMigrations()
+      .stream().flatMap(v -> Stream.of(v.getMigrations())).collect(Collectors.toList())
+      .stream().flatMap(List::stream).collect(Collectors.toList());
+    return availableMigrations.containsAll(jobRequest.getMigrations());
   }
 
   private AsyncMigrationJob buildInitialJob(AsyncMigrationJobRequest request) {
-    var jobRunner = getMigrationJobRunnerByName(request.getName());
-    var affectedEntities = new ArrayList<String>();
-    jobRunner.ifPresent(asyncMigrationJobRunner -> affectedEntities.addAll(asyncMigrationJobRunner
+    var jobRunners = getMigrationJobRunnersByName(request.getMigrations());
+    var affectedEntities = new HashSet<String>();
+    jobRunners.forEach(asyncMigrationJobRunner -> affectedEntities.addAll(asyncMigrationJobRunner
       .getAffectedEntities()
       .stream().map(Enum::name)
       .collect(Collectors.toList())));
     return new AsyncMigrationJob()
       .withJobStatus(AsyncMigrationJob.JobStatus.IN_PROGRESS)
       .withPublished(0)
-      .withName(request.getName())
+      .withMigrations(request.getMigrations())
       .withSubmittedDate(new Date())
-      .withAffectedEntities(affectedEntities)
+      .withAffectedEntities(new ArrayList<>(affectedEntities))
       .withId(randomUUID().toString());
   }
 
@@ -104,7 +110,7 @@ public final class AsyncMigrationJobService {
     migrationJobRepository.fetchAndUpdate(jobId,
       resp -> {
         var finalStatus = resp.getJobStatus() == PENDING_CANCEL
-          ? ID_PUBLISHING_CANCELLED : ID_PUBLISHING_FAILED;
+          ? CANCELLED : ID_PUBLISHING_FAILED;
         return resp.withJobStatus(finalStatus).withFinishedDate(new Date());
       });
   }
@@ -134,7 +140,7 @@ public final class AsyncMigrationJobService {
     return migrationJobRepository
       .fetchAndUpdate(migrationJob.getId(), job -> {
         job.setProcessed(job.getProcessed() + records);
-        if (ACCEPTABLE_STATUSES.contains(migrationJob.getJobStatus())) {
+        if (ACCEPTABLE_STATUSES.contains(job.getJobStatus())) {
           job.setJobStatus(job.getProcessed() >= job.getPublished()
             ? AsyncMigrationJob.JobStatus.COMPLETED
             : AsyncMigrationJob.JobStatus.IN_PROGRESS);

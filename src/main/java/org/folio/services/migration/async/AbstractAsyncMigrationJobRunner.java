@@ -20,6 +20,7 @@ import static org.folio.services.domainevent.DomainEvent.asyncMigrationEvent;
 public abstract class AbstractAsyncMigrationJobRunner {
 
   public static final String ASYNC_MIGRATION_JOB_ID_HEADER = "async-migration-job-id";
+  public static final String ASYNC_MIGRATION_JOB_NAME = "async-migration-job-name";
   private final Logger log = LogManager.getLogger(getClass());
 
   protected Future<Void> startMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
@@ -68,7 +69,8 @@ public abstract class AbstractAsyncMigrationJobRunner {
     return new InventoryProducerRecordBuilder()
       .key(row.getUUID("id").toString())
       .value(asyncMigrationEvent(context.getJob(), TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders())))
-      .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId());
+      .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId())
+      .header(ASYNC_MIGRATION_JOB_NAME, context.getMigrationContext().getMigrationName());
   }
 
   private static class StreamingContext {

@@ -6,6 +6,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +19,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.folio.services.migration.async.AbstractAsyncMigrationJobRunner.ASYNC_MIGRATION_JOB_NAME;
 
 public class AsyncMigrationsConsumerUtils {
 
@@ -34,17 +38,19 @@ public class AsyncMigrationsConsumerUtils {
         headers.put(TENANT_HEADER, tenantId);
 
         var availableMigrations = Set.of(
-          new PublicationPeriodMigrationService(vertxContext, headers));
+          new PublicationPeriodMigrationService(vertxContext, headers),
+          new ShelvingOrderAsyncMigrationService(vertxContext, headers));
         var jobService = new AsyncMigrationJobService(vertxContext, headers);
 
         var migrationEvents = buildIdsForMigrations(v.getValue());
         var migrations = migrationEvents.entrySet().stream()
           .filter(entry -> entry.getValue() != null && !entry.getValue().isEmpty())
           .map(entry -> {
-            var migrationJob = entry.getKey();
+            var migrationJob = entry.getKey().getJob();
+            var migrationName = entry.getKey().getMigrationName();
             var ids = entry.getValue();
             var startedMigrations = availableMigrations.stream()
-              .filter(javaMigration -> shouldProcessIdsForJob(javaMigration, migrationJob))
+              .filter(javaMigration -> shouldProcessIdsForJob(javaMigration, migrationJob, migrationName))
               .map(javaMigration -> javaMigration.runMigrationForIds(ids)
                 .onSuccess(notUsed -> jobService.logJobProcessed(migrationJob, ids.size()))
                 .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId())))
@@ -59,27 +65,39 @@ public class AsyncMigrationsConsumerUtils {
     };
   }
 
-  private static boolean shouldProcessIdsForJob(PublicationPeriodMigrationService javaMigration,
-                                                AsyncMigrationJob migrationJob) {
-    return javaMigration.getMigrationName().equals(migrationJob.getName())
+  private static boolean shouldProcessIdsForJob(AsyncBaseMigrationService javaMigration,
+                                                AsyncMigrationJob migrationJob,
+                                                String migrationName) {
+    return migrationName.equals(javaMigration.getMigrationName())
       && (migrationJob.getJobStatus().equals(AsyncMigrationJob.JobStatus.IN_PROGRESS)
       || migrationJob.getJobStatus().equals(AsyncMigrationJob.JobStatus.IDS_PUBLISHED));
   }
 
-  private static Map<AsyncMigrationJob, Set<String>> buildIdsForMigrations(Set<ConsumerRecord<String, JsonObject>> records) {
-    Map<AsyncMigrationJob, Set<String>> result = new HashMap<>();
+  private static Map<MigrationContext, Set<String>> buildIdsForMigrations(Set<ConsumerRecord<String, JsonObject>> records) {
+    Map<MigrationContext, Set<String>> result = new HashMap<>();
     records.forEach(record -> {
-      String id = record.key();
-      AsyncMigrationJob migrationName = getMigrationJobFromMessage(record);
-      result.computeIfAbsent(migrationName, k -> {
-        var set = new HashSet<String>();
-        set.add(id);
-        return set;
-      });
-      result.computeIfPresent(migrationName, (k, v) -> {
-        v.add(id);
-        return v;
-      });
+
+      var headerIterator = record
+        .headers().headers(ASYNC_MIGRATION_JOB_NAME)
+        .iterator();
+
+      if (headerIterator.hasNext()) {
+
+        String id = record.key();
+        var migrationContext = new MigrationContext(
+          new String(headerIterator.next().value()),
+          getMigrationJobFromMessage(record));
+
+        result.computeIfAbsent(migrationContext, k -> {
+          var set = new HashSet<String>();
+          set.add(id);
+          return set;
+        });
+        result.computeIfPresent(migrationContext, (k, v) -> {
+          v.add(id);
+          return v;
+        });
+      }
     });
     return result;
   }
@@ -87,7 +105,9 @@ public class AsyncMigrationsConsumerUtils {
   private static Map<String, Set<ConsumerRecord<String, JsonObject>>> buildTenantRecords(KafkaConsumerRecords<String, JsonObject> records) {
     var result = new HashMap<String, Set<ConsumerRecord<String, JsonObject>>>();
     records.records().iterator().forEachRemaining(record -> {
-      var iterator = record.headers().headers(TENANT_HEADER).iterator();
+      var iterator = record
+        .headers().headers(TENANT_HEADER)
+        .iterator();
       if (iterator.hasNext()) {
         String tenantId = new String(iterator.next().value());
         result.computeIfAbsent(tenantId, k -> {
@@ -109,5 +129,41 @@ public class AsyncMigrationsConsumerUtils {
     final var oldOrNew = payload.containsKey("new")
       ? payload.getJsonObject("new") : payload.getJsonObject("old");
     return oldOrNew != null ? oldOrNew.mapTo(AsyncMigrationJob.class) : null;
+  }
+
+  private static class MigrationContext {
+    private final String migrationName;
+    private final AsyncMigrationJob job;
+
+    public MigrationContext(String migrationName, AsyncMigrationJob job) {
+      this.migrationName = migrationName;
+      this.job = job;
+    }
+
+    public String getMigrationName() {
+      return migrationName;
+    }
+
+    public AsyncMigrationJob getJob() {
+      return job;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+
+      if (!(o instanceof MigrationContext)) return false;
+
+      MigrationContext that = (MigrationContext) o;
+
+      return new EqualsBuilder().append(getMigrationName(), that.getMigrationName())
+        .append(getJob(), that.getJob()).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+      return new HashCodeBuilder(17, 37)
+        .append(getMigrationName()).append(getJob()).toHashCode();
+    }
   }
 }
