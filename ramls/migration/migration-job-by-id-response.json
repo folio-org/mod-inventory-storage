@@ -8,9 +8,12 @@
       "type": "string",
       "$ref": "../raml-util/schemas/uuid.schema"
     },
-    "name": {
+    "migrations": {
       "description": "Name of migration procedure",
-      "type": "string"
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "affectedEntities": {
       "description": "List of affected entities by particular migration",
@@ -21,15 +24,39 @@
     },
     "published": {
       "description": "Number of records that was published so far",
-      "type": "integer",
-      "minimum": 0,
-      "default": 0
+      "type": "array",
+      "items": {
+        "properties": {
+          "migrationName": {
+            "description": "Name of migration procedure",
+            "type": "string"
+          },
+          "count": {
+            "description": "Number of records that was published so far",
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      }
     },
     "processed": {
       "description": "Number of records that was processed",
-      "type": "integer",
-      "minimum": 0,
-      "default": 0
+      "type": "array",
+      "items": {
+        "properties": {
+          "migrationName": {
+            "description": "Name of migration procedure",
+            "type": "string"
+          },
+          "count": {
+            "description": "Number of records that was processed",
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      }
     },
     "jobStatus": {
       "description": "Overall job status",
@@ -39,7 +66,7 @@
         "Id publishing failed",
         "Ids published",
         "Pending cancel",
-        "Id publishing cancelled",
+        "Cancelled",
         "Completed"
       ]
     },
