@@ -17,11 +17,18 @@ import static org.folio.Environment.environmentName;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.asyncMigrationEvent;
 
-public abstract class AbstractAsyncMigrationJobRunner {
+public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJobRunner {
 
   public static final String ASYNC_MIGRATION_JOB_ID_HEADER = "async-migration-job-id";
   public static final String ASYNC_MIGRATION_JOB_NAME = "async-migration-job-name";
   private final Logger log = LogManager.getLogger(getClass());
+
+  @Override
+  public void startAsyncMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
+    context.getVertxContext().executeBlocking(v ->
+      startMigration(migrationJob, context)
+        .onComplete(result -> v.complete()));
+  }
 
   protected Future<Void> startMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
     var migrationService = new AsyncMigrationJobService(context.getVertxContext(), context.getOkapiHeaders());

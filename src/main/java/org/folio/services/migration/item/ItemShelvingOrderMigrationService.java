@@ -56,7 +56,7 @@ public class ItemShelvingOrderMigrationService extends AsyncBaseMigrationService
     return "itemShelvingOrderMigration";
   }
 
-  private String selectSql() {
+  protected String selectSql() {
     return String.format(SELECT_SQL, postgresClient.getFullTableName("item"));
   }
 }

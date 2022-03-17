@@ -37,7 +37,8 @@ public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrati
     return postgresClient.selectStream(connection, selectSql());
   }
 
-  private String selectSql() {
+  @Override
+  protected String selectSql() {
     String ids = getIdsForMigration().stream()
       .map(id -> "'" + id + "'")
       .collect(Collectors.joining(", "));
