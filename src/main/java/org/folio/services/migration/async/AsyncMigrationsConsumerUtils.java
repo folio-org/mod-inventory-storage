@@ -52,7 +52,7 @@ public class AsyncMigrationsConsumerUtils {
             var startedMigrations = availableMigrations.stream()
               .filter(javaMigration -> shouldProcessIdsForJob(javaMigration, migrationJob, migrationName))
               .map(javaMigration -> javaMigration.runMigrationForIds(ids)
-                .onSuccess(notUsed -> jobService.logJobProcessed(migrationJob, ids.size()))
+                .onSuccess(notUsed -> jobService.logJobProcessed(migrationName, migrationJob.getId(), ids.size()))
                 .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId())))
               .collect(Collectors.toList());
             return CompositeFuture.all(new ArrayList<>(startedMigrations));

@@ -61,7 +61,8 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
           context.getAsyncMigrationService().logJobFail(context.getJobId());
         } else {
           log.info("Publishing records for migration completed");
-          context.getAsyncMigrationService().logPublishingCompleted(recordsPublished.result(), context.getJobId());
+          context.getAsyncMigrationService()
+            .logPublishingCompleted(context.getMigrationContext().getMigrationName(), recordsPublished.result(), context.getJobId());
         }
       });
   }
@@ -69,7 +70,8 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   private Future<Long> processStream(StreamingContext context) {
     return context.getPublisher().publishStream(context.stream,
       row -> rowToProducerRecord(row, context),
-      recordsPublished -> context.getAsyncMigrationService().logJobDetails(context.job, recordsPublished));
+      recordsPublished -> context.getAsyncMigrationService()
+        .logJobDetails(context.getMigrationContext().getMigrationName(), context.getJob(), recordsPublished));
   }
 
   private InventoryProducerRecordBuilder rowToProducerRecord(Row row, StreamingContext context) {

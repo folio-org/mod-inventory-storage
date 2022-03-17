@@ -7,6 +7,8 @@ import org.folio.rest.jaxrs.model.AsyncMigration;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
+import org.folio.rest.jaxrs.model.Processed;
+import org.folio.rest.jaxrs.model.Published;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 
@@ -99,7 +101,6 @@ public final class AsyncMigrationJobService {
       .collect(Collectors.toList())));
     return new AsyncMigrationJob()
       .withJobStatus(AsyncMigrationJob.JobStatus.IN_PROGRESS)
-      .withPublished(0)
       .withMigrations(request.getMigrations())
       .withSubmittedDate(new Date())
       .withAffectedEntities(new ArrayList<>(affectedEntities))
@@ -115,19 +116,34 @@ public final class AsyncMigrationJobService {
       });
   }
 
-  public void logPublishingCompleted(Long recordsPublished, String jobId) {
+  public void logPublishingCompleted(String migrationName, Long recordsPublished, String jobId) {
     migrationJobRepository
-      .fetchAndUpdate(jobId, job -> job
-        .withPublished(recordsPublished.intValue())
-        .withJobStatus(IDS_PUBLISHED));
+      .fetchAndUpdate(jobId, job -> {
+        job.getPublished().stream()
+          .filter(p -> migrationName.equals(p.getMigrationName()))
+          .findFirst().ifPresentOrElse(p -> p.setCount(recordsPublished.intValue()),
+            () -> job.getPublished().add(new Published()
+              .withMigrationName(migrationName)
+              .withCount(recordsPublished.intValue())));
+        job.withJobStatus(IDS_PUBLISHED);
+        return job;
+      });
   }
 
-  public Future<AsyncMigrationJob> logJobDetails(AsyncMigrationJob migrationJob, Long records) {
+  public Future<AsyncMigrationJob> logJobDetails(String migrationName, AsyncMigrationJob migrationJob, Long records) {
     if (!shouldLogJobDetails(records)) {
       return succeededFuture(migrationJob);
     }
     return migrationJobRepository
-      .fetchAndUpdate(migrationJob.getId(), job -> job.withPublished(records.intValue()))
+      .fetchAndUpdate(migrationJob.getId(), job -> {
+        job.getPublished().stream()
+          .filter(p -> migrationName.equals(p.getMigrationName()))
+          .findFirst().ifPresentOrElse(p -> p.setCount(records.intValue()),
+            () -> job.getPublished().add(new Published()
+              .withMigrationName(migrationName)
+              .withCount(records.intValue())));
+        return job;
+      })
       .map(job -> {
         if (job.getJobStatus() == AsyncMigrationJob.JobStatus.PENDING_CANCEL) {
           throw new IllegalStateException("The job has been cancelled");
@@ -136,12 +152,25 @@ public final class AsyncMigrationJobService {
       });
   }
 
-  public Future<AsyncMigrationJob> logJobProcessed(AsyncMigrationJob migrationJob, Integer records) {
+  public Future<AsyncMigrationJob> logJobProcessed(String migrationName, String jobId, Integer records) {
     return migrationJobRepository
-      .fetchAndUpdate(migrationJob.getId(), job -> {
-        job.setProcessed(job.getProcessed() + records);
+      .fetchAndUpdate(jobId, job -> {
+        job.getProcessed().stream()
+          .filter(p -> p.getMigrationName().equals(migrationName))
+          .findFirst()
+          .ifPresentOrElse(v -> v.setCount(v.getCount() + records),
+            () -> job.getProcessed().add(new Processed()
+              .withCount(records)
+              .withMigrationName(migrationName)));
         if (ACCEPTABLE_STATUSES.contains(job.getJobStatus())) {
-          job.setJobStatus(job.getProcessed() >= job.getPublished()
+          var totalPublished = job.getPublished()
+            .stream().map(Published::getCount)
+            .mapToInt(Integer::intValue).sum();
+          var totalProcessed = job.getProcessed()
+            .stream().map(Processed::getCount)
+            .mapToInt(Integer::intValue).sum();
+
+          job.setJobStatus(totalProcessed >= totalPublished
             ? AsyncMigrationJob.JobStatus.COMPLETED
             : AsyncMigrationJob.JobStatus.IN_PROGRESS);
         }

@@ -24,15 +24,37 @@
     },
     "published": {
       "description": "Number of records that was published so far",
-      "type": "integer",
-      "minimum": 0,
-      "default": 0
+      "type": "array",
+      "items": {
+        "properties": {
+          "migrationName": {
+            "description": "Name of migration procedure",
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      }
     },
     "processed": {
       "description": "Number of records that was processed",
-      "type": "integer",
-      "minimum": 0,
-      "default": 0
+      "type": "array",
+      "items": {
+        "properties": {
+          "migrationName": {
+            "description": "Name of migration procedure",
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      }
     },
     "jobStatus": {
       "description": "Overall job status",

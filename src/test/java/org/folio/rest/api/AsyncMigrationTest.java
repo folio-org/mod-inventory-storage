@@ -9,6 +9,8 @@ import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
+import org.folio.rest.jaxrs.model.Processed;
+import org.folio.rest.jaxrs.model.Published;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -18,6 +20,7 @@ import org.folio.services.migration.async.PublicationPeriodMigrationJobRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -49,7 +52,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   private final AsyncMigrationJobRepository repository = getRepository();
 
   @Test
-  public void canMigrateItems() {
+  public void canMigrateItemsInstances(){
     var numberOfRecords = 101;
 
     var holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
@@ -59,23 +62,6 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
         .withItemLevelCallNumber("K1 .M44")
         .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents().withCallNumber("K1 .M44")))));
 
-    var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(Collections.singletonList("itemShelvingOrderMigration")));
-
-    await().atMost(20, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
-      .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
-
-    var job = asyncMigration.getMigrationJob(migrationJob.getId());
-
-    assertThat(job.getPublished(), is(numberOfRecords));
-    assertThat(job.getProcessed(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
-    assertThat(job.getSubmittedDate(), notNullValue());
-  }
-
-  @Test
-  public void canMigrateInstances() {
-    var numberOfRecords = 202;
     IntStream.range(0, numberOfRecords).parallel().forEach(v ->
       instancesClient.create(new JsonObject()
         .put("title", "test" + v)
@@ -97,15 +83,17 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
       .until(() -> instancesClient.getByQuery("?query=publicationPeriod.start==2018").isEmpty());
 
     var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(Collections.singletonList("publicationPeriodMigration")));
+      .withMigrations(Arrays.asList("publicationPeriodMigration", "itemShelvingOrderMigration")));
 
     await().atMost(20, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
       .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
 
     var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
-    assertThat(job.getPublished(), is(numberOfRecords));
-    assertThat(job.getProcessed(), is(numberOfRecords));
+    assertThat(job.getPublished().stream().map(Published::getCount)
+      .mapToInt(Integer::intValue).sum(), is(numberOfRecords * 2));
+    assertThat(job.getProcessed().stream().map(Processed::getCount)
+      .mapToInt(Integer::intValue).sum(), is(numberOfRecords * 2));
     assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
@@ -142,7 +130,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
     assertThat(job.getJobStatus(), is(CANCELLED));
-    assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
+    assertThat(job.getPublished().get(0).getCount(), greaterThanOrEqualTo(1000));
   }
 
   private PostgresClientFuturized getPostgresClientFuturized() {
