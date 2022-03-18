@@ -50,7 +50,9 @@ resourceTypes:
         responses:
           200:
             body:
-  #              type: instanceRelationship
+              application/json:
+                type: instanceRelationship
+                example: !include examples/instancerelationship_get.json
         description: |
           Get Instance Relationship
   /instances:
@@ -86,7 +88,9 @@ resourceTypes:
         responses:
           200:
             body:
-  #              type: instance
+              application/json:
+                type: instance
+                example: !include examples/instance_get.json
         description: |
           Get Instance by InstanceId
           Instances are stored and accessed by a hash of key properties. The rules which govern
