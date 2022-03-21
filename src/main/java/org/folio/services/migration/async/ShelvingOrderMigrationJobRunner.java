@@ -12,23 +12,23 @@ import java.util.List;
 
 import static java.lang.String.format;
 
-public class PublicationPeriodMigrationJobRunner extends AbstractAsyncMigrationJobRunner {
+public class ShelvingOrderMigrationJobRunner extends AbstractAsyncMigrationJobRunner {
 
   private static final String SELECT_SQL = "SELECT id FROM %s " +
-    "WHERE jsonb->>'publicationPeriod' IS NULL AND parse_publication_period(jsonb) IS NOT NULL";
+    "WHERE jsonb->>'effectiveCallNumberComponents' IS NOT NULL";
 
   @Override
   protected Future<RowStream<Row>> openStream(PostgresClientFuturized postgresClient, SQLConnection connection) {
-    return postgresClient.selectStream(connection, format(SELECT_SQL, postgresClient.getFullTableName("instance")));
+    return postgresClient.selectStream(connection, format(SELECT_SQL, postgresClient.getFullTableName("item")));
   }
 
   @Override
   public String getMigrationName() {
-    return "publicationPeriodMigration";
+    return "itemShelvingOrderMigration";
   }
 
   @Override
   public List<AffectedEntity> getAffectedEntities() {
-    return Collections.singletonList(AffectedEntity.INSTANCE);
+    return Collections.singletonList(AffectedEntity.ITEM);
   }
 }

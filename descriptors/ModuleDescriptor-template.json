@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "item-storage-dereferenced",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [{
         "methods": ["GET"],
         "pathPattern": "/item-storage-dereferenced/items",
@@ -111,7 +111,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "5.0",
+      "version": "5.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -142,7 +142,7 @@
     },
     {
       "id": "holdings-storage-batch-sync",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -153,7 +153,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "8.0",
+      "version": "8.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -251,7 +251,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -262,7 +262,7 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1242,7 +1242,7 @@
     },
     {
       "id": "inventory-view",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -2608,6 +2608,9 @@
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
       "subPermissions": [
+        "authority-storage.authority.reindex.post",
+        "authority-storage.authority.reindex.item.get",
+        "authority-storage.authority.reindex.item.delete",
         "inventory-storage.related-instance-types.item.post",
         "inventory-storage.related-instance-types.item.put",
         "inventory-storage.related-instance-types.item.get",
@@ -2633,9 +2636,6 @@
         "inventory-storage.authorities.item.put",
         "inventory-storage.authorities.item.delete",
         "inventory-storage.authorities.collection.delete",
-        "inventory-storage.authority.reindex.post",
-        "inventory-storage.authority.reindex.item.get",
-        "inventory-storage.authority.reindex.item.delete",
         "inventory-storage.holdings.collection.get",
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",
@@ -2827,10 +2827,11 @@
         "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
         "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
         "inventory-storage.holdings-sources.collection.get",
-        "inventory-storage.holdings-sources.get",
-        "inventory-storage.holdings-sources.post",
-        "inventory-storage.holdings-sources.put",
-        "inventory-storage.holdings-sources.delete",
+        "inventory-storage.holdings-sources.item.get",
+        "inventory-storage.holdings-sources.item.post",
+        "inventory-storage.holdings-sources.item.get",
+        "inventory-storage.holdings-sources.item.put",
+        "inventory-storage.holdings-sources.item.delete",
         "inventory-storage.bound-with-parts.collection.get",
         "inventory-storage.bound-with-parts.item.get",
         "inventory-storage.bound-with-parts.item.post",

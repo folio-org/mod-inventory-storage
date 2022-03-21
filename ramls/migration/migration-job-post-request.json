@@ -3,16 +3,19 @@
   "description": "Post migration job request",
   "type": "object",
   "properties": {
-    "name": {
-      "description": "Name of migration procedure",
-      "type": "string"
+    "migrations": {
+      "description": "Names of migration procedure",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "affectedEntities": {
       "description": "List of affected entities by particular migration",
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["INSTANCE"]
+        "enum": ["INSTANCE", "ITEM"]
       }
     }
   },
