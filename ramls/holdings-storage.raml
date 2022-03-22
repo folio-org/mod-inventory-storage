@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Holdings Storage
-version: v5.0
+version: v5.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -58,6 +58,7 @@ resourceTypes:
         responses:
           200:
             body:
-#              type: holdinsgrecord
+              application/json:
+                type: holdingsRecord
             description: |
               Get Holdings Record by holdingsRecordId

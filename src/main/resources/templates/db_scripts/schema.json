@@ -1145,8 +1145,8 @@
     },
     {
       "run": "after",
-      "snippetPath": "statisticalCodeTypesReferenceCheckTrigger.sql",
-      "fromModuleVersion": "23.0.0"
+      "snippetPath": "statisticalCodeIdReferenceCheckTrigger.sql",
+      "fromModuleVersion": "23.1.0"
     }
   ]
 }
