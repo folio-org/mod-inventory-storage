@@ -2062,6 +2062,24 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allFoundIds, hasItems(wholeCallNumberHolding.getId(), noPrefixHolding.getId()));
   }
 
+  @Test
+  public void canFilterByInstanceProperty() {
+    IndividualResource instancePlanet = instancesClient
+        .create(smallAngryPlanet(UUID.randomUUID()));
+    IndividualResource instanceUprooted = instancesClient
+        .create(uprooted(UUID.randomUUID()));
+    UUID holdingPlanet = createHolding(instancePlanet.getId(), mainLibraryLocationId, null);
+    UUID holdingUprooted = createHolding(instanceUprooted.getId(), mainLibraryLocationId, null);
+
+    var foundPlanet = holdingsClient.getMany("instance.title = planet");
+    assertThat(foundPlanet, hasSize(1));
+    assertThat(foundPlanet.get(0).getId(), is(holdingPlanet));
+
+    var foundUprooted = holdingsClient.getMany("instance.title = uprooted");
+    assertThat(foundUprooted, hasSize(1));
+    assertThat(foundUprooted.get(0).getId(), is(holdingUprooted));
+  }
+
   private void setHoldingsSequence(long sequenceNumber) {
     final Vertx vertx = StorageTestSuite.getVertx();
     final PostgresClient postgresClient =
