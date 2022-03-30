@@ -1,4 +1,4 @@
-## 23.0.2 IN-PROGRESS
+## 23.0.2 2022-03-30
 
 * Removes undefined permissions (MODINVSTOR-882)
 
