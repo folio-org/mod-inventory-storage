@@ -1,3 +1,7 @@
+## 23.0.2 IN-PROGRESS
+
+* Removes undefined permissions (MODINVSTOR-882)
+
 ## 23.0.1 2022-03-21
 MODINVSTOR-883 Migrate to use new api-lint and api-doc CI tools
 MODINVSTOR-880: Migration for effectiveShelvingOrder for Dewey and Other scheme call numbers
