@@ -7,6 +7,7 @@ buildMvn {
   doApiLint = true
   apiTypes = 'RAML'
   apiDirectories = 'ramls'
+  apiExcludes = 'authority-collection.raml'
 
   mvnDeploy = 'yes'
   doKubeDeploy = true
