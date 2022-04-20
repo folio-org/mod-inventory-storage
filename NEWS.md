@@ -14,6 +14,7 @@
 
 ## 23.0.0 2022-02-22
 
+* Added trigger to prevent statistical code deletion when in use (MODINVSTOR-829)
 * Added administrative notes to item, instance, and holdings records (MODINVSTOR-834, MODINVSTOR-833, MODINVSTOR-832)
 * Upgrade to RMB 33.1.3, 33.2.4 (CVE-2021-44228) (MODINVSTOR-851, MODINVSTOR-868)
 * Introduces validation against RAML API specs for 147 APIs (MODINVSTOR-24)

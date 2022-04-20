@@ -123,6 +123,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @After
   public void removeStatisticalCodes() {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
     statisticalCodeFixture.removeTestStatisticalCodes();
   }
 
