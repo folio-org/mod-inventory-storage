@@ -968,7 +968,7 @@
           "fieldName": "relatedInstanceId",
           "targetTable": "instance",
           "tOps": "ADD"
-        },       
+        },
         {
           "fieldName": "relatedInstanceType",
           "targetTable": "related_instance_type",
@@ -1146,6 +1146,11 @@
     {
       "run": "after",
       "snippetPath": "statisticalCodeIdReferenceCheckTrigger.sql",
+      "fromModuleVersion": "23.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "changeUUIDCastInGetStatisticalCodesFunction.sql",
       "fromModuleVersion": "23.1.0"
     }
   ]
