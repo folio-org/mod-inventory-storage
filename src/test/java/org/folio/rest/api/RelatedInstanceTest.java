@@ -58,7 +58,7 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("instanceId"), is(smallAngryUuid.toString()));
     assertThat(response.getJson().getString("relatedInstanceId"), is(nodUuid.toString()));
-    assertThat(response.getJson().getString("relatedInstanceType"), is(relatedInstanceTypeId.toString()));
+    assertThat(response.getJson().getString("relatedInstanceTypeId"), is(relatedInstanceTypeId.toString()));
   }
  
   @Test
@@ -132,7 +132,7 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("instanceId"), is(smallAngryUuid.toString()));
     assertThat(response.getJson().getString("relatedInstanceId"), is(nodUuid.toString()));
-    assertThat(response.getJson().getString("relatedInstanceType"), is(relatedInstanceTypeId.toString()));
+    assertThat(response.getJson().getString("relatedInstanceTypeId"), is(relatedInstanceTypeId.toString()));
 
     instancesClient.create(uprooted(upRootedUuid));
 
@@ -317,7 +317,7 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
       .put("id", existingRecordUuid)
       .put("instanceId", instanceId)
       .put("relatedInstanceId", relatedInstanceId)
-      .put("relatedInstanceType", relatedInstanceTypeId);
+      .put("relatedInstanceTypeId", relatedInstanceTypeId);
 
     send(relatedInstanceUrl, HttpMethod.PUT, request.toString(),
     SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updateRelatedInstance));
@@ -336,7 +336,7 @@ public class RelatedInstanceTest extends TestBaseWithInventoryUtil {
     JsonObject request = new JsonObject()
       .put("instanceId", instanceId)
       .put("relatedInstanceId", relatedInstanceId)
-      .put("relatedInstanceType", relatedInstanceTypeId);
+      .put("relatedInstanceTypeId", relatedInstanceTypeId);
 
     send(createRelatedInstanceUrl, HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(createRelatedInstance));

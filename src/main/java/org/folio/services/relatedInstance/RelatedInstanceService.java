@@ -46,13 +46,13 @@ public class RelatedInstanceService {
   }
 
   public Future<Response> createRelatedInstance(RelatedInstance entity) {
-    String relatedInstanceType = entity.getRelatedInstanceType().toString();
+    String relatedInstanceTypeId = entity.getRelatedInstanceTypeId().toString();
     return instanceRepository.getById(entity.getInstanceId())
       .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
       .compose(instance -> instanceRepository.getById(entity.getRelatedInstanceId()))
       .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
-      .compose(instance -> instanceTypeRepository.getById(entity.getRelatedInstanceType()))
-      .compose(instanceTypeRecord -> refuseIfNotFound(instanceTypeRecord, instanceTypeNotFoundMessage(relatedInstanceType)))
+      .compose(instance -> instanceTypeRepository.getById(entity.getRelatedInstanceTypeId()))
+      .compose(instanceTypeRecord -> refuseIfNotFound(instanceTypeRecord, instanceTypeNotFoundMessage(relatedInstanceTypeId)))
       .compose(instanceType -> {
         final Promise<Response> postResponse = promise();
 
@@ -64,15 +64,15 @@ public class RelatedInstanceService {
   }
 
   public Future<Response> updateRelatedInstance(RelatedInstance entity) {
-    String relatedInstanceType = entity.getRelatedInstanceType().toString();
+    String relatedInstanceTypeId = entity.getRelatedInstanceTypeId().toString();
     return relatedInstanceRepository.getById(entity.getId())
       .compose(CommonValidators::refuseIfNotFound)
       .compose(relatedInstance -> instanceRepository.getById(entity.getInstanceId())
       .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
       .compose(instance -> instanceRepository.getById(entity.getRelatedInstanceId()))
       .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
-      .compose(instance -> instanceTypeRepository.getById(entity.getRelatedInstanceType()))
-      .compose(instanceTypeRecord -> refuseIfNotFound(instanceTypeRecord, instanceTypeNotFoundMessage(relatedInstanceType)))
+      .compose(instance -> instanceTypeRepository.getById(entity.getRelatedInstanceTypeId()))
+      .compose(instanceTypeRecord -> refuseIfNotFound(instanceTypeRecord, instanceTypeNotFoundMessage(relatedInstanceTypeId)))
       .compose(instanceType -> {
         final Promise<Response> postResponse = promise();
 
