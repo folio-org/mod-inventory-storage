@@ -46,7 +46,7 @@ public class RelatedInstanceService {
   }
 
   public Future<Response> createRelatedInstance(RelatedInstance entity) {
-    String relatedInstanceTypeId = entity.getRelatedInstanceTypeId().toString();
+    String relatedInstanceTypeId = entity.getRelatedInstanceTypeId();
     return instanceRepository.getById(entity.getInstanceId())
       .compose(instanceRecord -> refuseIfNotFound(instanceRecord, instanceNotFoundMessage(entity.getInstanceId().toString())))
       .compose(instance -> instanceRepository.getById(entity.getRelatedInstanceId()))
@@ -64,7 +64,7 @@ public class RelatedInstanceService {
   }
 
   public Future<Response> updateRelatedInstance(RelatedInstance entity) {
-    String relatedInstanceTypeId = entity.getRelatedInstanceTypeId().toString();
+    String relatedInstanceTypeId = entity.getRelatedInstanceTypeId();
     return relatedInstanceRepository.getById(entity.getId())
       .compose(CommonValidators::refuseIfNotFound)
       .compose(relatedInstance -> instanceRepository.getById(entity.getInstanceId())
