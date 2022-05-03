@@ -970,7 +970,7 @@
           "tOps": "ADD"
         },
         {
-          "fieldName": "relatedInstanceType",
+          "fieldName": "relatedInstanceTypeId",
           "targetTable": "related_instance_type",
           "tOps": "ADD"
         }
