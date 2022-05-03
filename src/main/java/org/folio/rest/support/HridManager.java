@@ -258,8 +258,6 @@ public class HridManager {
   /**
    * Optimized version of getNextHrid that makes a single call to retrieve
    * hridsettings and the next sequence value for the specified inventory type.
-   * @param type
-   * @return
    */
   private Future<String> getNextHrid(InventoryType type) {
     final String sql = "select jsonb::TEXT from hrid_settings " +
@@ -288,8 +286,14 @@ public class HridManager {
           new ArrayTuple(1).addString(sequenceName),
           reply -> {
             var result = reply.result();
-            if (reply.failed() || result.size() != 2) {
+            if (reply.failed()) {
               fail(promise, "Failed to get hridsettings and next sequence value from the database", reply.cause());
+              return;
+            }
+            if (result.size() != 2) {
+              String errorMessage = "Result set contains " + result.size() + " items instead of 2 items";
+              fail(promise, errorMessage,
+                new IllegalStateException(errorMessage));
               return;
             }
             RowIterator<Row> iterator = result.iterator();
