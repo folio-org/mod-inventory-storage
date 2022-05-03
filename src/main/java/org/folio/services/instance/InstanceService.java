@@ -64,7 +64,11 @@ public class InstanceService {
           InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventPublisher.publishCreated());
+          .compose(response -> {
+            // return response without waiting for event publish
+            domainEventPublisher.publishCreated().apply(response);
+            return Future.succeededFuture(response);
+          });
       });
   }
 
