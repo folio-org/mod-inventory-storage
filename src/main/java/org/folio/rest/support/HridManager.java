@@ -288,8 +288,9 @@ public class HridManager {
           new ArrayTuple(1).addString(sequenceName),
           reply -> {
             var result = reply.result();
-            if (result.size() != 2) {
-              promise.complete(null);
+            if (reply.failed() || result.size() != 2) {
+              fail(promise, "Failed to get hridsettings and next sequence value from the database", reply.cause());
+              return;
             }
             RowIterator<Row> iterator = result.iterator();
             // get hridSettings
@@ -306,7 +307,7 @@ public class HridManager {
           });
       });
     } catch (Exception e) {
-      fail(promise, "Failed to get the next sequence value from the database", e);
+      fail(promise, "Failed to get hridsettings and next sequence value from the database", e);
     }
 
     return promise.future();
