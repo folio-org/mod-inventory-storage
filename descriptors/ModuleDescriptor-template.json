@@ -1,6 +1,7 @@
 {
   "id": "${artifactId}-${version}",
   "name": "Inventory Storage Module",
+  "replaces": [ "inventory-storage" ],
   "provides": [
     {
       "id": "item-storage-dereferenced",
