@@ -65,7 +65,12 @@ public class InstanceService {
 
         return postResponse.future()
           .compose(response -> {
-            // return response without waiting for event publish
+            // Return the response without waiting for a domain event publish
+            // to complete. Units of work performed by this service is the same
+            // but the ordering of the units of work provides a benefit to the
+            // api client invoking this endpoint. The response is returned
+            // a little earlier so the api client can continue its processing
+            // while the domain event publish is satisfied.
             domainEventPublisher.publishCreated().apply(response);
             return Future.succeededFuture(response);
           });

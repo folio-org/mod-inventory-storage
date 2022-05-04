@@ -8,7 +8,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.impl.future.FailedFuture;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
@@ -28,7 +27,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 public class HridManager {
   private static final Logger log = LogManager.getLogger();
@@ -225,34 +223,6 @@ public class HridManager {
     }
 
     return promise.future().map(v -> null);
-  }
-
-  private Future<String> getNextHrid(Function<HridSettings, Future<String>> mapper) {
-    final Promise<String> promise = Promise.promise();
-
-    try {
-      context.runOnContext(v -> getHridSettings().compose(mapper::apply).onComplete(promise));
-    } catch (Exception e) {
-      fail(promise, "Failed to get the next HRID", e);
-    }
-
-    return promise.future();
-  }
-
-  private Future<String> getNextHrid(final HridSettings hridSettings, InventoryType type) {
-    final String sql = "SELECT nextval('hrid_" + type.name().toLowerCase() + "_seq')";
-    final Promise<Row> promise = Promise.promise();
-
-    try {
-      postgresClient.selectSingle(sql, promise);
-    } catch (Exception e) {
-      fail(promise, "Failed to get the next sequence value from the database", e);
-    }
-
-    final String hridPrefix = type.getPrefix(hridSettings);
-    return promise.future()
-      .map(sequence -> String.format(getHridFormatter(hridSettings),
-        Objects.toString(hridPrefix, ""), sequence.getLong(0)));
   }
 
   /**
