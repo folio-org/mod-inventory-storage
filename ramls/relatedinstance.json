@@ -14,7 +14,7 @@
       "description": "ID of the second related instance",
       "type": "string"
     },
-    "relatedInstanceType":{
+    "relatedInstanceTypeId":{
       "description": "UUID of the related instance type",
       "type": "string"
     },
@@ -27,6 +27,6 @@
   "required": [
     "instanceId",
     "relatedInstanceId",
-    "relatedInstanceType"
+    "relatedInstanceTypeId"
   ]
 }
