@@ -1368,6 +1368,11 @@
           "permissionsRequired": ["inventory-storage.migration.job.item.get"]
         },
         {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/migrations/jobs",
+          "permissionsRequired": ["inventory-storage.migration.job.item.get"]
+        },
+        {
           "methods": ["DELETE"],
           "pathPattern": "/inventory-storage/migrations/jobs/{id}",
           "permissionsRequired": ["inventory-storage.migration.job.item.delete"]

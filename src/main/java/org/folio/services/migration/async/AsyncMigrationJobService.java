@@ -5,10 +5,12 @@ import io.vertx.core.Future;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigration;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
+import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.Processed;
 import org.folio.rest.jaxrs.model.Published;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 
@@ -42,6 +44,13 @@ public final class AsyncMigrationJobService {
     this.migrationJobRepository = new AsyncMigrationJobRepository(vertxContext, okapiHeaders);
     var postgresClient = new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders));
     this.migrationContext = new AsyncMigrationContext(vertxContext, okapiHeaders, postgresClient);
+  }
+
+  public Future<AsyncMigrationJobCollection> getAllAsyncJobs() {
+    return migrationJobRepository.get(new Criterion())
+      .map(list -> new AsyncMigrationJobCollection()
+        .withJobs(list)
+        .withTotalRecords(list.size()));
   }
 
   public Future<AsyncMigrationJob> submitAsyncMigration(AsyncMigrationJobRequest jobRequest) {

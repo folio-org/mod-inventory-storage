@@ -2,6 +2,7 @@ package org.folio.rest.support.fixtures;
 
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
+import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.support.HttpClient;
@@ -39,6 +40,13 @@ public final class AsyncMigrationFixture {
     return get(client.get(migrationsUrl(""), TENANT_ID)
       .thenApply(Response::getJson)
       .thenApply(json -> json.mapTo(AsyncMigrations.class)));
+  }
+
+  @SneakyThrows
+  public AsyncMigrationJobCollection getAllMigrationJobs() {
+    return get(client.get(migrationJobsUrl(""), TENANT_ID)
+      .thenApply(Response::getJson)
+      .thenApply(json -> json.mapTo(AsyncMigrationJobCollection.class)));
   }
 
   @SneakyThrows
