@@ -28,6 +28,18 @@ public class InventoryStorageMigrationsAPI implements InventoryStorageMigrations
   }
 
   @Override
+  public void getInventoryStorageMigrationsJobs(Map<String, String> okapiHeaders,
+                                                Handler<AsyncResult<Response>> asyncResultHandler,
+                                                Context vertxContext) {
+
+    new AsyncMigrationJobService(vertxContext, okapiHeaders).getAllAsyncJobs()
+      .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(
+        GetInventoryStorageMigrationsJobsResponse.respond200WithApplicationJson(response))))
+      .onFailure(error -> asyncResultHandler.handle(Future.succeededFuture(
+        GetInventoryStorageMigrationsJobsResponse.respond500WithTextPlain(error.getMessage()))));
+  }
+
+  @Override
   public void postInventoryStorageMigrationsJobs(AsyncMigrationJobRequest entity,
                                                  Map<String, String> okapiHeaders,
                                                  Handler<AsyncResult<Response>> asyncResultHandler,
