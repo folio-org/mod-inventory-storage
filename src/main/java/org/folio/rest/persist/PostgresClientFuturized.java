@@ -27,43 +27,23 @@ public class PostgresClientFuturized {
   }
 
   public <T> Future<String> save(String table, String id, T entity) {
-    final Promise<String> saveResult = promise();
-
-    postgresClient.save(table, id, entity, saveResult);
-
-    return saveResult.future();
+    return postgresClient.save(table, id, entity);
   }
 
   public <T> Future<T> getById(String tableName, String id, Class<T> type) {
-    final Promise<T> getByIdResult = promise();
-
-    postgresClient.getById(tableName, id, type, getByIdResult);
-
-    return getByIdResult.future();
+    return postgresClient.getById(tableName, id, type);
   }
 
   public <T> Future<List<T>> get(String tableName, Class<T> type, Criterion criterion) {
-    final Promise<Results<T>> getItemsResult = promise();
-
-    postgresClient.get(tableName, type, criterion, false, getItemsResult);
-
-    return getItemsResult.future().map(Results::getResults);
+    return postgresClient.get(tableName, type, criterion, false).map(Results::getResults);
   }
 
   public Future<RowSet<Row>> delete(String tableName, Criterion criterion) {
-    final Promise<RowSet<Row>> removeAllResult = promise();
-
-    postgresClient.delete(tableName, criterion, removeAllResult);
-
-    return removeAllResult.future();
+    return postgresClient.delete(tableName, criterion);
   }
 
   public Future<RowSet<Row>> deleteById(String tableName, String id) {
-    final Promise<RowSet<Row>> deleteResult = promise();
-
-    postgresClient.delete(tableName, id, deleteResult);
-
-    return deleteResult.future();
+    return postgresClient.delete(tableName, id);
   }
 
   public <T> Future<Map<String, T>> getById(String tableName, Collection<String> ids, Class<T> type) {
