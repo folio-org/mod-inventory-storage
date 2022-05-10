@@ -1,6 +1,5 @@
 ## 23.1.0 IN-PROGRESS
 
-* Add related instances record API (MODINVSTOR-861)
 * Added integrity checks to statisticalCodeIds in instance records (MODINVSTOR-885)
 * Removed UUID contraint on statisticalCodeIds in instance Records (MODINVSTOR-885)
 * Combined calls to retrieve HRID settings and getting sequence values (MODINVSTOR-894)
