@@ -5,7 +5,7 @@
       "fromModuleVersion": "22.1.0",
       "withMetadata": true,
       "withAuditing": false,
-      "withOptimisticLocking": "logOnConflict"
+      "withOptimisticLocking": "failOnConflict"
     },
     {
       "tableName": "loan_type",
