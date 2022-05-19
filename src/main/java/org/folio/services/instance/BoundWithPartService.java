@@ -38,7 +38,7 @@ public class BoundWithPartService {
       InventoryStorageBoundWithParts.PostInventoryStorageBoundWithPartsResponse.class, postResult);
 
     return postResult.future()
-      .compose(domainEventPublisher.publishCreated());
+      .onSuccess(domainEventPublisher.publishCreated());
   }
 
   public Future<Response> update(BoundWithPart entity, String id) {
@@ -47,7 +47,7 @@ public class BoundWithPartService {
       InventoryStorageBoundWithParts.PutInventoryStorageBoundWithPartsByIdResponse.class, putResult);
 
     return putResult.future()
-      .compose(domainEventPublisher.publishUpdated(entity));
+      .onSuccess(domainEventPublisher.publishUpdated(entity));
   }
 
   public Future<Response> delete(String id) {
@@ -60,7 +60,7 @@ public class BoundWithPartService {
           InventoryStorageBoundWithParts.DeleteInventoryStorageBoundWithPartsByIdResponse.class, deleteResult);
 
         return deleteResult.future()
-          .compose(domainEventPublisher.publishRemoved(item));
+          .onSuccess(domainEventPublisher.publishRemoved(item));
       });
   }
 }
