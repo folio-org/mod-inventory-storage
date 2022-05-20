@@ -77,16 +77,16 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
     };
   }
 
-  public Handler<Response> publishRemoved(DomainType record) {
+  public Handler<Response> publishRemoved(DomainType removedRecord) {
     return response -> {
       if (!isDeleteSuccessResponse(response)) {
         log.warn("Record removal failed, no event will be sent");
         return;
       }
 
-      getInstanceId(record)
+      getInstanceId(removedRecord)
         .compose(instanceId -> domainEventService.publishRecordRemoved(instanceId,
-          convertDomainToEvent(instanceId, record)));
+          convertDomainToEvent(instanceId, removedRecord)));
     };
   }
 
