@@ -37,7 +37,7 @@ public class AuthorityService {
     final Promise<Response> postResponse = promise();
     post(AUTHORITY_TABLE, entity, okapiHeaders, vertxContext,
       AuthorityStorage.PostAuthorityStorageAuthoritiesResponse.class, postResponse);
-    return postResponse.future().compose(domainEventService.publishCreated());
+    return postResponse.future().onSuccess(domainEventService.publishCreated());
   }
 
   public Future<Response> updateAuthority(String authorityId,
@@ -51,7 +51,7 @@ public class AuthorityService {
           AuthorityStorage.PutAuthorityStorageAuthoritiesByAuthorityIdResponse.class, putResult);
 
         return putResult.future()
-          .compose(domainEventService.publishUpdated(oldRecord));
+          .onSuccess(domainEventService.publishUpdated(oldRecord));
       });
   }
 
@@ -65,7 +65,7 @@ public class AuthorityService {
           AuthorityStorage.DeleteAuthorityStorageAuthoritiesByAuthorityIdResponse.class, deleteResult);
 
         return deleteResult.future()
-          .compose(domainEventService.publishRemoved(authority));
+          .onSuccess(domainEventService.publishRemoved(authority));
       });
   }
 

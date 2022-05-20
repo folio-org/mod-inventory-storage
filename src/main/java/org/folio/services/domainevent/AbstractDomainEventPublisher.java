@@ -10,9 +10,9 @@ import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
 
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -36,60 +36,57 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
     this.domainEventService = domainEventService;
   }
 
-  public Function<Response, Future<Response>> publishUpdated(DomainType oldRecord) {
+  public Handler<Response> publishUpdated(DomainType oldRecord) {
     return response -> {
       if (!isUpdateSuccessResponse(response)) {
         log.warn("Record update failed, skipping event publishing");
-        return succeededFuture(response);
+        return;
       }
 
-      return publishUpdated(singletonList(oldRecord)).map(response);
+      publishUpdated(singletonList(oldRecord));
     };
   }
 
   @SuppressWarnings("unchecked")
-  public Function<Response, Future<Response>> publishCreated() {
+  public Handler<Response> publishCreated() {
     return response -> {
       if (!isCreateSuccessResponse(response)) {
         log.warn("Record create failed, skipping event publishing");
-        return succeededFuture(response);
+        return;
       }
 
-      return publishCreated(singletonList((DomainType) response.getEntity()))
-        .map(response);
+      publishCreated(singletonList((DomainType) response.getEntity()));
     };
   }
 
-  public Function<Response, Future<Response>> publishCreatedOrUpdated(
+  public Handler<Response> publishCreatedOrUpdated(
     BatchOperationContext<DomainType> batchOperation) {
 
     return response -> {
       if (!isCreateSuccessResponse(response)) {
         log.warn("Records create/update failed, skipping event publishing");
-        return succeededFuture(response);
+        return;
       }
 
       log.info("Records created {}, records updated {}",
         batchOperation.getRecordsToBeCreated().size(),
         batchOperation.getExistingRecords().size());
 
-      return publishCreated(batchOperation.getRecordsToBeCreated())
-        .compose(notUsed -> publishUpdated(batchOperation.getExistingRecords()))
-        .map(response);
+      publishCreated(batchOperation.getRecordsToBeCreated())
+        .compose(notUsed -> publishUpdated(batchOperation.getExistingRecords()));
     };
   }
 
-  public Function<Response, Future<Response>> publishRemoved(DomainType record) {
+  public Handler<Response> publishRemoved(DomainType removedRecord) {
     return response -> {
       if (!isDeleteSuccessResponse(response)) {
         log.warn("Record removal failed, no event will be sent");
-        return succeededFuture(response);
+        return;
       }
 
-      return getInstanceId(record)
+      getInstanceId(removedRecord)
         .compose(instanceId -> domainEventService.publishRecordRemoved(instanceId,
-          convertDomainToEvent(instanceId, record)))
-        .map(response);
+          convertDomainToEvent(instanceId, removedRecord)));
     };
   }
 
