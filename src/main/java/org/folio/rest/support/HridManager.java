@@ -11,8 +11,11 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.RowSet;
 import java.util.List;
+
+import io.vertx.sqlclient.impl.ArrayTuple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -24,12 +27,16 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 public class HridManager {
   private static final Logger log = LogManager.getLogger();
 
   public static final String HRID_SETTINGS_TABLE  = "hrid_settings";
+
+  private static final String HRID_INSTANCES_SEQUENCE_NAME = "hrid_instances_seq";
+  private static final String HRID_ITEMS_SEQUENCE_NAME = "hrid_items_seq";
+  private static final String HRID_HOLDINGS_SEQUENCE_NAME = "hrid_holdings_seq";
+
 
   private final Context context;
   private final PostgresClient postgresClient;
@@ -40,15 +47,15 @@ public class HridManager {
   }
 
   public Future<String> getNextInstanceHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings, InventoryType.Instances));
+    return getNextHrid(InventoryType.Instances);
   }
 
   public Future<String> getNextHoldingsHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings, InventoryType.Holdings));
+    return getNextHrid(InventoryType.Holdings);
   }
 
   public Future<String> getNextItemHrid() {
-    return getNextHrid(hridSettings -> getNextHrid(hridSettings, InventoryType.Items));
+    return getNextHrid(InventoryType.Items);
   }
 
   public Future<Item> populateHrid(Item item) {
@@ -218,32 +225,66 @@ public class HridManager {
     return promise.future().map(v -> null);
   }
 
-  private Future<String> getNextHrid(Function<HridSettings, Future<String>> mapper) {
+  /**
+   * Optimized version of getNextHrid that makes a single call to retrieve
+   * hridsettings and the next sequence value for the specified inventory type.
+   */
+  private Future<String> getNextHrid(InventoryType type) {
+    final String sql = "select jsonb::TEXT from hrid_settings " +
+      "union all " +
+      "SELECT nextval($1)::text";
     final Promise<String> promise = Promise.promise();
 
     try {
-      context.runOnContext(v -> getHridSettings().compose(mapper::apply).onComplete(promise));
+      context.runOnContext(v ->
+      {
+        String sequenceName;
+        switch (type) {
+          case Instances:
+            sequenceName = HRID_INSTANCES_SEQUENCE_NAME;
+            break;
+          case Holdings:
+            sequenceName = HRID_HOLDINGS_SEQUENCE_NAME;
+            break;
+          case Items:
+            sequenceName = HRID_ITEMS_SEQUENCE_NAME;
+          default:
+            sequenceName = "hrid_" + type.name().toLowerCase() + "_seq";
+        }
+
+        postgresClient.select(sql,
+          new ArrayTuple(1).addString(sequenceName),
+          reply -> {
+            var result = reply.result();
+            if (reply.failed()) {
+              fail(promise, "Failed to get hridsettings and next sequence value from the database", reply.cause());
+              return;
+            }
+            if (result.size() != 2) {
+              String errorMessage = "Result set contains " + result.size() + " items instead of 2 items";
+              fail(promise, errorMessage,
+                new IllegalStateException(errorMessage));
+              return;
+            }
+            RowIterator<Row> iterator = result.iterator();
+            // get hridSettings
+            var hridSettingsrow = iterator.next();
+            HridSettings hridSettings = Json.decodeValue(hridSettingsrow.getString(0), HridSettings.class);
+            final String hridPrefix = type.getPrefix(hridSettings);
+            // get hrid
+            var hridIdrow = iterator.next();
+            String s = String.format(
+              getHridFormatter(hridSettings),
+              Objects.toString(hridPrefix, ""),
+              Long.parseLong(hridIdrow.getString(0)));
+            promise.complete(s);
+          });
+      });
     } catch (Exception e) {
-      fail(promise, "Failed to get the next HRID", e);
+      fail(promise, "Failed to get hridsettings and next sequence value from the database", e);
     }
 
     return promise.future();
-  }
-
-  private Future<String> getNextHrid(final HridSettings hridSettings, InventoryType type) {
-    final String sql = "SELECT nextval('hrid_" + type.name().toLowerCase() + "_seq')";
-    final Promise<Row> promise = Promise.promise();
-
-    try {
-      postgresClient.selectSingle(sql, promise);
-    } catch (Exception e) {
-      fail(promise, "Failed to get the next sequence value from the database", e);
-    }
-
-    final String hridPrefix = type.getPrefix(hridSettings);
-    return promise.future()
-      .map(sequence -> String.format(getHridFormatter(hridSettings),
-        Objects.toString(hridPrefix, ""), sequence.getLong(0)));
   }
 
   private String getHridFormatter(HridSettings hridSettings) {

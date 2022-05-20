@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
+import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
@@ -24,6 +25,7 @@ import org.junit.runner.RunWith;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -42,6 +44,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -53,7 +56,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   private final AsyncMigrationJobRepository repository = getRepository();
 
   @Test
-  public void canMigrateItemsInstances(){
+  public void canMigrateItemsInstances() {
     var numberOfRecords = 101;
 
     var holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
@@ -107,6 +110,15 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     assertNotNull(migrations);
     assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
     assertEquals("publicationPeriodMigration", migrations.getAsyncMigrations().get(0).getMigrations().get(0));
+  }
+
+  @Test
+  public void canGetAllAvailableMigrationJobs() {
+    asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
+      .withMigrations(List.of("itemShelvingOrderMigration")));
+    AsyncMigrationJobCollection migrations = asyncMigration.getAllMigrationJobs();
+    assertNotNull(migrations);
+    assertTrue(migrations.getJobs().size() > 0);
   }
 
   @Test

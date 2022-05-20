@@ -231,14 +231,6 @@ public class InterfaceUrls {
   public static URL instanceIteration(String path) {
     return StorageTestSuite.storageUrl("/instance-storage/instances/iteration" + path);
   }
-
-  public static URL relatedInstanceTypesStorageUrl(String subPath) {
-    return StorageTestSuite.storageUrl("/related-instance-types" + subPath);
-  }
-
-  public static URL relatedInstanceStorageUrl(String subPath) {
-    return StorageTestSuite.storageUrl("/instance-storage/related-instances" + subPath);
-  }
   
   public static URL migrationsUrl(String subPath) {
     return StorageTestSuite.storageUrl("/inventory-storage/migrations" + subPath);

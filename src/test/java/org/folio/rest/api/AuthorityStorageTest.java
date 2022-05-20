@@ -1,28 +1,32 @@
 package org.folio.rest.api;
 
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import lombok.SneakyThrows;
-import org.folio.rest.jaxrs.model.Authority;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.net.HttpURLConnection;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.assertEquals;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.authoritiesStorageUrl;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForAuthority;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForAuthority;
-import static org.junit.Assert.assertEquals;
+
+import java.net.HttpURLConnection;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import org.folio.rest.jaxrs.model.Authority;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 
 @RunWith(JUnitParamsRunner.class)
 public class AuthorityStorageTest extends TestBase {
@@ -113,6 +117,25 @@ public class AuthorityStorageTest extends TestBase {
   }
 
   @Test
+  public void optimisticLockingVersion() {
+    assertEquals(0, authoritiesClient.getAll().size());
+    authoritiesClient.create(new JsonObject()
+      .put("personalName", "personalName")
+      .put("_version", 1));
+    var response = authoritiesClient.getAll();
+    assertEquals(1, response.size());
+    JsonObject authority = new JsonObject(response.get(0).encode());
+
+    authority.put("personalName", "changed");
+    // updating with current _version 1 succeeds and increments _version to 2
+    assertEquals(204, put(authority).getStatusCode());
+
+    authority.put("personalName", "changed one more time");
+    // updating with outdated _version 1 fails, current _version is 2
+    assertEquals(409, put(authority).getStatusCode());
+  }
+
+  @Test
   @SneakyThrows
   public void putByIdNotFound() {
     assertEquals(0, authoritiesClient.getAll().size());
@@ -142,6 +165,20 @@ public class AuthorityStorageTest extends TestBase {
   private void createAuthRecords(int quantity) {
     for (int i = 0; i < quantity; i++) {
       authoritiesClient.create(new JsonObject().put("personalName", "personalName" + i));
+    }
+  }
+
+  private Response put(JsonObject object) {
+    final UUID id = UUID.fromString(object.getString("id"));
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    client.put(authoritiesStorageUrl(String.format("/%s", id)), object,
+      TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    try {
+      return replaceCompleted.get(5, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
     }
   }
 
