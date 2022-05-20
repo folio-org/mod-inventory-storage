@@ -19,13 +19,17 @@ import java.util.concurrent.TimeoutException;
 import io.vertx.sqlclient.Row;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -34,11 +38,15 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class HridSettingsStorageTest extends TestBase {
   private static final Logger log = LogManager.getLogger();
+
+  @Rule
+  public Timeout rule = Timeout.seconds(5);
 
   private final HridSettings initialHridSettings = new HridSettings()
     .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
@@ -51,14 +59,17 @@ public class HridSettingsStorageTest extends TestBase {
     .withItems(new HridSetting().withPrefix("it").withStartNumber(1L))
     .withCommonRetainLeadingZeroes(false);
 
+  private Vertx vertx;
+  private PostgresClient postgresClient;
+  private HridManager hridManager;
+
   @Before
   public void setUp(TestContext testContext) {
     log.info("Initializing values");
     final Async async = testContext.async();
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient =
-      PostgresClient.getInstance(vertx, TENANT_ID);
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
+    vertx = StorageTestSuite.getVertx();
+    postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+    hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
     hridManager.updateHridSettings(initialHridSettings).onComplete(hridSettings -> {
       // We need to do this in cases where tests do not update the start number. In this
       // case, calling updateHridSettings will not update the sequences since the start number
@@ -271,12 +282,7 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextInstanceHrid(TestContext testContext) {
     log.info("Starting canGetNextInstanceHrid()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
-    hridManager.getNextInstanceHrid()
+    getNextInstanceHrid()
       .compose(hrid -> validateHrid(hrid, "in00000000001", testContext))
       .onComplete(testContext.asyncAssertSuccess(
         v -> log.info("Finished canGetNextInstanceHrid()")));
@@ -286,13 +292,8 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextInstanceHridWithoutLeadingZeroes(TestContext testContext) {
     log.info("Starting canGetNextInstanceHrid()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
     hridManager.updateHridSettings(initialHridSettingsWithoutLeadingZeroes).onComplete(
-      testContext.asyncAssertSuccess(hridSettingsResult -> hridManager.getNextInstanceHrid()
+      testContext.asyncAssertSuccess(hridSettingsResult -> getNextInstanceHrid()
         .compose(hrid -> validateHrid(hrid, "in1", testContext))
         .onComplete(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextInstanceHridWithoutLeadingZeroes()"))))
@@ -303,11 +304,6 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextInstanceHridAfterSettingStartNumber(TestContext testContext) {
     log.info("Starting canGetNextInstanceHridAfterSettingStartNumber()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(250L))
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
@@ -315,7 +311,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
-        hridSettingsResult -> hridManager.getNextInstanceHrid().compose(
+        hridSettingsResult -> getNextInstanceHrid().compose(
           hrid -> validateHrid(hrid, "in00000000250", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextInstanceHridAfterSettingStartNumber()")))));
@@ -325,11 +321,6 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextInstanceHridAfterSettingStartNumberWithoutLeadingZeroes(TestContext testContext) {
     log.info("Starting canGetNextInstanceHridAfterSettingStartNumberWithoutLeadingZeroes()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(250L))
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
@@ -338,7 +329,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
-        hridSettingsResult -> hridManager.getNextInstanceHrid().compose(
+        hridSettingsResult -> getNextInstanceHrid().compose(
           hrid -> validateHrid(hrid, "in250", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextInstanceHridAfterSettingStartNumberWithoutLeadingZeroes()")))));
@@ -348,12 +339,8 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextHoldingHrid(TestContext testContext) {
     log.info("Starting canGetNextHoldingHrid()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
-    hridManager.getNextHoldingsHrid()
+    hridManager.populateHrid(new HoldingsRecord())
+      .map(HoldingsRecord::getHrid)
       .compose(hrid -> validateHrid(hrid, "ho00000000001", testContext))
       .onComplete(testContext.asyncAssertSuccess(
         v -> log.info("Finished canGetNextHoldingHrid()")));
@@ -363,13 +350,8 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextHoldingHridWithoutLeadingZeroes(TestContext testContext) {
     log.info("Starting canGetNextHoldingHridWithoutLeadingZeroes()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
     hridManager.updateHridSettings(initialHridSettingsWithoutLeadingZeroes).onComplete(
-      testContext.asyncAssertSuccess(hridSettingsResult -> hridManager.getNextHoldingsHrid()
+      testContext.asyncAssertSuccess(hridSettingsResult -> getNextHoldingsHrid()
         .compose(hrid -> validateHrid(hrid, "ho1", testContext))
         .onComplete(testContext.asyncAssertSuccess(
           v -> log.info("Finished canGetNextHoldingHridWithoutLeadingZeroes()"))))
@@ -380,11 +362,6 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextHoldingHridAfterSettingStartNumber(TestContext testContext) {
     log.info("Starting canGetNextHoldingHridAfterSettingStartNumber()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890L))
@@ -392,7 +369,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
-        hridSettings -> hridManager.getNextHoldingsHrid().compose(
+        hridSettings -> getNextHoldingsHrid().compose(
           hrid -> validateHrid(hrid, "ho00000007890", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextHoldingHridAfterSettingStartNumber()")))));
@@ -402,11 +379,6 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextHoldingHridAfterSettingStartNumberWithoutLeadingZeroes(TestContext testContext) {
     log.info("Starting canGetNextHoldingHridAfterSettingStartNumberWithoutLeadingZeroes()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890L))
@@ -415,7 +387,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
-        hridSettings -> hridManager.getNextHoldingsHrid().compose(
+        hridSettings -> getNextHoldingsHrid().compose(
           hrid -> validateHrid(hrid, "ho7890", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextHoldingHridAfterSettingStartNumberWithoutLeadingZeroes()")))));
@@ -425,12 +397,7 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextItemHrid(TestContext testContext) {
     log.info("Starting canGetNextItemHrid()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
-    hridManager.getNextItemHrid()
+    getNextItemHrid()
       .compose(hrid -> validateHrid(hrid, "it00000000001", testContext))
       .onComplete(testContext.asyncAssertSuccess(v -> log.info("Finished canGetNextItemHrid()")));
   }
@@ -439,11 +406,6 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextItemHridAfterSettingStartNumber(TestContext testContext) {
     log.info("Starting canGetNextItemHridAfterSettingStartNumber()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
@@ -451,7 +413,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
-        hridSettings -> hridManager.getNextItemHrid().compose(
+        hridSettings -> getNextItemHrid().compose(
           hrid -> validateHrid(hrid, "it00087654321", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextItemHridAfterSettingStartNumber()")))));
@@ -461,19 +423,14 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextItemHridMultipleTimes(TestContext testContext) {
     log.info("Starting canGetNextItemHridMultipleTimes()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
-    hridManager.getNextItemHrid().compose(hrid -> validateHrid(hrid, "it00000000001", testContext))
-      .compose(v -> hridManager.getNextItemHrid())
+    getNextItemHrid().compose(hrid -> validateHrid(hrid, "it00000000001", testContext))
+      .compose(v -> getNextItemHrid())
       .compose(hrid -> validateHrid(hrid, "it00000000002", testContext))
-      .compose(v -> hridManager.getNextItemHrid())
+      .compose(v -> getNextItemHrid())
       .compose(hrid -> validateHrid(hrid, "it00000000003", testContext))
-      .compose(v -> hridManager.getNextItemHrid())
+      .compose(v -> getNextItemHrid())
       .compose(hrid -> validateHrid(hrid, "it00000000004", testContext))
-      .compose(v -> hridManager.getNextItemHrid())
+      .compose(v -> getNextItemHrid())
       .compose(hrid -> validateHrid(hrid, "it00000000005", testContext))
       .onComplete(testContext.asyncAssertSuccess(
         v -> log.info("Finished canGetNextItemHridMultipleTimes()")));
@@ -483,11 +440,6 @@ public class HridSettingsStorageTest extends TestBase {
   public void canGetNextItemHridWithNoPrefix(TestContext testContext) {
     log.info("Starting canGetNextItemHridWithNoPrefix()");
 
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
-
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withStartNumber(100L))
       .withHoldings(new HridSetting().withStartNumber(200L))
@@ -495,7 +447,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     hridManager.updateHridSettings(newHridSettings)
       .onComplete(testContext.asyncAssertSuccess(
-        hridSettings -> hridManager.getNextItemHrid().compose(
+        hridSettings -> getNextItemHrid().compose(
           hrid -> validateHrid(hrid, "00000000300", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextItemHridWithNoPrefix()")))));
@@ -504,11 +456,6 @@ public class HridSettingsStorageTest extends TestBase {
   @Test
   public void canRollbackFailedTransaction(TestContext testContext) {
     log.info("Starting canRollbackFailedTransaction()");
-
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
 
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withStartNumber(999_999_999_999L))
@@ -547,21 +494,17 @@ public class HridSettingsStorageTest extends TestBase {
 
   @Test
   public void canGetNextHridWhenStartNumberIsLong(TestContext testContext) {
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withStartNumber(9_999_999_997L))
       .withHoldings(new HridSetting().withStartNumber(9_999_999_998L))
       .withItems(new HridSetting().withStartNumber(9_999_999_999L));
 
     hridManager.updateHridSettings(newHridSettings)
-      .compose(v -> hridManager.getNextInstanceHrid())
+      .compose(v -> getNextInstanceHrid())
       .compose(hrid -> validateHrid(hrid, "09999999997", testContext))
-      .compose(v -> hridManager.getNextHoldingsHrid())
+      .compose(v -> getNextHoldingsHrid())
       .compose(hrid -> validateHrid(hrid, "09999999998", testContext))
-      .compose(v -> hridManager.getNextItemHrid())
+      .compose(v -> getNextItemHrid())
       .compose(hrid -> validateHrid(hrid, "09999999999", testContext))
       .onComplete(testContext.asyncAssertSuccess());
   }
@@ -569,10 +512,7 @@ public class HridSettingsStorageTest extends TestBase {
   @Test
   public void canGetNextHridWhenStartNumberIsLongWithoutLeadingZeroes(TestContext testContext) {
     log.info("Starting canGetNextHridWhenStartNumberIsLongWithoutLeadingZeroes()");
-    final Vertx vertx = StorageTestSuite.getVertx();
-    final PostgresClient postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
-    final HridManager hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withStartNumber(9_999_999_997L))
       .withHoldings(new HridSetting().withStartNumber(9_999_999_998L))
@@ -580,14 +520,26 @@ public class HridSettingsStorageTest extends TestBase {
       .withCommonRetainLeadingZeroes(false);
 
     hridManager.updateHridSettings(newHridSettings)
-      .compose(v -> hridManager.getNextInstanceHrid())
+      .compose(v -> getNextInstanceHrid())
       .compose(hrid -> validateHrid(hrid, "9999999997", testContext))
-      .compose(v -> hridManager.getNextHoldingsHrid())
+      .compose(v -> getNextHoldingsHrid())
       .compose(hrid -> validateHrid(hrid, "9999999998", testContext))
-      .compose(v -> hridManager.getNextItemHrid())
+      .compose(v -> getNextItemHrid())
       .compose(hrid -> validateHrid(hrid, "9999999999", testContext))
       .onComplete(testContext.asyncAssertSuccess(
         v1 -> log.info("Finished canGetNextHridWhenStartNumberIsLongWithoutLeadingZeroes()")));
+  }
+
+  private Future<String> getNextInstanceHrid() {
+    return hridManager.populateHrid(new Instance()).map(Instance::getHrid);
+  }
+
+  private Future<String> getNextHoldingsHrid() {
+    return hridManager.populateHrid(new HoldingsRecord()).map(HoldingsRecord::getHrid);
+  }
+
+  private Future<String> getNextItemHrid() {
+    return hridManager.populateHrid(new Item()).map(Item::getHrid);
   }
 
   private Future<String> validateHrid(String hrid, String expectedValue, TestContext testContext) {
