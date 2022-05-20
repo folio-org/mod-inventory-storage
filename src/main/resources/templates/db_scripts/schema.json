@@ -5,7 +5,7 @@
       "fromModuleVersion": "22.1.0",
       "withMetadata": true,
       "withAuditing": false,
-      "withOptimisticLocking": "logOnConflict"
+      "withOptimisticLocking": "failOnConflict"
     },
     {
       "tableName": "loan_type",
@@ -943,38 +943,6 @@
       "tableName": "iteration_job",
       "withMetadata": false,
       "withAuditing": false
-    },
-    {
-      "tableName": "related_instance_type",
-      "withMetadata": true,
-      "withAuditing": false,
-      "uniqueIndex": [
-        {
-          "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ]
-    },
-    {
-      "tableName":"related_instance",
-      "withMetadata": true,
-      "foreignKeys": [
-        {
-          "fieldName": "instanceId",
-          "targetTable": "instance",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "relatedInstanceId",
-          "targetTable": "instance",
-          "tOps": "ADD"
-        },
-        {
-          "fieldName": "relatedInstanceTypeId",
-          "targetTable": "related_instance_type",
-          "tOps": "ADD"
-        }
-      ]
     },
     {
       "tableName": "async_migration_job",
