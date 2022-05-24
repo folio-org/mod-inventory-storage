@@ -14,6 +14,7 @@ import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.rest.persist.cql.CQLQueryValidationException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
@@ -56,7 +57,7 @@ public final class EndpointFailureHandler {
   public static Response failureResponse(Throwable error) {
     log.error("An error occurred", error);
 
-    if (error instanceof BadRequestException) {
+    if (error instanceof BadRequestException || error instanceof CQLQueryValidationException) {
       return textPlainResponse(400, error);
     } else if (error instanceof NotFoundException) {
       return textPlainResponse(404, error);

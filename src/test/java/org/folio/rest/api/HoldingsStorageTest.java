@@ -596,6 +596,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotDeleteHoldingsWithEmptyCql() throws Exception {
+
+    var response = client.delete(holdingsStorageUrl("?query="), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString("empty"));
+  }
+
+  @Test
   public void tenantIsRequiredForCreatingANewHolding()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {

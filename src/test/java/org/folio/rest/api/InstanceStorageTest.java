@@ -441,6 +441,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotDeleteNonexistingInstance() throws Exception {
+
+    var response = client.delete(instancesStorageUrl("/" + UUID.randomUUID()), TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(404));
+  }
+
+  @Test
   public void canDeleteInstancesByCql() throws Exception {
 
     var id5 = UUID.randomUUID();
@@ -464,6 +472,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertRemoveEventForInstance(instance1);
     assertRemoveEventForInstance(instance3);
     assertRemoveEventForInstance(instance5);
+  }
+
+  @Test
+  public void cannotDeleteInstancesWithEmptyCql() throws Exception {
+
+    var response = client.delete(instancesStorageUrl("?query="), TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString("empty"));
   }
 
   @Test

@@ -31,6 +31,7 @@ import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.containsStringIgnoringCase;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -1961,6 +1962,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void cannotDeleteItemsWithoutCql(String query) throws Exception {
     var response = client.delete(itemsStorageUrl(query), StorageTestSuite.TENANT_ID).get(5, SECONDS);
     assertThat(response.getBody(), is("Expected CQL but query parameter is empty"));
+    assertThat(response.getStatusCode(), is(400));
+  }
+
+  @Test
+  public void cannotDeleteItemsWithInvalidCql() throws Exception {
+    var response = client.delete(itemsStorageUrl("?query=\""), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+    assertThat(response.getBody(), containsStringIgnoringCase("parse"));
     assertThat(response.getStatusCode(), is(400));
   }
 
