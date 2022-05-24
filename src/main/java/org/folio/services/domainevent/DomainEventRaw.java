@@ -23,12 +23,12 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 public class DomainEventRaw {
   @JsonProperty("old")
   @JsonRawValue
-  private String oldEntity;
+  private final String oldEntity;
   @JsonProperty("new")
   @JsonRawValue
-  private String newEntity;
-  private DomainEventType type;
-  private String tenant;
+  private final String newEntity;
+  private final DomainEventType type;
+  private final String tenant;
 
   public DomainEventRaw(String oldEntity, String newEntity, DomainEventType type, String tenant) {
     this.oldEntity = oldEntity;
@@ -41,32 +41,16 @@ public class DomainEventRaw {
     return oldEntity;
   }
 
-  public void setOldEntity(String oldEntity) {
-    this.oldEntity = oldEntity;
-  }
-
   public Object getNewEntity() {
     return newEntity;
-  }
-
-  public void setNewEntity(String newEntity) {
-    this.newEntity = newEntity;
   }
 
   public DomainEventType getType() {
     return type;
   }
 
-  public void setType(DomainEventType type) {
-    this.type = type;
-  }
-
   public String getTenant() {
     return tenant;
-  }
-
-  public void setTenant(String tenant) {
-    this.tenant = tenant;
   }
 
   @Override
