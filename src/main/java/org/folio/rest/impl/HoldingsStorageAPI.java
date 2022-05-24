@@ -36,7 +36,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     Context vertxContext) {
 
     new HoldingsService(vertxContext, okapiHeaders).deleteHoldings(query)
-    .otherwise(e -> EndpointFailureHandler.failureResponse(e))
+    .otherwise(EndpointFailureHandler::failureResponse)
     .onComplete(asyncResultHandler);
   }
 
@@ -88,7 +88,7 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     Context vertxContext) {
 
     new HoldingsService(vertxContext, okapiHeaders).deleteHolding(holdingsRecordId)
-    .otherwise(e -> EndpointFailureHandler.failureResponse(e))
+    .otherwise(EndpointFailureHandler::failureResponse)
     .onComplete(asyncResultHandler);
   }
 

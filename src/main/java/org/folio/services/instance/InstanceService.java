@@ -124,6 +124,8 @@ public class InstanceService {
   /**
    * Delete instance and connected marc record.
    */
+  // suppress "Remove useless curly braces around lambda containing only one statement"
+  @SuppressWarnings("java:S1602")
   public Future<Response> deleteInstance(String id) {
     return instanceRepository.delete("id==" + id)
         .map(rowSet -> {
@@ -140,6 +142,8 @@ public class InstanceService {
   /**
    * Delete instances and connected marc records.
    */
+  // suppress "Remove useless curly braces around lambda containing only one statement"
+  @SuppressWarnings("java:S1602")
   public Future<Response> deleteInstances(String cql) {
     if (StringUtils.isBlank(cql)) {
       return Future.succeededFuture(

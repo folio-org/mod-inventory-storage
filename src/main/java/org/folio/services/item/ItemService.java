@@ -161,6 +161,8 @@ public class ItemService {
       });
   }
 
+  // suppress "Remove useless curly braces around lambda containing only one statement"
+  @SuppressWarnings("java:S1602")
   public Future<Response> deleteItems(String cql) {
     if (StringUtils.isBlank(cql)) {
       return Future.succeededFuture(

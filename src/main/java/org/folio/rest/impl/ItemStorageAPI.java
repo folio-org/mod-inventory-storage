@@ -68,7 +68,7 @@ public class ItemStorageAPI implements ItemStorage {
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new ItemService(vertxContext, okapiHeaders).deleteItems(query)
-    .otherwise(e -> EndpointFailureHandler.failureResponse(e))
+    .otherwise(EndpointFailureHandler::failureResponse)
     .onComplete(asyncResultHandler);
   }
 
