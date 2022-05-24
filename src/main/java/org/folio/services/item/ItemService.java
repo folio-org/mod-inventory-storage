@@ -9,6 +9,7 @@ import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
 import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.ItemStorage.DeleteItemStorageItemsByItemIdResponse;
+import static org.folio.rest.jaxrs.resource.ItemStorage.DeleteItemStorageItemsResponse;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PostItemStorageItemsResponse;
 import static org.folio.rest.jaxrs.resource.ItemStorage.PutItemStorageItemsByItemIdResponse;
 import static org.folio.rest.jaxrs.resource.ItemStorageBatchSynchronous.PostItemStorageBatchSynchronousResponse;
@@ -38,7 +39,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.exceptions.BadRequestException;
@@ -48,6 +49,7 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.support.CqlUtil;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
@@ -159,10 +161,28 @@ public class ItemService {
       });
   }
 
-  public Future<Void> deleteAllItems() {
+  public Future<Response> deleteItems(String cql) {
+    if (StringUtils.isBlank(cql)) {
+      return Future.succeededFuture(
+          DeleteItemStorageItemsResponse.respond400WithTextPlain(
+              "Expected CQL but query parameter is empty"));
+    }
+    if (CqlUtil.isMatchingAll(cql)) {
+      return deleteAllItems();  // faster: sends only one domain event (Kafka) message
+    }
+    return itemRepository.delete(cql)
+        .onSuccess(rowSet -> vertxContext.runOnContext(runLater -> {
+          rowSet.iterator().forEachRemaining(row -> {
+            domainEventService.publishRemoved(row.getString(0), row.getString(1));
+          });
+        }))
+        .map(Response.noContent().build());
+  }
+
+  public Future<Response> deleteAllItems() {
     return itemRepository.deleteAll()
       .onSuccess(notUsed -> domainEventService.publishAllRemoved())
-      .mapEmpty();
+      .map(Response.noContent().build());
   }
 
   /**

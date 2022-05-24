@@ -3,8 +3,9 @@ package org.folio.services.instance;
 import static io.vertx.core.Promise.promise;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
-import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -19,12 +20,14 @@ import io.vertx.core.Promise;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.CqlUtil;
 import org.folio.rest.support.HridManager;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.validator.CommonValidators;
@@ -110,27 +113,49 @@ public class InstanceService {
       });
   }
 
-  public Future<Void> deleteAllInstances() {
+  public Future<Response> deleteAllInstances() {
     return marcRepository.deleteAll()
       .compose(notUsed -> relationshipRepository.deleteAll())
       .compose(notUsed -> instanceRepository.deleteAll())
       .onSuccess(notUsed -> domainEventPublisher.publishAllRemoved())
-      .mapEmpty();
+      .map(Response.noContent().build());
   }
 
+  /**
+   * Delete instance and connected marc record.
+   */
   public Future<Response> deleteInstance(String id) {
-    return instanceRepository.getById(id)
-      .compose(CommonValidators::refuseIfNotFound)
-      // before deleting the instance record delete its source marc record (foreign key!)
-      .compose(instance -> marcRepository.deleteById(id).map(notUsed -> instance))
-      .compose(instance -> {
-        final Promise<Response> deleteResult = promise();
-
-        deleteById(INSTANCE_TABLE, id, okapiHeaders, vertxContext,
-          InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse.class, deleteResult);
-
-        return deleteResult.future()
-          .onSuccess(domainEventPublisher.publishRemoved(instance));
-      });
+    return instanceRepository.delete("id==" + id)
+        .map(rowSet -> {
+          if (! rowSet.iterator().hasNext()) {
+            return DeleteInstanceStorageInstancesByInstanceIdResponse.respond404WithTextPlain("Not found");
+          }
+          rowSet.iterator().forEachRemaining(row -> {
+            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1));
+          });
+          return Response.noContent().build();
+        });
   }
+
+  /**
+   * Delete instances and connected marc records.
+   */
+  public Future<Response> deleteInstances(String cql) {
+    if (StringUtils.isBlank(cql)) {
+      return Future.succeededFuture(
+          DeleteInstanceStorageInstancesResponse.respond400WithTextPlain(
+              "Expected CQL but query parameter is empty"));
+    }
+    if (CqlUtil.isMatchingAll(cql)) {
+      return deleteAllInstances();  // faster: sends only one domain event (Kafka) message
+    }
+    return instanceRepository.delete(cql)
+        .onSuccess(rowSet -> vertxContext.runOnContext(runLater -> {
+          rowSet.iterator().forEachRemaining(row -> {
+            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1));
+          });
+        }))
+        .map(Response.noContent().build());
+  }
+
 }

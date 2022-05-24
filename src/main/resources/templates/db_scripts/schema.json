@@ -1125,6 +1125,11 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/correctGetUpdatedInstanceIdsView.sql",
       "fromModuleVersion": "23.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instanceDeleteCascade.sql",
+      "fromModuleVersion": "23.1.0"
     }
   ]
 }

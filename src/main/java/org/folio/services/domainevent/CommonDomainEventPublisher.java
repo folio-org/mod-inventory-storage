@@ -95,6 +95,12 @@ public class CommonDomainEventPublisher<T> {
     return publish(instanceId, domainEvent);
   }
 
+  Future<Void> publishRecordRemoved(String instanceId, String oldEntity) {
+    final DomainEventRaw domainEvent = DomainEventRaw.deleteEvent(oldEntity, tenantId(okapiHeaders));
+
+    return publish(instanceId, domainEvent);
+  }
+
   Future<Void> publishAllRecordsRemoved() {
     return publish(NULL_INSTANCE_ID, deleteAllEvent(tenantId(okapiHeaders)));
   }
@@ -147,7 +153,7 @@ public class CommonDomainEventPublisher<T> {
       .onSuccess(records -> log.info("Total records published from stream {}", records));
   }
 
-  private Future<Void> publish(String key, DomainEvent<T> value) {
+  private Future<Void> publish(String key, Object value) {
     log.debug("Sending domain event [{}], payload [{}]", key, value);
 
     var producerRecord = new InventoryProducerRecordBuilder()

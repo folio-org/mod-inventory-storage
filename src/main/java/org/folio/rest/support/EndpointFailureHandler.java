@@ -50,30 +50,36 @@ public final class EndpointFailureHandler {
   }
 
   public static Handler<Throwable> handleFailure(Handler<AsyncResult<Response>> asyncResultHandler) {
-    return error -> {
-      log.error("An error occurred", error);
-      Response responseToReturn;
+    return error -> asyncResultHandler.handle(succeededFuture(failureResponse(error)));
+  }
 
-      if (error instanceof BadRequestException) {
-        responseToReturn = textPlainResponse(400, error);
-      } else if (error instanceof NotFoundException) {
-        responseToReturn = textPlainResponse(404, error);
-      } else if (error instanceof ValidationException) {
-        final Errors errors = ((ValidationException) error).getErrors();
-        responseToReturn = failedValidationResponse(errors);
-      } else if (PgExceptionUtil.isVersionConflict(error)) {
-        responseToReturn = textPlainResponse(409, error);
-      } else {
-        responseToReturn = textPlainResponse(500, error);
-      }
+  public static Response failureResponse(Throwable error) {
+    log.error("An error occurred", error);
 
-      asyncResultHandler.handle(succeededFuture(responseToReturn));
-    };
+    if (error instanceof BadRequestException) {
+      return textPlainResponse(400, error);
+    } else if (error instanceof NotFoundException) {
+      return textPlainResponse(404, error);
+    } else if (error instanceof ValidationException) {
+      final Errors errors = ((ValidationException) error).getErrors();
+      return failedValidationResponse(errors);
+    } else if (PgExceptionUtil.isVersionConflict(error)) {
+      return textPlainResponse(409, error);
+    }
+    String message = PgExceptionUtil.badRequestMessage(error);
+    if (message != null) {
+      return textPlainResponse(400, message);
+    }
+    return textPlainResponse(500, error);
   }
 
   private static Response textPlainResponse(int status, Throwable error) {
+    return textPlainResponse(status, error.getMessage());
+  }
+
+  private static Response textPlainResponse(int status, String message) {
     return Response.status(status).header(CONTENT_TYPE, "text/plain")
-      .entity(error.getMessage()).build();
+        .entity(message).build();
   }
 
   private static Response failedValidationResponse(Object jsonEntity) {

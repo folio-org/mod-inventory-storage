@@ -5,7 +5,10 @@
 * Combined calls to retrieve HRID settings and getting sequence values (MODINVSTOR-894)
 * Allow response to be returned to the api client without waiting for domain event publishing during instance creation (MODINVSTOR-894)
 * Enable optimistic locking 'failOnConflict' for authorities (MODINVSTOR-909)
+* Correctly implement delete by CQL for instance/holding/item (MODINVSTOR-576)
+* Reject DELETE instance/holding/item without CQL query (MODINVSTOR-901)
 * provides `item-storage-dereferenced 0.2`
+* provides `item-storage 9.1`
 * provides `holdings-storage 5.1`
 * provides `holdings-storage-batch-sync 1.1`
 * provides `instance-storage 8.1`

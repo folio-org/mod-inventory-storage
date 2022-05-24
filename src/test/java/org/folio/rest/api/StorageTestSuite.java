@@ -166,7 +166,7 @@ public class StorageTestSuite {
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     try {
-      client.delete(rootUrl, TENANT_ID,
+      client.delete(rootUrl + "?query=id==*", TENANT_ID,
         ResponseHandler.any(deleteAllFinished));
 
       Response response = TestBase.get(deleteAllFinished);

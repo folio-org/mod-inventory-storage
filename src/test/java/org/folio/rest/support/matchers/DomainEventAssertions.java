@@ -69,7 +69,7 @@ public final class DomainEventAssertions {
     assertThat(deleteEvent.value().getString("type"), is("DELETE"));
     assertThat(deleteEvent.value().getString("tenant"), is(TENANT_ID));
     assertThat(deleteEvent.value().getJsonObject("new"), nullValue());
-    assertThat(deleteEvent.value().getJsonObject("old"), is(record));
+    assertThat(fixCreatedDate(deleteEvent.value().getJsonObject("old")), is(record));
 
     assertHeaders(deleteEvent.headers());
   }
@@ -308,5 +308,31 @@ public final class DomainEventAssertions {
 
   private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {
     return item.copy().put("instanceId", instanceId);
+  }
+
+  /**
+   * Append missing time zone to metadata.createdDate.
+   *
+   * <p>Fix "createdDate":"2022-05-22T22:55:14.346" to "createdDate":"2022-05-22T22:55:14.346+00:00"
+   *
+   * <p>Fix "createdDate":"2022-05-22T22:55:14.3"   to "createdDate":"2022-05-22T22:55:14.300+00:00"
+   *
+   * <p>Fix "createdDate":"2022-05-22T22:55:14.34Z" to "createdDate":"2022-05-22T22:55:14.340+00:00"
+   */
+  private static JsonObject fixCreatedDate(JsonObject jsonObject) {
+    JsonObject metadata = jsonObject.getJsonObject("metadata");
+    if (metadata == null) {
+      return jsonObject;
+    }
+    String createdDate = metadata.getString("createdDate");
+    if (createdDate == null || createdDate.length() == 29) {
+      return jsonObject;
+    }
+    if (createdDate.endsWith("Z")) {
+      createdDate = createdDate.substring(0, createdDate.length() - 1);
+    }
+    createdDate += ".000+00:00".substring(createdDate.length() - 19);
+    metadata.put("createdDate", createdDate);
+    return jsonObject;
   }
 }

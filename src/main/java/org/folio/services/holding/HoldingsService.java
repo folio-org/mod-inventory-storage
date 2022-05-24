@@ -5,6 +5,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.HoldingsStorage.DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse;
+import static org.folio.rest.jaxrs.resource.HoldingsStorage.DeleteHoldingsStorageHoldingsResponse;
 import static org.folio.rest.jaxrs.resource.HoldingsStorage.PostHoldingsStorageHoldingsResponse;
 import static org.folio.rest.jaxrs.resource.HoldingsStorage.PutHoldingsStorageHoldingsByHoldingsRecordIdResponse;
 import static org.folio.rest.jaxrs.resource.HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse;
@@ -23,12 +24,14 @@ import io.vertx.core.Promise;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.support.CqlUtil;
 import org.folio.rest.support.HridManager;
 import org.folio.services.domainevent.HoldingDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
@@ -59,10 +62,10 @@ public class HoldingsService {
     domainEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);
   }
 
-  public Future<Void> deleteAllHoldings() {
+  public Future<Response> deleteAllHoldings() {
     return holdingsRepository.deleteAll()
       .onSuccess(notUsed -> domainEventPublisher.publishAllRemoved())
-      .mapEmpty();
+      .map(Response.noContent().build());
   }
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
@@ -121,6 +124,24 @@ public class HoldingsService {
         return deleteResult.future()
           .onSuccess(domainEventPublisher.publishRemoved(hr));
       });
+  }
+
+  public Future<Response> deleteHoldings(String cql) {
+    if (StringUtils.isBlank(cql)) {
+      return Future.succeededFuture(
+          DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
+              "Expected CQL but query parameter is empty"));
+    }
+    if (CqlUtil.isMatchingAll(cql)) {
+      return deleteAllHoldings();  // faster: sends only one domain event (Kafka) message
+    }
+    return holdingsRepository.delete(cql)
+        .onSuccess(rowSet -> vertxContext.runOnContext(runLater -> {
+          rowSet.iterator().forEachRemaining(row -> {
+            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1));
+          });
+        }))
+        .map(Response.noContent().build());
   }
 
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert) {

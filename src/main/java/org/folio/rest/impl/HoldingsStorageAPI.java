@@ -7,12 +7,11 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.services.holding.HoldingsService;
 
 import io.vertx.core.AsyncResult;
@@ -27,25 +26,18 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class HoldingsStorageAPI implements HoldingsStorage {
 
-  private static final Logger log = LogManager.getLogger();
-
-  // Has to be lowercase because raml-module-builder uses case sensitive
-  // lower case headers
-  private static final String TENANT_HEADER = "x-okapi-tenant";
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
 
   @Validate
   @Override
-  public void deleteHoldingsStorageHoldings(String lang,
+  public void deleteHoldingsStorageHoldings(String query,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new HoldingsService(vertxContext, okapiHeaders)
-      .deleteAllHoldings()
-      .onSuccess(notUsed -> asyncResultHandler.handle(succeededFuture(
-        DeleteHoldingsStorageHoldingsResponse.respond204())))
-      .onFailure(handleFailure(asyncResultHandler));
+    new HoldingsService(vertxContext, okapiHeaders).deleteHoldings(query)
+    .otherwise(e -> EndpointFailureHandler.failureResponse(e))
+    .onComplete(asyncResultHandler);
   }
 
   @Validate
@@ -95,10 +87,9 @@ public class HoldingsStorageAPI implements HoldingsStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new HoldingsService(vertxContext, okapiHeaders)
-      .deleteHolding(holdingsRecordId)
-      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
-      .onFailure(handleFailure(asyncResultHandler));
+    new HoldingsService(vertxContext, okapiHeaders).deleteHolding(holdingsRecordId)
+    .otherwise(e -> EndpointFailureHandler.failureResponse(e))
+    .onComplete(asyncResultHandler);
   }
 
   @Validate

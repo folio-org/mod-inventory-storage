@@ -1906,7 +1906,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
-    client.delete(itemsStorageUrl(""), StorageTestSuite.TENANT_ID,
+    client.delete(itemsStorageUrl("?query=id==*"), StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(deleteAllFinished));
 
     Response deleteResponse = deleteAllFinished.get(5, TimeUnit.SECONDS);
@@ -1928,6 +1928,40 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(responseBody.getInteger("totalRecords"), is(0));
 
     assertRemoveAllEventForItem();
+  }
+
+  @Test
+  public void canDeleteItemsByCql() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    var item1 = createItem(smallAngryPlanet(holdingsRecordId).put("barcode", "1234"));
+    var item2 = createItem(nod(holdingsRecordId).put("barcode", "23"));
+    var item3 = createItem(uprooted(UUID.randomUUID(), holdingsRecordId).put("barcode", "12"));
+    var item4 = createItem(temeraire(UUID.randomUUID(), holdingsRecordId).put("barcode", "234"));
+    var item5 = createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId).put("barcode", "123"));
+
+    var response = client.delete(itemsStorageUrl("?query=barcode==12*"), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(204));
+    assertExists(item2);
+    assertExists(item4);
+    assertNotExists(item1);
+    assertNotExists(item3);
+    assertNotExists(item5);
+    assertRemoveEventForItem(item1);
+    assertRemoveEventForItem(item3);
+    assertRemoveEventForItem(item5);
+  }
+
+  @Parameters({
+    "",
+    "?query=",
+    "?query=%20%20",
+  })
+  @Test
+  public void cannotDeleteItemsWithoutCql(String query) throws Exception {
+    var response = client.delete(itemsStorageUrl(query), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+    assertThat(response.getBody(), is("Expected CQL but query parameter is empty"));
+    assertThat(response.getStatusCode(), is(400));
   }
 
   @Test
@@ -2700,6 +2734,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private void assertExists(JsonObject expectedItem) {
     Response response = getById(expectedItem.getString("id"));
     assertExists(response, expectedItem);
+  }
+
+  private void assertNotExists(JsonObject item) {
+    assertGetNotFound(itemsStorageUrl("/" + item.getString("id")));
   }
 
   private void assertExists(Response response, JsonObject expectedItem) {
