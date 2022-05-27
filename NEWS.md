@@ -1,3 +1,11 @@
+## 23.0.3 2022-05-26
+
+### Stories
+
+* [MODINVSTOR-913](https://issues.folio.org/browse/MODINVSTOR-913) Enhance inventory-hierarchy view to make it return instances by date search criteria that have holdings only - Lotus
+
+  [Full Changelog](https://github.com/folio-org/mod-inventory-storage/compare/v23.0.2...v23.0.3)
+
 ## 23.0.2 2022-03-30
 
 * Removes undefined permissions (MODINVSTOR-882)
