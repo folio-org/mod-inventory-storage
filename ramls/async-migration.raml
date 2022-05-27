@@ -10,6 +10,7 @@ documentation:
 
 types:
   asyncMigrationJob: !include migration/migration-job-by-id-response.json
+  asyncMigrationJobCollection: !include migration/migration-job-collection-response.json
   asyncMigrations: !include migration/migrations-get-response.json
   asyncMigrationJobRequest: !include migration/migration-job-post-request.json
   errors: !include raml-util/schemas/errors.schema
@@ -33,6 +34,19 @@ traits:
           text/plain:
             example: Internal server error
   /jobs:
+    get:
+      description: Get migration jobs
+      responses:
+        200:
+          description: Migration jobs collection has returned
+          body:
+            application/json:
+              type: asyncMigrationJobCollection
+        500:
+          description: Internal server error
+          body:
+            text/plain:
+              example: Internal server error
     post:
       description: Submit a migration job
       body:

@@ -38,6 +38,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -123,6 +124,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @After
   public void removeStatisticalCodes() {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
     statisticalCodeFixture.removeTestStatisticalCodes();
   }
 
@@ -1674,7 +1676,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertCqlFindsBarcodes("barcode==123456A", "123456a");
     assertCqlFindsBarcodes("barcode==123456ä", "123456ä");
     assertCqlFindsBarcodes("barcode==123456Ä", "123456ä");
-    assertCqlFindsBarcodes("barcode==123456* sortBy barcode", "123456a", "123456ä");
+    assertCqlFindsBarcodes("barcode==123456*", "123456a", "123456ä");
   }
 
   @Test
@@ -2713,12 +2715,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * Assert that the cql query returns items with the expected barcodes.
+   * Assert that the cql query returns items with the expected barcodes in any order.
    */
   private void assertCqlFindsBarcodes(String cql, String ... expectedBarcodes) throws Exception {
     Items items = findItems(cql);
     String [] barcodes = items.getItems().stream().map(Item::getBarcode).toArray(String []::new);
-    assertThat(cql, barcodes, is(expectedBarcodes));
+    assertThat(cql, barcodes, arrayContainingInAnyOrder(expectedBarcodes));
     assertThat(cql, items.getTotalRecords(), is(barcodes.length));
   }
 

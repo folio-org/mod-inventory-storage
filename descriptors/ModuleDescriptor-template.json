@@ -1,6 +1,7 @@
 {
   "id": "${artifactId}-${version}",
   "name": "Inventory Storage Module",
+  "replaces": [ "inventory-storage" ],
   "provides": [
     {
       "id": "item-storage-dereferenced",
@@ -1294,60 +1295,6 @@
       ]
     },
     {
-      "id":"related-instances",
-      "version":"1.0",
-      "handlers": [
-        {
-          "methods": ["GET"],
-          "pathPattern": "/instance-storage/related-instances",
-          "permissionsRequired": ["inventory-storage.related-instances.collection.get"]
-        }, {
-          "methods": ["GET"],
-          "pathPattern": "/instance-storage/related-instances/{id}",
-          "permissionsRequired": ["inventory-storage.related-instances.item.get"]
-        }, {
-          "methods": ["POST"],
-          "pathPattern": "/instance-storage/related-instances",
-          "permissionsRequired": ["inventory-storage.related-instances.item.post"]
-        }, {
-          "methods": ["PUT"],
-          "pathPattern": "/instance-storage/related-instances/{id}",
-          "permissionsRequired": ["inventory-storage.related-instances.item.put"]
-        }, {
-          "methods": ["DELETE"],
-          "pathPattern": "/instance-storage/related-instances/{id}",
-          "permissionsRequired": ["inventory-storage.related-instances.item.delete"]
-        }
-      ]
-    },
-    {
-      "id": "related-instance-types",
-      "version": "1.0",
-      "handlers": [
-        {
-          "methods": ["GET"],
-          "pathPattern": "/related-instance-types",
-          "permissionsRequired": ["inventory-storage.related-instance-types.collection.get"]
-        }, {
-          "methods": ["GET"],
-          "pathPattern": "/related-instance-types/{id}",
-          "permissionsRequired": ["inventory-storage.related-instance-types.item.get"]
-        }, {
-          "methods": ["POST"],
-          "pathPattern": "/related-instance-types",
-          "permissionsRequired": ["inventory-storage.related-instance-types.item.post"]
-        }, {
-          "methods": ["PUT"],
-          "pathPattern": "/related-instance-types/{id}",
-          "permissionsRequired": ["inventory-storage.related-instance-types.item.put"]
-        }, {
-          "methods": ["DELETE"],
-          "pathPattern": "/related-instance-types/{id}",
-          "permissionsRequired": ["inventory-storage.related-instance-types.item.delete"]
-        }
-      ]
-    },
-    {
       "id": "async-migration",
       "version": "0.1",
       "handlers": [
@@ -1364,6 +1311,11 @@
         {
           "methods": ["GET"],
           "pathPattern": "/inventory-storage/migrations/jobs/{id}",
+          "permissionsRequired": ["inventory-storage.migration.job.item.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/migrations/jobs",
           "permissionsRequired": ["inventory-storage.migration.job.item.get"]
         },
         {
@@ -2532,57 +2484,6 @@
       "description": "get instances by query with their holdings and items"
     },
     {
-      "permissionName":"inventory-storage.related-instances.collection.get",
-      "displayName": "inventory storage - get related-instances collection",
-      "description": "get related-instances collection from storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instances.item.get",
-      "displayName": "inventory storage - get individual related-instance",
-      "description": "get individual related-instance from storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instances.item.post",
-      "displayName": "inventory storage - create individual related-instances",
-      "description": "create individual related-instances in storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instances.item.put",
-      "displayName": "inventory storage - modify related-instances",
-      "description": "modify related-instances in storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instances.item.delete",
-      "displayName": "inventory storage - delete individual related-instances",
-      "description": "delete individual related-instances from storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instance-types.collection.get",
-      "displayName": "inventory storage - get related-instance-type collection",
-      "description": "get related-instance-type collection from storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instance-types.item.get",
-      "displayName": "inventory storage - get individual related-instance-type",
-      "description": "get individual related-instance-type from storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instance-types.item.post",
-      "displayName": "inventory storage - create individual related-instance-type",
-      "description": "create individual related-instance-type in storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instance-types.item.put",
-      "displayName": "inventory storage - modify related-instance-type",
-      "description": "modify related-instance-type in storage"
-    },
-    {
-      "permissionName": "inventory-storage.related-instance-types.item.delete",
-      "displayName": "inventory storage - delete individual related-instance-type",
-      "description": "delete individual related-instance-type from storage"
-    },
-
-    {
       "permissionName": "inventory-storage.migration.job.item.delete",
       "displayName": "inventory storage - cancel migration job",
       "description": "cancel a running migration job"
@@ -2611,16 +2512,6 @@
         "authority-storage.authority.reindex.post",
         "authority-storage.authority.reindex.item.get",
         "authority-storage.authority.reindex.item.delete",
-        "inventory-storage.related-instance-types.item.post",
-        "inventory-storage.related-instance-types.item.put",
-        "inventory-storage.related-instance-types.item.get",
-        "inventory-storage.related-instance-types.item.delete",
-        "inventory-storage.related-instance-types.collection.get",
-        "inventory-storage.related-instances.item.delete",
-        "inventory-storage.related-instances.item.put",
-        "inventory-storage.related-instances.item.post",
-        "inventory-storage.related-instances.item.get",
-        "inventory-storage.related-instances.collection.get",
         "inventory-storage-dereferenced.items.item.get",
         "inventory-storage-dereferenced.items.collection.get",
         "inventory-storage.items.collection.get",

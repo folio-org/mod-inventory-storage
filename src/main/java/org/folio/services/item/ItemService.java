@@ -95,7 +95,7 @@ public class ItemService {
           PostItemStorageItemsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventService.publishCreated());
+          .onSuccess(domainEventService.publishCreated());
       });
   }
 
@@ -115,7 +115,7 @@ public class ItemService {
           okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class, postSyncResult);
 
         return postSyncResult.future()
-          .compose(domainEventService.publishCreatedOrUpdated(batchOperation));
+          .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation));
       });
   }
 
@@ -131,7 +131,7 @@ public class ItemService {
       .compose(x -> refuseWhenHridChanged(putData.item, newItem))
       .map(x -> effectiveValuesService.populateEffectiveValues(newItem, putData.holdingsRecord))
       .compose(x -> updateItem(newItem))
-      .compose(finalItem -> domainEventService.publishUpdated(finalItem, putData.item, putData.holdingsRecord))
+      .onSuccess(finalItem -> domainEventService.publishUpdated(finalItem, putData.item, putData.holdingsRecord))
       .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
       .otherwise(e -> {
         if (e instanceof ResponseException) {
@@ -155,13 +155,14 @@ public class ItemService {
           DeleteItemStorageItemsByItemIdResponse.class, deleteResult);
 
         return deleteResult.future()
-          .compose(domainEventService.publishRemoved(item));
+          .onSuccess(domainEventService.publishRemoved(item));
       });
   }
 
   public Future<Void> deleteAllItems() {
     return itemRepository.deleteAll()
-      .compose(notUsed -> domainEventService.publishAllRemoved());
+      .onSuccess(notUsed -> domainEventService.publishAllRemoved())
+      .mapEmpty();
   }
 
   /**

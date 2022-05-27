@@ -61,7 +61,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(boundWithGETResponseForPartById.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getAllPartsForBoundWithItem.size(), is(3));
 
-    await().atMost(5, TimeUnit.SECONDS)
+    await().atMost(10, TimeUnit.SECONDS)
       .until(() -> FakeKafkaConsumer.getAllPublishedBoundWithIdsCount() == 3);
   }
 
@@ -112,7 +112,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(oldPart2Gone.size(), is(0));
     assertThat(newPart2.size(), is(1));
 
-    await().atMost(5, TimeUnit.SECONDS)
+    await().atMost(10, TimeUnit.SECONDS)
       .until(() -> FakeKafkaConsumer.getAllPublishedBoundWithIdsCount() == 3);
   }
 
