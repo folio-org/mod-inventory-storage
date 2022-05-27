@@ -64,15 +64,13 @@ public class InstanceService {
           InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
 
         return postResponse.future()
-          .onSuccess(response -> {
             // Return the response without waiting for a domain event publish
             // to complete. Units of work performed by this service is the same
             // but the ordering of the units of work provides a benefit to the
             // api client invoking this endpoint. The response is returned
             // a little earlier so the api client can continue its processing
             // while the domain event publish is satisfied.
-            domainEventPublisher.publishCreated().apply(response);
-          });
+            .onSuccess(domainEventPublisher.publishCreated());
       });
   }
 
@@ -92,7 +90,7 @@ public class InstanceService {
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class, postResult);
 
         return postResult.future()
-          .compose(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
       });
   }
 
@@ -108,7 +106,7 @@ public class InstanceService {
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
 
         return putResult.future()
-          .compose(domainEventPublisher.publishUpdated(oldInstance));
+          .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
       });
   }
 
@@ -116,7 +114,8 @@ public class InstanceService {
     return marcRepository.deleteAll()
       .compose(notUsed -> relationshipRepository.deleteAll())
       .compose(notUsed -> instanceRepository.deleteAll())
-      .compose(notUsed -> domainEventPublisher.publishAllRemoved());
+      .onSuccess(notUsed -> domainEventPublisher.publishAllRemoved())
+      .mapEmpty();
   }
 
   public Future<Response> deleteInstance(String id) {
@@ -131,7 +130,7 @@ public class InstanceService {
           InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse.class, deleteResult);
 
         return deleteResult.future()
-          .compose(domainEventPublisher.publishRemoved(instance));
+          .onSuccess(domainEventPublisher.publishRemoved(instance));
       });
   }
 }

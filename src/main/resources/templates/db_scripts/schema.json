@@ -5,7 +5,7 @@
       "fromModuleVersion": "22.1.0",
       "withMetadata": true,
       "withAuditing": false,
-      "withOptimisticLocking": "logOnConflict"
+      "withOptimisticLocking": "failOnConflict"
     },
     {
       "tableName": "loan_type",
@@ -1119,6 +1119,11 @@
     {
       "run": "after",
       "snippetPath": "changeUUIDCastInGetStatisticalCodesFunction.sql",
+      "fromModuleVersion": "23.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/correctGetUpdatedInstanceIdsView.sql",
       "fromModuleVersion": "23.1.0"
     }
   ]

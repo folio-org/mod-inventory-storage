@@ -1,7 +1,5 @@
 package org.folio.rest.support;
 
-import static io.vertx.core.CompositeFuture.all;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.vertx.core.AsyncResult;
@@ -11,13 +9,15 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import io.vertx.sqlclient.impl.ArrayTuple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.impl.InstanceStorageBatchAPI;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
@@ -27,6 +27,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 public class HridManager {
   private static final Logger log = LogManager.getLogger();
@@ -46,55 +48,57 @@ public class HridManager {
     this.postgresClient = Objects.requireNonNull(postgresClient, "PostgresClient cannot be null");
   }
 
+  /**
+   * @deprecated Remove after deprecated {@link InstanceStorageBatchAPI} has been removed.
+   */
+  @Deprecated
   public Future<String> getNextInstanceHrid() {
-    return getNextHrid(InventoryType.Instances);
-  }
-
-  public Future<String> getNextHoldingsHrid() {
-    return getNextHrid(InventoryType.Holdings);
-  }
-
-  public Future<String> getNextItemHrid() {
-    return getNextHrid(InventoryType.Items);
+    return populateHrid(new Instance()).map(Instance::getHrid);
   }
 
   public Future<Item> populateHrid(Item item) {
-    return isBlank(item.getHrid())
-      ? getNextItemHrid().map(item::withHrid)
-      : Future.succeededFuture(item);
+    return populateHridForItems(List.of(item)).map(item);
   }
 
   public Future<Instance> populateHrid(Instance instance) {
-    return isBlank(instance.getHrid())
-      ? getNextInstanceHrid().map(instance::withHrid)
-      : Future.succeededFuture(instance);
+    return populateHridForInstances(List.of(instance)).map(instance);
   }
 
   public Future<HoldingsRecord> populateHrid(HoldingsRecord hr) {
-    return isBlank(hr.getHrid())
-      ? getNextHoldingsHrid().map(hr::withHrid)
-      : Future.succeededFuture(hr);
+    return populateHridForHoldings(List.of(hr)).map(hr);
+  }
+
+  private <T> Future<List<T>> populateHrids(InventoryType inventoryType, List<T> list,
+      Function<T, String> getHrid, BiConsumer<T, String> setHrid) {
+
+    int n = 0;
+    for (T t : list) {
+      if (isBlank(getHrid.apply(t))) {
+        n++;
+      }
+    }
+    return getNextHrids(inventoryType, n)
+        .map(List::iterator)
+        .map(hrids -> {
+          for (T t : list) {
+            if (isBlank(getHrid.apply(t))) {
+              setHrid.accept(t, hrids.next());
+            }
+          }
+          return list;
+        });
   }
 
   public Future<List<Instance>> populateHridForInstances(List<Instance> instances) {
-    return all(instances.stream()
-      .map(this::populateHrid)
-      .collect(toList()))
-      .map(notUsed -> instances);
+    return populateHrids(InventoryType.Instances, instances, Instance::getHrid, Instance::setHrid);
   }
 
   public Future<List<Item>> populateHridForItems(List<Item> items) {
-    return all(items.stream()
-      .map(this::populateHrid)
-      .collect(toList()))
-      .map(notUsed -> items);
+    return populateHrids(InventoryType.Items, items, Item::getHrid, Item::setHrid);
   }
 
   public Future<List<HoldingsRecord>> populateHridForHoldings(List<HoldingsRecord> hrs) {
-    return all(hrs.stream()
-      .map(this::populateHrid)
-      .collect(toList()))
-      .map(notUsed -> hrs);
+    return populateHrids(InventoryType.Holdings, hrs, HoldingsRecord::getHrid, HoldingsRecord::setHrid);
   }
 
   public Future<HridSettings> getHridSettings() {
@@ -226,65 +230,32 @@ public class HridManager {
   }
 
   /**
-   * Optimized version of getNextHrid that makes a single call to retrieve
-   * hridsettings and the next sequence value for the specified inventory type.
+   * Return the next n HRIDs for the given type.
    */
-  private Future<String> getNextHrid(InventoryType type) {
-    final String sql = "select jsonb::TEXT from hrid_settings " +
-      "union all " +
-      "SELECT nextval($1)::text";
-    final Promise<String> promise = Promise.promise();
-
-    try {
-      context.runOnContext(v ->
-      {
-        String sequenceName;
-        switch (type) {
-          case Instances:
-            sequenceName = HRID_INSTANCES_SEQUENCE_NAME;
-            break;
-          case Holdings:
-            sequenceName = HRID_HOLDINGS_SEQUENCE_NAME;
-            break;
-          case Items:
-            sequenceName = HRID_ITEMS_SEQUENCE_NAME;
-          default:
-            sequenceName = "hrid_" + type.name().toLowerCase() + "_seq";
-        }
-
-        postgresClient.select(sql,
-          new ArrayTuple(1).addString(sequenceName),
-          reply -> {
-            var result = reply.result();
-            if (reply.failed()) {
-              fail(promise, "Failed to get hridsettings and next sequence value from the database", reply.cause());
-              return;
-            }
-            if (result.size() != 2) {
-              String errorMessage = "Result set contains " + result.size() + " items instead of 2 items";
-              fail(promise, errorMessage,
-                new IllegalStateException(errorMessage));
-              return;
-            }
-            RowIterator<Row> iterator = result.iterator();
-            // get hridSettings
-            var hridSettingsrow = iterator.next();
-            HridSettings hridSettings = Json.decodeValue(hridSettingsrow.getString(0), HridSettings.class);
-            final String hridPrefix = type.getPrefix(hridSettings);
-            // get hrid
-            var hridIdrow = iterator.next();
-            String s = String.format(
-              getHridFormatter(hridSettings),
-              Objects.toString(hridPrefix, ""),
-              Long.parseLong(hridIdrow.getString(0)));
-            promise.complete(s);
-          });
-      });
-    } catch (Exception e) {
-      fail(promise, "Failed to get hridsettings and next sequence value from the database", e);
+  private Future<List<String>> getNextHrids(InventoryType type, int n) {
+    if (n == 0) {
+      return Future.succeededFuture(Collections.emptyList());
     }
-
-    return promise.future();
+    StringBuilder sql = new StringBuilder("SELECT jsonb::text");
+    for (int i = 0; i < n; i++) {
+      sql.append(", nextval($1)");
+    }
+    sql.append(" FROM hrid_settings");
+    return postgresClient.selectSingle(sql.toString(), Tuple.of(type.getSequenceName()))
+        .map(row -> {
+          HridSettings hridSettings = Json.decodeValue(row.getString(0), HridSettings.class);
+          final String hridPrefix = type.getPrefix(hridSettings);
+          final String formatter = getHridFormatter(hridSettings);
+          List<String> list = new ArrayList<>(n);
+          for (int i = 1; i <= n; i++) {
+            String hrid = String.format(
+                formatter,
+                Objects.toString(hridPrefix, ""),
+                row.getLong(i));
+            list.add(hrid);
+          }
+          return list;
+        });
   }
 
   private String getHridFormatter(HridSettings hridSettings) {
@@ -328,6 +299,8 @@ public class HridManager {
 
   private interface Inventory<H> {
     String getPrefix(HridSettings hridSettings);
+
+    String getSequenceName();
   }
 
   private enum InventoryType implements Inventory<HridSettings> {
@@ -336,17 +309,34 @@ public class HridManager {
       public String getPrefix(HridSettings hridSettings) {
         return hridSettings.getHoldings().getPrefix();
       }
+
+      @Override
+      public String getSequenceName() {
+        return HRID_HOLDINGS_SEQUENCE_NAME;
+      }
     },
 
     Instances {
+      @Override
       public String getPrefix(HridSettings hridSettings) {
         return hridSettings.getInstances().getPrefix();
+      }
+
+      @Override
+      public String getSequenceName() {
+        return HRID_INSTANCES_SEQUENCE_NAME;
       }
     },
 
     Items {
+      @Override
       public String getPrefix(HridSettings hridSettings) {
         return hridSettings.getItems().getPrefix();
+      }
+
+      @Override
+      public String getSequenceName() {
+        return HRID_ITEMS_SEQUENCE_NAME;
       }
     }
   }

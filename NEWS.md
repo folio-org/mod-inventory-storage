@@ -4,6 +4,7 @@
 * Removed UUID contraint on statisticalCodeIds in instance Records (MODINVSTOR-885)
 * Combined calls to retrieve HRID settings and getting sequence values (MODINVSTOR-894)
 * Allow response to be returned to the api client without waiting for domain event publishing during instance creation (MODINVSTOR-894)
+* Enable optimistic locking 'failOnConflict' for authorities (MODINVSTOR-909)
 * provides `item-storage-dereferenced 0.2`
 * provides `holdings-storage 5.1`
 * provides `holdings-storage-batch-sync 1.1`
