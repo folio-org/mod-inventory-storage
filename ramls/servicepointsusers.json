@@ -12,6 +12,7 @@
       }
     },
     "totalRecords": {
+      "description": "Estimated or exact total number of records",
       "type": "integer"
     }
   },
