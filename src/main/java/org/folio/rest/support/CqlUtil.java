@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 public final class CqlUtil {
   private static final Pattern CQL_MATCHES_ALL = Pattern.compile(
-      "^ *id *==? *\\* *$|^ *cql.allRecords *= *1 *$");
+      "^ *id *==? *\\* *$|^ *id *==? *\"\\*\" *$|^ *cql.allRecords *= *1 *$");
 
   private CqlUtil() {
     throw new UnsupportedOperationException("Cannot instantiate utility class");

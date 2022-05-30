@@ -18,9 +18,13 @@ public class CqlUtilTest {
 
   @Parameters({
     "id=*",
+    "id=\"*\"",
     "id==*",
+    "id==\"*\"",
     "  id  =  *  ",
+    "  id  =  \"*\"  ",
     "  id  ==  *  ",
+    "  id  ==  \"*\"  ",
     "cql.allRecords=1",
     "  cql.allRecords  =  1  ",
   })
@@ -34,7 +38,11 @@ public class CqlUtilTest {
     "a=1 AND id=*",
     "id==* AND b=2",
     "cql.allRecords=1 NOT c=3",
-    "d=4 NOT cql.allRecords=1",
+    "d=4 NOT id==\"*\"",
+    "id==a*",
+    "id==*a",
+    "id==\"a*\"",
+    "id==\"*a\"",
   })
   @Test
   public void doesntMatchAllItems(String cql) {
