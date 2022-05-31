@@ -30,6 +30,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlUtil;
 import org.folio.rest.support.HridManager;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
+import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 
 public class InstanceService {
@@ -127,7 +128,7 @@ public class InstanceService {
   // suppress "Remove useless curly braces around lambda containing only one statement"
   @SuppressWarnings("java:S1602")
   public Future<Response> deleteInstance(String id) {
-    return instanceRepository.delete("id==" + id)
+    return instanceRepository.delete("id==" + StringUtil.cqlEncode(id))
         .map(rowSet -> {
           if (! rowSet.iterator().hasNext()) {
             return DeleteInstanceStorageInstancesByInstanceIdResponse.respond404WithTextPlain("Not found");
