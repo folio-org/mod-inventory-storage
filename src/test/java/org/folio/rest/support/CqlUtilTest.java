@@ -7,8 +7,8 @@ import junitparams.Parameters;
 import org.folio.rest.testing.UtilityClassTester;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-@RunWith(JUnitParamsRunner.class)
 
+@RunWith(JUnitParamsRunner.class)
 public class CqlUtilTest {
 
   @Test
