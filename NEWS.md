@@ -1,4 +1,4 @@
-## 23.1.0 IN-PROGRESS
+## 24.0.0 IN-PROGRESS
 
 * Added integrity checks to statisticalCodeIds in instance records (MODINVSTOR-885)
 * Removed UUID contraint on statisticalCodeIds in instance Records (MODINVSTOR-885)
@@ -8,10 +8,10 @@
 * Correctly implement delete by CQL for instance/holding/item (MODINVSTOR-576)
 * Reject DELETE instance/holding/item without CQL query (MODINVSTOR-901)
 * provides `item-storage-dereferenced 0.2`
-* provides `item-storage 9.1`
-* provides `holdings-storage 5.1`
+* provides `item-storage 10.0`
+* provides `holdings-storage 6.0`
 * provides `holdings-storage-batch-sync 1.1`
-* provides `instance-storage 8.1`
+* provides `instance-storage 9.0`
 * provides `instance-storage-batch 1.1`
 * provides `instance-storage-batch-sync 1.1`
 * provides `inventory-view 1.1`
