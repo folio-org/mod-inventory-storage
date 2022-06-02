@@ -2202,18 +2202,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   public void canPostSynchronousBatchWithExistingAndGeneratedHRID() throws Exception {
     log.info("Starting canPostSynchronousBatchWithExistingAndGeneratedHRID");
 
+    final UUID id [] = new UUID[5];
     final JsonArray instancesArray = new JsonArray();
-    final int numberOfInstances = 5;
-    final UUID [] uuids = new UUID[numberOfInstances];
-
-    instancesArray.add(uprooted(uuids[0] = UUID.randomUUID()));
-    instancesArray.add(temeraire(uuids[1] = UUID.randomUUID()));
-
-    for(int i = 2; i < numberOfInstances; i++) {
-      final JsonObject sap = smallAngryPlanet(uuids[i] = UUID.randomUUID());
-      sap.put("hrid", "sap" + i);
-      instancesArray.add(sap);
-    }
+    instancesArray.add(uprooted(id[0] = UUID.randomUUID()));
+    instancesArray.add(uprooted(id[1] = UUID.randomUUID()).put("hrid", "foo"));
+    instancesArray.add(uprooted(id[2] = UUID.randomUUID()));
+    instancesArray.add(uprooted(id[3] = UUID.randomUUID()).put("hrid", "bar"));
+    instancesArray.add(uprooted(id[4] = UUID.randomUUID()));
 
     final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
 
@@ -2221,25 +2216,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     instancesStorageSyncClient.createNoResponse(instanceCollection);
 
-    JsonObject instance = instancesArray.getJsonObject(0);
-    Response response = getById(instance.getString("id"));
+    assertThat(getById(id[0]).getJson().getString("hrid"), is("in00000000001"));
+    assertThat(getById(id[1]).getJson().getString("hrid"), is("foo"));
+    assertThat(getById(id[2]).getJson().getString("hrid"), is("in00000000002"));
+    assertThat(getById(id[3]).getJson().getString("hrid"), is("bar"));
+    assertThat(getById(id[4]).getJson().getString("hrid"), is("in00000000003"));
 
-    assertThat(response.getJson().getString("hrid"),
-      either(is("in00000000001")).or(is("in00000000002")));
-
-    for (int i = 2; i < numberOfInstances; i++) {
-      instance = instancesArray.getJsonObject(i);
-      response = getById(instance.getString("id"));
-
-      assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
-      assertThat(response.getJson().getString("hrid"), is("sap" + i));
-    }
-
-    instance = instancesArray.getJsonObject(1);
-    response = getById(instance.getString("id"));
-
-    assertThat(response.getJson().getString("hrid"),
-      either(is("in00000000001")).or(is("in00000000002")));
+    String nextHrid = createInstance(uprooted(UUID.randomUUID())).getJson().getString("hrid");
+    assertThat(nextHrid, is("in00000000004"));
 
     log.info("Finisted canPostSynchronousBatchWithExistingAndGeneratedHRID");
   }

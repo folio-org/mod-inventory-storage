@@ -1028,6 +1028,11 @@
       "fromModuleVersion": "23.1.0"
     },
     {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/correctGetUpdatedInstanceIdsView.sql",
+      "fromModuleVersion": "23.1.0"
+    },
+    {
         "run":"after",
         "snippetPath":"dropCallNumberNormalizationFunctions.sql",
         "fromModuleVersion":"24.0.0"
