@@ -1,5 +1,6 @@
 ## 23.1.0 IN-PROGRESS
 
+* Upgraded RMB to 33.2.10 (MODINVSTOR-915)
 * Added integrity checks to statisticalCodeIds in instance records (MODINVSTOR-885)
 * Removed UUID contraint on statisticalCodeIds in instance Records (MODINVSTOR-885)
 * Combined calls to retrieve HRID settings and getting sequence values (MODINVSTOR-894)
