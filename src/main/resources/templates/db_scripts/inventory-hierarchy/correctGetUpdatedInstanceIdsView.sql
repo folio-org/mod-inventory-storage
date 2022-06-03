@@ -30,9 +30,9 @@ WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                              SELECT instanceid,
                                              (strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) AS maxDate
                              FROM ${myuniversity}_${mymodule}.holdings_record hr
-                                      LEFT JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
+                                      INNER JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
                              WHERE (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
-                                    AND NOT EXISTS (SELECT NULL WHERE $5)) as FOO group by instanceid
+                                    AND NOT EXISTS (SELECT NULL WHERE $5)) as related_hr_items group by instanceid
                              UNION ALL
                              SELECT (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
                                     greatest((strToTimestamp(audit_item.jsonb -> 'record' ->> 'updatedDate')),
