@@ -21,18 +21,20 @@ WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                              WHERE (strToTimestamp(inst.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
 
                              UNION ALL
-                             SELECT instanceid, MAX(maxdate) as maxdate FROM (SELECT instanceid,
-                                             (strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) as maxdate
-                             FROM ${myuniversity}_${mymodule}.holdings_record hr
-                             WHERE ((strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
-                                    AND NOT EXISTS (SELECT NULL WHERE $5))
-                             UNION
-                             SELECT instanceid,
-                                             (strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) AS maxDate
-                             FROM ${myuniversity}_${mymodule}.holdings_record hr
-                                      INNER JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
-                             WHERE (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
-                                    AND NOT EXISTS (SELECT NULL WHERE $5)) as related_hr_items group by instanceid
+                             SELECT instanceid, MAX(maxdate) as maxdate
+                               FROM (
+                                     SELECT instanceid,(strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) as maxdate
+                                       FROM ${myuniversity}_${mymodule}.holdings_record hr
+                                      WHERE ((strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
+                                        AND NOT EXISTS (SELECT NULL WHERE $5))
+                                     UNION
+                                     SELECT instanceid, (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) AS maxDate
+                                       FROM ${myuniversity}_${mymodule}.holdings_record hr
+                                              INNER JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
+                                      WHERE (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
+                                        AND NOT EXISTS (SELECT NULL WHERE $5)
+                                    ) AS related_hr_items
+                                    GROUP BY instanceid
                              UNION ALL
                              SELECT (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
                                     greatest((strToTimestamp(audit_item.jsonb -> 'record' ->> 'updatedDate')),
