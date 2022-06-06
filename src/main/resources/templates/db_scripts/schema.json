@@ -1125,7 +1125,7 @@
     {
       "run": "after",
       "snippetPath": "inventory-hierarchy/correctGetUpdatedInstanceIdsView.sql",
-      "fromModuleVersion": "23.0.3"
+      "fromModuleVersion": "23.0.5"
     }
   ]
 }
