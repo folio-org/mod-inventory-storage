@@ -1,3 +1,6 @@
+## 23.0.5 2022-06-06
+* Update fromModuleVersion value (MODINVSTOR-913)
+
 ## 23.0.4 2022-06-03
 * Enhance inventory-hierarchy view - SQL query optimization (MODINVSTOR-913)
 
