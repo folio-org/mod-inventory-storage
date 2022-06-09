@@ -31,6 +31,7 @@ import java.util.stream.IntStream;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
@@ -151,7 +152,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   private static Map<String, String> okapiHeaders() {
-    return Map.of(TENANT.toLowerCase(), TENANT_ID);
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
   }
 
   private static Context getContext() {
