@@ -24,6 +24,7 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.rest.api.entities.Instance;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.kafka.InventoryProducerRecordBuilder;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.services.kafka.topic.KafkaTopic;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      Map.of(), KafkaTopic.instance("foo-tenant", environmentName()),
+      new CaseInsensitiveMap<>(Map.of()), KafkaTopic.instance("foo-tenant", environmentName()),
         producerManager, failureHandler);
   }
 

@@ -1,6 +1,6 @@
 package org.folio.rest.impl;
 
-import org.folio.rest.testing.UtilityClassTester;
+import org.folio.okapi.testing.UtilityClassTester;
 import org.junit.Test;
 
 public class StorageHelperTest {

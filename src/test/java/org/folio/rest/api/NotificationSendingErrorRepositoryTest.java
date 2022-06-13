@@ -12,6 +12,7 @@ import org.folio.persist.NotificationSendingErrorRepository;
 import org.folio.persist.entity.NotificationSendingError;
 import org.folio.rest.persist.PgUtil;
 import org.junit.Test;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 public class NotificationSendingErrorRepositoryTest extends TestBaseWithInventoryUtil {
   @Test
@@ -32,7 +33,7 @@ public class NotificationSendingErrorRepositoryTest extends TestBaseWithInventor
 
   private NotificationSendingErrorRepository createRepository() {
     var postgresClient = PgUtil.postgresClient(getVertx().getOrCreateContext(),
-      Map.of("x-okapi-tenant", TENANT_ID));
+    new CaseInsensitiveMap<>(Map.of("x-okapi-tenant", TENANT_ID)));
 
     return new NotificationSendingErrorRepository(postgresClient);
   }
