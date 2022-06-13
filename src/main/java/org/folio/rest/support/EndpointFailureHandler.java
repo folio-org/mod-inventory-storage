@@ -14,8 +14,10 @@ import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.persist.PgExceptionUtil;
+import org.folio.services.HridLockErrorMapper;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.pgclient.PgException;
 
 public final class EndpointFailureHandler {
   private static final Logger log = LogManager.getLogger();
@@ -54,7 +56,7 @@ public final class EndpointFailureHandler {
       log.error("An error occurred", error);
       Response responseToReturn;
 
-      if (error instanceof BadRequestException) {
+      if (error instanceof BadRequestException || isHridLockException(error)) {
         responseToReturn = textPlainResponse(400, error);
       } else if (error instanceof NotFoundException) {
         responseToReturn = textPlainResponse(404, error);
@@ -79,5 +81,12 @@ public final class EndpointFailureHandler {
   private static Response failedValidationResponse(Object jsonEntity) {
     return Response.status(422).header(CONTENT_TYPE, "application/json")
       .entity(jsonEntity).build();
+  }
+
+  private static boolean isHridLockException(Throwable error) {
+    if (! (error instanceof PgException)) {
+      return false;
+    }
+    return HridLockErrorMapper.HRID_LOCK_ERROR_CODE.equals(((PgException) error).getCode());
   }
 }

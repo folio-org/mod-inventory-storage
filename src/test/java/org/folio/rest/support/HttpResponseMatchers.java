@@ -1,11 +1,13 @@
 package org.folio.rest.support;
 
+import org.apache.commons.lang3.StringUtils;
 import org.folio.HttpStatus;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 import io.vertx.core.json.JsonObject;
+import javax.ws.rs.core.MediaType;
 
 public class HttpResponseMatchers {
   public static Matcher<Response> statusCodeIs(int statusCode) {
@@ -34,6 +36,34 @@ public class HttpResponseMatchers {
     return statusCodeIs(httpStatus.toInt());
   }
 
+  public static Matcher<Response> textBodyContains(CharSequence substring) {
+    return new TypeSafeDiagnosingMatcher<Response>() {
+      @Override
+      public void describeTo(Description description) {
+        description
+          .appendText("a response where content type is text/plain and body contains '")
+          .appendText(substring.toString()).appendText("'");
+      }
+
+      @Override
+      protected boolean matchesSafely(Response response, Description description) {
+        boolean result = true;
+
+        if (! MediaType.TEXT_PLAIN.equals(response.getContentType())) {
+          result = false;
+          description.appendText("Response where context type is not text/plain: " + response.getContentType());
+        }
+
+        if (! StringUtils.contains(response.getBody(), substring)) {
+          result = false;
+          description.appendText("Response where body doesn't contain '" + substring + "': " + response.getBody());
+        }
+
+        return result;
+      }
+    };
+  }
+
   /**
    * Expect that the body is a JSON where errors[0].message contains the substring.
    * @param substring the expected substring
@@ -44,7 +74,7 @@ public class HttpResponseMatchers {
       @Override
       public void describeTo(Description description) {
         description
-          .appendText("an response where the body is a JSON where errors[0].message contains '")
+          .appendText("a response where the body is a JSON where errors[0].message contains '")
           .appendText(substring).appendText("'");
       }
 

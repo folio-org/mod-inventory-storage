@@ -11,8 +11,6 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
-import static org.folio.validator.HridValidators.refuseWhenHridChanged;
-
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -26,6 +24,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
+import org.folio.services.HridLockErrorMapper;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 
@@ -90,6 +89,7 @@ public class InstanceService {
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class, postResult);
 
         return postResult.future()
+          .map(HridLockErrorMapper::map)
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
       });
   }
@@ -97,7 +97,6 @@ public class InstanceService {
   public Future<Response> updateInstance(String id, Instance newInstance) {
     return instanceRepository.getById(id)
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(oldInstance -> refuseWhenHridChanged(oldInstance, newInstance))
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
 
@@ -106,6 +105,7 @@ public class InstanceService {
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
 
         return putResult.future()
+          .map(HridLockErrorMapper::map)
           .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
       });
   }

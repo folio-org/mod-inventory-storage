@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
@@ -1815,9 +1816,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final Response response = updateCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(),
-        is("The hrid field cannot be changed: new=ABC123, old=ho00000000001"));
+    assertThat(response, allOf(statusCodeIs(HTTP_BAD_REQUEST),
+        textBodyContains("The hrid field cannot be changed: new=ABC123, old=ho00000000001")));
 
     log.info("Finished cannotChangeHRIDAfterCreation");
   }
@@ -1854,9 +1854,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final Response response = updateCompleted.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(),
-        is("The hrid field cannot be changed: new=null, old=ho00000000001"));
+    assertThat(response, allOf(statusCodeIs(HTTP_BAD_REQUEST),
+        textBodyContains("The hrid field cannot be changed: new=<NULL>, old=ho00000000001")));
 
     log.info("Finished cannotRemoveHRIDAfterCreation");
   }
@@ -1966,6 +1965,21 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     }
 
     log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithChangedHrid() {
+    final JsonArray holdingsArray = threeHoldings();
+    assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HTTP_CREATED));
+
+    for (int i = 0; i < 3; i++) {
+      holdingsArray.set(i, getById(holdingsArray.getJsonObject(i).getString("id")).getJson());
+    }
+    String old = holdingsArray.getJsonObject(1).getString("hrid");
+    holdingsArray.getJsonObject(1).put("hrid", "7");
+
+    assertThat(postSynchronousBatch("?upsert=true", holdingsArray),
+        allOf(statusCodeIs(400), textBodyContains("The hrid field cannot be changed: new=7, old=" + old)));
   }
 
   @Test
@@ -2170,8 +2184,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonArray holdingsArray1 = threeHoldings();
     final JsonArray holdingsArray2 = threeHoldings();
 
-    holdingsArray1.getJsonObject(1).put("id", existingHrId);
-    holdingsArray2.getJsonObject(1).put("id", existingHrId);
+    holdingsArray1.getJsonObject(1).put("id", existingHrId).put("hrid", "foo");
+    holdingsArray2.getJsonObject(1).put("id", existingHrId).put("hrid", "foo");
 
     final Response firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
     final JsonObject existingHrBeforeUpdate = getById(existingHrId).getJson();

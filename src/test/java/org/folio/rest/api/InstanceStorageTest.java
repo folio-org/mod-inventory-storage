@@ -25,6 +25,7 @@ import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.HttpResponseMatchers.textBodyContains;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.ResponseHandler.json;
@@ -2096,9 +2097,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canPostSynchronousBatchWithExistingIdUpsertTrue() throws Exception {
     UUID duplicateId = UUID.randomUUID();
-    final IndividualResource existingInstance = createInstance(nod(duplicateId));
+    final IndividualResource existingInstance = createInstance(nod(duplicateId).put("hrid", "i1"));
     final JsonObject firstInstanceToCreate = uprooted(UUID.randomUUID());
-    final JsonObject instanceToUpdate = smallAngryPlanet(duplicateId);
+    final JsonObject instanceToUpdate = smallAngryPlanet(duplicateId).put("hrid", "i1");
     final JsonObject secondInstanceToCreate = temeraire(UUID.randomUUID());
 
     JsonArray instancesArray = new JsonArray();
@@ -2274,7 +2275,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(putResponse.getStatusCode(), is(400));
     assertThat(putResponse.getBody(),
-        is("The hrid field cannot be changed: new=testHRID, old=in00000000001"));
+        containsString("The hrid field cannot be changed: new=testHRID, old=in00000000001."));
 
     log.info("Finished cannotChageHRIDAfterCreation");
   }
@@ -2307,7 +2308,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(putResponse.getStatusCode(), is(400));
     assertThat(putResponse.getBody(),
-        is("The hrid field cannot be changed: new=null, old=in00000000001"));
+        containsString("The hrid field cannot be changed: new=<NULL>, old=in00000000001."));
 
     log.info("Finished cannotRemoveHRIDAfterCreation");
   }
@@ -2412,6 +2413,23 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         is("in00000000001"));
 
     log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithChangedHrid() throws Exception {
+    final UUID id [] = new UUID[2];
+    final JsonArray instancesArray = new JsonArray();
+    instancesArray.add(uprooted(id[0] = UUID.randomUUID()));
+    instancesArray.add(uprooted(id[1] = UUID.randomUUID()).put("hrid", "41"));
+    final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+    instancesStorageSyncClient.createNoResponse(instanceCollection);
+
+    instancesArray.clear();
+    instancesArray.add(getById(id[0]).getJson());
+    instancesArray.add(getById(id[1]).getJson().put("hrid", "42"));
+
+    Response response = instancesStorageSyncClient.attemptToCreate("?upsert=true", instanceCollection);
+    assertThat(response, allOf(statusCodeIs(400), textBodyContains("The hrid field cannot be changed: new=42, old=41.")));
   }
 
   @Test

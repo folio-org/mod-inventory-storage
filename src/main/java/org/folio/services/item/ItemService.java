@@ -19,8 +19,6 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
-import static org.folio.validator.HridValidators.refuseWhenHridChanged;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -50,6 +48,7 @@ import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.client.exceptions.ResponseException;
+import org.folio.services.HridLockErrorMapper;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
@@ -115,6 +114,7 @@ public class ItemService {
           okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class, postSyncResult);
 
         return postSyncResult.future()
+          .map(HridLockErrorMapper::map)
           .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation));
       });
   }
@@ -128,7 +128,6 @@ public class ItemService {
     PutData putData = new PutData();
     return getItemAndHolding(itemId, newItem.getHoldingsRecordId())
       .onSuccess(putData::set)
-      .compose(x -> refuseWhenHridChanged(putData.item, newItem))
       .map(x -> effectiveValuesService.populateEffectiveValues(newItem, putData.holdingsRecord))
       .compose(x -> updateItem(newItem))
       .onSuccess(finalItem -> domainEventService.publishUpdated(finalItem, putData.item, putData.holdingsRecord))

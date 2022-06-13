@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
@@ -11,6 +12,7 @@ import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENT
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.HttpResponseMatchers.textBodyContains;
 import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
@@ -806,22 +808,15 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("materialTypeId", bookMaterialTypeID);
 
-    setItemSequence(1);
+    final JsonObject itemToPut = createItem(itemToCreate);
 
-    createItem(itemToCreate);
+    itemToPut.put("hrid", "ABC123");
 
-    itemToCreate.put("hrid", "ABC123");
+    final Response response = client.put(itemsStorageUrl("/" + itemId), itemToPut, StorageTestSuite.TENANT_ID)
+        .get(5, TimeUnit.SECONDS);
 
-    final CompletableFuture<Response> completed = new CompletableFuture<>();
-
-    client.put(itemsStorageUrl("/" + itemId), itemToCreate, StorageTestSuite.TENANT_ID,
-        ResponseHandler.text(completed));
-
-    final Response response = completed.get(5, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(),
-        is("The hrid field cannot be changed: new=ABC123, old=it00000000001"));
+    assertThat(response, allOf(statusCodeIs(HTTP_BAD_REQUEST),
+        textBodyContains("The hrid field cannot be changed: new=ABC123, old=it00000000001.")));
 
     log.info("Finished cannotUpdateAnItemWithChangedHRID");
   }
@@ -854,9 +849,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     final Response response = completed.get(5, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(),
-        is("The hrid field cannot be changed: new=null, old=it00000000001"));
+    assertThat(response, allOf(statusCodeIs(HTTP_BAD_REQUEST),
+        textBodyContains("The hrid field cannot be changed: new=<NULL>, old=it00000000001.")));
 
     log.info("Finished cannotUpdateAnItemWithRemovedHRID");
   }
@@ -1080,6 +1074,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     final var firstResponse = postSynchronousBatch("?upsert=true", itemsArray1);
     final var existingItemBeforeUpdate = getById(existingItemId).getJson();
+    itemsArray2.getJsonObject(0).put("hrid", existingItemBeforeUpdate.getString("hrid"));
     final var secondResponse = postSynchronousBatch("?upsert=true", itemsArray2);
 
     assertThat(firstResponse.getStatusCode(), is(201));
@@ -1169,6 +1164,21 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     }
 
     log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithChangedHrid() {
+    final JsonArray itemsArray = threeItems();
+    itemsArray.getJsonObject(1).put("hrid", "23");
+    assertThat(postSynchronousBatch(itemsArray), statusCodeIs(HTTP_CREATED));
+
+    for (int i = 0; i < itemsArray.size(); i++) {
+      itemsArray.set(i, getById(itemsArray.getJsonObject(i).getString("id")).getJson());
+    }
+    itemsArray.getJsonObject(1).put("hrid", "1");
+
+    assertThat(postSynchronousBatch("?upsert=true", itemsArray), allOf(statusCodeIs(HTTP_BAD_REQUEST),
+        textBodyContains("The hrid field cannot be changed: new=1, old=23.")));
   }
 
   @Test

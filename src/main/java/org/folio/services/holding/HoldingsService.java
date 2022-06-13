@@ -13,8 +13,6 @@ import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
-import static org.folio.validator.HridValidators.refuseWhenHridChanged;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -30,6 +28,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.HridManager;
+import org.folio.services.HridLockErrorMapper;
 import org.folio.services.domainevent.HoldingDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.services.item.ItemService;
@@ -93,20 +92,17 @@ public class HoldingsService {
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
 
-    return refuseWhenHridChanged(oldHoldings, newHoldings)
-      .compose(notUsed -> {
-        final Promise<List<Item>> overallResult = promise();
+    final Promise<List<Item>> overallResult = promise();
 
-        postgresClient.startTx(
-          connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
-            .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
-            .onComplete(handleTransaction(connection, overallResult)));
+    postgresClient.startTx(
+      connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
+        .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
+        .onComplete(handleTransaction(connection, overallResult)));
 
-        return overallResult.future()
-          .compose(itemsBeforeUpdate -> itemEventService.publishUpdated(newHoldings, itemsBeforeUpdate))
-          .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-          .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
-      });
+    return overallResult.future()
+      .compose(itemsBeforeUpdate -> itemEventService.publishUpdated(newHoldings, itemsBeforeUpdate))
+      .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+      .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
   }
 
   public Future<Response> deleteHolding(String hrId) {
@@ -139,6 +135,7 @@ public class HoldingsService {
           postSyncResult);
 
         return postSyncResult.future()
+          .map(HridLockErrorMapper::map)
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
       });
   }
