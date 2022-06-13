@@ -4,6 +4,7 @@ import io.vertx.core.Context;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
@@ -31,7 +32,6 @@ import java.util.stream.IntStream;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
