@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +35,7 @@ public class AsyncMigrationsConsumerUtils {
 
       eventsByTenant.entrySet().parallelStream().forEach(v -> {
         var tenantId = v.getKey();
-        var headers = new HashMap<String, String>();
+        var headers = new CaseInsensitiveMap<String, String>();
         headers.put(TENANT_HEADER, tenantId);
 
         var availableMigrations = Set.of(

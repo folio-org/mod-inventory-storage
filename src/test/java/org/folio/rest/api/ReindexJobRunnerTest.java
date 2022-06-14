@@ -31,7 +31,7 @@ import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
-import org.folio.services.domainevent.AuthorityDomainEventPublisher;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.kafka.topic.KafkaTopic;
 import org.folio.services.reindex.ReindexJobRunner;
@@ -41,10 +41,10 @@ import org.junit.Test;
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher =
-    new CommonDomainEventPublisher<>(getContext(), Map.of(TENANT, TENANT_ID),
+    new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       KafkaTopic.instance(TENANT_ID, environmentName()));
   private final CommonDomainEventPublisher<Authority> authorityEventPublisher =
-    new CommonDomainEventPublisher(getContext(), Map.of(TENANT, TENANT_ID),
+    new CommonDomainEventPublisher(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       KafkaTopic.authority(TENANT_ID, environmentName()));
 
   @Test
@@ -182,7 +182,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   private static Map<String, String> okapiHeaders() {
-    return Map.of(TENANT.toLowerCase(), TENANT_ID);
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
   }
 
   private static Context getContext() {
