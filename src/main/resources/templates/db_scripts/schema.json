@@ -873,11 +873,6 @@
       "fromModuleVersion": "19.2.0"
     },
     {
-      "run": "before",
-      "snippetPath": "createCallNumberNormalizationFunctions.sql",
-      "fromModuleVersion": "19.2.0"
-    },
-    {
       "run":"after",
       "snippetPath":"setEffectiveHoldingsLocation.sql",
       "fromModuleVersion":"20.1.0"
