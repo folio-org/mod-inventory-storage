@@ -4,6 +4,7 @@ import io.vertx.core.Context;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
@@ -153,7 +154,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   private static Map<String, String> okapiHeaders() {
-    return Map.of(TENANT.toLowerCase(), TENANT_ID);
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
   }
 
   private static Context getContext() {
