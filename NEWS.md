@@ -1,21 +1,26 @@
+## 25.0.0 IN-PROGRESS
+
+* Correctly implement delete by CQL for instance/holding/item (MODINVSTOR-576)
+* Reject DELETE instance/holding/item without CQL query (MODINVSTOR-901)
+* provides `holdings-storage 6.0`
+* provides `instance-storage 9.0`
+* provides `item-storage 10.0`
+
 ## 24.0.0 IN-PROGRESS
 
+* Upgraded RMB to 34.0.0 (MODINVSTOR-915)
 * Added integrity checks to statisticalCodeIds in instance records (MODINVSTOR-885)
 * Removed UUID contraint on statisticalCodeIds in instance Records (MODINVSTOR-885)
 * Combined calls to retrieve HRID settings and getting sequence values (MODINVSTOR-894)
 * Allow response to be returned to the api client without waiting for domain event publishing during instance creation (MODINVSTOR-894)
 * Enable optimistic locking 'failOnConflict' for authorities (MODINVSTOR-909)
-* Correctly implement delete by CQL for instance/holding/item (MODINVSTOR-576)
-* Reject DELETE instance/holding/item without CQL query (MODINVSTOR-901)
 * provides `item-storage-dereferenced 0.2`
-* provides `item-storage 10.0`
-* provides `holdings-storage 6.0`
+* provides `holdings-storage 5.1`
 * provides `holdings-storage-batch-sync 1.1`
-* provides `instance-storage 9.0`
+* provides `instance-storage 8.1`
 * provides `instance-storage-batch 1.1`
 * provides `instance-storage-batch-sync 1.1`
 * provides `inventory-view 1.1`
-
 
 ## 23.0.0 2022-02-22
 

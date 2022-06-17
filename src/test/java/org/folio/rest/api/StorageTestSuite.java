@@ -72,8 +72,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
   ItemEffectiveCallNumberDataUpgradeTest.class,
   ModesOfIssuanceMigrationScriptTest.class,
   PrecedingSucceedingTitleTest.class,
-  HoldingsCallNumberNormalizedTest.class,
-  ItemCallNumberNormalizedTest.class,
   AbstractInstanceRecordsAPITest.class,
   OaiPmhViewTest.class,
   InventoryHierarchyViewTest.class,
