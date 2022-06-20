@@ -1,7 +1,6 @@
 ## 25.0.0 IN-PROGRESS
 
-* Correctly implement delete by CQL for instance/holding/item (MODINVSTOR-576)
-* Reject DELETE instance/holding/item without CQL query (MODINVSTOR-901)
+* Only allow bulk deletion for instances/holdings/items using a CQL query (MODINVSTOR-576, MODINVSTOR-901)
 * provides `holdings-storage 6.0`
 * provides `instance-storage 9.0`
 * provides `item-storage 10.0`

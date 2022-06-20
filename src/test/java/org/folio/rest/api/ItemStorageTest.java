@@ -1907,7 +1907,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
-    client.delete(itemsStorageUrl("?query=id==*"), StorageTestSuite.TENANT_ID,
+    client.delete(itemsStorageUrl("?query=cql.allRecords=1"), StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(deleteAllFinished));
 
     Response deleteResponse = deleteAllFinished.get(5, TimeUnit.SECONDS);
@@ -1931,8 +1931,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertRemoveAllEventForItem();
   }
 
+  @SneakyThrows
   @Test
-  public void canDeleteItemsByCql() throws Exception {
+  public void canDeleteItemsByCql() {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     var item1 = createItem(smallAngryPlanet(holdingsRecordId).put("barcode", "1234"));
     var item2 = createItem(nod(holdingsRecordId).put("barcode", "23"));
@@ -1953,21 +1954,25 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertRemoveEventForItem(item5);
   }
 
+  @SneakyThrows
   @Parameters({
     "",
     "?query=",
     "?query=%20%20",
   })
   @Test
-  public void cannotDeleteItemsWithoutCql(String query) throws Exception {
+  public void cannotDeleteItemsWithoutCql(String query) {
     var response = client.delete(itemsStorageUrl(query), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
     assertThat(response.getBody(), is("Expected CQL but query parameter is empty"));
     assertThat(response.getStatusCode(), is(400));
   }
 
+  @SneakyThrows
   @Test
-  public void cannotDeleteItemsWithInvalidCql() throws Exception {
+  public void cannotDeleteItemsWithInvalidCql() {
     var response = client.delete(itemsStorageUrl("?query=\""), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
     assertThat(response.getBody(), containsStringIgnoringCase("parse"));
     assertThat(response.getStatusCode(), is(400));
   }

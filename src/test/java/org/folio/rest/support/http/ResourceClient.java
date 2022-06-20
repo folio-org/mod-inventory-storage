@@ -295,7 +295,7 @@ public class ResourceClient {
     try {
       var cql = PercentCodec.encode("cql.allRecords=1");
       client.delete(urlMaker.combine("?query=" + cql), StorageTestSuite.TENANT_ID,
-        ResponseHandler.any(deleteAllFinished));
+          ResponseHandler.any(deleteAllFinished));
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }

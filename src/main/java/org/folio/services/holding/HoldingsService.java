@@ -31,7 +31,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
-import org.folio.rest.support.CqlUtil;
+import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.services.domainevent.HoldingDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
@@ -134,15 +134,17 @@ public class HoldingsService {
           DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
               "Expected CQL but query parameter is empty"));
     }
-    if (CqlUtil.isMatchingAll(cql)) {
+    if (new CqlQuery(cql).isMatchingAll()) {
       return deleteAllHoldings();  // faster: sends only one domain event (Kafka) message
     }
+    // do not add curly braces for readability, this is to comply with
+    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return holdingsRepository.delete(cql)
-        .onSuccess(rowSet -> vertxContext.runOnContext(runLater -> {
-          rowSet.iterator().forEachRemaining(row -> {
-            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1));
-          });
-        }))
+        .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
+          rowSet.iterator().forEachRemaining(row ->
+            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
+          )
+        ))
         .map(Response.noContent().build());
   }
 

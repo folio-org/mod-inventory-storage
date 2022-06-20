@@ -9,6 +9,7 @@ import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.api.TestBase.holdingsClient;
+import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getAuthorityEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstAuthorityEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstHoldingEvent;
@@ -69,7 +70,10 @@ public final class DomainEventAssertions {
     assertThat(deleteEvent.value().getString("type"), is("DELETE"));
     assertThat(deleteEvent.value().getString("tenant"), is(TENANT_ID));
     assertThat(deleteEvent.value().getJsonObject("new"), nullValue());
-    assertThat(fixCreatedDate(deleteEvent.value().getJsonObject("old")), is(record));
+
+    // ignore metadata because +00:00 ends as Z after createdDate and updatedDate have been
+    // deserialized from JSON to POJO resulting in a Date and serialized from POJO to JSON
+    assertThat(deleteEvent.value().getJsonObject("old"), equalsIgnoringMetadata(record));
 
     assertHeaders(deleteEvent.headers());
   }
@@ -308,31 +312,5 @@ public final class DomainEventAssertions {
 
   private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {
     return item.copy().put("instanceId", instanceId);
-  }
-
-  /**
-   * Append missing time zone to metadata.createdDate.
-   *
-   * <p>Fix "createdDate":"2022-05-22T22:55:14.346" to "createdDate":"2022-05-22T22:55:14.346+00:00"
-   *
-   * <p>Fix "createdDate":"2022-05-22T22:55:14.3"   to "createdDate":"2022-05-22T22:55:14.300+00:00"
-   *
-   * <p>Fix "createdDate":"2022-05-22T22:55:14.34Z" to "createdDate":"2022-05-22T22:55:14.340+00:00"
-   */
-  private static JsonObject fixCreatedDate(JsonObject jsonObject) {
-    JsonObject metadata = jsonObject.getJsonObject("metadata");
-    if (metadata == null) {
-      return jsonObject;
-    }
-    String createdDate = metadata.getString("createdDate");
-    if (createdDate == null || createdDate.length() == 29) {
-      return jsonObject;
-    }
-    if (createdDate.endsWith("Z")) {
-      createdDate = createdDate.substring(0, createdDate.length() - 1);
-    }
-    createdDate += ".000+00:00".substring(createdDate.length() - 19);
-    metadata.put("createdDate", createdDate);
-    return jsonObject;
   }
 }

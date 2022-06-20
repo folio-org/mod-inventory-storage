@@ -4,17 +4,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.folio.rest.testing.UtilityClassTester;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
-public class CqlUtilTest {
-
-  @Test
-  public void isUtilityClass() {
-    UtilityClassTester.assertUtilityClass(CqlUtil.class);
-  }
+public class CqlQueryTest {
 
   @Parameters({
     "id=*",
@@ -30,7 +24,7 @@ public class CqlUtilTest {
   })
   @Test
   public void matchesAllItems(String cql) {
-    assertThat(CqlUtil.isMatchingAll(cql), is(true));
+    assertThat(new CqlQuery(cql).isMatchingAll(), is(true));
   }
 
   @Parameters({
@@ -46,7 +40,7 @@ public class CqlUtilTest {
   })
   @Test
   public void doesntMatchAllItems(String cql) {
-    assertThat(CqlUtil.isMatchingAll(cql), is(false));
+    assertThat(new CqlQuery(cql).isMatchingAll(), is(false));
   }
 
 }

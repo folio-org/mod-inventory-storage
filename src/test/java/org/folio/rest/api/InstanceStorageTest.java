@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import lombok.SneakyThrows;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -440,16 +440,18 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertRemoveEventForInstance(createdInstance.getJson());
   }
 
+  @SneakyThrows
   @Test
-  public void cannotDeleteNonexistingInstance() throws Exception {
+  public void cannotDeleteInstanceThatDoesNotExist() {
 
     var response = client.delete(instancesStorageUrl("/" + UUID.randomUUID()), TENANT_ID).get(5, SECONDS);
 
     assertThat(response.getStatusCode(), is(404));
   }
 
+  @SneakyThrows
   @Test
-  public void canDeleteInstancesByCql() throws Exception {
+  public void canDeleteInstancesByCql() {
 
     var id5 = UUID.randomUUID();
     var instance1 = createInstance(nod(UUID.randomUUID()).put("hrid", "1234")).getJson();
@@ -474,8 +476,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertRemoveEventForInstance(instance5);
   }
 
+  @SneakyThrows
   @Test
-  public void cannotDeleteInstancesWithEmptyCql() throws Exception {
+  public void cannotDeleteInstancesWithEmptyCql() {
 
     var response = client.delete(instancesStorageUrl("?query="), TENANT_ID).get(5, SECONDS);
 

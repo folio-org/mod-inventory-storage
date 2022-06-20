@@ -27,7 +27,7 @@ import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.CqlUtil;
+import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
@@ -123,43 +123,43 @@ public class InstanceService {
   }
 
   /**
-   * Delete instance and connected marc record.
+   * Delete instance, this also deletes connected marc records (ON DELETE CASCADE).
    */
-  // suppress "Remove useless curly braces around lambda containing only one statement"
-  @SuppressWarnings("java:S1602")
   public Future<Response> deleteInstance(String id) {
     return instanceRepository.delete("id==" + StringUtil.cqlEncode(id))
         .map(rowSet -> {
           if (! rowSet.iterator().hasNext()) {
             return DeleteInstanceStorageInstancesByInstanceIdResponse.respond404WithTextPlain("Not found");
           }
-          rowSet.iterator().forEachRemaining(row -> {
-            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1));
-          });
+          // do not add curly braces for readability, this is to comply with
+          // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
+          rowSet.iterator().forEachRemaining(row ->
+            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
+          );
           return Response.noContent().build();
         });
   }
 
   /**
-   * Delete instances and connected marc records.
+   * Delete instances, this also deletes connected marc records (ON DELETE CASCADE).
    */
-  // suppress "Remove useless curly braces around lambda containing only one statement"
-  @SuppressWarnings("java:S1602")
   public Future<Response> deleteInstances(String cql) {
     if (StringUtils.isBlank(cql)) {
       return Future.succeededFuture(
           DeleteInstanceStorageInstancesResponse.respond400WithTextPlain(
               "Expected CQL but query parameter is empty"));
     }
-    if (CqlUtil.isMatchingAll(cql)) {
+    if (new CqlQuery(cql).isMatchingAll()) {
       return deleteAllInstances();  // faster: sends only one domain event (Kafka) message
     }
+    // do not add curly braces for readability, this is to comply with
+    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return instanceRepository.delete(cql)
-        .onSuccess(rowSet -> vertxContext.runOnContext(runLater -> {
-          rowSet.iterator().forEachRemaining(row -> {
-            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1));
-          });
-        }))
+        .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
+          rowSet.iterator().forEachRemaining(row ->
+            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
+          )
+        ))
         .map(Response.noContent().build());
   }
 

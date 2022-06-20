@@ -49,7 +49,7 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
-import org.folio.rest.support.CqlUtil;
+import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
@@ -161,23 +161,23 @@ public class ItemService {
       });
   }
 
-  // suppress "Remove useless curly braces around lambda containing only one statement"
-  @SuppressWarnings("java:S1602")
   public Future<Response> deleteItems(String cql) {
     if (StringUtils.isBlank(cql)) {
       return Future.succeededFuture(
           DeleteItemStorageItemsResponse.respond400WithTextPlain(
               "Expected CQL but query parameter is empty"));
     }
-    if (CqlUtil.isMatchingAll(cql)) {
+    if (new CqlQuery(cql).isMatchingAll()) {
       return deleteAllItems();  // faster: sends only one domain event (Kafka) message
     }
+    // do not add curly braces for readability, this is to comply with
+    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return itemRepository.delete(cql)
-        .onSuccess(rowSet -> vertxContext.runOnContext(runLater -> {
-          rowSet.iterator().forEachRemaining(row -> {
-            domainEventService.publishRemoved(row.getString(0), row.getString(1));
-          });
-        }))
+        .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
+          rowSet.iterator().forEachRemaining(row ->
+            domainEventService.publishRemoved(row.getString(0), row.getString(1))
+          )
+        ))
         .map(Response.noContent().build());
   }
 
