@@ -5,7 +5,7 @@
       "fromModuleVersion": "22.1.0",
       "withMetadata": true,
       "withAuditing": false,
-      "withOptimisticLocking": "logOnConflict"
+      "withOptimisticLocking": "failOnConflict"
     },
     {
       "tableName": "loan_type",
@@ -376,32 +376,8 @@
       ],
       "ginIndex": [
         {
-          "fieldName": "title",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "indexTitle",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "contributors",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
           "fieldName": "identifiers",
           "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        },
-        {
-          "fieldName": "subjects",
-          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         }
@@ -464,34 +440,6 @@
       ],
       "fullTextIndex": [
         {
-          "fieldName": "classifications",
-          "arraySubfield" : "classificationNumber",
-          "arrayModifiers": ["classificationTypeId"]
-        },
-        {
-          "fieldName": "keyword",
-          "multiFieldNames": "title,indexTitle,alternativeTitles[*].alternativeTitle,series,contributors[*].name,identifiers[*].value"
-        },
-        {
-          "fieldName": "allTitles",
-          "multiFieldNames": "title,indexTitle,alternativeTitles[*].alternativeTitle,series"
-        },
-        {
-          "fieldName": "contributorsNames",
-          "multiFieldNames": "contributors[*].name"
-        },
-        {
-          "fieldName": "title"
-        },
-        {
-          "fieldName": "languages"
-        },
-        {
-          "fieldName": "contributors",
-          "arraySubfield" : "name",
-          "arrayModifiers": ["contributorNameTypeId"]
-        },
-        {
           "fieldName": "identifiers",
           "arraySubfield" : "value",
           "arrayModifiers": ["identifierTypeId"]
@@ -505,16 +453,6 @@
           "fieldName": "isbn",
           "sqlExpression" : "normalize_isbns(jsonb->'identifiers')",
           "sqlExpressionQuery": "normalize_digits($)"
-        },
-        {
-          "fieldName": "dateOfPublication",
-          "sqlExpression" : "concat_array_object_values(jsonb->'publication', 'dateOfPublication')"
-        },
-        {
-          "fieldName": "subjects",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
         }
       ]
     },
@@ -702,12 +640,6 @@
         }
       ],
       "ginIndex": [
-        {
-          "fieldName": "electronicAccess",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
       ],
       "index": [
         {
@@ -738,16 +670,6 @@
         }
       ],
       "fullTextIndex": [
-        {
-          "fieldName": "callNumberAndSuffixNormalized",
-          "sqlExpression" : "normalize_holdings_call_number_and_suffix(jsonb)",
-          "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
-        },
-        {
-          "fieldName": "fullCallNumberNormalized",
-          "sqlExpression" : "normalize_holdings_full_call_number(jsonb)",
-          "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
-        }
       ]
     },
     {
@@ -864,24 +786,8 @@
         }
       ],
       "ginIndex": [
-        {
-          "fieldName": "status.name",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": true
-        }
       ],
       "fullTextIndex": [
-        {
-          "fieldName": "callNumberAndSuffixNormalized",
-          "sqlExpression" : "normalize_item_call_number_and_suffix(jsonb)",
-          "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
-        },
-        {
-          "fieldName": "fullCallNumberNormalized",
-          "sqlExpression" : "normalize_item_full_call_number(jsonb)",
-          "sqlExpressionQuery": "normalize_call_number_string($) || '*'"
-        }
       ]
     },
     {
@@ -945,15 +851,9 @@
       "withAuditing": false
     },
     {
-      "tableName": "related_instance_type",
-      "withMetadata": true,
-      "withAuditing": false,
-      "uniqueIndex": [
-        {
-          "fieldName": "name",
-          "tOps": "ADD"
-        }
-      ]
+      "tableName": "async_migration_job",
+      "withMetadata": false,
+      "withAuditing": false
     }
   ],
   "scripts": [
@@ -970,11 +870,6 @@
     {
       "run": "before",
       "snippetPath": "createIsbnFunctions.sql",
-      "fromModuleVersion": "19.2.0"
-    },
-    {
-      "run": "before",
-      "snippetPath": "createCallNumberNormalizationFunctions.sql",
       "fromModuleVersion": "19.2.0"
     },
     {
@@ -1079,8 +974,13 @@
     },
     {
       "run": "after",
+      "snippetPath": "publication-period/publication-period-functions.sql",
+      "fromModuleVersion": "23.0.0"
+    },
+    {
+      "run": "after",
       "snippetPath": "instance-hr-item/instance-hr-item-view.sql",
-      "fromModuleVersion": "19.5.0"
+      "fromModuleVersion": "23.0.0"
     },
     {
       "run": "after",
@@ -1111,6 +1011,31 @@
       "run": "after",
       "snippetPath": "itemStatisticalCodeReferenceCheckTrigger.sql",
       "fromModuleVersion": "22.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "statisticalCodeTypesReferenceCheckTrigger.sql",
+      "fromModuleVersion": "23.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "statisticalCodeIdReferenceCheckTrigger.sql",
+      "fromModuleVersion": "23.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "changeUUIDCastInGetStatisticalCodesFunction.sql",
+      "fromModuleVersion": "23.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/correctGetUpdatedInstanceIdsView.sql",
+      "fromModuleVersion": "23.1.0"
+    },
+    {
+        "run":"after",
+        "snippetPath":"dropCallNumberNormalizationFunctions.sql",
+        "fromModuleVersion":"24.0.0"
     }
   ]
 }

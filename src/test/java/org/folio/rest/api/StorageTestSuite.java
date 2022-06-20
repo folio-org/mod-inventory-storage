@@ -1,16 +1,5 @@
 package org.folio.rest.api;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -32,7 +21,6 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
 import org.folio.services.kafka.KafkaProperties;
-import org.folio.services.kafka.topic.KafkaTopicsExistsTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -41,8 +29,21 @@ import org.junit.runners.Suite;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+  AsyncMigrationTest.class,
+  PublicationPeriodMigrationTest.class,
   CallNumberUtilsTest.class,
   InstanceStorageTest.class,
   RecordBulkTest.class,
@@ -71,8 +72,6 @@ import org.testcontainers.utility.DockerImageName;
   ItemEffectiveCallNumberDataUpgradeTest.class,
   ModesOfIssuanceMigrationScriptTest.class,
   PrecedingSucceedingTitleTest.class,
-  HoldingsCallNumberNormalizedTest.class,
-  ItemCallNumberNormalizedTest.class,
   AbstractInstanceRecordsAPITest.class,
   OaiPmhViewTest.class,
   InventoryHierarchyViewTest.class,
@@ -85,11 +84,9 @@ import org.testcontainers.utility.DockerImageName;
   PreviouslyHeldDataUpgradeTest.class,
   ItemShelvingOrderMigrationServiceApiTest.class,
   NotificationSendingErrorRepositoryTest.class,
-  PublicationPeriodMigrationTest.class,
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
-  RelatedInstanceTypeTest.class,
   SampleDataTest.class
 })
 public class StorageTestSuite {

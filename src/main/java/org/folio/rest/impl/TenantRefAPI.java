@@ -38,7 +38,6 @@ public class TenantRefAPI extends TenantAPI {
   private static final String SAMPLE_KEY = "loadSample";
   private static final String REFERENCE_KEY = "loadReference";
   private static final String REFERENCE_LEAD = "ref-data";
-
   private static final Logger log = LogManager.getLogger();
   final String[] refPaths = new String[]{
     "material-types",
@@ -73,7 +72,8 @@ public class TenantRefAPI extends TenantAPI {
     "bound-with/instances",
     "bound-with/holdingsrecords",
     "bound-with/items",
-    "bound-with/bound-with-parts"
+    "bound-with/bound-with-parts",
+    "related-instance-types"
   };
 
   List<JsonObject> servicePoints = null;
@@ -156,7 +156,8 @@ public class TenantRefAPI extends TenantAPI {
       future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
     }
 
-    return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers).map(result));
+    return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
+      .map(result));
   }
 
   @Validate

@@ -61,7 +61,8 @@ public class HoldingsService {
 
   public Future<Void> deleteAllHoldings() {
     return holdingsRepository.deleteAll()
-      .compose(notUsed -> domainEventPublisher.publishAllRemoved());
+      .onSuccess(notUsed -> domainEventPublisher.publishAllRemoved())
+      .mapEmpty();
   }
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
@@ -85,7 +86,7 @@ public class HoldingsService {
           PostHoldingsStorageHoldingsResponse.class, postResponse);
 
         return postResponse.future()
-          .compose(domainEventPublisher.publishCreated());
+          .onSuccess(domainEventPublisher.publishCreated());
       });
   }
 
@@ -104,7 +105,7 @@ public class HoldingsService {
         return overallResult.future()
           .compose(itemsBeforeUpdate -> itemEventService.publishUpdated(newHoldings, itemsBeforeUpdate))
           .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-          .compose(domainEventPublisher.publishUpdated(oldHoldings));
+          .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
       });
   }
 
@@ -118,7 +119,7 @@ public class HoldingsService {
           DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse.class, deleteResult);
 
         return deleteResult.future()
-          .compose(domainEventPublisher.publishRemoved(hr));
+          .onSuccess(domainEventPublisher.publishRemoved(hr));
       });
   }
 
@@ -138,7 +139,7 @@ public class HoldingsService {
           postSyncResult);
 
         return postSyncResult.future()
-          .compose(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
       });
   }
 

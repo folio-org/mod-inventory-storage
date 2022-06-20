@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Instance Storage
-version: v8.0
+version: v8.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -50,7 +50,8 @@ resourceTypes:
         responses:
           200:
             body:
-  #              type: instanceRelationship
+              application/json:
+                type: instanceRelationship
         description: |
           Get Instance Relationship
   /instances:
@@ -86,7 +87,8 @@ resourceTypes:
         responses:
           200:
             body:
-  #              type: instance
+              application/json:
+                type: instance
         description: |
           Get Instance by InstanceId
           Instances are stored and accessed by a hash of key properties. The rules which govern

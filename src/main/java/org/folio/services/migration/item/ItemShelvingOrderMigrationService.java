@@ -4,18 +4,19 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
-import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.async.AsyncBaseMigrationService;
 
-public class ItemShelvingOrderMigrationService extends BaseMigrationService {
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+public class ItemShelvingOrderMigrationService extends AsyncBaseMigrationService {
   private static final String SELECT_SQL = "SELECT jsonb FROM %s WHERE "
     + "jsonb->>'effectiveShelvingOrder' IS NULL";
 
@@ -41,16 +42,21 @@ public class ItemShelvingOrderMigrationService extends BaseMigrationService {
   }
 
   @Override
-  protected Future<Integer> updateBatch(List<Row> batch) {
+  protected Future<Integer> updateBatch(List<Row> batch, SQLConnection connection) {
     var items = batch.stream()
       .map(row -> rowToClass(row, Item.class))
       .map(EffectiveCallNumberComponentsUtil::calculateAndSetEffectiveShelvingOrder)
       .collect(Collectors.toList());
 
-    return itemRepository.update(items).map(notUsed -> items.size());
+    return itemRepository.updateBatch(items, connection).map(notUsed -> items.size());
   }
 
-  private String selectSql() {
+  @Override
+  public String getMigrationName() {
+    return "itemShelvingOrderMigration";
+  }
+
+  protected String selectSql() {
     return String.format(SELECT_SQL, postgresClient.getFullTableName("item"));
   }
 }

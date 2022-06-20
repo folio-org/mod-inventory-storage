@@ -1,12 +1,31 @@
-## 23.0.0 IN-PROGRESS
+## 24.0.0 IN-PROGRESS
 
+* POST /item-storage/items error message on non-UUID statistical code ID (MODINVSTOR-755)
+
+## 23.1.0 IN-PROGRESS
+
+* Upgraded RMB to 34.0.0 (MODINVSTOR-915)
+* Added integrity checks to statisticalCodeIds in instance records (MODINVSTOR-885)
+* Removed UUID contraint on statisticalCodeIds in instance Records (MODINVSTOR-885)
+* Combined calls to retrieve HRID settings and getting sequence values (MODINVSTOR-894)
+* Allow response to be returned to the api client without waiting for domain event publishing during instance creation (MODINVSTOR-894)
+* Enable optimistic locking 'failOnConflict' for authorities (MODINVSTOR-909)
+* provides `item-storage-dereferenced 0.2`
+* provides `holdings-storage 5.1`
+* provides `holdings-storage-batch-sync 1.1`
+* provides `instance-storage 8.1`
+* provides `instance-storage-batch 1.1`
+* provides `instance-storage-batch-sync 1.1`
+* provides `inventory-view 1.1`
+
+
+## 23.0.0 2022-02-22
+
+* Added trigger to prevent statistical code deletion when in use (MODINVSTOR-829)
 * Added administrative notes to item, instance, and holdings records (MODINVSTOR-834, MODINVSTOR-833, MODINVSTOR-832)
-* Upgrade to RMB 33.1.3. (CVE-2021-44228) (MODINVSTOR-851)
+* Upgrade to RMB 33.1.3, 33.2.4 (CVE-2021-44228) (MODINVSTOR-851, MODINVSTOR-868)
 * Introduces validation against RAML API specs for 147 APIs (MODINVSTOR-24)
-* Reject non-existing statistical code IDs (MODINVSTOR-676)
-* Reject non-UUID statistical code IDs (MODINVSTOR-755)
-* Provides `item-storage 10.0` (MODINVSTOR-755)
-* Provides `item-storage-batch-sync 2.0` (MODINVSTOR-755)
+* Adds related-instances endpoint (MODINVSTOR-861)
 
 ## 22.0.0 2021-10-06
 

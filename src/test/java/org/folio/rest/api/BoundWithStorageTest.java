@@ -8,6 +8,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.http.ResourceClient;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,8 +16,12 @@ import org.junit.runner.RunWith;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.awaitility.Awaitility.await;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -34,6 +39,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateAndRetrieveBoundWithParts() {
+    FakeKafkaConsumer.removeAllEvents();
     IndividualResource mainInstance = createInstance("Main Instance");
     IndividualResource mainHoldingsRecord = createHoldingsRecord(mainInstance.getId());
     IndividualResource item = createItem(mainHoldingsRecord.getId());
@@ -54,6 +60,9 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(boundWithGETResponseForPartById.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getAllPartsForBoundWithItem.size(), is(3));
+
+    await().atMost(10, TimeUnit.SECONDS)
+      .until(() -> FakeKafkaConsumer.getAllPublishedBoundWithIdsCount() == 3);
   }
 
   @Test
@@ -72,6 +81,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canChangeOnePartOfABoundWith() {
+    FakeKafkaConsumer.removeAllEvents();
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource instance2 = createInstance("Instance 2");
@@ -101,6 +111,9 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getAllPartsForBoundWithItemAgain.size(), is(2));
     assertThat(oldPart2Gone.size(), is(0));
     assertThat(newPart2.size(), is(1));
+
+    await().atMost(10, TimeUnit.SECONDS)
+      .until(() -> FakeKafkaConsumer.getAllPublishedBoundWithIdsCount() == 3);
   }
 
   private JsonObject createBoundWithPartJson(UUID holdingsRecordId, UUID itemId) {

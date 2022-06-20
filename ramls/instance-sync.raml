@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Inventory Storage Instance Batch Sync API
-version: v1.0
+version: v1.1
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -14,10 +14,10 @@ types:
 /instance-storage/batch/synchronous:
   displayName: Instances Batch Upload Sync API
   post:
-    description: "Create or update a collection of instances in a single synchronous request"
+    description: "Create or update a collection of instances in a single synchronous request; if any instance fails the complete batch will be rejected (all or nothing)"
     queryParameters:
       upsert:
-        description: When a record with the same id already exists upsert=true will update it, upsert=false will fail the complete batch.
+        description: When a record with the same id already exists upsert=true will update it, upsert=false will fail the complete batch. The _version property of each instance to be updated must match the stored _version property (optimistic locking).
         type: boolean
         required: false
         default: false

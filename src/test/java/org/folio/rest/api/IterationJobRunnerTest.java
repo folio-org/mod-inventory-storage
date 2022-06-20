@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import io.vertx.core.Context;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
@@ -131,7 +132,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   private static Map<String, String> okapiHeaders() {
-    return Map.of(TENANT.toLowerCase(), TENANT_ID);
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
   }
 
   private static Context getContext() {

@@ -19,6 +19,14 @@
     {
       "name": "inventory.instance-contribution",
       "numPartitions": 50
+    },
+    {
+      "name": "inventory.bound-with",
+      "numPartitions": 50
+    },
+    {
+      "name": "inventory.async-migration",
+      "numPartitions": 50
     }
   ]
 }

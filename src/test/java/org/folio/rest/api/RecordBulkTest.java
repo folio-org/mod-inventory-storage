@@ -9,6 +9,7 @@ import static org.folio.rest.support.http.InterfaceUrls.recordBulkUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -22,6 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.IntStream;
 
 import org.folio.rest.jaxrs.model.RecordBulkIdsGetField;
 import org.folio.rest.support.Response;
@@ -116,6 +118,34 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canGetInstanceIdsByEffectiveLocation() throws ExecutionException, InterruptedException, TimeoutException {
+    var expectedInstanceId = UUID.randomUUID();
+    var effectiveLocationId = mainLibraryLocationId;
+    instancesClient.create(instance(expectedInstanceId));
+    var holdingId = createHolding(expectedInstanceId, effectiveLocationId, null);
+    createItem(buildItem(holdingId, null, null));
+
+    var secondInstanceId = UUID.randomUUID();
+    var secondLocationId = annexLibraryLocationId;
+    instancesClient.create(instance(secondInstanceId));
+    var secondHoldingId = createHolding(expectedInstanceId, secondLocationId, null);
+    createItem(buildItem(secondHoldingId, null, null));
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    URL getInstanceUrl = recordBulkUrl(String.format("/ids?query=(items.effectiveLocationId==\"%s\")", effectiveLocationId));
+    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    Response response = getCompleted.get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+
+    var ids = response.getJson().getJsonArray("ids");
+    assertThat(ids.size(), is(1));
+
+    var instanceId = ids.getJsonObject(0).getString("id");
+    assertThat(instanceId, equalTo(expectedInstanceId.toString()));
+  }
+
+  @Test
   public void canGetInstanceBulkOfIdWithQueryExact()
       throws MalformedURLException,
       InterruptedException,
@@ -128,30 +158,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
       RecordBulkIdsGetField.ID);
     createManyMoons(moons);
 
-    String query = urlEncode("keyword all \"Moon #3\"");
-    URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
-
-    Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponseWithTotal(response, expectedMatches, moons);
-  }
-
-  @Test
-  public void canGetInstanceBulkOfIdWithQueryWildcard()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
-
-    int totalMoons = 20;
-    int expectedMatches = 11;
-    Map<String, JsonObject> moons = manyMoons(totalMoons,
-      RecordBulkIdsGetField.ID);
-    createManyMoons(moons);
-
-    String query = urlEncode("keyword all \"Moon #1*\"");
+    String query = urlEncode("title all \"Moon #3\"");
     URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();

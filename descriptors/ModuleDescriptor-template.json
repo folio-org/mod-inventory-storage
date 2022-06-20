@@ -1,10 +1,11 @@
 {
   "id": "${artifactId}-${version}",
   "name": "Inventory Storage Module",
+  "replaces": [ "inventory-storage" ],
   "provides": [
     {
       "id": "item-storage-dereferenced",
-      "version": "0.1",
+      "version": "0.2",
       "handlers": [{
         "methods": ["GET"],
         "pathPattern": "/item-storage-dereferenced/items",
@@ -69,7 +70,7 @@
     },
     {
       "id": "item-storage",
-      "version": "10.0",
+      "version": "9.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -100,7 +101,7 @@
     },
     {
       "id": "item-storage-batch-sync",
-      "version": "2.0",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -111,7 +112,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "5.0",
+      "version": "5.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -142,7 +143,7 @@
     },
     {
       "id": "holdings-storage-batch-sync",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -153,7 +154,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "8.0",
+      "version": "8.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -251,7 +252,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -262,7 +263,7 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1242,7 +1243,7 @@
     },
     {
       "id": "inventory-view",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1294,29 +1295,33 @@
       ]
     },
     {
-      "id": "related-instance-types",
-      "version": "1.0",
+      "id": "async-migration",
+      "version": "0.1",
       "handlers": [
         {
-          "methods": ["GET"],
-          "pathPattern": "/related-instance-types",
-          "permissionsRequired": ["inventory-storage.related-instance-types.collection.get"]
-        }, {
-          "methods": ["GET"],
-          "pathPattern": "/related-instance-types/{id}",
-          "permissionsRequired": ["inventory-storage.related-instance-types.item.get"]
-        }, {
           "methods": ["POST"],
-          "pathPattern": "/related-instance-types",
-          "permissionsRequired": ["inventory-storage.related-instance-types.item.post"]
-        }, {
-          "methods": ["PUT"],
-          "pathPattern": "/related-instance-types/{id}",
-          "permissionsRequired": ["inventory-storage.related-instance-types.item.put"]
-        }, {
+          "pathPattern": "/inventory-storage/migrations/jobs",
+          "permissionsRequired": ["inventory-storage.migration.job.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/migrations",
+          "permissionsRequired": ["inventory-storage.migration.item.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/migrations/jobs/{id}",
+          "permissionsRequired": ["inventory-storage.migration.job.item.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-storage/migrations/jobs",
+          "permissionsRequired": ["inventory-storage.migration.job.item.get"]
+        },
+        {
           "methods": ["DELETE"],
-          "pathPattern": "/related-instance-types/{id}",
-          "permissionsRequired": ["inventory-storage.related-instance-types.item.delete"]
+          "pathPattern": "/inventory-storage/migrations/jobs/{id}",
+          "permissionsRequired": ["inventory-storage.migration.job.item.delete"]
         }
       ]
     }
@@ -2479,35 +2484,34 @@
       "description": "get instances by query with their holdings and items"
     },
     {
-      "permissionName": "inventory-storage.related-instance-types.collection.get",
-      "displayName": "inventory storage - get related-instance-type collection",
-      "description": "get related-instance-type collection from storage"
+      "permissionName": "inventory-storage.migration.job.item.delete",
+      "displayName": "inventory storage - cancel migration job",
+      "description": "cancel a running migration job"
     },
     {
-      "permissionName": "inventory-storage.related-instance-types.item.get",
-      "displayName": "inventory storage - get individual related-instance-type",
-      "description": "get individual related-instance-type from storage"
+      "permissionName": "inventory-storage.migration.job.item.get",
+      "displayName": "inventory storage - get migration job by id",
+      "description": "get migration job by id"
     },
     {
-      "permissionName": "inventory-storage.related-instance-types.item.post",
-      "displayName": "inventory storage - create individual related-instance-type",
-      "description": "create individual related-instance-type in storage"
+      "permissionName": "inventory-storage.migration.item.get",
+      "displayName": "inventory storage - get list of available migrations",
+      "description": "get list of available migrations"
     },
     {
-      "permissionName": "inventory-storage.related-instance-types.item.put",
-      "displayName": "inventory storage - modify related-instance-type",
-      "description": "modify related-instance-type in storage"
+      "permissionName": "inventory-storage.migration.job.post",
+      "displayName": "inventory storage - submit migration job",
+      "description": "submit migration instance job"
     },
-    {
-      "permissionName": "inventory-storage.related-instance-types.item.delete",
-      "displayName": "inventory storage - delete individual related-instance-type",
-      "description": "delete individual related-instance-type from storage"
-    },
+
     {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
       "subPermissions": [
+        "authority-storage.authority.reindex.post",
+        "authority-storage.authority.reindex.item.get",
+        "authority-storage.authority.reindex.item.delete",
         "inventory-storage-dereferenced.items.item.get",
         "inventory-storage-dereferenced.items.collection.get",
         "inventory-storage.items.collection.get",
@@ -2523,9 +2527,6 @@
         "inventory-storage.authorities.item.put",
         "inventory-storage.authorities.item.delete",
         "inventory-storage.authorities.collection.delete",
-        "inventory-storage.authority.reindex.post",
-        "inventory-storage.authority.reindex.item.get",
-        "inventory-storage.authority.reindex.item.delete",
         "inventory-storage.holdings.collection.get",
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",
@@ -2717,10 +2718,11 @@
         "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
         "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
         "inventory-storage.holdings-sources.collection.get",
-        "inventory-storage.holdings-sources.get",
-        "inventory-storage.holdings-sources.post",
-        "inventory-storage.holdings-sources.put",
-        "inventory-storage.holdings-sources.delete",
+        "inventory-storage.holdings-sources.item.get",
+        "inventory-storage.holdings-sources.item.post",
+        "inventory-storage.holdings-sources.item.get",
+        "inventory-storage.holdings-sources.item.put",
+        "inventory-storage.holdings-sources.item.delete",
         "inventory-storage.bound-with-parts.collection.get",
         "inventory-storage.bound-with-parts.item.get",
         "inventory-storage.bound-with-parts.item.post",
@@ -2735,7 +2737,11 @@
         "inventory-storage.instance.reindex.post",
         "inventory-storage.instance.iteration.post",
         "inventory-storage.instance.iteration.item.get",
-        "inventory-storage.instance.iteration.item.delete"
+        "inventory-storage.instance.iteration.item.delete",
+        "inventory-storage.migration.job.item.delete",
+        "inventory-storage.migration.job.post",
+        "inventory-storage.migration.job.item.get",
+        "inventory-storage.migration.item.get"
       ]
     }
   ],

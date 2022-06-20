@@ -29,6 +29,8 @@ public final class FakeKafkaConsumer {
     new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> authorityEvents =
     new ConcurrentHashMap<>();
+  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> boundWith =
+    new ConcurrentHashMap<>();
 
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
@@ -40,8 +42,10 @@ public final class FakeKafkaConsumer {
     final var HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
     final var ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
     final var AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
+    final var BOUND_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME));
+    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME, BOUND_TOPIC_NAME));
+
     consumer.handler(message -> {
       final List<KafkaConsumerRecord<String, JsonObject>> storageList;
 
@@ -62,6 +66,10 @@ public final class FakeKafkaConsumer {
           storageList = authorityEvents.computeIfAbsent(message.key(),
             k -> new ArrayList<>());
           break;
+        case BOUND_TOPIC_NAME:
+          storageList = boundWith.computeIfAbsent(message.key(),
+            k -> new ArrayList<>());
+          break;
         default:
           throw new IllegalArgumentException("Undefined topic");
       }
@@ -76,10 +84,16 @@ public final class FakeKafkaConsumer {
     itemEvents.clear();
     instanceEvents.clear();
     holdingsEvents.clear();
+    authorityEvents.clear();
+    boundWith.clear();
   }
 
   public static int getAllPublishedInstanceIdsCount() {
     return instanceEvents.size();
+  }
+
+  public static int getAllPublishedBoundWithIdsCount() {
+    return boundWith.size();
   }
 
   public static int getAllPublishedAuthoritiesCount() {
