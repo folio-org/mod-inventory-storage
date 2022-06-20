@@ -4,12 +4,16 @@ import java.util.regex.Pattern;
 
 public final class CqlQuery {
   private static final Pattern CQL_MATCHES_ALL = Pattern.compile(
-      "^ *id *==? *\\* *$|^ *id *==? *\"\\*\" *$|^ *cql.allRecords *= *1 *$");
+      "^ *id *==? *\\* *$"              // id=*
+      + "|"
+      + "^ *id *==? *\"\\*\" *$"        // id="*"
+      + "|"
+      + "^ *cql.allRecords *= *1 *$");  // cql.allRecords=1
 
-  private final String cqlQuery;
+  private final String cql;
 
   public CqlQuery(String cqlQuery) {
-    this.cqlQuery = cqlQuery;
+    cql = cqlQuery;
   }
 
   /**
@@ -19,6 +23,6 @@ public final class CqlQuery {
    * method covers only a few cases and doesn't consider the existing data.
    */
   public boolean isMatchingAll() {
-    return CQL_MATCHES_ALL.matcher(cqlQuery).find();
+    return CQL_MATCHES_ALL.matcher(cql).find();
   }
 }
