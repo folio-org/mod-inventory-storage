@@ -158,30 +158,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
       RecordBulkIdsGetField.ID);
     createManyMoons(moons);
 
-    String query = urlEncode("keyword all \"Moon #3\"");
-    URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
-
-    Response response = getCompleted.get(5, SECONDS);
-    validateMoonsResponseWithTotal(response, expectedMatches, moons);
-  }
-
-  @Test
-  public void canGetInstanceBulkOfIdWithQueryWildcard()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
-
-    int totalMoons = 20;
-    int expectedMatches = 11;
-    Map<String, JsonObject> moons = manyMoons(totalMoons,
-      RecordBulkIdsGetField.ID);
-    createManyMoons(moons);
-
-    String query = urlEncode("keyword all \"Moon #1*\"");
+    String query = urlEncode("title all \"Moon #3\"");
     URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
