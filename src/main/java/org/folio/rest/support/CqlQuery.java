@@ -6,10 +6,10 @@ import org.z3950.zing.cql.CQLParser;
 import org.z3950.zing.cql.CQLTermNode;
 
 public final class CqlQuery {
-  private final String cqlQuery;
+  private final String cql;
 
-  public CqlQuery(String cqlQuery) {
-    this.cqlQuery = cqlQuery;
+  public CqlQuery(String cql) {
+    this.cql = cql;
   }
 
   /**
@@ -21,7 +21,7 @@ public final class CqlQuery {
   public boolean isMatchingAll() {
     CQLNode cqlNode;
     try {
-      cqlNode = new CQLParser().parse(cqlQuery);
+      cqlNode = new CQLParser().parse(cql);
     } catch (Exception e) {
       return false;
     }
