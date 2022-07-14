@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ## 25.0.0 IN-PROGRESS
 
 * POST /item-storage/items error message on non-UUID statistical code ID (MODINVSTOR-755)
