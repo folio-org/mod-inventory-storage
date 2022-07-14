@@ -62,6 +62,10 @@ public class HoldingsService {
     domainEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);
   }
 
+  /**
+   * Deletes all holdings but sends only a single domain event (Kafka) message "all records removed",
+   * this is much faster than sending one message for each deleted holding.
+   */
   public Future<Response> deleteAllHoldings() {
     return holdingsRepository.deleteAll()
       .onSuccess(notUsed -> domainEventPublisher.publishAllRemoved())
@@ -126,8 +130,6 @@ public class HoldingsService {
       });
   }
 
-  // suppress "Remove useless curly braces around lambda containing only one statement"
-  @SuppressWarnings("java:S1602")
   public Future<Response> deleteHoldings(String cql) {
     if (StringUtils.isBlank(cql)) {
       return Future.succeededFuture(

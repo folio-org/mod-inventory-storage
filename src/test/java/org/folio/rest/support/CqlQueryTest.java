@@ -33,10 +33,12 @@ public class CqlQueryTest {
     "id==* AND b=2",
     "cql.allRecords=1 NOT c=3",
     "d=4 NOT id==\"*\"",
+    "id<>*",
     "id==a*",
     "id==*a",
     "id==\"a*\"",
     "id==\"*a\"",
+    "=",
   })
   @Test
   public void doesntMatchAllItems(String cql) {

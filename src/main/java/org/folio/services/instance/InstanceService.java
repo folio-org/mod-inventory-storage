@@ -114,6 +114,10 @@ public class InstanceService {
       });
   }
 
+  /**
+   * Deletes all instances but sends only a single domain event (Kafka) message "all records removed",
+   * this is much faster than sending one message for each deleted instance.
+   */
   public Future<Response> deleteAllInstances() {
     return marcRepository.deleteAll()
       .compose(notUsed -> relationshipRepository.deleteAll())

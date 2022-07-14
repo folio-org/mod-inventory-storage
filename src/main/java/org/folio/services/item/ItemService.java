@@ -181,6 +181,10 @@ public class ItemService {
         .map(Response.noContent().build());
   }
 
+  /**
+   * Deletes all items but sends only a single domain event (Kafka) message "all records removed",
+   * this is much faster than sending one message for each deleted item.
+   */
   public Future<Response> deleteAllItems() {
     return itemRepository.deleteAll()
       .onSuccess(notUsed -> domainEventService.publishAllRemoved())

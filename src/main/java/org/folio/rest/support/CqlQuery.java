@@ -1,19 +1,15 @@
 package org.folio.rest.support;
 
-import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
+import org.z3950.zing.cql.CQLNode;
+import org.z3950.zing.cql.CQLParser;
+import org.z3950.zing.cql.CQLTermNode;
 
 public final class CqlQuery {
-  private static final Pattern CQL_MATCHES_ALL = Pattern.compile(
-      "^ *id *==? *\\* *$"              // id=*
-      + "|"
-      + "^ *id *==? *\"\\*\" *$"        // id="*"
-      + "|"
-      + "^ *cql.allRecords *= *1 *$");  // cql.allRecords=1
-
-  private final String cql;
+  private final String cqlQuery;
 
   public CqlQuery(String cqlQuery) {
-    cql = cqlQuery;
+    this.cqlQuery = cqlQuery;
   }
 
   /**
@@ -23,6 +19,26 @@ public final class CqlQuery {
    * method covers only a few cases and doesn't consider the existing data.
    */
   public boolean isMatchingAll() {
-    return CQL_MATCHES_ALL.matcher(cql).find();
+    CQLNode cqlNode;
+    try {
+      cqlNode = new CQLParser().parse(cqlQuery);
+    } catch (Exception e) {
+      return false;
+    }
+    if (! (cqlNode instanceof CQLTermNode)) {
+      return false;
+    }
+    var node = (CQLTermNode) cqlNode;
+    // cql.allRecords: A special index which matches every record available. Every record is matched no matter what
+    // values are provided for the relation and term, but the recommended syntax is: cql.allRecords = 1
+    // http://docs.oasis-open.org/search-ws/searchRetrieve/v1.0/os/part5-cql/searchRetrieve-v1.0-os-part5-cql.html#_Toc324166821
+    if ("cql.allRecords".equalsIgnoreCase(node.getIndex())) {
+      return true;
+    }
+    var base = node.getRelation() == null ? null : node.getRelation().getBase();
+    // In RMB id=* matches all records: https://github.com/folio-org/raml-module-builder#cql-matching-all-records
+    return "id".equalsIgnoreCase(node.getIndex())
+        && StringUtils.equalsAny(base, "=", "==")
+        && "*".equals(node.getTerm());
   }
 }
