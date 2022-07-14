@@ -261,6 +261,16 @@ Changing the start number to a number lower than the current number is not suppo
 likely lead to generation of duplicate HRIDs. If an inventory type is added that contains a
 duplicate HRID, the module will reject the submission.
 
+# /inventory-view/instances
+
+Running a query against the `/inventory-view/instances` API writes this log message:
+
+```
+WARN  CQL2PgJSON           loadDbSchema loadDbSchema(): No configuration for table instance_holdings_item_view found, using defaults
+```
+
+This is a [known issue caused by RMB](https://issues.folio.org/browse/RMB-909) and can be ignored.
+
 # Domain event pattern
 
 The pattern means that every time when an instance/item is created/updated/removed
