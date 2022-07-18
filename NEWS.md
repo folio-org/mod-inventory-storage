@@ -1,3 +1,7 @@
+## 25.0.0 IN-PROGRESS
+
+* POST /item-storage/items error message on non-UUID statistical code ID (MODINVSTOR-755)
+
 ## 24.0.0 2022-07-01
 
 * Upgraded RMB to 34.0.0 ([MODINVSTOR-915](https://issues.folio.org/browse/MODINVSTOR-915))
