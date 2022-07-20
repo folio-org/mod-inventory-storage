@@ -1,6 +1,7 @@
-## 25.0.0 IN-PROGRESS
+## 24.0.1 2022-07-18
 
-* POST /item-storage/items error message on non-UUID statistical code ID (MODINVSTOR-755)
+* Improve populating shelfKey from callNumber ([MODINVSTOR-932](https://issues.folio.org/browse/MODINVSTOR-932))
+* POST /item-storage/items error message on non-UUID statistical code ID ([MODINVSTOR-755](https://issues.folio.org/browse/MODINVSTOR-755))
 
 ## 24.0.0 2022-07-01
 
