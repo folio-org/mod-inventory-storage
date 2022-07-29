@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import io.vertx.core.Future;
 import java.util.UUID;
 import org.folio.persist.ReindexJobRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.junit.Test;
 
@@ -39,7 +40,7 @@ public class ReindexServiceTest {
     verify(runner, times(1)).startReindex(any(), any());
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = BadRequestException.class)
   public void cannotCancelFinishedJob() {
     var reindexJob = new ReindexJob();
     reindexJob.withId(UUID.randomUUID().toString());
