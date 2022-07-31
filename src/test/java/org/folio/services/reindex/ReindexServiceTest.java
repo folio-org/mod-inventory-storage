@@ -28,7 +28,7 @@ public class ReindexServiceTest {
   @Test
   public void canSubmitReindex() {
     when(repository.save(any(), any()))
-      .thenReturn(Future.succeededFuture());
+      .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
 
     var reindexJob = get(reindexService.submitReindex(ReindexResourceName.INSTANCE));
 
