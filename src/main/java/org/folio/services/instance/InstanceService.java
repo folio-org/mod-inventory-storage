@@ -52,6 +52,7 @@ public class InstanceService {
     effectiveValuesService = new InstanceEffectiveValuesService();
   }
 
+  @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"
   public Future<Response> getInstanceSet(boolean instance, boolean holdingsRecords, boolean items,
       boolean precedingTitles, boolean succeedingTitles,
       boolean superInstanceRelationships, boolean subInstanceRelationships,
