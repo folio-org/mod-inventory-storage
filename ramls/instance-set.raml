@@ -1,0 +1,81 @@
+#%RAML 1.0
+title: Instance Set API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Instance Set
+    content: Get instances, for each instance get related records
+
+types:
+  instanceSet: !include instance-set.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  language: !include raml-util/traits/language.raml
+  validate: !include raml-util/traits/validation.raml
+  searchable: !include raml-util/traits/searchable.raml
+
+resourceTypes:
+  collection-stream: !include raml-util/rtypes/collection-stream.raml
+
+/inventory-view/instance-set:
+  type:
+    collection-stream:
+     schemaCollection: instanceSet
+     exampleCollection: !include examples/instance-set.json
+  get:
+    description: Get instances, for each instance get related records
+    is: [searchable: {description: "using CQL", example: "hrid==\"in007\""}]
+    queryParameters:
+      instance:
+        description: Add "instance" property with the instance JSON
+        type: boolean
+        required: false
+        default: false
+      holdingsRecords:
+        description: Add "holdingsRecords" array with all holdings record JSONs that belong to the instance
+        type: boolean
+        required: false
+        default: false
+      items:
+        description: Add "items" array with all item JSONs that belong to the instance
+        type: boolean
+        required: false
+        default: false
+      precedingTitles:
+        description: Add "precedingTitles" array with relationship records, each has a precedingInstanceId property
+        type: boolean
+        required: false
+        default: false
+      succeedingTitles:
+        description: Add "succeedingTitles" array with relationship records, each has a succeedingInstanceId property
+        type: boolean
+        required: false
+        default: false
+      superInstanceRelationships:
+        description: Add "superInstanceRelationships" array with relationship records, each has a superInstanceId property
+        type: boolean
+        required: false
+        default: false
+      subInstanceRelationships:
+        description: Add "subInstanceRelationships" array with relationship records, each has a subInstanceId property
+        type: boolean
+        required: false
+        default: false
+      offset:
+        description: Skip over a number of elements by specifying an offset value for the query
+        type: integer
+        required: false
+        example: 0
+        default: 0
+        minimum: 0
+        maximum: 2147483647
+      limit:
+        description: Limit the number of instance records to return data for; small maximum avoids out of memory
+        type: integer
+        required: true
+        example: 1
+        minimum: 1
+        maximum: 10
