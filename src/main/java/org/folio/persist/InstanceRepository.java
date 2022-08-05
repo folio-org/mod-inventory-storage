@@ -8,7 +8,6 @@ import io.vertx.sqlclient.RowStream;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.resource.InventoryViewInstanceSet;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -29,6 +28,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
       "SELECT id FROM " + postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
   }
 
+  @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"
   public Future<Response> getInstanceSet(boolean instance, boolean holdingsRecords, boolean items,
       boolean precedingTitles, boolean succeedingTitles,
       boolean superInstanceRelationships, boolean subInstanceRelationships,
@@ -82,14 +82,11 @@ public class InstanceRepository extends AbstractRepository<Instance> {
               json.append(iterator.next().getString(0));
             }
             json.append("\n]}");
-            return InventoryViewInstanceSet.GetInventoryViewInstanceSetResponse
-                .ok(json.toString(), MediaType.APPLICATION_JSON_TYPE)
-                .build();
+            return Response.ok(json.toString(), MediaType.APPLICATION_JSON_TYPE).build();
           });
+    } catch (CQLQueryValidationException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
     } catch (Exception e) {
-      if (e instanceof CQLQueryValidationException) {
-        e = new BadRequestException(e.getMessage());
-      }
       return Future.failedFuture(e);
     }
   }
