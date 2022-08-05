@@ -32,6 +32,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   private static final UUID instanceId4 = UUID.fromString("40000000-0000-4000-8000-000000000000");
   private static final UUID instanceId5 = UUID.fromString("50000000-0000-4000-8000-000000000000");
   private static final UUID instanceId6 = UUID.fromString("60000000-0000-4000-8000-000000000000");
+  private static final UUID instanceId7 = UUID.fromString("70000000-0000-4000-8000-000000000000");
   private static final UUID holdingId11 = UUID.fromString("11000000-0000-4000-8000-000000000000");
   private static final UUID holdingId61 = UUID.fromString("61000000-0000-4000-8000-000000000000");
   private static final UUID holdingId62 = UUID.fromString("62000000-0000-4000-8000-000000000000");
@@ -48,6 +49,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
     createInstance(instanceId4);
     createInstance(instanceId5);
     createInstance(instanceId6);
+    createInstance(instanceId7);
     createHolding(instanceId1, holdingId11);
     createHolding(instanceId6, holdingId61);
     createHolding(instanceId6, holdingId62);
@@ -67,7 +69,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void shouldReturnAllInstancesWhenNoCql() {
-    assertThat(getInstanceSets(null).size(), is(6));
+    assertThat(getInstanceSets(null).size(), is(7));
   }
 
   @Test
@@ -98,10 +100,26 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canQueryWithLimitAndOffset() {
-    var sets = getInstanceSets("cql.allRecords=1 sortBy id/sort.ascending", 2, 3);
+    var sets = getInstanceSets("cql.allRecords=1 sortBy id/sort.ascending", "", 2, 3);
     assertThat(ids(sets), contains(instanceId4, instanceId5));
-    sets = getInstanceSets("cql.allRecords=1 sortBy id/sort.descending", 2, 3);
-    assertThat(ids(sets), contains(instanceId3, instanceId2));
+    sets = getInstanceSets("cql.allRecords=1 sortBy id/sort.descending", "", 2, 3);
+    assertThat(ids(sets), contains(instanceId4, instanceId3));
+  }
+
+  @Test
+  public void canGetEmptyArrays() {
+    var parameters = "&holdingsRecords=true&items=true"
+        + "&precedingTitles=true&succeedingTitles=true"
+        + "&superInstanceRelationships=true&subInstanceRelationships=true";
+    var sets = getInstanceSets("id==" + instanceId7, parameters, 1, 0);
+    var set = sets.getJsonObject(0);
+    // .size() fails if the JsonArray is null
+    assertThat(set.getJsonArray("holdingsRecords").size(), is(0));
+    assertThat(set.getJsonArray("items").size(), is(0));
+    assertThat(set.getJsonArray("precedingTitles").size(), is(0));
+    assertThat(set.getJsonArray("succeedingTitles").size(), is(0));
+    assertThat(set.getJsonArray("superInstanceRelationships").size(), is(0));
+    assertThat(set.getJsonArray("subInstanceRelationships").size(), is(0));
   }
 
   @Test
@@ -196,13 +214,13 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   private JsonArray getInstanceSets(String cql) {
-    return getInstanceSets(cql, 10, 0);
+    return getInstanceSets(cql, "", 10, 0);
   }
 
   @SneakyThrows
-  private JsonArray getInstanceSets(String cql, int limit, int offset) {
+  private JsonArray getInstanceSets(String cql, String parameters, int limit, int offset) {
     String query = cql == null ? "" : "&query=" + PercentCodec.encode(cql);
-    URL url = instanceSetUrl("?limit=" + limit + "&offset=" + offset + query);
+    URL url = instanceSetUrl("?limit=" + limit + "&offset=" + offset + query + parameters);
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(url, TENANT_ID, json(getCompleted));
     Response response = getCompleted.get(5, SECONDS);
