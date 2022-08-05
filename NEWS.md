@@ -1,3 +1,8 @@
+## 24.1.0 IN-PROGRESS
+
+* GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918), [MODINVSTOR-944](https://issues.folio.org/browse/MODINVSTOR-944))
+* provides `inventory-view-instance-set 1.0`
+
 ## 24.0.2 2022-08-10
 
 * Fixing when migration script to populate holdings effective locations runs ([MODINVSTOR-940] (https://issues.folio.org/browse/MODINVSTOR-940))
