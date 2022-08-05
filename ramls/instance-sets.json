@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "List of instance sets",
+  "type": "object",
+  "properties": {
+    "instanceSets": {
+      "type": "array",
+      "description": "List of instance sets",
+      "items": {
+        "$ref": "instance-set.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["instanceSets"]
+}
