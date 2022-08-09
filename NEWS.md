@@ -1,3 +1,7 @@
+## 25.0.0 IN-PROGRESS
+
+* Fixed effective location migration script for holdings records (MODINVSTOR-940)
+
 ## 24.0.1 2022-07-18
 
 * Improve populating shelfKey from callNumber ([MODINVSTOR-932](https://issues.folio.org/browse/MODINVSTOR-932))
