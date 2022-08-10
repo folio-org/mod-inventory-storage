@@ -875,7 +875,7 @@
     {
       "run":"after",
       "snippetPath":"setEffectiveHoldingsLocation.sql",
-      "fromModuleVersion":"20.1.0"
+      "fromModuleVersion":"25.0.0"
     },
     {
       "run": "after",
