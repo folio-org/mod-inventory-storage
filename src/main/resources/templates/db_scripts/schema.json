@@ -1041,6 +1041,11 @@
       "run": "after",
       "snippetPath": "createInstanceSetView.sql",
       "fromModuleVersion": "25.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "removeRelatedInstanceTypeOperations.sql",
+      "fromModuleVersion": "25.0.0"
     }
   ]
 }
