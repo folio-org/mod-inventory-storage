@@ -1,3 +1,7 @@
+## 24.0.4 2022-08-11
+
+* Fixing mb bugfest and clean deployment schema difference version modified ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
+
 ## 24.0.2 2022-08-10
 
 * Fixing when migration script to populate holdings effective locations runs ([MODINVSTOR-940] (https://issues.folio.org/browse/MODINVSTOR-940))
