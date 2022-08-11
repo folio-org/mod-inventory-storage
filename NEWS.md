@@ -1,6 +1,7 @@
 ## 25.0.0 IN-PROGRESS
 
 * Fixed effective location migration script for holdings records (MODINVSTOR-940)
+* Fixing mg bugfest and clean deployment schema difference ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
 * GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918))
 * provides `inventory-view-instance-set 1.0`
 
