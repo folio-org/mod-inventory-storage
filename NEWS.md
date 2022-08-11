@@ -1,6 +1,7 @@
 ## 24.0.2 2022-08-10
 
 * Fixing when migration script to populate holdings effective locations runs ([MODINVSTOR-940] (https://issues.folio.org/browse/MODINVSTOR-940))
+* There is an operator script (on the wiki in inventory->scripts) that can be used to manually populate effectiveLocationId fields in holdings records for libraries who still have difficulties getting this field populated for existing records
 
 ## 24.0.1 2022-07-18
 
