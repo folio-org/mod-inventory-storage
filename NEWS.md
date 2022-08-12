@@ -1,6 +1,6 @@
-## 24.0.4 2022-08-11
+## 24.0.4 IN-PROGRESS
 
-* Fixing mb bugfest and clean deployment schema difference version modified ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
+* Adds integrity checks for statistical code types during upgrade ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
 
 ## 24.0.2 2022-08-10
 
