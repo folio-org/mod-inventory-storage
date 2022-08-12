@@ -1253,6 +1253,17 @@
       ]
     },
     {
+      "id": "inventory-view-instance-set",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-view/instance-set",
+          "permissionsRequired": ["inventory-storage.inventory-view.instance-set.get"]
+        }
+      ]
+    },
+    {
       "id": "instance-reindex",
       "version": "0.1",
       "handlers": [
@@ -2484,6 +2495,11 @@
       "description": "get instances by query with their holdings and items"
     },
     {
+      "permissionName": "inventory-storage.inventory-view.instance-set.get",
+      "displayName": "inventory view - get instances by query with a set of related records",
+      "description": "get instances by query with a set of related records"
+    },
+    {
       "permissionName": "inventory-storage.migration.job.item.delete",
       "displayName": "inventory storage - cancel migration job",
       "description": "cancel a running migration job"
@@ -2731,6 +2747,7 @@
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
         "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
         "inventory-storage.inventory-view.instances.collection.get",
+        "inventory-storage.inventory-view.instance-set.get",
         "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
         "inventory-storage.instance.reindex.item.delete",
         "inventory-storage.instance.reindex.item.get",

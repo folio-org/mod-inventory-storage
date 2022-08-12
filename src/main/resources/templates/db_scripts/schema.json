@@ -875,7 +875,7 @@
     {
       "run":"after",
       "snippetPath":"setEffectiveHoldingsLocation.sql",
-      "fromModuleVersion":"20.1.0"
+      "fromModuleVersion":"25.0.0"
     },
     {
       "run": "after",
@@ -1015,7 +1015,7 @@
     {
       "run": "after",
       "snippetPath": "statisticalCodeTypesReferenceCheckTrigger.sql",
-      "fromModuleVersion": "23.0.0"
+      "fromModuleVersion": "25.0.0"
     },
     {
       "run": "after",
@@ -1036,6 +1036,11 @@
         "run":"after",
         "snippetPath":"dropCallNumberNormalizationFunctions.sql",
         "fromModuleVersion":"24.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createInstanceSetView.sql",
+      "fromModuleVersion": "25.0.0"
     }
   ]
 }
