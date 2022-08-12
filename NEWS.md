@@ -3,6 +3,7 @@
 * Fixed effective location migration script for holdings records (MODINVSTOR-940)
 * GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918))
 * provides `inventory-view-instance-set 1.0`
+* Added Alternative title and Former title to alternative title default types ([MODINVSTOR-389] (https://issues.folio.org/browse/MODINVSTOR-389))
 
 
 ## 24.0.1 2022-07-18
