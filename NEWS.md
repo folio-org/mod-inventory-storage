@@ -1,4 +1,4 @@
-## 24.1.0 2022-08-11
+## 24.1.0 2022-08-12
 
 * GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918), [MODINVSTOR-944](https://issues.folio.org/browse/MODINVSTOR-944))
 * provides `inventory-view-instance-set 1.0`
