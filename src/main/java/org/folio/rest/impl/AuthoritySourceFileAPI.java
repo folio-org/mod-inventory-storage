@@ -4,8 +4,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.core.Response;
@@ -18,7 +16,7 @@ public class AuthoritySourceFileAPI implements org.folio.rest.jaxrs.resource.Aut
   public static final String REFERENCE_TABLE = "authority_source_file";
 
   public static final Set<String> PRE_DEFINED_SOURCE_FILE_IDS =
-    new HashSet<>(Arrays.asList(
+    Set.of(
       "cb58492d-018e-442d-9ce3-35aabfc524aa",
       "191874a0-707a-4634-928e-374ee9103225",
       "b224845c-5026-4594-8b55-61d39ecf0541",
@@ -31,7 +29,7 @@ public class AuthoritySourceFileAPI implements org.folio.rest.jaxrs.resource.Aut
       "6ddf21a6-bc2f-4cb0-ad96-473e1f82da23",
       "b0f38dbe-5bc0-477d-b1ee-6d9878a607f7",
       "70ff583b-b8c9-483e-ac21-cb4a9217898b"
-    ));
+    );
 
   public static final String UPDATE_PRE_DEFINED_SOURCE_FILE_ERROR = "Modification of pre-defined authority source file is not allowed";
   public static final String DELETE_PRE_DEFINED_SOURCE_FILE_ERROR = "Deletion of pre-defined authority source file is not allowed";

@@ -14,12 +14,7 @@ import org.junit.Test;
 
 public class AuthoritySourceFileAPITest extends TestBase {
 
-  private static ResourceClient authoritySourceFileClient;
-
-  @BeforeClass
-  public static void beforeAll() {
-    authoritySourceFileClient = ResourceClient.forAuthoritySourceFiles(client);
-  }
+  private static ResourceClient authoritySourceFileClient = ResourceClient.forAuthoritySourceFiles(client);
 
   @Test
   public void shouldNotDeletePreDefinedSourceFile() {
