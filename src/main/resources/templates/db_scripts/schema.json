@@ -854,6 +854,21 @@
       "tableName": "async_migration_job",
       "withMetadata": false,
       "withAuditing": false
+    },
+    {
+      "tableName": "authority_source_file",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "scripts": [

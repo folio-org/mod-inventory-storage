@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.alternativeTitleTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.authorityNoteTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.authoritySourceFilesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.callNumberTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.classificationTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.contributorNameTypesUrl;
@@ -615,6 +616,19 @@ public class ReferenceTablesTest extends TestBase {
     String updateProperty = InstanceNoteType.NAME_KEY;
 
     testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+  }
+
+  @Test
+  public void authoritySourceFilesLoaded()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+    URL apiUrl = authoritySourceFilesUrl("");
+
+    Response searchResponse = getReferenceRecords(apiUrl);
+    validateNumberOfReferenceRecords("authority source files", searchResponse, 1, 100);
   }
 
   @Test
