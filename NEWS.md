@@ -4,7 +4,16 @@
 * Adds integrity checks for statistical code types during upgrade ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
 * GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918))
 * provides `inventory-view-instance-set 1.0`
+* Added Alternative title and Former title to alternative title default types ([MODINVSTOR-389] (https://issues.folio.org/browse/MODINVSTOR-389))
 
+## 24.0.3 2022-08-17
+
+* Restrict cancellation of already finished reindex job ([MODINVSTOR-936] (https://issues.folio.org/browse/MODINVSTOR-936))
+* Remove shelfKey pattern check for call-number ([MODINVSTOR-942] (https://issues.folio.org/browse/MODINVSTOR-942))
+
+## 24.0.2 2022-08-10
+
+* Fixing when migration script to populate holdings effective locations runs ([MODINVSTOR-940] (https://issues.folio.org/browse/MODINVSTOR-940))
 
 ## 24.0.1 2022-07-18
 
