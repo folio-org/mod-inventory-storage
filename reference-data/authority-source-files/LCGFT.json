@@ -1,6 +1,8 @@
 {
   "id": "67d1ec4b-a19a-4324-9f19-473b49e370ac",
   "name": "LC Genre/Form Terms (LCGFT)",
-  "code": "gf",
+  "codes": [
+    "gf"
+  ],
   "type": "Subjects"
 }

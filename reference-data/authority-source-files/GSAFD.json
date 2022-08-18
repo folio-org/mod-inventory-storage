@@ -1,6 +1,8 @@
 {
   "id": "b224845c-5026-4594-8b55-61d39ecf0541",
   "name": "GSAFD Genre Terms (GSAFD)",
-  "code": "gsafd",
+  "codes": [
+    "gsafd"
+  ],
   "type": "Subjects"
 }

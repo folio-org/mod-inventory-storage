@@ -1,6 +1,8 @@
 {
   "id": "837e2c7b-037b-4113-9dfd-b1b8aeeb1fb8",
   "name": "LC Subject Headings (LCSH)",
-  "code": "sh",
+  "codes": [
+    "sh"
+  ],
   "type": "Subjects"
 }

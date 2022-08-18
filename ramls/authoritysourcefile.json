@@ -11,9 +11,12 @@
       "type": "string",
       "description": "Authority source file name"
     },
-    "code": {
-      "type": "string",
-      "description": "Identifying prefix"
+    "codes": {
+      "type" : "array",
+      "items": {
+        "type": "string",
+        "description": "identifying prefix, i.e. 'n', 'D', 'fst'"
+      }
     },
     "type": {
       "type": "string",
@@ -28,7 +31,7 @@
   "additionalProperties": false,
   "required": [
     "name",
-    "code",
+    "codes",
     "type"
   ]
 }
