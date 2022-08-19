@@ -1,6 +1,8 @@
 ## 25.0.0 IN-PROGRESS
 
-* Create a pre-defined Authority Source file list (MODINVSTOR-892)
+* Create a pre-defined Authority Source file list, extend authority schema with sourceFileId ([MODINVSTOR-892](https://issues.folio.org/browse/MODINVSTOR-892))
+* provides `authority-storage 1.1`
+* provides `authority-source-files 1.0`
 * Fixed effective location migration script for holdings records (MODINVSTOR-940)
 * Adds integrity checks for statistical code types during upgrade ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
 * GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918))
