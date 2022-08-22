@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of Authority source files",
+  "type": "object",
+  "properties": {
+    "authoritySourceFiles": {
+      "description": "List of Authority source files",
+      "id": "authoritySourceFile",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "authoritysourcefile.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "authoritySourceFiles",
+    "totalRecords"
+  ]
+}
+

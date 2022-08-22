@@ -51,6 +51,17 @@ public class InstanceService {
     effectiveValuesService = new InstanceEffectiveValuesService();
   }
 
+  @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"
+  public Future<Response> getInstanceSet(boolean instance, boolean holdingsRecords, boolean items,
+      boolean precedingTitles, boolean succeedingTitles,
+      boolean superInstanceRelationships, boolean subInstanceRelationships,
+      int offset, int limit, String query) {
+
+    return instanceRepository.getInstanceSet(instance, holdingsRecords, items,
+        precedingTitles, succeedingTitles, superInstanceRelationships, subInstanceRelationships,
+        offset, limit, query);
+  }
+
   public Future<Response> createInstance(Instance entity) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
     effectiveValuesService.populateEffectiveValues(entity);

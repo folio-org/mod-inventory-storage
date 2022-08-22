@@ -73,7 +73,8 @@ public class TenantRefAPI extends TenantAPI {
     "bound-with/holdingsrecords",
     "bound-with/items",
     "bound-with/bound-with-parts",
-    "related-instance-types"
+    "related-instance-types",
+    "authority-source-files"
   };
 
   List<JsonObject> servicePoints = null;

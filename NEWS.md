@@ -1,3 +1,30 @@
+## 25.0.0 IN-PROGRESS
+
+* Create a pre-defined Authority Source file list, extend authority schema with sourceFileId ([MODINVSTOR-892](https://issues.folio.org/browse/MODINVSTOR-892))
+* provides `authority-storage 1.1`
+* provides `authority-source-files 1.0`
+* Fixed effective location migration script for holdings records (MODINVSTOR-940)
+* Adds integrity checks for statistical code types during upgrade ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
+* GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918))
+* provides `inventory-view-instance-set 1.0`
+* Added Alternative title and Former title to alternative title default types ([MODINVSTOR-389] (https://issues.folio.org/browse/MODINVSTOR-389))
+* Extend instance contributors schema with Authority ID ([MODINVSTOR-950](https://issues.folio.org/browse/MODINVSTOR-950))
+* provides `instance-storage 8.2`
+
+## 24.0.3 2022-08-17
+
+* Restrict cancellation of already finished reindex job ([MODINVSTOR-936] (https://issues.folio.org/browse/MODINVSTOR-936))
+* Remove shelfKey pattern check for call-number ([MODINVSTOR-942] (https://issues.folio.org/browse/MODINVSTOR-942))
+
+## 24.0.2 2022-08-10
+
+* Fixing when migration script to populate holdings effective locations runs ([MODINVSTOR-940] (https://issues.folio.org/browse/MODINVSTOR-940))
+
+## 24.0.1 2022-07-18
+
+* Improve populating shelfKey from callNumber ([MODINVSTOR-932](https://issues.folio.org/browse/MODINVSTOR-932))
+* POST /item-storage/items error message on non-UUID statistical code ID ([MODINVSTOR-755](https://issues.folio.org/browse/MODINVSTOR-755))
+
 ## 24.0.0 2022-07-01
 
 * Upgraded RMB to 34.0.0 ([MODINVSTOR-915](https://issues.folio.org/browse/MODINVSTOR-915))
