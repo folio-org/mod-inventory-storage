@@ -40,7 +40,7 @@ resourceTypes:
     post:
       is: [validate]
     delete:
-      is: [searchable: { description: "CQL to select holdings to delete, use either cql.allRecords=1 or id==* to delete all", example: "callNumber==\"123-0*\"" } ]
+      is: [searchable: { description: "CQL to select holdings to delete, use cql.allRecords=1 to delete all", example: "callNumber==\"123-0*\"" } ]
       responses:
         204:
           description: "Selected holdings deleted"

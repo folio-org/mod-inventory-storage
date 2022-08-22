@@ -29,7 +29,6 @@ public class InstanceRepository extends AbstractRepository<Instance> {
       "SELECT id FROM " + postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
   }
 
-<<<<<<< HEAD
   /**
    * Delete by CQL. For each deleted record return a {@link Row} with the instance id String
    * and with the instance jsonb String.

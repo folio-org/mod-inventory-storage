@@ -69,7 +69,7 @@ resourceTypes:
           ]
     post:
     delete:
-      is: [searchable: { description: "CQL to select instances to delete, use either cql.allRecords=1 or id==* to delete all. Deletes connected marc source records.",
+      is: [searchable: { description: "CQL to select instances to delete, use cql.allRecords=1 to delete all. Deletes connected marc source records.",
                          example: "hrid==\"in123-0*\"" } ]
       responses:
         204:
