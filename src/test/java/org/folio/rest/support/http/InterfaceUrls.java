@@ -62,6 +62,10 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/instance-storage/batch/synchronous" + subPath);
   }
 
+  public static URL instanceSetUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/inventory-view/instance-set" + subPath);
+  }
+
   public static URL instanceRelationshipsUrl(String subPath) {
     return StorageTestSuite.storageUrl("/instance-storage/instance-relationships" + subPath);
   }
@@ -128,6 +132,10 @@ public class InterfaceUrls {
 
   public static URL natureOfContentTermsUrl(String subPath) {
     return StorageTestSuite.storageUrl("/nature-of-content-terms" + subPath);
+  }
+
+  public static URL authoritySourceFilesUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/authority-source-files" + subPath);
   }
 
   public static URL authorityNoteTypesUrl(String subPath) {
@@ -231,7 +239,7 @@ public class InterfaceUrls {
   public static URL instanceIteration(String path) {
     return StorageTestSuite.storageUrl("/instance-storage/instances/iteration" + path);
   }
-  
+
   public static URL migrationsUrl(String subPath) {
     return StorageTestSuite.storageUrl("/inventory-storage/migrations" + subPath);
   }

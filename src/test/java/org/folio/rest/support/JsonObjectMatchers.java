@@ -61,4 +61,23 @@ public class JsonObjectMatchers {
         }
     };
   }
+
+  public static Matcher<JsonObject> equalsIgnoringMetadata(JsonObject expected) {
+    return new TypeSafeMatcher<JsonObject>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText(
+          "a JsonObject being equal when ignoring metadata property: " + expected);
+      }
+
+      @Override
+      protected boolean matchesSafely(JsonObject jsonObject) {
+        var finalJsonObject = jsonObject.copy();
+        var finalExpected = expected.copy();
+        finalJsonObject.remove("metadata");
+        finalExpected.remove("metadata");
+        return finalJsonObject.equals(finalExpected);
+      }
+    };
+  }
 }

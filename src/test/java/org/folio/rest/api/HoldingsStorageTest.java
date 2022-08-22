@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -557,6 +558,58 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allHoldings.size(), is(0));
 
     assertRemoveAllEventForHolding();
+  }
+
+  @SneakyThrows
+  @Test
+  public void canDeleteHoldingsByCql() {
+    UUID instanceId1 = UUID.randomUUID();
+    UUID instanceId2 = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId1));
+    instancesClient.create(nod(instanceId2));
+
+    var h1 = holdingsClient.create(new HoldingRequestBuilder()
+        .forInstance(instanceId1)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("1234")).getJson();
+    var h2 = holdingsClient.create(new HoldingRequestBuilder()
+        .forInstance(instanceId1)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("21234")).getJson();
+    var h3 = holdingsClient.create(new HoldingRequestBuilder()
+        .forInstance(instanceId2)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("12")).getJson();
+    var h4 = holdingsClient.create(new HoldingRequestBuilder()
+        .forInstance(instanceId2)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("3123")).getJson();
+    var h5 = holdingsClient.create(new HoldingRequestBuilder()
+        .forInstance(instanceId2)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("123")).getJson();
+
+    var response = client.delete(holdingsStorageUrl("?query=hrid==12*"), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(204));
+    assertExists(h2);
+    assertExists(h4);
+    assertNotExists(h1);
+    assertNotExists(h3);
+    assertNotExists(h5);
+    assertRemoveEventForHolding(h1);
+    assertRemoveEventForHolding(h3);
+    assertRemoveEventForHolding(h5);
+  }
+
+  @SneakyThrows
+  @Test
+  public void cannotDeleteHoldingsWithEmptyCql() {
+
+    var response = client.delete(holdingsStorageUrl("?query="), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString("empty"));
   }
 
   @Test
@@ -2491,6 +2544,16 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private void assertExists(Response response, JsonObject expectedHolding) {
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
     assertThat(response.getBody(), containsString(expectedHolding.getString("instanceId")));
+  }
+
+  private void assertNotExists(JsonObject holding) {
+    try {
+      Response response = client.get(holdingsStorageUrl("/" + holding.getString("id")), StorageTestSuite.TENANT_ID)
+          .get(5, SECONDS);
+      assertThat(response, statusCodeIs(HttpStatus.HTTP_NOT_FOUND));
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void assertHRIDRange(Response response, String minHRID, String maxHRID) {

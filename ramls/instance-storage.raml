@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Instance Storage
-version: v8.1
+version: v9.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -69,10 +69,16 @@ resourceTypes:
           ]
     post:
     delete:
-      is: [language]
+      is: [searchable: { description: "CQL to select instances to delete, use cql.allRecords=1 to delete all. Deletes connected marc source records.",
+                         example: "hrid==\"in123-0*\"" } ]
       responses:
         204:
-          description: "All instances deleted"
+          description: "Selected instances deleted"
+        400:
+          description: "Bad request, e.g. malformed query parameter"
+          body:
+            text/plain:
+              example: "query parameter is empty"
         500:
           description: "Internal server error, e.g. due to misconfiguration"
           body:

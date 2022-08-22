@@ -19,6 +19,7 @@ import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.Builder;
+import org.folio.util.PercentCodec;
 import org.folio.util.StringUtil;
 
 import io.vertx.core.json.JsonObject;
@@ -38,6 +39,11 @@ public class ResourceClient {
   public static ResourceClient forAuthorities(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::authoritiesStorageUrl,
       "authorities");
+  }
+
+  public static ResourceClient forAuthoritySourceFiles(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::authoritySourceFilesUrl,
+      "authoritySourceFiles");
   }
 
   public static ResourceClient forHoldings(HttpClient client) {
@@ -185,9 +191,6 @@ public class ResourceClient {
       String.format("Failed to create %s: %s", resourceName, response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    System.out.println(String.format("Created resource %s: %s", resourceName,
-      response.getJson().encodePrettily()));
-
     return new IndividualResource(response);
   }
 
@@ -278,7 +281,6 @@ public class ResourceClient {
   }
 
   public void delete(UUID id) {
-
     Response response = deleteIfPresent(id != null ? id.toString() : null);
 
     assertThat(String.format(
@@ -295,8 +297,9 @@ public class ResourceClient {
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     try {
-      client.delete(urlMaker.combine(""), StorageTestSuite.TENANT_ID,
-        ResponseHandler.any(deleteAllFinished));
+      var cql = PercentCodec.encode("cql.allRecords=1");
+      client.delete(urlMaker.combine("?query=" + cql), StorageTestSuite.TENANT_ID,
+          ResponseHandler.any(deleteAllFinished));
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }

@@ -127,11 +127,15 @@
             "description": "UUID of contributor name type term defined by the MARC code list for relators",
             "$ref": "uuid.json"
           },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls the contributor",
+            "$ref": "uuid.json"
+          },
           "contributorNameType": {
             "type": "object",
             "description": "Dereferenced contributor-name type",
             "javaType": "org.folio.rest.jaxrs.model.contributorNameTypeVirtual",
-            "readonly": true,
             "folio:$ref": "contributornametype.json",
             "readonly": true,
             "folio:isVirtual": true,

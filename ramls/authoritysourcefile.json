@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An Authority source file",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "unique ID of the Authority source file; a UUID",
+      "$ref": "uuid.json"
+    },
+    "name": {
+      "type": "string",
+      "description": "Authority source file name"
+    },
+    "codes": {
+      "type" : "array",
+      "description": "List of identifying prefix",
+      "items": {
+        "type": "string",
+        "description": "identifying prefix, i.e. 'n', 'D', 'fst'"
+      }
+    },
+    "type": {
+      "type": "string",
+      "description": "Type of authority records stored in source file"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "codes",
+    "type"
+  ]
+}
+

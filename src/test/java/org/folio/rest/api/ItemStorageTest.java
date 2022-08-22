@@ -31,6 +31,7 @@ import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.containsStringIgnoringCase;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -1935,7 +1936,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
-    client.delete(itemsStorageUrl(""), StorageTestSuite.TENANT_ID,
+    client.delete(itemsStorageUrl("?query=cql.allRecords=1"), StorageTestSuite.TENANT_ID,
       ResponseHandler.empty(deleteAllFinished));
 
     Response deleteResponse = deleteAllFinished.get(5, TimeUnit.SECONDS);
@@ -1957,6 +1958,52 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(responseBody.getInteger("totalRecords"), is(0));
 
     assertRemoveAllEventForItem();
+  }
+
+  @SneakyThrows
+  @Test
+  public void canDeleteItemsByCql() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    var item1 = createItem(smallAngryPlanet(holdingsRecordId).put("barcode", "1234"));
+    var item2 = createItem(nod(holdingsRecordId).put("barcode", "23"));
+    var item3 = createItem(uprooted(UUID.randomUUID(), holdingsRecordId).put("barcode", "12"));
+    var item4 = createItem(temeraire(UUID.randomUUID(), holdingsRecordId).put("barcode", "234"));
+    var item5 = createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId).put("barcode", "123"));
+
+    var response = client.delete(itemsStorageUrl("?query=barcode==12*"), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(204));
+    assertExists(item2);
+    assertExists(item4);
+    assertNotExists(item1);
+    assertNotExists(item3);
+    assertNotExists(item5);
+    assertRemoveEventForItem(item1);
+    assertRemoveEventForItem(item3);
+    assertRemoveEventForItem(item5);
+  }
+
+  @SneakyThrows
+  @Parameters({
+    "",
+    "?query=",
+    "?query=%20%20",
+  })
+  @Test
+  public void cannotDeleteItemsWithoutCql(String query) {
+    var response = client.delete(itemsStorageUrl(query), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getBody(), is("Expected CQL but query parameter is empty"));
+    assertThat(response.getStatusCode(), is(400));
+  }
+
+  @SneakyThrows
+  @Test
+  public void cannotDeleteItemsWithInvalidCql() {
+    var response = client.delete(itemsStorageUrl("?query=\""), StorageTestSuite.TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getBody(), containsStringIgnoringCase("parse"));
+    assertThat(response.getStatusCode(), is(400));
   }
 
   @Test
@@ -2729,6 +2776,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private void assertExists(JsonObject expectedItem) {
     Response response = getById(expectedItem.getString("id"));
     assertExists(response, expectedItem);
+  }
+
+  private void assertNotExists(JsonObject item) {
+    assertGetNotFound(itemsStorageUrl("/" + item.getString("id")));
   }
 
   private void assertExists(Response response, JsonObject expectedItem) {

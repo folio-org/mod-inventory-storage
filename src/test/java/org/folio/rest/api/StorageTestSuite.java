@@ -78,6 +78,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
   InventoryViewTest.class,
+  InstanceSetTest.class,
   BoundWithStorageTest.class,
   ReindexJobRunnerTest.class,
   EffectiveLocationMigrationTest.class,
@@ -164,7 +165,7 @@ public class StorageTestSuite {
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     try {
-      client.delete(rootUrl, TENANT_ID,
+      client.delete(rootUrl + "?query=cql.allRecords=1", TENANT_ID,
         ResponseHandler.any(deleteAllFinished));
 
       Response response = TestBase.get(deleteAllFinished);
