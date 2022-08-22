@@ -18,7 +18,7 @@
     },
     {
       "id": "authority-storage",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1335,6 +1335,33 @@
           "permissionsRequired": ["inventory-storage.migration.job.item.delete"]
         }
       ]
+    },
+    {
+      "id": "authority-source-files",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/authority-source-files",
+          "permissionsRequired": ["inventory-storage.authority-source-files.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/authority-source-files/{id}",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-source-files",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/authority-source-files/{id}",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/authority-source-files/{id}",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.delete"]
+        }
+      ]
     }
   ],
   "permissionSets": [
@@ -2519,6 +2546,31 @@
       "displayName": "inventory storage - submit migration job",
       "description": "submit migration instance job"
     },
+    {
+      "permissionName": "inventory-storage.authority-source-files.collection.get",
+      "displayName": "inventory storage - get authority-source-file collection",
+      "description": "get authority-source-file collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.get",
+      "displayName": "inventory storage - get individual authority-source-file",
+      "description": "get individual authority-source-file from storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.post",
+      "displayName": "inventory storage - create individual authority-source-file",
+      "description": "create individual authority-source-file in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.put",
+      "displayName": "inventory storage - modify authority-source-file",
+      "description": "modify authority-source-file in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.delete",
+      "displayName": "inventory storage - delete individual authority-source-file",
+      "description": "delete individual authority-source-file from storage"
+    },
 
     {
       "permissionName": "inventory-storage.all",
@@ -2758,7 +2810,12 @@
         "inventory-storage.migration.job.item.delete",
         "inventory-storage.migration.job.post",
         "inventory-storage.migration.job.item.get",
-        "inventory-storage.migration.item.get"
+        "inventory-storage.migration.item.get",
+        "inventory-storage.authority-source-files.collection.get",
+        "inventory-storage.authority-source-files.item.get",
+        "inventory-storage.authority-source-files.item.post",
+        "inventory-storage.authority-source-files.item.put",
+        "inventory-storage.authority-source-files.item.delete"
       ]
     }
   ],
