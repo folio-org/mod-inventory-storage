@@ -1015,7 +1015,7 @@
     {
       "run": "after",
       "snippetPath": "statisticalCodeTypesReferenceCheckTrigger.sql",
-      "fromModuleVersion": "23.0.0"
+      "fromModuleVersion": "24.0.3"
     },
     {
       "run": "after",
