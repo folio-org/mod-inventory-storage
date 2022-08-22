@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.alternativeTitleTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.authorityNoteTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.authoritySourceFilesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.callNumberTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.classificationTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.contributorNameTypesUrl;
@@ -34,14 +35,15 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.folio.rest.api.entities.AlternativeTitleType;
 import org.folio.rest.api.entities.AuthorityNoteType;
+import org.folio.rest.api.entities.AuthoritySourceFile;
 import org.folio.rest.api.entities.CallNumberType;
 import org.folio.rest.api.entities.ClassificationType;
 import org.folio.rest.api.entities.ContributorNameType;
@@ -618,6 +620,39 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
+  public void authoritySourceFilesLoaded()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+    URL apiUrl = authoritySourceFilesUrl("");
+
+    Response searchResponse = getReferenceRecords(apiUrl);
+    validateNumberOfReferenceRecords("authority source files", searchResponse, 1, 100);
+  }
+
+  @Test
+  public void authoritySourceFilesBasicCrud()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException {
+    String entityPath = "/authority-source-files";
+    AuthoritySourceFile entity =
+      new AuthoritySourceFile("Test authority source file", List.of("test"), "Subjects");
+
+    Response postResponse = createReferenceRecord(entityPath, entity);
+    assertThat(postResponse.getStatusCode(),
+      is(HttpURLConnection.HTTP_CREATED));
+
+    String entityUUID = postResponse.getJson().getString("id");
+    String updateProperty = AuthoritySourceFile.NAME_KEY;
+
+    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+  }
+
+  @Test
   public void authorityNoteTypesLoaded()
     throws InterruptedException,
     MalformedURLException,
@@ -883,7 +918,8 @@ public class ReferenceTablesTest extends TestBase {
     entity.put("id", entityId);
     Response postResponse1 = createReferenceRecord(path, entity);
     if (Arrays.asList("/electronic-access-relationships", "/instance-statuses",
-      "/modes-of-issuance", "/statistical-code-types", "/holdings-types", "/authority-note-types").contains(path)) {
+      "/modes-of-issuance", "/statistical-code-types", "/holdings-types",
+      "/authority-note-types", "/authority-source-files").contains(path)) {
       assertThat(postResponse1.getStatusCode(), is(422));
     } else {
       assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
@@ -916,7 +952,7 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put("id", "baduuid");
     Response postResponse2 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/instance-note-types", "/authority-note-types", "/nature-of-content-terms").contains(path)) {
+    if (Arrays.asList("/instance-note-types", "/authority-note-types", "/authority-source-files", "/nature-of-content-terms").contains(path)) {
       assertThat(postResponse2.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
     } else {
       assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
