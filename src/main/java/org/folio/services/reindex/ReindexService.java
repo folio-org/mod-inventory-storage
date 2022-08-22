@@ -1,6 +1,7 @@
 package org.folio.services.reindex;
 
 import static java.util.UUID.randomUUID;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
 
@@ -9,6 +10,7 @@ import io.vertx.core.Future;
 import java.util.Date;
 import java.util.Map;
 import org.folio.persist.ReindexJobRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.ReindexJob;
 
 public final class ReindexService {
@@ -37,8 +39,15 @@ public final class ReindexService {
   }
 
   public Future<ReindexJob> cancelReindex(String jobId) {
-    return reindexJobRepository.fetchAndUpdate(jobId,
-      resp -> resp.withJobStatus(PENDING_CANCEL));
+    return reindexJobRepository.fetchAndUpdate(jobId, resp -> {
+        if (resp.getJobStatus() == IDS_PUBLISHED) {
+          throw new IllegalStateException("The job has been finished");
+        }
+        return resp.withJobStatus(PENDING_CANCEL);
+      })
+      .onFailure(throwable -> {
+        throw new BadRequestException(throwable.getMessage());
+      });
   }
 
   private ReindexJob buildInitialJob() {

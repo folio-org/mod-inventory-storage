@@ -41,6 +41,11 @@ public class ResourceClient {
       "authorities");
   }
 
+  public static ResourceClient forAuthoritySourceFiles(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::authoritySourceFilesUrl,
+      "authoritySourceFiles");
+  }
+
   public static ResourceClient forHoldings(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::holdingsStorageUrl,
       "holdingsRecords");
@@ -276,7 +281,6 @@ public class ResourceClient {
   }
 
   public void delete(UUID id) {
-
     Response response = deleteIfPresent(id != null ? id.toString() : null);
 
     assertThat(String.format(

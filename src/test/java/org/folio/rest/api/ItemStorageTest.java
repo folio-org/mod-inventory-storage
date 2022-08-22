@@ -863,6 +863,35 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotCreateItemWithNonUuidStatisticalCodes() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject nod = nod(holdingsRecordId).put("statisticalCodeIds", new JsonArray().add("07"));
+    assertThat(itemsClient.attemptToCreate(nod), hasValidationError(
+        "elements in list must match pattern", "statisticalCodeIds", "[07]"));
+  }
+
+  @Test
+  public void cannotCreateItemSyncWithNonUuidStatisticalCodes() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject nod = nod(holdingsRecordId).put("statisticalCodeIds",
+        new JsonArray().add("00000000-0000-4444-8888-000000000000").add("12345678"));
+    JsonObject items = new JsonObject().put("items", new JsonArray().add(nod));
+    assertThat(itemsStorageSyncClient.attemptToCreate(items), hasValidationError(
+        "elements in list must match pattern", "items[0].statisticalCodeIds",
+        "[00000000-0000-4444-8888-000000000000, 12345678]"));
+  }
+
+  @Test
+  public void cannotUpdateItemWithNonUuidStatisticalCodes() {
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject nod = createItem(nod(holdingsRecordId));
+    nod.put("statisticalCodeIds", new JsonArray().add("1234567890123456789012345678901234567890"));
+    assertThat(itemsClient.attemptToReplace(nod.getString("id"), nod), hasValidationError(
+        "elements in list must match pattern", "statisticalCodeIds",
+        "[1234567890123456789012345678901234567890]"));
+  }
+
+  @Test
   public void canCreateAnItemWithManyProperties()
     throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {

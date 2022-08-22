@@ -25,7 +25,7 @@ import io.vertx.core.json.JsonObject;
 
 public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   private final static String INSTANCE_TYPE_ID_TEXT = "6312d172-f0cf-40f6-b27d-9fa8feaf332f";
-  private final static String INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
+  final static String INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
 
   @Before
   public void beforeEach() {
