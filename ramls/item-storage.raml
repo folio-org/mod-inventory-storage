@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Item Storage
-version: v9.0
+version: v10.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -40,10 +40,15 @@ resourceTypes:
     post:
       is: [validate]
     delete:
-      is: [language]
+      is: [searchable: { description: "CQL to select items to delete, use cql.allRecords=1 to delete all", example: "barcode==\"123-0*\"" } ]
       responses:
         204:
-          description: "All items deleted"
+          description: "Selected items deleted"
+        400:
+          description: "Bad request, e.g. malformed query parameter"
+          body:
+            text/plain:
+              example: "query parameter is empty"
         500:
           description: "Internal server error, e.g. due to misconfiguration"
           body:

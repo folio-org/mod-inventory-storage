@@ -9,7 +9,11 @@
 * provides `inventory-view-instance-set 1.0`
 * Added Variant title and Former title to alternative title default types ([MODINVSTOR-389] (https://issues.folio.org/browse/MODINVSTOR-389))
 * Extend instance contributors schema with Authority ID ([MODINVSTOR-950](https://issues.folio.org/browse/MODINVSTOR-950))
-* provides `instance-storage 8.2`
+* provides `instance-storage 9.0`
+* Require CQL query for bulk delete of instances/holdings/items ([MODINVSTOR-576](https://issues.folio.org/browse/MODINVSTOR-576), [MODINVSTOR-901](https://issues.folio.org/browse/MODINVSTOR-901))
+* provides `instance-storage 9.0`
+* provides `holdings-storage 6.0`
+* provides `item-storage 10.0`
 
 ## 24.0.3 2022-08-17
 

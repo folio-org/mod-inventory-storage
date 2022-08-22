@@ -51,7 +51,7 @@ public final class InventoryProducerRecordBuilder {
 
   public KafkaProducerRecord<String, String> build() {
     try {
-      var valueAsString = getMapper().writeValueAsString(this.value);
+      var valueAsString = value instanceof String ? (String) value : getMapper().writeValueAsString(value);
       var record = create(topic, key, valueAsString);
       headers.forEach(record::addHeader);
       return record;

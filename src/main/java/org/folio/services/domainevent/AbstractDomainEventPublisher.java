@@ -90,6 +90,10 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
     };
   }
 
+  public void publishRemoved(String instanceId, String rawRecord) {
+    domainEventService.publishRecordRemoved(instanceId, rawRecord);
+  }
+
   public Future<Void> publishAllRemoved() {
     return domainEventService.publishAllRecordsRemoved();
   }
