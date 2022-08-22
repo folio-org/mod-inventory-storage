@@ -8,6 +8,8 @@
 * GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918))
 * provides `inventory-view-instance-set 1.0`
 * Added Alternative title and Former title to alternative title default types ([MODINVSTOR-389] (https://issues.folio.org/browse/MODINVSTOR-389))
+* Extend instance contributors schema with Authority ID ([MODINVSTOR-950](https://issues.folio.org/browse/MODINVSTOR-950))
+* provides `instance-storage 8.2`
 
 ## 24.0.3 2022-08-17
 
