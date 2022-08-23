@@ -35,6 +35,7 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
@@ -112,16 +113,14 @@ public class InstanceStorageAPI implements InstanceStorage {
   @Validate
   @Override
   public void deleteInstanceStorageInstances(
-    String lang,
+    String query,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    new InstanceService(vertxContext, okapiHeaders)
-      .deleteAllInstances()
-      .onSuccess(notUsed -> asyncResultHandler.handle(
-        succeededFuture(DeleteInstanceStorageInstancesResponse.respond204())))
-      .onFailure(handleFailure(asyncResultHandler));
+    new InstanceService(vertxContext, okapiHeaders).deleteInstances(query)
+    .otherwise(EndpointFailureHandler::failureResponse)
+    .onComplete(asyncResultHandler);
   }
 
   @Validate

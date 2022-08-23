@@ -11,6 +11,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.services.item.ItemService;
 
 import io.vertx.core.AsyncResult;
@@ -62,14 +63,13 @@ public class ItemStorageAPI implements ItemStorage {
 
   @Validate
   @Override
-  public void deleteItemStorageItems(String lang,
+  public void deleteItemStorageItems(String query,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    new ItemService(vertxContext, okapiHeaders).deleteAllItems()
-      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(
-        DeleteItemStorageItemsResponse.respond204())))
-      .onFailure(handleFailure(asyncResultHandler));
+    new ItemService(vertxContext, okapiHeaders).deleteItems(query)
+    .otherwise(EndpointFailureHandler::failureResponse)
+    .onComplete(asyncResultHandler);
   }
 
   @Validate

@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import lombok.SneakyThrows;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -439,6 +439,52 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertGetNotFound(url);
     assertRemoveEventForInstance(createdInstance.getJson());
+  }
+
+  @SneakyThrows
+  @Test
+  public void cannotDeleteInstanceThatDoesNotExist() {
+
+    var response = client.delete(instancesStorageUrl("/" + UUID.randomUUID()), TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(404));
+  }
+
+  @SneakyThrows
+  @Test
+  public void canDeleteInstancesByCql() {
+
+    var id5 = UUID.randomUUID();
+    var instance1 = createInstance(nod(UUID.randomUUID()).put("hrid", "1234")).getJson();
+    var instance2 = createInstance(nod(UUID.randomUUID()).put("hrid", "2123")).getJson();
+    var instance3 = createInstance(nod(UUID.randomUUID()).put("hrid", "12")).getJson();
+    var instance4 = createInstance(nod(UUID.randomUUID()).put("hrid", "345 12")).getJson();
+    var instance5 = createInstance(nod(id5).put("hrid", "123")).getJson();
+    put(id5, marcJson);
+    instance5 = getById(id5).getJson();
+
+    var response = client.delete(instancesStorageUrl("?query=hrid==12*"), TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertExists(instance2);
+    assertExists(instance4);
+    assertNotExists(instance1);
+    assertNotExists(instance3);
+    assertNotExists(instance5);
+    getMarcJsonNotFound(id5);
+    assertRemoveEventForInstance(instance1);
+    assertRemoveEventForInstance(instance3);
+    assertRemoveEventForInstance(instance5);
+  }
+
+  @SneakyThrows
+  @Test
+  public void cannotDeleteInstancesWithEmptyCql() {
+
+    var response = client.delete(instancesStorageUrl("?query="), TENANT_ID).get(5, SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString("empty"));
   }
 
   @Test
@@ -1009,7 +1055,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * Create the 5 example instances and run a get request using the provided cql query.
+   * Create the 5 example instances.
    */
   private void create5instances() {
     try {
@@ -1413,7 +1459,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> allDeleted = new CompletableFuture<>();
 
-    client.delete(instancesStorageUrl(""), TENANT_ID,
+    client.delete(instancesStorageUrl("?query=cql.allRecords=1"), TENANT_ID,
       ResponseHandler.empty(allDeleted));
 
     Response deleteResponse = allDeleted.get(5, SECONDS);
@@ -2783,6 +2829,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     Response response = getById(expectedInstance.getString("id"));
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
     assertThat(response.getBody(), containsString(expectedInstance.getString("title")));
+  }
+
+  private void assertNotExists(JsonObject instanceToGet) {
+    assertGetNotFound(instancesStorageUrl("/" + instanceToGet.getString("id")));
   }
 
   public static JsonObject smallAngryPlanet(UUID id) {

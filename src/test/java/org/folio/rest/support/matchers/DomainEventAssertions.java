@@ -9,6 +9,7 @@ import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.api.TestBase.holdingsClient;
+import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getAuthorityEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstAuthorityEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstHoldingEvent;
@@ -69,7 +70,10 @@ public final class DomainEventAssertions {
     assertThat(deleteEvent.value().getString("type"), is("DELETE"));
     assertThat(deleteEvent.value().getString("tenant"), is(TENANT_ID));
     assertThat(deleteEvent.value().getJsonObject("new"), nullValue());
-    assertThat(deleteEvent.value().getJsonObject("old"), is(record));
+
+    // ignore metadata because +00:00 ends as Z after createdDate and updatedDate have been
+    // deserialized from JSON to POJO resulting in a Date and serialized from POJO to JSON
+    assertThat(deleteEvent.value().getJsonObject("old"), equalsIgnoringMetadata(record));
 
     assertHeaders(deleteEvent.headers());
   }

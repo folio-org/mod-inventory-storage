@@ -53,6 +53,12 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
+  public void publishRemoved(String instanceId, String itemRaw) {
+    String instanceIdAndItemRaw = "{\"instanceId\":\"" + instanceId + "\"," + itemRaw.substring(1);
+    domainEventService.publishRecordRemoved(instanceId, instanceIdAndItemRaw);
+  }
+
+  @Override
   protected String getId(Item record) {
     return record.getId();
   }
