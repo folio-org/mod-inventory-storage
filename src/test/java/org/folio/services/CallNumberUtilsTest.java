@@ -47,7 +47,7 @@ public class CallNumberUtilsTest extends TestCase {
     "19 A2 C 6444218 MUSIC CD,,,9A2 C0444218 Music CD,,,,,",
     "GROUP Smith,,,GROUP Smith,,,,,",
     "free-text,,,free-text,,,,,",
-    "RR 718,,,RR 718,,,,,"
+    "RR 3718,,,RR 718,,,,,"
   })
   @Test
   public void inputForShelvingNumber(

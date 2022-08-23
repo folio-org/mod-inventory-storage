@@ -2,6 +2,11 @@
 
 * Adds integrity checks for statistical code types during upgrade ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
 
+## 24.0.3 2022-08-17
+
+* Restrict cancellation of already finished reindex job ([MODINVSTOR-936] (https://issues.folio.org/browse/MODINVSTOR-936))
+* Remove shelfKey pattern check for call-number ([MODINVSTOR-942] (https://issues.folio.org/browse/MODINVSTOR-942))
+
 ## 24.0.2 2022-08-10
 
 * Fixing when migration script to populate holdings effective locations runs ([MODINVSTOR-940] (https://issues.folio.org/browse/MODINVSTOR-940))
