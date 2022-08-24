@@ -190,7 +190,7 @@
     <url>https://github.com/folio-org/mod-inventory-storage</url>
     <connection>scm:git:git://github.com:folio-org/mod-inventory-storage.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-inventory-storage.git</developerConnection>
-    <tag>v24.0.3</tag>
+    <tag>v24.0.4</tag>
   </scm>
 
   <build>
