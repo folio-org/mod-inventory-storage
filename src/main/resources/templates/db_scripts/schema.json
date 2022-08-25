@@ -594,6 +594,7 @@
         {
           "fieldName": "instanceId",
           "targetTable": "instance",
+          "targetTableAlias": "instance",
           "tableAlias" : "holdingsRecords",
           "tOps": "ADD"
         },
