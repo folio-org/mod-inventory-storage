@@ -15,7 +15,7 @@ public class AuthoritySourceFileAPI implements org.folio.rest.jaxrs.resource.Aut
 
   public static final String REFERENCE_TABLE = "authority_source_file";
 
-  public static final String URL_PROTOCOL_PATTERN = "^(http[s]?://www\\.|http[s]?://|www\\.)";
+  public static final String URL_PROTOCOL_PATTERN = "^(https?://www\\.|https?://|www\\.)";
 
   @Override
   @Validate
