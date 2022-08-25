@@ -4,5 +4,7 @@
   "codes": [
     "gsafd"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "vocabularyserver.com/gsafd/",
+  "source": "folio"
 }

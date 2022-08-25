@@ -5,13 +5,17 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang.StringUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.AuthoritySourceFile;
 import org.folio.rest.jaxrs.model.AuthoritySourceFiles;
 import org.folio.rest.persist.PgUtil;
 
 public class AuthoritySourceFileAPI implements org.folio.rest.jaxrs.resource.AuthoritySourceFiles {
+
   public static final String REFERENCE_TABLE = "authority_source_file";
+
+  public static final String ULR_PROTOCOL_PATTERN = "^(http[s]?://www\\.|http[s]?://|www\\.)";
 
   @Override
   @Validate
@@ -31,6 +35,8 @@ public class AuthoritySourceFileAPI implements org.folio.rest.jaxrs.resource.Aut
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                        Context vertxContext) {
+    normalizeBaseUrl(entity);
+
     PgUtil.post(REFERENCE_TABLE, entity, okapiHeaders, vertxContext,
       PostAuthoritySourceFilesResponse.class,
       asyncResultHandler);
@@ -65,8 +71,22 @@ public class AuthoritySourceFileAPI implements org.folio.rest.jaxrs.resource.Aut
                                           Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
+    normalizeBaseUrl(entity);
+
     PgUtil.put(REFERENCE_TABLE, entity, id, okapiHeaders, vertxContext,
       PutAuthoritySourceFilesByIdResponse.class,
       asyncResultHandler);
   }
+
+  private static void normalizeBaseUrl(AuthoritySourceFile entity) {
+    var baseUrl = entity.getBaseUrl();
+    if (StringUtils.isNotBlank(baseUrl)) {
+      baseUrl = baseUrl.replaceFirst(ULR_PROTOCOL_PATTERN, "");
+      if (!baseUrl.endsWith("/")) {
+        baseUrl += "/";
+      }
+      entity.setBaseUrl(baseUrl);
+    }
+  }
+
 }
