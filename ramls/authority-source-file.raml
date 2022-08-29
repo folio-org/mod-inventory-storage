@@ -11,6 +11,7 @@ documentation:
 types:
   authoritySourceFile: !include authoritysourcefile.json
   authoritySourceFiles: !include authoritysourcefiles.json
+  authoritySourceFilePatchRequest: !include authoritysourcefile-patch.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -45,3 +46,39 @@ resourceTypes:
       collection-item:
         exampleItem: !include examples/authoritysourcefile.json
         schema: authoritySourceFile
+    patch:
+      description: Update Authority source file
+      body:
+        application/json:
+          description: Patch Authority source file
+          type: authoritySourceFilePatchRequest
+      responses:
+        204:
+          description: No Content
+        400:
+          description: Bad Request
+          body:
+            text/plain:
+              example: |
+                "unable to update <<resourcePathName|!singularize>> -- malformed JSON at 13:4"
+        401:
+          description: "Not authorized to perform requested action"
+          body:
+            text/plain:
+              example: "Invalid token"
+        404:
+          description: "Item with a given ID not found"
+          body:
+            text/plain:
+              example: |
+                "<<resourcePathName|!singularize>> not found"
+        409:
+          description: "Optimistic locking version conflict"
+          body:
+            text/plain:
+              example: "version conflict"
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "internal server error, contact administrator"

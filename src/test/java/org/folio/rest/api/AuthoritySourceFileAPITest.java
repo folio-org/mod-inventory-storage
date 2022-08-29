@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.entities.AuthoritySourceFile.BASE_URL_KEY;
 import static org.folio.rest.api.entities.AuthoritySourceFile.CODES_KEY;
 import static org.folio.rest.api.entities.AuthoritySourceFile.NAME_KEY;
@@ -11,7 +12,11 @@ import static org.junit.Assert.assertEquals;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
+import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.http.ResourceClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,15 +27,15 @@ public class AuthoritySourceFileAPITest extends TestBase {
   private static ResourceClient authoritySourceFileClient = ResourceClient.forAuthoritySourceFiles(client);
 
   @Test
-  public void shouldNormalizeBaseUrl() {
-    var nonNormalizedBaseUrl = "https://www.id.loc.gov/authoritiesq/subjects";
+  public void shouldNormalizeBaseUrl()
+    throws ExecutionException, InterruptedException, TimeoutException {
+    var nonNormalizedBaseUrl = "https://www.id.loc.gov/authorities/test-source";
     var entityId = UUID.randomUUID();
 
-    var creationResponse = authoritySourceFileClient.create(
-      prepareTestEntity(entityId, nonNormalizedBaseUrl));
+    var creationResponse = authoritySourceFileClient.create(prepareTestEntity(entityId, nonNormalizedBaseUrl));
     var entity = creationResponse.getJson();
 
-    assertEquals("id.loc.gov/authoritiesq/subjects/", entity.getString(BASE_URL_KEY));
+    assertEquals("id.loc.gov/authorities/test-source/", entity.getString(BASE_URL_KEY));
 
     // Test baseUrl normalization on PUT
     entity.put(BASE_URL_KEY, "http://example.com/authorities/");
@@ -39,6 +44,16 @@ public class AuthoritySourceFileAPITest extends TestBase {
     var updatedEntity = authoritySourceFileClient.getById(entityId).getJson();
 
     assertEquals("example.com/authorities/", updatedEntity.getString(BASE_URL_KEY));
+
+    // Test baseUrl normalization on PATCH
+    var patchData = new JsonObject().put(BASE_URL_KEY, "http://example.com/authorities/patched");
+
+    client.patch(InterfaceUrls.authoritySourceFilesUrl("/" + entityId), patchData, TENANT_ID)
+      .get(15, TimeUnit.SECONDS);
+
+    var patchedEntity = authoritySourceFileClient.getById(entityId).getJson();
+
+    assertEquals("example.com/authorities/patched/", patchedEntity.getString(BASE_URL_KEY));
   }
 
   private static JsonObject prepareTestEntity(UUID id, String baseUrl) {
