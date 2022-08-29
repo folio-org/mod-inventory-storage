@@ -88,7 +88,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
-  SampleDataTest.class
+  SampleDataTest.class,
+  AuthoritySourceFileAPITest.class
 })
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";

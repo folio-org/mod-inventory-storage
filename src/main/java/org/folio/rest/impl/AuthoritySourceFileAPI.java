@@ -58,12 +58,12 @@ public class AuthoritySourceFileAPI implements org.folio.rest.jaxrs.resource.Aut
                                             Context vertxContext) {
     new AuthoritySourceFileRepository(vertxContext, okapiHeaders).getById(id)
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(record -> {
-        record.setBaseUrl(patchData.getBaseUrl());
+      .compose(entity -> {
+        entity.setBaseUrl(patchData.getBaseUrl());
 
-        normalizeBaseUrl(record);
+        normalizeBaseUrl(entity);
 
-        return put(AUTHORITY_SOURCE_FILE_TABLE, record, id, okapiHeaders, vertxContext,
+        return put(AUTHORITY_SOURCE_FILE_TABLE, entity, id, okapiHeaders, vertxContext,
           PatchAuthoritySourceFilesByIdResponse.class);
       })
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
