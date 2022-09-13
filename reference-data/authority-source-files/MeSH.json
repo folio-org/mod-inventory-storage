@@ -4,5 +4,7 @@
   "codes": [
     "D"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "id.nlm.nih.gov/mesh/",
+  "source": "folio"
 }

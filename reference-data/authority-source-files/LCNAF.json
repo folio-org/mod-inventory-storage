@@ -7,5 +7,7 @@
     "nr",
     "no"
   ],
-  "type": "Names"
+  "type": "Names",
+  "baseUrl": "id.loc.gov/authorities/names/",
+  "source": "folio"
 }

@@ -639,8 +639,8 @@ public class ReferenceTablesTest extends TestBase {
     TimeoutException,
     ExecutionException {
     String entityPath = "/authority-source-files";
-    AuthoritySourceFile entity =
-      new AuthoritySourceFile("Test authority source file", List.of("test"), "Subjects");
+    AuthoritySourceFile entity = new AuthoritySourceFile("Test authority source file", List.of("test"),
+        "Subjects", "example.com/sources/", "folio");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(),

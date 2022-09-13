@@ -4,5 +4,7 @@
   "codes": [
     "sh"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "id.loc.gov/authorities/subjects/",
+  "source": "folio"
 }

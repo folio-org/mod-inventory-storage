@@ -4,5 +4,7 @@
   "codes": [
     "fst"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "id.worldcat.org/fast/",
+  "source": "folio"
 }

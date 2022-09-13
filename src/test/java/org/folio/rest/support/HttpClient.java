@@ -219,4 +219,8 @@ public class HttpClient {
   public CompletableFuture<Response> delete(URL url, String tenantId) {
     return asResponse(request(HttpMethod.DELETE, url, tenantId));
   }
+
+  public CompletableFuture<Response> patch(URL url, Object body, String tenantId) {
+    return asResponse(request(HttpMethod.PATCH, url, body, tenantId));
+  }
 }

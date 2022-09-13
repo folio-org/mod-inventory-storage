@@ -868,6 +868,10 @@
         {
           "fieldName": "codes",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "baseUrl",
+          "tOps": "ADD"
         }
       ]
     }
