@@ -4,5 +4,7 @@
   "codes": [
     "mp"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "id.loc.gov/authorities/performanceMediums/",
+  "source": "folio"
 }

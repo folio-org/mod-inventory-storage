@@ -5,5 +5,7 @@
     "lcgtm",
     "tgm"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "id.loc.gov/vocabulary/graphicMaterials/",
+  "source": "folio"
 }

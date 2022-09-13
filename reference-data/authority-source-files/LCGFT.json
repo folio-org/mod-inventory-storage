@@ -4,5 +4,7 @@
   "codes": [
     "gf"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "id.loc.gov/authorities/genreForms/",
+  "source": "folio"
 }

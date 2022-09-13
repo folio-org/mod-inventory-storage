@@ -4,5 +4,7 @@
   "codes": [
     "dg"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "id.loc.gov/authorities/demographicTerms/",
+  "source": "folio"
 }

@@ -4,5 +4,7 @@
   "codes": [
     "sj"
   ],
-  "type": "Subjects"
+  "type": "Subjects",
+  "baseUrl": "id.loc.gov/authorities/childrensSubjects/",
+  "source": "folio"
 }

@@ -1344,19 +1344,28 @@
           "methods": ["GET"],
           "pathPattern": "/authority-source-files",
           "permissionsRequired": ["inventory-storage.authority-source-files.collection.get"]
-        }, {
+        },
+        {
           "methods": ["GET"],
           "pathPattern": "/authority-source-files/{id}",
           "permissionsRequired": ["inventory-storage.authority-source-files.item.get"]
-        }, {
+        },
+        {
           "methods": ["POST"],
           "pathPattern": "/authority-source-files",
           "permissionsRequired": ["inventory-storage.authority-source-files.item.post"]
-        }, {
+        },
+        {
           "methods": ["PUT"],
           "pathPattern": "/authority-source-files/{id}",
           "permissionsRequired": ["inventory-storage.authority-source-files.item.put"]
-        }, {
+        },
+        {
+          "methods": ["PATCH"],
+          "pathPattern": "/authority-source-files/{id}",
+          "permissionsRequired": ["inventory-storage.authority-source-files.item.patch"]
+        },
+        {
           "methods": ["DELETE"],
           "pathPattern": "/authority-source-files/{id}",
           "permissionsRequired": ["inventory-storage.authority-source-files.item.delete"]
@@ -2565,6 +2574,11 @@
       "permissionName": "inventory-storage.authority-source-files.item.put",
       "displayName": "inventory storage - modify authority-source-file",
       "description": "modify authority-source-file in storage"
+    },
+    {
+      "permissionName": "inventory-storage.authority-source-files.item.patch",
+      "displayName": "inventory storage - patch authority-source-file",
+      "description": "patch authority-source-file in storage"
     },
     {
       "permissionName": "inventory-storage.authority-source-files.item.delete",
