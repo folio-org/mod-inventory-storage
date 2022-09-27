@@ -1,6 +1,6 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond500WithTextPlain;
+import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronousUnsafe.PostInstanceStorageBatchSynchronousUnsafeResponse.respond500WithTextPlain;
 
 import java.util.Map;
 
@@ -8,21 +8,21 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstancesPost;
-import org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous;
+import org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronousUnsafe;
 import org.folio.services.instance.InstanceService;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
-public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
+public class InstanceBatchSyncUnsafeAPI implements InstanceStorageBatchSynchronousUnsafe {
   @Validate
   @Override
-  public void postInstanceStorageBatchSynchronous(boolean upsert, InstancesPost entity, Map<String, String> okapiHeaders,
+  public void postInstanceStorageBatchSynchronousUnsafe(InstancesPost entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new InstanceService(vertxContext, okapiHeaders)
-      .createInstances(entity.getInstances(), upsert, true)
+      .createInstances(entity.getInstances(), true, false)
       .otherwise(cause -> respond500WithTextPlain(cause.getMessage()))
       .onComplete(asyncResultHandler);
   }

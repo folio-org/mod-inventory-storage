@@ -48,3 +48,29 @@ types:
         body:
           text/plain:
             example: "Internal server error"
+/holdings-storage/batch/synchronous-unsafe:
+  displayName: Holdings Batch Upload Sync API With Optimistic Locking Disabled
+  post:
+    description: "Create or update a collection of holdings in a single synchronous request; if any holding fails the complete batch will be rejected (all or nothing).  The _version property is ignored, optimistic locking is disabled - this is known to lead to data loss in some cases, don't use in production, you have been warned!"
+    body:
+      application/json:
+        type: holdingsrecords_post
+        example: !include examples/holdingsrecords_post.json
+    responses:
+      201:
+        description: "All holdings have been successfully created or updated"
+      413:
+        description: "Payload Too Large"
+        body:
+          text/plain:
+            example: "Payload Too Large"
+      422:
+        description: "Unprocessable Entity"
+        body:
+          application/json:
+            type: errors
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"

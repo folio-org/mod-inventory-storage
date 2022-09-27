@@ -48,4 +48,30 @@ types:
         body:
           text/plain:
             example: "Internal server error"
+/item-storage/batch/synchronous-unsafe:
+  displayName: Item Batch Upload Sync API With Optimistic Locking Disabled
+  post:
+    description: "Create or update (upsert) a collection of items in a single synchronous request; if any item fails the complete batch will be rejected (all or nothing). The _version property is ignored, optimistic locking is disabled - this is known to lead to data loss in some cases, don't use in production, you have been warned!"
+    body:
+      application/json:
+        type: items_post
+        example: !include examples/items_post.json
+    responses:
+      201:
+        description: "All items have been successfully created or updated"
+      413:
+        description: "Payload Too Large"
+        body:
+          text/plain:
+            example: "Payload Too Large"
+      422:
+        description: "Unprocessable Entity"
+        body:
+          application/json:
+            type: errors
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
 

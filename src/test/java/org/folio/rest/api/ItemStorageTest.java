@@ -20,6 +20,7 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
@@ -56,7 +57,7 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -84,6 +85,7 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.builders.StatisticalCodeBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.matchers.DomainEventAssertions;
+import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -111,6 +113,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
   }
 
   @After
@@ -399,6 +403,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     // updating with outdated _version 1 fails, current _version is 2
     int expected = OptimisticLocking.hasFailOnConflict("item") ? 409 : 204;
     assertThat(update(item).getStatusCode(), is(expected));
+    // updating with _version -1 should fail, single item PUT never allows to suppress optimistic locking
+    item.put("_version", -1);
+    assertThat(update(item).getStatusCode(), is(409));
+    // this allow should not apply to single holding PUT, only to batch unsafe
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+        Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+    item.put("_version", -1);
+    assertThat(update(item).getStatusCode(), is(409));
   }
 
   @Test
@@ -1030,13 +1042,21 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private Response postSynchronousBatch(JsonArray itemsArray) {
-    return postSynchronousBatch("", itemsArray);
+    return postSynchronousBatch(itemsStorageSyncUrl(""), itemsArray);
   }
 
   private Response postSynchronousBatch(String subPath, JsonArray itemsArray) {
+    return postSynchronousBatch(itemsStorageSyncUrl(subPath), itemsArray);
+  }
+
+  private Response postSynchronousBatchUnsafe(JsonArray itemsArray) {
+    return postSynchronousBatch(itemsStorageSyncUnsafeUrl(""), itemsArray);
+  }
+
+  private Response postSynchronousBatch(URL url, JsonArray itemsArray) {
     JsonObject itemsCollection = new JsonObject().put("items", itemsArray);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(itemsStorageSyncUrl(subPath), itemsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
+    client.post(url, itemsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
     try {
       return createCompleted.get(5, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -1056,6 +1076,26 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .map(obj -> (JsonObject) obj)
       .map(obj -> getById(obj.getString("id")).getJson())
       .forEach(DomainEventAssertions::assertCreateEventForItem);
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
+    JsonArray itemsArray = threeItems();
+    assertThat(postSynchronousBatchUnsafe(itemsArray), statusCodeIs(413));
+  }
+
+  @Test
+  public void canPostSynchronousBatchUnsafe() {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+        Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+
+    JsonArray itemsArray = threeItems();
+    // insert
+    assertThat(postSynchronousBatchUnsafe(itemsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+    // unsafe update
+    assertThat(postSynchronousBatchUnsafe(itemsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
+    // safe update
+    assertThat(postSynchronousBatch("?upsert=true", itemsArray), statusCodeIs(409));
   }
 
   @Test
