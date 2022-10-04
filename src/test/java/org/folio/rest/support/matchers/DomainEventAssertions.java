@@ -259,10 +259,15 @@ public final class DomainEventAssertions {
     await()
       .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(1));
 
+    var lastUpdateEvent = getItemEvents(instanceIdForItem, itemId).stream()
+        .filter(event -> "UPDATE".equals(event.value().getString("type")))
+        .reduce((a, b) -> b)
+        .get();
+
     // Domain event for item has an extra 'instanceId' property for
     // old/new object, the property does not exist in schema,
     // so we have to add it manually
-    assertUpdateEvent(getLastItemEvent(instanceIdForItem, itemId),
+    assertUpdateEvent(lastUpdateEvent,
       addInstanceIdForItem(oldItem, getInstanceIdForItem(oldItem)),
       addInstanceIdForItem(newItem, instanceIdForItem));
   }
