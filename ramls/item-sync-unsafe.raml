@@ -23,7 +23,7 @@ types:
       201:
         description: "All items have been successfully created or updated"
       413:
-        description: "Payload Too Large"
+        description: "Payload too large or not allowed by DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable"
         body:
           text/plain:
             example: "Payload Too Large"
