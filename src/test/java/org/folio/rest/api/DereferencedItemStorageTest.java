@@ -160,7 +160,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static void postItem(JsonObject itemRecord) {
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     postCompleted = client.post(itemsStorageUrl(""), itemRecord, StorageTestSuite.TENANT_ID);
-    Response response = postCompleted.get(5, SECONDS);
+    Response response = postCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(201));
   }
 
@@ -218,7 +218,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     client.get(dereferencedItemStorage("?query=") + urlEncode(badSearchQuery),
       StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
 
-    return searchCompleted.get(5, TimeUnit.SECONDS);
+    return searchCompleted.get(10, TimeUnit.SECONDS);
   }
 
   @SneakyThrows
@@ -227,7 +227,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     client.get(dereferencedItemStorage("/") + urlEncode(badId),
       StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
 
-    return searchCompleted.get(5, TimeUnit.SECONDS);
+    return searchCompleted.get(10, TimeUnit.SECONDS);
   }
 
   @SneakyThrows
@@ -236,7 +236,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     client.get(dereferencedItemStorage("?query=") + urlEncode(searchQuery),
       StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    return searchCompleted.get(5, TimeUnit.SECONDS).getJson()
+    return searchCompleted.get(10, TimeUnit.SECONDS).getJson()
       .mapTo(DereferencedItems.class);
   }
 
@@ -245,7 +245,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(dereferencedItemStorage("/" + id), TENANT_ID, json(getCompleted));
 
-    return getCompleted.get(5, SECONDS).getJson()
+    return getCompleted.get(10, SECONDS).getJson()
       .mapTo(DereferencedItem.class);
   }
 
@@ -254,7 +254,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(dereferencedItemStorage(""), TENANT_ID, json(getCompleted));
 
-    return getCompleted.get(5, SECONDS).getJson()
+    return getCompleted.get(10, SECONDS).getJson()
       .mapTo(DereferencedItems.class);
   }
 
