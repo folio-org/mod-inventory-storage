@@ -27,21 +27,22 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import org.awaitility.Awaitility;
-import org.awaitility.core.ConditionFactory;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 
 public final class DomainEventAssertions {
   private DomainEventAssertions() { }
@@ -102,9 +103,9 @@ public final class DomainEventAssertions {
     final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap()
       .addAll(kafkaHeadersToMap(headers));
 
-    assertEquals(caseInsensitiveMap.size(), 2);
-    assertEquals(caseInsensitiveMap.get(TENANT), TENANT_ID);
-    assertEquals(caseInsensitiveMap.get(URL), storageUrl("").toString());
+    assertEquals(2, caseInsensitiveMap.size());
+    assertEquals(TENANT_ID, caseInsensitiveMap.get(TENANT));
+    assertEquals(storageUrl("").toString(), caseInsensitiveMap.get(URL));
   }
 
   public static void assertNoUpdateEvent(String instanceId) {
@@ -255,9 +256,12 @@ public final class DomainEventAssertions {
   public static void assertUpdateEventForItem(JsonObject oldItem, JsonObject newItem) {
     final String itemId = newItem.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(newItem);
+    final String oldItemHoldingsId = getHoldingsRecordIdForItem(oldItem);
+    final String newItemHoldingsId = getHoldingsRecordIdForItem(newItem);
+    final int itemEventsCountGreaterThan = oldItemHoldingsId.equals(newItemHoldingsId) ? 2 : 1;
 
     await()
-      .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(1));
+      .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThanOrEqualTo(itemEventsCountGreaterThan));
 
     var lastUpdateEvent = getItemEvents(instanceIdForItem, itemId).stream()
         .filter(event -> "UPDATE".equals(event.value().getString("type")))
@@ -310,9 +314,13 @@ public final class DomainEventAssertions {
   }
 
   private static String getInstanceIdForItem(JsonObject newItem) {
-    final UUID holdingsRecordId = fromString(newItem.getString("holdingsRecordId"));
+    final UUID holdingsRecordId = fromString(getHoldingsRecordIdForItem(newItem));
 
     return holdingsClient.getById(holdingsRecordId).getJson().getString("instanceId");
+  }
+
+  private static String getHoldingsRecordIdForItem(JsonObject item) {
+    return item.getString("holdingsRecordId");
   }
 
   private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {

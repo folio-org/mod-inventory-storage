@@ -32,11 +32,11 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
   }
 
-  public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord holdingsRecord) {
-    ItemWithInstanceId oldItemWithId = new ItemWithInstanceId(oldItem, holdingsRecord.getInstanceId());
-    ItemWithInstanceId newItemWithId = new ItemWithInstanceId(newItem, holdingsRecord.getInstanceId());
+  public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord newHoldings, HoldingsRecord oldHoldings) {
+    ItemWithInstanceId oldItemWithId = new ItemWithInstanceId(oldItem, oldHoldings.getInstanceId());
+    ItemWithInstanceId newItemWithId = new ItemWithInstanceId(newItem, newHoldings.getInstanceId());
 
-    return domainEventService.publishRecordUpdated(holdingsRecord.getInstanceId(), oldItemWithId, newItemWithId);
+    return domainEventService.publishRecordUpdated(newHoldings.getInstanceId(), oldItemWithId, newItemWithId);
   }
 
   public Future<Void> publishUpdated(HoldingsRecord hr, List<Item> oldItems) {
@@ -59,8 +59,8 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
-  protected String getId(Item record) {
-    return record.getId();
+  protected String getId(Item item) {
+    return item.getId();
   }
 
   @Override
