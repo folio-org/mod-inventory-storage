@@ -1080,6 +1080,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
+    // not allowed because env var DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is not set
     JsonArray itemsArray = threeItems();
     assertThat(postSynchronousBatchUnsafe(itemsArray), statusCodeIs(413));
   }
@@ -1089,12 +1090,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
         Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
 
-    JsonArray itemsArray = threeItems();
     // insert
+    JsonArray itemsArray = threeItems();
     assertThat(postSynchronousBatchUnsafe(itemsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
     // unsafe update
+    itemsArray.getJsonObject(1).put("barcode", "123");
     assertThat(postSynchronousBatchUnsafe(itemsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
-    // safe update
+    // safe update, env var should not influence the regular API
+    itemsArray.getJsonObject(1).put("barcode", "456");
     assertThat(postSynchronousBatch("?upsert=true", itemsArray), statusCodeIs(409));
   }
 
