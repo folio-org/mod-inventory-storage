@@ -4,7 +4,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.rest.support.http.InterfaceUrls.itemDamagedStatusesUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URL;
@@ -40,7 +40,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
       .withSource("local");
 
     Response result = client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
@@ -56,7 +56,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
     JsonObject object = new JsonObject().put("foo", "boo");
 
     Response result = client.post(itemDamagedStatusesUrl(EMPTY), object, TEST_TENANT)
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(422));
@@ -71,13 +71,13 @@ public class ItemDamagedStatusAPITest extends TestBase {
       .withSource("local");
 
     Response result = client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
 
     result = client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT)
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
@@ -97,7 +97,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
         status.setId(response.getJson().getString("id"));
         return client.post(itemDamagedStatusesUrl(EMPTY), status, TEST_TENANT);
       })
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
 
     assertThat(result, notNullValue());
@@ -118,7 +118,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
         String id = response.getJson().getString("id");
         return client.get(itemDamagedStatusesUrl("/" + id), TEST_TENANT);
       })
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
@@ -142,7 +142,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
       .thenCompose(it -> client.post(url, status.withName("name"), TEST_TENANT))
       .whenComplete(ItemDamagedStatusAPITest::assertHttpStatusIsCreated)
       .thenCompose(it -> client.get(url, TEST_TENANT))
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     int size = result.getJson().getJsonArray("itemDamageStatuses").size();
     assertThat(size, is(2));
@@ -164,7 +164,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
       .whenComplete(ItemDamagedStatusAPITest::assertHttpStatusIsCreated)
       .thenApply(it -> itemDamagedStatusesUrl("?query=name=targetName"))
       .thenCompose(url -> client.get(url, TEST_TENANT))
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     JsonObject body = result.getJson();
     int size = body.getJsonArray("itemDamageStatuses").size();
@@ -185,7 +185,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
       .whenComplete(ItemDamagedStatusAPITest::assertHttpStatusIsCreated)
       .thenApply(response -> response.getJson().getString("id"))
       .thenCompose(id -> client.delete(itemDamagedStatusesUrl("/" + id), TEST_TENANT))
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
@@ -196,7 +196,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     URL url = itemDamagedStatusesUrl("/" + UUID.randomUUID());
-    Response result = client.delete(url, TEST_TENANT).get(5, TimeUnit.SECONDS);
+    Response result = client.delete(url, TEST_TENANT).get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
@@ -216,7 +216,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
       .thenApply(response -> status.withId(response.getJson().getString("id")))
       .thenApply(it -> itemDamagedStatusesUrl("/" + status.getId()))
       .thenCompose(url -> client.put(url, status.withSource("folio"), TEST_TENANT))
-      .get(5, TimeUnit.SECONDS);
+      .get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
@@ -231,7 +231,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
       .withSource("local");
 
     URL url = itemDamagedStatusesUrl("/" + UUID.randomUUID());
-    Response result = client.put(url, status, TEST_TENANT).get(5, TimeUnit.SECONDS);
+    Response result = client.put(url, status, TEST_TENANT).get(10, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));

@@ -104,7 +104,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     client.get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getCompleted));
 
-    final Response response = getCompleted.get(5, SECONDS);
+    final Response response = getCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(200));
 
@@ -135,7 +135,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     client.get(InterfaceUrls.hridSettingsStorageUrl(""), "BAD", text(getCompleted));
 
-    final Response response = getCompleted.get(5, SECONDS);
+    final Response response = getCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(500));
 
@@ -157,7 +157,7 @@ public class HridSettingsStorageTest extends TestBase {
     client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
       empty(putCompleted));
 
-    final Response putResponse = putCompleted.get(5, SECONDS);
+    final Response putResponse = putCompleted.get(10, SECONDS);
 
     assertThat(putResponse.getStatusCode(), is(204));
 
@@ -165,7 +165,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     client.get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getCompleted));
 
-    final Response getResponse = getCompleted.get(5, SECONDS);
+    final Response getResponse = getCompleted.get(10, SECONDS);
 
     final HridSettings actualHridSettings = getResponse.getJson().mapTo(HridSettings.class);
 
@@ -205,7 +205,7 @@ public class HridSettingsStorageTest extends TestBase {
     client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, "BAD",
       text(putCompleted));
 
-    final Response putResponse = putCompleted.get(5, SECONDS);
+    final Response putResponse = putCompleted.get(10, SECONDS);
 
     assertThat(putResponse.getStatusCode(), is(500));
 
@@ -221,7 +221,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     client.get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(originalGetCompleted));
 
-    final Response originalGetResponse = originalGetCompleted.get(5, SECONDS);
+    final Response originalGetResponse = originalGetCompleted.get(10, SECONDS);
 
     assertThat(originalGetResponse.getStatusCode(), is(200));
 
@@ -241,7 +241,7 @@ public class HridSettingsStorageTest extends TestBase {
     client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
       empty(putCompleted));
 
-    final Response putResponse = putCompleted.get(5, SECONDS);
+    final Response putResponse = putCompleted.get(10, SECONDS);
 
     assertThat(putResponse.getStatusCode(), is(204));
 
@@ -249,7 +249,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     client.get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getAfterUpdateCompleted));
 
-    final Response getAfterUpdateResponse = getAfterUpdateCompleted.get(5, SECONDS);
+    final Response getAfterUpdateResponse = getAfterUpdateCompleted.get(10, SECONDS);
 
     final HridSettings actualHridSettings =
       getAfterUpdateResponse.getJson().mapTo(HridSettings.class);

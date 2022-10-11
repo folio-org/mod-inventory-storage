@@ -49,7 +49,7 @@ public class AuthoritySourceFileAPITest extends TestBase {
     var patchData = new JsonObject().put(BASE_URL_KEY, "http://example.com/authorities/patched");
 
     client.patch(InterfaceUrls.authoritySourceFilesUrl("/" + entityId), patchData, TENANT_ID)
-      .get(15, TimeUnit.SECONDS);
+      .get(20, TimeUnit.SECONDS);
 
     var patchedEntity = authoritySourceFileClient.getById(entityId).getJson();
 
