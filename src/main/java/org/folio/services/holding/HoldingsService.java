@@ -114,7 +114,7 @@ public class HoldingsService {
             .onComplete(handleTransaction(connection, overallResult)));
 
         return overallResult.future()
-          .compose(itemsBeforeUpdate -> itemEventService.publishUpdated(newHoldings, itemsBeforeUpdate))
+          .compose(itemsBeforeUpdate -> itemEventService.publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
           .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
           .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
       });
@@ -155,8 +155,8 @@ public class HoldingsService {
   }
 
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
-    for (HoldingsRecord record : holdings) {
-      record.setEffectiveLocationId(calculateEffectiveLocation(record));
+    for (HoldingsRecord holdingsRecord : holdings) {
+      holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
     }
 
     return hridManager.populateHridForHoldings(holdings)
@@ -167,9 +167,9 @@ public class HoldingsService {
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
   }
 
-  private String calculateEffectiveLocation(HoldingsRecord record) {
-    String permanentLocationId = record.getPermanentLocationId();
-    String temporaryLocationId = record.getTemporaryLocationId();
+  private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {
+    String permanentLocationId = holdingsRecord.getPermanentLocationId();
+    String temporaryLocationId = holdingsRecord.getTemporaryLocationId();
 
     if (temporaryLocationId != null) {
       return temporaryLocationId;

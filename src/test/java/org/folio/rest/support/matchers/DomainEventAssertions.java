@@ -254,11 +254,13 @@ public final class DomainEventAssertions {
   }
 
   public static void assertUpdateEventForItem(JsonObject oldItem, JsonObject newItem) {
+    assertUpdateEventForItem(oldItem, newItem, getInstanceIdForItem(oldItem));
+  }
+
+  public static void assertUpdateEventForItem(JsonObject oldItem, JsonObject newItem, String oldInstanceId) {
     final String itemId = newItem.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(newItem);
-    final String oldItemHoldingsId = getHoldingsRecordIdForItem(oldItem);
-    final String newItemHoldingsId = getHoldingsRecordIdForItem(newItem);
-    final int itemEventsCountGreaterThan = oldItemHoldingsId.equals(newItemHoldingsId) ? 2 : 1;
+    final int itemEventsCountGreaterThan = oldInstanceId.equals(instanceIdForItem) ? 2 : 1;
 
     await()
       .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThanOrEqualTo(itemEventsCountGreaterThan));
@@ -272,7 +274,7 @@ public final class DomainEventAssertions {
     // old/new object, the property does not exist in schema,
     // so we have to add it manually
     assertUpdateEvent(lastUpdateEvent,
-      addInstanceIdForItem(oldItem, getInstanceIdForItem(oldItem)),
+      addInstanceIdForItem(oldItem, oldInstanceId),
       addInstanceIdForItem(newItem, instanceIdForItem));
   }
 
@@ -305,12 +307,14 @@ public final class DomainEventAssertions {
 
   public static void assertUpdateEventForHolding(JsonObject oldHr, JsonObject newHr) {
     final String id = newHr.getString("id");
-    final String instanceId = newHr.getString("instanceId");
+    final String oldInstanceId = oldHr.getString("instanceId");
+    final String newInstanceId = newHr.getString("instanceId");
+    final int holdingsEventsCountGreaterThan = oldInstanceId.equals(newInstanceId) ? 2 : 1;
 
     await()
-      .until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(1));
+      .until(() -> getHoldingsEvents(newInstanceId, id).size(), greaterThanOrEqualTo(holdingsEventsCountGreaterThan));
 
-    assertUpdateEvent(getLastHoldingEvent(instanceId, id), oldHr, newHr);
+    assertUpdateEvent(getLastHoldingEvent(newInstanceId, id), oldHr, newHr);
   }
 
   private static String getInstanceIdForItem(JsonObject newItem) {

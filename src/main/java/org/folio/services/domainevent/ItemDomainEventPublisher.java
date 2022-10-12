@@ -39,7 +39,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     return domainEventService.publishRecordUpdated(newHoldings.getInstanceId(), oldItemWithId, newItemWithId);
   }
 
-  public Future<Void> publishUpdated(HoldingsRecord hr, List<Item> oldItems) {
+  public Future<Void> publishUpdated(HoldingsRecord oldHoldings, HoldingsRecord newHoldings, List<Item> oldItems) {
     if (oldItems.isEmpty()) {
       log.info("No items were updated, skipping event sending");
       return succeededFuture();
@@ -48,7 +48,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     log.info("[{}] items were updated, sending events for them", oldItems.size());
 
     return repository.getById(oldItems, Item::getId)
-      .map(updatedItems -> mapOldItemsToNew(hr, oldItems, updatedItems.values()))
+      .map(updatedItems -> mapOldItemsToNew(oldHoldings, newHoldings, oldItems, updatedItems.values()))
       .compose(domainEventService::publishRecordsUpdated);
   }
 
@@ -77,11 +77,11 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   private List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> mapOldItemsToNew(
-    HoldingsRecord hr, Collection<Item> oldItems, Collection<Item> newItems) {
+    HoldingsRecord oldHoldings, HoldingsRecord newHoldings, Collection<Item> oldItems, Collection<Item> newItems) {
 
     return mapOldRecordsToNew(
-      oldItems.stream().map(item -> pair(hr.getInstanceId(), item)).collect(toList()),
-      newItems.stream().map(item -> pair(hr.getInstanceId(), item)).collect(toList()));
+      oldItems.stream().map(item -> pair(oldHoldings.getInstanceId(), item)).collect(toList()),
+      newItems.stream().map(item -> pair(newHoldings.getInstanceId(), item)).collect(toList()));
   }
 
   private String getInstanceId(Map<String, HoldingsRecord> holdings, Item item) {
