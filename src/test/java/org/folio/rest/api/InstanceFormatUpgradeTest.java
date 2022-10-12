@@ -50,6 +50,6 @@ public class InstanceFormatUpgradeTest extends TestBaseWithInventoryUtil{
       future.complete(handler.result());
     });
 
-    return future.get(5, TimeUnit.SECONDS);
+    return future.get(10, TimeUnit.SECONDS);
   }
 }

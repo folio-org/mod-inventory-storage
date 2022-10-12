@@ -40,7 +40,7 @@ public class UpcIsmnMigrationScriptTest extends MigrationTestBase {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
     String url = identifierTypesUrl("/" + id).toString();
     client.get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
-    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
     return searchResponse;
   }
 }

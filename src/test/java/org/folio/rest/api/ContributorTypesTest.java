@@ -3,7 +3,7 @@ package org.folio.rest.api;
 import static org.folio.rest.support.http.InterfaceUrls.contributorTypesUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -32,7 +32,7 @@ public class ContributorTypesTest extends TestBase {
       + urlEncode("cql.allRecords=1");
 
     client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
-    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(
       String.format("Failed to search for instances: '%s'", searchResponse.getBody()),
