@@ -815,7 +815,7 @@ public class ReferenceTablesTest extends TestBase {
     String url = baseUrl.toString() + "?limit=400&query="
             + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8.name());
     client.get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
-    Response searchResponse = searchCompleted.get(5, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
     return searchResponse;
   }
 
@@ -837,7 +837,7 @@ public class ReferenceTablesTest extends TestBase {
       TENANT_ID,
             ResponseHandler.any(createCompleted)
     );
-    Response postResponse = createCompleted.get(5, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
     return postResponse;
   }
 
@@ -850,7 +850,7 @@ public class ReferenceTablesTest extends TestBase {
     client.get(getByIdUrl, TENANT_ID,
       ResponseHandler.any(getCompleted));
 
-    Response getByIdResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    Response getByIdResponse = getCompleted.get(10, TimeUnit.SECONDS);
 
     return getByIdResponse;
   }
@@ -863,7 +863,7 @@ public class ReferenceTablesTest extends TestBase {
     client.get(getByQueryUrl, TENANT_ID,
       ResponseHandler.any(getCompleted));
 
-    Response getByQueryResponse = getCompleted.get(5, TimeUnit.SECONDS);
+    Response getByQueryResponse = getCompleted.get(10, TimeUnit.SECONDS);
 
     return getByQueryResponse;
 
@@ -878,7 +878,7 @@ public class ReferenceTablesTest extends TestBase {
       TENANT_ID,
             ResponseHandler.any(deleteCompleted)
     );
-    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
+    Response deleteResponse = deleteCompleted.get(10, TimeUnit.SECONDS);
     return deleteResponse;
   }
 
@@ -891,7 +891,7 @@ public class ReferenceTablesTest extends TestBase {
       TENANT_ID,
             ResponseHandler.any(updateCompleted)
     );
-    Response putResponse = updateCompleted.get(5, TimeUnit.SECONDS);
+    Response putResponse = updateCompleted.get(10, TimeUnit.SECONDS);
     return putResponse;
   }
 

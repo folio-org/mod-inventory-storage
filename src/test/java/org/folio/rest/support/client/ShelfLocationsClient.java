@@ -37,7 +37,7 @@ public class ShelfLocationsClient {
     client.post(shelfLocationsUrl, shelfLocationRequest, StorageTestSuite.TENANT_ID,
       ResponseHandler.json(completed));
 
-    Response response = completed.get(5, TimeUnit.SECONDS);
+    Response response = completed.get(10, TimeUnit.SECONDS);
 
     return response.getJson().getString("id");
   }
