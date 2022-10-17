@@ -83,13 +83,13 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
     String sql = "update " + getPostgresClientFuturized().getFullTableName("instance") + " set jsonb = jsonb - 'publicationPeriod' where jsonb->> 'title' like 'test%'";
     postgresClient(getContext(), okapiHeaders()).execute(sql);
-    await().atMost(10, SECONDS)
+    await().atMost(5, SECONDS)
       .until(() -> instancesClient.getByQuery("?query=publicationPeriod.start==2018").isEmpty());
 
     var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
       .withMigrations(Arrays.asList("publicationPeriodMigration", "itemShelvingOrderMigration")));
 
-    await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
+    await().atMost(20, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
       .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
 
     var job = asyncMigration.getMigrationJob(migrationJob.getId());

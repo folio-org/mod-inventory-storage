@@ -91,7 +91,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getSubmittedDate(), notNullValue());
 
     // Should be a single iteration message for each instance ID generated in the row stream
-    await().atMost(10, SECONDS)
+    await().atMost(5, SECONDS)
       .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
   }
 

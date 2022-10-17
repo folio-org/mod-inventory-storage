@@ -469,7 +469,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private void withFaultyViewFunction(Callable<Void> callable) throws Exception {
     String sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.get_items_and_holdings_view RENAME TO x";
     PostgresClient.getInstance(getVertx()).execute(sql)
-    .toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
+    .toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
 
     try {
       callable.call();
@@ -477,7 +477,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     finally {
       sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.x RENAME TO get_items_and_holdings_view";
       PostgresClient.getInstance(getVertx()).execute(sql)
-      .toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
+      .toCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
     }
   }
 
