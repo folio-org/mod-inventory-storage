@@ -17,7 +17,6 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.matchers.DomainEventAssertions;
-import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -28,7 +27,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -85,8 +83,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
   }
 
   @After
@@ -689,14 +685,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     // updating with outdated _version 1 fails, current _version is 2
     int expected = OptimisticLocking.hasFailOnConflict("holdings_record") ? 409 : 204;
     assertThat(update(holding).getStatusCode(), is(expected));
-    // updating with _version -1 should fail, single holding PUT never allows to suppress optimistic locking
-    holding.put("_version", -1);
-    assertThat(update(holding).getStatusCode(), is(409));
-    // this allow should not apply to single holding PUT, only to batch unsafe
-    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
-        Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
-    holding.put("_version", -1);
-    assertThat(update(holding).getStatusCode(), is(409));
   }
 
   @Test
@@ -2187,49 +2175,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private Response postSynchronousBatch(JsonArray holdingsArray) {
-    return postSynchronousBatch(holdingsStorageSyncUrl(""), holdingsArray);
-  }
-
-  private Response postSynchronousBatchUnsafe(JsonArray holdingsArray) {
-    return postSynchronousBatch(holdingsStorageSyncUnsafeUrl(""), holdingsArray);
+    return postSynchronousBatch("", holdingsArray);
   }
 
   private Response postSynchronousBatch(String subPath, JsonArray holdingsArray) {
-    return postSynchronousBatch(holdingsStorageSyncUrl(subPath), holdingsArray);
-  }
-
-  private Response postSynchronousBatch(URL url, JsonArray holdingsArray) {
     JsonObject holdingsCollection = new JsonObject().put("holdingsRecords", holdingsArray);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(url, holdingsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
+    client.post(holdingsStorageSyncUrl(subPath), holdingsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
     try {
       return createCompleted.get(5, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  @Test
-  public void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
-    // not allowed because env var DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is not set
-    JsonArray holdings = threeHoldings();
-    assertThat(postSynchronousBatchUnsafe(holdings), statusCodeIs(413));
-  }
-
-  @Test
-  public void canPostSynchronousBatchUnsafe() {
-    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
-        Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
-
-    // insert
-    JsonArray holdings = threeHoldings();
-    assertThat(postSynchronousBatchUnsafe(holdings), statusCodeIs(HttpStatus.HTTP_CREATED));
-    // unsafe update
-    holdings.getJsonObject(1).put("copyNumber", "456");
-    assertThat(postSynchronousBatchUnsafe(holdings), statusCodeIs(HttpStatus.HTTP_CREATED));
-    // safe update, env var should not influence the regular API
-    holdings.getJsonObject(1).put("copyNumber", "789");
-    assertThat(postSynchronousBatch("?upsert=true", holdings), statusCodeIs(409));
   }
 
   @Test

@@ -32,7 +32,6 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
@@ -59,7 +58,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -104,7 +102,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.tools.utils.OptimisticLockingUtil;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
@@ -127,7 +124,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
     natureOfContentIdsToRemoveAfterTest.clear();
   }
 
@@ -336,14 +332,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     // updating with outdated _version 1 fails, current _version is 2
     int expected = OptimisticLocking.hasFailOnConflict("instance") ? 409 : 204;
     assertThat(update(instance).getStatusCode(), is(expected));
-    // updating with _version -1 should fail, single instance PUT never allows to suppress optimistic locking
-    instance.put("_version", -1);
-    assertThat(update(instance).getStatusCode(), is(409));
-    // this allow should not apply to single instance PUT, only to batch unsafe
-    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
-        Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
-    instance.put("_version", -1);
-    assertThat(update(instance).getStatusCode(), is(409));
   }
 
   @Test
@@ -2055,29 +2043,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
-    // not allowed because env var DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is not set
-    JsonArray instances = new JsonArray().add(uprooted(UUID.randomUUID())).add(temeraire(UUID.randomUUID()));
-    assertThat(postSynchronousBatchUnsafe(instances), statusCodeIs(413));
-  }
-
-  @Test
-  public void canPostSynchronousBatchUnsafe() {
-    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
-        Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
-
-    // insert
-    JsonArray instances = new JsonArray().add(uprooted(UUID.randomUUID())).add(temeraire(UUID.randomUUID()));
-    assertThat(postSynchronousBatchUnsafe(instances), statusCodeIs(HttpStatus.HTTP_CREATED));
-    // unsafe update
-    instances.getJsonObject(1).put("title", "surprise");
-    assertThat(postSynchronousBatchUnsafe(instances), statusCodeIs(HttpStatus.HTTP_CREATED));
-    // safe update, env var should not influence the regular API
-    instances.getJsonObject(1).put("title", "sunset");
-    assertThat(postSynchronousBatch("?upsert=true", instances), statusCodeIs(409));
-  }
-
-  @Test
   public void canGenerateInstanceHRIDWhenNotSupplied() throws Exception {
     log.info("Starting canGenerateInstanceHRIDWhenNotSupplied");
 
@@ -2826,25 +2791,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
 
     return new IndividualResource(getResponse);
-  }
-
-  private Response postSynchronousBatch(String subPath, JsonArray itemsArray) {
-    return postSynchronousBatch(instancesStorageSyncUrl(subPath), itemsArray);
-  }
-
-  private Response postSynchronousBatchUnsafe(JsonArray itemsArray) {
-    return postSynchronousBatch(instancesStorageSyncUnsafeUrl(""), itemsArray);
-  }
-
-  private Response postSynchronousBatch(URL url, JsonArray itemsArray) {
-    JsonObject instanceCollection = new JsonObject().put("instances", itemsArray);
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(url, instanceCollection, TENANT_ID, ResponseHandler.any(createCompleted));
-    try {
-      return createCompleted.get(5, SECONDS);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   private Response getById(UUID id) {

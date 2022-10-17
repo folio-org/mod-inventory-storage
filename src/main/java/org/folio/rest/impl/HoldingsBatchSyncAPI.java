@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.jaxrs.resource.HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse.respond500WithTextPlain;
 
 import java.util.Map;
@@ -22,8 +23,9 @@ public class HoldingsBatchSyncAPI implements HoldingsStorageBatchSynchronous {
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     new HoldingsService(vertxContext, okapiHeaders)
-      .createHoldings(entity.getHoldingsRecords(), upsert, true)
-      .otherwise(cause -> respond500WithTextPlain(cause.getMessage()))
-      .onComplete(asyncResultHandler);
+      .createHoldings(entity.getHoldingsRecords(), upsert)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(cause -> asyncResultHandler.handle(succeededFuture(
+        respond500WithTextPlain(cause.getMessage()))));
   }
 }
