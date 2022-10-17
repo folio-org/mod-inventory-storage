@@ -53,7 +53,7 @@ public final class DomainEventAssertions {
    * <a href="https://issues.folio.org/browse/MODINVSTOR-754">MODINVSTOR-754</a>
    */
   private static ConditionFactory await() {
-    return Awaitility.await().atMost(10, SECONDS);
+    return Awaitility.await().atMost(5, SECONDS);
   }
 
   private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {

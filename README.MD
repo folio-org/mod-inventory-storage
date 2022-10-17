@@ -65,33 +65,6 @@ run `mvn install` from the root directory.
 
 To run the tests against both embedded and external databases, run `./build.sh` from the root directory.
 
-# Environment Variables
-
-These environment variables configure Kafka, for details see [Kafka](#kafka):
-* `KAFKA_PORT`
-* `KAFKA_HOST`
-* `REPLICATION_FACTOR`
-
-mod-inventory-storage also supports all Raml Module Builder (RMB) environment variables,
-for details see [RMB](https://github.com/folio-org/raml-module-builder#environment-variables):
-* `DB_HOST`
-* `DB_PORT`
-* `DB_USERNAME`
-* `DB_PASSWORD`
-* `DB_DATABASE`
-* `DB_HOST_READER`
-* `DB_PORT_READER`
-* `DB_SERVER_PEM`
-* `DB_QUERYTIMEOUT`
-* `DB_CHARSET`
-* `DB_MAXPOOLSIZE`
-* `DB_MAXSHAREDPOOLSIZE`
-* `DB_CONNECTIONRELEASEDELAY`
-* `DB_RECONNECTATTEMPTS`
-* `DB_RECONNECTINTERVAL`
-* `DB_EXPLAIN_QUERY_THRESHOLD`
-* `DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING`
-
 # Local Deployment using Docker
 
 ## Preparation

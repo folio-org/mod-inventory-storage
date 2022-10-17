@@ -97,7 +97,7 @@ public class AuthorityStorageTest extends TestBase {
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     var response2 = ResponseHandler.empty(deleteCompleted);
     client.delete(authoritiesStorageUrl("/" + UUID.randomUUID()), TENANT_ID, response2);
-    Response deleteResponse = deleteCompleted.get(10, TimeUnit.SECONDS);
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
     assertEquals(HttpURLConnection.HTTP_NOT_FOUND, deleteResponse.getStatusCode());
     assertEquals(1, response.size());
   }
@@ -147,7 +147,7 @@ public class AuthorityStorageTest extends TestBase {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     var response2 = ResponseHandler.any(putCompleted);
     client.put(authoritiesStorageUrl("/" + UUID.randomUUID()), object.mapTo(Authority.class), TENANT_ID, response2);
-    Response putResponse = putCompleted.get(10, TimeUnit.SECONDS);
+    Response putResponse = putCompleted.get(5, TimeUnit.SECONDS);
     assertEquals(HttpURLConnection.HTTP_NOT_FOUND, putResponse.getStatusCode());
     var response3 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
     assertEquals("personalName0", response3.getJson().getString("personalName"));
@@ -176,7 +176,7 @@ public class AuthorityStorageTest extends TestBase {
       TENANT_ID, ResponseHandler.empty(replaceCompleted));
 
     try {
-      return replaceCompleted.get(10, SECONDS);
+      return replaceCompleted.get(5, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }

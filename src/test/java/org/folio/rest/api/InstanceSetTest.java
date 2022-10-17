@@ -95,7 +95,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   public void invalidCqlReturns400() {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(instanceSetUrl("?limit=1&query=id=="), TENANT_ID, text(getCompleted));
-    assertThat(getCompleted.get(10, SECONDS).getStatusCode(), is(400));
+    assertThat(getCompleted.get(5, SECONDS).getStatusCode(), is(400));
   }
 
   @Test
@@ -223,7 +223,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
     URL url = instanceSetUrl("?limit=" + limit + "&offset=" + offset + query + parameters);
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(url, TENANT_ID, json(getCompleted));
-    Response response = getCompleted.get(10, SECONDS);
+    Response response = getCompleted.get(5, SECONDS);
     return response.getJson().getJsonArray("instanceSets");
   }
 
@@ -232,7 +232,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
     URL url = instanceSetUrl("?limit=10&query=id==" + instanceId6.toString() + "&" + parameters);
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(url, TENANT_ID, json(getCompleted));
-    var sets = getCompleted.get(10, SECONDS).getJson().getJsonArray("instanceSets");
+    var sets = getCompleted.get(5, SECONDS).getJson().getJsonArray("instanceSets");
     assertThat(ids(sets), contains(instanceId6));
     assertThat(sets.size(), is(1));
     return sets.getJsonObject(0);

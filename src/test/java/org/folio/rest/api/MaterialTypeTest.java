@@ -112,7 +112,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
       requestWithAdditionalProperty.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.jsonErrors(createMaterialType));
 
-    JsonErrorResponse response = createMaterialType.get(10, TimeUnit.SECONDS);
+    JsonErrorResponse response = createMaterialType.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
@@ -160,7 +160,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
 
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
 
     assertThat(updateResponse, statusCodeIs(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -195,7 +195,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
 
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(5, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
@@ -212,7 +212,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     send(materialTypesStorageUrl("/" + UUID.randomUUID().toString()).toString(), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
 
-    Response getResponse = getCompleted.get(10, TimeUnit.SECONDS);
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
@@ -232,7 +232,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     send(materialTypesStorageUrl("").toString(), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
-    Response getResponse = getCompleted.get(10, TimeUnit.SECONDS);
+    Response getResponse = getCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getResponse.getJson().getInteger("totalRecords"), is(2));
@@ -254,7 +254,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     send(materialTypesStorageUrl("/" + id.toString()).toString(), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
 
-    Response deleteResponse = deleteCompleted.get(10, TimeUnit.SECONDS);
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
@@ -279,7 +279,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     send(itemsStorageUrl("").toString(), HttpMethod.POST, item.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createItemCompleted));
 
-    Response createItemResponse = createItemCompleted.get(10, TimeUnit.SECONDS);
+    Response createItemResponse = createItemCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(createItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
@@ -289,7 +289,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.text(deleteCompleted));
 
-    Response deleteResponse = deleteCompleted.get(10, TimeUnit.SECONDS);
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
@@ -307,7 +307,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.text(deleteCompleted));
 
-    Response deleteResponse = deleteCompleted.get(10, TimeUnit.SECONDS);
+    Response deleteResponse = deleteCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
@@ -337,7 +337,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     send(createMTURL, HttpMethod.POST, new JsonObject().put("name", name).toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createMaterialType));
 
-    return createMaterialType.get(10, TimeUnit.SECONDS);
+    return createMaterialType.get(5, TimeUnit.SECONDS);
   }
 
   private Response createMaterialType(UUID id, String name)
@@ -355,7 +355,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     send(materialTypesStorageUrl("").toString(), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createMaterialType));
 
-    return createMaterialType.get(10, TimeUnit.SECONDS);
+    return createMaterialType.get(5, TimeUnit.SECONDS);
   }
 
   private Response getById(UUID id)
@@ -369,6 +369,6 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     send(materialTypesStorageUrl("/" + id.toString()).toString(), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(10, TimeUnit.SECONDS);
+    return getCompleted.get(5, TimeUnit.SECONDS);
   }
 }

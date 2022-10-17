@@ -1,6 +1,6 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond500WithTextPlain;
+import static io.vertx.core.Future.succeededFuture;
 
 import java.util.Map;
 
@@ -21,9 +21,11 @@ public class InstanceBatchSyncAPI implements InstanceStorageBatchSynchronous {
   public void postInstanceStorageBatchSynchronous(boolean upsert, InstancesPost entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    new InstanceService(vertxContext, okapiHeaders)
-      .createInstances(entity.getInstances(), upsert, true)
-      .otherwise(cause -> respond500WithTextPlain(cause.getMessage()))
-      .onComplete(asyncResultHandler);
+    new InstanceService(vertxContext, okapiHeaders).createInstances(
+      entity.getInstances(), upsert)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(cause -> asyncResultHandler.handle(succeededFuture(
+        PostInstanceStorageBatchSynchronousResponse.respond500WithTextPlain(
+          cause.getMessage()))));
   }
 }

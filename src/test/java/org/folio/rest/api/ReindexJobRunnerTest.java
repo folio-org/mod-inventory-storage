@@ -44,7 +44,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       KafkaTopic.instance(TENANT_ID, environmentName()));
   private final CommonDomainEventPublisher<Authority> authorityEventPublisher =
-    new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
+    new CommonDomainEventPublisher(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       KafkaTopic.authority(TENANT_ID, environmentName()));
 
   @Test
@@ -77,7 +77,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     // Should be a single reindex message for each instance ID generated in the row stream
     // The numbers should match exactly, but intermittently, the published id count is
     // greater than the number of records-no one has been able to figure out why.
-    await().atMost(10, SECONDS)
+    await().atMost(5, SECONDS)
       .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
   }
 
@@ -108,7 +108,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
-    await().atMost(10, SECONDS)
+    await().atMost(5, SECONDS)
       .until(FakeKafkaConsumer::getAllPublishedAuthoritiesCount, greaterThanOrEqualTo(numberOfRecords));
   }
 
