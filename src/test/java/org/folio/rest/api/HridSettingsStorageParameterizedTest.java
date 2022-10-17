@@ -92,7 +92,7 @@ public class HridSettingsStorageParameterizedTest extends TestBase {
     client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
         json(putCompleted));
 
-    final Response putResponse = putCompleted.get(10, SECONDS);
+    final Response putResponse = putCompleted.get(5, SECONDS);
 
     verifyValidationError(putResponse, keyPart + '.' + testField, expectedValue);
 

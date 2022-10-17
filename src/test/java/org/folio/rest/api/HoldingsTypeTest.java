@@ -42,7 +42,7 @@ public class HoldingsTypeTest extends TestBase {
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     client.post(holdingsTypesUrl(""), holdingsType, TENANT_ID, ResponseHandler.json(postCompleted));
 
-    Response response = postCompleted.get(10, TimeUnit.SECONDS);
+    Response response = postCompleted.get(5, TimeUnit.SECONDS);
     assertThat(response.getStatusCode(), is(422));
 
     JsonArray errors = response.getJson().getJsonArray("errors");

@@ -13,20 +13,11 @@ public class OptimisticLocking {
       new JsonObject(ResourceUtils.resource2String("templates/db_scripts/schema.json"))
       .getJsonArray("tables");
 
-  /**
-   * true if tableName has failOnConflict or failOnConflictUnlessSuppressed, false otherwise.
-   */
   public static boolean hasFailOnConflict(String tableName) {
     for (int i = 0; i < tables.size(); i++) {
       JsonObject table = tables.getJsonObject(i);
       if (tableName.equals(table.getString("tableName"))) {
-        switch (table.getString("withOptimisticLocking", "")) {
-          case "failOnConflict":
-          case "failOnConflictUnlessSuppressed":
-            return true;
-          default:
-            return false;
-        }
+        return "failOnConflict".equals(table.getString("withOptimisticLocking"));
       }
     }
     throw new InvalidParameterException("Table not found: " + tableName);

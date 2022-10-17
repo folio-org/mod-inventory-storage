@@ -111,17 +111,6 @@
       ]
     },
     {
-      "id": "item-storage-batch-sync-unsafe",
-      "version": "1.0",
-      "handlers": [
-        {
-          "methods": ["POST"],
-          "pathPattern": "/item-storage/batch/synchronous-unsafe",
-          "permissionsRequired": ["inventory-storage.items.batch-unsafe.post"]
-        }
-      ]
-    },
-    {
       "id": "holdings-storage",
       "version": "6.0",
       "handlers": [
@@ -160,17 +149,6 @@
           "methods": ["POST"],
           "pathPattern": "/holdings-storage/batch/synchronous",
           "permissionsRequired": ["inventory-storage.holdings.batch.post"]
-        }
-      ]
-    },
-    {
-      "id": "holdings-storage-batch-sync-unsafe",
-      "version": "1.0",
-      "handlers": [
-        {
-          "methods": ["POST"],
-          "pathPattern": "/holdings-storage/batch/synchronous-unsafe",
-          "permissionsRequired": ["inventory-storage.holdings.batch-unsafe.post"]
         }
       ]
     },
@@ -291,17 +269,6 @@
           "methods": ["POST"],
           "pathPattern": "/instance-storage/batch/synchronous",
           "permissionsRequired": ["inventory-storage.instances.batch.post"]
-        }
-      ]
-    },
-    {
-      "id": "instance-storage-batch-sync-unsafe",
-      "version": "1.0",
-      "handlers": [
-        {
-          "methods": ["POST"],
-          "pathPattern": "/instance-storage/batch/synchronous-unsafe",
-          "permissionsRequired": ["inventory-storage.instances.batch-unsafe.post"]
         }
       ]
     },
@@ -1534,13 +1501,8 @@
     },
     {
       "permissionName": "inventory-storage.items.batch.post",
-      "displayName": "inventory storage - create or update a number of items",
-      "description": "create or update a number of items in storage"
-    },
-    {
-      "permissionName": "inventory-storage.items.batch-unsafe.post",
-      "displayName": "inventory storage - create or update a number of items with optimistic locking disabled",
-      "description": "create or update a number of items in storage with optimistic locking disabled"
+      "displayName": "inventory storage - create a number of items",
+      "description": "create a number of items in storage"
     },
     {
       "permissionName": "inventory-storage.holdings.collection.get",
@@ -1574,13 +1536,8 @@
     },
     {
       "permissionName": "inventory-storage.holdings.batch.post",
-      "displayName": "inventory storage - create or update a number of holdings",
-      "description": "create or update a number of holdings in storage"
-    },
-    {
-      "permissionName": "inventory-storage.holdings.batch-unsafe.post",
-      "displayName": "inventory storage - create or update a number of holdings with optimistic locking disabled",
-      "description": "create or update a number of holdings in storage with optimistic locking disabled"
+      "displayName": "inventory storage - create a number of holdings",
+      "description": "create a number of holdings in storage"
     },
     {
       "permissionName": "inventory-storage.instances.collection.get",
@@ -1619,13 +1576,8 @@
     },
     {
       "permissionName": "inventory-storage.instances.batch.post",
-      "displayName": "inventory storage - create or update a number of instances",
-      "description": "create or update a number of instances in storage"
-    },
-    {
-      "permissionName": "inventory-storage.instances.batch-unsafe.post",
-      "displayName": "inventory storage - create or update a number of instances with optimistic locking disabled",
-      "description": "create or update a number of instances in storage with optimistic locking disabled"
+      "displayName": "inventory storage - create a number of instances",
+      "description": "create a number of instances in storage"
     },
     {
       "permissionName": "inventory-storage.instances.source-record.delete",
@@ -2651,7 +2603,6 @@
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
         "inventory-storage.items.batch.post",
-        "inventory-storage.items.batch-unsafe.post",
         "inventory-storage.authorities.collection.get",
         "inventory-storage.authorities.item.get",
         "inventory-storage.authorities.item.post",
@@ -2665,7 +2616,6 @@
         "inventory-storage.holdings.item.delete",
         "inventory-storage.holdings.collection.delete",
         "inventory-storage.holdings.batch.post",
-        "inventory-storage.holdings.batch-unsafe.post",
         "inventory-storage.instances.collection.get",
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",
@@ -2678,7 +2628,6 @@
         "inventory-storage.instances.source-record.marc-json.delete",
         "inventory-storage.instances.collection.delete",
         "inventory-storage.instances.batch.post",
-        "inventory-storage.instances.batch-unsafe.post",
         "inventory-storage.loan-types.collection.get",
         "inventory-storage.loan-types.item.get",
         "inventory-storage.loan-types.item.post",
@@ -2900,20 +2849,12 @@
       { "name": "ENV", "value": "folio" },
       { "name": "DB_HOST", "value": "postgres" },
       { "name": "DB_PORT", "value": "5432" },
-      { "name": "DB_HOST_READER", "value": "postgres-read" },
-      { "name": "DB_PORT_READER", "value": "5432" },
       { "name": "DB_USERNAME", "value": "folio_admin" },
       { "name": "DB_PASSWORD", "value": "folio_admin" },
       { "name": "DB_DATABASE", "value": "okapi_modules" },
       { "name": "DB_QUERYTIMEOUT", "value": "60000" },
       { "name": "DB_CHARSET", "value": "UTF-8" },
       { "name": "DB_MAXPOOLSIZE", "value": "5" },
-      { "name": "DB_MAXSHAREDPOOLSIZE", "value": "3" },
-      { "name": "DB_CONNECTIONRELEASEDELAY", "value": "60000" },
-      { "name": "DB_RECONNECTATTEMPTS", "value": "3" },
-      { "name": "DB_RECONNECTINTERVAL", "value": "10000" },
-      { "name": "DB_EXPLAIN_QUERY_THRESHOLD", "value": "1000000" },
-      { "name": "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING", "value": "0001-01-01T00:00:00Z" },
       { "name": "KAFKA_HOST", "value": "kafka" },
       { "name": "KAFKA_PORT", "value": "9092" },
       { "name": "REPLICATION_FACTOR", "value": "1" }

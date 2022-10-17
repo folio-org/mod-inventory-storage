@@ -22,7 +22,7 @@ public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
   public void postItemStorageBatchSynchronous(boolean upsert, ItemsPost entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    new ItemService(vertxContext, okapiHeaders).createItems(entity.getItems(), upsert, true)
+    new ItemService(vertxContext, okapiHeaders).createItems(entity.getItems(), upsert)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(EndpointFailureHandler.handleFailure(asyncResultHandler,
         PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,

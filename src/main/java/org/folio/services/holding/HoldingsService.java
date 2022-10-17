@@ -100,10 +100,6 @@ public class HoldingsService {
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
 
-    if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
-      newHoldings.setVersion(null);  // enforce optimistic locking
-    }
-
     return refuseWhenHridChanged(oldHoldings, newHoldings)
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
@@ -154,7 +150,7 @@ public class HoldingsService {
         .map(Response.noContent().build());
   }
 
-  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
+  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert) {
     for (HoldingsRecord holdingsRecord : holdings) {
       holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
     }
@@ -162,9 +158,16 @@ public class HoldingsService {
     return hridManager.populateHridForHoldings(holdings)
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
-      .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
-          okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
+      .compose(batchOperation -> {
+        final Promise<Response> postSyncResult = promise();
+
+        postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert,
+          okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class,
+          postSyncResult);
+
+        return postSyncResult.future()
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
+      });
   }
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {

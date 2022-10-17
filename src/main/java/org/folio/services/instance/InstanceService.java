@@ -89,7 +89,7 @@ public class InstanceService {
       });
   }
 
-  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
+  public Future<Response> createInstances(List<Instance> instances, boolean upsert) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
@@ -97,11 +97,15 @@ public class InstanceService {
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId))
       .compose(batchOperation -> {
+        final Promise<Response> postResult = promise();
+
         effectiveValuesService.populateEffectiveValues(instances, batchOperation);
         // Can use instances list here directly because the class is stateful
-        return postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
-            vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
-            .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
+        postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, okapiHeaders,
+          vertxContext, PostInstanceStorageBatchSynchronousResponse.class, postResult);
+
+        return postResult.future()
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
       });
   }
 
