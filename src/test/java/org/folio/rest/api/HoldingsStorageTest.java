@@ -56,6 +56,7 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemove
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -325,6 +326,47 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(NEW_TEST_TAG));
     assertUpdateEventForHolding(holdingResource.getJson(), holdingFromGet);
+  }
+
+  @Test
+  public void canMoveHoldingsToNewInstance() throws ExecutionException, InterruptedException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+    UUID newInstanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+    instancesClient.create(smallAngryPlanet(newInstanceId));
+    setHoldingsSequence(1);
+
+    IndividualResource holdingResource = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withPermanentLocation(mainLibraryLocationId));
+
+    UUID holdingId = holdingResource.getId();
+
+    JsonObject item = create(itemsStorageUrl(""), new ItemRequestBuilder()
+      .forHolding(holdingId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create())
+      .getJson();
+
+    JsonObject replacement = holdingResource.copyJson()
+      .put("instanceId", newInstanceId.toString());
+
+    holdingsClient.replace(holdingId, replacement);
+
+    Response getResponse = holdingsClient.getById(holdingId);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject holdingFromGet = getResponse.getJson();
+
+    assertThat(holdingFromGet.getString("instanceId"), is(newInstanceId.toString()));
+    assertUpdateEventForHolding(holdingResource.getJson(), holdingFromGet);
+
+    JsonObject newItem = item.copy()
+      .put("_version", 2);
+    assertUpdateEventForItem(item, newItem, instanceId.toString());
   }
 
   @Test

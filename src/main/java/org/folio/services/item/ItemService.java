@@ -5,8 +5,8 @@ import static io.vertx.core.Promise.promise;
 import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
-import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
 import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
+import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.ItemStorage.DeleteItemStorageItemsByItemIdResponse;
 import static org.folio.rest.jaxrs.resource.ItemStorage.DeleteItemStorageItemsResponse;
@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -71,6 +72,7 @@ public class ItemService {
   private final ItemRepository itemRepository;
   private final PostgresClient postgresClient;
   private final PostgresClientFuturized postgresClientFuturized;
+  private final HoldingsRepository holdingsRepository;
 
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -83,6 +85,7 @@ public class ItemService {
     effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
+    holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
   }
 
   public Future<Response> createItem(Item entity) {
@@ -130,10 +133,18 @@ public class ItemService {
     PutData putData = new PutData();
     return getItemAndHolding(itemId, newItem.getHoldingsRecordId())
       .onSuccess(putData::set)
-      .compose(x -> refuseWhenHridChanged(putData.item, newItem))
-      .map(x -> effectiveValuesService.populateEffectiveValues(newItem, putData.holdingsRecord))
+      .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
+      .onSuccess(item -> {
+        if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
+          putData.oldHoldings = putData.newHoldings;
+          return;
+        }
+        holdingsRepository.getById(putData.oldItem.getHoldingsRecordId()).onSuccess(holdingsRecord ->
+          putData.oldHoldings = holdingsRecord);})
+      .map(x -> effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings))
       .compose(x -> updateItem(newItem))
-      .onSuccess(finalItem -> domainEventService.publishUpdated(finalItem, putData.item, putData.holdingsRecord))
+      .onSuccess(finalItem ->
+        domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
       .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
       .otherwise(e -> {
         if (e instanceof ResponseException) {
@@ -229,11 +240,12 @@ public class ItemService {
   }
 
   private static class PutData {
-    private Item item;
-    private HoldingsRecord holdingsRecord;
+    private Item oldItem;
+    private HoldingsRecord oldHoldings;
+    private HoldingsRecord newHoldings;
     public void set(PutData other) {
-      item = other.item;
-      holdingsRecord = other.holdingsRecord;
+      oldItem = other.oldItem;
+      newHoldings = other.newHoldings;
     }
   }
 
@@ -256,21 +268,21 @@ public class ItemService {
                     "holdingsRecordId not found: " + holdingsId)));
           }
           PutData putData = new PutData();
-          putData.item = readValue(row.getString(0), Item.class);
-          putData.holdingsRecord = readValue(row.getString(1), HoldingsRecord.class);
+          putData.oldItem = readValue(row.getString(0), Item.class);
+          putData.newHoldings = readValue(row.getString(1), HoldingsRecord.class);
           return Future.succeededFuture(putData);
         });
   }
 
   private Future<Item> updateItem(Item item) {
-    JsonObject record;
+    JsonObject itemJson;
     try{
-      record = pojo2JsonObject(item);
+      itemJson = pojo2JsonObject(item);
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
     String tableName = postgresClientFuturized.getFullTableName(ITEM_TABLE);
-    Tuple tuple = Tuple.of(record, item.getId());
+    Tuple tuple = Tuple.of(itemJson, item.getId());
 
     return postgresClient.execute("UPDATE " + tableName + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb::text", tuple)
       .compose(rowSet -> {

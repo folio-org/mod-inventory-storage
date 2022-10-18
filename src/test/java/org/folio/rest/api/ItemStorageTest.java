@@ -388,6 +388,25 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canMoveItemToNewInstance() {
+    final UUID oldHoldingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID newHoldingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = smallAngryPlanet(id, oldHoldingsRecordId);
+    createItem(itemToCreate);
+
+    JsonObject createdItem = getById(id).getJson();
+    assertThat(createdItem.getString("copyNumber"), nullValue());
+
+    JsonObject updatedItem = createdItem.copy()
+      .put("holdingsRecordId", newHoldingsRecordId.toString());
+    itemsClient.replace(id, updatedItem);
+
+    assertUpdateEventForItem(createdItem, getById(id).getJson());
+  }
+
+  @Test
   public void optimisticLockingVersion() {
     UUID itemId = UUID.randomUUID();
     UUID holdingId = createInstanceAndHolding(mainLibraryLocationId);
