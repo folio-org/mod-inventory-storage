@@ -260,22 +260,23 @@ public final class DomainEventAssertions {
   public static void assertUpdateEventForItem(JsonObject oldItem, JsonObject newItem, String oldInstanceId) {
     final String itemId = newItem.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(newItem);
-    final int itemEventsCountGreaterThan = oldInstanceId.equals(instanceIdForItem) ? 2 : 1;
 
-    await()
-      .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThanOrEqualTo(itemEventsCountGreaterThan));
-
-    var lastUpdateEvent = getItemEvents(instanceIdForItem, itemId).stream()
-        .filter(event -> "UPDATE".equals(event.value().getString("type")))
-        .reduce((a, b) -> b)
-        .get();
-
-    // Domain event for item has an extra 'instanceId' property for
-    // old/new object, the property does not exist in schema,
-    // so we have to add it manually
-    assertUpdateEvent(lastUpdateEvent,
-      addInstanceIdForItem(oldItem, oldInstanceId),
-      addInstanceIdForItem(newItem, instanceIdForItem));
+    await().until(() -> {
+      for (var event : getItemEvents(instanceIdForItem, itemId)) {
+        try {
+          // Domain event for item has an extra 'instanceId' property for
+          // old/new object, the property does not exist in schema,
+          // so we have to add it manually
+          assertUpdateEvent(event,
+              addInstanceIdForItem(oldItem, oldInstanceId),
+              addInstanceIdForItem(newItem, instanceIdForItem));
+          return true;
+        } catch (AssertionError e) {
+          // ignore, check next event
+        }
+      }
+      return false;
+    });
   }
 
   public static void assertCreateEventForHolding(JsonObject hr) {
