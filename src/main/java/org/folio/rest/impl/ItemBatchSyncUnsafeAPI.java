@@ -8,7 +8,7 @@ import javax.ws.rs.core.Response;
 
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ItemsPost;
-import org.folio.rest.jaxrs.resource.ItemStorageBatchSynchronous;
+import org.folio.rest.jaxrs.resource.ItemStorageBatchSynchronousUnsafe;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.services.item.ItemService;
 
@@ -16,16 +16,16 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 
-public class ItemBatchSyncAPI implements ItemStorageBatchSynchronous {
+public class ItemBatchSyncUnsafeAPI implements ItemStorageBatchSynchronousUnsafe {
   @Validate
   @Override
-  public void postItemStorageBatchSynchronous(boolean upsert, ItemsPost entity, Map<String, String> okapiHeaders,
+  public void postItemStorageBatchSynchronousUnsafe(ItemsPost entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    new ItemService(vertxContext, okapiHeaders).createItems(entity.getItems(), upsert, true)
+    new ItemService(vertxContext, okapiHeaders).createItems(entity.getItems(), true, false)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(EndpointFailureHandler.handleFailure(asyncResultHandler,
-        PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,
-        PostItemStorageBatchSynchronousResponse::respond500WithTextPlain));
+        PostItemStorageBatchSynchronousUnsafeResponse::respond422WithApplicationJson,
+        PostItemStorageBatchSynchronousUnsafeResponse::respond500WithTextPlain));
   }
 }
