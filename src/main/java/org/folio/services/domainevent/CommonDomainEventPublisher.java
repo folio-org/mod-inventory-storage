@@ -149,7 +149,7 @@ public class CommonDomainEventPublisher<T> {
       });
 
     return promise.future()
-      .onComplete(e -> kafkaProducer.close())
+      .onComplete(e -> kafkaProducer.flush(x -> kafkaProducer.close()))
       .onSuccess(records -> log.info("Total records published from stream {}", records));
   }
 
@@ -165,7 +165,7 @@ public class CommonDomainEventPublisher<T> {
     return producer.send(producerRecord)
       .<Void>map(notUsed -> null)
       .onComplete(result -> {
-        producer.close();
+        producer.flush(x -> producer.close());
 
         if (result.failed()) {
           log.error("Unable to send domain event [{}], payload - [{}]",
