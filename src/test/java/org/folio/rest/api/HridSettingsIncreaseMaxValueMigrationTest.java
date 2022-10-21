@@ -73,7 +73,7 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
       }
     });
 
-    return nextValue.get(5, TimeUnit.SECONDS);
+    return nextValue.get(10, TimeUnit.SECONDS);
   }
 
   private Long incrementSequence(String sequenceName, int times)

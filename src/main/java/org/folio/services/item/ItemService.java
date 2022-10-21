@@ -104,7 +104,7 @@ public class ItemService {
       });
   }
 
-  public Future<Response> createItems(List<Item> items, boolean upsert) {
+  public Future<Response> createItems(List<Item> items, boolean upsert, boolean optimisticLocking) {
     final Date itemStatusDate = new java.util.Date();
     items.stream()
       .filter(item -> item.getStatus().getDate() == null)
@@ -113,19 +113,13 @@ public class ItemService {
     return hridManager.populateHridForItems(items)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
-      .compose(batchOperation -> {
-        final Promise<Response> postSyncResult = promise();
-
-        postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert,
-          okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class, postSyncResult);
-
-        return postSyncResult.future()
-          .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation));
-      });
+      .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
+          okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
+          .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
   }
 
   public Future<Response> updateItems(List<Item> items) {
-    return createItems(items, true);
+    return createItems(items, true, true);
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
@@ -275,6 +269,10 @@ public class ItemService {
   }
 
   private Future<Item> updateItem(Item item) {
+    if (Integer.valueOf(-1).equals(item.getVersion())) {
+      item.setVersion(null);  // enforce optimistic locking
+    }
+
     JsonObject itemJson;
     try{
       itemJson = pojo2JsonObject(item);
