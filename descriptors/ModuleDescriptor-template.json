@@ -2900,8 +2900,6 @@
       { "name": "ENV", "value": "folio" },
       { "name": "DB_HOST", "value": "postgres" },
       { "name": "DB_PORT", "value": "5432" },
-      { "name": "DB_HOST_READER", "value": "postgres-read" },
-      { "name": "DB_PORT_READER", "value": "5432" },
       { "name": "DB_USERNAME", "value": "folio_admin" },
       { "name": "DB_PASSWORD", "value": "folio_admin" },
       { "name": "DB_DATABASE", "value": "okapi_modules" },
