@@ -52,6 +52,8 @@ public class CommonDomainEventPublisherTest {
     var stream = spy(new TestRowStream(6));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
+    when(producer.close()).thenReturn(succeededFuture());
+    when(producer.flush()).thenReturn(succeededFuture());
     when(producer.writeQueueFull()).thenReturn(false, false, false, true, false, true);
     when(producer.send(any())).thenReturn(succeededFuture());
     when(producer.drainHandler(any())).thenAnswer(this::drainHandler);
@@ -71,6 +73,8 @@ public class CommonDomainEventPublisherTest {
     var stream = spy(new TestRowStream(6));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
+    when(producer.close()).thenReturn(succeededFuture());
+    when(producer.flush()).thenReturn(succeededFuture());
     when(producer.send(any())).thenReturn(succeededFuture());
 
     var future = eventPublisher.publishStream(stream,
@@ -93,6 +97,8 @@ public class CommonDomainEventPublisherTest {
     var stream = spy(new TestRowStream(4));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
+    when(producer.close()).thenReturn(succeededFuture());
+    when(producer.flush()).thenReturn(succeededFuture());
     when(producer.send(any()))
       .thenReturn(succeededFuture(), failedFuture(""), succeededFuture(), failedFuture(""));
 
@@ -108,6 +114,8 @@ public class CommonDomainEventPublisherTest {
     var stream = spy(new TestRowStream(4));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
+    when(producer.close()).thenReturn(succeededFuture());
+    when(producer.flush()).thenReturn(succeededFuture());
     when(producer.send(any())).thenThrow(new IllegalStateException("server error"));
 
     var future = eventPublisher.publishStream(stream,
@@ -126,6 +134,7 @@ public class CommonDomainEventPublisherTest {
     var causeError = new IllegalArgumentException("error");
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
+    when(producer.close()).thenReturn(succeededFuture());
     when(producer.send(any())).thenReturn(failedFuture(causeError));
 
     var e = assertThrows(RuntimeException.class,
