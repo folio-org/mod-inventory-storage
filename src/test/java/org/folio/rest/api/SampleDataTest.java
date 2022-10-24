@@ -8,7 +8,7 @@ import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -39,7 +39,7 @@ public class SampleDataTest extends TestBase {
     try {
       CompletableFuture<Response> getCompleted = new CompletableFuture<>();
       client.get(url, TENANT_ID, json(getCompleted));
-      Response response = getCompleted.get(5, SECONDS);
+      Response response = getCompleted.get(10, SECONDS);
       JsonObject body = response.getJson();
       JsonArray array = body.getJsonArray(arrayName);
       assertThat(array.size(), is(expectedCount));
@@ -78,7 +78,7 @@ public class SampleDataTest extends TestBase {
     try {
       CompletableFuture<Response> getCompleted = new CompletableFuture<>();
       client.get(url, TENANT_ID, json(getCompleted));
-      Response response = getCompleted.get(5, SECONDS);
+      Response response = getCompleted.get(10, SECONDS);
       assertThat(response.getStatusCode(), is(HTTP_OK));
       return response.getJson();
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -129,7 +129,7 @@ public class SampleDataTest extends TestBase {
     try {
       CompletableFuture<Response> getCompleted = new CompletableFuture<>();
       client.get(instanceRelationshipsUrl("?limit=100"), TENANT_ID, json(getCompleted));
-      Response response = getCompleted.get(5, SECONDS);
+      Response response = getCompleted.get(10, SECONDS);
       JsonObject body = response.getJson();
       JsonArray array = body.getJsonArray("instanceRelationships");
       for (int i=0; i<array.size(); i++) {

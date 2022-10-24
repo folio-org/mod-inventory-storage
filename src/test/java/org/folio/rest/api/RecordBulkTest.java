@@ -69,7 +69,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
-    Response response = getCompleted.get(5, SECONDS);
+    Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
@@ -91,7 +91,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
-    Response response = getCompleted.get(5, SECONDS);
+    Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
@@ -113,7 +113,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
-    Response response = getCompleted.get(5, SECONDS);
+    Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponse(response, expectedMatches, moons);
   }
 
@@ -134,7 +134,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL getInstanceUrl = recordBulkUrl(String.format("/ids?query=(items.effectiveLocationId==\"%s\")", effectiveLocationId));
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
-    Response response = getCompleted.get(5, SECONDS);
+    Response response = getCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(HTTP_OK));
 
@@ -164,7 +164,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
-    Response response = getCompleted.get(5, SECONDS);
+    Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
@@ -187,7 +187,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
-    Response response = getCompleted.get(5, SECONDS);
+    Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponseWithTotal(response, expectedMatches, moons);
   }
 
@@ -206,7 +206,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
-    Response response = getCompleted.get(5, SECONDS);
+    Response response = getCompleted.get(10, SECONDS);
     validateHoldingsResponseWithTotals(response, holdingIds, totalHoldingsIds);
   }
 
@@ -225,7 +225,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
     client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
-    Response response = getCompleted.get(5, SECONDS);
+    Response response = getCompleted.get(10, SECONDS);
     validateHoldingsResponse(response, holdingIds, 5);
   }
 

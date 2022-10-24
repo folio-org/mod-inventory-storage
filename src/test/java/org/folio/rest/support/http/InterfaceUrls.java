@@ -38,12 +38,20 @@ public class InterfaceUrls {
     return StorageTestSuite.storageUrl("/item-storage/batch/synchronous" + subPath);
   }
 
+  public static URL itemsStorageSyncUnsafeUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/item-storage/batch/synchronous-unsafe" + subPath);
+  }
+
   public static URL holdingsStorageUrl(String subPath) {
     return StorageTestSuite.storageUrl("/holdings-storage/holdings" + subPath);
   }
 
   public static URL holdingsStorageSyncUrl(String subPath) {
     return StorageTestSuite.storageUrl("/holdings-storage/batch/synchronous" + subPath);
+  }
+
+  public static URL holdingsStorageSyncUnsafeUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/holdings-storage/batch/synchronous-unsafe" + subPath);
   }
 
   public static URL holdingsSourceUrl(String subPath) {
@@ -60,6 +68,10 @@ public class InterfaceUrls {
 
   public static URL instancesStorageSyncUrl(String subPath) {
     return StorageTestSuite.storageUrl("/instance-storage/batch/synchronous" + subPath);
+  }
+
+  public static URL instancesStorageSyncUnsafeUrl(String subPath) {
+    return StorageTestSuite.storageUrl("/instance-storage/batch/synchronous-unsafe" + subPath);
   }
 
   public static URL instanceSetUrl(String subPath) {

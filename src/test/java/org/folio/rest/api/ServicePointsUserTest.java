@@ -213,7 +213,7 @@ public class ServicePointsUserTest extends TestBase {
     send(servicePointsUsersUrl(""), HttpMethod.POST, request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(createServicePointUser));
 
-    return createServicePointUser.get(5, TimeUnit.SECONDS);
+    return createServicePointUser.get(10, TimeUnit.SECONDS);
   }
 
   public static Response getServicePointUserById(UUID id)
@@ -224,7 +224,7 @@ public class ServicePointsUserTest extends TestBase {
     send(servicePointsUsersUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
 
-    return getCompleted.get(5, TimeUnit.SECONDS);
+    return getCompleted.get(10, TimeUnit.SECONDS);
   }
 
   public static Response updateServicePointUserById(UUID id, JsonObject entity)
@@ -235,7 +235,7 @@ public class ServicePointsUserTest extends TestBase {
     send(servicePointsUsersUrl("/" + id.toString()), HttpMethod.PUT, entity.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(putCompleted));
 
-    return putCompleted.get(5, TimeUnit.SECONDS);
+    return putCompleted.get(10, TimeUnit.SECONDS);
   }
 
   public static Response deleteServicePointUserById(UUID id) throws InterruptedException,
@@ -246,7 +246,7 @@ public class ServicePointsUserTest extends TestBase {
     send(servicePointsUsersUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
 
-    return deleteCompleted.get(5, TimeUnit.SECONDS);
+    return deleteCompleted.get(10, TimeUnit.SECONDS);
   }
 
   public static Response getServicePointUsers(String query) throws InterruptedException,
@@ -261,6 +261,6 @@ public class ServicePointsUserTest extends TestBase {
     send(url, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(5, TimeUnit.SECONDS);
+    return getCompleted.get(10, TimeUnit.SECONDS);
   }
 }
