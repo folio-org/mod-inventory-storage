@@ -1,5 +1,21 @@
 package org.folio.services.reindex;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.InventoryKafkaTopic.AUTHORITY;
+import static org.folio.InventoryKafkaTopic.INSTANCE;
+import static org.folio.dbschema.ObjectMapperTool.readValue;
+import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
+import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
+import static org.folio.rest.impl.AuthorityRecordsAPI.AUTHORITY_TABLE;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.services.domainevent.DomainEvent.reindexEvent;
+
+import java.util.Map;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.WorkerExecutor;
@@ -16,22 +32,6 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
-
-import java.util.Map;
-
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.InventoryKafkaTopic.AUTHORITY;
-import static org.folio.InventoryKafkaTopic.INSTANCE;
-import static org.folio.dbschema.ObjectMapperTool.readValue;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
-import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
-import static org.folio.rest.impl.AuthorityRecordsAPI.AUTHORITY_TABLE;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.services.domainevent.DomainEvent.reindexEvent;
 
 public class ReindexJobRunner {
   public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";

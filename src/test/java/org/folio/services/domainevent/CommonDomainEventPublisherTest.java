@@ -1,21 +1,5 @@
 package org.folio.services.domainevent;
 
-import io.vertx.core.Handler;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.folio.kafka.KafkaProducerManager;
-import org.folio.kafka.services.KafkaProducerRecordBuilder;
-import org.folio.rest.api.entities.Instance;
-import org.folio.rest.support.sql.TestRowStream;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.Map;
-
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
@@ -32,6 +16,22 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Map;
+
+import io.vertx.core.Handler;
+import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.folio.kafka.KafkaProducerManager;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
+import org.folio.rest.api.entities.Instance;
+import org.folio.rest.support.sql.TestRowStream;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommonDomainEventPublisherTest {
