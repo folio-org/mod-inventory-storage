@@ -21,7 +21,7 @@ public class UpcIsmnMigrationScriptTest extends MigrationTestBase {
     ids.put("UPC","1795ea23-6856-48a5-a772-f356e16a8a6c");
     ids.put("Invalid UPC", "b3ea81fb-3324-4c64-9efc-7c0c93d5943c");
     ids.put("ISMN", "ebfd00b6-61d3-4d87-a6d8-810c941176d5");
-    ids.put("Invalid ISMN", "ebfd00b6-61d3-4d87-a6d8-810c941176d5");
+    ids.put("Invalid ISMN", "4f07ea37-6c7f-4836-add2-14249e628ed1");
   }
 
   @Test
