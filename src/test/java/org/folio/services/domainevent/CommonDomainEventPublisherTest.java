@@ -126,6 +126,8 @@ public class CommonDomainEventPublisherTest {
     var causeError = new IllegalArgumentException("error");
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
+    when(producer.close()).thenReturn(succeededFuture());
+    when(producer.flush()).thenReturn(succeededFuture());
     when(producer.send(any())).thenReturn(failedFuture(causeError));
 
     var e = assertThrows(RuntimeException.class,
