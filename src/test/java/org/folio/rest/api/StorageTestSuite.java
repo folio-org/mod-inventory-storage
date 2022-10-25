@@ -20,7 +20,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
-import org.folio.services.kafka.KafkaProperties;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -37,6 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static java.lang.System.getenv;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -130,8 +130,8 @@ public class StorageTestSuite {
     kafkaContainer.start();
     logger.info("starting Kafka host={} port={}",
       kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
-    KafkaProperties.setHost(kafkaContainer.getHost());
-    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
+    getenv().put("KAFKA_HOST", kafkaContainer.getHost());
+    getenv().put("KAFKA_PORT", String.valueOf(kafkaContainer.getFirstMappedPort()));
 
     logger.info("starting RestVerticle");
 

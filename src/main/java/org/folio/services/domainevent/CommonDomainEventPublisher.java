@@ -26,20 +26,19 @@ import org.apache.logging.log4j.Logger;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
-import org.folio.services.kafka.InventoryProducerRecordBuilder;
-import org.folio.services.kafka.KafkaProperties;
-import org.folio.services.kafka.topic.KafkaTopic;
+import org.folio.kafka.services.KafkaEnvironmentProperties;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
 
 public class CommonDomainEventPublisher<T> {
   public static final String NULL_INSTANCE_ID = "00000000-0000-0000-0000-000000000000";
   private static final Logger log = getLogger(CommonDomainEventPublisher.class);
 
   private final Map<String, String> okapiHeaders;
-  private final KafkaTopic kafkaTopic;
   private final KafkaProducerManager producerManager;
   private final FailureHandler failureHandler;
+  private final String kafkaTopic;
 
-  CommonDomainEventPublisher(Map<String, String> okapiHeaders, KafkaTopic kafkaTopic,
+  CommonDomainEventPublisher(Map<String, String> okapiHeaders, String kafkaTopic,
     KafkaProducerManager kafkaProducerManager, FailureHandler failureHandler) {
 
     this.okapiHeaders = okapiHeaders;
@@ -49,7 +48,7 @@ public class CommonDomainEventPublisher<T> {
   }
 
   public CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
-    KafkaTopic kafkaTopic) {
+    String kafkaTopic) {
 
     this(okapiHeaders, kafkaTopic, createProducerManager(vertxContext),
       new LogToDbFailureHandler(vertxContext, okapiHeaders));
@@ -106,7 +105,7 @@ public class CommonDomainEventPublisher<T> {
   }
 
   public <R> Future<Long> publishStream(ReadStream<R> readStream,
-    Function<R, InventoryProducerRecordBuilder> mapper,
+    Function<R, KafkaProducerRecordBuilder> mapper,
     Function<Long, Future<?>> progressHandler) {
 
     var promise = Promise.<Long>promise();
@@ -156,7 +155,7 @@ public class CommonDomainEventPublisher<T> {
   private Future<Void> publish(String key, Object value) {
     log.debug("Sending domain event [{}], payload [{}]", key, value);
 
-    var producerRecord = new InventoryProducerRecordBuilder()
+    var producerRecord = new KafkaProducerRecordBuilder()
       .key(key).value(value).topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders)
       .build();
 
@@ -181,13 +180,13 @@ public class CommonDomainEventPublisher<T> {
   }
 
   private KafkaProducer<String, String> getOrCreateProducer(String prefix) {
-    return producerManager.createShared(prefix + kafkaTopic.getTopicName());
+    return producerManager.createShared(prefix + kafkaTopic);
   }
 
   private static KafkaProducerManager createProducerManager(Context vertxContext) {
     var kafkaConfig = KafkaConfig.builder()
-      .kafkaPort(KafkaProperties.getPort())
-      .kafkaHost(KafkaProperties.getHost())
+      .kafkaPort(KafkaEnvironmentProperties.port())
+      .kafkaHost(KafkaEnvironmentProperties.host())
       .build();
 
     return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);

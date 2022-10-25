@@ -9,13 +9,13 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.InventoryKafkaTopic;
 import org.folio.dbschema.Versioned;
+import org.folio.kafka.services.KafkaAdminClientService;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
-import org.folio.rest.tools.utils.TenantTool;
-import org.folio.services.kafka.topic.KafkaAdminClientService;
 import org.folio.services.migration.BaseMigrationService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.folio.Environment.environmentName;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 public class TenantRefAPI extends TenantAPI {
 
@@ -114,7 +114,7 @@ public class TenantRefAPI extends TenantAPI {
 
     // create topics before loading data
     Future<Integer> future = new KafkaAdminClientService(vertxContext.owner())
-      .createKafkaTopics(tenantId, environmentName())
+      .createKafkaTopics(InventoryKafkaTopic.values(), tenantId)
       .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext));
 
     if (isNew(attributes, "20.0.0")) {
@@ -166,7 +166,7 @@ public class TenantRefAPI extends TenantAPI {
                          Handler<AsyncResult<Response>> handler, Context context) {
     // delete Kafka topics if tenant purged
     Future<Void> result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
-      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(TenantTool.tenantId(headers), environmentName())
+      ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(InventoryKafkaTopic.values(), tenantId(headers))
       : Future.succeededFuture();
     result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
   }

@@ -1,9 +1,26 @@
 package org.folio.services.domainevent;
 
+import io.vertx.core.Handler;
+import io.vertx.kafka.client.producer.KafkaProducer;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.folio.kafka.KafkaProducerManager;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
+import org.folio.rest.api.entities.Instance;
+import org.folio.rest.support.sql.TestRowStream;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.Map;
+
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
-import static org.folio.Environment.environmentName;
+import static org.folio.InventoryKafkaTopic.INSTANCE;
+import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.api.TestBase.get;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -16,23 +33,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
-
-import io.vertx.core.Handler;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import org.folio.kafka.KafkaProducerManager;
-import org.folio.rest.api.entities.Instance;
-import org.folio.rest.support.sql.TestRowStream;
-import org.folio.services.kafka.InventoryProducerRecordBuilder;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.folio.services.kafka.topic.KafkaTopic;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.junit.MockitoJUnitRunner;
-
 @RunWith(MockitoJUnitRunner.class)
 public class CommonDomainEventPublisherTest {
   @Mock private KafkaProducer<String, String> producer;
@@ -43,7 +43,7 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      new CaseInsensitiveMap<>(Map.of()), KafkaTopic.instance("foo-tenant", environmentName()),
+      new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName(environment(), "foo-tenant"),
         producerManager, failureHandler);
   }
 
@@ -57,7 +57,7 @@ public class CommonDomainEventPublisherTest {
     when(producer.drainHandler(any())).thenAnswer(this::drainHandler);
 
     var recordsPublished = get(eventPublisher.publishStream(stream,
-      row -> new InventoryProducerRecordBuilder(), notUsed -> succeededFuture()));
+      row -> new KafkaProducerRecordBuilder(), notUsed -> succeededFuture()));
 
     assertThat(recordsPublished, is(6L));
 
@@ -74,7 +74,7 @@ public class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenReturn(succeededFuture());
 
     var future = eventPublisher.publishStream(stream,
-      row -> new InventoryProducerRecordBuilder(),
+      row -> new KafkaProducerRecordBuilder(),
       records -> records > 3 ? failedFuture("stream failed") : succeededFuture());
 
     await().until(future::isComplete);
@@ -97,7 +97,7 @@ public class CommonDomainEventPublisherTest {
       .thenReturn(succeededFuture(), failedFuture(""), succeededFuture(), failedFuture(""));
 
     var recordsPublished = get(eventPublisher.publishStream(stream,
-      row -> new InventoryProducerRecordBuilder(), records -> succeededFuture()));
+      row -> new KafkaProducerRecordBuilder(), records -> succeededFuture()));
 
     assertThat(recordsPublished, is(2L));
     verify(failureHandler, times(2)).handleFailure(any(), any());
@@ -111,7 +111,7 @@ public class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenThrow(new IllegalStateException("server error"));
 
     var future = eventPublisher.publishStream(stream,
-      row -> new InventoryProducerRecordBuilder(), records -> succeededFuture());
+      row -> new KafkaProducerRecordBuilder(), records -> succeededFuture());
 
     await().until(future::isComplete);
 

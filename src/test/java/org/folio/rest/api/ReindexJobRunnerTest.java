@@ -3,7 +3,7 @@ package org.folio.rest.api;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
-import static org.folio.Environment.environmentName;
+import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
@@ -33,19 +33,20 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
-import org.folio.services.kafka.topic.KafkaTopic;
 import org.folio.services.reindex.ReindexJobRunner;
 import org.folio.services.reindex.ReindexResourceName;
 import org.junit.Test;
+import static org.folio.InventoryKafkaTopic.AUTHORITY;
+import static org.folio.InventoryKafkaTopic.INSTANCE;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
-      KafkaTopic.instance(TENANT_ID, environmentName()));
+      INSTANCE.fullTopicName(environment(), TENANT_ID));
   private final CommonDomainEventPublisher<Authority> authorityEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
-      KafkaTopic.authority(TENANT_ID, environmentName()));
+      AUTHORITY.fullTopicName(environment(), TENANT_ID));
 
   @Test
   public void canReindexInstances() {

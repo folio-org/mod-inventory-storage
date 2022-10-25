@@ -1,7 +1,8 @@
 package org.folio.services.iteration;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.Environment.environmentName;
+import static org.folio.kafka.KafkaTopicNameHelper.formatTopicName;
+import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
@@ -17,6 +18,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
@@ -27,12 +29,11 @@ import org.folio.rest.persist.SQLConnection;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.DomainEventType;
-import org.folio.services.kafka.InventoryProducerRecordBuilder;
-import org.folio.services.kafka.topic.KafkaTopic;
 
 public class IterationJobRunner {
 
   public static final String ITERATION_JOB_ID_HEADER = "iteration-job-id";
+  public static final String MODULE_PREFIX = "inventory";
 
   private static final Logger log = LogManager.getLogger(IterationJobRunner.class);
   private static final int POOL_SIZE = 2;
@@ -68,8 +69,8 @@ public class IterationJobRunner {
   }
 
   public void startIteration(IterationJob job) {
-    eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        KafkaTopic.forName(job.getJobParams().getTopicName(), tenantId(okapiHeaders), environmentName()));
+    String fullTopicName = formatTopicName(environment(), tenantId(okapiHeaders), MODULE_PREFIX, job.getJobParams().getTopicName());
+    eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders, fullTopicName);
 
     workerExecutor.executeBlocking(
       promise -> streamInstanceIds(new IterationContext(job))
@@ -148,8 +149,8 @@ public class IterationJobRunner {
       });
   }
 
-  private InventoryProducerRecordBuilder rowToProducerRecord(Row row, IterationContext context) {
-    return new InventoryProducerRecordBuilder()
+  private KafkaProducerRecordBuilder rowToProducerRecord(Row row, IterationContext context) {
+    return new KafkaProducerRecordBuilder()
       .key(row.getUUID("id").toString())
       .value(iterationEvent(context.getEventType()))
       .header(ITERATION_JOB_ID_HEADER, context.getJobId());

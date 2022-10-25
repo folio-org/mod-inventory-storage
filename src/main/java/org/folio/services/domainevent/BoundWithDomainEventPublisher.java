@@ -7,14 +7,14 @@ import org.folio.persist.BoundWithRepository;
 import org.folio.persist.HoldingsRepository;
 import org.folio.rest.jaxrs.model.BoundWithPart;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.services.kafka.topic.KafkaTopic;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
-import static org.folio.Environment.environmentName;
+import static org.folio.InventoryKafkaTopic.BOUND_WITH;
+import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<BoundWithPart, BoundWithInstanceId> {
@@ -24,7 +24,7 @@ public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<
   public BoundWithDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new BoundWithRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
-        KafkaTopic.boundWith(tenantId(okapiHeaders), environmentName())));
+        BOUND_WITH.fullTopicName(environment(), tenantId(okapiHeaders))));
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
   }
 

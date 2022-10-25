@@ -12,13 +12,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.folio.services.kafka.KafkaProperties;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
+import org.folio.kafka.services.KafkaEnvironmentProperties;
 
 public final class FakeKafkaConsumer {
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> itemEvents =
@@ -200,7 +200,7 @@ public final class FakeKafkaConsumer {
 
   private Map<String, String> consumerProperties() {
     Map<String, String> config = new HashMap<>();
-    config.put("bootstrap.servers", KafkaProperties.getHost() + ":" + KafkaProperties.getPort());
+    config.put("bootstrap.servers", KafkaEnvironmentProperties.host() + ":" + KafkaEnvironmentProperties.port());
     config.put("key.deserializer", StringDeserializer.class.getName());
     config.put("value.deserializer", JsonObjectDeserializer.class.getName());
     config.put("group.id", "folio_test");

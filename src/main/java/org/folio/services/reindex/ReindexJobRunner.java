@@ -1,21 +1,13 @@
 package org.folio.services.reindex;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.Environment.environmentName;
-import static org.folio.dbschema.ObjectMapperTool.readValue;
-import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
-import static org.folio.rest.impl.AuthorityRecordsAPI.AUTHORITY_TABLE;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
-import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.services.domainevent.DomainEvent.reindexEvent;
-
-import java.util.Map;
-
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.WorkerExecutor;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.model.Instance;
@@ -24,14 +16,22 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
-import org.folio.services.kafka.InventoryProducerRecordBuilder;
-import org.folio.services.kafka.topic.KafkaTopic;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.WorkerExecutor;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowStream;
+import java.util.Map;
+
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.InventoryKafkaTopic.AUTHORITY;
+import static org.folio.InventoryKafkaTopic.INSTANCE;
+import static org.folio.dbschema.ObjectMapperTool.readValue;
+import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
+import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
+import static org.folio.rest.impl.AuthorityRecordsAPI.AUTHORITY_TABLE;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
+import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.services.domainevent.DomainEvent.reindexEvent;
 
 public class ReindexJobRunner {
   public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
@@ -50,9 +50,9 @@ public class ReindexJobRunner {
       new ReindexJobRepository(vertxContext, okapiHeaders),
       vertxContext,
       new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        KafkaTopic.instance(tenantId(okapiHeaders), environmentName())),
+        INSTANCE.fullTopicName(environment(), tenantId(okapiHeaders))),
       new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        KafkaTopic.authority(tenantId(okapiHeaders), environmentName())),
+        AUTHORITY.fullTopicName(environment(), tenantId(okapiHeaders))),
       tenantId(okapiHeaders));
   }
 
@@ -181,15 +181,15 @@ public class ReindexJobRunner {
       });
   }
 
-  private InventoryProducerRecordBuilder rowToInstanceProducerRecord(Row row, ReindexContext reindexContext) {
-    return new InventoryProducerRecordBuilder()
+  private KafkaProducerRecordBuilder rowToInstanceProducerRecord(Row row, ReindexContext reindexContext) {
+    return new KafkaProducerRecordBuilder()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
   }
 
-  private InventoryProducerRecordBuilder rowToAuthorityProducerRecord(Row row, ReindexContext reindexContext) {
-    return new InventoryProducerRecordBuilder()
+  private KafkaProducerRecordBuilder rowToAuthorityProducerRecord(Row row, ReindexContext reindexContext) {
+    return new KafkaProducerRecordBuilder()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId, readValue(row.getValue("jsonb").toString(), Authority.class)))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
