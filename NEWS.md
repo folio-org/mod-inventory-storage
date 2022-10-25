@@ -1,18 +1,22 @@
-## 25.0.0 IN-PROGRESS
+## 25.0.0 2022-10-25
 
 * Upgraded RMB to 35.0.0 ([MODINVSTOR-965](https://issues.folio.org/browse/MODINVSTOR-965))
 * Extend authority schema with Authority Natural ID ([MODINVSTOR-955](https://issues.folio.org/browse/MODINVSTOR-955))
 * Create a pre-defined Authority Source file list, extend authority schema with sourceFileId ([MODINVSTOR-892](https://issues.folio.org/browse/MODINVSTOR-892))
-* provides `authority-storage 1.1`
-* provides `authority-source-files 1.0`
-* Fixed effective location migration script for holdings records (MODINVSTOR-940)
+* Fixed effective location migration script for holdings records ([MODINVSTOR-940](https://issues.folio.org/browse/MODINVSTOR-940))
 * Adds integrity checks for statistical code types during upgrade ([MODINVSTOR-935] (https://issues.folio.org/browse/MODINVSTOR-935))
 * GET Instance Set by CQL ([MODINVSTOR-918](https://issues.folio.org/browse/MODINVSTOR-918))
-* provides `inventory-view-instance-set 1.0`
 * Added Variant title and Former title to alternative title default types ([MODINVSTOR-389] (https://issues.folio.org/browse/MODINVSTOR-389))
 * Extend instance contributors schema with Authority ID ([MODINVSTOR-950](https://issues.folio.org/browse/MODINVSTOR-950))
 * Require CQL query for bulk delete of instances/holdings/items ([MODINVSTOR-576](https://issues.folio.org/browse/MODINVSTOR-576), [MODINVSTOR-901](https://issues.folio.org/browse/MODINVSTOR-901))
 * Batch update with optimistic locking disabled ([MODINVSTOR-924](https://issues.folio.org/browse/MODINVSTOR-924))
+* Support filtering by instance field when searching holdings ([MODINVSTOR-890](https://issues.folio.org/browse/MODINVSTOR-890))
+* GET /inventory-view/instances warns "No configuration for table instance_holdings_item_view" ([MODINVSTOR-929](https://issues.folio.org/browse/MODINVSTOR-929))
+* Speed up setEffectiveHoldingsLocation.sql migration ([MODINVSTOR-949](https://issues.folio.org/browse/MODINVSTOR-949))
+* Remove `DB_*_READER` environment variables from ModuleDescriptor ([MODINVSTOR-974](https://issues.folio.org/browse/MODINVSTOR-974))
+* provides `authority-storage 1.1`
+* provides `authority-source-files 1.0`
+* provides `inventory-view-instance-set 1.0`
 * provides `instance-storage 9.0`
 * provides `holdings-storage 6.0`
 * provides `item-storage 10.0`
