@@ -38,6 +38,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -77,6 +78,21 @@ public final class DomainEventAssertions {
     assertThat(deleteEvent.value().getJsonObject("old"), equalsIgnoringMetadata(record));
 
     assertHeaders(deleteEvent.headers());
+  }
+
+  private static boolean hasRemoveEvent(Collection<KafkaConsumerRecord<String, JsonObject>> events, JsonObject record) {
+    if (events == null) {
+      return false;
+    }
+    for (var event : events) {
+      try {
+        assertRemoveEvent(event, record);
+        return true;
+      } catch (AssertionError e) {
+        // ignore
+      }
+    }
+    return false;
   }
 
   private static void assertRemoveAllEvent(KafkaConsumerRecord<String, JsonObject> deleteEvent) {
@@ -171,10 +187,7 @@ public final class DomainEventAssertions {
   public static void assertRemoveEventForInstance(JsonObject instance) {
     final String instanceId = instance.getString("id");
 
-    await()
-      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(1));
-
-    assertRemoveEvent(getLastInstanceEvent(instanceId), instance);
+    await().until(() -> hasRemoveEvent(getInstanceEvents(instanceId), instance));
   }
 
   public static void assertRemoveAllEventForInstance() {
@@ -187,10 +200,7 @@ public final class DomainEventAssertions {
   public static void assertRemoveEventForAuthority(JsonObject authority) {
     final String id = authority.getString("id");
 
-    await()
-      .until(() -> getAuthorityEvents(id).size(), greaterThan(1));
-
-    assertRemoveEvent(getLastAuthorityEvent(id), authority);
+    await().until(() -> hasRemoveEvent(getAuthorityEvents(id), authority));
   }
 
   public static void assertRemoveAllEventForAuthority() {
@@ -235,15 +245,11 @@ public final class DomainEventAssertions {
   public static void assertRemoveEventForItem(JsonObject item) {
     final String itemId = item.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(item);
-
-    await()
-      .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(1));
-
     // Domain event for item has an extra 'instanceId' property for
     // old/new object, the property does not exist in schema,
     // so we have to add it manually
-    assertRemoveEvent(getLastItemEvent(instanceIdForItem, itemId),
-      addInstanceIdForItem(item, instanceIdForItem));
+    final JsonObject expectedItem = addInstanceIdForItem(item, instanceIdForItem);
+    await().until(() -> hasRemoveEvent(getItemEvents(instanceIdForItem, itemId), expectedItem));
   }
 
   public static void assertRemoveAllEventForItem() {
@@ -293,10 +299,7 @@ public final class DomainEventAssertions {
     final String id = hr.getString("id");
     final String instanceId = hr.getString("instanceId");
 
-    await()
-      .until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(1));
-
-    assertRemoveEvent(getLastHoldingEvent(instanceId, id), hr);
+    await().until(() -> hasRemoveEvent(getHoldingsEvents(instanceId, id), hr));
   }
 
   public static void assertRemoveAllEventForHolding() {
