@@ -29,6 +29,8 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 import io.vertx.core.json.JsonArray;
@@ -116,6 +118,11 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     LocationsTest.createLocation(secondFloorLocationId,  SECOND_FLOOR_LOCATION,  "TestBaseWI/SF");
     LocationsTest.createLocation(thirdFloorLocationId,   THIRD_FLOOR_LOCATION,   "TestBaseWI/TF");
     LocationsTest.createLocation(fourthFloorLocationId,  FOURTH_FLOOR_LOCATION,  "TestBaseWI/FF");
+  }
+
+  @Before
+  public void removeAllEvents() {
+    FakeKafkaConsumer.removeAllEvents();
   }
 
   protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId) {
