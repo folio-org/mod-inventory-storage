@@ -14,7 +14,6 @@ import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 import static org.folio.InventoryKafkaTopic.BOUND_WITH;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<BoundWithPart, BoundWithInstanceId> {
@@ -24,7 +23,7 @@ public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<
   public BoundWithDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new BoundWithRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
-        BOUND_WITH.fullTopicName(environment(), tenantId(okapiHeaders))));
+        BOUND_WITH.fullTopicName(tenantId(okapiHeaders))));
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
   }
 
@@ -46,7 +45,7 @@ public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<
   }
 
   @Override
-  protected String getId(BoundWithPart record) {
-    return record.getId();
+  protected String getId(BoundWithPart boundWithPart) {
+    return boundWithPart.getId();
   }
 }

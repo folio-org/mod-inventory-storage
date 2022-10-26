@@ -11,9 +11,9 @@ import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
+import org.folio.services.domainevent.DomainEvent;
 
 import static org.folio.InventoryKafkaTopic.ASYNC_MIGRATION;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.asyncMigrationEvent;
 
@@ -33,7 +33,7 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   protected Future<Void> startMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
     var migrationService = new AsyncMigrationJobService(context.getVertxContext(), context.getOkapiHeaders());
     var publisher = new CommonDomainEventPublisher<AsyncMigrationJob>(context.getVertxContext(), context.getOkapiHeaders(),
-      ASYNC_MIGRATION.fullTopicName(environment(), tenantId(context.getOkapiHeaders())));
+      ASYNC_MIGRATION.fullTopicName( tenantId(context.getOkapiHeaders())));
     var streamingContext = new StreamingContext(migrationJob, context, migrationService, publisher);
 
     return streamIdsForMigration(streamingContext)
@@ -74,8 +74,8 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
         .logJobDetails(context.getMigrationContext().getMigrationName(), context.getJob(), recordsPublished));
   }
 
-  private KafkaProducerRecordBuilder rowToProducerRecord(Row row, StreamingContext context) {
-    return new KafkaProducerRecordBuilder()
+  private KafkaProducerRecordBuilder<String, DomainEvent<?>> rowToProducerRecord(Row row, StreamingContext context) {
+    return new KafkaProducerRecordBuilder<String, DomainEvent<?>>()
       .key(row.getUUID("id").toString())
       .value(asyncMigrationEvent(context.getJob(), TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders())))
       .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId())

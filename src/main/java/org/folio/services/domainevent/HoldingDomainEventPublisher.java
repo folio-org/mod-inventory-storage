@@ -3,7 +3,6 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.stream.Collectors.toList;
 import static org.folio.InventoryKafkaTopic.HOLDINGS_RECORD;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Collection;
@@ -23,7 +22,7 @@ public class HoldingDomainEventPublisher
   public HoldingDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new HoldingsRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
-        HOLDINGS_RECORD.fullTopicName(environment(), tenantId(okapiHeaders))));
+        HOLDINGS_RECORD.fullTopicName(tenantId(okapiHeaders))));
   }
 
   @Override
@@ -41,7 +40,7 @@ public class HoldingDomainEventPublisher
   }
 
   @Override
-  protected String getId(HoldingsRecord record) {
-    return record.getId();
+  protected String getId(HoldingsRecord holdings) {
+    return holdings.getId();
   }
 }

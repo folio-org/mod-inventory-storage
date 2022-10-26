@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.InventoryKafkaTopic.AUTHORITY;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 public class AuthorityDomainEventPublisher extends AbstractDomainEventPublisher<Authority, Authority> {
@@ -21,7 +20,7 @@ public class AuthorityDomainEventPublisher extends AbstractDomainEventPublisher<
   public AuthorityDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new AuthorityRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
-        AUTHORITY.fullTopicName(environment(), tenantId(okapiHeaders))));
+        AUTHORITY.fullTopicName(tenantId(okapiHeaders))));
   }
 
   @Override
@@ -37,7 +36,7 @@ public class AuthorityDomainEventPublisher extends AbstractDomainEventPublisher<
   }
 
   @Override
-  protected String getId(Authority record) {
-    return record.getId();
+  protected String getId(Authority authority) {
+    return authority.getId();
   }
 }

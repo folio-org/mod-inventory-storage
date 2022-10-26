@@ -4,7 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import java.util.Collection;
@@ -30,7 +29,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   public ItemDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new ItemRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
-        ITEM.fullTopicName(environment(), tenantId(okapiHeaders))));
+        ITEM.fullTopicName(tenantId(okapiHeaders))));
 
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
   }

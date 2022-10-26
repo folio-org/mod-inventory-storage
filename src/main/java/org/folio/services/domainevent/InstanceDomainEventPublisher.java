@@ -3,7 +3,6 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,7 +24,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new InstanceRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
-        INSTANCE.fullTopicName(environment(), tenantId(okapiHeaders))));
+        INSTANCE.fullTopicName(tenantId(okapiHeaders))));
   }
 
   public Future<Void> publishInstancesCreated(List<Instance> instances) {
@@ -54,7 +53,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
   }
 
   @Override
-  protected String getId(Instance record) {
-    return record.getId();
+  protected String getId(Instance instance) {
+    return instance.getId();
   }
 }

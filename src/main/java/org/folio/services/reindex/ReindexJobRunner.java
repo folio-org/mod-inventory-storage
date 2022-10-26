@@ -4,7 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.InventoryKafkaTopic.AUTHORITY;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.AuthorityRecordsAPI.AUTHORITY_TABLE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
@@ -32,6 +31,7 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
+import org.folio.services.domainevent.DomainEvent;
 
 public class ReindexJobRunner {
   public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
@@ -50,9 +50,9 @@ public class ReindexJobRunner {
       new ReindexJobRepository(vertxContext, okapiHeaders),
       vertxContext,
       new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        INSTANCE.fullTopicName(environment(), tenantId(okapiHeaders))),
+        INSTANCE.fullTopicName(tenantId(okapiHeaders))),
       new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        AUTHORITY.fullTopicName(environment(), tenantId(okapiHeaders))),
+        AUTHORITY.fullTopicName(tenantId(okapiHeaders))),
       tenantId(okapiHeaders));
   }
 
@@ -181,15 +181,15 @@ public class ReindexJobRunner {
       });
   }
 
-  private KafkaProducerRecordBuilder rowToInstanceProducerRecord(Row row, ReindexContext reindexContext) {
-    return new KafkaProducerRecordBuilder()
+  private KafkaProducerRecordBuilder<String, DomainEvent<?>> rowToInstanceProducerRecord(Row row, ReindexContext reindexContext) {
+    return new KafkaProducerRecordBuilder<String, DomainEvent<?>>()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
   }
 
-  private KafkaProducerRecordBuilder rowToAuthorityProducerRecord(Row row, ReindexContext reindexContext) {
-    return new KafkaProducerRecordBuilder()
+  private KafkaProducerRecordBuilder<String, DomainEvent<?>> rowToAuthorityProducerRecord(Row row, ReindexContext reindexContext) {
+    return new KafkaProducerRecordBuilder<String, DomainEvent<?>>()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId, readValue(row.getValue("jsonb").toString(), Authority.class)))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
