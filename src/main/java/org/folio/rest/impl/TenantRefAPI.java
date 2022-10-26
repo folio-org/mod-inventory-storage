@@ -77,23 +77,6 @@ public class TenantRefAPI extends TenantAPI {
     "authority-source-files"
   };
 
-  List<JsonObject> servicePoints = null;
-
-  String servicePointUserFilter(String s) {
-    JsonObject jInput = new JsonObject(s);
-    JsonObject jOutput = new JsonObject();
-    jOutput.put("userId", jInput.getString("id"));
-    JsonArray ar = new JsonArray();
-    for (JsonObject pt : servicePoints) {
-      ar.add(pt.getString("id"));
-    }
-    jOutput.put("servicePointsIds", ar);
-    jOutput.put("defaultServicePointId", ar.getString(0));
-    String res = jOutput.encodePrettily();
-    log.info("servicePointUser result : " + res);
-    return res;
-  }
-
   /**
    * Returns attributes.getModuleFrom() < featureVersion or attributes.getModuleFrom() is null.
    */
@@ -118,10 +101,10 @@ public class TenantRefAPI extends TenantAPI {
       .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext));
 
     if (isNew(attributes, "20.0.0")) {
+      List<JsonObject> servicePoints = new LinkedList<>();
       try {
         List<URL> urls = TenantLoading.getURLsFromClassPathDir(
           REFERENCE_LEAD + "/service-points");
-        servicePoints = new LinkedList<>();
         for (URL url : urls) {
           InputStream stream = url.openStream();
           String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
@@ -148,12 +131,10 @@ public class TenantRefAPI extends TenantAPI {
       tl.add("bound-with/holdingsrecords", "holdings-storage/holdings");
       tl.add("bound-with/items", "item-storage/items");
       tl.add("bound-with/bound-with-parts", "inventory-storage/bound-with-parts");
-      if (servicePoints != null) {
-        tl.withFilter(this::servicePointUserFilter)
-          .withPostOnly()
-          .withAcceptStatus(422)
-          .add("users", "service-points-users");
-      }
+      tl.withFilter(service -> servicePointUserFilter(service, servicePoints))
+        .withPostOnly()
+        .withAcceptStatus(422)
+        .add("users", "service-points-users");
       future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
     }
 
@@ -162,6 +143,7 @@ public class TenantRefAPI extends TenantAPI {
   }
 
   @Validate
+  @Override
   public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
                          Handler<AsyncResult<Response>> handler, Context context) {
     // delete Kafka topics if tenant purged
@@ -190,5 +172,20 @@ public class TenantRefAPI extends TenantAPI {
       .onSuccess(notUsed -> log.info("Java migrations has been completed"))
       .onFailure(error -> log.error("Some java migrations failed", error))
       .mapEmpty();
+  }
+
+  private String servicePointUserFilter(String service, List<JsonObject> servicePoints) {
+    JsonObject jInput = new JsonObject(service);
+    JsonObject jOutput = new JsonObject();
+    jOutput.put("userId", jInput.getString("id"));
+    JsonArray ar = new JsonArray();
+    for (JsonObject pt : servicePoints) {
+      ar.add(pt.getString("id"));
+    }
+    jOutput.put("servicePointsIds", ar);
+    jOutput.put("defaultServicePointId", ar.getString(0));
+    String res = jOutput.encodePrettily();
+    log.info("servicePointUser result : {}", res);
+    return res;
   }
 }
