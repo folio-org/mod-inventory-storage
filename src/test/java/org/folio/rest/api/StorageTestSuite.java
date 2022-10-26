@@ -296,7 +296,7 @@ public class StorageTestSuite {
       tenantPrepared = new CompletableFuture<>();
       client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
           ResponseHandler.any(tenantPrepared));
-      response = tenantPrepared.get(60, TimeUnit.SECONDS);
+      response = tenantPrepared.get(61, TimeUnit.SECONDS);
 
       failureMessage = String.format("Tenant get failed: %s: %s",
           response.getStatusCode(), response.getBody());
