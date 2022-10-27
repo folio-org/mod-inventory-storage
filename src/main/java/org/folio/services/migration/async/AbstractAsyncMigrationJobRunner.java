@@ -11,7 +11,6 @@ import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
-import org.folio.services.domainevent.DomainEvent;
 
 import static org.folio.InventoryKafkaTopic.ASYNC_MIGRATION;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
@@ -74,8 +73,8 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
         .logJobDetails(context.getMigrationContext().getMigrationName(), context.getJob(), recordsPublished));
   }
 
-  private KafkaProducerRecordBuilder<String, DomainEvent<?>> rowToProducerRecord(Row row, StreamingContext context) {
-    return new KafkaProducerRecordBuilder<String, DomainEvent<?>>()
+  private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, StreamingContext context) {
+    return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
       .value(asyncMigrationEvent(context.getJob(), TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders())))
       .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId())

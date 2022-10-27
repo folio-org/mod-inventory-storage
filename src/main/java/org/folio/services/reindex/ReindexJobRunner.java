@@ -31,7 +31,6 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
-import org.folio.services.domainevent.DomainEvent;
 
 public class ReindexJobRunner {
   public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
@@ -181,15 +180,15 @@ public class ReindexJobRunner {
       });
   }
 
-  private KafkaProducerRecordBuilder<String, DomainEvent<?>> rowToInstanceProducerRecord(Row row, ReindexContext reindexContext) {
-    return new KafkaProducerRecordBuilder<String, DomainEvent<?>>()
+  private KafkaProducerRecordBuilder<String, Object> rowToInstanceProducerRecord(Row row, ReindexContext reindexContext) {
+    return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
   }
 
-  private KafkaProducerRecordBuilder<String, DomainEvent<?>> rowToAuthorityProducerRecord(Row row, ReindexContext reindexContext) {
-    return new KafkaProducerRecordBuilder<String, DomainEvent<?>>()
+  private KafkaProducerRecordBuilder<String, Object> rowToAuthorityProducerRecord(Row row, ReindexContext reindexContext) {
+    return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId, readValue(row.getValue("jsonb").toString(), Authority.class)))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());

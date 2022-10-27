@@ -105,7 +105,7 @@ public class CommonDomainEventPublisher<T> {
   }
 
   public <R> Future<Long> publishStream(ReadStream<R> readStream,
-    Function<R, KafkaProducerRecordBuilder> mapper,
+    Function<R, KafkaProducerRecordBuilder<String, Object>> mapper,
     Function<Long, Future<?>> progressHandler) {
 
     var promise = Promise.<Long>promise();
@@ -155,7 +155,7 @@ public class CommonDomainEventPublisher<T> {
   private Future<Void> publish(String key, Object value) {
     log.debug("Sending domain event [{}], payload [{}]", key, value);
 
-    var producerRecord = new KafkaProducerRecordBuilder()
+    var producerRecord = new KafkaProducerRecordBuilder<String, Object>()
       .key(key).value(value).topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders)
       .build();
 
