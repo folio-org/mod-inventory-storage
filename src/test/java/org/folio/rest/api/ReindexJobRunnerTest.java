@@ -3,7 +3,6 @@ package org.folio.rest.api;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
@@ -43,10 +42,10 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
-      INSTANCE.fullTopicName(environment(), TENANT_ID));
+      INSTANCE.fullTopicName(TENANT_ID));
   private final CommonDomainEventPublisher<Authority> authorityEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
-      AUTHORITY.fullTopicName(environment(), TENANT_ID));
+      AUTHORITY.fullTopicName(TENANT_ID));
 
   @Test
   public void canReindexInstances() {

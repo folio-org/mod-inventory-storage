@@ -4,7 +4,6 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.api.TestBase.get;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -43,7 +42,7 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName(environment(), "foo-tenant"),
+      new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName("foo-tenant"),
         producerManager, failureHandler);
   }
 
@@ -57,7 +56,7 @@ public class CommonDomainEventPublisherTest {
     when(producer.drainHandler(any())).thenAnswer(this::drainHandler);
 
     var recordsPublished = get(eventPublisher.publishStream(stream,
-      row -> new KafkaProducerRecordBuilder(), notUsed -> succeededFuture()));
+      row -> builderWithValue(""), notUsed -> succeededFuture()));
 
     assertThat(recordsPublished, is(6L));
 
@@ -74,7 +73,7 @@ public class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenReturn(succeededFuture());
 
     var future = eventPublisher.publishStream(stream,
-      row -> new KafkaProducerRecordBuilder(),
+      row -> builderWithValue(""),
       records -> records > 3 ? failedFuture("stream failed") : succeededFuture());
 
     await().until(future::isComplete);
@@ -97,7 +96,7 @@ public class CommonDomainEventPublisherTest {
       .thenReturn(succeededFuture(), failedFuture(""), succeededFuture(), failedFuture(""));
 
     var recordsPublished = get(eventPublisher.publishStream(stream,
-      row -> new KafkaProducerRecordBuilder(), records -> succeededFuture()));
+      row -> builderWithValue(""), records -> succeededFuture()));
 
     assertThat(recordsPublished, is(2L));
     verify(failureHandler, times(2)).handleFailure(any(), any());
@@ -111,7 +110,7 @@ public class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenThrow(new IllegalStateException("server error"));
 
     var future = eventPublisher.publishStream(stream,
-      row -> new KafkaProducerRecordBuilder(), records -> succeededFuture());
+      row -> builderWithValue(""), records -> succeededFuture());
 
     await().until(future::isComplete);
 
@@ -141,5 +140,9 @@ public class CommonDomainEventPublisherTest {
       .handle(null);
 
     return null;
+  }
+
+  private KafkaProducerRecordBuilder<String, Object> builderWithValue(Object value){
+    return new KafkaProducerRecordBuilder<String, Object>().value(value);
   }
 }
