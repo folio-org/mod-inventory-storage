@@ -127,10 +127,11 @@ public class StorageTestSuite {
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     kafkaContainer.start();
-    logger.info("starting Kafka host={} port={}",
-      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
-    System.setProperty("KAFKA_HOST", kafkaContainer.getHost());
-    System.setProperty("KAFKA_PORT", String.valueOf(kafkaContainer.getFirstMappedPort()));
+    var kafkaHost = kafkaContainer.getHost();
+    var kafkaPort = String.valueOf(kafkaContainer.getFirstMappedPort());
+    logger.info("Starting Kafka host={} port={}", kafkaHost, kafkaPort);
+    System.setProperty("kafka-port", kafkaPort);
+    System.setProperty("kafka-host", kafkaHost);
 
     logger.info("starting RestVerticle");
 
