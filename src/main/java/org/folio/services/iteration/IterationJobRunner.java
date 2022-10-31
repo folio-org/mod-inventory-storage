@@ -149,8 +149,8 @@ public class IterationJobRunner {
       });
   }
 
-  private KafkaProducerRecordBuilder rowToProducerRecord(Row row, IterationContext context) {
-    return new KafkaProducerRecordBuilder()
+  private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, IterationContext context) {
+    return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
       .value(iterationEvent(context.getEventType()))
       .header(ITERATION_JOB_ID_HEADER, context.getJobId());
