@@ -1,7 +1,7 @@
 package org.folio.services.iteration;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.kafka.KafkaTopicNameHelper.formatTopicName;
+import static java.lang.String.join;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
@@ -33,7 +33,6 @@ import org.folio.services.domainevent.DomainEventType;
 public class IterationJobRunner {
 
   public static final String ITERATION_JOB_ID_HEADER = "iteration-job-id";
-  public static final String MODULE_PREFIX = "inventory";
 
   private static final Logger log = LogManager.getLogger(IterationJobRunner.class);
   private static final int POOL_SIZE = 2;
@@ -69,7 +68,7 @@ public class IterationJobRunner {
   }
 
   public void startIteration(IterationJob job) {
-    String fullTopicName = formatTopicName(environment(), tenantId(okapiHeaders), MODULE_PREFIX, job.getJobParams().getTopicName());
+    String fullTopicName = join(".", environment(), tenantId(okapiHeaders), job.getJobParams().getTopicName());
     eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders, fullTopicName);
 
     workerExecutor.executeBlocking(
