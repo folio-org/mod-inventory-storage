@@ -128,6 +128,11 @@ public final class FakeKafkaConsumer {
   private static KafkaConsumerRecord<String, JsonObject>  getLastEvent(
     Collection<KafkaConsumerRecord<String, JsonObject> > events) {
 
+    // This is not the ideal implementation for getting the last event.
+    // Ideally, this should not rely on time stamps at all.
+    // The testing paradigm needs to account for the asynchronous nature rather
+    // than assuming the "first" or "last" event represent the expected
+    // response.
     Iterator<KafkaConsumerRecord<String, JsonObject>> iter = events.stream().iterator();
     KafkaConsumerRecord<String, JsonObject> last = null;
 
@@ -145,6 +150,7 @@ public final class FakeKafkaConsumer {
   private static KafkaConsumerRecord<String, JsonObject>  getFirstEvent(
     Collection<KafkaConsumerRecord<String, JsonObject> > events) {
 
+    // See also the comment in getLastEvent() above.
     Iterator<KafkaConsumerRecord<String, JsonObject>> iter = events.stream().iterator();
     KafkaConsumerRecord<String, JsonObject> first = null;
 

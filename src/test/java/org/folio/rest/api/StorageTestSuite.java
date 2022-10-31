@@ -296,6 +296,8 @@ public class StorageTestSuite {
       tenantPrepared = new CompletableFuture<>();
       client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
           ResponseHandler.any(tenantPrepared));
+      // The extra 1 in 61 is intentionally added to rule out potential
+      // real-time timing issues with the 60 second wait above.
       response = tenantPrepared.get(61, TimeUnit.SECONDS);
 
       failureMessage = String.format("Tenant get failed: %s: %s",
