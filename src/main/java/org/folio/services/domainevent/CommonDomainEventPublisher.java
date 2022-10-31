@@ -148,7 +148,6 @@ public class CommonDomainEventPublisher<T> {
       });
 
     return promise.future()
-      .onComplete(e -> kafkaProducer.close())
       .onSuccess(records -> log.info("Total records published from stream {}", records));
   }
 
@@ -162,16 +161,14 @@ public class CommonDomainEventPublisher<T> {
     KafkaProducer<String, String> producer = getOrCreateProducer();
 
     return producer.send(producerRecord)
-      .<Void>map(notUsed -> null)
-      .onComplete(result -> {
-        producer.close();
+      .<Void>mapEmpty()
+      .eventually(x -> producer.flush())
+      .eventually(x -> producer.close())
+      .onFailure(cause -> {
+        log.error("Unable to send domain event [{}], payload - [{}]",
+          key, value, cause);
 
-        if (result.failed()) {
-          log.error("Unable to send domain event [{}], payload - [{}]",
-            key, value, result.cause());
-
-          failureHandler.handleFailure(result.cause(), producerRecord);
-        }
+        failureHandler.handleFailure(cause, producerRecord);
       });
   }
 
