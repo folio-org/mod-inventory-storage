@@ -51,7 +51,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
 
   @BeforeClass
-  public static void beforeClass() throws Exception {
+  public static void beforeClass() {
     instanceIteration = new InstanceIterationFixture(client);
   }
 
@@ -91,7 +91,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getSubmittedDate(), notNullValue());
 
     // Should be a single iteration message for each instance ID generated in the row stream
-    await().atMost(10, SECONDS)
+    await().atMost(15, SECONDS)
       .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
   }
 
