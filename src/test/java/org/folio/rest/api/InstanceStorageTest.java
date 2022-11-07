@@ -2,6 +2,32 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
+import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
+import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
+import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.rest.support.ResponseHandler.text;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsafeUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
+import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
+import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
+import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
+import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -20,33 +46,6 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
-import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
-import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
-import static org.folio.rest.support.ResponseHandler.json;
-import static org.folio.rest.support.ResponseHandler.text;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsafeUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
-import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
-import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoEvent;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForInstance;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
-import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
-import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
-import static org.folio.util.StringUtil.urlEncode;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -69,25 +68,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.SneakyThrows;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.jaxrs.model.Instance;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
@@ -105,6 +93,18 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import lombok.SneakyThrows;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
@@ -2210,6 +2210,37 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         is("The hrid field cannot be changed: new=testHRID, old=in00000000001"));
 
     log.info("Finished cannotChageHRIDAfterCreation");
+  }
+
+  @Test
+  @SneakyThrows
+  public void cannotCreateAnInstanceWhenAlreadyAllocatedHRIDIsAllocated() {
+    final var instanceRequest = smallAngryPlanet(UUID.randomUUID());
+    instanceRequest.remove("id");
+    instanceRequest.remove("hrid");
+
+    setInstanceSequence(1000L);
+
+    // Allocate the HRID
+    final var firstAllocation = instancesClient.create(instanceRequest).getJson();
+
+    assertThat(firstAllocation.getString("hrid"), is("in00000001000"));
+
+    // Reset the sequence
+    setInstanceSequence(1000L);
+
+    // Attempt second allocation
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    client.post(instancesStorageUrl(""), instanceRequest, TENANT_ID,
+      text(createCompleted));
+
+    final Response response = createCompleted.get(5, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+
+    assertThat(response.getBody(), is(
+      "lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table instance: in00000001000"));
   }
 
   @Test
