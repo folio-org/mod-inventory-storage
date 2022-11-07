@@ -1,3 +1,7 @@
+## 25.0.1 2022-11-07
+
+* Fix: Authority source files reference data doesn't load during module upgrade ([MODINVSTOR-984](https://issues.folio.org/browse/MODINVSTOR-984))
+
 ## 25.0.0 2022-10-25
 
 * Upgraded RMB to 35.0.0 ([MODINVSTOR-965](https://issues.folio.org/browse/MODINVSTOR-965))
