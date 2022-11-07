@@ -5,15 +5,14 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
-import org.folio.services.kafka.InventoryProducerRecordBuilder;
-import org.folio.services.kafka.topic.KafkaTopic;
 
-import static org.folio.Environment.environmentName;
+import static org.folio.InventoryKafkaTopic.ASYNC_MIGRATION;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.asyncMigrationEvent;
 
@@ -33,7 +32,7 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   protected Future<Void> startMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
     var migrationService = new AsyncMigrationJobService(context.getVertxContext(), context.getOkapiHeaders());
     var publisher = new CommonDomainEventPublisher<AsyncMigrationJob>(context.getVertxContext(), context.getOkapiHeaders(),
-      KafkaTopic.asyncMigration(tenantId(context.getOkapiHeaders()), environmentName()));
+      ASYNC_MIGRATION.fullTopicName( tenantId(context.getOkapiHeaders())));
     var streamingContext = new StreamingContext(migrationJob, context, migrationService, publisher);
 
     return streamIdsForMigration(streamingContext)
@@ -74,8 +73,8 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
         .logJobDetails(context.getMigrationContext().getMigrationName(), context.getJob(), recordsPublished));
   }
 
-  private InventoryProducerRecordBuilder rowToProducerRecord(Row row, StreamingContext context) {
-    return new InventoryProducerRecordBuilder()
+  private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, StreamingContext context) {
+    return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
       .value(asyncMigrationEvent(context.getJob(), TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders())))
       .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId())

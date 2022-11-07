@@ -11,7 +11,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DomainEvent<T> {

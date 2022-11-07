@@ -6,9 +6,9 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 import org.folio.kafka.KafkaConfig;
+import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.api.TestBase;
-import org.folio.services.kafka.KafkaProperties;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,8 +26,8 @@ public class KafkaTopicsExistsTest extends TestBase {
   public void before() {
     Vertx vertx = StorageTestSuite.getVertx();
     kafkaAdminClient = KafkaAdminClient.create(vertx, KafkaConfig.builder()
-      .kafkaHost(KafkaProperties.getHost())
-      .kafkaPort(KafkaProperties.getPort())
+      .kafkaHost(KafkaEnvironmentProperties.host())
+      .kafkaPort(KafkaEnvironmentProperties.port())
       .build().getProducerProps());
   }
 
