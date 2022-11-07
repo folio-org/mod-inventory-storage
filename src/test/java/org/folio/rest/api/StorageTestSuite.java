@@ -20,7 +20,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
-import org.folio.services.kafka.KafkaProperties;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -128,10 +127,11 @@ public class StorageTestSuite {
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     kafkaContainer.start();
-    logger.info("starting Kafka host={} port={}",
-      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
-    KafkaProperties.setHost(kafkaContainer.getHost());
-    KafkaProperties.setPort(kafkaContainer.getFirstMappedPort());
+    var kafkaHost = kafkaContainer.getHost();
+    var kafkaPort = String.valueOf(kafkaContainer.getFirstMappedPort());
+    logger.info("Starting Kafka host={} port={}", kafkaHost, kafkaPort);
+    System.setProperty("kafka-port", kafkaPort);
+    System.setProperty("kafka-host", kafkaHost);
 
     logger.info("starting RestVerticle");
 
@@ -296,7 +296,9 @@ public class StorageTestSuite {
       tenantPrepared = new CompletableFuture<>();
       client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
           ResponseHandler.any(tenantPrepared));
-      response = tenantPrepared.get(60, TimeUnit.SECONDS);
+      // The extra 1 in 61 is intentionally added to rule out potential
+      // real-time timing issues with the 60 second wait above.
+      response = tenantPrepared.get(61, TimeUnit.SECONDS);
 
       failureMessage = String.format("Tenant get failed: %s: %s",
           response.getStatusCode(), response.getBody());

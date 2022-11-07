@@ -6,19 +6,20 @@ import static java.util.Collections.emptyList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.folio.services.kafka.KafkaProperties;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
+import org.folio.kafka.services.KafkaEnvironmentProperties;
 
 public final class FakeKafkaConsumer {
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> itemEvents =
@@ -127,13 +128,41 @@ public final class FakeKafkaConsumer {
   private static KafkaConsumerRecord<String, JsonObject>  getLastEvent(
     Collection<KafkaConsumerRecord<String, JsonObject> > events) {
 
-    return events.stream().skip(events.size() - 1).findFirst().orElse(null);
+    // This is not the ideal implementation for getting the last event.
+    // Ideally, this should not rely on time stamps at all.
+    // The testing paradigm needs to account for the asynchronous nature rather
+    // than assuming the "first" or "last" event represent the expected
+    // response.
+    Iterator<KafkaConsumerRecord<String, JsonObject>> iter = events.stream().iterator();
+    KafkaConsumerRecord<String, JsonObject> last = null;
+
+    while (iter.hasNext()) {
+      KafkaConsumerRecord<String, JsonObject> record = iter.next();
+
+      if (last == null || record.timestamp() > last.timestamp()) {
+        last = record;
+      }
+    }
+
+    return last;
   }
 
   private static KafkaConsumerRecord<String, JsonObject>  getFirstEvent(
     Collection<KafkaConsumerRecord<String, JsonObject> > events) {
 
-    return events.stream().findFirst().orElse(null);
+    // See also the comment in getLastEvent() above.
+    Iterator<KafkaConsumerRecord<String, JsonObject>> iter = events.stream().iterator();
+    KafkaConsumerRecord<String, JsonObject> first = null;
+
+    while (iter.hasNext()) {
+      KafkaConsumerRecord<String, JsonObject> record = iter.next();
+
+      if (first == null || record.timestamp() < first.timestamp()) {
+        first = record;
+      }
+    }
+
+    return first;
   }
 
   public static KafkaConsumerRecord<String, JsonObject> getLastInstanceEvent(
@@ -200,7 +229,7 @@ public final class FakeKafkaConsumer {
 
   private Map<String, String> consumerProperties() {
     Map<String, String> config = new HashMap<>();
-    config.put("bootstrap.servers", KafkaProperties.getHost() + ":" + KafkaProperties.getPort());
+    config.put("bootstrap.servers", KafkaEnvironmentProperties.host() + ":" + KafkaEnvironmentProperties.port());
     config.put("key.deserializer", StringDeserializer.class.getName());
     config.put("value.deserializer", JsonObjectDeserializer.class.getName());
     config.put("group.id", "folio_test");
