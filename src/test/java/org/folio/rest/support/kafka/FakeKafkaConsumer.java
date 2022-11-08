@@ -135,7 +135,8 @@ public final class FakeKafkaConsumer {
     // response.
 
     return events.stream()
-      .max(Comparator.comparing(KafkaConsumerRecord::timestamp))
+      .sorted(timestampComparator().reversed())
+      .findFirst()
       .orElse(null);
   }
 
@@ -144,8 +145,13 @@ public final class FakeKafkaConsumer {
 
     // See also the comment in getLastEvent() above.
     return events.stream()
-      .min(Comparator.comparing(KafkaConsumerRecord::timestamp))
+      .sorted(timestampComparator())
+      .findFirst()
       .orElse(null);
+  }
+
+  private static Comparator<KafkaConsumerRecord<String, JsonObject>> timestampComparator() {
+    return Comparator.comparing(KafkaConsumerRecord::timestamp);
   }
 
   public static KafkaConsumerRecord<String, JsonObject> getLastInstanceEvent(
