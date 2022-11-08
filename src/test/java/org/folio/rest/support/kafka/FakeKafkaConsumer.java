@@ -5,21 +5,21 @@ import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.folio.kafka.services.KafkaEnvironmentProperties;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
-import org.folio.kafka.services.KafkaEnvironmentProperties;
 
 public final class FakeKafkaConsumer {
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> itemEvents =
@@ -133,36 +133,25 @@ public final class FakeKafkaConsumer {
     // The testing paradigm needs to account for the asynchronous nature rather
     // than assuming the "first" or "last" event represent the expected
     // response.
-    Iterator<KafkaConsumerRecord<String, JsonObject>> iter = events.stream().iterator();
-    KafkaConsumerRecord<String, JsonObject> last = null;
 
-    while (iter.hasNext()) {
-      KafkaConsumerRecord<String, JsonObject> record = iter.next();
-
-      if (last == null || record.timestamp() > last.timestamp()) {
-        last = record;
-      }
-    }
-
-    return last;
+    return events.stream()
+      .sorted(timestampComparator().reversed())
+      .findFirst()
+      .orElse(null);
   }
 
   private static KafkaConsumerRecord<String, JsonObject>  getFirstEvent(
     Collection<KafkaConsumerRecord<String, JsonObject> > events) {
 
     // See also the comment in getLastEvent() above.
-    Iterator<KafkaConsumerRecord<String, JsonObject>> iter = events.stream().iterator();
-    KafkaConsumerRecord<String, JsonObject> first = null;
+    return events.stream()
+      .sorted(timestampComparator())
+      .findFirst()
+      .orElse(null);
+  }
 
-    while (iter.hasNext()) {
-      KafkaConsumerRecord<String, JsonObject> record = iter.next();
-
-      if (first == null || record.timestamp() < first.timestamp()) {
-        first = record;
-      }
-    }
-
-    return first;
+  private static Comparator<KafkaConsumerRecord<String, JsonObject>> timestampComparator() {
+    return Comparator.comparing(KafkaConsumerRecord::timestamp);
   }
 
   public static KafkaConsumerRecord<String, JsonObject> getLastInstanceEvent(
