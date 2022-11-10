@@ -138,6 +138,17 @@ public class TenantRefAPI extends TenantAPI {
       future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
     }
 
+    if (isNew(attributes, "25.1.0")) {
+      TenantLoading tl = new TenantLoading();
+      tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+      tl.withIdContent();
+      tl.add("instances-25.1", "instance-storage/instances");
+      tl.add("holdingsrecords-25.1", "holdings-storage/holdings");
+      tl.add("items-25.1", "item-storage/items");
+      tl.add("bound-with/bound-with-parts-25.1", "inventory-storage/bound-with-parts");
+      future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+    }
+
     return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
       .map(result));
   }

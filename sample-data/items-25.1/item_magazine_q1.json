@@ -1,0 +1,12 @@
+{
+  "id" : "bd9eee25-c36b-4f64-a5d0-8d31c277c8d3",
+  "status" : {
+    "name" : "Available",
+    "date" : "2022-10-12T13:07:54.987+00:00"
+  },
+  "hrid" : "bwit0001",
+  "holdingsRecordId" : "7a2443bc-fe66-40d5-9400-9a800fdf013e",
+  "copyNumber" : "First copy of Q1",
+  "materialTypeId" : "d9acad2f-2aac-4b48-9097-e6ab85906b25",
+  "permanentLoanTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe27"
+}
