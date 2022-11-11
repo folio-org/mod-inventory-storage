@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.http.InterfaceUrls.contributorTypesUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.is;
@@ -11,7 +12,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class ContributorTypesTest extends TestBase {
     String url = contributorTypesUrl("").toString() + "?limit=400&query="
       + urlEncode("cql.allRecords=1");
 
-    client.get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+    getClient().get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
     Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(

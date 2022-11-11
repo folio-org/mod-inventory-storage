@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.api.entities.AuthoritySourceFile.BASE_URL_KEY;
 import static org.folio.rest.api.entities.AuthoritySourceFile.CODES_KEY;
 import static org.folio.rest.api.entities.AuthoritySourceFile.NAME_KEY;
@@ -24,7 +25,7 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class AuthoritySourceFileAPITest extends TestBase {
 
-  private static ResourceClient authoritySourceFileClient = ResourceClient.forAuthoritySourceFiles(client);
+  private static ResourceClient authoritySourceFileClient = ResourceClient.forAuthoritySourceFiles(getClient());
 
   @Test
   public void shouldNormalizeBaseUrl()
@@ -48,7 +49,7 @@ public class AuthoritySourceFileAPITest extends TestBase {
     // Test baseUrl normalization on PATCH
     var patchData = new JsonObject().put(BASE_URL_KEY, "http://example.com/authorities/patched");
 
-    client.patch(InterfaceUrls.authoritySourceFilesUrl("/" + entityId), patchData, TENANT_ID)
+    getClient().patch(InterfaceUrls.authoritySourceFilesUrl("/" + entityId), patchData, TENANT_ID)
       .get(20, TimeUnit.SECONDS);
 
     var patchedEntity = authoritySourceFileClient.getById(entityId).getJson();

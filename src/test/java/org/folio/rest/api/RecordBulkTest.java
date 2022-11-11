@@ -3,16 +3,20 @@ package org.folio.rest.api;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.recordBulkUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.recordBulkUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -23,18 +27,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.IntStream;
-
 import org.folio.rest.jaxrs.model.RecordBulkIdsGetField;
 import org.folio.rest.support.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class RecordBulkTest extends TestBaseWithInventoryUtil {
@@ -67,7 +65,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL getInstanceUrl = recordBulkUrl("/ids");
 
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponseWithTotal(response, expectedMatches, moons);
@@ -89,7 +87,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL getInstanceUrl = recordBulkUrl("/ids?type=id");
 
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponseWithTotal(response, expectedMatches, moons);
@@ -111,7 +109,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL getInstanceUrl = recordBulkUrl("/ids?type=id&limit=5&offset=0");
 
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponse(response, expectedMatches, moons);
@@ -133,7 +131,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL getInstanceUrl = recordBulkUrl(String.format("/ids?query=(items.effectiveLocationId==\"%s\")", effectiveLocationId));
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
     Response response = getCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(HTTP_OK));
@@ -162,7 +160,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponseWithTotal(response, expectedMatches, moons);
@@ -185,7 +183,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     URL getInstanceUrl = recordBulkUrl("/ids?type=id&query=" + query);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
     validateMoonsResponseWithTotal(response, expectedMatches, moons);
@@ -204,7 +202,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING");
 
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
     validateHoldingsResponseWithTotals(response, holdingIds, totalHoldingsIds);
@@ -223,7 +221,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     URL getInstanceUrl = recordBulkUrl("/ids?recordType=HOLDING&limit=5");
 
-    client.get(getInstanceUrl, TENANT_ID, json(getCompleted));
+    getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
     validateHoldingsResponse(response, holdingIds, 5);

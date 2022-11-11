@@ -1,7 +1,19 @@
 package org.folio.rest.api;
 
+import static org.awaitility.Awaitility.await;
+import static org.folio.rest.api.StorageTestSuite.getClient;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.net.HttpURLConnection;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import junitparams.JUnitParamsRunner;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
@@ -13,21 +25,9 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.net.HttpURLConnection;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import static org.awaitility.Awaitility.await;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 @RunWith(JUnitParamsRunner.class)
 public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
-  static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(client);
+  static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(getClient());
 
   @After
   public void afterEach() {

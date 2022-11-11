@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -9,14 +10,21 @@ import static org.hamcrest.Matchers.emptyString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.sqlclient.Row;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import io.vertx.sqlclient.Row;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
+import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
@@ -25,14 +33,6 @@ import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
 
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented
@@ -208,7 +208,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     CompletableFuture<HttpResponse<Buffer>> createCompleted = new CompletableFuture<>();
     Item item = buildItem(holdingsRecordId, null, null);
 
-    client
+    getClient()
       .post(InterfaceUrls.itemsStorageUrl(""), item, StorageTestSuite.TENANT_ID,
           createCompleted::complete);
 

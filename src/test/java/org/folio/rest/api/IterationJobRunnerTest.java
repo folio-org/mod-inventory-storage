@@ -5,6 +5,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
@@ -17,12 +18,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import io.vertx.core.Context;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
@@ -51,8 +51,8 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
 
   @BeforeClass
-  public static void beforeClass() {
-    instanceIteration = new InstanceIterationFixture(client);
+  public static void beforeClass() throws Exception {
+    instanceIteration = new InstanceIterationFixture(getClient());
   }
 
   @Before

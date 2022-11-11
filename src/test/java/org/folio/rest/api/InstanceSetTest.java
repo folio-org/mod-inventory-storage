@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.instanceSetUrl;
@@ -94,7 +95,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   public void invalidCqlReturns400() {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(instanceSetUrl("?limit=1&query=id=="), TENANT_ID, text(getCompleted));
+    getClient().get(instanceSetUrl("?limit=1&query=id=="), TENANT_ID, text(getCompleted));
     assertThat(getCompleted.get(10, SECONDS).getStatusCode(), is(400));
   }
 
@@ -222,7 +223,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
     String query = cql == null ? "" : "&query=" + PercentCodec.encode(cql);
     URL url = instanceSetUrl("?limit=" + limit + "&offset=" + offset + query + parameters);
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(url, TENANT_ID, json(getCompleted));
+    getClient().get(url, TENANT_ID, json(getCompleted));
     Response response = getCompleted.get(10, SECONDS);
     return response.getJson().getJsonArray("instanceSets");
   }
@@ -231,7 +232,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   private JsonObject getInstance6(String parameters) {
     URL url = instanceSetUrl("?limit=10&query=id==" + instanceId6.toString() + "&" + parameters);
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(url, TENANT_ID, json(getCompleted));
+    getClient().get(url, TENANT_ID, json(getCompleted));
     var sets = getCompleted.get(10, SECONDS).getJson().getJsonArray("instanceSets");
     assertThat(ids(sets), contains(instanceId6));
     assertThat(sets.size(), is(1));

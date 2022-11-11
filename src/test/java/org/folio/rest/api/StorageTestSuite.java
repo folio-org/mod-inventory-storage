@@ -1,5 +1,8 @@
 package org.folio.rest.api;
 
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+import static java.time.Duration.ofMinutes;
+
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -106,7 +109,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
   private static final Logger logger = LogManager.getLogger();
-  private static Vertx vertx;
+  private static final Vertx vertx = Vertx.vertx();
+  private static final HttpClient client = new HttpClient(vertx);
   private static int port;
 
   private static final KafkaContainer kafkaContainer
@@ -124,9 +128,14 @@ public class StorageTestSuite {
     }
   }
 
+  public static HttpClient getClient() {
+    return client;
+  }
+
   public static Vertx getVertx() {
     return vertx;
   }
+
   @SneakyThrows
   @BeforeClass
   public static void before() {
@@ -136,15 +145,15 @@ public class StorageTestSuite {
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
 
-    vertx = Vertx.vertx();
-
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     kafkaContainer.start();
+
     var kafkaHost = kafkaContainer.getHost();
     var kafkaPort = String.valueOf(kafkaContainer.getFirstMappedPort());
     logger.info("Starting Kafka host={} port={}", kafkaHost, kafkaPort);
     System.setProperty("kafka-port", kafkaPort);
     System.setProperty("kafka-host", kafkaHost);
+    await().atMost(ofMinutes(1)).until(() -> kafkaContainer.isRunning());
 
     logger.info("starting RestVerticle");
 
@@ -168,8 +177,9 @@ public class StorageTestSuite {
 
     removeTenant(TENANT_ID);
     kafkaContainer.stop();
+    await().atMost(ofMinutes(1)).until(() -> !kafkaContainer.isRunning());
     vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
-    vertx = null; // declare it dead but also for TestBase.testBaseBeforeClass.
+    client.getWebClient().close();
     PostgresClient.stopPostgresTester();
   }
 

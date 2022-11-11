@@ -1,32 +1,30 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
-
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.http.InterfaceUrls.authoritiesStorageUrl;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForAuthority;
+import static org.junit.Assert.assertEquals;
 
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import io.vertx.core.json.JsonObject;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class AuthorityStorageTest extends TestBase {
@@ -96,7 +94,7 @@ public class AuthorityStorageTest extends TestBase {
     assertEquals(1, response.size());
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     var response2 = ResponseHandler.empty(deleteCompleted);
-    client.delete(authoritiesStorageUrl("/" + UUID.randomUUID()), TENANT_ID, response2);
+    getClient().delete(authoritiesStorageUrl("/" + UUID.randomUUID()), TENANT_ID, response2);
     Response deleteResponse = deleteCompleted.get(10, TimeUnit.SECONDS);
     assertEquals(HttpURLConnection.HTTP_NOT_FOUND, deleteResponse.getStatusCode());
     assertEquals(1, response.size());
@@ -146,7 +144,7 @@ public class AuthorityStorageTest extends TestBase {
     object.put("personalName", "changed");
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
     var response2 = ResponseHandler.any(putCompleted);
-    client.put(authoritiesStorageUrl("/" + UUID.randomUUID()), object.mapTo(Authority.class), TENANT_ID, response2);
+    getClient().put(authoritiesStorageUrl("/" + UUID.randomUUID()), object.mapTo(Authority.class), TENANT_ID, response2);
     Response putResponse = putCompleted.get(10, TimeUnit.SECONDS);
     assertEquals(HttpURLConnection.HTTP_NOT_FOUND, putResponse.getStatusCode());
     var response3 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
@@ -172,7 +170,7 @@ public class AuthorityStorageTest extends TestBase {
     final UUID id = UUID.fromString(object.getString("id"));
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
-    client.put(authoritiesStorageUrl(String.format("/%s", id)), object,
+    getClient().put(authoritiesStorageUrl(String.format("/%s", id)), object,
       TENANT_ID, ResponseHandler.empty(replaceCompleted));
 
     try {

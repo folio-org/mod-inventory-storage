@@ -1,9 +1,14 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getClient;
+import static org.folio.rest.api.StorageTestSuite.getVertx;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.HttpResponse;
@@ -15,8 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.fixtures.AsyncMigrationFixture;
@@ -25,9 +28,6 @@ import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 /**
@@ -40,8 +40,6 @@ public abstract class TestBase {
   /** timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS) */
   public static final long TIMEOUT = 10;
 
-  private static boolean invokeStorageTestSuiteAfter = false;
-  static HttpClient client;
   protected static ResourceClient instancesClient;
   public static ResourceClient holdingsClient;
   protected static ResourceClient itemsClient;
@@ -92,55 +90,33 @@ public abstract class TestBase {
   @BeforeClass
   public static void testBaseBeforeClass() {
     logger.info("starting @BeforeClass testBaseBeforeClass()");
-    Vertx vertx = StorageTestSuite.getVertx();
-    if (vertx == null) {
-      invokeStorageTestSuiteAfter = true;
-      StorageTestSuite.before();
-      vertx = StorageTestSuite.getVertx();
-    } else {
-      invokeStorageTestSuiteAfter = false;
-    }
 
-    client = new HttpClient(vertx);
-    instancesClient = ResourceClient.forInstances(client);
-    holdingsClient = ResourceClient.forHoldings(client);
-    itemsClient = ResourceClient.forItems(client);
-    authoritiesClient = ResourceClient.forAuthorities(client);
-    locationsClient = ResourceClient.forLocations(client);
-    callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
-    modesOfIssuanceClient = ResourceClient.forModesOfIssuance(client);
-    instanceRelationshipsClient = ResourceClient.forInstanceRelationships(client);
-    instanceRelationshipTypesClient = ResourceClient.forInstanceRelationshipTypes(client);
-    precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(client);
-    instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(client);
-    itemsStorageSyncClient = ResourceClient.forItemsStorageSync(client);
-    inventoryViewClient = ResourceClient.forInventoryView(client);
-    statisticalCodeClient = ResourceClient.forStatisticalCodes(client);
+    instancesClient = ResourceClient.forInstances(getClient());
+    holdingsClient = ResourceClient.forHoldings(getClient());
+    itemsClient = ResourceClient.forItems(getClient());
+    authoritiesClient = ResourceClient.forAuthorities(getClient());
+    locationsClient = ResourceClient.forLocations(getClient());
+    callNumberTypesClient = ResourceClient.forCallNumberTypes(getClient());
+    modesOfIssuanceClient = ResourceClient.forModesOfIssuance(getClient());
+    instanceRelationshipsClient = ResourceClient.forInstanceRelationships(getClient());
+    instanceRelationshipTypesClient = ResourceClient.forInstanceRelationshipTypes(getClient());
+    precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(getClient());
+    instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(getClient());
+    itemsStorageSyncClient = ResourceClient.forItemsStorageSync(getClient());
+    inventoryViewClient = ResourceClient.forInventoryView(getClient());
+    statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
     instancesStorageBatchInstancesClient = ResourceClient
-      .forInstancesStorageBatchInstances(client);
+      .forInstancesStorageBatchInstances(getClient());
     instanceTypesClient = ResourceClient
-      .forInstanceTypes(client);
-    illPoliciesClient = ResourceClient.forIllPolicies(client);
-    statisticalCodeFixture = new StatisticalCodeFixture(client);
-    kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
+      .forInstanceTypes(getClient());
+    illPoliciesClient = ResourceClient.forIllPolicies(getClient());
+    statisticalCodeFixture = new StatisticalCodeFixture(getClient());
+    kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
     FakeKafkaConsumer.removeAllEvents();
-    instanceReindex = new InstanceReindexFixture(client);
-    authorityReindex = new AuthorityReindexFixture(client);
-    asyncMigration = new AsyncMigrationFixture(client);
+    instanceReindex = new InstanceReindexFixture(getClient());
+    authorityReindex = new AuthorityReindexFixture(getClient());
+    asyncMigration = new AsyncMigrationFixture(getClient());
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
-  }
-
-  @AfterClass
-  public static void testBaseAfterClass()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    client.getWebClient().close();
-    client = null;
-    if (invokeStorageTestSuiteAfter) {
-      StorageTestSuite.after();
-    }
   }
 
   static void send(URL url, HttpMethod method, String content,
@@ -171,16 +147,16 @@ public abstract class TestBase {
     if (userId != null) {
       headers.add("X-Okapi-User-Id", userId);
     }
-    client.getWebClient()
-    .requestAbs(method, url)
-    .putHeader("Authorization", "test_tenant")
-    .putHeader("x-okapi-tenant", "test_tenant")
-    .putHeader("Accept", "application/json,text/plain")
-    .putHeader("Content-type", contentType)
-    .putHeaders(headers)
-    .sendBuffer(body)
-    .onSuccess(handler)
-    .onFailure(error -> logger.error(error.getMessage(), error));
+    getClient().getWebClient()
+      .requestAbs(method, url)
+      .putHeader("Authorization", "test_tenant")
+      .putHeader("x-okapi-tenant", "test_tenant")
+      .putHeader("Accept", "application/json,text/plain")
+      .putHeader("Content-type", contentType)
+      .putHeaders(headers)
+      .sendBuffer(body)
+      .onSuccess(handler)
+      .onFailure(error -> logger.error(error.getMessage(), error));
   }
 
   /**
@@ -190,7 +166,7 @@ public abstract class TestBase {
   void assertGetNotFound(URL url) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(url, TENANT_ID, ResponseHandler.text(getCompleted));
+    getClient().get(url, TENANT_ID, ResponseHandler.text(getCompleted));
     Response response = get(getCompleted);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }

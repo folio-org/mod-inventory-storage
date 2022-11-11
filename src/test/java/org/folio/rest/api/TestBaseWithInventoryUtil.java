@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -14,11 +15,12 @@ import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
-
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
@@ -32,9 +34,6 @@ import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.Before;
 import org.junit.BeforeClass;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 /**
  *
@@ -99,13 +98,13 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
     createDefaultInstanceType();
 
-    MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
+    MaterialTypesClient materialTypesClient = new MaterialTypesClient(getClient(), materialTypesStorageUrl(""));
     journalMaterialTypeID = materialTypesClient.create("journal");
     journalMaterialTypeId = UUID.fromString(journalMaterialTypeID);
     bookMaterialTypeID = materialTypesClient.create("book");
     bookMaterialTypeId = UUID.fromString(bookMaterialTypeID);
 
-    LoanTypesClient loanTypesClient = new LoanTypesClient(client, loanTypesStorageUrl(""));
+    LoanTypesClient loanTypesClient = new LoanTypesClient(getClient(), loanTypesStorageUrl(""));
     canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
     canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
     nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating");
@@ -258,7 +257,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected JsonObject createItem(JsonObject itemToCreate) {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    client.post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
         ResponseHandler.json(createCompleted));
 
     Response response = get(createCompleted);
@@ -324,7 +323,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   private IndividualResource getInstanceStatusByCode(String code) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(instanceStatusesUrl("?query=code=" + code),
+    getClient().get(instanceStatusesUrl("?query=code=" + code),
       TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonObject instanceStatus = get(getCompleted)
