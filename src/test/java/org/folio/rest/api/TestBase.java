@@ -123,7 +123,7 @@ public abstract class TestBase {
     illPoliciesClient = ResourceClient.forIllPolicies(client);
     statisticalCodeFixture = new StatisticalCodeFixture(client);
     kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
-    kafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.removeAllEvents();
     instanceReindex = new InstanceReindexFixture(client);
     authorityReindex = new AuthorityReindexFixture(client);
     asyncMigration = new AsyncMigrationFixture(client);
