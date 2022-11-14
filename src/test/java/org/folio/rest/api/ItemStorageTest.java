@@ -22,6 +22,8 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
@@ -112,6 +114,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUrl(""));
 
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
   }
