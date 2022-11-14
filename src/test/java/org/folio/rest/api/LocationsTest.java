@@ -56,7 +56,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
         LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
         UUID spID = UUID.randomUUID();
         servicePointIDs.add(spID);
-        String spName = "LocationsTest Service Point";
+        String spName = "Service Point " + spID;
         ServicePointTest.createServicePoint(spID, spName, "SP", spName,
             "SP Description", 0, false, null);
       }
