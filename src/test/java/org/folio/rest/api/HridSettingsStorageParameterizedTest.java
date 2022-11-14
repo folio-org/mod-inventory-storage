@@ -2,8 +2,8 @@ package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;

@@ -2,10 +2,11 @@ package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
+import static org.folio.utility.VertxUtility.getClient;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -66,7 +67,7 @@ public class HridSettingsStorageTest extends TestBase {
   public void setUp(TestContext testContext) {
     log.info("Initializing values");
     final Async async = testContext.async();
-    vertx = StorageTestSuite.getVertx();
+    vertx = getVertx();
     postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
     hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
     hridManager.updateHridSettings(initialHridSettings).onComplete(hridSettings -> {

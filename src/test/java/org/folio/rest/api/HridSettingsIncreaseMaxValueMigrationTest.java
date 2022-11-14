@@ -1,19 +1,15 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.getVertx;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.folio.rest.persist.PostgresClient;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
 
 public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase {
   private static final String CREATE_SEQUENCE_SQL = loadCreateSequenceSqlFile();

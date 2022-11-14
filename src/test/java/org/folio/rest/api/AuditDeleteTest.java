@@ -1,12 +1,20 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.*;
-import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.api.StorageTestSuite.deleteAll;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.pointer.JsonPointer;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import java.net.MalformedURLException;
-import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -14,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
@@ -22,12 +29,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.json.pointer.JsonPointer;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 
 @RunWith(VertxUnitRunner.class)
 public class AuditDeleteTest extends TestBaseWithInventoryUtil {

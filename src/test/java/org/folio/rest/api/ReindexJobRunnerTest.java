@@ -9,6 +9,7 @@ import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
@@ -18,11 +19,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
-import io.vertx.core.Context;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.model.Instance;
@@ -30,7 +31,6 @@ import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
 import org.folio.services.reindex.ReindexResourceName;
@@ -186,7 +186,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   private static Context getContext() {
-    return StorageTestSuite.getVertx().getOrCreateContext();
+    return getVertx().getOrCreateContext();
   }
 
   private PostgresClientFuturized getPostgresClientFuturized() {

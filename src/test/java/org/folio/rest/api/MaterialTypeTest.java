@@ -1,13 +1,19 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.VertxUtility.getVertx;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-
-import org.folio.rest.support.*;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.UUID;
@@ -15,14 +21,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.junit.Before;
+import org.junit.Test;
 
 public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
@@ -45,7 +51,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
 
     canCirculateLoanTypeID = new LoanTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      new HttpClient(getVertx()),
       loanTypesStorageUrl("")).create("Can Circulate");
   }
 

@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.http.InterfaceUrls.alternativeTitleTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.authorityNoteTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.authoritySourceFilesUrl;
@@ -25,6 +24,8 @@ import static org.folio.rest.support.http.InterfaceUrls.modesOfIssuanceUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
+import static org.folio.utility.VertxUtility.getClient;
+import static org.folio.utility.VertxUtility.vertxUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -551,7 +552,7 @@ public class ReferenceTablesTest extends TestBase {
     Response instanceResponse = createReferenceRecord("/instance-storage/instances", instance);
     assertThat(instanceResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    Response result = deleteReferenceRecordById(StorageTestSuite.storageUrl("/instance-types/" + instanceTypeId));
+    Response result = deleteReferenceRecordById(vertxUrl("/instance-types/" + instanceTypeId));
 
     assertThat(result.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
@@ -830,7 +831,7 @@ public class ReferenceTablesTest extends TestBase {
   private Response createReferenceRecord(String path, JsonEntity referenceObject)
     throws ExecutionException, InterruptedException, TimeoutException {
 
-    URL referenceUrl = StorageTestSuite.storageUrl(path);
+    URL referenceUrl = vertxUrl(path);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(
             referenceUrl,
@@ -904,10 +905,10 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put(updateProperty, entity.getString(updateProperty)+" UPDATED");
 
-    URL url = StorageTestSuite.storageUrl(path + "/" + entityId);
-    URL urlWithBadUUID = StorageTestSuite.storageUrl(path + "/baduuid");
-    URL urlWithBadParameter = StorageTestSuite.storageUrl(path+"?offset=-3");
-    URL urlWithBadCql = StorageTestSuite.storageUrl(path + "?query=badcql");
+    URL url = vertxUrl(path + "/" + entityId);
+    URL urlWithBadUUID = vertxUrl(path + "/baduuid");
+    URL urlWithBadParameter = vertxUrl(path+"?offset=-3");
+    URL urlWithBadCql = vertxUrl(path + "?query=badcql");
 
     Response putResponse = updateRecord(url, entity);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));

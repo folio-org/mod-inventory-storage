@@ -7,7 +7,6 @@ import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.storageUrl;
 import static org.folio.rest.api.TestBase.holdingsClient;
 import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getAuthorityEvents;
@@ -23,6 +22,7 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_INSTANCE_ID;
+import static org.folio.utility.VertxUtility.vertxUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -121,7 +121,7 @@ public final class DomainEventAssertions {
 
     assertEquals(2, caseInsensitiveMap.size());
     assertEquals(TENANT_ID, caseInsensitiveMap.get(TENANT));
-    assertEquals(storageUrl("").toString(), caseInsensitiveMap.get(URL));
+    assertEquals(vertxUrl("").toString(), caseInsensitiveMap.get(URL));
   }
 
   public static void assertNoUpdateEvent(String instanceId) {

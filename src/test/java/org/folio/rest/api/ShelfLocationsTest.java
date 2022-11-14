@@ -11,10 +11,13 @@ import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -24,16 +27,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.Before;
 import org.junit.Test;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
-
-
 
 public class ShelfLocationsTest extends TestBase {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
@@ -62,11 +62,11 @@ public class ShelfLocationsTest extends TestBase {
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
     new LoanTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      new HttpClient(getVertx()),
       loanTypesStorageUrl("")).create("Can Circulate");
 
     new MaterialTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      new HttpClient(getVertx()),
       materialTypesStorageUrl("")).create("Journal");
 
     instID = UUID.randomUUID();

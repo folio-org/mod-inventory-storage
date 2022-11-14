@@ -2,18 +2,17 @@ package org.folio.rest.api;
 
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.utility.VertxUtility.getVertx;
 
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.UnaryOperator;
-
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.util.ResourceUtil;
-
 
 abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
   static String loadScript(String scriptName) {
@@ -120,6 +119,6 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
   }
 
   private PostgresClient getPostgresClient() {
-    return PostgresClient.getInstance(StorageTestSuite.getVertx());
+    return PostgresClient.getInstance(getVertx());
   }
 }

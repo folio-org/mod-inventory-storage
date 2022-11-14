@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -12,6 +11,7 @@ import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -80,7 +80,9 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final UUID UUID_INSTANCE_TYPE = UUID.fromString("535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
 
   @BeforeClass
-  public static void beforeAny() {
+  public static void testBaseWithInvUtilBeforeClass() {
+    logger.info("starting @BeforeClass testBaseWithInvUtilBeforeClass()");
+
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
@@ -117,6 +119,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     LocationsTest.createLocation(secondFloorLocationId,  SECOND_FLOOR_LOCATION,  "TestBaseWI/SF");
     LocationsTest.createLocation(thirdFloorLocationId,   THIRD_FLOOR_LOCATION,   "TestBaseWI/TF");
     LocationsTest.createLocation(fourthFloorLocationId,  FOURTH_FLOOR_LOCATION,  "TestBaseWI/FF");
+    logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
   }
 
   @Before
@@ -250,7 +253,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   private static boolean instanceTypeDoesNotAlreadyExist(UUID id) {
     Response response = instanceTypesClient.getById(id);
-
     return response.getStatusCode() == HttpStatus.HTTP_NOT_FOUND.toInt();
   }
 

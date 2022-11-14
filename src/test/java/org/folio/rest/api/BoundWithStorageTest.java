@@ -1,10 +1,10 @@
 package org.folio.rest.api;
 
 import static org.awaitility.Awaitility.await;
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 

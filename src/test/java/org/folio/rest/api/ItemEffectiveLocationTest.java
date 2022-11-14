@@ -1,8 +1,8 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
+import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;

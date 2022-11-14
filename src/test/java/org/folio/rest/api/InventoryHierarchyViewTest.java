@@ -2,8 +2,6 @@ package org.folio.rest.api;
 
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
-import static org.folio.rest.api.StorageTestSuite.getClient;
-import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.inventoryHierarchyItemsAndHoldings;
@@ -24,6 +22,8 @@ import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationCodeForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.isDeleted;
+import static org.folio.utility.VertxUtility.getClient;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;

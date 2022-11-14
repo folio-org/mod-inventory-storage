@@ -7,7 +7,6 @@ import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
@@ -30,6 +29,8 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdate
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.folio.utility.VertxUtility.getClient;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -50,7 +51,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
@@ -2873,12 +2873,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private void setItemSequence(long sequenceNumber) {
-    final Vertx vertx = StorageTestSuite.getVertx();
     final PostgresClient postgresClient =
-        PostgresClient.getInstance(vertx, TENANT_ID);
+        PostgresClient.getInstance(getVertx(), TENANT_ID);
     final CompletableFuture<Void> sequenceSet = new CompletableFuture<>();
 
-    vertx.runOnContext(v ->
+    getVertx().runOnContext(v ->
       postgresClient.selectSingle("select setval('hrid_items_seq',"
         + sequenceNumber + ",FALSE)", r -> {
         if (r.succeeded()) {

@@ -1,6 +1,6 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.getVertx;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -12,22 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
-
-import javax.ws.rs.core.Response;
-
-import org.awaitility.Awaitility;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.impl.AbstractInstanceRecordsAPI;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.AdditionalAnswers;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -37,6 +21,19 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.sqlclient.Tuple;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import javax.ws.rs.core.Response;
+import org.awaitility.Awaitility;
+import org.folio.rest.RestVerticle;
+import org.folio.rest.impl.AbstractInstanceRecordsAPI;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.AdditionalAnswers;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 @RunWith(VertxUnitRunner.class)
 public class AbstractInstanceRecordsAPITest extends TestBase {

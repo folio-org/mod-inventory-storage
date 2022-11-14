@@ -3,13 +3,15 @@ package org.folio.rest.api;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.boundWithStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.utility.VertxUtility.getClient;
+import static org.folio.utility.VertxUtility.prepareTenant;
+import static org.folio.utility.VertxUtility.removeTenant;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -35,8 +37,8 @@ public class SampleDataTest extends TestBase {
    */
   @BeforeClass
   public static void beforeAny() throws Exception {
-    StorageTestSuite.removeTenant(StorageTestSuite.TENANT_ID);
-    StorageTestSuite.prepareTenant(StorageTestSuite.TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
+    removeTenant(StorageTestSuite.TENANT_ID);
+    prepareTenant(StorageTestSuite.TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
   }
 
   private void assertCount(URL url, String arrayName, int expectedCount) {

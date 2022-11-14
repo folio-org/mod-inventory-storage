@@ -9,10 +9,14 @@ import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,16 +25,13 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.junit.Before;
 import org.junit.Test;
-
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 /* TODO: Missing tests
    - Bad inst/camp/lib in PUT
@@ -78,11 +79,11 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
     canCirculateLoanTypeID = new LoanTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      new HttpClient(getVertx()),
       loanTypesStorageUrl("")).create("Can Circulate");
 
     journalMaterialTypeID = new MaterialTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      new HttpClient(getVertx()),
       materialTypesStorageUrl("")).create("Journal");
 
     createLocUnits(true);

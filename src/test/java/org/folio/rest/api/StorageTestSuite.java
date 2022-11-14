@@ -1,26 +1,31 @@
 package org.folio.rest.api;
 
-import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
-import static java.time.Duration.ofMinutes;
+import static org.folio.utility.KafkaUtility.startKafka;
+import static org.folio.utility.KafkaUtility.stopKafka;
+import static org.folio.utility.VertxUtility.getVertx;
+import static org.folio.utility.VertxUtility.removeTenant;
+import static org.folio.utility.VertxUtility.startVertx;
+import static org.folio.utility.VertxUtility.stopVertx;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.net.URL;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
 import org.folio.services.CallNumberUtilsTest;
 import org.junit.AfterClass;
@@ -28,19 +33,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.utility.DockerImageName;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -109,62 +101,22 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class StorageTestSuite {
   public static final String TENANT_ID = "test_tenant";
   private static final Logger logger = LogManager.getLogger();
-  private static final Vertx vertx = Vertx.vertx();
-  private static final HttpClient client = new HttpClient(vertx);
-  private static int port;
-
-  private static final KafkaContainer kafkaContainer
-    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
 
   private StorageTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
   }
 
-  public static URL storageUrl(String path) {
-    try {
-      return new URL("http", "localhost", port, path);
-    } catch (MalformedURLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public static HttpClient getClient() {
-    return client;
-  }
-
-  public static Vertx getVertx() {
-    return vertx;
-  }
-
   @SneakyThrows
   @BeforeClass
   public static void before() {
-
     logger.info("starting @BeforeClass before()");
 
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
-    kafkaContainer.start();
-
-    var kafkaHost = kafkaContainer.getHost();
-    var kafkaPort = String.valueOf(kafkaContainer.getFirstMappedPort());
-    logger.info("Starting Kafka host={} port={}", kafkaHost, kafkaPort);
-    System.setProperty("kafka-port", kafkaPort);
-    System.setProperty("kafka-host", kafkaHost);
-    await().atMost(ofMinutes(1)).until(() -> kafkaContainer.isRunning());
-
-    logger.info("starting RestVerticle");
-
-    port = NetworkUtils.nextFreePort();
-    DeploymentOptions options = new DeploymentOptions();
-    options.setConfig(new JsonObject().put("http.port", port));
-    startVerticle(options);
-
-    logger.info("preparing tenant");
-
-    prepareTenant(TENANT_ID, false);
+    startKafka();
+    startVertx(TENANT_ID);
 
     logger.info("finished @BeforeClass before()");
   }
@@ -176,10 +128,8 @@ public class StorageTestSuite {
     TimeoutException {
 
     removeTenant(TENANT_ID);
-    kafkaContainer.stop();
-    await().atMost(ofMinutes(1)).until(() -> !kafkaContainer.isRunning());
-    vertx.close().toCompletionStage().toCompletableFuture().get(20, TimeUnit.SECONDS);
-    client.getWebClient().close();
+    stopKafka();
+    stopVertx();
     PostgresClient.stopPostgresTester();
   }
 
@@ -256,83 +206,5 @@ public class StorageTestSuite {
     });
 
     return TestBase.get(selectCompleted);
-  }
-
-  private static void startVerticle(DeploymentOptions options)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    vertx.deployVerticle(RestVerticle.class, options)
-    .toCompletionStage()
-    .toCompletableFuture()
-    .get(20, TimeUnit.SECONDS);
-  }
-
-  static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    JsonArray ar = new JsonArray();
-    ar.add(new JsonObject().put("key", "loadReference").put("value", "true"));
-    ar.add(new JsonObject().put("key", "loadSample").put("value", Boolean.toString(loadSample)));
-
-    JsonObject jo = new JsonObject();
-    jo.put("parameters", ar);
-    if (moduleFrom != null) {
-      jo.put("module_from", moduleFrom);
-    }
-    jo.put("module_to", moduleTo);
-    tenantOp(tenantId, jo);
-  }
-
-  static void prepareTenant(String tenantId, boolean loadSample)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
-    prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
-  }
-
-  static void removeTenant(String tenantId) throws InterruptedException, ExecutionException, TimeoutException {
-
-    JsonObject jo = new JsonObject();
-    jo.put("purge", Boolean.TRUE);
-
-    tenantOp(tenantId, jo);
-  }
-
-  public static void tenantOp(String tenantId, JsonObject job) throws InterruptedException, ExecutionException, TimeoutException {
-    CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
-
-    HttpClient client = new HttpClient(vertx);
-    client.post(storageUrl("/_/tenant"), job, tenantId,
-        ResponseHandler.any(tenantPrepared));
-
-    Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
-
-    String failureMessage = String.format("Tenant post failed: %s: %s",
-        response.getStatusCode(), response.getBody());
-
-    // wait if not complete ...
-    if (response.getStatusCode() == 201) {
-      String id = response.getJson().getString("id");
-
-      tenantPrepared = new CompletableFuture<>();
-      client.get(storageUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
-          ResponseHandler.any(tenantPrepared));
-      // The extra 1 in 61 is intentionally added to rule out potential
-      // real-time timing issues with the 60 second wait above.
-      response = tenantPrepared.get(61, TimeUnit.SECONDS);
-
-      failureMessage = String.format("Tenant get failed: %s: %s",
-          response.getStatusCode(), response.getBody());
-
-      if (response.getStatusCode() == 200 && response.getJson().containsKey("error")) {
-        throw new IllegalStateException(response.getJson().getString("error"));
-      }
-
-      assertThat(failureMessage, response.getStatusCode(), is(200));
-    } else {
-      assertThat(failureMessage, response.getStatusCode(), is(204));
-    }
   }
 }

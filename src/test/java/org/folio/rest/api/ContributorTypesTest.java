@@ -1,8 +1,8 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.http.InterfaceUrls.contributorTypesUrl;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 

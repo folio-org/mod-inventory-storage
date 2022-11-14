@@ -3,7 +3,6 @@ package org.folio.rest.api;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getClient;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -29,6 +28,8 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdate
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.folio.utility.VertxUtility.getClient;
+import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -48,7 +49,6 @@ import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -740,7 +740,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canGetWithOptimizedSql(TestContext testContext) {
     int n = PgUtil.getOptimizedSqlSize() / 2;
-    PostgresClient pg = PostgresClient.getInstance(StorageTestSuite.getVertx(), TENANT_ID);
+    PostgresClient pg = PostgresClient.getInstance(getVertx(), TENANT_ID);
 
     // "b foo" records are before the getOptimizedSqlSize() limit
     // "d foo" records are after the getOptimizedSqlSize() limit
@@ -2778,12 +2778,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private void setInstanceSequence(long sequenceNumber) {
-    final Vertx vertx = StorageTestSuite.getVertx();
     final PostgresClient postgresClient =
-        PostgresClient.getInstance(vertx, TENANT_ID);
+        PostgresClient.getInstance(getVertx(), TENANT_ID);
     final CompletableFuture<Void> sequenceSet = new CompletableFuture<>();
 
-    vertx.runOnContext(v -> {
+    getVertx().runOnContext(v -> {
       postgresClient.selectSingle("select setval('hrid_instances_seq',"
           + sequenceNumber + ",FALSE)", r -> {
             if (r.succeeded()) {
