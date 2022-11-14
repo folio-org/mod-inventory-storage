@@ -29,6 +29,11 @@
       "type": "boolean",
       "description": "If true, leading zeros should be applied for HRIDs",
       "default": true
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
     }
   },
   "additionalProperties": false,
