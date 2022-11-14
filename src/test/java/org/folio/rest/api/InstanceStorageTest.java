@@ -1463,9 +1463,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canDeleteAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
-    final var firstInstance = createInstance(smallAngryPlanet(UUID.randomUUID()));
-    final var secondInstance = createInstance(nod(UUID.randomUUID()));
-    final var thirdInstance = createInstance(uprooted(UUID.randomUUID()));
+    createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(nod(UUID.randomUUID()));
+    createInstance(uprooted(UUID.randomUUID()));
 
     CompletableFuture<Response> allDeleted = new CompletableFuture<>();
 

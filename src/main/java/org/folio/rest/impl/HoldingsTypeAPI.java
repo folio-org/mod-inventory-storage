@@ -3,10 +3,13 @@ package org.folio.rest.impl;
 import static java.util.Collections.singletonList;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,21 +21,16 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.HoldingsType;
 import org.folio.rest.jaxrs.model.HoldingsTypes;
 import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 
 /**
  *
@@ -42,7 +40,6 @@ public class HoldingsTypeAPI implements org.folio.rest.jaxrs.resource.HoldingsTy
 
   public static final String REFERENCE_TABLE  = "holdings_type";
 
-  private static final String LOCATION_PREFIX = "/holdings-types/";
   private static final Logger log = LogManager.getLogger();
   private final Messages messages             = Messages.getInstance();
 

@@ -499,7 +499,7 @@ public class ReferenceTablesTest extends TestBase {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = instanceStatusesUrl("/" + entityUUID);
+    instanceStatusesUrl("/" + entityUUID);
     String updateProperty = InstanceStatus.NAME_KEY;
 
     testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);

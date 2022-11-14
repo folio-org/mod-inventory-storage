@@ -1988,12 +1988,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
-    final var createdItems = List.of(
-      createItem(smallAngryPlanet(holdingsRecordId)),
-      createItem(nod(holdingsRecordId)),
-      createItem(uprooted(UUID.randomUUID(), holdingsRecordId)),
-      createItem(temeraire(UUID.randomUUID(), holdingsRecordId)),
-      createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId)));
+    createItem(smallAngryPlanet(holdingsRecordId));
+    createItem(nod(holdingsRecordId));
+    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
+    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
+    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 

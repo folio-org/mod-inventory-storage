@@ -155,7 +155,7 @@ public class AuthorityStorageTest extends TestBase {
   public void postWithWrongFields() {
     assertEquals(0, authoritiesClient.getAll().size());
 
-    var res = authoritiesClient.create(new JsonObject()
+    authoritiesClient.create(new JsonObject()
       .put("personalName", "personalName")
       .put("wrong", "test"));
   }

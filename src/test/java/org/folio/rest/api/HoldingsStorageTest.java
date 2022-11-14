@@ -537,23 +537,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(nod(secondInstanceId));
     instancesClient.create(uprooted(thirdInstanceId));
 
-    UUID firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
       .withPermanentLocation(mainLibraryLocationId)).getId();
 
-    UUID secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
       .withPermanentLocation(annexLibraryLocationId)).getId();
 
-    UUID thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(thirdInstanceId)
       .withPermanentLocation(mainLibraryLocationId)).getId();
 
-    UUID fourthHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
       .withPermanentLocation(mainLibraryLocationId)).getId();
 
-    UUID fifthHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
       .withPermanentLocation(annexLibraryLocationId)).getId();
 
@@ -598,19 +598,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(nod(secondInstanceId));
     instancesClient.create(uprooted(thirdInstanceId));
 
-    final List<IndividualResource> createdHoldings = List.of(
-      holdingsClient.create(new HoldingRequestBuilder()
-        .forInstance(firstInstanceId)
-        .withPermanentLocation(mainLibraryLocationId)),
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(firstInstanceId)
+      .withPermanentLocation(mainLibraryLocationId));
 
-      holdingsClient.create(new HoldingRequestBuilder()
-        .forInstance(secondInstanceId)
-        .withPermanentLocation(annexLibraryLocationId)),
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(secondInstanceId)
+      .withPermanentLocation(annexLibraryLocationId));
 
-      holdingsClient.create(new HoldingRequestBuilder()
-        .forInstance(thirdInstanceId)
-        .withPermanentLocation(mainLibraryLocationId))
-    );
+    holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(thirdInstanceId)
+      .withPermanentLocation(mainLibraryLocationId));
 
     holdingsClient.deleteAll();
 
