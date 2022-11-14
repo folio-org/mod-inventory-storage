@@ -19,7 +19,6 @@ import org.junit.runners.Suite;
   TenantRefAPITest.class,
 })
 public class RestTestSuite {
-  public static String KAFKA_CONTAINER_NAME = "confluentinc/cp-kafka:5.4.3";
 
   private RestTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
