@@ -38,6 +38,13 @@ public class TenantRefAPI extends TenantAPI {
   private static final String SAMPLE_KEY = "loadSample";
   private static final String REFERENCE_KEY = "loadReference";
   private static final String REFERENCE_LEAD = "ref-data";
+  private static final String INSTANCES = "instance-storage/instances";
+  private static final String HOLDINGS = "holdings-storage/holdings";
+  private static final String ITEMS = "item-storage/items";
+  private static final String INSTANCE_RELATIONSHIPS = "instance-storage/instance-relationships";
+  private static final String BOUND_WITH_PARTS = "inventory-storage/bound-with-parts";
+  private static final String SERVICE_POINTS_USERS = "service-points-users";
+
   private static final Logger log = LogManager.getLogger();
   final String[] refPaths = new String[]{
     "material-types",
@@ -122,19 +129,30 @@ public class TenantRefAPI extends TenantAPI {
         tl.add(p);
       }
       tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
-      tl.add("instances", "instance-storage/instances");
       tl.withIdContent();
-      tl.add("holdingsrecords", "holdings-storage/holdings");
-      tl.add("items", "item-storage/items");
-      tl.add("instance-relationships", "instance-storage/instance-relationships");
-      tl.add("bound-with/instances", "instance-storage/instances");
-      tl.add("bound-with/holdingsrecords", "holdings-storage/holdings");
-      tl.add("bound-with/items", "item-storage/items");
-      tl.add("bound-with/bound-with-parts", "inventory-storage/bound-with-parts");
+      tl.add("instances", INSTANCES);
+      tl.add("holdingsrecords", HOLDINGS);
+      tl.add("items", ITEMS);
+      tl.add("instance-relationships", INSTANCE_RELATIONSHIPS);
+      tl.add("bound-with/instances", INSTANCES);
+      tl.add("bound-with/holdingsrecords", HOLDINGS);
+      tl.add("bound-with/items", ITEMS);
+      tl.add("bound-with/bound-with-parts", BOUND_WITH_PARTS);
       tl.withFilter(service -> servicePointUserFilter(service, servicePoints))
         .withPostOnly()
         .withAcceptStatus(422)
-        .add("users", "service-points-users");
+        .add("users", SERVICE_POINTS_USERS);
+      future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+    }
+
+    if (isNew(attributes, "25.1.0")) {
+      TenantLoading tl = new TenantLoading();
+      tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+      tl.withIdContent();
+      tl.add("bound-with/instances-25.1", INSTANCES);
+      tl.add("bound-with/holdingsrecords-25.1", HOLDINGS);
+      tl.add("bound-with/items-25.1", ITEMS);
+      tl.add("bound-with/bound-with-parts-25.1", BOUND_WITH_PARTS);
       future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
     }
 
