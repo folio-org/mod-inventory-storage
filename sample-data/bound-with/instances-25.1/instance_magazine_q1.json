@@ -1,0 +1,15 @@
+{
+  "id" : "28d36163-0425-4452-b1f8-1dc4467c52b1",
+  "hrid" : "bwinst0004",
+  "source" : "FOLIO",
+  "title" : "Magazine - Q1",
+  "identifiers" : [ {
+    "identifierTypeId" : "2e8b3b6c-0e7d-4e48-bca2-b0b23b376af5",
+    "value" : "bw"
+  } ],
+  "instanceTypeId" : "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
+  "previouslyHeld" : false,
+  "staffSuppress" : false,
+  "discoverySuppress" : false,
+  "statusUpdatedDate" : "2022-10-12T13:04:01.666+0000"
+}
