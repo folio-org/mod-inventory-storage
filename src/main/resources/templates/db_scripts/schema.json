@@ -794,7 +794,7 @@
     {
       "tableName": "hrid_settings",
       "fromModuleVersion": "17.1.0",
-      "withMetadata": false,
+      "withMetadata": true,
       "withAuditing": false,
       "customSnippetPath": "hridSettings.sql"
     },
