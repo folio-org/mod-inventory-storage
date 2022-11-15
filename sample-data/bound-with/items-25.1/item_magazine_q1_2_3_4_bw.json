@@ -1,0 +1,13 @@
+{
+  "id" : "917e044f-173c-4445-8293-45a78ef49ace",
+  "status" : {
+    "name" : "Available",
+    "date" : "2022-10-12T13:09:44.476+00:00"
+  },
+  "hrid" : "bwit0005",
+  "holdingsRecordId" : "7a2443bc-fe66-40d5-9400-9a800fdf013e",
+  "barcode" : "BW-item1",
+  "copyNumber" : "The bind of second copies of Q1,2,3, and 4",
+  "materialTypeId" : "d9acad2f-2aac-4b48-9097-e6ab85906b25",
+  "permanentLoanTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe27"
+}
