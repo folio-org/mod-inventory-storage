@@ -49,10 +49,6 @@ public class TenantRefAPI extends TenantAPI {
   final String[] refPaths = new String[]{
     "material-types",
     "loan-types",
-    "location-units/institutions",
-    "location-units/campuses",
-    "location-units/libraries",
-    "locations",
     "identifier-types",
     "contributor-types",
     "service-points",
@@ -130,6 +126,10 @@ public class TenantRefAPI extends TenantAPI {
       }
       tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
       tl.withIdContent();
+      tl.add("location-units/institutions");
+      tl.add("location-units/campuses");
+      tl.add("location-units/libraries");
+      tl.add("locations");
       tl.add("instances", INSTANCES);
       tl.add("holdingsrecords", HOLDINGS);
       tl.add("items", ITEMS);
