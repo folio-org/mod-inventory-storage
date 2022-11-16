@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -12,6 +11,7 @@ import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasAggregat
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasEffectiveLocationInstitutionName;
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.isDeleted;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.allOf;

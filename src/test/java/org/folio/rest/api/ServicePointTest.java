@@ -3,15 +3,20 @@ package org.folio.rest.api;
 import static org.folio.rest.impl.ServicePointAPI.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
 import static org.folio.rest.impl.ServicePointAPI.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
-
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
+import static org.folio.utility.LocationUtility.createServicePoint;
+import static org.folio.utility.RestUtility.send;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -19,9 +24,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -29,10 +31,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
-
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
-import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
 
 /**
  *
@@ -701,50 +699,6 @@ public class ServicePointTest extends TestBase{
       .getJsonArray("servicepoints").stream()
       .map(obj -> (JsonObject) obj)
       .collect(Collectors.toList());
-  }
-
-  public static Response createServicePoint(UUID id, String name, String code,
-                                            String discoveryDisplayName, String description, Integer shelvingLagTime,
-                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-
-    return createServicePoint(id, name, code, discoveryDisplayName, description,
-      shelvingLagTime, pickupLocation, shelfExpiryPeriod, Collections.emptyList());
-
-  }
-
-  private static Response createServicePoint(UUID id, String name, String code,
-                                            String discoveryDisplayName, String description, Integer shelvingLagTime,
-                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod, List<StaffSlip> slips)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-
-    CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
-    JsonObject request = new JsonObject();
-    request
-      .put("name", name)
-      .put("code", code)
-      .put("discoveryDisplayName", discoveryDisplayName);
-    if(id != null) { request.put("id", id.toString()); }
-    if(description != null) { request.put("description", description); }
-    if(shelvingLagTime != null) { request.put("shelvingLagTime", shelvingLagTime); }
-    if(pickupLocation != null) { request.put("pickupLocation", pickupLocation); }
-    if(shelfExpiryPeriod != null) {request.put("holdShelfExpiryPeriod", new JsonObject(Json.encode(shelfExpiryPeriod)));}
-
-    if (!slips.isEmpty()) {
-      JsonArray staffSlips = new JsonArray();
-      for (StaffSlip ss : slips) {
-        JsonObject staffSlip = new JsonObject();
-        staffSlip.put("id", ss.getId());
-        staffSlip.put("printByDefault", ss.getPrintByDefault());
-        staffSlips.add(staffSlip);
-      }
-      request.put("staffSlips", staffSlips);
-    }
-
-    send(servicePointsUrl(""), HttpMethod.POST, request.toString(),
-            SUPPORTED_CONTENT_TYPE_JSON_DEF,
-            ResponseHandler.json(createServicePoint));
-    return createServicePoint.get(10, TimeUnit.SECONDS);
   }
 
   public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, HoldShelfExpiryPeriod.IntervalId intervalId){

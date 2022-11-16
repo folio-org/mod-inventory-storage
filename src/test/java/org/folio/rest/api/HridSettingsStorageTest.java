@@ -1,10 +1,10 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;

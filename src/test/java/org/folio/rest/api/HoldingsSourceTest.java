@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.support.http.InterfaceUrls.holdingsSourceUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -143,7 +144,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    getClient().post(holdingsSourceUrl(""), request, StorageTestSuite.TENANT_ID,
+    getClient().post(holdingsSourceUrl(""), request, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     Response response = createCompleted.get(10, TimeUnit.SECONDS);

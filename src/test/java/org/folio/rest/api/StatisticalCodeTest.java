@@ -1,9 +1,7 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -26,11 +24,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
+
   @Before
-  public void removeTestStatisticalCodes() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+  public void beforeEach() {
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+
     statisticalCodeFixture.removeTestStatisticalCodes();
   }
 
@@ -85,7 +86,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), StorageTestSuite.TENANT_ID,
+    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
     Response response = deleteCompleted.get(10, TimeUnit.SECONDS);
@@ -123,7 +124,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), StorageTestSuite.TENANT_ID,
+    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
     Response response = deleteCompleted.get(10, TimeUnit.SECONDS);
@@ -171,7 +172,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), StorageTestSuite.TENANT_ID,
+    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
     Response response = deleteCompleted.get(10, TimeUnit.SECONDS);

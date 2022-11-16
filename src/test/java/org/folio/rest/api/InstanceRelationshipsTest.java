@@ -4,6 +4,7 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,7 +53,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     getClient().post(
             instanceRelationshipsUrl(""),
             instanceRelationshipRequestObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.json(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
@@ -66,7 +67,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     getClient().post(
             instanceRelationshipsUrl(""),
             instanceRelationshipRequestObject2.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.json(createRelationshipCompleted2)
     );
     Response relationshipPostResponse2 = createRelationshipCompleted2.get(10, TimeUnit.SECONDS);
@@ -93,7 +94,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     getClient().post(
             instanceRelationshipsUrl(""),
             instanceRelationshipRequestObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.text(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
@@ -119,7 +120,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     getClient().post(
             instanceRelationshipsUrl(""),
             instanceRelationshipRequestObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.text(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
@@ -133,7 +134,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     getClient().post(
             instancesStorageUrl(""),
             requestObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.json(createCompleted)
     );
     Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);

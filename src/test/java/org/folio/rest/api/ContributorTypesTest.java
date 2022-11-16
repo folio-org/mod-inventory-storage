@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static org.folio.rest.support.http.InterfaceUrls.contributorTypesUrl;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,7 +32,7 @@ public class ContributorTypesTest extends TestBase {
     String url = contributorTypesUrl("").toString() + "?limit=400&query="
       + urlEncode("cql.allRecords=1");
 
-    getClient().get(url, StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+    getClient().get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
     Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(

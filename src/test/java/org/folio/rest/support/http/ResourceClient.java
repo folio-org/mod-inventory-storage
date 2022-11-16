@@ -1,8 +1,10 @@
 package org.folio.rest.support.http;
 
-import static org.hamcrest.core.Is.is;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,8 +12,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-
-import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
@@ -21,8 +21,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.Builder;
 import org.folio.util.PercentCodec;
 import org.folio.util.StringUtil;
-
-import io.vertx.core.json.JsonObject;
 
 public class ResourceClient {
 
@@ -212,7 +210,7 @@ public class ResourceClient {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     try {
-      client.post(urlMaker.combine(subPath), request, StorageTestSuite.TENANT_ID,
+      client.post(urlMaker.combine(subPath), request, TENANT_ID,
         ResponseHandler.any(createCompleted));
     } catch (MalformedURLException e) {
       throw new RuntimeException(subPath + ": " + e.getMessage(), e);
@@ -256,7 +254,7 @@ public class ResourceClient {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
     client.put(urlMakerWithId(id), request,
-      StorageTestSuite.TENANT_ID, ResponseHandler.any(putCompleted));
+      TENANT_ID, ResponseHandler.any(putCompleted));
 
     return TestBase.get(putCompleted);
   }
@@ -267,7 +265,7 @@ public class ResourceClient {
   }
 
   public Response getByIdIfPresent(String id) {
-    return TestBase.get(client.get(urlMakerWithId(id), StorageTestSuite.TENANT_ID));
+    return TestBase.get(client.get(urlMakerWithId(id), TENANT_ID));
   }
 
   public Response deleteIfPresent(String id) {
@@ -275,7 +273,7 @@ public class ResourceClient {
     CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
 
     client.delete(urlMakerWithId(id),
-      StorageTestSuite.TENANT_ID, ResponseHandler.any(deleteFinished));
+      TENANT_ID, ResponseHandler.any(deleteFinished));
 
     return TestBase.get(deleteFinished);
   }
@@ -298,7 +296,7 @@ public class ResourceClient {
 
     try {
       var cql = PercentCodec.encode("cql.allRecords=1");
-      client.delete(urlMaker.combine("?query=" + cql), StorageTestSuite.TENANT_ID,
+      client.delete(urlMaker.combine("?query=" + cql), TENANT_ID,
           ResponseHandler.any(deleteAllFinished));
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
@@ -323,7 +321,7 @@ public class ResourceClient {
       try {
         CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
 
-        client.delete(urlMakerWithId(record.getString("id")), StorageTestSuite.TENANT_ID,
+        client.delete(urlMakerWithId(record.getString("id")), TENANT_ID,
           ResponseHandler.any(deleteFinished));
 
         Response deleteResponse = TestBase.get(deleteFinished);
@@ -350,7 +348,7 @@ public class ResourceClient {
     CompletableFuture<Response> getFinished = new CompletableFuture<>();
 
     try {
-      client.get(urlMaker.combine(query), StorageTestSuite.TENANT_ID,
+      client.get(urlMaker.combine(query), TENANT_ID,
         ResponseHandler.any(getFinished));
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
@@ -374,7 +372,7 @@ public class ResourceClient {
 
     try {
       client.get(urlMaker.combine("?query=" + encodedQuery),
-        StorageTestSuite.TENANT_ID, ResponseHandler.json(getFinished));
+        TENANT_ID, ResponseHandler.json(getFinished));
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }

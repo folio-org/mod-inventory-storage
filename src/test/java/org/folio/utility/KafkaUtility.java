@@ -36,11 +36,14 @@ public class KafkaUtility {
   }
 
   public static void stopKafka() {
-    logger.info("stopping Kafka host={} port={}",
+    if (kafkaContainer.isRunning()) {
+      logger.info("stopping Kafka host={} port={}",
         kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
 
-    kafkaContainer.stop();
-
-    logger.info("finished stopping Kafka");
+      kafkaContainer.stop();
+      logger.info("finished stopping Kafka");
+    } else {
+      logger.info("Kafka container already stopped");
+    }
   }
 }

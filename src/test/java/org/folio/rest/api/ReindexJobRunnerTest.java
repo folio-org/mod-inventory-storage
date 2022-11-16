@@ -3,12 +3,14 @@ package org.folio.rest.api;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.folio.InventoryKafkaTopic.AUTHORITY;
+import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -35,8 +37,6 @@ import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
 import org.folio.services.reindex.ReindexResourceName;
 import org.junit.Test;
-import static org.folio.InventoryKafkaTopic.AUTHORITY;
-import static org.folio.InventoryKafkaTopic.INSTANCE;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();

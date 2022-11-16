@@ -1,13 +1,13 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.dereferencedItemStorage;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -158,7 +158,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private static void postItem(JsonObject itemRecord) {
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
-    postCompleted = getClient().post(itemsStorageUrl(""), itemRecord, StorageTestSuite.TENANT_ID);
+    postCompleted = getClient().post(itemsStorageUrl(""), itemRecord, TENANT_ID);
     Response response = postCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(201));
   }
@@ -215,7 +215,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private Response attemptFindByCql(String badSearchQuery) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
     getClient().get(dereferencedItemStorage("?query=") + urlEncode(badSearchQuery),
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
+      TENANT_ID, ResponseHandler.text(searchCompleted));
 
     return searchCompleted.get(10, TimeUnit.SECONDS);
   }
@@ -224,7 +224,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private Response attemptFindById(String badId) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
     getClient().get(dereferencedItemStorage("/") + urlEncode(badId),
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
+      TENANT_ID, ResponseHandler.text(searchCompleted));
 
     return searchCompleted.get(10, TimeUnit.SECONDS);
   }
@@ -233,7 +233,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private DereferencedItems findByCql(String searchQuery) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
     getClient().get(dereferencedItemStorage("?query=") + urlEncode(searchQuery),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+      TENANT_ID, ResponseHandler.json(searchCompleted));
 
     return searchCompleted.get(10, TimeUnit.SECONDS).getJson()
       .mapTo(DereferencedItems.class);

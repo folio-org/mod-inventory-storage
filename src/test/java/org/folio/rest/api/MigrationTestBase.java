@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
-
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getVertx;
 
 import io.vertx.sqlclient.Row;

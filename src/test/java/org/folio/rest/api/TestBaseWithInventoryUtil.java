@@ -1,16 +1,10 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,6 +26,7 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
+import org.folio.utility.LocationUtility;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -62,12 +57,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
   // that JUnit calls *before* the @BeforeClass beforeAny() method.
-  public static UUID mainLibraryLocationId = UUID.randomUUID();
-  public static UUID annexLibraryLocationId = UUID.randomUUID();
-  public static UUID onlineLocationId = UUID.randomUUID();
-  public static UUID secondFloorLocationId = UUID.randomUUID();
-  public static UUID thirdFloorLocationId = UUID.randomUUID();
-  public static UUID fourthFloorLocationId = UUID.randomUUID();
+  public static final UUID mainLibraryLocationId = UUID.randomUUID();
+  public static final UUID annexLibraryLocationId = UUID.randomUUID();
+  public static final UUID onlineLocationId = UUID.randomUUID();
+  public static final UUID secondFloorLocationId = UUID.randomUUID();
+  public static final UUID thirdFloorLocationId = UUID.randomUUID();
+  public static final UUID fourthFloorLocationId = UUID.randomUUID();
 
   // These UUIDs were taken from reference-data folder.
   // When the vertical gets started the data from the reference-data folder are loaded to the DB.
@@ -87,44 +82,45 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
 
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-
+    clearData();
     createDefaultInstanceType();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
 
-    MaterialTypesClient materialTypesClient = new MaterialTypesClient(getClient(), materialTypesStorageUrl(""));
-    journalMaterialTypeID = materialTypesClient.create("journal");
-    journalMaterialTypeId = UUID.fromString(journalMaterialTypeID);
-    bookMaterialTypeID = materialTypesClient.create("book");
-    bookMaterialTypeId = UUID.fromString(bookMaterialTypeID);
-
-    LoanTypesClient loanTypesClient = new LoanTypesClient(getClient(), loanTypesStorageUrl(""));
-    canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
-    canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
-    nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating");
-    nonCirculatingLoanTypeId = UUID.fromString(nonCirculatingLoanTypeID);
-
-    LocationsTest.createLocUnits(true);
-    LocationsTest.createLocation(mainLibraryLocationId,  MAIN_LIBRARY_LOCATION,  "TestBaseWI/M");
-    LocationsTest.createLocation(annexLibraryLocationId, ANNEX_LIBRARY_LOCATION, "TestBaseWI/A");
-    LocationsTest.createLocation(onlineLocationId,       ONLINE_LOCATION,        "TestBaseWI/O");
-    LocationsTest.createLocation(secondFloorLocationId,  SECOND_FLOOR_LOCATION,  "TestBaseWI/SF");
-    LocationsTest.createLocation(thirdFloorLocationId,   THIRD_FLOOR_LOCATION,   "TestBaseWI/TF");
-    LocationsTest.createLocation(fourthFloorLocationId,  FOURTH_FLOOR_LOCATION,  "TestBaseWI/FF");
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
   }
 
   @Before
   public void removeAllEvents() {
     FakeKafkaConsumer.removeAllEvents();
+  }
+
+  protected static void setupMaterialTypes() {
+    MaterialTypesClient materialTypesClient = new MaterialTypesClient(getClient(), materialTypesStorageUrl(""));
+    journalMaterialTypeID = materialTypesClient.create("journal");
+    journalMaterialTypeId = UUID.fromString(journalMaterialTypeID);
+    bookMaterialTypeID = materialTypesClient.create("book");
+    bookMaterialTypeId = UUID.fromString(bookMaterialTypeID);
+  }
+
+  protected static void setupLoanTypes() {
+    LoanTypesClient loanTypesClient = new LoanTypesClient(getClient(), loanTypesStorageUrl(""));
+    canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
+    canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
+    nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating");
+    nonCirculatingLoanTypeId = UUID.fromString(nonCirculatingLoanTypeID);
+  }
+
+  protected static void setupLocations() {
+    LocationUtility.clearServicePointIDs();
+    LocationUtility.createLocationUnits(true);
+    LocationUtility.createLocation(mainLibraryLocationId,  MAIN_LIBRARY_LOCATION,  "TestBaseWI/M");
+    LocationUtility.createLocation(annexLibraryLocationId, ANNEX_LIBRARY_LOCATION, "TestBaseWI/A");
+    LocationUtility.createLocation(onlineLocationId,       ONLINE_LOCATION,        "TestBaseWI/O");
+    LocationUtility.createLocation(secondFloorLocationId,  SECOND_FLOOR_LOCATION,  "TestBaseWI/SF");
+    LocationUtility.createLocation(thirdFloorLocationId,   THIRD_FLOOR_LOCATION,   "TestBaseWI/TF");
+    LocationUtility.createLocation(fourthFloorLocationId,  FOURTH_FLOOR_LOCATION,  "TestBaseWI/FF");
   }
 
   protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId) {
@@ -139,7 +135,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return createHolding(instanceId, holdingsPermanentLocationId, holdingsTemporaryLocationId);
   }
 
-  static UUID createInstanceAndHoldingWithBuilder(
+  protected static UUID createInstanceAndHoldingWithBuilder(
     UUID holdingsPermanentLocationId, UnaryOperator<HoldingRequestBuilder> holdingsBuilderProcessor) {
 
     UUID instanceId = UUID.randomUUID();

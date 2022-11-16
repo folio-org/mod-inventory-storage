@@ -1,17 +1,23 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.ext.web.client.HttpResponse;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
@@ -63,33 +69,11 @@ public abstract class TestBase {
   static AuthorityReindexFixture authorityReindex;
   static AsyncMigrationFixture asyncMigration;
 
-  /**
-   * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
-   *
-   * <p>Wraps these checked exceptions into RuntimeException:
-   * InterruptedException, ExecutionException, TimeoutException.
-   */
-  public static <T> T get(CompletableFuture<T> future) {
-    try {
-      return future.get(TestBase.TIMEOUT, TimeUnit.SECONDS);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
-   *
-   * <p>Wraps these checked exceptions into RuntimeException:
-   * InterruptedException, ExecutionException, TimeoutException.
-   */
-  public static <T> T get(Future<T> future) {
-    return get(future.toCompletionStage().toCompletableFuture());
-  }
-
   @BeforeClass
   public static void testBaseBeforeClass() {
     logger.info("starting @BeforeClass testBaseBeforeClass()");
+
+    FakeKafkaConsumer.removeAllEvents();
 
     instancesClient = ResourceClient.forInstances(getClient());
     holdingsClient = ResourceClient.forHoldings(getClient());
@@ -112,51 +96,48 @@ public abstract class TestBase {
     illPoliciesClient = ResourceClient.forIllPolicies(getClient());
     statisticalCodeFixture = new StatisticalCodeFixture(getClient());
     kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
-    FakeKafkaConsumer.removeAllEvents();
     instanceReindex = new InstanceReindexFixture(getClient());
     authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
-  static void send(URL url, HttpMethod method, String content,
-      String contentType, Handler<HttpResponse<Buffer>> handler) {
-    send(url, method, null, content, contentType, handler);
+  protected static void clearData() {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUrl(""));
   }
 
-  static void send(URL url, HttpMethod method, String userId, String content,
-                   String contentType, Handler<HttpResponse<Buffer>> handler) {
-    send(url.toString(), method, userId, content, contentType, handler);
-  }
-
-  static Future<HttpResponse<Buffer>> send(URL url, HttpMethod method, String content,
-      String contentType) {
-    return Future.future(promise -> send(url, method, content, contentType, promise::complete));
-  }
-
-  static void send(String url, HttpMethod method, String content,
-                   String contentType, Handler<HttpResponse<Buffer>> handler) {
-    send(url, method, null, content, contentType, handler);
-  }
-
-  static void send(String url, HttpMethod method, String userId, String content,
-        String contentType, Handler<HttpResponse<Buffer>> handler) {
-    Buffer body = Buffer.buffer(content == null ? "" : content);
-
-    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
-    if (userId != null) {
-      headers.add("X-Okapi-User-Id", userId);
+  /**
+   * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
+   *
+   * <p>Wraps these checked exceptions into RuntimeException:
+   * InterruptedException, ExecutionException, TimeoutException.
+   */
+  public static <T> T get(CompletableFuture<T> future) {
+    try {
+      return future.get(TestBase.TIMEOUT, TimeUnit.SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
     }
-    getClient().getWebClient()
-      .requestAbs(method, url)
-      .putHeader("Authorization", "test_tenant")
-      .putHeader("x-okapi-tenant", "test_tenant")
-      .putHeader("Accept", "application/json,text/plain")
-      .putHeader("Content-type", contentType)
-      .putHeaders(headers)
-      .sendBuffer(body)
-      .onSuccess(handler)
-      .onFailure(error -> logger.error(error.getMessage(), error));
+  }
+
+  /**
+   * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
+   *
+   * <p>Wraps these checked exceptions into RuntimeException:
+   * InterruptedException, ExecutionException, TimeoutException.
+   */
+  public static <T> T get(Future<T> future) {
+    return get(future.toCompletionStage().toCompletableFuture());
   }
 
   /**

@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.alternativeTitleTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.authorityNoteTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.authoritySourceFilesUrl;
@@ -24,6 +23,7 @@ import static org.folio.rest.support.http.InterfaceUrls.modesOfIssuanceUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.folio.utility.VertxUtility.vertxUrl;
 import static org.hamcrest.CoreMatchers.is;

@@ -11,6 +11,16 @@ import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
+import static org.folio.utility.LocationUtility.clearServicePointIDs;
+import static org.folio.utility.LocationUtility.createLocation;
+import static org.folio.utility.LocationUtility.createLocationUnits;
+import static org.folio.utility.LocationUtility.getCampusID;
+import static org.folio.utility.LocationUtility.getInstitutionID;
+import static org.folio.utility.LocationUtility.getLibraryID;
+import static org.folio.utility.LocationUtility.getServicePointIDs;
+import static org.folio.utility.RestUtility.send;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -20,8 +30,6 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -37,29 +45,25 @@ import org.junit.Test;
 
 public class ShelfLocationsTest extends TestBase {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
-  private UUID instID;
-  private UUID campID;
-  private UUID libID;
-  private List<UUID> servicePointIDs = new ArrayList<UUID>();
 
   @Before
   public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
     StorageTestSuite.deleteAll(locationsStorageUrl(""));
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
     StorageTestSuite.deleteAll(locCampusStorageUrl(""));
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
 
     new LoanTypesClient(
       new HttpClient(getVertx()),
@@ -69,26 +73,20 @@ public class ShelfLocationsTest extends TestBase {
       new HttpClient(getVertx()),
       materialTypesStorageUrl("")).create("Journal");
 
-    instID = UUID.randomUUID();
-    LocationUnitTest.createInst(instID, "Primary Institution", "PI");
-    campID = UUID.randomUUID();
-    LocationUnitTest.createCamp(campID, "Central Campus", "CC", instID);
-    libID = UUID.randomUUID();
-    LocationUnitTest.createLib(libID, "Main Library", "ML", campID);
-    UUID spID = UUID.randomUUID();
-    servicePointIDs.add(spID);
-    ServicePointTest.createServicePoint(spID, "Service Point", "SP", "Service Point", "SP Description", 0, false, null);
+    clearServicePointIDs();
+    createLocationUnits(true);
   }
 
   @Test
   public void canCreateShelfLocation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
-    Response response = LocationsTest.createLocation(null, "Main Library", instID, campID, libID, "PI/CC/ML/X",
-        servicePointIDs);
+    Response response = createLocation(null, "Main Library",
+        getInstitutionID(), getCampusID(), getLibraryID(), "PI/CC/ML/X",
+        getServicePointIDs());
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -97,14 +95,15 @@ public class ShelfLocationsTest extends TestBase {
 
   @Test
   public void canGetAShelfLocationById()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    Response createResponse = LocationsTest.createLocation(
-        id, "Main Library", instID, campID, libID, "PI/CC/ML/X", servicePointIDs);
+    Response createResponse = createLocation(id, "Main Library",
+        getInstitutionID(), getCampusID(), getLibraryID(), "PI/CC/ML/X",
+        getServicePointIDs());
     assertThat(createResponse, statusCodeIs(201));
 
     Response getResponse = getById(id);
@@ -115,10 +114,10 @@ public class ShelfLocationsTest extends TestBase {
   }
 
   private Response getById(UUID id)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 

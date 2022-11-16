@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -38,7 +39,7 @@ import org.mockito.stubbing.Answer;
 @RunWith(VertxUnitRunner.class)
 public class AbstractInstanceRecordsAPITest extends TestBase {
   private static final Map<String,String> okapiHeaders = Collections.singletonMap(
-      RestVerticle.OKAPI_HEADER_TENANT, StorageTestSuite.TENANT_ID);
+      RestVerticle.OKAPI_HEADER_TENANT, TENANT_ID);
 
   static class MyAbstractInstanceRecordsAPI extends AbstractInstanceRecordsAPI {
     public void fetchRecordsByQuery(String sql, RoutingContext routingContext,

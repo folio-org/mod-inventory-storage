@@ -1,10 +1,7 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.deleteAll;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,7 +23,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -47,18 +43,19 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   private UUID holdingsRecordId;
 
   @Before
-  public void setUp() throws InterruptedException, ExecutionException,
-    MalformedURLException, TimeoutException {
+  public void beforeEach()
+      throws InterruptedException,
+      ExecutionException,
+      MalformedURLException,
+      TimeoutException {
 
+    clearData();
     clearAuditTables();
-    holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
-  }
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
 
-  @BeforeClass
-  public static void beforeClass() {
-    deleteAll(itemsStorageUrl(""));
-    deleteAll(holdingsStorageUrl(""));
-    deleteAll(instancesStorageUrl(""));
+    holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
   }
 
   @Test
@@ -84,8 +81,12 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testOnlyDeletedInstancesAreStoredInAuditTable() throws InterruptedException,
-    MalformedURLException, TimeoutException, ExecutionException {
+  public void testOnlyDeletedInstancesAreStoredInAuditTable()
+      throws InterruptedException,
+      MalformedURLException,
+      TimeoutException,
+      ExecutionException {
+
     //given
     final JsonObject record = instancesClient.getAll().get(0);
     UUID instanceId = UUID.fromString(record.getString("id"));
@@ -103,8 +104,12 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testOnlyDeletedHoldingsAreStoredInAuditTable() throws InterruptedException,
-    MalformedURLException, TimeoutException, ExecutionException {
+  public void testOnlyDeletedHoldingsAreStoredInAuditTable()
+      throws InterruptedException,
+      MalformedURLException,
+      TimeoutException,
+      ExecutionException {
+
     //given
     final JsonObject record = holdingsClient.getAll().get(0);
     //when
@@ -119,7 +124,9 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   private Object getRecordIdFromAuditTable(String tableName)
-    throws InterruptedException, TimeoutException, ExecutionException {
+      throws InterruptedException,
+      TimeoutException,
+      ExecutionException {
 
     final Row row = getRecordsFromAuditTable(tableName).iterator().next();
     final JsonPointer jsonPointer = JsonPointer.from(RECORD_ID_JSON_PATH);
@@ -127,7 +134,9 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   private RowSet<Row> getRecordsFromAuditTable(String tableName)
-    throws InterruptedException, TimeoutException, ExecutionException {
+      throws InterruptedException,
+      TimeoutException,
+      ExecutionException {
 
     final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
     postgresClient.select(getAuditSQL(tableName), h ->

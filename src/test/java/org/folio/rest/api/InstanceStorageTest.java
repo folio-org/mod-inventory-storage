@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -15,7 +14,6 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchIns
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
@@ -28,6 +26,7 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdate
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -100,6 +99,7 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.utility.LocationUtility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -118,30 +118,23 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
-  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
-
   @Before
   public void beforeEach() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
 
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
     natureOfContentIdsToRemoveAfterTest.clear();
   }
 
   @After
-  public void resetInstanceHRID() {
+  public void afterEach(TestContext context) {
     setInstanceSequence(1);
-  }
 
-  @After
-  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("instance");
-  }
 
-  @After
-  public void removeGeneratedEntities(TestContext context) {
     final Async async = context.async();
     List<CompletableFuture<Response>> cfs = new ArrayList<CompletableFuture<Response>>();
     natureOfContentIdsToRemoveAfterTest.forEach(id -> cfs.add(getClient()
@@ -628,7 +621,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     String query = urlEncode(String.format("%s.updatedDate>=%s", METADATA_KEY, metadata.getString("updatedDate")));
 
-    getClient().get(instancesStorageUrl(String.format("?query=%s", query)), StorageTestSuite.TENANT_ID,
+    getClient().get(instancesStorageUrl(String.format("?query=%s", query)), TENANT_ID,
         ResponseHandler.json(getCompleted));
 
     Response response = getCompleted.get(10, TimeUnit.SECONDS);
@@ -1573,9 +1566,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     ///////// create location objects //////////////////////////////
     UUID loc1 = UUID.fromString("11111111-dee7-48eb-b03f-d02fdf0debd0");
-    LocationsTest.createLocation(loc1, "location1", "IX/L1");
+    LocationUtility.createLocation(loc1, "location1", "IX/L1");
     UUID loc2 = UUID.fromString("99999999-dee7-48eb-b03f-d02fdf0debd0");
-    LocationsTest.createLocation(loc2, "location2", "IX/L2");
+    LocationUtility.createLocation(loc2, "location2", "IX/L2");
     /////////////////// done //////////////////////////////////////
 
     /////////////////// create holdings records ///////////////////

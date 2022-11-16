@@ -1,15 +1,15 @@
 package org.folio.rest.support.fixtures;
 
+import static org.folio.rest.api.TestBase.get;
+import static org.folio.rest.support.http.InterfaceUrls.authorityReindexUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
-
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.TestBase.get;
-import static org.folio.rest.support.http.InterfaceUrls.authorityReindexUrl;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 public final class AuthorityReindexFixture {
   private final HttpClient client;

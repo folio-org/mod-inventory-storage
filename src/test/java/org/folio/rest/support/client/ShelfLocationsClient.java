@@ -1,15 +1,16 @@
 package org.folio.rest.support.client;
 
+import static org.folio.utility.RestUtility.TENANT_ID;
+
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.folio.rest.api.StorageTestSuite;
 import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 
 /**
  *
@@ -34,7 +35,7 @@ public class ShelfLocationsClient {
     JsonObject shelfLocationRequest = new JsonObject()
       .put("name", name);
 
-    client.post(shelfLocationsUrl, shelfLocationRequest, StorageTestSuite.TENANT_ID,
+    client.post(shelfLocationsUrl, shelfLocationRequest, TENANT_ID,
       ResponseHandler.json(completed));
 
     Response response = completed.get(10, TimeUnit.SECONDS);

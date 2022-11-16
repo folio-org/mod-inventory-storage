@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static org.folio.utility.KafkaUtility.startKafka;
 import static org.folio.utility.KafkaUtility.stopKafka;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.folio.utility.VertxUtility.removeTenant;
 import static org.folio.utility.VertxUtility.startVertx;
@@ -99,7 +100,6 @@ import org.junit.runners.Suite;
   //UpdateItemStatusDateFunctionMigrationTest.class,
 })
 public class StorageTestSuite {
-  public static final String TENANT_ID = "test_tenant";
   private static final Logger logger = LogManager.getLogger();
 
   private StorageTestSuite() {

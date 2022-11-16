@@ -1,12 +1,12 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.authoritiesStorageUrl;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForAuthority;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.junit.Assert.assertEquals;
 
@@ -31,6 +31,7 @@ public class AuthorityStorageTest extends TestBase {
 
   @Before
   public void beforeEach() {
+    clearData();
     StorageTestSuite.deleteAll(authoritiesStorageUrl(""));
   }
 

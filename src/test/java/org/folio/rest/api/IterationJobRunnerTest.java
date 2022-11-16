@@ -4,11 +4,11 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -49,7 +49,6 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   private IterationJobRepository jobRepository;
   private InstanceRepository instanceRepository;
   private IterationJobRunner jobRunner;
-
 
   @BeforeClass
   public static void beforeClass() throws Exception {

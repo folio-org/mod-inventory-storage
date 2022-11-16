@@ -1,10 +1,10 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.entities.PrecedingSucceedingTitle.PRECEDING_INSTANCE_ID_KEY;
 import static org.folio.rest.api.entities.PrecedingSucceedingTitle.SUCCEEDING_INSTANCE_ID_KEY;
 import static org.folio.rest.support.http.InterfaceUrls.precedingSucceedingTitleUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
