@@ -22,6 +22,7 @@ import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,14 @@ public class AuthorityStorageTest extends TestBase {
   public void beforeEach() {
     clearData();
     StorageTestSuite.deleteAll(authoritiesStorageUrl(""));
+  }
+
+  @After
+  public void afterEach()
+      throws InterruptedException,
+      ExecutionException {
+
+    removeAllEvents(true);
   }
 
   @Test

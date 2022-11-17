@@ -123,14 +123,18 @@ public class StorageTestSuite {
 
   @AfterClass
   public static void after()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException {
+
+    logger.info("starting @AfterClass after()");
 
     removeTenant(TENANT_ID);
-    stopKafka();
     stopVertx();
+    stopKafka();
+
     PostgresClient.stopPostgresTester();
+    logger.info("finished @AfterClass after()");
   }
 
   static void deleteAll(URL rootUrl) {

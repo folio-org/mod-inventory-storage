@@ -55,8 +55,8 @@ public class KafkaTopicsExistsTest {
       TimeoutException {
 
     removeTenant(TENANT_ID);
-    stopKafka();
     stopVertx();
+    stopKafka();
     PostgresClient.stopPostgresTester();
   }
 

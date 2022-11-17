@@ -130,17 +130,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @After
-  public void afterEach(TestContext context) {
+  public void afterEach(TestContext context)
+      throws InterruptedException,
+      ExecutionException {
+
     setInstanceSequence(1);
 
     StorageTestSuite.checkForMismatchedIDs("instance");
 
+    // This calls get() to ensure blocking until all futures are complete.
     final Async async = context.async();
     List<CompletableFuture<Response>> cfs = new ArrayList<CompletableFuture<Response>>();
     natureOfContentIdsToRemoveAfterTest.forEach(id -> cfs.add(getClient()
       .delete(natureOfContentTermsUrl("/" + id), TENANT_ID)));
     CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
-      .thenAccept(v -> async.complete());
+      .thenAccept(v -> async.complete())
+      .get();
+
+    removeAllEvents(true);
   }
 
   @Test

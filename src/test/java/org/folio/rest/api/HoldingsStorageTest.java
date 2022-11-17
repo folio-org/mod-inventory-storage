@@ -106,10 +106,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @After
-  public void afterEach() {
+  public void afterEach()
+      throws InterruptedException,
+      ExecutionException {
+
     setHoldingsSequence(1);
 
     StorageTestSuite.checkForMismatchedIDs("holdings_record");
+
+    removeAllEvents(true);
   }
 
   @Test

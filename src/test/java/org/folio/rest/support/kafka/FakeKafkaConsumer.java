@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -32,6 +32,8 @@ public final class FakeKafkaConsumer {
     new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> boundWith =
     new ConcurrentHashMap<>();
+
+  private KafkaConsumer<String, JsonObject> consumer;
 
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
@@ -78,7 +80,17 @@ public final class FakeKafkaConsumer {
       storageList.add(message);
     });
 
+    this.setConsumer(consumer);
+
     return this;
+  }
+
+  public Future<Void> commit() {
+    return consumer.commit();
+  }
+
+  public void unsubscribe() {
+    consumer.unsubscribe();
   }
 
   public static void removeAllEvents() {
@@ -214,6 +226,10 @@ public final class FakeKafkaConsumer {
     final var id = oldOrNew != null ? oldOrNew.getString("id") : null;
 
     return instanceAndIdKey(message.key(), id);
+  }
+
+  private void setConsumer(KafkaConsumer<String, JsonObject> consumer) {
+    this.consumer = consumer;
   }
 
   private Map<String, String> consumerProperties() {

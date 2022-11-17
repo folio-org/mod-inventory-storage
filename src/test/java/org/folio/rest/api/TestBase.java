@@ -34,6 +34,8 @@ import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 /**
@@ -73,8 +75,6 @@ public abstract class TestBase {
   public static void testBaseBeforeClass() {
     logger.info("starting @BeforeClass testBaseBeforeClass()");
 
-    FakeKafkaConsumer.removeAllEvents();
-
     instancesClient = ResourceClient.forInstances(getClient());
     holdingsClient = ResourceClient.forHoldings(getClient());
     itemsClient = ResourceClient.forItems(getClient());
@@ -100,6 +100,35 @@ public abstract class TestBase {
     authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
+  }
+
+  @AfterClass
+  public static void afterAll() {
+    kafkaConsumer.unsubscribe();
+  }
+
+  @Before
+  public void removeAllEvents()
+      throws InterruptedException,
+      ExecutionException {
+
+    removeAllEvents(false);
+  }
+
+  protected static void removeAllEvents(boolean commit)
+      throws InterruptedException,
+      ExecutionException {
+
+    // Commit the consumer and block until done.
+    // This is done to help reduce chances of messages from other tests.
+    if (commit) {
+      kafkaConsumer.commit()
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get();
+    }
+
+    FakeKafkaConsumer.removeAllEvents();
   }
 
   protected static void clearData() {

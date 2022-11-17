@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
@@ -20,6 +21,7 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.builders.StatisticalCodeBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,6 +35,14 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     setupLocations();
 
     statisticalCodeFixture.removeTestStatisticalCodes();
+  }
+
+  @After
+  public void afterEach()
+      throws InterruptedException,
+      ExecutionException {
+
+    removeAllEvents(true);
   }
 
   @Test

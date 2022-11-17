@@ -56,13 +56,17 @@ public class VertxUtility {
 
   public static void stopVertx()
       throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+      ExecutionException {
 
-    vertx.close()
-      .toCompletionStage()
-      .toCompletableFuture()
-      .get(20, TimeUnit.SECONDS);
+    try {
+      vertx.close()
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(20, TimeUnit.SECONDS);
+    } catch (TimeoutException e) {
+      // Do not care if Vertx close times out.
+      logger.debug(e.getMessage(), e);
+    }
 
     client.getWebClient().close();
   }

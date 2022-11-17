@@ -13,6 +13,7 @@ import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import junitparams.JUnitParamsRunner;
 import org.folio.rest.support.IndividualResource;
@@ -30,11 +31,16 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(getClient());
 
   @After
-  public void afterEach() {
+  public void afterEach()
+      throws InterruptedException,
+      ExecutionException {
+
     deleteBoundWithParts();
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    removeAllEvents(true);
   }
 
   @Test
