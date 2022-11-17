@@ -16,13 +16,9 @@ import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
-import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
@@ -107,33 +103,29 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static final String TAG_VALUE = "test-tag";
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
 
-  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
-
   @Before
   public void beforeEach() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
-    StorageTestSuite.deleteAll(servicePointsUrl(""));
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
 
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
   }
 
   @After
-  public void resetItemHRID() {
+  public void afterEach()
+      throws InterruptedException,
+      ExecutionException {
+
     setItemSequence(1);
-  }
 
-  @After
-  public void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIDs("item");
-  }
 
-  @After
-  public void removeStatisticalCodes() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     statisticalCodeFixture.removeTestStatisticalCodes();
+
+    removeAllEvents(true);
   }
 
   @Parameters({

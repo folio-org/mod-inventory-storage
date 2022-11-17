@@ -25,6 +25,8 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
@@ -32,6 +34,29 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F.";
   private static final String HRID = "inst000000000022";
   private static final String TITLE = "A web primer";
+
+  @Before
+  public void beforeEach() {
+    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+    StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
+
+    deleteAllById(precedingSucceedingTitleClient);
+
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+  }
+
+  @After
+  public void afterEach() {
+    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+    StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
+
+    deleteAllById(precedingSucceedingTitleClient);
+  }
 
   @Test
   public void canCreateConnectedPrecedingSucceedingTitle() {

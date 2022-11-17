@@ -1,5 +1,8 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.VertxUtility.getClient;
@@ -29,12 +32,15 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
   @Before
   public void beforeEach() {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    statisticalCodeFixture.removeTestStatisticalCodes();
+
     clearData();
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-
-    statisticalCodeFixture.removeTestStatisticalCodes();
   }
 
   @After

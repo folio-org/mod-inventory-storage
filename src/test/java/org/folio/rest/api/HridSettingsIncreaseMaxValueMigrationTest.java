@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.folio.rest.persist.PostgresClient;
+import org.junit.Before;
 import org.junit.Test;
 
 public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase {
@@ -17,6 +18,14 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
   private static final String INSTANCES_SEQ = "hrid_instances_seq";
   private static final String HOLDINGS_SEQ = "hrid_holdings_seq";
   private static final String ITEMS_SEQ = "hrid_items_seq";
+
+  @Before
+  public void beforeEach() {
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+  }
 
   @Test
   public void retainsCurrentValueOfSequences() throws Exception {

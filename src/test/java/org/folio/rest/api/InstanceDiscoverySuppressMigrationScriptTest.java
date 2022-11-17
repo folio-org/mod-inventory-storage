@@ -1,23 +1,20 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.support.IndividualResource;
 import org.junit.Before;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestBase {
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
@@ -26,7 +23,10 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
 
   @Before
   public void beforeEach() {
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
   }
 
   @Test

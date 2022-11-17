@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.junit.Before;
 import org.junit.Test;
 
 public class UpcIsmnMigrationScriptTest extends MigrationTestBase {
@@ -21,6 +22,14 @@ public class UpcIsmnMigrationScriptTest extends MigrationTestBase {
     ids.put("Invalid UPC", "b3ea81fb-3324-4c64-9efc-7c0c93d5943c");
     ids.put("ISMN", "ebfd00b6-61d3-4d87-a6d8-810c941176d5");
     ids.put("Invalid ISMN", "4f07ea37-6c7f-4836-add2-14249e628ed1");
+  }
+
+  @Before
+  public void beforeEach() {
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
   }
 
   @Test

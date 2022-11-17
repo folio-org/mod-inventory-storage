@@ -93,10 +93,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final String TAG_VALUE = "test-tag";
   public static final String NEW_TEST_TAG = "new test tag";
 
-  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
-
   @Before
   public void beforeEach() {
+    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+    StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
+
+    deleteAllById(precedingSucceedingTitleClient);
+
     clearData();
     setupMaterialTypes();
     setupLoanTypes();

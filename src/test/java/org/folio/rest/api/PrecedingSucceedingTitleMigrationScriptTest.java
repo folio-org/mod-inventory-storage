@@ -1,6 +1,6 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.ItemDamagedStatusAPITest.TEST_TENANT;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -32,10 +32,15 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
 
   @Before
   public void beforeEach() throws Exception {
+    StorageTestSuite.deleteAll(TENANT_ID, INSTANCE_RELATIONSHIP_TABLE);
+    StorageTestSuite.deleteAll(TENANT_ID, INSTANCE_RELATIONSHIP_TYPE_TABLE);
+    StorageTestSuite.deleteAll(TENANT_ID, PRECEDING_SUCCEEDING_TITLE_TABLE);
 
-    StorageTestSuite.deleteAll(TEST_TENANT, INSTANCE_RELATIONSHIP_TABLE);
-    StorageTestSuite.deleteAll(TEST_TENANT, INSTANCE_RELATIONSHIP_TYPE_TABLE);
-    StorageTestSuite.deleteAll(TEST_TENANT, PRECEDING_SUCCEEDING_TITLE_TABLE);
+    deleteAllById(precedingSucceedingTitleClient);
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
 
     final UUID instance1Id = UUID.randomUUID();
     final UUID instance2Id = UUID.randomUUID();

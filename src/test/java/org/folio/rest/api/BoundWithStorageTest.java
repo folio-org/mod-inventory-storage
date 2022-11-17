@@ -1,9 +1,6 @@
 package org.folio.rest.api;
 
 import static org.awaitility.Awaitility.await;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,14 +28,20 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(getClient());
 
   @After
+  public void beforeEach() {
+    deleteAllById(boundWithPartsClient);
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+  }
+
+  @After
   public void afterEach()
       throws InterruptedException,
       ExecutionException {
 
-    deleteBoundWithParts();
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    deleteAllById(boundWithPartsClient);
 
     removeAllEvents(true);
   }
@@ -147,12 +150,6 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
         .forHolding(holdingsRecordId)
         .withMaterialType(bookMaterialTypeId)
         .withPermanentLoanType(canCirculateLoanTypeId));
-  }
-
-  private void deleteBoundWithParts() {
-    for (JsonObject boundWithPart : boundWithPartsClient.getAll()) {
-      boundWithPartsClient.delete(UUID.fromString(boundWithPart.getString("id")));
-    }
   }
 
 }

@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.folio.rest.support.IndividualResource;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,6 +20,16 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
 
   @Before
   public void beforeEach() {
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+
+    StorageTestSuite.deleteAll(modesOfIssuanceUrl(""));
+  }
+
+  @After
+  public void afterEach() {
     StorageTestSuite.deleteAll(modesOfIssuanceUrl(""));
   }
 

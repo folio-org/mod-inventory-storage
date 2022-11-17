@@ -69,6 +69,7 @@ import org.folio.rest.api.entities.StatisticalCode;
 import org.folio.rest.api.entities.StatisticalCodeType;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -76,6 +77,11 @@ import org.junit.Test;
  * @author ne
  */
 public class ReferenceTablesTest extends TestBase {
+
+  @Before
+  public void beforeEach() {
+    clearData();
+  }
 
   @Test
   public void alternativeTitleTypesLoaded()

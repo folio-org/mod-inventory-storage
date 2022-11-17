@@ -18,8 +18,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -146,6 +148,15 @@ public abstract class TestBase {
   }
 
   /**
+   * Delete all rows found using the client by "id" field.
+   */
+  protected static void deleteAllById(ResourceClient client) {
+    for (JsonObject row : client.getAll()) {
+      client.delete(UUID.fromString(row.getString("id")));
+    }
+  }
+
+  /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
    *
    * <p>Wraps these checked exceptions into RuntimeException:
@@ -173,7 +184,7 @@ public abstract class TestBase {
    * Assert that a GET at the url returns 404 status code (= not found).
    * @param url  endpoint where to execute a GET request
    */
-  void assertGetNotFound(URL url) {
+  public void assertGetNotFound(URL url) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     getClient().get(url, TENANT_ID, ResponseHandler.text(getCompleted));
