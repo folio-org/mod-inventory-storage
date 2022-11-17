@@ -794,7 +794,7 @@
     {
       "tableName": "hrid_settings",
       "fromModuleVersion": "17.1.0",
-      "withMetadata": true,
+      "withMetadata": false,
       "withAuditing": false,
       "customSnippetPath": "hridSettings.sql"
     },
@@ -1071,6 +1071,11 @@
       "run": "after",
       "snippetPath": "addAuthoritySourceFiles.sql",
       "fromModuleVersion": "25.0.1"
+    },
+    {
+      "run": "after",
+      "snippetPath": "setDefaultMetadataForHrIdHoldings.sql",
+      "fromModuleVersion": "25.1.0"
     }
   ]
 }
