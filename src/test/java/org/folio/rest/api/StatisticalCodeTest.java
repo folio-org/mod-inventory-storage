@@ -41,7 +41,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

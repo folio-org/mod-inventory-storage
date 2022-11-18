@@ -54,7 +54,7 @@ public class LocationUnitTest extends TestBase {
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   private Response getInstById(UUID id) {

@@ -52,7 +52,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
       .toString();
 
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

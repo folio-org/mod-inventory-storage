@@ -33,7 +33,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

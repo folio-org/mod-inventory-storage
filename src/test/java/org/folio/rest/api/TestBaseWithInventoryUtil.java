@@ -26,6 +26,7 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.utility.LocationUtility;
 import org.junit.BeforeClass;
 
@@ -87,7 +88,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    removeAllEvents(false);
+    FakeKafkaConsumer.clearAllEvents();
 
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
   }

@@ -102,7 +102,7 @@ public abstract class TestBase {
     instanceReindex = new InstanceReindexFixture(getClient());
     authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
@@ -114,31 +114,9 @@ public abstract class TestBase {
   @SneakyThrows
   @Before
   public void removeAllEvents() {
-    removeAllEvents(false);
-  }
+    kafkaConsumer.resetTimestamp();
 
-  protected static void removeAllEvents(boolean block)
-      throws InterruptedException,
-      ExecutionException {
-
-    // Commit the consumer and block until done.
-    // This is done to help reduce chances of messages from other tests.
-    // Timeout is added to speed up the time waiting at increased risk of problems.
-    if (block) {
-      try {
-        kafkaConsumer.commit()
-          .toCompletionStage()
-          .toCompletableFuture()
-          .get(300, TimeUnit.MILLISECONDS);
-      } catch (TimeoutException e) {
-        logger.debug(e.getMessage(), e);
-      }
-    } else {
-      // Commit without waiting.
-      kafkaConsumer.commit();
-    }
-
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
   }
 
   protected static void clearData() {

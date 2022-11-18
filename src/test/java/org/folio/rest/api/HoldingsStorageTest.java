@@ -109,18 +109,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @SneakyThrows
   @After
   public void afterEach() {
-
     setHoldingsSequence(1);
 
     StorageTestSuite.checkForMismatchedIDs("holdings_record");
-
-    removeAllEvents(true);
   }
 
   @Test
@@ -326,6 +323,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .forInstance(instanceId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .withPermanentLocation(mainLibraryLocationId));
+
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
 
     UUID holdingId = holdingResource.getId();
 

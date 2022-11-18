@@ -27,7 +27,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

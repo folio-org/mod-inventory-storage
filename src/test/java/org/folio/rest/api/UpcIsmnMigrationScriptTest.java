@@ -32,7 +32,7 @@ public class UpcIsmnMigrationScriptTest extends MigrationTestBase {
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

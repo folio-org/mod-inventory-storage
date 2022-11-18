@@ -35,7 +35,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

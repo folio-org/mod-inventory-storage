@@ -52,7 +52,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     setupMaterialTypes();
     clearServicePointIDs();
     createLocationUnits(true);
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

@@ -72,7 +72,7 @@ public class ShelfLocationsTest extends TestBase {
 
     clearServicePointIDs();
     createLocationUnits(true);
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

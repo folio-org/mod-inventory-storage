@@ -129,7 +129,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
     natureOfContentIdsToRemoveAfterTest.clear();
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @SneakyThrows
@@ -149,7 +149,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .thenAccept(v -> async.complete())
       .get();
 
-    removeAllEvents(true);
+    removeAllEvents();
   }
 
   @Test
@@ -400,6 +400,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     String adminNote = "An Admin note";
     final IndividualResource createdInstance = createInstance(smallAngryPlanet(id));
+
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
 
     JsonObject replacement = createdInstance.copyJson();
     replacement.put("title", "A Long Way to a Small Angry Planet");
@@ -2671,6 +2674,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   public void canUpdateInstanceWithDiscoverySuppressProperty() throws Exception {
     IndividualResource instance = createInstance(smallAngryPlanet(UUID.randomUUID()));
     assertThat(instance.getJson().getBoolean(DISCOVERY_SUPPRESS), is(false));
+
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
 
     final IndividualResource updateInstance = updateInstance(
       getById(instance.getId()).getJson().copy().put(DISCOVERY_SUPPRESS, true));

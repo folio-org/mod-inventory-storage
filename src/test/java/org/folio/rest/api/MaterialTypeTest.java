@@ -44,7 +44,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
       loanTypesStorageUrl("")).create("Can Circulate");
 
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

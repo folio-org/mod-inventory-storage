@@ -97,7 +97,7 @@ public class HridSettingsStorageTest extends TestBase {
       });
     });
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

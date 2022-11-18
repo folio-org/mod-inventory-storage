@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import junit.framework.AssertionFailedError;
 import org.folio.rest.support.Response;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -39,7 +40,7 @@ public class SampleDataTest extends TestBase {
   public static void beforeAny() throws Exception {
     removeTenant(TENANT_ID);
     prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
-    removeAllEvents(false);
+    FakeKafkaConsumer.clearAllEvents();
   }
 
   private void assertCount(URL url, String arrayName, int expectedCount) {

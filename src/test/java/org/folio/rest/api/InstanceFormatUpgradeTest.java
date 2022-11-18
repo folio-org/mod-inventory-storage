@@ -32,7 +32,7 @@ public class InstanceFormatUpgradeTest extends TestBaseWithInventoryUtil{
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

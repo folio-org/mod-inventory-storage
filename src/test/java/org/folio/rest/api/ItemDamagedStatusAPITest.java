@@ -31,7 +31,7 @@ public class ItemDamagedStatusAPITest extends TestBase {
     assertTrue(StorageTestSuite.deleteAll(TENANT_ID,
         ItemDamagedStatusAPI.REFERENCE_TABLE));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

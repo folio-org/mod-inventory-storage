@@ -49,7 +49,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @After

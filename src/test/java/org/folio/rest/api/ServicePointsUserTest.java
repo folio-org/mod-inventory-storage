@@ -40,7 +40,7 @@ public class ServicePointsUserTest extends TestBase {
     StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
     StorageTestSuite.deleteAll(servicePointsUrl(""));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   //BEGIN TESTS

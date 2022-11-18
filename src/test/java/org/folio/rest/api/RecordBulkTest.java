@@ -45,7 +45,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @After

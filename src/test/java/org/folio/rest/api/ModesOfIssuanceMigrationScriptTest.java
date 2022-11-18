@@ -29,7 +29,7 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
 
     StorageTestSuite.deleteAll(modesOfIssuanceUrl(""));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @After

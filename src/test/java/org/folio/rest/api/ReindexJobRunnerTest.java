@@ -61,7 +61,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
 
@@ -95,7 +95,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
 

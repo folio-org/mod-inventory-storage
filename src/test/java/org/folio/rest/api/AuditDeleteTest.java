@@ -54,7 +54,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
     holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

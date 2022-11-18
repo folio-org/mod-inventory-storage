@@ -29,7 +29,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

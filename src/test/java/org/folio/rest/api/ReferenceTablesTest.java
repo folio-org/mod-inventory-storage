@@ -83,7 +83,7 @@ public class ReferenceTablesTest extends TestBase {
   @Before
   public void beforeEach() {
     clearData();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

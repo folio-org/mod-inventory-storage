@@ -66,7 +66,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
         jobRepository, instanceRepository, getContext(), okapiHeaders());
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

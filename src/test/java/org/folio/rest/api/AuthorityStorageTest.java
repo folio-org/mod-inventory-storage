@@ -36,13 +36,7 @@ public class AuthorityStorageTest extends TestBase {
     clearData();
     StorageTestSuite.deleteAll(authoritiesStorageUrl(""));
 
-    removeAllEvents(false);
-  }
-
-  @SneakyThrows
-  @After
-  public void afterEach() {
-    removeAllEvents(true);
+    removeAllEvents();
   }
 
   @Test
@@ -115,6 +109,10 @@ public class AuthorityStorageTest extends TestBase {
   public void putById() {
     assertEquals(0, authoritiesClient.getAll().size());
     createAuthRecords(1);
+
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
+
     var response = authoritiesClient.getAll();
     assertEquals(1, response.size());
     JsonObject object = new JsonObject(response.get(0).encode());

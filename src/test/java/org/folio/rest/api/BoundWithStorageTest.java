@@ -35,20 +35,18 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @SneakyThrows
   @After
   public void afterEach() {
     deleteAllById(boundWithPartsClient);
-
-    removeAllEvents(true);
   }
 
   @Test
   public void canCreateAndRetrieveBoundWithParts() {
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
     IndividualResource mainInstance = createInstance("Main Instance");
     IndividualResource mainHoldingsRecord = createHoldingsRecord(mainInstance.getId());
     IndividualResource item = createItem(mainHoldingsRecord.getId());
@@ -90,7 +88,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canChangeOnePartOfABoundWith() {
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource instance2 = createInstance("Instance 2");

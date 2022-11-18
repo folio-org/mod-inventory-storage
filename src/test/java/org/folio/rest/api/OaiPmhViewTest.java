@@ -81,7 +81,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     createItem(mainLibraryLocationId, "item barcode 1", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

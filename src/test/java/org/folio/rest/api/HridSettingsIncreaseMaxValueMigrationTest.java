@@ -27,7 +27,7 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

@@ -23,7 +23,7 @@ public class RetainLeadingZeroesMigrationScriptTest extends MigrationTestBase {
     setupLocations();
 
     unsetJsonbProperty("hrid_settings", UUID.fromString("a501f2a8-5b31-48b2-874d-2191e48db8cd"), LEADING_ZEROES_PROPERTY);
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

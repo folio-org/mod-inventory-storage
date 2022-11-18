@@ -62,7 +62,7 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
       PRECEDING_SUCCEEDING_RELATIONSHIP_TYPE_ID);
     createInstanceRelationship(instance1Id, instance3Id, BOUND_WITH_INSTANCE_RELATIONSHIP_TYPE_ID);
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @Test

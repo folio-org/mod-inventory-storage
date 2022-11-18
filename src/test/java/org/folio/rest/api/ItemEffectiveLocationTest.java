@@ -57,7 +57,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     // canCalculateEffectiveLocationOnItemUpdate(PermTemp, PermTemp, PermTemp)
     instancesClient.create(instance(instanceId));
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @After

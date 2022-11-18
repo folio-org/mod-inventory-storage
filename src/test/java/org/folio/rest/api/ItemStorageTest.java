@@ -113,7 +113,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
 
-    removeAllEvents(false);
+    removeAllEvents();
   }
 
   @SneakyThrows
@@ -125,8 +125,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     statisticalCodeFixture.removeTestStatisticalCodes();
-
-    removeAllEvents(true);
   }
 
   @Parameters({
@@ -399,6 +397,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject createdItem = getById(id).getJson();
     assertThat(createdItem.getString("copyNumber"), nullValue());
 
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
+
     JsonObject updatedItem = createdItem.copy()
       .put("holdingsRecordId", newHoldingsRecordId.toString());
     itemsClient.replace(id, updatedItem);
@@ -412,15 +413,32 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingId = createInstanceAndHolding(mainLibraryLocationId);
     JsonObject item = createItem(nod(itemId, holdingId));
     item.put(PERMANENT_LOCATION_ID_KEY, annexLibraryLocationId);
+
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
+
     // updating with current _version 1 succeeds and increments _version to 2
     assertThat(update(item).getStatusCode(), is(204));
     item.put(PERMANENT_LOCATION_ID_KEY, secondFloorLocationId);
+
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
+
     // updating with outdated _version 1 fails, current _version is 2
     int expected = OptimisticLocking.hasFailOnConflict("item") ? 409 : 204;
+
     assertThat(update(item).getStatusCode(), is(expected));
+
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
+
     // updating with _version -1 should fail, single item PUT never allows to suppress optimistic locking
     item.put("_version", -1);
     assertThat(update(item).getStatusCode(), is(409));
+
+    // Clear events to help avoid delayed message problems.
+    removeAllEvents();
+
     // this allow should not apply to single holding PUT, only to batch unsafe
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
         Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
