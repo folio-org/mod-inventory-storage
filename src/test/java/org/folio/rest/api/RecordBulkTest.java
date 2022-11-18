@@ -27,6 +27,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.RecordBulkIdsGetField;
 import org.folio.rest.support.Response;
 import org.junit.After;
@@ -37,11 +38,14 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    removeAllEvents(false);
   }
 
   @After

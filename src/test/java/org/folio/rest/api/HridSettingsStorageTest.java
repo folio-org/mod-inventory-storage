@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -63,8 +64,9 @@ public class HridSettingsStorageTest extends TestBase {
   private PostgresClient postgresClient;
   private HridManager hridManager;
 
+  @SneakyThrows
   @Before
-  public void setUp(TestContext testContext) {
+  public void beforeEach(TestContext testContext) {
     log.info("Initializing values");
     final Async async = testContext.async();
     vertx = getVertx();
@@ -94,6 +96,8 @@ public class HridSettingsStorageTest extends TestBase {
         return null;
       });
     });
+
+    removeAllEvents(false);
   }
 
   @Test

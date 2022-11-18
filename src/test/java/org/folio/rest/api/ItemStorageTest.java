@@ -103,6 +103,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static final String TAG_VALUE = "test-tag";
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
@@ -111,13 +112,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     setupLocations();
 
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
+
+    removeAllEvents(false);
   }
 
+  @SneakyThrows
   @After
-  public void afterEach()
-      throws InterruptedException,
-      ExecutionException {
-
+  public void afterEach() {
     setItemSequence(1);
 
     StorageTestSuite.checkForMismatchedIDs("item");

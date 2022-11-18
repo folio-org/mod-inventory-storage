@@ -10,9 +10,9 @@ import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(getClient());
 
+  @SneakyThrows
   @After
   public void beforeEach() {
     deleteAllById(boundWithPartsClient);
@@ -34,13 +35,12 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
+    removeAllEvents(false);
   }
 
+  @SneakyThrows
   @After
-  public void afterEach()
-      throws InterruptedException,
-      ExecutionException {
-
+  public void afterEach() {
     deleteAllById(boundWithPartsClient);
 
     removeAllEvents(true);

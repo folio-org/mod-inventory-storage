@@ -17,6 +17,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.junit.Before;
@@ -25,11 +26,14 @@ import org.junit.Test;
 public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
   private static final String MIGRATION_SCRIPT = loadScript("migrateItemCopyNumberToSingleValue.sql");
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    removeAllEvents(false);
   }
 
   @Test

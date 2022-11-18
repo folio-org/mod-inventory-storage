@@ -32,7 +32,6 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static final UUID smallAngryPlanetId = UUID.randomUUID();
   private static final UUID uprootedId = UUID.randomUUID();
 
-
   @BeforeClass
   public static void beforeTests() throws InterruptedException, ExecutionException, TimeoutException {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
@@ -48,6 +47,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     postItem(smallAngryPlanet);
     postItem(nod);
     postItem(uprooted);
+    removeAllEvents(false);
   }
 
   @AfterClass

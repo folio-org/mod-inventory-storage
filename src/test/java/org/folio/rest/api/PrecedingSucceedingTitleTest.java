@@ -19,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import lombok.SneakyThrows;
 import org.folio.rest.api.entities.PrecedingSucceedingTitle;
 import org.folio.rest.api.entities.PrecedingSucceedingTitles;
 import org.folio.rest.jaxrs.model.Errors;
@@ -35,6 +36,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   private static final String HRID = "inst000000000022";
   private static final String TITLE = "A web primer";
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
@@ -47,6 +49,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
+    removeAllEvents(false);
   }
 
   @After

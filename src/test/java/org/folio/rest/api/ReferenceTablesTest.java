@@ -43,6 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.rest.api.entities.AlternativeTitleType;
 import org.folio.rest.api.entities.AuthorityNoteType;
 import org.folio.rest.api.entities.AuthoritySourceFile;
@@ -78,9 +79,11 @@ import org.junit.Test;
  */
 public class ReferenceTablesTest extends TestBase {
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
+    removeAllEvents(false);
   }
 
   @Test

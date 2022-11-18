@@ -61,11 +61,7 @@ public class KafkaTopicsExistsTest {
   }
 
   @Before
-  public void beforeEach()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
-
+  public void beforeEach() {
     kafkaAdminClient = KafkaAdminClient.create(getVertx(), KafkaConfig.builder()
       .kafkaHost(KafkaEnvironmentProperties.host())
       .kafkaPort(KafkaEnvironmentProperties.port())

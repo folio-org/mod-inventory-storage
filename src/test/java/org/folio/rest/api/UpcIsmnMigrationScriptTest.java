@@ -9,6 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
@@ -24,12 +25,14 @@ public class UpcIsmnMigrationScriptTest extends MigrationTestBase {
     ids.put("Invalid ISMN", "4f07ea37-6c7f-4836-add2-14249e628ed1");
   }
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
+    removeAllEvents(false);
   }
 
   @Test

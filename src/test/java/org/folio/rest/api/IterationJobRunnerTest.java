@@ -23,6 +23,7 @@ import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
@@ -55,8 +56,9 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     instanceIteration = new InstanceIterationFixture(getClient());
   }
 
+  @SneakyThrows
   @Before
-  public void setUp() {
+  public void beforeEach() {
     jobRepository = new IterationJobRepository(getContext(), okapiHeaders());
     instanceRepository = mock(InstanceRepository.class);
 
@@ -64,8 +66,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
         jobRepository, instanceRepository, getContext(), okapiHeaders());
 
-    // Make sure no events are left over from previous runs
-    FakeKafkaConsumer.removeAllEvents();
+    removeAllEvents(false);
   }
 
   @Test

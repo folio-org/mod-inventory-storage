@@ -93,6 +93,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final String TAG_VALUE = "test-tag";
   public static final String NEW_TEST_TAG = "new test tag";
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
@@ -107,12 +108,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     setupLocations();
 
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
+
+    removeAllEvents(false);
   }
 
+  @SneakyThrows
   @After
-  public void afterEach()
-      throws InterruptedException,
-      ExecutionException {
+  public void afterEach() {
 
     setHoldingsSequence(1);
 

@@ -4,8 +4,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,18 +14,16 @@ public class RetainLeadingZeroesMigrationScriptTest extends MigrationTestBase {
   private static final String SQL_GET_HRID_SETTINGS = "SELECT jsonb FROM %s.hrid_settings WHERE id = 'a501f2a8-5b31-48b2-874d-2191e48db8cd'";
   private static final String LEADING_ZEROES_PROPERTY = "commonRetainLeadingZeroes";
 
+  @SneakyThrows
   @Before
-  public void beforeEach()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
-
+  public void beforeEach() {
     clearData();
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
 
     unsetJsonbProperty("hrid_settings", UUID.fromString("a501f2a8-5b31-48b2-874d-2191e48db8cd"), LEADING_ZEROES_PROPERTY);
+    removeAllEvents(false);
   }
 
   @Test

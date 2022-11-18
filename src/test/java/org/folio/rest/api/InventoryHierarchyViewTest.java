@@ -52,6 +52,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -81,8 +82,9 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private JsonObject predefinedInstance;
   private JsonObject predefinedHoldings;
 
+  @SneakyThrows
   @Before
-  public void setUp() {
+  public void beforeEach() {
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
@@ -97,6 +99,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     createItem(mainLibraryLocationId, "item barcode", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
+
+    removeAllEvents(false);
   }
 
   @Test

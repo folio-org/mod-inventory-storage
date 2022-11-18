@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.util.ResourceUtil;
 import org.junit.Before;
@@ -24,12 +25,14 @@ public class InstanceFormatUpgradeTest extends TestBaseWithInventoryUtil{
     .asString("templates/db_scripts/addInstanceFormatsAudioBelt.sql")
     .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
+    removeAllEvents(false);
   }
 
   @Test

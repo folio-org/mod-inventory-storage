@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
@@ -33,10 +34,13 @@ import org.junit.Test;
 public class ServicePointsUserTest extends TestBase {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
     StorageTestSuite.deleteAll(servicePointsUrl(""));
+
+    removeAllEvents(false);
   }
 
   //BEGIN TESTS

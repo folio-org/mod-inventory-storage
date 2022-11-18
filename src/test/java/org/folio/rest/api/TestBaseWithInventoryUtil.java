@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
+import lombok.SneakyThrows;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
@@ -72,6 +73,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final UUID UUID_TEXT = UUID.fromString("6312d172-f0cf-40f6-b27d-9fa8feaf332f");
   protected static final UUID UUID_INSTANCE_TYPE = UUID.fromString("535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
 
+  @SneakyThrows
   @BeforeClass
   public static void testBaseWithInvUtilBeforeClass() {
     logger.info("starting @BeforeClass testBaseWithInvUtilBeforeClass()");
@@ -85,6 +87,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
+    removeAllEvents(false);
 
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
   }

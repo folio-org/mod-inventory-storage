@@ -20,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.JsonErrorResponse;
@@ -33,13 +34,9 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
+  @SneakyThrows
   @Before
-  public void beforeEach()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException,
-      MalformedURLException {
-
+  public void beforeEach() {
     clearData();
 
     canCirculateLoanTypeID = new LoanTypesClient(
@@ -47,6 +44,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
       loanTypesStorageUrl("")).create("Can Circulate");
 
     setupLocations();
+    removeAllEvents(false);
   }
 
   @Test

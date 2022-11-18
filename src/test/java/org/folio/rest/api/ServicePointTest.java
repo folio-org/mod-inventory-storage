@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -39,10 +40,13 @@ import org.junit.Test;
 public class ServicePointTest extends TestBase{
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
     StorageTestSuite.deleteAll(servicePointsUrl(""));
+
+    removeAllEvents(false);
   }
 
   @Test

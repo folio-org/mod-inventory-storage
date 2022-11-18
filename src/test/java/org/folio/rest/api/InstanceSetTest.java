@@ -43,7 +43,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   private static final UUID itemId621   = UUID.fromString("62100000-0000-4000-8000-000000000000");
 
   @BeforeClass
-  public static void setupRecords() {
+  public static void beforeAll() {
     createInstance(instanceId1);
     createInstance(instanceId2);
     createInstance(instanceId3);

@@ -118,6 +118,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
@@ -127,12 +128,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
     natureOfContentIdsToRemoveAfterTest.clear();
+
+    removeAllEvents(false);
   }
 
+  @SneakyThrows
   @After
-  public void afterEach(TestContext context)
-      throws InterruptedException,
-      ExecutionException {
+  public void afterEach(TestContext context) {
 
     setInstanceSequence(1);
 

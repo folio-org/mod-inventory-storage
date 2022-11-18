@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
@@ -42,13 +43,9 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
   private UUID holdingsRecordId;
 
+  @SneakyThrows
   @Before
-  public void beforeEach()
-      throws InterruptedException,
-      ExecutionException,
-      MalformedURLException,
-      TimeoutException {
-
+  public void beforeEach() {
     clearData();
     clearAuditTables();
     setupMaterialTypes();
@@ -56,6 +53,8 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     setupLocations();
 
     holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    removeAllEvents(false);
   }
 
   @Test

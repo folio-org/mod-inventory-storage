@@ -23,6 +23,7 @@ import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import lombok.SneakyThrows;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -40,6 +41,7 @@ public class LocationUnitTest extends TestBase {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
@@ -51,6 +53,8 @@ public class LocationUnitTest extends TestBase {
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+
+    removeAllEvents(false);
   }
 
   private Response getInstById(UUID id) {

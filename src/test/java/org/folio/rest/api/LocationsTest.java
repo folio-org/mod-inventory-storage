@@ -20,14 +20,12 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
@@ -42,10 +40,9 @@ import org.junit.Test;
 public class LocationsTest extends TestBaseWithInventoryUtil {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
+  @SneakyThrows
   @Before
-  public void beforeEach() 
-      throws MalformedURLException,InterruptedException, ExecutionException, TimeoutException {
-
+  public void beforeEach() {
     clearData();
 
     canCirculateLoanTypeID = new LoanTypesClient(
@@ -55,6 +52,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     setupMaterialTypes();
     clearServicePointIDs();
     createLocationUnits(true);
+    removeAllEvents(false);
   }
 
   @Test

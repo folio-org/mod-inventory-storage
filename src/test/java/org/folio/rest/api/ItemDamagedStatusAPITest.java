@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.HttpStatus;
 import org.folio.rest.impl.ItemDamagedStatusAPI;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
@@ -24,10 +25,13 @@ import org.junit.Test;
 
 public class ItemDamagedStatusAPITest extends TestBase {
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     assertTrue(StorageTestSuite.deleteAll(TENANT_ID,
         ItemDamagedStatusAPI.REFERENCE_TABLE));
+
+    removeAllEvents(false);
   }
 
   @Test

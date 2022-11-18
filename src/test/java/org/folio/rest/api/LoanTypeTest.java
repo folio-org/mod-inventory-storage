@@ -22,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
@@ -40,13 +41,9 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
   private static String postRequestCourse    = "{\"name\": \"Course reserve\"}";
   private static String putRequest  = "{\"name\": \"Reading room\"}";
 
+  @SneakyThrows
   @Before
-  public void beforeEach()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException,
-      MalformedURLException {
-
+  public void beforeEach() {
     clearData();
 
     materialTypeID = ResourceClient.forMaterialTypes(getClient())
@@ -55,6 +52,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
       .toString();
 
     setupLocations();
+    removeAllEvents(false);
   }
 
   @Test

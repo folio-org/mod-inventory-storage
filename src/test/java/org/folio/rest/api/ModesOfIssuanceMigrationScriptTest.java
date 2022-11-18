@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.rest.support.IndividualResource;
 import org.junit.After;
 import org.junit.Before;
@@ -18,6 +19,7 @@ import org.junit.Test;
 public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
   private static final String MIGRATION_SCRIPT = loadScript("renameModesOfIssuance.sql");
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
@@ -26,6 +28,8 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
     setupLocations();
 
     StorageTestSuite.deleteAll(modesOfIssuanceUrl(""));
+
+    removeAllEvents(false);
   }
 
   @After

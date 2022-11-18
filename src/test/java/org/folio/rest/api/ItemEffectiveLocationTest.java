@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
@@ -43,6 +44,7 @@ import org.junit.runner.RunWith;
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static final UUID instanceId = UUID.randomUUID();
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
@@ -54,6 +56,8 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     // canCalculateEffectiveLocationOnIHoldingUpdate(PermTemp, PermTemp, PermTemp)
     // canCalculateEffectiveLocationOnItemUpdate(PermTemp, PermTemp, PermTemp)
     instancesClient.create(instance(instanceId));
+
+    removeAllEvents(false);
   }
 
   @After

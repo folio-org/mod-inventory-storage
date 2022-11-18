@@ -11,13 +11,18 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.RunTestOnContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.pgclient.PgException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.core.Response;
-
-import io.vertx.pgclient.PgException;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.impl.ItemDamagedStatusAPI;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
@@ -36,14 +41,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.RunTestOnContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-
 @RunWith(VertxUnitRunner.class)
 public class ItemDamagedStatusAPIUnitTest {
   private static final String DEFAULT_QUERY = "";
@@ -60,7 +57,6 @@ public class ItemDamagedStatusAPIUnitTest {
   private PostgresClient postgresClient;
   @InjectMocks
   private ItemDamagedStatusAPI itemDamagedStatusAPI = new ItemDamagedStatusAPI();
-
 
   @Before
   public void setUp() {

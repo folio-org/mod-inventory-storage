@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -41,8 +42,9 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   private ObjectMapper mapper = new ObjectMapper();
 
+  @SneakyThrows
   @BeforeClass
-  public static void createInstanceAndCallNumberTypes() throws Exception {
+  public static void beforeAll() {
     instancesClient.create(instance(instanceId));
 
     callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);

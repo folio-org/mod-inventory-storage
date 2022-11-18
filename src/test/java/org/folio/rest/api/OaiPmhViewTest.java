@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -65,8 +66,9 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   private UUID holdingsRecordId1;
   private Map<String, String> params;
 
+  @SneakyThrows
   @Before
-  public void setUp() throws InterruptedException, ExecutionException, MalformedURLException, TimeoutException {
+  public void beforeEach() {
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
@@ -78,6 +80,8 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     createItem(mainLibraryLocationId, "item barcode 1", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
+
+    removeAllEvents(false);
   }
 
   @Test

@@ -30,17 +30,18 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class AuthorityStorageTest extends TestBase {
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
     StorageTestSuite.deleteAll(authoritiesStorageUrl(""));
+
+    removeAllEvents(false);
   }
 
+  @SneakyThrows
   @After
-  public void afterEach()
-      throws InterruptedException,
-      ExecutionException {
-
+  public void afterEach() {
     removeAllEvents(true);
   }
 

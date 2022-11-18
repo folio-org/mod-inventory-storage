@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.support.IndividualResource;
 import org.junit.Before;
@@ -21,12 +22,14 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
   private static final String MIGRATION_SCRIPT
     = loadScript("populateDiscoverySuppressIfNotSet.sql");
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     clearData();
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
+    removeAllEvents(false);
   }
 
   @Test

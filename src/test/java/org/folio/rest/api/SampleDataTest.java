@@ -39,6 +39,7 @@ public class SampleDataTest extends TestBase {
   public static void beforeAny() throws Exception {
     removeTenant(TENANT_ID);
     prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
+    removeAllEvents(false);
   }
 
   private void assertCount(URL url, String arrayName, int expectedCount) {
