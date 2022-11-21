@@ -51,17 +51,17 @@ public class SampleDataTest extends TestBase {
 
   @Test
   public void instanceCount() {
-    assertCount(instancesStorageUrl("?limit=100"), "instances", 32);
+    assertCount(instancesStorageUrl("?limit=100"), "instances", 36);
   }
 
   @Test
   public void holdingsCount() {
-    assertCount(holdingsStorageUrl("?limit=100"), "holdingsRecords", 16);
+    assertCount(holdingsStorageUrl("?limit=100"), "holdingsRecords", 20);
   }
 
   @Test
   public void itemCount() {
-    assertCount(itemsStorageUrl("?limit=100"), "items", 19);
+    assertCount(itemsStorageUrl("?limit=100"), "items", 25);
   }
 
   @Test
@@ -71,7 +71,7 @@ public class SampleDataTest extends TestBase {
 
   @Test
   public void boundWithPartsCount() {
-    assertCount(boundWithStorageUrl("?limit=100"), "boundWithParts", 3);
+    assertCount(boundWithStorageUrl("?limit=100"), "boundWithParts", 10);
   }
 
   private JsonObject get(URL url) {

@@ -106,14 +106,17 @@ public class InstallUpgradeIT {
   public void installAndUpgrade() {
     setTenant("latest");
 
-    postTenant(new JsonObject()
+    JsonObject body = new JsonObject()
         .put("module_to", "999999.0.0")
         .put("parameters", new JsonArray()
             .add(new JsonObject().put("key", "loadReference").put("value", "true"))
-            .add(new JsonObject().put("key", "loadSample").put("value", "true"))));
+            .add(new JsonObject().put("key", "loadSample").put("value", "true")));
+
+    postTenant(body);
 
     // migrate from 0.0.0, migration should be idempotent
-    postTenant(new JsonObject().put("module_to", "999999.0.0").put("module_from", "0.0.0"));
+    body.put("module_from", "0.0.0");
+    postTenant(body);
 
     smokeTest();
   }
@@ -127,7 +130,12 @@ public class InstallUpgradeIT {
     setTenant("lotus");
 
     // migrate
-    postTenant(new JsonObject().put("module_to", "999999.0.0").put("module_from", "23.0.0"));
+    postTenant(new JsonObject()
+        .put("module_from", "23.0.0")
+        .put("module_to", "999999.0.0")
+        .put("parameters", new JsonArray()
+            .add(new JsonObject().put("key", "loadReference").put("value", "true"))
+            .add(new JsonObject().put("key", "loadSample").put("value", "true"))));
 
     smokeTest();
   }
@@ -183,7 +191,7 @@ public class InstallUpgradeIT {
       get("/instance-storage/instances?limit=1000").
     then().
       statusCode(200).
-      body("instances.size()", is(32));
+      body("instances.size()", is(36));
   }
 
   static void postgresExec(String... command) {
