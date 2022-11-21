@@ -852,6 +852,10 @@
       "withAuditing": false
     },
     {
+      "tableName": "related_instance_type",
+      "mode": "DELETE"
+    },
+    {
       "tableName": "async_migration_job",
       "withMetadata": false,
       "withAuditing": false
