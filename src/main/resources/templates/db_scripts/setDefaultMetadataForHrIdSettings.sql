@@ -1,9 +1,3 @@
-ALTER TABLE ${myuniversity}_${mymodule}.hrid_settings
-  ADD COLUMN IF NOT EXISTS
-    creation_date timestamp,
-  ADD COLUMN IF NOT EXISTS
-    created_by text;
-
 UPDATE ${myuniversity}_${mymodule}.hrid_settings
 	SET creation_date = NOW()
 WHERE creation_date IS NULL;
