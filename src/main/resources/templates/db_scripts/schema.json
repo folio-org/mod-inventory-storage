@@ -1074,7 +1074,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "setDefaultMetadataForHrIdHoldings.sql",
+      "snippetPath": "setDefaultMetadataForHrIdSettings.sql",
       "fromModuleVersion": "25.1.0"
     }
   ]
