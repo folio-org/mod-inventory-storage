@@ -119,6 +119,24 @@ public abstract class TestBase {
     FakeKafkaConsumer.clearAllEvents();
   }
 
+  /**
+   * Clear as much data as is safely possible.
+   *
+   * The intended use of this function is to clear as much data as possible
+   * with the goal of maintaining isolated states between tests.
+   *
+   * This does not clear all possible data due to observed problems with
+   * several tests. Through rigorous testing the data cleared here has been
+   * found to work reasonably well across all tests. Clearing some data, such
+   * as with StorageTestSuite.deleteAll(authoritiesStorageUrl("")) has been
+   * found to not work across all tests when added to this function. These
+   * problematic data clearing sets are located within the tests that need
+   * them rather than in this function.
+   *
+   * Once all tests are properly implemented to safely work with completely
+   * isolated starting states, then this should be updated or removed
+   * accordingly.
+   */
   protected static void clearData() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
