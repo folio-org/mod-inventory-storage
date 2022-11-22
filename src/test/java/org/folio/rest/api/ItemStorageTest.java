@@ -397,7 +397,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject createdItem = getById(id).getJson();
     assertThat(createdItem.getString("copyNumber"), nullValue());
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events after create to reduce chances of
+    // CREATE messages appearing after UPDATE later on.
+    // This should be removed once the messaging problem is
+    // properly resolved.
     removeAllEvents();
 
     JsonObject updatedItem = createdItem.copy()
@@ -414,14 +417,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject item = createItem(nod(itemId, holdingId));
     item.put(PERMANENT_LOCATION_ID_KEY, annexLibraryLocationId);
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events after create to reduce chances of
+    // CREATE messages appearing after UPDATE later on.
+    // This should be removed once the messaging problem is
+    // properly resolved.
     removeAllEvents();
 
     // updating with current _version 1 succeeds and increments _version to 2
     assertThat(update(item).getStatusCode(), is(204));
     item.put(PERMANENT_LOCATION_ID_KEY, secondFloorLocationId);
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events, see first removeAllEvents() comments above.
     removeAllEvents();
 
     // updating with outdated _version 1 fails, current _version is 2
@@ -429,14 +435,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(update(item).getStatusCode(), is(expected));
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events, see first removeAllEvents() comments above.
     removeAllEvents();
 
     // updating with _version -1 should fail, single item PUT never allows to suppress optimistic locking
     item.put("_version", -1);
     assertThat(update(item).getStatusCode(), is(409));
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events, see first removeAllEvents() comments above.
     removeAllEvents();
 
     // this allow should not apply to single holding PUT, only to batch unsafe

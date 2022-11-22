@@ -324,7 +324,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .withPermanentLocation(mainLibraryLocationId));
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events after create to reduce chances of
+    // CREATE messages appearing after UPDATE later on.
+    // This should be removed once the messaging problem is
+    // properly resolved.
     removeAllEvents();
 
     UUID holdingId = holdingResource.getId();

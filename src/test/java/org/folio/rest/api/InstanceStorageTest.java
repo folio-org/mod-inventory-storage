@@ -401,7 +401,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     String adminNote = "An Admin note";
     final IndividualResource createdInstance = createInstance(smallAngryPlanet(id));
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events after create to reduce chances of
+    // CREATE messages appearing after UPDATE later on.
+    // This should be removed once the messaging problem is
+    // properly resolved.
     removeAllEvents();
 
     JsonObject replacement = createdInstance.copyJson();
@@ -2675,7 +2678,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource instance = createInstance(smallAngryPlanet(UUID.randomUUID()));
     assertThat(instance.getJson().getBoolean(DISCOVERY_SUPPRESS), is(false));
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events after create to reduce chances of
+    // CREATE messages appearing after UPDATE later on.
+    // This should be removed once the messaging problem is
+    // properly resolved.
     removeAllEvents();
 
     final IndividualResource updateInstance = updateInstance(

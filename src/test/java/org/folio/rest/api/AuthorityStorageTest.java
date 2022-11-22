@@ -110,7 +110,10 @@ public class AuthorityStorageTest extends TestBase {
     assertEquals(0, authoritiesClient.getAll().size());
     createAuthRecords(1);
 
-    // Clear events to help avoid delayed message problems.
+    // Clear Kafka events after create to reduce chances of
+    // CREATE messages appearing after UPDATE later on.
+    // This should be removed once the messaging problem is
+    // properly resolved.
     removeAllEvents();
 
     var response = authoritiesClient.getAll();
