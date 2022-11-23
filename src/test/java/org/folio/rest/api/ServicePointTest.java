@@ -385,7 +385,7 @@ public class ServicePointTest extends TestBase{
       .put("code", "cd2")
       .put("discoveryDisplayName", "Circulation Desk -- Basement")
       .put("pickupLocation", true)
-      .put("holdShelfCloseLibraryDateManagement", Servicepoint.HoldShelfClosedLibraryDateManagement.MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value())
+      .put("holdShelfClosedLibraryDateManagement", Servicepoint.HoldShelfClosedLibraryDateManagement.MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value())
       .put("holdShelfExpiryPeriod", new JsonObject(
         Json.encode(createHoldShelfExpiryPeriod(5, HoldShelfExpiryPeriod.IntervalId.WEEKS)))
       );
