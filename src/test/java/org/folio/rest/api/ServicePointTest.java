@@ -401,7 +401,7 @@ public class ServicePointTest extends TestBase{
     assertThat(responseJson.getString("code"), is("cd2"));
     assertThat(responseJson.getString("name"), is("Circ Desk 2")); //should fail
     assertThat(responseJson.getBoolean("pickupLocation"), is(true));
-    assertThat(responseJson.getString("holdShelfCloseLibraryDateManagement"),
+    assertThat(responseJson.getString("holdShelfClosedLibraryDateManagement"),
       is (Servicepoint.HoldShelfClosedLibraryDateManagement.MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value()));
 
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
