@@ -18,25 +18,11 @@
         "Months"
       ],
       "default" : "Days"
-    },
-    "closeLibraryDateManagement": {
-      "type": "string",
-      "description": "enum for closeLibraryDateManagement",
-      "enum":[
-        "Keep_the_current_due_date",
-        "Move_to_the_end_of_the_previous_open_day",
-        "Move_to_the_end_of_the_next_open_day",
-        "Keep_the_current_due_date_time",
-        "Move_to_end_of_current_service_point_hours",
-        "Move_to_beginning_of_next_open_service_point_hours"
-      ],
-      "default" : "Keep_the_current_due_date"
     }
   },
   "required": [
     "duration",
-    "intervalId",
-    "closeLibraryDateManagement"
+    "intervalId"
   ],
   "additionalProperties": false
 }
