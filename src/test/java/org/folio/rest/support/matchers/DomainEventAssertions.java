@@ -29,7 +29,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 
@@ -113,6 +112,23 @@ public final class DomainEventAssertions {
     assertThat(updateEvent.value().getJsonObject("new"), is(newRecord));
 
     assertHeaders(updateEvent.headers());
+  }
+
+  public static boolean hasUpdateEvent(Collection<KafkaConsumerRecord<String, JsonObject>> events,
+      JsonObject oldRecord, JsonObject newRecord) {
+
+    if (events == null) {
+      return false;
+    }
+    for (var event : events) {
+      try {
+        assertUpdateEvent(event, oldRecord, newRecord);
+        return true;
+      } catch (AssertionError e) {
+        // ignore
+      }
+    }
+    return false;
   }
 
   private static void assertHeaders(List<KafkaHeader> headers) {
@@ -311,14 +327,9 @@ public final class DomainEventAssertions {
 
   public static void assertUpdateEventForHolding(JsonObject oldHr, JsonObject newHr) {
     final String id = newHr.getString("id");
-    final String oldInstanceId = oldHr.getString("instanceId");
     final String newInstanceId = newHr.getString("instanceId");
-    final int holdingsEventsCountGreaterThan = oldInstanceId.equals(newInstanceId) ? 2 : 1;
 
-    await()
-      .until(() -> getHoldingsEvents(newInstanceId, id).size(), greaterThanOrEqualTo(holdingsEventsCountGreaterThan));
-
-    assertUpdateEvent(getLastHoldingEvent(newInstanceId, id), oldHr, newHr);
+    await().until(() -> hasUpdateEvent(getHoldingsEvents(newInstanceId, id), oldHr, newHr));
   }
 
   private static String getInstanceIdForItem(JsonObject newItem) {
