@@ -230,9 +230,7 @@ public final class DomainEventAssertions {
     final String instanceId = oldInstance.getString("id");
 
     await()
-      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(1));
-
-    assertUpdateEvent(getLastInstanceEvent(instanceId), oldInstance, newInstance);
+      .until(() -> hasUpdateEvent(getInstanceEvents(instanceId), oldInstance, newInstance));
   }
 
   public static void assertUpdateEventForAuthority(JsonObject oldAuthority, JsonObject newAuthority) {
