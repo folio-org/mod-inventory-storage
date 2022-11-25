@@ -14,10 +14,12 @@ public class InstanceEventMessage {
     final var value = consumerRecord.value();
 
     return new InstanceEventMessage(value.getString("type"),
-      value.getString("tenant"), value.getJsonObject("new"));
+      value.getString("tenant"), value.getJsonObject("new"),
+      value.getJsonObject("old"));
   }
 
   private final String type;
   private final String tenant;
   private final JsonObject newRepresentation;
+  private final JsonObject oldRepresentation;
 }

@@ -477,7 +477,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Awaitility.await().atMost(1, SECONDS)
         .until(() -> getMessagesForInstance(instanceId),
-          hasDeleteEvent(TENANT_ID));
+          hasDeleteEventFor(TENANT_ID, instance));
 
     Awaitility.await().atMost(10, SECONDS)
       .until(() -> {
@@ -515,18 +515,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @NotNull
-  private Matcher<Iterable<? super InstanceEventMessage>> hasDeleteEvent(
-    String tenantId) {
+  private Matcher<Iterable<? super InstanceEventMessage>> hasDeleteEventFor(
+    String tenantId, JsonObject instance) {
 
     return hasItem(allOf(
       isDeleteEvent(),
       isForTenant(tenantId),
-      hasNoNewRepresentation()));
-  }
-
-  @NotNull
-  private Matcher<InstanceEventMessage> hasNoNewRepresentation() {
-    return hasProperty("newRepresentation", is(nullValue()));
+      hasNoNewRepresentation(),
+      hasOldRepresentation(instance)));
   }
 
   @NotNull
@@ -537,6 +533,18 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @NotNull
   private Matcher<InstanceEventMessage> isForTenant(String tenantId) {
     return hasProperty("tenant", is(tenantId));
+  }
+
+  @NotNull
+  private Matcher<InstanceEventMessage> hasNoNewRepresentation() {
+    return hasProperty("newRepresentation", is(nullValue()));
+  }
+
+  @NotNull
+  private Matcher<InstanceEventMessage> hasOldRepresentation(JsonObject instance) {
+    // ignore metadata because created and updated date might be represented
+    // with either +00:00 or Z due to differences in serialization / deserialization
+    return hasProperty("oldRepresentation", equalsIgnoringMetadata(instance));
   }
 
   private Collection<InstanceEventMessage> getMessagesForInstance(String instanceId) {
