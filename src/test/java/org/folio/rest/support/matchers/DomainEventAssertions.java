@@ -115,6 +115,23 @@ public final class DomainEventAssertions {
     assertHeaders(updateEvent.headers());
   }
 
+  public static boolean hasUpdateEvent(Collection<KafkaConsumerRecord<String, JsonObject>> events,
+      JsonObject oldRecord, JsonObject newRecord) {
+
+    if (events == null) {
+      return false;
+    }
+    for (var event : events) {
+      try {
+        assertUpdateEvent(event, oldRecord, newRecord);
+        return true;
+      } catch (AssertionError e) {
+        // ignore
+      }
+    }
+    return false;
+  }
+
   private static void assertHeaders(List<KafkaHeader> headers) {
     final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap()
       .addAll(kafkaHeadersToMap(headers));
@@ -222,10 +239,7 @@ public final class DomainEventAssertions {
   public static void assertUpdateEventForAuthority(JsonObject oldAuthority, JsonObject newAuthority) {
     final String id = oldAuthority.getString("id");
 
-    await()
-      .until(() -> getAuthorityEvents(id).size(), greaterThan(1));
-
-    assertUpdateEvent(getLastAuthorityEvent(id), oldAuthority, newAuthority);
+    await().until(() -> hasUpdateEvent(getAuthorityEvents(id), oldAuthority, newAuthority));
   }
 
   public static void assertCreateEventForItem(JsonObject item) {
