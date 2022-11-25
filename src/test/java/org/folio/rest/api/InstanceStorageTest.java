@@ -476,7 +476,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final String instanceId = instance.getString("id");
 
     Awaitility.await().atMost(1, SECONDS)
-        .until(() -> getMessagesForInstance(instanceId), hasDeleteEvent(TENANT_ID));
+        .until(() -> getMessagesForInstance(instanceId),
+          hasDeleteEvent(TENANT_ID));
 
     Awaitility.await().atMost(10, SECONDS)
       .until(() -> {
@@ -517,7 +518,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private Matcher<Iterable<? super InstanceEventMessage>> hasDeleteEvent(
     String tenantId) {
 
-    return hasItem(allOf(isDeleteEvent(), isForTenant(tenantId)));
+    return hasItem(allOf(
+      isDeleteEvent(),
+      isForTenant(tenantId),
+      hasNoNewRepresentation()));
+  }
+
+  @NotNull
+  private Matcher<InstanceEventMessage> hasNoNewRepresentation() {
+    return hasProperty("newRepresentation", is(nullValue()));
   }
 
   @NotNull

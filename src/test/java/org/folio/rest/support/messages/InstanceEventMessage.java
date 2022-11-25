@@ -14,8 +14,10 @@ public class InstanceEventMessage {
     final var value = consumerRecord.value();
 
     return new InstanceEventMessage(value.getString("type"),
-      value.getString("tenant"));
+      value.getString("tenant"), value.getJsonObject("new"));
   }
+
   private final String type;
   private final String tenant;
+  private final JsonObject newRepresentation;
 }
