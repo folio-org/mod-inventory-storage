@@ -36,6 +36,19 @@
       "$ref": "time-period.json",
       "description": "expiration period for items on the hold shelf at the service point"
     },
+    "holdShelfClosedLibraryDateManagement": {
+      "type": "string",
+      "description": "enum for closedLibraryDateManagement associated with hold shelf",
+      "enum":[
+        "Keep_the_current_due_date",
+        "Move_to_the_end_of_the_previous_open_day",
+        "Move_to_the_end_of_the_next_open_day",
+        "Keep_the_current_due_date_time",
+        "Move_to_end_of_current_service_point_hours",
+        "Move_to_beginning_of_next_open_service_point_hours"
+      ],
+      "default" : "Keep_the_current_due_date"
+    },
     "staffSlips": {
       "type": "array",
       "description": "List of staff slips for this service point",
