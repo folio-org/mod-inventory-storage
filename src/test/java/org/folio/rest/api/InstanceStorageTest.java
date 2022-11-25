@@ -1,10 +1,13 @@
 package org.folio.rest.api;
 
+import static io.vertx.core.MultiMap.caseInsensitiveMultiMap;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.ResponseHandler.json;
@@ -15,6 +18,7 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsa
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
@@ -28,6 +32,7 @@ import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUni
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -48,11 +53,6 @@ import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -60,6 +60,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -74,12 +75,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.SneakyThrows;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.awaitility.Awaitility;
 import org.folio.HttpStatus;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -104,6 +107,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.MultiMap;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.producer.KafkaHeader;
+import lombok.SneakyThrows;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
@@ -135,7 +148,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @After
   public void afterEach(TestContext context) {
-
     setInstanceSequence(1);
 
     StorageTestSuite.checkForMismatchedIDs("instance");
@@ -437,9 +449,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAnInstance() throws InterruptedException, TimeoutException,
-    ExecutionException {
-
+  @SneakyThrows
+  public void canDeleteAnInstance() {
     UUID id = UUID.randomUUID();
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
@@ -456,7 +467,43 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     assertGetNotFound(url);
-    assertRemoveEventForInstance(createdInstance.getJson());
+
+    JsonObject instance = createdInstance.getJson();
+    final String instanceId = instance.getString("id");
+
+    Awaitility.await().atMost(10, SECONDS)
+      .until(() -> {
+        Collection<KafkaConsumerRecord<String, JsonObject>> events = getInstanceEvents(instanceId);
+        if (events == null) {
+          return false;
+        }
+        for (var event : events) {
+          try {
+            assertThat(event.value().getString("type"), is("DELETE"));
+            assertThat(event.value().getString("tenant"), is(TENANT_ID));
+            assertThat(event.value().getJsonObject("new"), nullValue());
+
+            // ignore metadata because +00:00 ends as Z after createdDate and updatedDate have been
+            // deserialized from JSON to POJO resulting in a Date and serialized from POJO to JSON
+            assertThat(event.value().getJsonObject("old"), equalsIgnoringMetadata(
+              instance));
+
+            List<KafkaHeader> headers = event.headers();
+            final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap()
+              .addAll(kafkaHeadersToMap(headers));
+
+            assertEquals(2, caseInsensitiveMap.size());
+            assertEquals(TENANT_ID, caseInsensitiveMap.get(TENANT_ID));
+            assertEquals(vertxUrl("").toString(), caseInsensitiveMap.get(
+              XOkapiHeaders.URL));
+
+            return true;
+          } catch (AssertionError e) {
+            // ignore
+          }
+        }
+        return false;
+      });
   }
 
   @SneakyThrows
