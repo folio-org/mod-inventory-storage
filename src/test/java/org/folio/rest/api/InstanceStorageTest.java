@@ -44,6 +44,7 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
@@ -101,8 +102,10 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
+import org.folio.rest.support.messages.InstanceEventMessage;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -471,6 +474,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instance = createdInstance.getJson();
     final String instanceId = instance.getString("id");
 
+    Awaitility.await().atMost(1, SECONDS)
+        .until(() -> getMessagesForInstance(instanceId), hasDeleteEvent());
+
     Awaitility.await().atMost(10, SECONDS)
       .until(() -> {
         Collection<KafkaConsumerRecord<String, JsonObject>> events = getInstanceEvents(instanceId);
@@ -504,6 +510,18 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         }
         return false;
       });
+  }
+
+  private Matcher<Iterable<? super InstanceEventMessage>> hasDeleteEvent() {
+    final Matcher<InstanceEventMessage> itemMatcher = hasProperty("type", is("DELETE"));
+    return hasItem(itemMatcher);
+  }
+
+  private Collection<InstanceEventMessage> getMessagesForInstance(String instanceId) {
+    return getInstanceEvents(instanceId)
+      .stream()
+      .map(InstanceEventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
   }
 
   @SneakyThrows
