@@ -44,6 +44,7 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -475,9 +476,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instance = createdInstance.getJson();
     final String instanceId = instance.getString("id");
 
-    Awaitility.await().atMost(1, SECONDS)
-        .until(() -> getMessagesForInstance(instanceId),
-          hasDeleteEventFor(TENANT_ID, instance));
+    Awaitility.await().atMost(2, SECONDS)
+      .until(() -> getMessagesForInstance(instanceId),
+        hasDeleteEventFor(instance, TENANT_ID, storageUrl("")));
 
     Awaitility.await().atMost(10, SECONDS)
       .until(() -> {
@@ -516,13 +517,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @NotNull
   private Matcher<Iterable<? super InstanceEventMessage>> hasDeleteEventFor(
-    String tenantId, JsonObject instance) {
+    JsonObject instance, String tenantId, URL url) {
 
     return hasItem(allOf(
       isDeleteEvent(),
       isForTenant(tenantId),
       hasNoNewRepresentation(),
-      hasOldRepresentation(instance)));
+      hasOldRepresentation(instance),
+      hasHeaders(tenantId, url)));
   }
 
   @NotNull
@@ -545,6 +547,21 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     // ignore metadata because created and updated date might be represented
     // with either +00:00 or Z due to differences in serialization / deserialization
     return hasProperty("oldRepresentation", equalsIgnoringMetadata(instance));
+  }
+
+  @NotNull
+  private Matcher<InstanceEventMessage> hasHeaders(String tenantId, URL url) {
+    return hasProperty("headers", matchingTenantAndUrl(tenantId, url));
+  }
+
+  @NotNull
+  private Matcher<Map<? extends String, ? extends String>> matchingTenantAndUrl(
+    String tenantId, URL url) {
+
+    return allOf(
+      // Needs to be lower case because keys are mapped to lower case
+      hasEntry(TENANT.toLowerCase(), tenantId),
+      hasEntry(XOkapiHeaders.URL.toLowerCase(), url.toString()));
   }
 
   private Collection<InstanceEventMessage> getMessagesForInstance(String instanceId) {
