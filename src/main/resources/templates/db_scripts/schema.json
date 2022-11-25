@@ -793,7 +793,7 @@
     },
     {
       "tableName": "hrid_settings",
-      "fromModuleVersion": "17.1.0",
+      "fromModuleVersion": "25.1.0",
       "withMetadata": true,
       "withAuditing": false,
       "customSnippetPath": "hridSettings.sql"
@@ -850,6 +850,10 @@
       "tableName": "iteration_job",
       "withMetadata": false,
       "withAuditing": false
+    },
+    {
+      "tableName": "related_instance_type",
+      "mode": "DELETE"
     },
     {
       "tableName": "async_migration_job",
@@ -1071,6 +1075,11 @@
       "run": "after",
       "snippetPath": "addAuthoritySourceFiles.sql",
       "fromModuleVersion": "25.0.1"
+    },
+    {
+      "run": "after",
+      "snippetPath": "setDefaultMetadataForHrIdSettings.sql",
+      "fromModuleVersion": "25.1.0"
     }
   ]
 }
