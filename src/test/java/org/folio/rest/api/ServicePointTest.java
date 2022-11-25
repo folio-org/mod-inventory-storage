@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
+import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
@@ -362,6 +363,46 @@ public class ServicePointTest extends TestBase{
     assertThat(responseJson.getString("code"), is("cd2"));
     assertThat(responseJson.getString("name"), is("Circ Desk 2")); //should fail
     assertThat(responseJson.getBoolean("pickupLocation"), is(true));
+
+    JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
+    assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (5));
+    assertThat(holdShelfExpiryPeriod.getString("intervalId"), is (HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
+  }
+
+  @Test
+  public void canUpdateAServicePointWithHoldShelfExpiryPeriodAndHoldShelfCloseLibraryDateManagementAndNotBeingPickupLocation()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
+    UUID id = UUID.randomUUID();
+    createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20,
+      false, null);
+    JsonObject request = new JsonObject()
+      .put("id", id.toString())
+      .put("name", "Circ Desk 2")
+      .put("code", "cd2")
+      .put("discoveryDisplayName", "Circulation Desk -- Basement")
+      .put("pickupLocation", true)
+      .put("holdShelfClosedLibraryDateManagement", Servicepoint.HoldShelfClosedLibraryDateManagement.MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value())
+      .put("holdShelfExpiryPeriod", new JsonObject(
+        Json.encode(createHoldShelfExpiryPeriod(5, HoldShelfExpiryPeriod.IntervalId.WEEKS)))
+      );
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(servicePointsUrl("/" + id.toString()), HttpMethod.PUT, request.encode(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+
+    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    Response getResponse = getById(id);
+    JsonObject responseJson = getResponse.getJson();
+    assertThat(responseJson.getString("id"), is(id.toString()));
+    assertThat(responseJson.getString("code"), is("cd2"));
+    assertThat(responseJson.getString("name"), is("Circ Desk 2")); //should fail
+    assertThat(responseJson.getBoolean("pickupLocation"), is(true));
+    assertThat(responseJson.getString("holdShelfClosedLibraryDateManagement"),
+      is (Servicepoint.HoldShelfClosedLibraryDateManagement.MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value()));
 
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is (5));
@@ -748,10 +789,10 @@ public class ServicePointTest extends TestBase{
   }
 
   public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, HoldShelfExpiryPeriod.IntervalId intervalId){
-      HoldShelfExpiryPeriod holdShelfExpiryPeriod = new HoldShelfExpiryPeriod();
-      holdShelfExpiryPeriod.setDuration(duration);
-      holdShelfExpiryPeriod.setIntervalId(intervalId);
-      return holdShelfExpiryPeriod;
+    HoldShelfExpiryPeriod holdShelfExpiryPeriod = new HoldShelfExpiryPeriod();
+    holdShelfExpiryPeriod.setDuration(duration);
+    holdShelfExpiryPeriod.setIntervalId(intervalId);
+    return holdShelfExpiryPeriod;
   }
 
   public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(){
