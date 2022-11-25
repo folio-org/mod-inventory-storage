@@ -1,9 +1,8 @@
 package org.folio.rest.api;
 
-import static io.vertx.core.MultiMap.caseInsensitiveMultiMap;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
+import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -82,7 +81,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.awaitility.Awaitility;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
@@ -113,14 +111,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.producer.KafkaHeader;
 import lombok.SneakyThrows;
 
 @RunWith(VertxUnitRunner.class)
@@ -476,43 +471,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instance = createdInstance.getJson();
     final String instanceId = instance.getString("id");
 
-    Awaitility.await().atMost(2, SECONDS)
+    await().atMost(2, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
-        hasDeleteEventFor(instance, TENANT_ID, storageUrl("")));
-
-    Awaitility.await().atMost(10, SECONDS)
-      .until(() -> {
-        Collection<KafkaConsumerRecord<String, JsonObject>> events = getInstanceEvents(instanceId);
-        if (events == null) {
-          return false;
-        }
-        for (var event : events) {
-          try {
-            assertThat(event.value().getString("type"), is("DELETE"));
-            assertThat(event.value().getString("tenant"), is(TENANT_ID));
-            assertThat(event.value().getJsonObject("new"), nullValue());
-
-            // ignore metadata because +00:00 ends as Z after createdDate and updatedDate have been
-            // deserialized from JSON to POJO resulting in a Date and serialized from POJO to JSON
-            assertThat(event.value().getJsonObject("old"), equalsIgnoringMetadata(
-              instance));
-
-            List<KafkaHeader> headers = event.headers();
-            final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap()
-              .addAll(kafkaHeadersToMap(headers));
-
-            assertEquals(2, caseInsensitiveMap.size());
-            assertEquals(TENANT_ID, caseInsensitiveMap.get(TENANT_ID));
-            assertEquals(vertxUrl("").toString(), caseInsensitiveMap.get(
-              XOkapiHeaders.URL));
-
-            return true;
-          } catch (AssertionError e) {
-            // ignore
-          }
-        }
-        return false;
-      });
+        hasDeleteEventFor(instance, TENANT_ID, vertxUrl("")));
   }
 
   @NotNull
@@ -560,7 +521,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     return allOf(
       // Needs to be lower case because keys are mapped to lower case
-      hasEntry(TENANT.toLowerCase(), tenantId),
+      hasEntry(XOkapiHeaders.TENANT.toLowerCase(), tenantId),
       hasEntry(XOkapiHeaders.URL.toLowerCase(), url.toString()));
   }
 
