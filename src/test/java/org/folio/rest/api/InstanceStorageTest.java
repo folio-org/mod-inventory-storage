@@ -106,6 +106,7 @@ import org.folio.rest.support.messages.InstanceEventMessage;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
 import org.hamcrest.Matcher;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -475,7 +476,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final String instanceId = instance.getString("id");
 
     Awaitility.await().atMost(1, SECONDS)
-        .until(() -> getMessagesForInstance(instanceId), hasDeleteEvent());
+        .until(() -> getMessagesForInstance(instanceId), hasDeleteEvent(TENANT_ID));
 
     Awaitility.await().atMost(10, SECONDS)
       .until(() -> {
@@ -512,9 +513,21 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       });
   }
 
-  private Matcher<Iterable<? super InstanceEventMessage>> hasDeleteEvent() {
-    final Matcher<InstanceEventMessage> itemMatcher = hasProperty("type", is("DELETE"));
-    return hasItem(itemMatcher);
+  @NotNull
+  private Matcher<Iterable<? super InstanceEventMessage>> hasDeleteEvent(
+    String tenantId) {
+
+    return hasItem(allOf(isDeleteEvent(), isForTenant(tenantId)));
+  }
+
+  @NotNull
+  private static Matcher<InstanceEventMessage> isDeleteEvent() {
+    return hasProperty("type", is("DELETE"));
+  }
+
+  @NotNull
+  private Matcher<InstanceEventMessage> isForTenant(String tenantId) {
+    return hasProperty("tenant", is(tenantId));
   }
 
   private Collection<InstanceEventMessage> getMessagesForInstance(String instanceId) {

@@ -11,7 +11,11 @@ public class InstanceEventMessage {
   public static InstanceEventMessage fromConsumerRecord(
     KafkaConsumerRecord<String, JsonObject> consumerRecord) {
 
-    return new InstanceEventMessage(consumerRecord.value().getString("type"));
+    final var value = consumerRecord.value();
+
+    return new InstanceEventMessage(value.getString("type"),
+      value.getString("tenant"));
   }
   private final String type;
+  private final String tenant;
 }
