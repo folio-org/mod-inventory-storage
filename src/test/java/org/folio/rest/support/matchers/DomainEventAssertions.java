@@ -238,10 +238,7 @@ public final class DomainEventAssertions {
   public static void assertUpdateEventForAuthority(JsonObject oldAuthority, JsonObject newAuthority) {
     final String id = oldAuthority.getString("id");
 
-    await()
-      .until(() -> getAuthorityEvents(id).size(), greaterThan(1));
-
-    assertUpdateEvent(getLastAuthorityEvent(id), oldAuthority, newAuthority);
+    await().until(() -> hasUpdateEvent(getAuthorityEvents(id), oldAuthority, newAuthority));
   }
 
   public static void assertCreateEventForItem(JsonObject item) {
