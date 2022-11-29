@@ -26,7 +26,7 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,8 +52,9 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     removeAllEvents();
   }
 
-  @After
-  public void afterEach() {
+  @AfterClass
+  public static void afterAll() {
+    // Prevent tests from other classes from being affected by this data.
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
