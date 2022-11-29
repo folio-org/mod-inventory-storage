@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.rest.support.IndividualResource;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,8 +32,9 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
     removeAllEvents();
   }
 
-  @After
-  public void afterEach() {
+  @AfterClass
+  public static void afterAll() {
+    // Prevent tests from other classes from being affected by this data.
     StorageTestSuite.deleteAll(modesOfIssuanceUrl(""));
   }
 
