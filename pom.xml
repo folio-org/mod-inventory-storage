@@ -521,8 +521,12 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.19.1</version>
         <configuration>
+          <excludes>
+            <exclude>org/folio/rest/api/*Test.java</exclude>
+          </excludes>
           <includes>
-            <include>org/folio/AllTestSuite.java</include>
+            <include>org/folio/rest/api/StorageTestSuite.java</include>
+            <include>**/*Test.java</include>
           </includes>
           <!-- 3 tests of ItemStorageTest fail when run with de (= German) locale because
                of translated error messages.
