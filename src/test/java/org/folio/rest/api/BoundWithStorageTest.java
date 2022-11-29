@@ -11,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.support.IndividualResource;
@@ -69,7 +70,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getAllPartsForBoundWithItem.size(), is(3));
 
     await().atMost(10, TimeUnit.SECONDS)
-      .until(() -> FakeKafkaConsumer.getAllPublishedBoundWithIdsCount() == 3);
+      .until(() -> hasPublishedBoundWithHoldingsRecordIds(
+          mainHoldingsRecord.getId(), anotherHoldingsRecord.getId(), aThirdHoldingsRecord.getId()));
   }
 
   @Test
@@ -120,7 +122,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(newPart2.size(), is(1));
 
     await().atMost(10, TimeUnit.SECONDS)
-      .until(() -> FakeKafkaConsumer.getAllPublishedBoundWithIdsCount() == 3);
+      .until(() -> hasPublishedBoundWithHoldingsRecordIds(
+          holdingsRecord1.getId(), holdingsRecord2.getId(), holdingsRecord3.getId()));
   }
 
   private JsonObject createBoundWithPartJson(UUID holdingsRecordId, UUID itemId) {
@@ -150,4 +153,12 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
         .withPermanentLoanType(canCirculateLoanTypeId));
   }
 
+  private boolean hasPublishedBoundWithHoldingsRecordIds(UUID id1, UUID id2, UUID id3) {
+    List<String> holdingsRecordIds = List.of(id1.toString(), id2.toString(), id3.toString());
+    List<String> publishedHoldingsRecordIds = FakeKafkaConsumer.getAllPublishedBoundWithEvents().stream()
+        .filter(json -> json.containsKey("new"))
+        .map(json -> json.getJsonObject("new").getString("holdingsRecordId"))
+        .collect(Collectors.toList());
+    return publishedHoldingsRecordIds.containsAll(holdingsRecordIds);
+  }
 }

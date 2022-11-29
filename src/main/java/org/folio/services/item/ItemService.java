@@ -128,15 +128,17 @@ public class ItemService {
     return getItemAndHolding(itemId, newItem.getHoldingsRecordId())
       .onSuccess(putData::set)
       .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
-      .onSuccess(item -> {
+      .compose(x -> {
         if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
-          putData.oldHoldings = putData.newHoldings;
-          return;
+          return Future.succeededFuture(putData.newHoldings);
         }
-        holdingsRepository.getById(putData.oldItem.getHoldingsRecordId()).onSuccess(holdingsRecord ->
-          putData.oldHoldings = holdingsRecord);})
-      .map(x -> effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings))
-      .compose(x -> updateItem(newItem))
+        return holdingsRepository.getById(putData.oldItem.getHoldingsRecordId());
+      })
+      .compose(oldHoldings -> {
+        putData.oldHoldings = oldHoldings;
+        effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
+        return updateItem(newItem);
+      })
       .onSuccess(finalItem ->
         domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
       .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
