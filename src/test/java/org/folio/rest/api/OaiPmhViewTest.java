@@ -11,9 +11,9 @@ import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasAggregat
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasEffectiveLocationInstitutionName;
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.isDeleted;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.folio.utility.VertxUtility.getClient;
-import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

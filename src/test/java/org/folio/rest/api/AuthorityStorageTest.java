@@ -6,8 +6,8 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreate
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForAuthority;
+import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.folio.utility.VertxUtility.getClient;
 import static org.junit.Assert.assertEquals;
 
 import io.vertx.core.json.JsonObject;

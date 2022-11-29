@@ -1,8 +1,8 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.support.http.InterfaceUrls.holdingsSourceUrl;
+import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.folio.utility.VertxUtility.getClient;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;

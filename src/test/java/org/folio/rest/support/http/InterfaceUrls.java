@@ -1,6 +1,6 @@
 package org.folio.rest.support.http;
 
-import static org.folio.utility.VertxUtility.vertxUrl;
+import static org.folio.utility.ModuleUtility.vertxUrl;
 
 import java.net.URL;
 

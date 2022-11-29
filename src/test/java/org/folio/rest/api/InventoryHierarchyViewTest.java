@@ -21,9 +21,9 @@ import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationCodeForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.isDeleted;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.folio.utility.VertxUtility.getClient;
-import static org.folio.utility.VertxUtility.getVertx;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;

@@ -1,6 +1,6 @@
 package org.folio.utility;
 
-import static org.folio.utility.VertxUtility.getClient;
+import static org.folio.utility.ModuleUtility.getClient;
 
 import io.vertx.core.Future;
 import io.vertx.core.Handler;

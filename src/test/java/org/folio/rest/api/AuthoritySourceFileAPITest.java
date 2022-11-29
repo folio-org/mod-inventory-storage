@@ -6,8 +6,8 @@ import static org.folio.rest.api.entities.AuthoritySourceFile.NAME_KEY;
 import static org.folio.rest.api.entities.AuthoritySourceFile.SOURCE_KEY;
 import static org.folio.rest.api.entities.AuthoritySourceFile.TYPE_KEY;
 import static org.folio.rest.api.entities.JsonEntity.ID_KEY;
+import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.folio.utility.VertxUtility.getClient;
 import static org.junit.Assert.assertEquals;
 
 import io.vertx.core.json.JsonObject;

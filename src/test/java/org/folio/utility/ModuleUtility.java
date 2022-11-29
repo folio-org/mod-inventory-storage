@@ -21,13 +21,13 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 
-public class VertxUtility {
+public class ModuleUtility {
   private static final Logger logger = LogManager.getLogger();
   private static Vertx vertx;
   private static HttpClient client;
   private static int port = 0;
 
-  private VertxUtility() {
+  private ModuleUtility() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
   }
 
@@ -35,7 +35,7 @@ public class VertxUtility {
     return client;
   }
 
-  public static void startVertx(String tenantId)
+  public static void startVerticle(String tenantId)
       throws InterruptedException,
       ExecutionException,
       TimeoutException {
@@ -54,7 +54,7 @@ public class VertxUtility {
     prepareTenant(tenantId, false);
   }
 
-  public static void stopVertx()
+  public static void stopVerticle()
       throws InterruptedException,
       ExecutionException {
 

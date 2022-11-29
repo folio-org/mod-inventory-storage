@@ -2,11 +2,11 @@ package org.folio.rest.api;
 
 import static org.folio.utility.KafkaUtility.startKafka;
 import static org.folio.utility.KafkaUtility.stopKafka;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.ModuleUtility.removeTenant;
+import static org.folio.utility.ModuleUtility.startVerticle;
+import static org.folio.utility.ModuleUtility.stopVerticle;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.folio.utility.VertxUtility.getVertx;
-import static org.folio.utility.VertxUtility.removeTenant;
-import static org.folio.utility.VertxUtility.startVertx;
-import static org.folio.utility.VertxUtility.stopVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -116,7 +116,7 @@ public class StorageTestSuite {
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     startKafka();
-    startVertx(TENANT_ID);
+    startVerticle(TENANT_ID);
 
     logger.info("finished @BeforeClass before()");
   }
@@ -130,7 +130,7 @@ public class StorageTestSuite {
     logger.info("starting @AfterClass after()");
 
     removeTenant(TENANT_ID);
-    stopVertx();
+    stopVerticle();
     stopKafka();
 
     PostgresClient.stopPostgresTester();
