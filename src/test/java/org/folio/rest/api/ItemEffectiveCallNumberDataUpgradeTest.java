@@ -45,6 +45,8 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
   @SneakyThrows
   @BeforeClass
   public static void beforeAll() {
+    TestBase.beforeAll();
+
     instancesClient.create(instance(instanceId));
 
     callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);

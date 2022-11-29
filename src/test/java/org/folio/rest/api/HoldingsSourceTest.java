@@ -31,6 +31,8 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
 
   @BeforeClass
   public static void beforeAll() {
+    TestBase.beforeAll();
+
     holdingsSourceClient = ResourceClient.forHoldingsSource(getClient());
   }
 

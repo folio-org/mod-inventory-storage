@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import junit.framework.AssertionFailedError;
+import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.BeforeClass;
@@ -36,8 +37,11 @@ public class SampleDataTest extends TestBase {
    * recreate tenant (with reference and) WITH sample data
    * Omit update for now.. It hangs for unknown reasons when using Embedded Postgres MODINVSTOR-369
    */
+  @SneakyThrows
   @BeforeClass
-  public static void beforeAny() throws Exception {
+  public static void beforeAll() {
+    TestBase.beforeAll();
+
     removeTenant(TENANT_ID);
     prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
     FakeKafkaConsumer.clearAllEvents();

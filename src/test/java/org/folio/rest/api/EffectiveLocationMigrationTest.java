@@ -38,7 +38,7 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   @After
-  public void cleanUp() {
+  public void afterEach() {
     holdingsClient.delete(holdingsId);
     instancesClient.delete(instanceId);
   }

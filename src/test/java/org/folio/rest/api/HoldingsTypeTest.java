@@ -25,6 +25,8 @@ public class HoldingsTypeTest extends TestBase {
 
   @BeforeClass
   public static void beforeAll() {
+    TestBase.beforeAll();
+
     holdingsTypeClient = ResourceClient.forHoldingsType(getClient());
   }
 

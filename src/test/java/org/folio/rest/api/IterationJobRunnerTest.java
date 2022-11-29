@@ -53,6 +53,8 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
   @BeforeClass
   public static void beforeClass() throws Exception {
+    TestBase.beforeAll();
+
     instanceIteration = new InstanceIterationFixture(getClient());
   }
 

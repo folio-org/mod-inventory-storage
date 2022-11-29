@@ -43,6 +43,8 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
   @BeforeClass
   public static void createCallNumberTypes() {
+    TestBase.beforeAll();
+
     callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);
     callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE_SECOND);
     callNumberTypesClient.deleteIfPresent(ITEM_LEVEL_CALL_NUMBER_TYPE);

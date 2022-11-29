@@ -75,7 +75,7 @@ public abstract class TestBase {
   static AsyncMigrationFixture asyncMigration;
 
   @BeforeClass
-  public static void testBaseBeforeClass() {
+  public static void beforeAll() {
     logger.info("starting @BeforeClass testBaseBeforeClass()");
 
     instancesClient = ResourceClient.forInstances(getClient());

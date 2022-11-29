@@ -54,6 +54,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
 
   @AfterClass
   public static void afterAll() {
+    TestBase.afterAll();
+
     // Prevent tests from other classes from being affected by this data.
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");

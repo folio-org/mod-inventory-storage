@@ -34,6 +34,8 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @BeforeClass
   public static void beforeAll() {
+    TestBase.beforeAll();
+
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));

@@ -44,6 +44,8 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
 
   @BeforeClass
   public static void beforeAll() {
+    TestBase.beforeAll();
+
     createInstance(instanceId1);
     createInstance(instanceId2);
     createInstance(instanceId3);
