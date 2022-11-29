@@ -1,3 +1,11 @@
+## 25.0.2 2022-11-30
+
+* RMB 35.0.4, Vert.x 4.3.5, Jackson 2.14.0 fixing f\_unaccent errors ([MODINVSTOR-996](https://issues.folio.org/browse/MODINVSTOR-996)), ([FOLIO-3630](https://issues.folio.org/browse/FOLIO-3630))
+* ItemStorageTest.canMoveItemToNewInstance ConditionTimeout/NPE ([MODINVSTOR-1000](https://issues.folio.org/browse/MODINVSTOR-1000))
+* Delete 2 functions from related\_instance\_type ([MODINVSTOR-991](https://issues.folio.org/browse/MODINVSTOR-991))
+* Move locations and location-units from reference data to sample data ([MODINVSTOR-443](https://issues.folio.org/browse/MODINVSTOR-443))
+* Fix unit tests with spurious Kafka message failures ([MODINVSTOR-997](https://issues.folio.org/browse/MODINVSTOR-997)), ([MODINVSTOR-998](https://issues.folio.org/browse/MODINVSTOR-998)), ([MODINVSTOR-999](https://issues.folio.org/browse/MODINVSTOR-999)), ([MODINVSTOR-1002](https://issues.folio.org/browse/MODINVSTOR-1002))
+
 ## 25.0.1 2022-11-07
 
 * Fix: Authority source files reference data doesn't load during module upgrade ([MODINVSTOR-984](https://issues.folio.org/browse/MODINVSTOR-984))
