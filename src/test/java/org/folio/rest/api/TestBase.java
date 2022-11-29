@@ -188,7 +188,7 @@ public abstract class TestBase {
    * Assert that a GET at the url returns 404 status code (= not found).
    * @param url  endpoint where to execute a GET request
    */
-  public void assertGetNotFound(URL url) {
+  void assertGetNotFound(URL url) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     getClient().get(url, TENANT_ID, ResponseHandler.text(getCompleted));
