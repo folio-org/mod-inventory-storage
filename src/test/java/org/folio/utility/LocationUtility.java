@@ -130,15 +130,10 @@ public class LocationUtility {
    * @return
    */
   public static UUID createLocation(UUID id, String name, String code) {
-    try {
-      //createLocationUnits(false); // Why is this being done again and then for each?
-      if (id == null) {
-        id = UUID.randomUUID();
-      }
-      createLocation(id, name, institutionID, campusID, libraryID, code, servicePointIDs);
-    } catch (Exception e) {
-      throw new AssertionError("CreateLocation failed:", e);
+    if (id == null) {
+      id = UUID.randomUUID();
     }
+    createLocation(id, name, institutionID, campusID, libraryID, code, servicePointIDs);
     return id;
   }
 
