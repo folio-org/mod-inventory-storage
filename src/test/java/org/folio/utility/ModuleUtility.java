@@ -35,7 +35,7 @@ public class ModuleUtility {
     return client;
   }
 
-  public static void startVerticle(String tenantId)
+  public static void startVerticleWebClientAndPrepareTenant(String tenantId)
       throws InterruptedException,
       ExecutionException,
       TimeoutException {
@@ -54,7 +54,7 @@ public class ModuleUtility {
     prepareTenant(tenantId, false);
   }
 
-  public static void stopVerticle()
+  public static void stopVerticleAndWebClient()
       throws InterruptedException,
       ExecutionException {
 

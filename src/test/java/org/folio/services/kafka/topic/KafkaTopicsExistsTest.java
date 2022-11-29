@@ -4,8 +4,8 @@ import static org.folio.utility.KafkaUtility.startKafka;
 import static org.folio.utility.KafkaUtility.stopKafka;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.ModuleUtility.removeTenant;
-import static org.folio.utility.ModuleUtility.startVerticle;
-import static org.folio.utility.ModuleUtility.stopVerticle;
+import static org.folio.utility.ModuleUtility.startVerticleWebClientAndPrepareTenant;
+import static org.folio.utility.ModuleUtility.stopVerticleAndWebClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.ext.unit.TestContext;
@@ -45,7 +45,7 @@ public class KafkaTopicsExistsTest {
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     startKafka();
-    startVerticle(TENANT_ID);
+    startVerticleWebClientAndPrepareTenant(TENANT_ID);
   }
 
   @AfterClass
@@ -55,7 +55,7 @@ public class KafkaTopicsExistsTest {
       TimeoutException {
 
     removeTenant(TENANT_ID);
-    stopVerticle();
+    stopVerticleAndWebClient();
     stopKafka();
     PostgresClient.stopPostgresTester();
   }
