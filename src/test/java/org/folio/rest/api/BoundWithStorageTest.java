@@ -20,6 +20,7 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -38,9 +39,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     removeAllEvents();
   }
 
-  @SneakyThrows
-  @After
-  public void afterEach() {
+  @AfterClass
+  public static void afterAll() {
     deleteAllById(boundWithPartsClient);
   }
 
