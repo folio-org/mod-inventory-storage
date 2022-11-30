@@ -36,6 +36,8 @@ public final class FakeKafkaConsumer {
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> boundWith =
     new ConcurrentHashMap<>();
 
+  // Provide a strong reference to reduce the chances of deallocation before
+  // all clients are properly unsubscribed.
   private KafkaConsumer<String, JsonObject> consumer;
 
   private static DateTime timestamp = DateTime.now();
@@ -95,6 +97,11 @@ public final class FakeKafkaConsumer {
     });
 
     timestamp = DateTime.now();
+
+    // Assign the created consumer to the class being returned.
+    // The caller of this function may then be able to call unsubscribe()
+    // as needed. This ensures that the reference remains strong once
+    // this once out of the scope of this function.
     this.setConsumer(consumer);
 
     return this;
