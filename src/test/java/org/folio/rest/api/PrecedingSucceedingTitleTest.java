@@ -52,6 +52,16 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     removeAllEvents();
   }
 
+  /**
+   * Delete all data to prevent potential constraint violations.
+   *
+   * The preceding_succeeding_title, instance_relationship, and
+   * bound_with_part may cause constraint violations when other classes
+   * attempt to delete or modify data.
+   *
+   * If isolation between test classes gets fixed then this afterAll() should
+   * not be necessary anymore.
+   */
   @AfterClass
   public static void afterAll() {
     TestBase.afterAll();
