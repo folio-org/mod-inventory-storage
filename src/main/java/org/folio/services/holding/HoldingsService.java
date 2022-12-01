@@ -99,7 +99,10 @@ public class HoldingsService {
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
-
+    log.info("TEMP DEBUG:updateHolding---: oldHoldings: version: {}, id: {}, object: {}",
+      oldHoldings.getVersion(), oldHoldings.getId(), oldHoldings);
+    log.info("TEMP DEBUG:updateHolding---: newHoldings: version: {}, id: {}, object: {}",
+      newHoldings.getVersion(), newHoldings.getId(), newHoldings);
     if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
       newHoldings.setVersion(null);  // enforce optimistic locking
     }
