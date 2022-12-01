@@ -6,11 +6,9 @@ import java.util.Map;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Value;
 
-@Getter
-@AllArgsConstructor
+@Value
 public class InstanceEventMessage {
   public static InstanceEventMessage fromConsumerRecord(
     KafkaConsumerRecord<String, JsonObject> consumerRecord) {
@@ -25,9 +23,9 @@ public class InstanceEventMessage {
       kafkaHeadersToMap(consumerRecord.headers()));
   }
 
-  private final String type;
-  private final String tenant;
-  private final JsonObject newRepresentation;
-  private final JsonObject oldRepresentation;
-  private final Map<String, String> headers;
+  String type;
+  String tenant;
+  JsonObject newRepresentation;
+  JsonObject oldRepresentation;
+  Map<String, String> headers;
 }
