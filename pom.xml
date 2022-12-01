@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-inventory-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>25.0.2-SNAPSHOT</version>
+  <version>25.0.3-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -34,8 +34,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>35.0.1</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.3.4</vertx.version>
+    <raml-module-builder-version>35.0.4</raml-module-builder-version> <!-- also update vertx.version -->
+    <vertx.version>4.3.5</vertx.version>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/authority-storage/authorities,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances</generate_routing_context>
     <argLine />
   </properties>
