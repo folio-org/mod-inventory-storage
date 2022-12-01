@@ -16,7 +16,7 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsa
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForInstance;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
@@ -58,7 +58,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -97,7 +96,7 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.support.messages.EventMessage;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
@@ -471,13 +470,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     await().atMost(2, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
         eventMessageMatchers.hasDeleteEventFor(instance));
-  }
-
-  private Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return getInstanceEvents(instanceId)
-      .stream()
-      .map(EventMessage::fromConsumerRecord)
-      .collect(Collectors.toList());
   }
 
   @SneakyThrows

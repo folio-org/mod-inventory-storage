@@ -3,11 +3,6 @@ package org.folio.rest.support.kafka;
 import static io.vertx.kafka.client.consumer.KafkaConsumer.create;
 import static java.util.Collections.emptyList;
 
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -16,11 +11,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
+import org.folio.rest.support.messages.EventMessage;
 import org.joda.time.DateTime;
+
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 
 public final class FakeKafkaConsumer {
   private static final Logger logger = LogManager.getLogger();
@@ -128,10 +132,6 @@ public final class FakeKafkaConsumer {
     return instanceEvents.size();
   }
 
-  public static int getAllPublishedBoundWithIdsCount() {
-    return boundWith.size();
-  }
-
   public static Collection<JsonObject> getAllPublishedBoundWithEvents() {
     List<JsonObject> list = new ArrayList<>();
     boundWith.values().forEach(collection -> collection.forEach(record -> list.add(record.value())));
@@ -146,6 +146,13 @@ public final class FakeKafkaConsumer {
     String instanceId) {
 
     return instanceEvents.getOrDefault(instanceId, emptyList());
+  }
+
+  public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
+    return getInstanceEvents(instanceId)
+      .stream()
+      .map(EventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
   }
 
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getAuthorityEvents(
