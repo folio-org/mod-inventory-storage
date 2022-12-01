@@ -4,11 +4,13 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
@@ -17,12 +19,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import io.vertx.core.Context;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
@@ -49,14 +51,16 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   private InstanceRepository instanceRepository;
   private IterationJobRunner jobRunner;
 
-
   @BeforeClass
-  public static void beforeClass() {
-    instanceIteration = new InstanceIterationFixture(client);
+  public static void beforeClass() throws Exception {
+    TestBase.beforeAll();
+
+    instanceIteration = new InstanceIterationFixture(getClient());
   }
 
+  @SneakyThrows
   @Before
-  public void setUp() {
+  public void beforeEach() {
     jobRepository = new IterationJobRepository(getContext(), okapiHeaders());
     instanceRepository = mock(InstanceRepository.class);
 
@@ -64,8 +68,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
         jobRepository, instanceRepository, getContext(), okapiHeaders());
 
-    // Make sure no events are left over from previous runs
-    FakeKafkaConsumer.removeAllEvents();
+    removeAllEvents();
   }
 
   @Test
@@ -136,7 +139,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   private static Context getContext() {
-    return StorageTestSuite.getVertx().getOrCreateContext();
+    return getVertx().getOrCreateContext();
   }
 
 }

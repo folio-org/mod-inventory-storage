@@ -1,13 +1,18 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.send;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-
-import org.folio.rest.support.*;
-import org.folio.rest.support.client.LoanTypesClient;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.UUID;
@@ -15,46 +20,39 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import lombok.SneakyThrows;
+import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.rest.support.HttpClient;
+import org.folio.rest.support.JsonErrorResponse;
+import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.client.LoanTypesClient;
+import org.junit.Before;
+import org.junit.Test;
 
 public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
-  // see also @BeforeClass TestBaseWithInventoryUtil.beforeAny()
-
+  @SneakyThrows
   @Before
-  public void beforeEach()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
+  public void beforeEach() {
+    clearData();
 
     canCirculateLoanTypeID = new LoanTypesClient(
-      new org.folio.rest.support.HttpClient(StorageTestSuite.getVertx()),
+      new HttpClient(getVertx()),
       loanTypesStorageUrl("")).create("Can Circulate");
+
+    setupLocations();
+    removeAllEvents();
   }
 
   @Test
   public void canCreateMaterialType()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     Response response = createMaterialType("Journal");
 
@@ -67,10 +65,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotCreateMaterialTypeWithSameName()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     createMaterialType("Journal");
 
@@ -81,10 +79,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotCreateMaterialTypeWithSameId()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     UUID id = UUID.randomUUID();
 
@@ -97,10 +95,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotProvideAdditionalPropertiesInMaterialType()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+      throws InterruptedException,
+      MalformedURLException,
+      TimeoutException,
+      ExecutionException {
 
     CompletableFuture<JsonErrorResponse> createMaterialType = new CompletableFuture<>();
 
@@ -120,10 +118,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canGetAMaterialTypeById()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     UUID id = UUID.randomUUID();
 
@@ -141,10 +139,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canUpdateAMaterialType()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     UUID id = UUID.randomUUID();
 
@@ -178,10 +176,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotUpdateAMaterialTypeThatDoesNotExist()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     UUID id = UUID.randomUUID();
 
@@ -202,10 +200,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotGetAMaterialTypeThatDoesNotExist()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -219,10 +217,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canGetAllMaterialTypes()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     createMaterialType(UUID.randomUUID(), "Journal");
     createMaterialType(UUID.randomUUID(), "Book");
@@ -240,10 +238,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canDeleteAnUnusedMaterialType()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     UUID id = UUID.randomUUID();
 
@@ -261,10 +259,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotDeleteAMaterialTypeAssociatedToAnItem()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     UUID materialTypeId = UUID.randomUUID();
 
@@ -296,10 +294,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotDeleteAMaterialTypeThatCannotBeFound()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
@@ -326,10 +324,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   private Response createMaterialType(String name)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
 
     CompletableFuture<Response> createMaterialType = new CompletableFuture<>();
     String createMTURL = materialTypesStorageUrl("").toString();
@@ -341,10 +339,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   private Response createMaterialType(UUID id, String name)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
 
     CompletableFuture<Response> createMaterialType = new CompletableFuture<>();
 
@@ -359,10 +357,10 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   private Response getById(UUID id)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException,
+      MalformedURLException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 

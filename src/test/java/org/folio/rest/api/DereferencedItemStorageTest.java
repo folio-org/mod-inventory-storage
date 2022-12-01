@@ -1,41 +1,41 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.rest.support.http.InterfaceUrls.dereferencedItemStorage;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.dereferencedItemStorage;
 import static org.folio.util.StringUtil.urlEncode;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 
+import io.vertx.core.json.JsonObject;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
+import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.DereferencedItem;
 import org.folio.rest.jaxrs.model.DereferencedItems;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonObject;
-import lombok.SneakyThrows;
 
 public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static final UUID smallAngryPlanetId = UUID.randomUUID();
   private static final UUID uprootedId = UUID.randomUUID();
 
-
+  @SneakyThrows
   @BeforeClass
-  public static void beforeTests() throws InterruptedException, ExecutionException, TimeoutException {
+  public static void beforeAll() {
+    TestBase.beforeAll();
+
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -49,6 +49,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     postItem(smallAngryPlanet);
     postItem(nod);
     postItem(uprooted);
+    FakeKafkaConsumer.clearAllEvents();
   }
 
   @AfterClass
@@ -159,7 +160,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private static void postItem(JsonObject itemRecord) {
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
-    postCompleted = client.post(itemsStorageUrl(""), itemRecord, StorageTestSuite.TENANT_ID);
+    postCompleted = getClient().post(itemsStorageUrl(""), itemRecord, TENANT_ID);
     Response response = postCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(201));
   }
@@ -215,8 +216,8 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private Response attemptFindByCql(String badSearchQuery) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-    client.get(dereferencedItemStorage("?query=") + urlEncode(badSearchQuery),
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
+    getClient().get(dereferencedItemStorage("?query=") + urlEncode(badSearchQuery),
+      TENANT_ID, ResponseHandler.text(searchCompleted));
 
     return searchCompleted.get(10, TimeUnit.SECONDS);
   }
@@ -224,8 +225,8 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private Response attemptFindById(String badId) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-    client.get(dereferencedItemStorage("/") + urlEncode(badId),
-      StorageTestSuite.TENANT_ID, ResponseHandler.text(searchCompleted));
+    getClient().get(dereferencedItemStorage("/") + urlEncode(badId),
+      TENANT_ID, ResponseHandler.text(searchCompleted));
 
     return searchCompleted.get(10, TimeUnit.SECONDS);
   }
@@ -233,8 +234,8 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private DereferencedItems findByCql(String searchQuery) {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-    client.get(dereferencedItemStorage("?query=") + urlEncode(searchQuery),
-      StorageTestSuite.TENANT_ID, ResponseHandler.json(searchCompleted));
+    getClient().get(dereferencedItemStorage("?query=") + urlEncode(searchQuery),
+      TENANT_ID, ResponseHandler.json(searchCompleted));
 
     return searchCompleted.get(10, TimeUnit.SECONDS).getJson()
       .mapTo(DereferencedItems.class);
@@ -243,7 +244,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private DereferencedItem findById(String id) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(dereferencedItemStorage("/" + id), TENANT_ID, json(getCompleted));
+    getClient().get(dereferencedItemStorage("/" + id), TENANT_ID, json(getCompleted));
 
     return getCompleted.get(10, SECONDS).getJson()
       .mapTo(DereferencedItem.class);
@@ -252,7 +253,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private DereferencedItems getAll() {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    client.get(dereferencedItemStorage(""), TENANT_ID, json(getCompleted));
+    getClient().get(dereferencedItemStorage(""), TENANT_ID, json(getCompleted));
 
     return getCompleted.get(10, SECONDS).getJson()
       .mapTo(DereferencedItems.class);

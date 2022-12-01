@@ -1,24 +1,23 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsTypesUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.ResourceClient;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 public class HoldingsTypeTest extends TestBase {
 
@@ -26,7 +25,9 @@ public class HoldingsTypeTest extends TestBase {
 
   @BeforeClass
   public static void beforeAll() {
-    holdingsTypeClient = ResourceClient.forHoldingsType(client);
+    TestBase.beforeAll();
+
+    holdingsTypeClient = ResourceClient.forHoldingsType(getClient());
   }
 
   @Test
@@ -40,7 +41,7 @@ public class HoldingsTypeTest extends TestBase {
     holdingsTypeClient.create(holdingsType);
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
-    client.post(holdingsTypesUrl(""), holdingsType, TENANT_ID, ResponseHandler.json(postCompleted));
+    getClient().post(holdingsTypesUrl(""), holdingsType, TENANT_ID, ResponseHandler.json(postCompleted));
 
     Response response = postCompleted.get(10, TimeUnit.SECONDS);
     assertThat(response.getStatusCode(), is(422));

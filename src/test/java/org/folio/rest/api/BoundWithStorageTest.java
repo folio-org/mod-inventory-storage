@@ -1,8 +1,19 @@
 package org.folio.rest.api;
 
+import static org.awaitility.Awaitility.await;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.net.HttpURLConnection;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
@@ -10,37 +21,33 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.net.HttpURLConnection;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import static org.awaitility.Awaitility.await;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 @RunWith(JUnitParamsRunner.class)
 public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
-  static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(client);
+  static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(getClient());
 
+  @SneakyThrows
   @After
-  public void afterEach() {
-    deleteBoundWithParts();
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+  public void beforeEach() {
+    deleteAllById(boundWithPartsClient);
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+    removeAllEvents();
+  }
+
+  @AfterClass
+  public static void afterAll() {
+    deleteAllById(boundWithPartsClient);
   }
 
   @Test
   public void canCreateAndRetrieveBoundWithParts() {
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
     IndividualResource mainInstance = createInstance("Main Instance");
     IndividualResource mainHoldingsRecord = createHoldingsRecord(mainInstance.getId());
     IndividualResource item = createItem(mainHoldingsRecord.getId());
@@ -83,7 +90,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canChangeOnePartOfABoundWith() {
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource instance2 = createInstance("Instance 2");
@@ -144,12 +151,6 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
         .forHolding(holdingsRecordId)
         .withMaterialType(bookMaterialTypeId)
         .withPermanentLoanType(canCirculateLoanTypeId));
-  }
-
-  private void deleteBoundWithParts() {
-    for (JsonObject boundWithPart : boundWithPartsClient.getAll()) {
-      boundWithPartsClient.delete(UUID.fromString(boundWithPart.getString("id")));
-    }
   }
 
   private boolean hasPublishedBoundWithHoldingsRecordIds(UUID id1, UUID id2, UUID id3) {

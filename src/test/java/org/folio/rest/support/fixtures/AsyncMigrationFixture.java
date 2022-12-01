@@ -1,5 +1,12 @@
 package org.folio.rest.support.fixtures;
 
+import static org.folio.rest.api.TestBase.get;
+import static org.folio.rest.support.http.InterfaceUrls.migrationJobsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.migrationsUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
@@ -7,13 +14,6 @@ import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
-
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.TestBase.get;
-import static org.folio.rest.support.http.InterfaceUrls.migrationJobsUrl;
-import static org.folio.rest.support.http.InterfaceUrls.migrationsUrl;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 public final class AsyncMigrationFixture {
   private final HttpClient client;

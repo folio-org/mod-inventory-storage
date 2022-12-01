@@ -3,12 +3,15 @@ package org.folio.rest.api;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.folio.InventoryKafkaTopic.AUTHORITY;
+import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
@@ -18,11 +21,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
-import io.vertx.core.Context;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.model.Instance;
@@ -30,13 +33,10 @@ import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.sql.TestRowStream;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
 import org.folio.services.reindex.ReindexResourceName;
 import org.junit.Test;
-import static org.folio.InventoryKafkaTopic.AUTHORITY;
-import static org.folio.InventoryKafkaTopic.INSTANCE;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
@@ -61,7 +61,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
 
@@ -95,7 +95,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.removeAllEvents();
+    FakeKafkaConsumer.clearAllEvents();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
 
@@ -186,7 +186,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   private static Context getContext() {
-    return StorageTestSuite.getVertx().getOrCreateContext();
+    return getVertx().getOrCreateContext();
   }
 
   private PostgresClientFuturized getPostgresClientFuturized() {

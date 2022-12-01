@@ -1,15 +1,13 @@
 package org.folio.rest.api;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Assert;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonObject;
 
 public class IllMigrationScriptTest extends MigrationTestBase {
   private static final String MIGRATION_SCRIPT = loadScript("updateIllPolicyWillNotLend.sql");
@@ -31,13 +29,13 @@ public class IllMigrationScriptTest extends MigrationTestBase {
       JsonObject originalPolicy = initialIllPolicies.get(policy.getString("id"));
       //did our special policy get updated to the correct value?
       if (policy.getString("id").contentEquals(WILL_NOT_LEND_ID)) {
-        Assert.assertThat(policy.getString("name"), is(WILL_NOT_LEND_UPDATED_NAME));
+        assertThat(policy.getString("name"), is(WILL_NOT_LEND_UPDATED_NAME));
       } else {
         //are all the other policy names left unchanged?
-        Assert.assertThat(policy.getString("name"), is(originalPolicy.getString("name")));
+        assertThat(policy.getString("name"), is(originalPolicy.getString("name")));
       }
       //do all the policies still have their original sources?
-      Assert.assertThat(policy.getString("source"), is(originalPolicy.getString("source")));
+      assertThat(policy.getString("source"), is(originalPolicy.getString("source")));
     });
   }
 }

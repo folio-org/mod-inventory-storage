@@ -1,8 +1,8 @@
 package org.folio.rest.support.fixtures;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.TestBase.get;
 import static org.folio.rest.support.http.InterfaceUrls.instanceIteration;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 

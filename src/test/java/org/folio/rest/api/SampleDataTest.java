@@ -2,25 +2,33 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
-import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.http.InterfaceUrls.boundWithStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.prepareTenant;
+import static org.folio.utility.ModuleUtility.removeTenant;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
+import junit.framework.AssertionFailedError;
+import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junit.framework.AssertionFailedError;
 
 public class SampleDataTest extends TestBase {
 
@@ -29,16 +37,20 @@ public class SampleDataTest extends TestBase {
    * recreate tenant (with reference and) WITH sample data
    * Omit update for now.. It hangs for unknown reasons when using Embedded Postgres MODINVSTOR-369
    */
+  @SneakyThrows
   @BeforeClass
-  public static void beforeAny() throws Exception {
-    StorageTestSuite.removeTenant(StorageTestSuite.TENANT_ID);
-    StorageTestSuite.prepareTenant(StorageTestSuite.TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
+  public static void beforeAll() {
+    TestBase.beforeAll();
+
+    removeTenant(TENANT_ID);
+    prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
+    FakeKafkaConsumer.clearAllEvents();
   }
 
   private void assertCount(URL url, String arrayName, int expectedCount) {
     try {
       CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-      client.get(url, TENANT_ID, json(getCompleted));
+      getClient().get(url, TENANT_ID, json(getCompleted));
       Response response = getCompleted.get(10, SECONDS);
       JsonObject body = response.getJson();
       JsonArray array = body.getJsonArray(arrayName);
@@ -77,7 +89,7 @@ public class SampleDataTest extends TestBase {
   private JsonObject get(URL url) {
     try {
       CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-      client.get(url, TENANT_ID, json(getCompleted));
+      getClient().get(url, TENANT_ID, json(getCompleted));
       Response response = getCompleted.get(10, SECONDS);
       assertThat(response.getStatusCode(), is(HTTP_OK));
       return response.getJson();
@@ -128,7 +140,7 @@ public class SampleDataTest extends TestBase {
   private JsonObject getInstanceRelationship(String id) {
     try {
       CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-      client.get(instanceRelationshipsUrl("?limit=100"), TENANT_ID, json(getCompleted));
+      getClient().get(instanceRelationshipsUrl("?limit=100"), TENANT_ID, json(getCompleted));
       Response response = getCompleted.get(10, SECONDS);
       JsonObject body = response.getJson();
       JsonArray array = body.getJsonArray("instanceRelationships");

@@ -1,12 +1,14 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.*;
 
+import io.vertx.ext.unit.junit.VertxUnitRunnerWithParametersFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -23,8 +25,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import io.vertx.ext.unit.junit.VertxUnitRunnerWithParametersFactory;
 
 @RunWith(Parameterized.class)
 @Parameterized.UseParametersRunnerFactory(VertxUnitRunnerWithParametersFactory.class)
@@ -89,7 +89,7 @@ public class HridSettingsStorageParameterizedTest extends TestBase {
             .withStartNumber(holdingStartNumber))
         .withItems(new HridSetting().withPrefix(itemPrefix).withStartNumber(itemStartNumber));
 
-    client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
+    getClient().put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
         json(putCompleted));
 
     final Response putResponse = putCompleted.get(10, SECONDS);

@@ -1,11 +1,15 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.support.http.InterfaceUrls.holdingsSourceUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.List;
@@ -14,7 +18,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -23,15 +26,14 @@ import org.folio.rest.support.http.ResourceClient;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-
 public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   private static ResourceClient holdingsSourceClient;
 
   @BeforeClass
   public static void beforeAll() {
-    holdingsSourceClient = ResourceClient.forHoldingsSource(client);
+    TestBase.beforeAll();
+
+    holdingsSourceClient = ResourceClient.forHoldingsSource(getClient());
   }
 
   @Test
@@ -144,7 +146,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    client.post(holdingsSourceUrl(""), request, StorageTestSuite.TENANT_ID,
+    getClient().post(holdingsSourceUrl(""), request, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
     Response response = createCompleted.get(10, TimeUnit.SECONDS);

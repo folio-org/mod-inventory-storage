@@ -1,19 +1,23 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
+import lombok.SneakyThrows;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -23,16 +27,21 @@ import org.folio.rest.support.builders.StatisticalCodeBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-
 public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
+
+  @SneakyThrows
   @Before
-  public void removeTestStatisticalCodes() {
+  public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
     statisticalCodeFixture.removeTestStatisticalCodes();
+
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+    removeAllEvents();
   }
 
   @Test
@@ -86,7 +95,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    client.delete(statisticalCodesUrl("/" + createdCode.getId().toString()), StorageTestSuite.TENANT_ID,
+    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
     Response response = deleteCompleted.get(10, TimeUnit.SECONDS);
@@ -124,7 +133,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    client.delete(statisticalCodesUrl("/" + createdCode.getId().toString()), StorageTestSuite.TENANT_ID,
+    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
     Response response = deleteCompleted.get(10, TimeUnit.SECONDS);
@@ -172,7 +181,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    client.delete(statisticalCodesUrl("/" + createdCode.getId().toString()), StorageTestSuite.TENANT_ID,
+    getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
     Response response = deleteCompleted.get(10, TimeUnit.SECONDS);

@@ -1,22 +1,31 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertTrue;
 
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.Timeout;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.sqlclient.Row;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
-import io.vertx.sqlclient.Row;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -32,14 +41,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.Timeout;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class HridSettingsStorageTest extends TestBase {
@@ -63,11 +64,12 @@ public class HridSettingsStorageTest extends TestBase {
   private PostgresClient postgresClient;
   private HridManager hridManager;
 
+  @SneakyThrows
   @Before
-  public void setUp(TestContext testContext) {
+  public void beforeEach(TestContext testContext) {
     log.info("Initializing values");
     final Async async = testContext.async();
-    vertx = StorageTestSuite.getVertx();
+    vertx = getVertx();
     postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
     hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
     hridManager.updateHridSettings(initialHridSettings).onComplete(hridSettings -> {
@@ -94,6 +96,8 @@ public class HridSettingsStorageTest extends TestBase {
         return null;
       });
     });
+
+    removeAllEvents();
   }
 
   @Test
@@ -102,7 +106,7 @@ public class HridSettingsStorageTest extends TestBase {
     log.info("Starting canRetrieveHridSettings()");
     final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getCompleted));
+    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getCompleted));
 
     final Response response = getCompleted.get(10, SECONDS);
 
@@ -133,7 +137,7 @@ public class HridSettingsStorageTest extends TestBase {
     log.info("Starting cannotRetrieveHridSettingsWithBadTenant()");
     final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(InterfaceUrls.hridSettingsStorageUrl(""), "BAD", text(getCompleted));
+    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), "BAD", text(getCompleted));
 
     final Response response = getCompleted.get(10, SECONDS);
 
@@ -154,7 +158,7 @@ public class HridSettingsStorageTest extends TestBase {
       .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200L))
       .withItems(new HridSetting().withPrefix("item").withStartNumber(500L));
 
-    client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
+    getClient().put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
       empty(putCompleted));
 
     final Response putResponse = putCompleted.get(10, SECONDS);
@@ -163,7 +167,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getCompleted));
+    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getCompleted));
 
     final Response getResponse = getCompleted.get(10, SECONDS);
 
@@ -202,7 +206,7 @@ public class HridSettingsStorageTest extends TestBase {
       .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200L))
       .withItems(new HridSetting().withPrefix("item").withStartNumber(500L));
 
-    client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, "BAD",
+    getClient().put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, "BAD",
       text(putCompleted));
 
     final Response putResponse = putCompleted.get(10, SECONDS);
@@ -219,7 +223,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     final CompletableFuture<Response> originalGetCompleted = new CompletableFuture<>();
 
-    client.get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(originalGetCompleted));
+    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(originalGetCompleted));
 
     final Response originalGetResponse = originalGetCompleted.get(10, SECONDS);
 
@@ -238,7 +242,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
-    client.put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
+    getClient().put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
       empty(putCompleted));
 
     final Response putResponse = putCompleted.get(10, SECONDS);
@@ -247,7 +251,7 @@ public class HridSettingsStorageTest extends TestBase {
 
     final CompletableFuture<Response> getAfterUpdateCompleted = new CompletableFuture<>();
 
-    client.get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getAfterUpdateCompleted));
+    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getAfterUpdateCompleted));
 
     final Response getAfterUpdateResponse = getAfterUpdateCompleted.get(10, SECONDS);
 

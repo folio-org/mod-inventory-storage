@@ -1,21 +1,22 @@
 package org.folio.rest.api;
 
+import static org.junit.Assert.assertEquals;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import junitparams.JUnitParamsRunner;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.util.ResourceUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static org.junit.Assert.assertEquals;
+import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.util.ResourceUtil;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class InstanceFormatUpgradeTest extends TestBaseWithInventoryUtil{
@@ -24,6 +25,15 @@ public class InstanceFormatUpgradeTest extends TestBaseWithInventoryUtil{
     .asString("templates/db_scripts/addInstanceFormatsAudioBelt.sql")
     .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
 
+  @SneakyThrows
+  @Before
+  public void beforeEach() {
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+    removeAllEvents();
+  }
 
   @Test
   public void canMigrateToDefaultPreviouslyHeldValue() throws

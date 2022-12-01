@@ -1,18 +1,18 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.StorageTestSuite.getVertx;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.NotificationSendingErrorRepository;
 import org.folio.persist.entity.NotificationSendingError;
 import org.folio.rest.persist.PgUtil;
 import org.junit.Test;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 public class NotificationSendingErrorRepositoryTest extends TestBaseWithInventoryUtil {
   @Test

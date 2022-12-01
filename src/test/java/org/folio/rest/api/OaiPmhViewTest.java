@@ -1,8 +1,6 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
-import static org.folio.rest.api.StorageTestSuite.getVertx;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
@@ -13,10 +11,18 @@ import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasAggregat
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.hasEffectiveLocationInstitutionName;
 import static org.folio.rest.support.matchers.OaiPmhResponseMatchers.isDeleted;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.Handler;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.sqlclient.Row;
 import java.net.MalformedURLException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -33,9 +39,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.apache.commons.lang3.StringUtils;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.OaipmhInstanceIds;
@@ -47,12 +53,6 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import io.vertx.core.Handler;
-import io.vertx.core.json.DecodeException;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.sqlclient.Row;
 
 @RunWith(VertxUnitRunner.class)
 public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
@@ -66,8 +66,9 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   private UUID holdingsRecordId1;
   private Map<String, String> params;
 
+  @SneakyThrows
   @Before
-  public void setUp() throws InterruptedException, ExecutionException, MalformedURLException, TimeoutException {
+  public void beforeEach() {
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
@@ -79,6 +80,8 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     createItem(mainLibraryLocationId, "item barcode 1", "item effective call number 1", journalMaterialTypeId);
     createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
+
+    removeAllEvents();
   }
 
   @Test
@@ -390,7 +393,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> future = new CompletableFuture<>();
     final List<JsonObject> results = new ArrayList<>();
 
-    client.get(oaiPmhView("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
+    getClient().get(oaiPmhView("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
 
     final Response response = future.get(2, TimeUnit.SECONDS);
     responseMatcher.handle(response);
@@ -429,7 +432,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     instanceIdsPayload.setInstanceIds(Arrays.stream(instanceIds).map(UUID::toString).collect(Collectors.toList()));
     instanceIdsPayload.setSkipSuppressedFromDiscoveryRecords(skipSuppressedFromDiscoveryRecords);
 
-    client.post(oaiPmhViewEnrichedInstances(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));
+    getClient().post(oaiPmhViewEnrichedInstances(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));
 
     final Response response = future.get(2, TimeUnit.SECONDS);
     responseMatcher.handle(response);
@@ -462,7 +465,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> future = new CompletableFuture<>();
     final List<JsonObject> results = new ArrayList<>();
 
-    client.get(oaiPmhViewUpdatedInstanceIds("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
+    getClient().get(oaiPmhViewUpdatedInstanceIds("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
 
     final Response response = future.get(6000, TimeUnit.SECONDS);
     responseMatcher.handle(response);

@@ -1,14 +1,14 @@
 package org.folio.rest.support.client;
 
+import static org.folio.utility.RestUtility.TENANT_ID;
+
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.api.StorageTestSuite;
+import java.net.URL;
+import java.util.concurrent.CompletableFuture;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-
-import java.net.URL;
-import java.util.concurrent.CompletableFuture;
 
 public class MaterialTypesClient {
   private final HttpClient client;
@@ -26,7 +26,7 @@ public class MaterialTypesClient {
     JsonObject materialTypeRequest = new JsonObject()
       .put("name", name);
 
-    client.post(materialTypesUrl, materialTypeRequest, StorageTestSuite.TENANT_ID,
+    client.post(materialTypesUrl, materialTypeRequest, TENANT_ID,
       ResponseHandler.json(completed));
 
     Response response = TestBase.get(completed);

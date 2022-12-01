@@ -4,16 +4,19 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import lombok.SneakyThrows;
 import org.folio.rest.api.entities.Instance;
 import org.folio.rest.api.entities.InstanceRelationship;
 import org.folio.rest.support.Response;
@@ -21,17 +24,18 @@ import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.json.JsonObject;
-
 public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   private final static String INSTANCE_TYPE_ID_TEXT = "6312d172-f0cf-40f6-b27d-9fa8feaf332f";
   final static String INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    removeAllEvents();
   }
 
   @Test
@@ -50,10 +54,10 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
             instance1Response.getString(Instance.ID_KEY),
             instance2Response.getString(Instance.ID_KEY),
             INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
-    client.post(
+    getClient().post(
             instanceRelationshipsUrl(""),
             instanceRelationshipRequestObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.json(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
@@ -64,10 +68,10 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
             instance1Response.getString(Instance.ID_KEY),
             instance3Response.getString(Instance.ID_KEY),
             INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
-    client.post(
+    getClient().post(
             instanceRelationshipsUrl(""),
             instanceRelationshipRequestObject2.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.json(createRelationshipCompleted2)
     );
     Response relationshipPostResponse2 = createRelationshipCompleted2.get(10, TimeUnit.SECONDS);
@@ -91,10 +95,10 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
             instance1Response.getString(Instance.ID_KEY),
             nonExistingInstanceId,
             INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
-    client.post(
+    getClient().post(
             instanceRelationshipsUrl(""),
             instanceRelationshipRequestObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.text(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
@@ -117,10 +121,10 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
             instance1Response.getString(Instance.ID_KEY),
             instance2Response.getString(Instance.ID_KEY),
             nonExistingRelationshipTypeId);
-    client.post(
+    getClient().post(
             instanceRelationshipsUrl(""),
             instanceRelationshipRequestObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.text(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
@@ -131,10 +135,10 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   private JsonObject createInstance (String title, String instanceTypeId) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     Instance requestObject = new Instance(title, "TEST", instanceTypeId);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(
+    getClient().post(
             instancesStorageUrl(""),
             requestObject.getJson(),
-            StorageTestSuite.TENANT_ID,
+            TENANT_ID,
             ResponseHandler.json(createCompleted)
     );
     Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);

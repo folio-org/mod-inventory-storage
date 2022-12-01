@@ -1,38 +1,79 @@
 package org.folio.services.kafka.topic;
 
-import io.vertx.core.Vertx;
+import static org.folio.utility.KafkaUtility.startKafka;
+import static org.folio.utility.KafkaUtility.stopKafka;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.ModuleUtility.removeTenant;
+import static org.folio.utility.ModuleUtility.startVerticleWebClientAndPrepareTenant;
+import static org.folio.utility.ModuleUtility.stopVerticleAndWebClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
+
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.folio.rest.api.StorageTestSuite;
-import org.folio.rest.api.TestBase;
+import org.folio.postgres.testing.PostgresTesterContainer;
+import org.folio.rest.persist.PostgresClient;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.List;
-
 @RunWith(VertxUnitRunner.class)
-public class KafkaTopicsExistsTest extends TestBase {
-  final short REPLICATION_FACTOR = 1;
+public class KafkaTopicsExistsTest {
+  private static final short REPLICATION_FACTOR = 1;
 
-  KafkaAdminClient kafkaAdminClient;
+  private KafkaAdminClient kafkaAdminClient;
+
+  @BeforeClass
+  public static void beforeAll()
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException {
+
+    // tests expect English error messages only, no Danish/German/...
+    Locale.setDefault(Locale.US);
+
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    startKafka();
+    startVerticleWebClientAndPrepareTenant(TENANT_ID);
+  }
+
+  @AfterClass
+  public static void afterAll(TestContext context)
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException {
+
+    removeTenant(TENANT_ID);
+    stopVerticleAndWebClient();
+    stopKafka();
+    PostgresClient.stopPostgresTester();
+  }
 
   @Before
-  public void before() {
-    Vertx vertx = StorageTestSuite.getVertx();
-    kafkaAdminClient = KafkaAdminClient.create(vertx, KafkaConfig.builder()
+  public void beforeEach() {
+    kafkaAdminClient = KafkaAdminClient.create(getVertx(), KafkaConfig.builder()
       .kafkaHost(KafkaEnvironmentProperties.host())
       .kafkaPort(KafkaEnvironmentProperties.port())
       .build().getProducerProps());
   }
 
   @After
-  public void after(TestContext context) {
+  public void afterEach(TestContext context)
+      throws InterruptedException,
+      ExecutionException,
+      TimeoutException {
+
     kafkaAdminClient.deleteTopics(List.of("T1", "T2", "T3"))
       .compose(x -> kafkaAdminClient.close())
       .onComplete(context.asyncAssertSuccess());
@@ -51,7 +92,7 @@ public class KafkaTopicsExistsTest extends TestBase {
           new NewTopic("T3", 1, REPLICATION_FACTOR)
         ))
       ).otherwise(cause -> {
-        if (cause instanceof org.apache.kafka.common.errors.TopicExistsException) {
+        if (cause instanceof TopicExistsException) {
           return null;
         }
         throw new RuntimeException(cause);

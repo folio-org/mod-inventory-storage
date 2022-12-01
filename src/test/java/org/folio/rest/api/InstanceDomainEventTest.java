@@ -10,21 +10,24 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpda
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonObject;
 import java.util.UUID;
-
+import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.json.JsonObject;
-
 public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
+
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    removeAllEvents();
   }
 
   @Test

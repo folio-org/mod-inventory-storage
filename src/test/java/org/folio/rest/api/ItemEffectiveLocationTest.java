@@ -2,6 +2,9 @@ package org.folio.rest.api;
 
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -9,30 +12,29 @@ import static org.hamcrest.Matchers.emptyString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.sqlclient.Row;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import io.vertx.sqlclient.Row;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
+import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.junit.After;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
 
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented
@@ -40,17 +42,22 @@ import static org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.
  */
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
-  private static Vertx vertx = Vertx.vertx();
-  private static UUID instanceId = UUID.randomUUID();
+  private static final UUID instanceId = UUID.randomUUID();
 
-  // for @BeforeClass beforeAny() see TestBaseWithInventoryUtil
+  @SneakyThrows
+  @Before
+  public void beforeEach() {
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
 
-  @BeforeClass
-  public static void createInstance() throws Exception {
     // Create once to be used by the many parameterized unit test in
     // canCalculateEffectiveLocationOnIHoldingUpdate(PermTemp, PermTemp, PermTemp)
     // canCalculateEffectiveLocationOnItemUpdate(PermTemp, PermTemp, PermTemp)
     instancesClient.create(instance(instanceId));
+
+    removeAllEvents();
   }
 
   @After
@@ -208,8 +215,8 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     CompletableFuture<HttpResponse<Buffer>> createCompleted = new CompletableFuture<>();
     Item item = buildItem(holdingsRecordId, null, null);
 
-    client
-      .post(InterfaceUrls.itemsStorageUrl(""), item, StorageTestSuite.TENANT_ID,
+    getClient()
+      .post(InterfaceUrls.itemsStorageUrl(""), item, TENANT_ID,
           createCompleted::complete);
 
     HttpResponse<Buffer> response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
@@ -282,7 +289,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private Row runSql(String sql) {
     CompletableFuture<Row> future = new CompletableFuture<>();
 
-    PostgresClient.getInstance(vertx).selectSingle(sql, handler -> {
+    PostgresClient.getInstance(getVertx()).selectSingle(sql, handler -> {
       if (handler.failed()) {
         future.completeExceptionally(handler.cause());
         return;

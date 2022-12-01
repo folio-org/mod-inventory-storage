@@ -3,6 +3,11 @@ package org.folio.rest.support.kafka;
 import static io.vertx.kafka.client.consumer.KafkaConsumer.create;
 import static java.util.Collections.emptyList;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -11,17 +16,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
+import org.joda.time.DateTime;
 
 public final class FakeKafkaConsumer {
+  private static final Logger logger = LogManager.getLogger();
+
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> itemEvents =
     new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> instanceEvents =
@@ -32,6 +35,12 @@ public final class FakeKafkaConsumer {
     new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> boundWith =
     new ConcurrentHashMap<>();
+
+  // Provide a strong reference to reduce the chances of deallocation before
+  // all clients are properly unsubscribed.
+  private KafkaConsumer<String, JsonObject> consumer;
+
+  private static DateTime timestamp = DateTime.now();
 
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
@@ -49,6 +58,15 @@ public final class FakeKafkaConsumer {
 
     consumer.handler(message -> {
       final List<KafkaConsumerRecord<String, JsonObject>> storageList;
+
+      // Messages that are earlier than the timestamp are stale and should be ignored.
+      if (message.timestamp() < timestamp.toInstant().getMillis()) {
+        logger.debug("Timestamp is " + message.timestamp()
+          + " less than " + timestamp.toInstant().getMillis()
+          + " for message: " + message.topic() + ", " + message.key() + ", "
+          + message.value().encodePrettily());
+        return;
+      }
 
       switch (message.topic()) {
         case ITEM_TOPIC_NAME:
@@ -78,10 +96,27 @@ public final class FakeKafkaConsumer {
       storageList.add(message);
     });
 
+    timestamp = DateTime.now();
+
+    // Assign the created consumer to the class being returned.
+    // The caller of this function may then be able to call unsubscribe()
+    // as needed. This ensures that the reference remains strong once
+    // this once out of the scope of this function.
+    this.setConsumer(consumer);
+
     return this;
   }
 
-  public static void removeAllEvents() {
+  public void resetTimestamp() {
+    // Update the timestamp to designate ignoring stale messages.
+    timestamp = DateTime.now();
+  }
+
+  public void unsubscribe() {
+    consumer.unsubscribe();
+  }
+
+  public static void clearAllEvents() {
     itemEvents.clear();
     instanceEvents.clear();
     holdingsEvents.clear();
@@ -222,6 +257,10 @@ public final class FakeKafkaConsumer {
     return instanceAndIdKey(message.key(), id);
   }
 
+  private void setConsumer(KafkaConsumer<String, JsonObject> consumer) {
+    this.consumer = consumer;
+  }
+
   private Map<String, String> consumerProperties() {
     Map<String, String> config = new HashMap<>();
     config.put("bootstrap.servers", KafkaEnvironmentProperties.host() + ":" + KafkaEnvironmentProperties.port());
@@ -229,7 +268,7 @@ public final class FakeKafkaConsumer {
     config.put("value.deserializer", JsonObjectDeserializer.class.getName());
     config.put("group.id", "folio_test");
     config.put("auto.offset.reset", "earliest");
-    config.put("enable.auto.commit", "true");
+    config.put("enable.auto.commit", "false");
 
     return config;
   }

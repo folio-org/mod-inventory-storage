@@ -1,24 +1,21 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
-
+import lombok.SneakyThrows;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
@@ -30,11 +27,8 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
-import org.junit.Before;
+import org.folio.utility.LocationUtility;
 import org.junit.BeforeClass;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 /**
  *
@@ -63,12 +57,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
   // that JUnit calls *before* the @BeforeClass beforeAny() method.
-  public static UUID mainLibraryLocationId = UUID.randomUUID();
-  public static UUID annexLibraryLocationId = UUID.randomUUID();
-  public static UUID onlineLocationId = UUID.randomUUID();
-  public static UUID secondFloorLocationId = UUID.randomUUID();
-  public static UUID thirdFloorLocationId = UUID.randomUUID();
-  public static UUID fourthFloorLocationId = UUID.randomUUID();
+  public static final UUID mainLibraryLocationId = UUID.randomUUID();
+  public static final UUID annexLibraryLocationId = UUID.randomUUID();
+  public static final UUID onlineLocationId = UUID.randomUUID();
+  public static final UUID secondFloorLocationId = UUID.randomUUID();
+  public static final UUID thirdFloorLocationId = UUID.randomUUID();
+  public static final UUID fourthFloorLocationId = UUID.randomUUID();
 
   // These UUIDs were taken from reference-data folder.
   // When the vertical gets started the data from the reference-data folder are loaded to the DB.
@@ -80,49 +74,50 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final UUID UUID_TEXT = UUID.fromString("6312d172-f0cf-40f6-b27d-9fa8feaf332f");
   protected static final UUID UUID_INSTANCE_TYPE = UUID.fromString("535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
 
+  @SneakyThrows
   @BeforeClass
-  public static void beforeAny() {
+  public static void testBaseWithInvUtilBeforeClass() {
+    logger.info("starting @BeforeClass testBaseWithInvUtilBeforeClass()");
+
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
 
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-
+    clearData();
     createDefaultInstanceType();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+    FakeKafkaConsumer.clearAllEvents();
 
-    MaterialTypesClient materialTypesClient = new MaterialTypesClient(client, materialTypesStorageUrl(""));
+    logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
+  }
+
+  protected static void setupMaterialTypes() {
+    MaterialTypesClient materialTypesClient = new MaterialTypesClient(getClient(), materialTypesStorageUrl(""));
     journalMaterialTypeID = materialTypesClient.create("journal");
     journalMaterialTypeId = UUID.fromString(journalMaterialTypeID);
     bookMaterialTypeID = materialTypesClient.create("book");
     bookMaterialTypeId = UUID.fromString(bookMaterialTypeID);
+  }
 
-    LoanTypesClient loanTypesClient = new LoanTypesClient(client, loanTypesStorageUrl(""));
+  protected static void setupLoanTypes() {
+    LoanTypesClient loanTypesClient = new LoanTypesClient(getClient(), loanTypesStorageUrl(""));
     canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
     canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
     nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating");
     nonCirculatingLoanTypeId = UUID.fromString(nonCirculatingLoanTypeID);
-
-    LocationsTest.createLocUnits(true);
-    LocationsTest.createLocation(mainLibraryLocationId,  MAIN_LIBRARY_LOCATION,  "TestBaseWI/M");
-    LocationsTest.createLocation(annexLibraryLocationId, ANNEX_LIBRARY_LOCATION, "TestBaseWI/A");
-    LocationsTest.createLocation(onlineLocationId,       ONLINE_LOCATION,        "TestBaseWI/O");
-    LocationsTest.createLocation(secondFloorLocationId,  SECOND_FLOOR_LOCATION,  "TestBaseWI/SF");
-    LocationsTest.createLocation(thirdFloorLocationId,   THIRD_FLOOR_LOCATION,   "TestBaseWI/TF");
-    LocationsTest.createLocation(fourthFloorLocationId,  FOURTH_FLOOR_LOCATION,  "TestBaseWI/FF");
   }
 
-  @Before
-  public void removeAllEvents() {
-    FakeKafkaConsumer.removeAllEvents();
+  protected static void setupLocations() {
+    LocationUtility.clearServicePointIDs();
+    LocationUtility.createLocationUnits(true);
+    LocationUtility.createLocation(mainLibraryLocationId,  MAIN_LIBRARY_LOCATION,  "TestBaseWI/M");
+    LocationUtility.createLocation(annexLibraryLocationId, ANNEX_LIBRARY_LOCATION, "TestBaseWI/A");
+    LocationUtility.createLocation(onlineLocationId,       ONLINE_LOCATION,        "TestBaseWI/O");
+    LocationUtility.createLocation(secondFloorLocationId,  SECOND_FLOOR_LOCATION,  "TestBaseWI/SF");
+    LocationUtility.createLocation(thirdFloorLocationId,   THIRD_FLOOR_LOCATION,   "TestBaseWI/TF");
+    LocationUtility.createLocation(fourthFloorLocationId,  FOURTH_FLOOR_LOCATION,  "TestBaseWI/FF");
   }
 
   protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId) {
@@ -137,7 +132,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return createHolding(instanceId, holdingsPermanentLocationId, holdingsTemporaryLocationId);
   }
 
-  static UUID createInstanceAndHoldingWithBuilder(
+  protected static UUID createInstanceAndHoldingWithBuilder(
     UUID holdingsPermanentLocationId, UnaryOperator<HoldingRequestBuilder> holdingsBuilderProcessor) {
 
     UUID instanceId = UUID.randomUUID();
@@ -251,14 +246,13 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   private static boolean instanceTypeDoesNotAlreadyExist(UUID id) {
     Response response = instanceTypesClient.getById(id);
-
     return response.getStatusCode() == HttpStatus.HTTP_NOT_FOUND.toInt();
   }
 
   protected JsonObject createItem(JsonObject itemToCreate) {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    client.post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
         ResponseHandler.json(createCompleted));
 
     Response response = get(createCompleted);
@@ -324,7 +318,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   private IndividualResource getInstanceStatusByCode(String code) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(instanceStatusesUrl("?query=code=" + code),
+    getClient().get(instanceStatusesUrl("?query=code=" + code),
       TENANT_ID, ResponseHandler.json(getCompleted));
 
     JsonObject instanceStatus = get(getCompleted)

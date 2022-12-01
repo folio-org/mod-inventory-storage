@@ -1,22 +1,22 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.ItemDamagedStatusAPITest.TEST_TENANT;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.api.entities.InstanceRelationship;
-import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.Response;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
+import org.folio.rest.api.entities.InstanceRelationship;
+import org.folio.rest.support.IndividualResource;
+import org.folio.rest.support.Response;
+import org.junit.Before;
+import org.junit.Test;
 
 public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBase {
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
@@ -30,12 +30,18 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
   private IndividualResource instanceRelationship1;
   private IndividualResource instanceRelationship2;
 
+  @SneakyThrows
   @Before
-  public void beforeEach() throws Exception {
+  public void beforeEach() {
+    StorageTestSuite.deleteAll(TENANT_ID, INSTANCE_RELATIONSHIP_TABLE);
+    StorageTestSuite.deleteAll(TENANT_ID, INSTANCE_RELATIONSHIP_TYPE_TABLE);
+    StorageTestSuite.deleteAll(TENANT_ID, PRECEDING_SUCCEEDING_TITLE_TABLE);
 
-    StorageTestSuite.deleteAll(TEST_TENANT, INSTANCE_RELATIONSHIP_TABLE);
-    StorageTestSuite.deleteAll(TEST_TENANT, INSTANCE_RELATIONSHIP_TYPE_TABLE);
-    StorageTestSuite.deleteAll(TEST_TENANT, PRECEDING_SUCCEEDING_TITLE_TABLE);
+    deleteAllById(precedingSucceedingTitleClient);
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
 
     final UUID instance1Id = UUID.randomUUID();
     final UUID instance2Id = UUID.randomUUID();
@@ -55,6 +61,8 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
     instanceRelationship2 = createInstanceRelationship(instance2Id, instance3Id,
       PRECEDING_SUCCEEDING_RELATIONSHIP_TYPE_ID);
     createInstanceRelationship(instance1Id, instance3Id, BOUND_WITH_INSTANCE_RELATIONSHIP_TYPE_ID);
+
+    removeAllEvents();
   }
 
   @Test

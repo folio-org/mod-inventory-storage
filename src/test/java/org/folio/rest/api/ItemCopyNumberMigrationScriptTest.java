@@ -1,37 +1,39 @@
 package org.folio.rest.api;
 
-
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 
+import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
+import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.json.JsonObject;
-
 public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
   private static final String MIGRATION_SCRIPT = loadScript("migrateItemCopyNumberToSingleValue.sql");
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
+
+    removeAllEvents();
   }
 
   @Test
@@ -158,7 +160,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     final JsonObject item = itemsClient.getById(id).getJson().copy()
       .put("copyNumbers", (String[]) null);
 
-    PostgresClient.getInstance(StorageTestSuite.getVertx(), TENANT_ID)
+    PostgresClient.getInstance(getVertx(), TENANT_ID)
       .update("item", item, id.toString(), reply -> {
         if (reply.succeeded()) {
           result.complete(null);

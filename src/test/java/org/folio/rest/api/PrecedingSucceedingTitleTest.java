@@ -1,42 +1,78 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.api.entities.PrecedingSucceedingTitle.PRECEDING_INSTANCE_ID_KEY;
+import static org.folio.rest.api.entities.PrecedingSucceedingTitle.SUCCEEDING_INSTANCE_ID_KEY;
+import static org.folio.rest.support.http.InterfaceUrls.precedingSucceedingTitleUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import static org.folio.rest.api.entities.PrecedingSucceedingTitle.PRECEDING_INSTANCE_ID_KEY;
-import static org.folio.rest.api.entities.PrecedingSucceedingTitle.SUCCEEDING_INSTANCE_ID_KEY;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.precedingSucceedingTitleUrl;
-
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
+import lombok.SneakyThrows;
 import org.folio.rest.api.entities.PrecedingSucceedingTitle;
 import org.folio.rest.api.entities.PrecedingSucceedingTitles;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.Test;
-
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-
 
 public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   private static final String INVALID_UUID_ERROR_MESSAGE = "Invalid UUID format of id, should be " +
     "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F.";
   private static final String HRID = "inst000000000022";
   private static final String TITLE = "A web primer";
+
+  @SneakyThrows
+  @Before
+  public void beforeEach() {
+    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+    StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
+
+    deleteAllById(precedingSucceedingTitleClient);
+
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+    removeAllEvents();
+  }
+
+  /**
+   * Delete all data to prevent potential constraint violations.
+   *
+   * The preceding_succeeding_title, instance_relationship, and
+   * bound_with_part may cause constraint violations when other classes
+   * attempt to delete or modify data.
+   *
+   * If isolation between test classes gets fixed then this afterAll() should
+   * not be necessary anymore.
+   */
+  @AfterClass
+  public static void afterAll() {
+    TestBase.afterAll();
+
+    // Prevent tests from other classes from being affected by this data.
+    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+    StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
+
+    deleteAllById(precedingSucceedingTitleClient);
+  }
 
   @Test
   public void canCreateConnectedPrecedingSucceedingTitle() {
@@ -267,7 +303,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     var titles =
       new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(precedingSucceedingTitleUrl("/instances/" + instanceId), titles.getJson(),
+    getClient().put(precedingSucceedingTitleUrl("/instances/" + instanceId), titles.getJson(),
       TENANT_ID, ResponseHandler.empty(putCompleted));
     Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(204));
@@ -294,7 +330,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     var titles =
       new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(precedingSucceedingTitleUrl("/instances/" + missedInstanceId), titles.getJson(),
+    getClient().put(precedingSucceedingTitleUrl("/instances/" + missedInstanceId), titles.getJson(),
       TENANT_ID, ResponseHandler.any(putCompleted));
     Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(404));
@@ -310,7 +346,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     var titles =
       new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle));
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-    client.put(precedingSucceedingTitleUrl("/instances/" + instanceId), titles.getJson(),
+    getClient().put(precedingSucceedingTitleUrl("/instances/" + instanceId), titles.getJson(),
       TENANT_ID, ResponseHandler.any(putCompleted));
     Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(422));

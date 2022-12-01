@@ -1,18 +1,23 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.ItemDamagedStatusAPITest.TEST_TENANT;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -23,13 +28,6 @@ import org.folio.util.ResourceUtil;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventoryUtil {
@@ -44,8 +42,11 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   private ObjectMapper mapper = new ObjectMapper();
 
+  @SneakyThrows
   @BeforeClass
-  public static void createInstanceAndCallNumberTypes() throws Exception {
+  public static void beforeAll() {
+    TestBase.beforeAll();
+
     instancesClient.create(instance(instanceId));
 
     callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);
@@ -353,7 +354,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
   private void removeEffectiveCallNumberComponents(String itemId) throws Exception {
     runSql(String.format(
       "UPDATE %s_mod_inventory_storage.item SET jsonb = jsonb - 'effectiveCallNumberComponents' WHERE id = '%s'",
-      TEST_TENANT,
+      TENANT_ID,
       itemId
     ));
 

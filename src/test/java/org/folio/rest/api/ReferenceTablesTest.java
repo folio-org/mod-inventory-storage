@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.support.http.InterfaceUrls.alternativeTitleTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.authorityNoteTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.authoritySourceFilesUrl;
@@ -24,6 +23,9 @@ import static org.folio.rest.support.http.InterfaceUrls.modesOfIssuanceUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.vertxUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -41,6 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.folio.rest.api.entities.AlternativeTitleType;
 import org.folio.rest.api.entities.AuthorityNoteType;
 import org.folio.rest.api.entities.AuthoritySourceFile;
@@ -67,6 +70,7 @@ import org.folio.rest.api.entities.StatisticalCode;
 import org.folio.rest.api.entities.StatisticalCodeType;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -74,6 +78,13 @@ import org.junit.Test;
  * @author ne
  */
 public class ReferenceTablesTest extends TestBase {
+
+  @SneakyThrows
+  @Before
+  public void beforeEach() {
+    clearData();
+    removeAllEvents();
+  }
 
   @Test
   public void alternativeTitleTypesLoaded()
@@ -497,7 +508,6 @@ public class ReferenceTablesTest extends TestBase {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     String entityUUID = postResponse.getJson().getString("id");
-    URL entityUrl = instanceStatusesUrl("/" + entityUUID);
     String updateProperty = InstanceStatus.NAME_KEY;
 
     testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
@@ -550,7 +560,7 @@ public class ReferenceTablesTest extends TestBase {
     Response instanceResponse = createReferenceRecord("/instance-storage/instances", instance);
     assertThat(instanceResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    Response result = deleteReferenceRecordById(StorageTestSuite.storageUrl("/instance-types/" + instanceTypeId));
+    Response result = deleteReferenceRecordById(vertxUrl("/instance-types/" + instanceTypeId));
 
     assertThat(result.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
@@ -814,7 +824,7 @@ public class ReferenceTablesTest extends TestBase {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
     String url = baseUrl.toString() + "?limit=400&query="
             + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8.name());
-    client.get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
+    getClient().get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
     Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
     return searchResponse;
   }
@@ -829,9 +839,9 @@ public class ReferenceTablesTest extends TestBase {
   private Response createReferenceRecord(String path, JsonEntity referenceObject)
     throws ExecutionException, InterruptedException, TimeoutException {
 
-    URL referenceUrl = StorageTestSuite.storageUrl(path);
+    URL referenceUrl = vertxUrl(path);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    client.post(
+    getClient().post(
             referenceUrl,
             referenceObject.getJson(),
       TENANT_ID,
@@ -847,7 +857,7 @@ public class ReferenceTablesTest extends TestBase {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(getByIdUrl, TENANT_ID,
+    getClient().get(getByIdUrl, TENANT_ID,
       ResponseHandler.any(getCompleted));
 
     Response getByIdResponse = getCompleted.get(10, TimeUnit.SECONDS);
@@ -860,7 +870,7 @@ public class ReferenceTablesTest extends TestBase {
           ExecutionException, TimeoutException {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(getByQueryUrl, TENANT_ID,
+    getClient().get(getByQueryUrl, TENANT_ID,
       ResponseHandler.any(getCompleted));
 
     Response getByQueryResponse = getCompleted.get(10, TimeUnit.SECONDS);
@@ -873,7 +883,7 @@ public class ReferenceTablesTest extends TestBase {
   throws ExecutionException, InterruptedException, TimeoutException {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    client.delete(
+    getClient().delete(
             entityUrl,
       TENANT_ID,
             ResponseHandler.any(deleteCompleted)
@@ -885,7 +895,7 @@ public class ReferenceTablesTest extends TestBase {
   private Response updateRecord (URL entityUrl, JsonEntity referenceObject)
   throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
-    client.put(
+    getClient().put(
             entityUrl,
             referenceObject.getJson(),
       TENANT_ID,
@@ -903,10 +913,10 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put(updateProperty, entity.getString(updateProperty)+" UPDATED");
 
-    URL url = StorageTestSuite.storageUrl(path + "/" + entityId);
-    URL urlWithBadUUID = StorageTestSuite.storageUrl(path + "/baduuid");
-    URL urlWithBadParameter = StorageTestSuite.storageUrl(path+"?offset=-3");
-    URL urlWithBadCql = StorageTestSuite.storageUrl(path + "?query=badcql");
+    URL url = vertxUrl(path + "/" + entityId);
+    URL urlWithBadUUID = vertxUrl(path + "/baduuid");
+    URL urlWithBadParameter = vertxUrl(path+"?offset=-3");
+    URL urlWithBadCql = vertxUrl(path + "?query=badcql");
 
     Response putResponse = updateRecord(url, entity);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));

@@ -3,24 +3,23 @@ package org.folio.rest.api;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.After;
-import org.junit.Before;
+import junitparams.JUnitParamsRunner;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.util.ResourceUtil;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.core.Vertx;
-import junitparams.JUnitParamsRunner;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
@@ -32,14 +31,14 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
     .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
   private static String removeExistingField = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb - 'effectiveLocationId';";
   private static String query = "SELECT jsonb FROM test_tenant_mod_inventory_storage.holdings_record WHERE id = '" + holdingsId.toString() + "';";
-  
+
   @Before
-  public void setUp() {
+  public void beforeEach() {
     instancesClient.create(instance(instanceId));
   }
 
   @After
-  public void cleanUp() {
+  public void afterEach() {
     holdingsClient.delete(holdingsId);
     instancesClient.delete(instanceId);
   }

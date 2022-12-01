@@ -2,24 +2,39 @@ package org.folio.rest.api;
 
 import static org.folio.rest.support.http.InterfaceUrls.modesOfIssuanceUrl;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
-import org.folio.rest.support.IndividualResource;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
+import org.folio.rest.support.IndividualResource;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
   private static final String MIGRATION_SCRIPT = loadScript("renameModesOfIssuance.sql");
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+
+    StorageTestSuite.deleteAll(modesOfIssuanceUrl(""));
+
+    removeAllEvents();
+  }
+
+  @AfterClass
+  public static void afterAll() {
+    // Prevent tests from other classes from being affected by this data.
     StorageTestSuite.deleteAll(modesOfIssuanceUrl(""));
   }
 
@@ -49,9 +64,9 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
   }
 
   private void expectModeOfIssuance(JsonObject modeOfIssuance, UUID id, String name, String source) {
-    Assert.assertThat(modeOfIssuance.getString("id"), is(id.toString()));
-    Assert.assertThat(modeOfIssuance.getString("name"), is(name));
-    Assert.assertThat(modeOfIssuance.getString("source"), is(source));
+    assertThat(modeOfIssuance.getString("id"), is(id.toString()));
+    assertThat(modeOfIssuance.getString("name"), is(name));
+    assertThat(modeOfIssuance.getString("source"), is(source));
   }
 
   private IndividualResource createModeOfIssuance(String id, String name, String source)

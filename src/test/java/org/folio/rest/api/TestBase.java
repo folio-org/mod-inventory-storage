@@ -1,22 +1,34 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
+import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
+import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
-import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.fixtures.AsyncMigrationFixture;
@@ -25,9 +37,8 @@ import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 /**
@@ -40,8 +51,6 @@ public abstract class TestBase {
   /** timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS) */
   public static final long TIMEOUT = 10;
 
-  private static boolean invokeStorageTestSuiteAfter = false;
-  static HttpClient client;
   protected static ResourceClient instancesClient;
   public static ResourceClient holdingsClient;
   protected static ResourceClient itemsClient;
@@ -64,6 +73,92 @@ public abstract class TestBase {
   static InstanceReindexFixture instanceReindex;
   static AuthorityReindexFixture authorityReindex;
   static AsyncMigrationFixture asyncMigration;
+
+  @BeforeClass
+  public static void beforeAll() {
+    logger.info("starting @BeforeClass testBaseBeforeClass()");
+
+    instancesClient = ResourceClient.forInstances(getClient());
+    holdingsClient = ResourceClient.forHoldings(getClient());
+    itemsClient = ResourceClient.forItems(getClient());
+    authoritiesClient = ResourceClient.forAuthorities(getClient());
+    locationsClient = ResourceClient.forLocations(getClient());
+    callNumberTypesClient = ResourceClient.forCallNumberTypes(getClient());
+    modesOfIssuanceClient = ResourceClient.forModesOfIssuance(getClient());
+    instanceRelationshipsClient = ResourceClient.forInstanceRelationships(getClient());
+    instanceRelationshipTypesClient = ResourceClient.forInstanceRelationshipTypes(getClient());
+    precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(getClient());
+    instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(getClient());
+    itemsStorageSyncClient = ResourceClient.forItemsStorageSync(getClient());
+    inventoryViewClient = ResourceClient.forInventoryView(getClient());
+    statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
+    instancesStorageBatchInstancesClient = ResourceClient
+      .forInstancesStorageBatchInstances(getClient());
+    instanceTypesClient = ResourceClient
+      .forInstanceTypes(getClient());
+    illPoliciesClient = ResourceClient.forIllPolicies(getClient());
+    statisticalCodeFixture = new StatisticalCodeFixture(getClient());
+    kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
+    instanceReindex = new InstanceReindexFixture(getClient());
+    authorityReindex = new AuthorityReindexFixture(getClient());
+    asyncMigration = new AsyncMigrationFixture(getClient());
+    FakeKafkaConsumer.clearAllEvents();
+    logger.info("finishing @BeforeClass testBaseBeforeClass()");
+  }
+
+  @AfterClass
+  public static void afterAll() {
+    kafkaConsumer.unsubscribe();
+  }
+
+  @SneakyThrows
+  @Before
+  public void removeAllEvents() {
+    kafkaConsumer.resetTimestamp();
+
+    FakeKafkaConsumer.clearAllEvents();
+  }
+
+  /**
+   * Clear as much data as is safely possible.
+   *
+   * The intended use of this function is to clear as much data as possible
+   * with the goal of maintaining isolated states between tests.
+   *
+   * This does not clear all possible data due to observed problems with
+   * several tests. Through rigorous testing the data cleared here has been
+   * found to work reasonably well across all tests. Clearing some data, such
+   * as with StorageTestSuite.deleteAll(authoritiesStorageUrl("")) has been
+   * found to not work across all tests when added to this function. These
+   * problematic data clearing sets are located within the tests that need
+   * them rather than in this function.
+   *
+   * Once all tests are properly implemented to safely work with completely
+   * isolated starting states, then this should be updated or removed
+   * accordingly.
+   */
+  protected static void clearData() {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+    StorageTestSuite.deleteAll(locationsStorageUrl(""));
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUrl(""));
+  }
+
+  /**
+   * Delete all rows found using the client by "id" field.
+   */
+  protected static void deleteAllById(ResourceClient client) {
+    for (JsonObject row : client.getAll()) {
+      client.delete(UUID.fromString(row.getString("id")));
+    }
+  }
 
   /**
    * Returns future.get({@link #TIMEOUT}, {@link TimeUnit#SECONDS}).
@@ -89,100 +184,6 @@ public abstract class TestBase {
     return get(future.toCompletionStage().toCompletableFuture());
   }
 
-  @BeforeClass
-  public static void testBaseBeforeClass() {
-    logger.info("starting @BeforeClass testBaseBeforeClass()");
-    Vertx vertx = StorageTestSuite.getVertx();
-    if (vertx == null) {
-      invokeStorageTestSuiteAfter = true;
-      StorageTestSuite.before();
-      vertx = StorageTestSuite.getVertx();
-    } else {
-      invokeStorageTestSuiteAfter = false;
-    }
-
-    client = new HttpClient(vertx);
-    instancesClient = ResourceClient.forInstances(client);
-    holdingsClient = ResourceClient.forHoldings(client);
-    itemsClient = ResourceClient.forItems(client);
-    authoritiesClient = ResourceClient.forAuthorities(client);
-    locationsClient = ResourceClient.forLocations(client);
-    callNumberTypesClient = ResourceClient.forCallNumberTypes(client);
-    modesOfIssuanceClient = ResourceClient.forModesOfIssuance(client);
-    instanceRelationshipsClient = ResourceClient.forInstanceRelationships(client);
-    instanceRelationshipTypesClient = ResourceClient.forInstanceRelationshipTypes(client);
-    precedingSucceedingTitleClient = ResourceClient.forPrecedingSucceedingTitles(client);
-    instancesStorageSyncClient = ResourceClient.forInstancesStorageSync(client);
-    itemsStorageSyncClient = ResourceClient.forItemsStorageSync(client);
-    inventoryViewClient = ResourceClient.forInventoryView(client);
-    statisticalCodeClient = ResourceClient.forStatisticalCodes(client);
-    instancesStorageBatchInstancesClient = ResourceClient
-      .forInstancesStorageBatchInstances(client);
-    instanceTypesClient = ResourceClient
-      .forInstanceTypes(client);
-    illPoliciesClient = ResourceClient.forIllPolicies(client);
-    statisticalCodeFixture = new StatisticalCodeFixture(client);
-    kafkaConsumer = new FakeKafkaConsumer().consume(vertx);
-    kafkaConsumer.removeAllEvents();
-    instanceReindex = new InstanceReindexFixture(client);
-    authorityReindex = new AuthorityReindexFixture(client);
-    asyncMigration = new AsyncMigrationFixture(client);
-    logger.info("finishing @BeforeClass testBaseBeforeClass()");
-  }
-
-  @AfterClass
-  public static void testBaseAfterClass()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    client.getWebClient().close();
-    client = null;
-    if (invokeStorageTestSuiteAfter) {
-      StorageTestSuite.after();
-    }
-  }
-
-  static void send(URL url, HttpMethod method, String content,
-      String contentType, Handler<HttpResponse<Buffer>> handler) {
-    send(url, method, null, content, contentType, handler);
-  }
-
-  static void send(URL url, HttpMethod method, String userId, String content,
-                   String contentType, Handler<HttpResponse<Buffer>> handler) {
-    send(url.toString(), method, userId, content, contentType, handler);
-  }
-
-  static Future<HttpResponse<Buffer>> send(URL url, HttpMethod method, String content,
-      String contentType) {
-    return Future.future(promise -> send(url, method, content, contentType, promise::complete));
-  }
-
-  static void send(String url, HttpMethod method, String content,
-                   String contentType, Handler<HttpResponse<Buffer>> handler) {
-    send(url, method, null, content, contentType, handler);
-  }
-
-  static void send(String url, HttpMethod method, String userId, String content,
-        String contentType, Handler<HttpResponse<Buffer>> handler) {
-    Buffer body = Buffer.buffer(content == null ? "" : content);
-
-    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
-    if (userId != null) {
-      headers.add("X-Okapi-User-Id", userId);
-    }
-    client.getWebClient()
-    .requestAbs(method, url)
-    .putHeader("Authorization", "test_tenant")
-    .putHeader("x-okapi-tenant", "test_tenant")
-    .putHeader("Accept", "application/json,text/plain")
-    .putHeader("Content-type", contentType)
-    .putHeaders(headers)
-    .sendBuffer(body)
-    .onSuccess(handler)
-    .onFailure(error -> logger.error(error.getMessage(), error));
-  }
-
   /**
    * Assert that a GET at the url returns 404 status code (= not found).
    * @param url  endpoint where to execute a GET request
@@ -190,7 +191,7 @@ public abstract class TestBase {
   void assertGetNotFound(URL url) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    client.get(url, TENANT_ID, ResponseHandler.text(getCompleted));
+    getClient().get(url, TENANT_ID, ResponseHandler.text(getCompleted));
     Response response = get(getCompleted);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }

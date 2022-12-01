@@ -1,43 +1,14 @@
 package org.folio.rest.api;
 
-import io.vertx.core.Context;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.folio.persist.AsyncMigrationJobRepository;
-import org.folio.rest.jaxrs.model.AsyncMigrationJob;
-import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
-import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
-import org.folio.rest.jaxrs.model.AsyncMigrations;
-import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
-import org.folio.rest.jaxrs.model.Processed;
-import org.folio.rest.jaxrs.model.Published;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.support.sql.TestRowStream;
-import org.folio.services.migration.async.AsyncMigrationContext;
-import org.folio.services.migration.async.PublicationPeriodMigrationJobRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.IntStream;
-
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.rest.api.StorageTestSuite.TENANT_ID;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
@@ -49,6 +20,35 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+
+import io.vertx.core.Context;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.IntStream;
+import junitparams.JUnitParamsRunner;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.folio.persist.AsyncMigrationJobRepository;
+import org.folio.rest.jaxrs.model.AsyncMigrationJob;
+import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
+import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
+import org.folio.rest.jaxrs.model.AsyncMigrations;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
+import org.folio.rest.jaxrs.model.Processed;
+import org.folio.rest.jaxrs.model.Published;
+import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.support.sql.TestRowStream;
+import org.folio.services.migration.async.AsyncMigrationContext;
+import org.folio.services.migration.async.PublicationPeriodMigrationJobRunner;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
@@ -156,7 +156,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   private static Context getContext() {
-    return StorageTestSuite.getVertx().getOrCreateContext();
+    return getVertx().getOrCreateContext();
   }
 
   private PublicationPeriodMigrationJobRunner jobRunner() {

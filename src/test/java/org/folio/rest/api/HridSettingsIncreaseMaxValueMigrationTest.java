@@ -1,19 +1,17 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.getVertx;
+import static org.folio.utility.ModuleUtility.getVertx;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
+import org.junit.Before;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonArray;
 
 public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase {
   private static final String CREATE_SEQUENCE_SQL = loadCreateSequenceSqlFile();
@@ -21,6 +19,16 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
   private static final String INSTANCES_SEQ = "hrid_instances_seq";
   private static final String HOLDINGS_SEQ = "hrid_holdings_seq";
   private static final String ITEMS_SEQ = "hrid_items_seq";
+
+  @SneakyThrows
+  @Before
+  public void beforeEach() {
+    clearData();
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
+    removeAllEvents();
+  }
 
   @Test
   public void retainsCurrentValueOfSequences() throws Exception {

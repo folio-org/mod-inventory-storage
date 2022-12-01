@@ -1,21 +1,34 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.LocationUtility.createCampus;
+import static org.folio.utility.LocationUtility.createInstitution;
+import static org.folio.utility.LocationUtility.createLibrary;
+import static org.folio.utility.RestUtility.send;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import java.net.HttpURLConnection;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import lombok.SneakyThrows;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.net.HttpURLConnection;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.http.InterfaceUrls.*;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 // Missing tests:
 // - Add/update a campus that points to a non-existing inst
@@ -28,6 +41,7 @@ public class LocationUnitTest extends TestBase {
 
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
+  @SneakyThrows
   @Before
   public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
@@ -39,25 +53,8 @@ public class LocationUnitTest extends TestBase {
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
     StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-  }
 
-  ///////////////////////////////////////////////////////  Inst test helpers
-  // May also be used from other tests
-  public static Response createInst(UUID id, String name, String code) {
-
-    CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
-
-    JsonObject request = new JsonObject()
-      .put("name", name)
-      .put("code", code);
-    if (id != null) {
-      request.put("id", id.toString());
-    }
-
-    send(locInstitutionStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
-
-    return get(createLocationUnit);
+    removeAllEvents();
   }
 
   private Response getInstById(UUID id) {
@@ -74,7 +71,7 @@ public class LocationUnitTest extends TestBase {
   @Test
   public void canCreateAnInst() {
 
-    Response response = createInst(null, "Institute of MetaPhysics", "MPI");
+    Response response = createInstitution(null, "Institute of MetaPhysics", "MPI");
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -85,8 +82,8 @@ public class LocationUnitTest extends TestBase {
   @Test
   public void cannotCreateInstWithSameName() {
 
-    createInst(null, "Institute of MetaPhysics", "MPI");
-    Response response = createInst(null, "Institute of MetaPhysics", "MPI");
+    createInstitution(null, "Institute of MetaPhysics", "MPI");
+    Response response = createInstitution(null, "Institute of MetaPhysics", "MPI");
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -94,8 +91,8 @@ public class LocationUnitTest extends TestBase {
   public void cannotCreateInstSameId() {
 
     UUID id = UUID.randomUUID();
-    createInst(id, "Institute of MetaPhysics", "MPI");
-    Response response = createInst(id, "The Other Institute", "MPI");
+    createInstitution(id, "Institute of MetaPhysics", "MPI");
+    Response response = createInstitution(id, "The Other Institute", "MPI");
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -103,7 +100,7 @@ public class LocationUnitTest extends TestBase {
   public void cannotCreateAnInstWithoutCode() {
 
     UUID id = UUID.randomUUID();
-    Response response = createInst(id, "Institute of MetaPhysics", null);
+    Response response = createInstitution(id, "Institute of MetaPhysics", null);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
@@ -112,7 +109,7 @@ public class LocationUnitTest extends TestBase {
   public void canGetAnInstById() {
 
     UUID id = UUID.randomUUID();
-    createInst(id, "Institute of MetaPhysics", "MPI");
+    createInstitution(id, "Institute of MetaPhysics", "MPI");
     Response getResponse = getInstById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -125,7 +122,7 @@ public class LocationUnitTest extends TestBase {
 
   @Test
   public void cannotGetAnInstByWrongId() {
-    createInst(null, "Institute of MetaPhysics", "MPI");
+    createInstitution(null, "Institute of MetaPhysics", "MPI");
     UUID id = UUID.randomUUID();
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.GET,
@@ -137,8 +134,8 @@ public class LocationUnitTest extends TestBase {
   @Test
   public void canListInsts() {
 
-    createInst(null, "Institute of MetaPhysics", "MPI");
-    createInst(null, "The Other Institute", "OI");
+    createInstitution(null, "Institute of MetaPhysics", "MPI");
+    createInstitution(null, "The Other Institute", "OI");
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -155,8 +152,8 @@ public class LocationUnitTest extends TestBase {
   @Test
   public void canQueryInsts() {
 
-    createInst(null, "Institute of MetaPhysics", "MPI");
-    createInst(null, "The Other Institute", "OI");
+    createInstitution(null, "Institute of MetaPhysics", "MPI");
+    createInstitution(null, "The Other Institute", "OI");
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locInstitutionStorageUrl("/?query=name=Other"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
@@ -169,8 +166,8 @@ public class LocationUnitTest extends TestBase {
   @Test
   public void badQueryInsts() {
 
-    createInst(null, "Institute of MetaPhysics", "MPI");
-    createInst(null, "The Other Institute", "OI");
+    createInstitution(null, "Institute of MetaPhysics", "MPI");
+    createInstitution(null, "The Other Institute", "OI");
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locInstitutionStorageUrl("/?query=invalidCQL"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
@@ -183,7 +180,7 @@ public class LocationUnitTest extends TestBase {
   public void canUpdateAnInst() {
 
     UUID id = UUID.randomUUID();
-    createInst(id, "Institute of MetaPhysics", "MPI");
+    createInstitution(id, "Institute of MetaPhysics", "MPI");
 
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
@@ -212,7 +209,7 @@ public class LocationUnitTest extends TestBase {
   public void cannotUpdateAnInstId() {
 
     UUID id = UUID.randomUUID();
-    createInst(id, "Institute of MetaPhysics", "MPI");
+    createInstitution(id, "Institute of MetaPhysics", "MPI");
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("name", "The Other Institute")
@@ -229,7 +226,7 @@ public class LocationUnitTest extends TestBase {
   public void canDeleteAnInst() {
 
     UUID id = UUID.randomUUID();
-    createInst(id, "Institute of MetaPhysics", "MPI");
+    createInstitution(id, "Institute of MetaPhysics", "MPI");
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
@@ -238,25 +235,6 @@ public class LocationUnitTest extends TestBase {
   }
 
 ////////////////////////////////////// Campus test helpers
-  public static Response createCamp(UUID id, String name, String code, UUID instId) {
-
-    CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
-
-    JsonObject request = new JsonObject()
-      .put("name", name)
-      .put("code", code);
-    if (instId != null) { // should not be, except when testing it
-      request.put("institutionId", instId.toString());
-    }
-    if (id != null) {
-      request.put("id", id.toString());
-    }
-
-    send(locCampusStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
-
-    return get(createLocationUnit);
-  }
 
   private Response getCampById(UUID id) {
 
@@ -273,9 +251,9 @@ public class LocationUnitTest extends TestBase {
   public void canCreateACamp() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
-    Response response = createCamp(null, "Riverside Campus", "RS", instId);
+    Response response = createCampus(null, "Riverside Campus", "RS", instId);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -287,10 +265,10 @@ public class LocationUnitTest extends TestBase {
   public void cannotCreateCampWithSameName() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
-    createCamp(null, "Riverside Campus", "RS", instId);
-    Response response = createCamp(null, "Riverside Campus", "RS", instId);
+    createCampus(null, "Riverside Campus", "RS", instId);
+    Response response = createCampus(null, "Riverside Campus", "RS", instId);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -298,18 +276,18 @@ public class LocationUnitTest extends TestBase {
   public void cannotCreateCampSameId() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
     UUID id = UUID.randomUUID();
-    createCamp(id, "Riverside Campus", "RS", instId);
-    Response response = createCamp(id, "Campus on the other Side of the River", "OS", instId);
+    createCampus(id, "Riverside Campus", "RS", instId);
+    Response response = createCampus(id, "Campus on the other Side of the River", "OS", instId);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
   public void cannotCreateCampWithoutInst() {
 
-    Response response = createCamp(null, "Campus on the other Side of the River", "OS", null);
+    Response response = createCampus(null, "Campus on the other Side of the River", "OS", null);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -317,10 +295,10 @@ public class LocationUnitTest extends TestBase {
   public void cannotCreateACampWithoutCode() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
     UUID id = UUID.randomUUID();
-    Response response = createCamp(id, "Campus on the other Side of the River", null, instId);
+    Response response = createCampus(id, "Campus on the other Side of the River", null, instId);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
@@ -329,10 +307,10 @@ public class LocationUnitTest extends TestBase {
   public void canGetACampById() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
     UUID id = UUID.randomUUID();
-    createCamp(id, "Riverside Campus", "RS", instId);
+    createCampus(id, "Riverside Campus", "RS", instId);
     Response getResponse = getCampById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -346,9 +324,9 @@ public class LocationUnitTest extends TestBase {
   @Test
   public void cannotGetACampWrongId() {
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
-    createCamp(null, "Riverside Campus", "RS", instId);
+    createCampus(null, "Riverside Campus", "RS", instId);
 
     UUID id = UUID.randomUUID();
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
@@ -362,10 +340,10 @@ public class LocationUnitTest extends TestBase {
   public void canListCamps() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
-    createCamp(null, "Riverside Campus", "RSC", instId);
-    createCamp(null, "Other Side Campus", "OSC", instId);
-    createCamp(null, "Underwater Location", "OSC", instId);
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
+    createCampus(null, "Riverside Campus", "RSC", instId);
+    createCampus(null, "Other Side Campus", "OSC", instId);
+    createCampus(null, "Underwater Location", "OSC", instId);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locCampusStorageUrl("/?query=name=Campus"), HttpMethod.GET,
@@ -381,10 +359,10 @@ public class LocationUnitTest extends TestBase {
   public void canUpdateACamp() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
     UUID id = UUID.randomUUID();
-    createCamp(id, "Riverside Campus", "MPI", instId);
+    createCampus(id, "Riverside Campus", "MPI", instId);
 
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
@@ -413,10 +391,10 @@ public class LocationUnitTest extends TestBase {
   public void cannotUpdateACampId() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
     UUID id = UUID.randomUUID();
-    createCamp(id, "Riverside Campus", "MPI", instId);
+    createCampus(id, "Riverside Campus", "MPI", instId);
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("name", "The Other Campus")
@@ -435,9 +413,9 @@ public class LocationUnitTest extends TestBase {
   public void canDeleteACamp() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID id = UUID.randomUUID();
-    createCamp(id, "Riverside Campus", "RS", instId);
+    createCampus(id, "Riverside Campus", "RS", instId);
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locCampusStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
@@ -449,8 +427,8 @@ public class LocationUnitTest extends TestBase {
   public void cannotDeleteInstUsedByCamp() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
-    createCamp(null, "Riverside Campus", "RS", instId);
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
+    createCampus(null, "Riverside Campus", "RS", instId);
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locInstitutionStorageUrl("/" + instId.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
@@ -459,23 +437,6 @@ public class LocationUnitTest extends TestBase {
   }
 
 ////////////////////////////////////// Library test helpers
-
-  public static Response createLib(UUID id, String name, String code, UUID campId) {
-    CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
-
-    JsonObject request = new JsonObject()
-      .put("name", name)
-      .put("code", code)
-      .put("campusId", campId.toString());
-    if (id != null) {
-      request.put("id", id.toString());
-    }
-
-    send(locLibraryStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
-
-    return get(createLocationUnit);
-  }
 
   private Response getLibById(UUID id) {
 
@@ -492,11 +453,11 @@ public class LocationUnitTest extends TestBase {
   public void canCreateALib() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
 
-    Response response = createLib(null, "Main Library", "RS", campId);
+    Response response = createLibrary(null, "Main Library", "RS", campId);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -508,12 +469,12 @@ public class LocationUnitTest extends TestBase {
   public void cannotCreateLibWithSameName() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
 
-    createLib(null, "Main Library", "RS", campId);
-    Response response = createLib(null, "Main Library", "RS", campId);
+    createLibrary(null, "Main Library", "RS", campId);
+    Response response = createLibrary(null, "Main Library", "RS", campId);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -521,13 +482,13 @@ public class LocationUnitTest extends TestBase {
   public void cannotCreateLibSameId() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
 
     UUID id = UUID.randomUUID();
-    createLib(id, "Main Library", "RS", campId);
-    Response response = createLib(id, "Library on the other Side of the River", "OS", campId);
+    createLibrary(id, "Main Library", "RS", campId);
+    Response response = createLibrary(id, "Library on the other Side of the River", "OS", campId);
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -535,12 +496,12 @@ public class LocationUnitTest extends TestBase {
   public void cannotCreateALibWithoutCode() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
 
     UUID id = UUID.randomUUID();
-    Response response = createLib(id, "Main Library", null, campId);
+    Response response = createLibrary(id, "Main Library", null, campId);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
@@ -549,12 +510,12 @@ public class LocationUnitTest extends TestBase {
   public void canGetALibById() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
 
     UUID id = UUID.randomUUID();
-    createLib(id, "Main Library", "ML", campId);
+    createLibrary(id, "Main Library", "ML", campId);
     Response getResponse = getLibById(id);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
@@ -569,10 +530,10 @@ public class LocationUnitTest extends TestBase {
   public void cannotGetALibWrongId() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
-    createLib(null, "Main Library", "ML", campId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
+    createLibrary(null, "Main Library", "ML", campId);
     UUID id = UUID.randomUUID();
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.GET,
@@ -585,12 +546,12 @@ public class LocationUnitTest extends TestBase {
   public void canListLibs() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
-    createLib(null, "Main Library", "ML", campId);
-    createLib(null, "Side Library", "SL", campId);
-    createLib(null, "The Book Store", "BS", campId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
+    createLibrary(null, "Main Library", "ML", campId);
+    createLibrary(null, "Side Library", "SL", campId);
+    createLibrary(null, "The Book Store", "BS", campId);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(locLibraryStorageUrl("/?query=name=LiBRaRy"), HttpMethod.GET,
@@ -606,11 +567,11 @@ public class LocationUnitTest extends TestBase {
   public void canUpdateALib() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
     UUID id = UUID.randomUUID();
-    createLib(id, "Main Library", "MPI", campId);
+    createLibrary(id, "Main Library", "MPI", campId);
 
     JsonObject updateRequest = new JsonObject()
       .put("id", id.toString())
@@ -637,11 +598,11 @@ public class LocationUnitTest extends TestBase {
 
   public void cannotUpdateALibId() {
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
     UUID id = UUID.randomUUID();
-    createLib(id, "Main Library", "MPI", campId);
+    createLibrary(id, "Main Library", "MPI", campId);
 
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString());
@@ -658,13 +619,13 @@ public class LocationUnitTest extends TestBase {
   public void canDeleteALib() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
 
     UUID id = UUID.randomUUID();
 
-    createLib(id, "Main Library", "RS", campId);
+    createLibrary(id, "Main Library", "RS", campId);
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
@@ -679,10 +640,10 @@ public class LocationUnitTest extends TestBase {
   public void cannotDeleteCampUsedByLib() {
 
     UUID instId = UUID.randomUUID();
-    createInst(instId, "Institute of MetaPhysics", "MPI");
+    createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
-    createCamp(campId, "Riverside Campus", "RS", instId);
-    createLib(null, "Main Library", "RS", campId);
+    createCampus(campId, "Riverside Campus", "RS", instId);
+    createLibrary(null, "Main Library", "RS", campId);
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     send(locCampusStorageUrl("/" + campId.toString()), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));

@@ -1,12 +1,17 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.StorageTestSuite.*;
-import static org.folio.rest.support.http.InterfaceUrls.*;
+
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.pointer.JsonPointer;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import java.net.MalformedURLException;
-import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -14,20 +19,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.json.pointer.JsonPointer;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 
 @RunWith(VertxUnitRunner.class)
 public class AuditDeleteTest extends TestBaseWithInventoryUtil {
@@ -45,19 +43,18 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
   private UUID holdingsRecordId;
 
+  @SneakyThrows
   @Before
-  public void setUp() throws InterruptedException, ExecutionException,
-    MalformedURLException, TimeoutException {
-
+  public void beforeEach() {
+    clearData();
     clearAuditTables();
-    holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
-  }
+    setupMaterialTypes();
+    setupLoanTypes();
+    setupLocations();
 
-  @BeforeClass
-  public static void beforeClass() {
-    deleteAll(itemsStorageUrl(""));
-    deleteAll(holdingsStorageUrl(""));
-    deleteAll(instancesStorageUrl(""));
+    holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+
+    removeAllEvents();
   }
 
   @Test
@@ -83,8 +80,12 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testOnlyDeletedInstancesAreStoredInAuditTable() throws InterruptedException,
-    MalformedURLException, TimeoutException, ExecutionException {
+  public void testOnlyDeletedInstancesAreStoredInAuditTable()
+      throws InterruptedException,
+      MalformedURLException,
+      TimeoutException,
+      ExecutionException {
+
     //given
     final JsonObject record = instancesClient.getAll().get(0);
     UUID instanceId = UUID.fromString(record.getString("id"));
@@ -102,8 +103,12 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testOnlyDeletedHoldingsAreStoredInAuditTable() throws InterruptedException,
-    MalformedURLException, TimeoutException, ExecutionException {
+  public void testOnlyDeletedHoldingsAreStoredInAuditTable()
+      throws InterruptedException,
+      MalformedURLException,
+      TimeoutException,
+      ExecutionException {
+
     //given
     final JsonObject record = holdingsClient.getAll().get(0);
     //when
@@ -118,7 +123,9 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   private Object getRecordIdFromAuditTable(String tableName)
-    throws InterruptedException, TimeoutException, ExecutionException {
+      throws InterruptedException,
+      TimeoutException,
+      ExecutionException {
 
     final Row row = getRecordsFromAuditTable(tableName).iterator().next();
     final JsonPointer jsonPointer = JsonPointer.from(RECORD_ID_JSON_PATH);
@@ -126,7 +133,9 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   private RowSet<Row> getRecordsFromAuditTable(String tableName)
-    throws InterruptedException, TimeoutException, ExecutionException {
+      throws InterruptedException,
+      TimeoutException,
+      ExecutionException {
 
     final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
     postgresClient.select(getAuditSQL(tableName), h ->

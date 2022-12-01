@@ -18,8 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
-
 import com.google.common.collect.Iterables;
 
 import io.vertx.core.AsyncResult;
