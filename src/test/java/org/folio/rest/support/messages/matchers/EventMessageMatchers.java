@@ -49,12 +49,17 @@ public class EventMessageMatchers {
 
   @NotNull
   private Matcher<EventMessage> isCreateEvent() {
-    return hasProperty("type", is("CREATE"));
+    return hasType("CREATE");
   }
 
   @NotNull
   private Matcher<EventMessage> isDeleteEvent() {
-    return hasProperty("type", is("DELETE"));
+    return hasType("DELETE");
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasType(String type) {
+    return hasProperty("type", is(type));
   }
 
   @NotNull
@@ -82,29 +87,32 @@ public class EventMessageMatchers {
 
 
   @NotNull
-  private Matcher<EventMessage> hasOldRepresentation(
-    JsonObject expectedRepresentation) {
-    // ignore metadata because created and updated date might be represented
-    // with either +00:00 or Z due to differences in serialization / deserialization
-    return hasProperty("oldRepresentation",
-      equalsIgnoringMetadata(expectedRepresentation));
+  private Matcher<EventMessage> hasOldRepresentation(JsonObject expectedRepresentation) {
+    return hasOldRepresentationThat(equalsIgnoringMetadata(expectedRepresentation));
   }
 
   @NotNull
   private Matcher<EventMessage> hasNoOldRepresentation() {
-    return hasProperty("oldRepresentation", is(nullValue()));
+    return hasOldRepresentationThat(is(nullValue()));
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasOldRepresentationThat(Matcher<?> matcher) {
+    return hasProperty("oldRepresentation", matcher);
   }
 
   @NotNull
   private Matcher<EventMessage> hasNewRepresentation(JsonObject expectedRepresentation) {
-    // ignore metadata because created and updated date might be represented
-    // with either +00:00 or Z due to differences in serialization / deserialization
-    return hasProperty("newRepresentation",
-      equalsIgnoringMetadata(expectedRepresentation));
+    return hasNewRepresentationThat(equalsIgnoringMetadata(expectedRepresentation));
   }
 
   @NotNull
   private Matcher<EventMessage> hasNoNewRepresentation() {
-    return hasProperty("newRepresentation", is(nullValue()));
+    return hasNewRepresentationThat(is(nullValue()));
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasNewRepresentationThat(Matcher<?> matcher) {
+    return hasProperty("newRepresentation", matcher);
   }
 }

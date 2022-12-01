@@ -1,11 +1,12 @@
 package org.folio.rest.support;
 
-import io.vertx.core.json.JsonObject;
+import java.util.List;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
-import java.util.List;
+import io.vertx.core.json.JsonObject;
 
 public class JsonObjectMatchers {
   public static Matcher<JsonObject> identifierMatches(String identifierTypeId, String value) {
@@ -62,18 +63,26 @@ public class JsonObjectMatchers {
     };
   }
 
-  public static Matcher<JsonObject> equalsIgnoringMetadata(JsonObject expected) {
-    return new TypeSafeMatcher<JsonObject>() {
+  /**
+   * Ignores change metadata because created and updated date might be represented
+   * with either +00:00 or Z due to differences in serialization / deserialization
+   *
+   * @param expectedRepresentation expected representation of the record
+   *
+   * @return a Hamcrest matcher
+   */
+  public static Matcher<JsonObject> equalsIgnoringMetadata(JsonObject expectedRepresentation) {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description.appendText(
-          "a JsonObject being equal when ignoring metadata property: " + expected);
+          "a JsonObject being equal when ignoring metadata property: " + expectedRepresentation);
       }
 
       @Override
       protected boolean matchesSafely(JsonObject jsonObject) {
         var finalJsonObject = jsonObject.copy();
-        var finalExpected = expected.copy();
+        var finalExpected = expectedRepresentation.copy();
         finalJsonObject.remove("metadata");
         finalExpected.remove("metadata");
         return finalJsonObject.equals(finalExpected);
