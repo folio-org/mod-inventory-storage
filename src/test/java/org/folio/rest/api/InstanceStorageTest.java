@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -16,21 +15,19 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsa
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForInstance;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.instanceDeletedMessagePublished;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
-import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -96,8 +93,7 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
-import org.folio.rest.support.messages.matchers.EventMessageMatchers;
+import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
 import org.junit.After;
@@ -463,13 +459,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertGetNotFound(url);
 
     JsonObject instance = createdInstance.getJson();
-    final String instanceId = instance.getString("id");
 
-    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-
-    await().atMost(2, SECONDS)
-      .until(() -> getMessagesForInstance(instanceId),
-        eventMessageMatchers.hasDeleteEventFor(instance));
+    instanceDeletedMessagePublished(instance);
   }
 
   @SneakyThrows
@@ -503,9 +494,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(instance3);
     assertNotExists(instance5);
     getMarcJsonNotFound(id5);
-    assertRemoveEventForInstance(instance1);
-    assertRemoveEventForInstance(instance3);
-    assertRemoveEventForInstance(instance5);
+    DomainEventAssertions.instanceDeletedMessagePublished(instance1);
+    DomainEventAssertions.instanceDeletedMessagePublished(instance3);
+    DomainEventAssertions.instanceDeletedMessagePublished(instance5);
   }
 
   @SneakyThrows

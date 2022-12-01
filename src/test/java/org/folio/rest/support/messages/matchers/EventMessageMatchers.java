@@ -28,9 +28,7 @@ public class EventMessageMatchers {
   URL expectedUrl;
 
   @NotNull
-  public Matcher<Iterable<? super EventMessage>> hasDeleteEventFor(
-    JsonObject representation) {
-
+  public Matcher<Iterable<? super EventMessage>> hasDeleteEventMessageFor(JsonObject representation) {
     return CoreMatchers.hasItem(allOf(
       isDeleteEvent(),
       isForTenant(),
