@@ -17,11 +17,11 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.instanceCreatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.instanceDeletedMessagePublished;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
@@ -93,7 +93,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.support.matchers.DomainEventAssertions;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
 import org.junit.After;
@@ -221,7 +220,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
-    assertCreateEventForInstance(instanceFromGet);
+    instanceCreatedMessagePublished(instanceFromGet);
 
     var storedPublicationPeriod = instance.getJsonObject("publicationPeriod")
       .mapTo(PublicationPeriod.class);
@@ -457,10 +456,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     assertGetNotFound(url);
-
-    JsonObject instance = createdInstance.getJson();
-
-    instanceDeletedMessagePublished(instance);
+    instanceDeletedMessagePublished(createdInstance.getJson());
   }
 
   @SneakyThrows
@@ -494,9 +490,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(instance3);
     assertNotExists(instance5);
     getMarcJsonNotFound(id5);
-    DomainEventAssertions.instanceDeletedMessagePublished(instance1);
-    DomainEventAssertions.instanceDeletedMessagePublished(instance3);
-    DomainEventAssertions.instanceDeletedMessagePublished(instance5);
+    instanceDeletedMessagePublished(instance1);
+    instanceDeletedMessagePublished(instance3);
+    instanceDeletedMessagePublished(instance5);
   }
 
   @SneakyThrows
@@ -2041,8 +2037,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
 
     assertUpdateEventForInstance(existingInstance.getJson(), updatedInstance);
-    assertCreateEventForInstance(getById(firstInstanceToCreate.getString("id")).getJson());
-    assertCreateEventForInstance(getById(secondInstanceToCreate.getString("id")).getJson());
+    instanceCreatedMessagePublished(getById(firstInstanceToCreate.getString("id")).getJson());
+    instanceCreatedMessagePublished(getById(secondInstanceToCreate.getString("id")).getJson());
   }
 
   @Test

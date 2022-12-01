@@ -2,6 +2,7 @@ package org.folio.rest.support.messages.matchers;
 
 import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.hasEntry;
@@ -12,7 +13,6 @@ import java.util.Map;
 
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.messages.EventMessage;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,8 +28,18 @@ public class EventMessageMatchers {
   URL expectedUrl;
 
   @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation) {
+    return hasItem(allOf(
+      isCreateEvent(),
+      isForTenant(),
+      hasHeaders(),
+      hasNewRepresentation(representation),
+      hasNoOldRepresentation()));
+  }
+
+  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasDeleteEventMessageFor(JsonObject representation) {
-    return CoreMatchers.hasItem(allOf(
+    return hasItem(allOf(
       isDeleteEvent(),
       isForTenant(),
       hasHeaders(),
@@ -38,17 +48,22 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  public Matcher<EventMessage> isDeleteEvent() {
+  private Matcher<EventMessage> isCreateEvent() {
+    return hasProperty("type", is("CREATE"));
+  }
+
+  @NotNull
+  private Matcher<EventMessage> isDeleteEvent() {
     return hasProperty("type", is("DELETE"));
   }
 
   @NotNull
-  public Matcher<EventMessage> isForTenant() {
+  private Matcher<EventMessage> isForTenant() {
     return hasProperty("tenant", is(expectedTenantId));
   }
 
   @NotNull
-  public Matcher<EventMessage> hasHeaders() {
+  private Matcher<EventMessage> hasHeaders() {
     return hasProperty("headers", allOf(
       hasTenantHeader(),
       hasUrlHeader()));
@@ -65,8 +80,10 @@ public class EventMessageMatchers {
     return hasEntry(XOkapiHeaders.TENANT.toLowerCase(), expectedTenantId);
   }
 
+
   @NotNull
-  public Matcher<EventMessage> hasOldRepresentation(JsonObject expectedRepresentation) {
+  private Matcher<EventMessage> hasOldRepresentation(
+    JsonObject expectedRepresentation) {
     // ignore metadata because created and updated date might be represented
     // with either +00:00 or Z due to differences in serialization / deserialization
     return hasProperty("oldRepresentation",
@@ -74,7 +91,20 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  public Matcher<EventMessage> hasNoNewRepresentation() {
+  private Matcher<EventMessage> hasNoOldRepresentation() {
+    return hasProperty("oldRepresentation", is(nullValue()));
+  }
+
+  @NotNull
+  private Matcher<EventMessage> hasNewRepresentation(JsonObject expectedRepresentation) {
+    // ignore metadata because created and updated date might be represented
+    // with either +00:00 or Z due to differences in serialization / deserialization
+    return hasProperty("newRepresentation",
+      equalsIgnoringMetadata(expectedRepresentation));
+  }
+
+  @NotNull
+  private Matcher<EventMessage> hasNoNewRepresentation() {
     return hasProperty("newRepresentation", is(nullValue()));
   }
 }

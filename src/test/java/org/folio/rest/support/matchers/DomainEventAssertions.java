@@ -173,15 +173,6 @@ public final class DomainEventAssertions {
       .until(() -> getInstanceEvents(instanceId), is(empty()));
   }
 
-  public static void assertCreateEventForInstance(JsonObject instance) {
-    final String instanceId = instance.getString("id");
-
-    await()
-      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
-
-    assertCreateEvent(getFirstInstanceEvent(instanceId), instance);
-  }
-
   public static void assertCreateEventForAuthority(JsonObject authority) {
     final String id = authority.getString("id");
 
@@ -189,6 +180,15 @@ public final class DomainEventAssertions {
       .until(() -> getAuthorityEvents(id).size(), greaterThan(0));
 
     assertCreateEvent(getFirstAuthorityEvent(id), authority);
+  }
+
+  public static void instanceCreatedMessagePublished(JsonObject instance) {
+    final String instanceId = instance.getString("id");
+
+    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+
+    await().until(() -> getMessagesForInstance(instanceId),
+      eventMessageMatchers.hasCreateEventMessageFor(instance));
   }
 
   public static void assertCreateEventForInstances(JsonArray instances) {
@@ -208,7 +208,7 @@ public final class DomainEventAssertions {
     final String instanceId = instance.getString("id");
 
     final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-  
+
     await().until(() -> getMessagesForInstance(instanceId),
       eventMessageMatchers.hasDeleteEventMessageFor(instance));
   }
