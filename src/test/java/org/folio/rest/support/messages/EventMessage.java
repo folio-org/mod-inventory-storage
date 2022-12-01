@@ -9,13 +9,13 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import lombok.Value;
 
 @Value
-public class InstanceEventMessage {
-  public static InstanceEventMessage fromConsumerRecord(
+public class EventMessage {
+  public static EventMessage fromConsumerRecord(
     KafkaConsumerRecord<String, JsonObject> consumerRecord) {
 
     final var value = consumerRecord.value();
 
-    return new InstanceEventMessage(
+    return new EventMessage(
       value.getString("type"),
       value.getString("tenant"),
       value.getJsonObject("new"),

@@ -6,7 +6,6 @@ import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.ResponseHandler.json;
@@ -43,8 +42,6 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
@@ -82,7 +79,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -101,11 +97,10 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.support.messages.InstanceEventMessage;
+import org.folio.rest.support.messages.EventMessage;
+import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
-import org.hamcrest.Matcher;
-import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -471,64 +466,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instance = createdInstance.getJson();
     final String instanceId = instance.getString("id");
 
+    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+
     await().atMost(2, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
-        hasDeleteEventFor(instance, TENANT_ID, vertxUrl("")));
+        eventMessageMatchers.hasDeleteEventFor(instance));
   }
 
-  @NotNull
-  private Matcher<Iterable<? super InstanceEventMessage>> hasDeleteEventFor(
-    JsonObject instance, String tenantId, URL url) {
-
-    return hasItem(allOf(
-      isDeleteEvent(),
-      isForTenant(tenantId),
-      hasNoNewRepresentation(),
-      hasOldRepresentation(instance),
-      hasHeaders(tenantId, url)));
-  }
-
-  @NotNull
-  private static Matcher<InstanceEventMessage> isDeleteEvent() {
-    return hasProperty("type", is("DELETE"));
-  }
-
-  @NotNull
-  private Matcher<InstanceEventMessage> isForTenant(String tenantId) {
-    return hasProperty("tenant", is(tenantId));
-  }
-
-  @NotNull
-  private Matcher<InstanceEventMessage> hasNoNewRepresentation() {
-    return hasProperty("newRepresentation", is(nullValue()));
-  }
-
-  @NotNull
-  private Matcher<InstanceEventMessage> hasOldRepresentation(JsonObject instance) {
-    // ignore metadata because created and updated date might be represented
-    // with either +00:00 or Z due to differences in serialization / deserialization
-    return hasProperty("oldRepresentation", equalsIgnoringMetadata(instance));
-  }
-
-  @NotNull
-  private Matcher<InstanceEventMessage> hasHeaders(String tenantId, URL url) {
-    return hasProperty("headers", matchingTenantAndUrl(tenantId, url));
-  }
-
-  @NotNull
-  private Matcher<Map<? extends String, ? extends String>> matchingTenantAndUrl(
-    String tenantId, URL url) {
-
-    return allOf(
-      // Needs to be lower case because keys are mapped to lower case
-      hasEntry(XOkapiHeaders.TENANT.toLowerCase(), tenantId),
-      hasEntry(XOkapiHeaders.URL.toLowerCase(), url.toString()));
-  }
-
-  private Collection<InstanceEventMessage> getMessagesForInstance(String instanceId) {
+  private Collection<EventMessage> getMessagesForInstance(String instanceId) {
     return getInstanceEvents(instanceId)
       .stream()
-      .map(InstanceEventMessage::fromConsumerRecord)
+      .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
   }
 
