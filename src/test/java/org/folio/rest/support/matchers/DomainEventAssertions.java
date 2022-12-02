@@ -49,6 +49,9 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class DomainEventAssertions {
+  private static final EventMessageMatchers eventMessageMatchers
+    = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+
   private DomainEventAssertions() { }
 
   /**
@@ -169,8 +172,6 @@ public final class DomainEventAssertions {
   public static void instanceCreatedMessagePublished(JsonObject instance) {
     final String instanceId = instance.getString("id");
 
-    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-
     await().until(() -> getMessagesForInstance(instanceId),
       eventMessageMatchers.hasCreateEventMessageFor(instance));
   }
@@ -189,8 +190,6 @@ public final class DomainEventAssertions {
   }
 
   public static void noInstanceUpdatedMessagePublished(String instanceId) {
-    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-
     await().during(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
         eventMessageMatchers.hasNoUpdateEventMessage());
@@ -199,23 +198,17 @@ public final class DomainEventAssertions {
   public static void instanceDeletedMessagePublished(JsonObject instance) {
     final String instanceId = instance.getString("id");
 
-    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-
     await().until(() -> getMessagesForInstance(instanceId),
       eventMessageMatchers.hasDeleteEventMessageFor(instance));
   }
 
   public static void noInstanceDeletedMessagePublished(String instanceId) {
-    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-
     await().during(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
         eventMessageMatchers.hasNoDeleteEventMessage());
   }
 
   public static void deleteAllEventForInstancesPublished() {
-    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-
     await()
       .until(() -> getMessagesForInstance(NULL_INSTANCE_ID),
         eventMessageMatchers.hasDeleteAllEventMessage());
