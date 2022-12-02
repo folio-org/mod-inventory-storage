@@ -157,6 +157,13 @@ public final class FakeKafkaConsumer {
       .collect(Collectors.toList());
   }
 
+  public static Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
+    return instanceIds.stream()
+      .map(FakeKafkaConsumer::getMessagesForInstance)
+      .flatMap(Collection::stream)
+      .collect(Collectors.toList());
+  }
+
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getAuthorityEvents(
     String authorityId) {
 

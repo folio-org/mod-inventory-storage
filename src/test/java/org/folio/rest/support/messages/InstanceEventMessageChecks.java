@@ -7,9 +7,12 @@ import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_INS
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
@@ -35,8 +38,19 @@ public class InstanceEventMessageChecks {
   }
 
   public static void instanceCreatedMessagesPublished(List<JsonObject> instances) {
-    await().until(FakeKafkaConsumer::getInstanceMessages,
-      eventMessageMatchers.hasCreateEventMessagesFor(instances));
+    final var instanceIds = instances.stream()
+      .map(instance -> instance.getString("id"))
+      .collect(Collectors.toList());
+
+    // This is a compromise because checking a large number of messages in
+    // one go seems to cause instability in the Jenkins builds
+    await().until(() -> FakeKafkaConsumer.getMessagesForInstances(instanceIds),
+      hasSize(instances.size()));
+
+    instances.forEach(instance -> {
+      assertThat(FakeKafkaConsumer.getMessagesForInstances(instanceIds),
+        eventMessageMatchers.hasCreateEventMessageFor(instance));
+    });
   }
 
   public static void instancedUpdatedMessagePublished(JsonObject oldInstance, JsonObject newInstance) {
