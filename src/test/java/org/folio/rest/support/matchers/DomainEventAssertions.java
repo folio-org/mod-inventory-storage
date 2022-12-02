@@ -168,11 +168,6 @@ public final class DomainEventAssertions {
     assertThat(updateMessage.getString("type"), not(is("DELETE")));
   }
 
-  public static void assertNoEvent(String instanceId) {
-    await().during(1, SECONDS)
-      .until(() -> getInstanceEvents(instanceId), is(empty()));
-  }
-
   public static void assertCreateEventForAuthority(JsonObject authority) {
     final String id = authority.getString("id");
 
@@ -180,6 +175,11 @@ public final class DomainEventAssertions {
       .until(() -> getAuthorityEvents(id).size(), greaterThan(0));
 
     assertCreateEvent(getFirstAuthorityEvent(id), authority);
+  }
+
+  public static void noInstanceMessagesPublished(String instanceId) {
+    await().during(1, SECONDS)
+      .until(() -> getMessagesForInstance(instanceId), is(empty()));
   }
 
   public static void instanceCreatedMessagePublished(JsonObject instance) {

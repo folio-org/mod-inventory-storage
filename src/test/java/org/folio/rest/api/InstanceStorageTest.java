@@ -18,7 +18,7 @@ import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceMessagesPublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.instanceCreatedMessagePublished;
@@ -1768,8 +1768,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertNotSuppressedFromDiscovery(instances);
     assertCreateEventForInstances(instances);
 
-    assertNoEvent(firstErrorInstance.getString("id"));
-    assertNoEvent(secondErrorInstance.getString("id"));
+    noInstanceMessagesPublished(firstErrorInstance.getString("id"));
+    noInstanceMessagesPublished(secondErrorInstance.getString("id"));
   }
 
   @Test
