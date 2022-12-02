@@ -17,7 +17,6 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getItemEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastAuthorityEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForInstance;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_INSTANCE_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -36,7 +35,6 @@ import java.util.UUID;
 
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
 import io.vertx.core.MultiMap;
@@ -56,7 +54,7 @@ public final class DomainEventAssertions {
    * <p>1 second is too short:
    * <a href="https://issues.folio.org/browse/MODINVSTOR-754">MODINVSTOR-754</a>
    */
-  private static ConditionFactory await() {
+  public static ConditionFactory await() {
     return Awaitility.await().atMost(10, SECONDS);
   }
 
@@ -158,55 +156,6 @@ public final class DomainEventAssertions {
       .until(() -> getAuthorityEvents(id).size(), greaterThan(0));
 
     assertCreateEvent(getFirstAuthorityEvent(id), authority);
-  }
-
-  public static void noInstanceMessagesPublished(String instanceId) {
-    await().during(1, SECONDS)
-      .until(() -> getMessagesForInstance(instanceId), is(empty()));
-  }
-
-  public static void instanceCreatedMessagePublished(JsonObject instance) {
-    final String instanceId = instance.getString("id");
-
-    await().until(() -> getMessagesForInstance(instanceId),
-      eventMessageMatchers.hasCreateEventMessageFor(instance));
-  }
-
-  public static void instanceCreatedMessagesPublished(List<JsonObject> instances) {
-    await().until(FakeKafkaConsumer::getInstanceMessages,
-      eventMessageMatchers.hasCreateEventMessagesFor(instances));
-  }
-
-  public static void instancedUpdatedMessagePublished(JsonObject oldInstance, JsonObject newInstance) {
-    final String instanceId = oldInstance.getString("id");
-
-    await().until(() -> getMessagesForInstance(instanceId),
-      eventMessageMatchers.hasUpdateEventMessageFor(oldInstance, newInstance));
-  }
-
-  public static void noInstanceUpdatedMessagePublished(String instanceId) {
-    await().during(1, SECONDS)
-      .until(() -> getMessagesForInstance(instanceId),
-        eventMessageMatchers.hasNoUpdateEventMessage());
-  }
-
-  public static void instanceDeletedMessagePublished(JsonObject instance) {
-    final String instanceId = instance.getString("id");
-
-    await().until(() -> getMessagesForInstance(instanceId),
-      eventMessageMatchers.hasDeleteEventMessageFor(instance));
-  }
-
-  public static void noInstanceDeletedMessagePublished(String instanceId) {
-    await().during(1, SECONDS)
-      .until(() -> getMessagesForInstance(instanceId),
-        eventMessageMatchers.hasNoDeleteEventMessage());
-  }
-
-  public static void deleteAllEventForInstancesPublished() {
-    await()
-      .until(() -> getMessagesForInstance(NULL_INSTANCE_ID),
-        eventMessageMatchers.hasDeleteAllEventMessage());
   }
 
   public static void assertRemoveEventForAuthority(JsonObject authority) {

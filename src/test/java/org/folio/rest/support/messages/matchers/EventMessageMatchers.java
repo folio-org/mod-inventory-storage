@@ -43,7 +43,7 @@ public class EventMessageMatchers {
   @NotNull
   public Matcher<Iterable<? super EventMessage>> hasCreateEventMessagesFor(
     Collection<JsonObject> representations) {
-    
+
     return allOf(representations.stream()
       .map(this::hasCreateEventMessageFor)
       .collect(Collectors.toList()));
