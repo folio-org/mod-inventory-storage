@@ -19,7 +19,7 @@ import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
 import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceMessagesPublished;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.deleteAllEventForInstancesPublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.instanceCreatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.instanceDeletedMessagePublished;
@@ -1498,7 +1498,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allInstances.size(), is(0));
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(0));
 
-    assertRemoveAllEventForInstance();
+    deleteAllEventForInstancesPublished();
   }
 
   @Test

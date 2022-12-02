@@ -39,6 +39,11 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasNoUpdateEventMessage() {
+    return not(hasItem(isUpdateEvent()));
+  }
+
+  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasDeleteEventMessageFor(JsonObject representation) {
     return hasItem(allOf(
       isDeleteEvent(),
@@ -54,8 +59,13 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  public Matcher<Iterable<? super EventMessage>> hasNoUpdateEventMessage() {
-    return not(hasItem(isUpdateEvent()));
+  public Matcher<Iterable<? super EventMessage>> hasDeleteAllEventMessage() {
+    return hasItem(allOf(
+      isDeleteAllEvent(),
+      isForTenant(),
+      hasHeaders(),
+      hasNoNewRepresentation(),
+      hasNoOldRepresentation()));
   }
 
   @NotNull
@@ -71,6 +81,11 @@ public class EventMessageMatchers {
   @NotNull
   private Matcher<EventMessage> isDeleteEvent() {
     return hasType("DELETE");
+  }
+
+  @NotNull
+  private Matcher<EventMessage> isDeleteAllEvent() {
+    return hasType("DELETE_ALL");
   }
 
   @NotNull

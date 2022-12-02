@@ -213,11 +213,12 @@ public final class DomainEventAssertions {
         eventMessageMatchers.hasNoDeleteEventMessage());
   }
 
-  public static void assertRemoveAllEventForInstance() {
-    await()
-      .until(() -> getInstanceEvents(NULL_INSTANCE_ID).size(), greaterThan(0));
+  public static void deleteAllEventForInstancesPublished() {
+    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
 
-    assertRemoveAllEvent(getLastInstanceEvent(NULL_INSTANCE_ID));
+    await()
+      .until(() -> getMessagesForInstance(NULL_INSTANCE_ID),
+        eventMessageMatchers.hasDeleteAllEventMessage());
   }
 
   public static void assertRemoveEventForAuthority(JsonObject authority) {
