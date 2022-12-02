@@ -54,8 +54,18 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasNoUpdateEventMessage() {
+    return not(hasItem(isUpdateEvent()));
+  }
+
+  @NotNull
   private Matcher<EventMessage> isCreateEvent() {
     return hasType("CREATE");
+  }
+
+  @NotNull
+  private Matcher<EventMessage> isUpdateEvent() {
+    return hasType("UPDATE");
   }
 
   @NotNull

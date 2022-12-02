@@ -4,7 +4,7 @@ import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceDeletedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceMessagesPublished;
 import static org.hamcrest.CoreMatchers.is;
@@ -45,7 +45,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
       updatedInstance);
 
     assertThat(updateInstance.getStatusCode(), is(400));
-    assertNoUpdateEvent(instance.getId().toString());
+    noInstanceUpdatedMessagePublished(instance.getId().toString());
   }
 
   @Test

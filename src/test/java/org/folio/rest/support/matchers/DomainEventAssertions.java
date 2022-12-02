@@ -144,14 +144,6 @@ public final class DomainEventAssertions {
     assertEquals(vertxUrl("").toString(), caseInsensitiveMap.get(URL));
   }
 
-  public static void assertNoUpdateEvent(String instanceId) {
-    await()
-      .until(() -> getInstanceEvents(instanceId), is(not(empty())));
-
-    final JsonObject updateMessage  = getLastInstanceEvent(instanceId).value();
-    assertThat(updateMessage.getString("type"), not(is("UPDATE")));
-  }
-
   public static void assertNoUpdateEventForHolding(String instanceId, String hrId) {
     await()
       .until(() -> getHoldingsEvents(instanceId, hrId), is(not(empty())));
@@ -194,6 +186,14 @@ public final class DomainEventAssertions {
       final String instanceId = instance.getString("id");
       assertCreateEvent(getFirstInstanceEvent(instanceId), instance);
     });
+  }
+
+  public static void noInstanceUpdatedMessagePublished(String instanceId) {
+    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+
+    await().during(1, SECONDS)
+      .until(() -> getMessagesForInstance(instanceId),
+        eventMessageMatchers.hasNoUpdateEventMessage());
   }
 
   public static void instanceDeletedMessagePublished(JsonObject instance) {
