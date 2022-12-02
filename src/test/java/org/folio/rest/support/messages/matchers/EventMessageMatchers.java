@@ -10,7 +10,9 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.messages.EventMessage;
@@ -36,6 +38,15 @@ public class EventMessageMatchers {
       hasHeaders(),
       hasNewRepresentation(representation),
       hasNoOldRepresentation()));
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasCreateEventMessagesFor(
+    Collection<JsonObject> representations) {
+    
+    return allOf(representations.stream()
+      .map(this::hasCreateEventMessageFor)
+      .collect(Collectors.toList()));
   }
 
   @NotNull

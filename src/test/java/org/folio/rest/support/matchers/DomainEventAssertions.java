@@ -11,7 +11,6 @@ import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getAuthorityEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstAuthorityEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstHoldingEvent;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstItemEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getItemEvents;
@@ -34,14 +33,13 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
 import io.vertx.core.MultiMap;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
@@ -174,17 +172,9 @@ public final class DomainEventAssertions {
       eventMessageMatchers.hasCreateEventMessageFor(instance));
   }
 
-  public static void assertCreateEventForInstances(JsonArray instances) {
-    assertCreateEventForInstances(instances.stream()
-      .map(obj -> (JsonObject) obj)
-      .collect(Collectors.toList()));
-  }
-
-  public static void assertCreateEventForInstances(List<JsonObject> instances) {
-    instances.forEach(instance -> {
-      final String instanceId = instance.getString("id");
-      assertCreateEvent(getFirstInstanceEvent(instanceId), instance);
-    });
+  public static void instanceCreatedMessagesPublished(List<JsonObject> instances) {
+    await().until(FakeKafkaConsumer::getInstanceMessages,
+      eventMessageMatchers.hasCreateEventMessagesFor(instances));
   }
 
   public static void instancedUpdatedMessagePublished(JsonObject oldInstance, JsonObject newInstance) {

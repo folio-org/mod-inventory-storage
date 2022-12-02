@@ -148,6 +148,14 @@ public final class FakeKafkaConsumer {
     return instanceEvents.getOrDefault(instanceId, emptyList());
   }
 
+  public static Collection<EventMessage> getInstanceMessages() {
+    return instanceEvents.values()
+      .stream()
+      .flatMap(List::stream)
+      .map(EventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
+  }
+
   public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
     return getInstanceEvents(instanceId)
       .stream()
