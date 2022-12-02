@@ -39,6 +39,18 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasUpdateEventMessageFor(JsonObject oldRepresentation,
+    JsonObject newRepresentation) {
+
+    return hasItem(allOf(
+      isUpdateEvent(),
+      isForTenant(),
+      hasHeaders(),
+      hasNewRepresentation(newRepresentation),
+      hasOldRepresentation(oldRepresentation)));
+  }
+
+  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasNoUpdateEventMessage() {
     return not(hasItem(isUpdateEvent()));
   }

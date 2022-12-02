@@ -20,7 +20,7 @@ import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBefo
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
 import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceMessagesPublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.deleteAllEventForInstancesPublished;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.instancedUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.instanceCreatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.instanceDeletedMessagePublished;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
@@ -433,7 +433,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString(STATUS_UPDATED_DATE_PROPERTY),
       is(replacement.getString(STATUS_UPDATED_DATE_PROPERTY)));
     assertThat(itemFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
-    assertUpdateEventForInstance(createdInstance.getJson(), updatedInstance.getJson());
+    instancedUpdatedMessagePublished(createdInstance.getJson(), updatedInstance.getJson());
     assertThat(itemFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
   }
 
@@ -2036,7 +2036,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedInstance = getResponse.getJson();
     assertThat(updatedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
 
-    assertUpdateEventForInstance(existingInstance.getJson(), updatedInstance);
+    instancedUpdatedMessagePublished(existingInstance.getJson(), updatedInstance);
     instanceCreatedMessagePublished(getById(firstInstanceToCreate.getString("id")).getJson());
     instanceCreatedMessagePublished(getById(secondInstanceToCreate.getString("id")).getJson());
   }
@@ -2688,7 +2688,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       getById(instance.getId()).getJson().copy().put(DISCOVERY_SUPPRESS, true));
 
     assertSuppressedFromDiscovery(instance.getId().toString());
-    assertUpdateEventForInstance(instance.getJson(), updateInstance.getJson());
+    instancedUpdatedMessagePublished(instance.getJson(), updateInstance.getJson());
   }
 
   @Test

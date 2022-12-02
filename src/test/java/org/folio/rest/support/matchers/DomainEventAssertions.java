@@ -14,11 +14,9 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstHoldingEven
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstItemEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getInstanceEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getItemEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastAuthorityEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForInstance;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_INSTANCE_ID;
@@ -189,6 +187,13 @@ public final class DomainEventAssertions {
     });
   }
 
+  public static void instancedUpdatedMessagePublished(JsonObject oldInstance, JsonObject newInstance) {
+    final String instanceId = oldInstance.getString("id");
+
+    await().until(() -> getMessagesForInstance(instanceId),
+      eventMessageMatchers.hasUpdateEventMessageFor(oldInstance, newInstance));
+  }
+
   public static void noInstanceUpdatedMessagePublished(String instanceId) {
     await().during(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
@@ -225,13 +230,6 @@ public final class DomainEventAssertions {
       .until(() -> getAuthorityEvents(NULL_INSTANCE_ID).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastAuthorityEvent(NULL_INSTANCE_ID));
-  }
-
-  public static void assertUpdateEventForInstance(JsonObject oldInstance, JsonObject newInstance) {
-    final String instanceId = oldInstance.getString("id");
-
-    await()
-      .until(() -> hasUpdateEvent(getInstanceEvents(instanceId), oldInstance, newInstance));
   }
 
   public static void assertUpdateEventForAuthority(JsonObject oldAuthority, JsonObject newAuthority) {
