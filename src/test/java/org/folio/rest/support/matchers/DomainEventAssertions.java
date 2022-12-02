@@ -20,6 +20,7 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastAuthorityEve
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastInstanceEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForInstance;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_INSTANCE_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -32,17 +33,20 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
+import org.folio.rest.support.messages.matchers.EventMessageMatchers;
+
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import org.awaitility.Awaitility;
-import org.awaitility.core.ConditionFactory;
 
 public final class DomainEventAssertions {
   private DomainEventAssertions() { }
@@ -169,15 +173,6 @@ public final class DomainEventAssertions {
       .until(() -> getInstanceEvents(instanceId), is(empty()));
   }
 
-  public static void assertCreateEventForInstance(JsonObject instance) {
-    final String instanceId = instance.getString("id");
-
-    await()
-      .until(() -> getInstanceEvents(instanceId).size(), greaterThan(0));
-
-    assertCreateEvent(getFirstInstanceEvent(instanceId), instance);
-  }
-
   public static void assertCreateEventForAuthority(JsonObject authority) {
     final String id = authority.getString("id");
 
@@ -185,6 +180,15 @@ public final class DomainEventAssertions {
       .until(() -> getAuthorityEvents(id).size(), greaterThan(0));
 
     assertCreateEvent(getFirstAuthorityEvent(id), authority);
+  }
+
+  public static void instanceCreatedMessagePublished(JsonObject instance) {
+    final String instanceId = instance.getString("id");
+
+    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+
+    await().until(() -> getMessagesForInstance(instanceId),
+      eventMessageMatchers.hasCreateEventMessageFor(instance));
   }
 
   public static void assertCreateEventForInstances(JsonArray instances) {
@@ -200,10 +204,13 @@ public final class DomainEventAssertions {
     });
   }
 
-  public static void assertRemoveEventForInstance(JsonObject instance) {
+  public static void instanceDeletedMessagePublished(JsonObject instance) {
     final String instanceId = instance.getString("id");
 
-    await().until(() -> hasRemoveEvent(getInstanceEvents(instanceId), instance));
+    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+
+    await().until(() -> getMessagesForInstance(instanceId),
+      eventMessageMatchers.hasDeleteEventMessageFor(instance));
   }
 
   public static void assertRemoveAllEventForInstance() {

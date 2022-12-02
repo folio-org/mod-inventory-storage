@@ -17,12 +17,12 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForInstance;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
+import static org.folio.rest.support.matchers.DomainEventAssertions.instanceCreatedMessagePublished;
+import static org.folio.rest.support.matchers.DomainEventAssertions.instanceDeletedMessagePublished;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
@@ -48,11 +48,6 @@ import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -74,7 +69,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.SneakyThrows;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -104,6 +99,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import lombok.SneakyThrows;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
@@ -135,7 +137,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @After
   public void afterEach(TestContext context) {
-
     setInstanceSequence(1);
 
     StorageTestSuite.checkForMismatchedIDs("instance");
@@ -219,7 +220,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
-    assertCreateEventForInstance(instanceFromGet);
+    instanceCreatedMessagePublished(instanceFromGet);
 
     var storedPublicationPeriod = instance.getJsonObject("publicationPeriod")
       .mapTo(PublicationPeriod.class);
@@ -437,9 +438,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAnInstance() throws InterruptedException, TimeoutException,
-    ExecutionException {
-
+  @SneakyThrows
+  public void canDeleteAnInstance() {
     UUID id = UUID.randomUUID();
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
@@ -456,7 +456,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     assertGetNotFound(url);
-    assertRemoveEventForInstance(createdInstance.getJson());
+    instanceDeletedMessagePublished(createdInstance.getJson());
   }
 
   @SneakyThrows
@@ -490,9 +490,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(instance3);
     assertNotExists(instance5);
     getMarcJsonNotFound(id5);
-    assertRemoveEventForInstance(instance1);
-    assertRemoveEventForInstance(instance3);
-    assertRemoveEventForInstance(instance5);
+    instanceDeletedMessagePublished(instance1);
+    instanceDeletedMessagePublished(instance3);
+    instanceDeletedMessagePublished(instance5);
   }
 
   @SneakyThrows
@@ -2037,8 +2037,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
 
     assertUpdateEventForInstance(existingInstance.getJson(), updatedInstance);
-    assertCreateEventForInstance(getById(firstInstanceToCreate.getString("id")).getJson());
-    assertCreateEventForInstance(getById(secondInstanceToCreate.getString("id")).getJson());
+    instanceCreatedMessagePublished(getById(firstInstanceToCreate.getString("id")).getJson());
+    instanceCreatedMessagePublished(getById(secondInstanceToCreate.getString("id")).getJson());
   }
 
   @Test
