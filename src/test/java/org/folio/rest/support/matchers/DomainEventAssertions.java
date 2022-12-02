@@ -160,14 +160,6 @@ public final class DomainEventAssertions {
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
-  public static void assertNoRemoveEvent(String instanceId) {
-    await()
-      .until(() -> getInstanceEvents(instanceId), is(not(empty())));
-
-    final JsonObject updateMessage  = getLastInstanceEvent(instanceId).value();
-    assertThat(updateMessage.getString("type"), not(is("DELETE")));
-  }
-
   public static void assertCreateEventForAuthority(JsonObject authority) {
     final String id = authority.getString("id");
 
@@ -211,6 +203,14 @@ public final class DomainEventAssertions {
 
     await().until(() -> getMessagesForInstance(instanceId),
       eventMessageMatchers.hasDeleteEventMessageFor(instance));
+  }
+
+  public static void noInstanceDeletedMessagePublished(String instanceId) {
+    final var eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+
+    await().during(1, SECONDS)
+      .until(() -> getMessagesForInstance(instanceId),
+        eventMessageMatchers.hasNoDeleteEventMessage());
   }
 
   public static void assertRemoveAllEventForInstance() {

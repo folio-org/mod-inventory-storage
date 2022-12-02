@@ -4,6 +4,7 @@ import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
@@ -45,6 +46,11 @@ public class EventMessageMatchers {
       hasHeaders(),
       hasNoNewRepresentation(),
       hasOldRepresentation(representation)));
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasNoDeleteEventMessage() {
+    return not(hasItem(isDeleteEvent()));
   }
 
   @NotNull

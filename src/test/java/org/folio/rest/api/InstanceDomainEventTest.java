@@ -4,19 +4,21 @@ import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceMessagesPublished;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoRemoveEvent;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEvent;
+import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceDeletedMessagePublished;
+import static org.folio.rest.support.matchers.DomainEventAssertions.noInstanceMessagesPublished;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.json.JsonObject;
 import java.util.UUID;
-import lombok.SneakyThrows;
+
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.junit.Before;
 import org.junit.Test;
+
+import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
 
@@ -71,7 +73,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final Response removeResponse = instancesClient.attemptToDelete(instance.getId());
 
     assertThat(removeResponse.getStatusCode(), is(400));
-    assertNoRemoveEvent(instance.getId().toString());
+    noInstanceDeletedMessagePublished(instance.getId().toString());
   }
 
   @Test
@@ -88,5 +90,5 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final Response removeResponse = instancesClient.attemptDeleteAll();
 
     assertThat(removeResponse.getStatusCode(), is(400));
-    assertNoRemoveEvent(instance.getId().toString());
+    noInstanceDeletedMessagePublished(instance.getId().toString());
   }}
