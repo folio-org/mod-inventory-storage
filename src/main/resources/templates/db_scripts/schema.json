@@ -1078,6 +1078,11 @@
     },
     {
       "run": "after",
+      "snippetPath": "updateLCNAFAuthoritySourceFile.sql",
+      "fromModuleVersion": "25.0.3"
+    },
+    {
+      "run": "after",
       "snippetPath": "setDefaultMetadataForHrIdSettings.sql",
       "fromModuleVersion": "25.1.0"
     }
