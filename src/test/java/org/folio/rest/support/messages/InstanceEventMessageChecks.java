@@ -12,8 +12,10 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.awaitility.core.ConditionFactory;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
@@ -26,7 +28,7 @@ public class InstanceEventMessageChecks {
   private InstanceEventMessageChecks() { }
 
   public static void noInstanceMessagesPublished(String instanceId) {
-    await().during(1, SECONDS)
+    awaitDuring(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId), is(empty()));
   }
 
@@ -61,7 +63,7 @@ public class InstanceEventMessageChecks {
   }
 
   public static void noInstanceUpdatedMessagePublished(String instanceId) {
-    await().during(1, SECONDS)
+    awaitDuring(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
         eventMessageMatchers.hasNoUpdateEventMessage());
   }
@@ -74,7 +76,7 @@ public class InstanceEventMessageChecks {
   }
 
   public static void noInstanceDeletedMessagePublished(String instanceId) {
-    await().during(1, SECONDS)
+    awaitDuring(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
         eventMessageMatchers.hasNoDeleteEventMessage());
   }
@@ -83,5 +85,9 @@ public class InstanceEventMessageChecks {
     await()
       .until(() -> getMessagesForInstance(NULL_INSTANCE_ID),
         eventMessageMatchers.hasDeleteAllEventMessage());
+  }
+
+  private static ConditionFactory awaitDuring(int timeout, TimeUnit unit) {
+    return await().during(timeout, unit);
   }
 }
