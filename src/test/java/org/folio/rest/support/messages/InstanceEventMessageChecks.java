@@ -88,6 +88,6 @@ public class InstanceEventMessageChecks {
   }
 
   private static ConditionFactory awaitDuring(int timeout, TimeUnit unit) {
-    return await().during(timeout, unit);
+    return await().atMost(timeout, unit).during(timeout, unit);
   }
 }
