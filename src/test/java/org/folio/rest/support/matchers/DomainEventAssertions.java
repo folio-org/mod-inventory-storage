@@ -2,7 +2,6 @@ package org.folio.rest.support.matchers;
 
 import static io.vertx.core.MultiMap.caseInsensitiveMultiMap;
 import static java.util.UUID.fromString;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
@@ -33,8 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import org.awaitility.Awaitility;
-import org.awaitility.core.ConditionFactory;
+import org.folio.rest.support.AwaitConfiguration;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
 import io.vertx.core.MultiMap;
@@ -47,16 +45,6 @@ public final class DomainEventAssertions {
     = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
 
   private DomainEventAssertions() { }
-
-  /**
-   * Awaitility.await() with a default timeout of 2 seconds.
-   *
-   * <p>1 second is too short:
-   * <a href="https://issues.folio.org/browse/MODINVSTOR-754">MODINVSTOR-754</a>
-   */
-  public static ConditionFactory await() {
-    return Awaitility.await().atMost(10, SECONDS);
-  }
 
   private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {
     assertThat("Create event should be present", createEvent.value(), is(notNullValue()));
@@ -142,7 +130,7 @@ public final class DomainEventAssertions {
   }
 
   public static void assertNoUpdateEventForHolding(String instanceId, String hrId) {
-    await()
+    AwaitConfiguration.awaitAtMost()
       .until(() -> getHoldingsEvents(instanceId, hrId), is(not(empty())));
 
     final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).value();
@@ -152,7 +140,7 @@ public final class DomainEventAssertions {
   public static void assertCreateEventForAuthority(JsonObject authority) {
     final String id = authority.getString("id");
 
-    await()
+    AwaitConfiguration.awaitAtMost()
       .until(() -> getAuthorityEvents(id).size(), greaterThan(0));
 
     assertCreateEvent(getFirstAuthorityEvent(id), authority);
@@ -161,11 +149,11 @@ public final class DomainEventAssertions {
   public static void assertRemoveEventForAuthority(JsonObject authority) {
     final String id = authority.getString("id");
 
-    await().until(() -> hasRemoveEvent(getAuthorityEvents(id), authority));
+    AwaitConfiguration.awaitAtMost().until(() -> hasRemoveEvent(getAuthorityEvents(id), authority));
   }
 
   public static void assertRemoveAllEventForAuthority() {
-    await()
+    AwaitConfiguration.awaitAtMost()
       .until(() -> getAuthorityEvents(NULL_INSTANCE_ID).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastAuthorityEvent(NULL_INSTANCE_ID));
@@ -174,14 +162,14 @@ public final class DomainEventAssertions {
   public static void assertUpdateEventForAuthority(JsonObject oldAuthority, JsonObject newAuthority) {
     final String id = oldAuthority.getString("id");
 
-    await().until(() -> hasUpdateEvent(getAuthorityEvents(id), oldAuthority, newAuthority));
+    AwaitConfiguration.awaitAtMost().until(() -> hasUpdateEvent(getAuthorityEvents(id), oldAuthority, newAuthority));
   }
 
   public static void assertCreateEventForItem(JsonObject item) {
     final String itemId = item.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(item);
 
-    await()
+    AwaitConfiguration.awaitAtMost()
       .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(0));
 
     // Domain event for item has an extra 'instanceId' property for
@@ -198,11 +186,11 @@ public final class DomainEventAssertions {
     // old/new object, the property does not exist in schema,
     // so we have to add it manually
     final JsonObject expectedItem = addInstanceIdForItem(item, instanceIdForItem);
-    await().until(() -> hasRemoveEvent(getItemEvents(instanceIdForItem, itemId), expectedItem));
+    AwaitConfiguration.awaitAtMost().until(() -> hasRemoveEvent(getItemEvents(instanceIdForItem, itemId), expectedItem));
   }
 
   public static void assertRemoveAllEventForItem() {
-    await()
+    AwaitConfiguration.awaitAtMost()
       .until(() -> getItemEvents(NULL_INSTANCE_ID, null).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastItemEvent(NULL_INSTANCE_ID, null));
@@ -216,7 +204,7 @@ public final class DomainEventAssertions {
     final String itemId = newItem.getString("id");
     final String instanceIdForItem = getInstanceIdForItem(newItem);
 
-    await().until(() -> {
+    AwaitConfiguration.awaitAtMost().until(() -> {
       for (var event : getItemEvents(instanceIdForItem, itemId)) {
         try {
           // Domain event for item has an extra 'instanceId' property for
@@ -238,7 +226,7 @@ public final class DomainEventAssertions {
     final String id = hr.getString("id");
     final String instanceId = hr.getString("instanceId");
 
-    await()
+    AwaitConfiguration.awaitAtMost()
       .until(() -> getHoldingsEvents(instanceId, id).size(), greaterThan(0));
 
     assertCreateEvent(getFirstHoldingEvent(instanceId, id), hr);
@@ -248,11 +236,11 @@ public final class DomainEventAssertions {
     final String id = hr.getString("id");
     final String instanceId = hr.getString("instanceId");
 
-    await().until(() -> hasRemoveEvent(getHoldingsEvents(instanceId, id), hr));
+    AwaitConfiguration.awaitAtMost().until(() -> hasRemoveEvent(getHoldingsEvents(instanceId, id), hr));
   }
 
   public static void assertRemoveAllEventForHolding() {
-    await()
+    AwaitConfiguration.awaitAtMost()
       .until(() -> getHoldingsEvents(NULL_INSTANCE_ID, null).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastHoldingEvent(NULL_INSTANCE_ID, null));
@@ -262,7 +250,7 @@ public final class DomainEventAssertions {
     final String id = newHr.getString("id");
     final String newInstanceId = newHr.getString("instanceId");
 
-    await().until(() -> hasUpdateEvent(getHoldingsEvents(newInstanceId, id), oldHr, newHr));
+    AwaitConfiguration.awaitAtMost().until(() -> hasUpdateEvent(getHoldingsEvents(newInstanceId, id), oldHr, newHr));
   }
 
   private static String getInstanceIdForItem(JsonObject newItem) {
