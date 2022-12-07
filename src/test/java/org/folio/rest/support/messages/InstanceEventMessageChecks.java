@@ -1,8 +1,9 @@
 package org.folio.rest.support.messages;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForInstance;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
+import static org.folio.rest.support.AwaitConfiguration.awaitDuring;
+import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForInstance;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_INSTANCE_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -14,7 +15,6 @@ import static org.hamcrest.Matchers.hasSize;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.folio.rest.support.AwaitConfiguration;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
@@ -27,7 +27,7 @@ public class InstanceEventMessageChecks {
   private InstanceEventMessageChecks() { }
 
   public static void noInstanceMessagesPublished(String instanceId) {
-    AwaitConfiguration.awaitDuring(1, SECONDS)
+    awaitDuring(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId), is(empty()));
   }
 
@@ -62,7 +62,7 @@ public class InstanceEventMessageChecks {
   }
 
   public static void noInstanceUpdatedMessagePublished(String instanceId) {
-    AwaitConfiguration.awaitDuring(1, SECONDS)
+    awaitDuring(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
         eventMessageMatchers.hasNoUpdateEventMessage());
   }
@@ -75,7 +75,7 @@ public class InstanceEventMessageChecks {
   }
 
   public static void noInstanceDeletedMessagePublished(String instanceId) {
-    AwaitConfiguration.awaitDuring(1, SECONDS)
+    awaitDuring(1, SECONDS)
       .until(() -> getMessagesForInstance(instanceId),
         eventMessageMatchers.hasNoDeleteEventMessage());
   }
