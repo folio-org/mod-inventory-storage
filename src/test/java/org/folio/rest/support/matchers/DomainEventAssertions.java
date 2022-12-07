@@ -33,17 +33,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import org.folio.rest.support.messages.matchers.EventMessageMatchers;
-
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class DomainEventAssertions {
-  private static final EventMessageMatchers eventMessageMatchers
-    = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-
   private DomainEventAssertions() { }
 
   private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {
