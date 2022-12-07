@@ -17,6 +17,9 @@ public class AwaitConfiguration {
   }
 
   public static ConditionFactory awaitDuring(int timeout, TimeUnit unit) {
-    return await().atMost(timeout, unit).during(timeout, unit);
+    // Uses longer at most than during to avoid known failures
+    // this means that it is always possible for a condition to only apply for part of the duration
+    // https://stackoverflow.com/questions/62830176/unpredictable-behavior-around-during-and-atmost-of-awaitility
+    return await().atMost(timeout + 1, unit).during(timeout, unit);
   }
 }
