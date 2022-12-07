@@ -32,7 +32,7 @@ public class InstanceEventMessageChecks {
   }
 
   public static void instanceCreatedMessagePublished(JsonObject instance) {
-    final String instanceId = instance.getString("id");
+    final String instanceId = getId(instance);
 
     awaitAtMost().until(() -> getMessagesForInstance(instanceId),
       eventMessageMatchers.hasCreateEventMessageFor(instance));
@@ -40,7 +40,7 @@ public class InstanceEventMessageChecks {
 
   public static void instanceCreatedMessagesPublished(List<JsonObject> instances) {
     final var instanceIds = instances.stream()
-      .map(instance -> instance.getString("id"))
+      .map(InstanceEventMessageChecks::getId)
       .collect(Collectors.toList());
 
     // This is a compromise because checking a large number of messages in
@@ -55,7 +55,7 @@ public class InstanceEventMessageChecks {
   }
 
   public static void instancedUpdatedMessagePublished(JsonObject oldInstance, JsonObject newInstance) {
-    final String instanceId = oldInstance.getString("id");
+    final String instanceId = getId(oldInstance);
 
     awaitAtMost().until(() -> getMessagesForInstance(instanceId),
       eventMessageMatchers.hasUpdateEventMessageFor(oldInstance, newInstance));
@@ -68,7 +68,7 @@ public class InstanceEventMessageChecks {
   }
 
   public static void instanceDeletedMessagePublished(JsonObject instance) {
-    final String instanceId = instance.getString("id");
+    final String instanceId = getId(instance);
 
     awaitAtMost().until(() -> getMessagesForInstance(instanceId),
       eventMessageMatchers.hasDeleteEventMessageFor(instance));
@@ -84,5 +84,9 @@ public class InstanceEventMessageChecks {
     awaitAtMost()
       .until(() -> getMessagesForInstance(NULL_INSTANCE_ID),
         eventMessageMatchers.hasDeleteAllEventMessage());
+  }
+
+  private static String getId(JsonObject json) {
+    return json.getString("id");
   }
 }
