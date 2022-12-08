@@ -124,13 +124,8 @@ public class AuthorityStorageTest extends TestBase {
   @Test
   public void putById() {
     assertEquals(0, authoritiesClient.getAll().size());
-    createAuthRecords(1);
 
-    // Clear Kafka events after create to reduce chances of
-    // CREATE messages appearing after UPDATE later on.
-    // This should be removed once the messaging problem is
-    // properly resolved.
-    removeAllEvents();
+    createAuthRecords(1);
 
     var response = authoritiesClient.getAll();
     assertEquals(1, response.size());
