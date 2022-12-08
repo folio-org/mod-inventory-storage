@@ -142,16 +142,25 @@ public final class FakeKafkaConsumer {
     return authorityEvents.size();
   }
 
-  public static Collection<KafkaConsumerRecord<String, JsonObject> > getInstanceEvents(
-    String instanceId) {
-
-    return instanceEvents.getOrDefault(instanceId, emptyList());
+  public static Collection<EventMessage> getInstanceMessages() {
+    return instanceEvents.values()
+      .stream()
+      .flatMap(List::stream)
+      .map(EventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
   }
 
   public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return getInstanceEvents(instanceId)
+    return instanceEvents.getOrDefault(instanceId, emptyList())
       .stream()
       .map(EventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
+  }
+
+  public static Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
+    return instanceIds.stream()
+      .map(FakeKafkaConsumer::getMessagesForInstance)
+      .flatMap(Collection::stream)
       .collect(Collectors.toList());
   }
 
@@ -202,22 +211,10 @@ public final class FakeKafkaConsumer {
     return Comparator.comparing(KafkaConsumerRecord::timestamp);
   }
 
-  public static KafkaConsumerRecord<String, JsonObject> getLastInstanceEvent(
-    String instanceId) {
-
-    return getLastEvent(getInstanceEvents(instanceId));
-  }
-
   public static KafkaConsumerRecord<String, JsonObject> getLastAuthorityEvent(
     String id) {
 
     return getLastEvent(getAuthorityEvents(id));
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject>  getFirstInstanceEvent(
-    String instanceId) {
-
-    return getFirstEvent(getInstanceEvents(instanceId));
   }
 
   public static KafkaConsumerRecord<String, JsonObject>  getFirstAuthorityEvent(

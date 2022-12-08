@@ -4,11 +4,14 @@ import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.Map;
 
 import org.folio.okapi.common.XOkapiHeaders;
@@ -38,6 +41,30 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  public Matcher<Collection<?>> hasCreateEventMessagesFor(
+    Collection<JsonObject> representations) {
+
+    return hasSize(representations.size());
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasUpdateEventMessageFor(JsonObject oldRepresentation,
+    JsonObject newRepresentation) {
+
+    return hasItem(allOf(
+      isUpdateEvent(),
+      isForTenant(),
+      hasHeaders(),
+      hasNewRepresentation(newRepresentation),
+      hasOldRepresentation(oldRepresentation)));
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasNoUpdateEventMessage() {
+    return not(hasItem(isUpdateEvent()));
+  }
+
+  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasDeleteEventMessageFor(JsonObject representation) {
     return hasItem(allOf(
       isDeleteEvent(),
@@ -48,13 +75,38 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasNoDeleteEventMessage() {
+    return not(hasItem(isDeleteEvent()));
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasDeleteAllEventMessage() {
+    return hasItem(allOf(
+      isDeleteAllEvent(),
+      isForTenant(),
+      hasHeaders(),
+      hasNoNewRepresentation(),
+      hasNoOldRepresentation()));
+  }
+
+  @NotNull
   private Matcher<EventMessage> isCreateEvent() {
     return hasType("CREATE");
   }
 
   @NotNull
+  private Matcher<EventMessage> isUpdateEvent() {
+    return hasType("UPDATE");
+  }
+
+  @NotNull
   private Matcher<EventMessage> isDeleteEvent() {
     return hasType("DELETE");
+  }
+
+  @NotNull
+  private Matcher<EventMessage> isDeleteAllEvent() {
+    return hasType("DELETE_ALL");
   }
 
   @NotNull

@@ -5,6 +5,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
+import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.ResponseHandler.json;
@@ -17,12 +18,12 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForInstances;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoEvent;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForInstance;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForInstance;
-import static org.folio.rest.support.matchers.DomainEventAssertions.instanceCreatedMessagePublished;
-import static org.folio.rest.support.matchers.DomainEventAssertions.instanceDeletedMessagePublished;
+import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceCreatedMessagesPublished;
+import static org.folio.rest.support.messages.InstanceEventMessageChecks.noInstanceMessagesPublished;
+import static org.folio.rest.support.messages.InstanceEventMessageChecks.deleteAllEventForInstancesPublished;
+import static org.folio.rest.support.messages.InstanceEventMessageChecks.instancedUpdatedMessagePublished;
+import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceCreatedMessagePublished;
+import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceDeletedMessagePublished;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
@@ -86,13 +87,13 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
-import org.folio.rest.support.JsonArrayHelper;
 import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
+import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
 import org.junit.After;
@@ -433,7 +434,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString(STATUS_UPDATED_DATE_PROPERTY),
       is(replacement.getString(STATUS_UPDATED_DATE_PROPERTY)));
     assertThat(itemFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
-    assertUpdateEventForInstance(createdInstance.getJson(), updatedInstance.getJson());
+    instancedUpdatedMessagePublished(createdInstance.getJson(), updatedInstance.getJson());
     assertThat(itemFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
   }
 
@@ -1383,7 +1384,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(2));
 
-    List<JsonObject> foundInstances = JsonArrayHelper.toList(responseBody.getJsonArray(INSTANCES_KEY));
+    List<JsonObject> foundInstances = toList(responseBody.getJsonArray(INSTANCES_KEY));
 
     assertThat(foundInstances.size(), is(2));
 
@@ -1498,7 +1499,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allInstances.size(), is(0));
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(0));
 
-    assertRemoveAllEventForInstance();
+    deleteAllEventForInstancesPublished();
   }
 
   @Test
@@ -1725,7 +1726,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertNotSuppressedFromDiscovery(instances);
 
-    assertCreateEventForInstances(instances);
+    instanceCreatedMessagesPublished(toList(instances));
   }
 
   @Test
@@ -1766,10 +1767,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instances.size(), is(2));
 
     assertNotSuppressedFromDiscovery(instances);
-    assertCreateEventForInstances(instances);
 
-    assertNoEvent(firstErrorInstance.getString("id"));
-    assertNoEvent(secondErrorInstance.getString("id"));
+    instanceCreatedMessagesPublished(toList(instances));
+    noInstanceMessagesPublished(firstErrorInstance.getString("id"));
+    noInstanceMessagesPublished(secondErrorInstance.getString("id"));
   }
 
   @Test
@@ -1946,7 +1947,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .map(Response::getJson)
       .collect(Collectors.toList());
 
-    assertCreateEventForInstances(createdInstances);
+    instanceCreatedMessagesPublished(createdInstances);
   }
 
   @Test
@@ -1956,7 +1957,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final var createCompleted = createInstancesBatchSync(instanceCollection);
     assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
 
-    JsonArrayHelper.toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(item -> {
+    toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(item -> {
       assertThat(getById(item.getString("id")).getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
         hasIsoFormat());
     });
@@ -2036,7 +2037,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedInstance = getResponse.getJson();
     assertThat(updatedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
 
-    assertUpdateEventForInstance(existingInstance.getJson(), updatedInstance);
+    instancedUpdatedMessagePublished(existingInstance.getJson(), updatedInstance);
     instanceCreatedMessagePublished(getById(firstInstanceToCreate.getString("id")).getJson());
     instanceCreatedMessagePublished(getById(secondInstanceToCreate.getString("id")).getJson());
   }
@@ -2688,7 +2689,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       getById(instance.getId()).getJson().copy().put(DISCOVERY_SUPPRESS, true));
 
     assertSuppressedFromDiscovery(instance.getId().toString());
-    assertUpdateEventForInstance(instance.getJson(), updateInstance.getJson());
+    instancedUpdatedMessagePublished(instance.getJson(), updateInstance.getJson());
   }
 
   @Test
