@@ -4,7 +4,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.rest.support.AwaitConfiguration.awaitDuring;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForInstance;
-import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_INSTANCE_ID;
+import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
@@ -80,9 +80,9 @@ public class InstanceEventMessageChecks {
         eventMessageMatchers.hasNoDeleteEventMessage());
   }
 
-  public static void deleteAllEventForInstancesPublished() {
+  public static void allInstancesDeletedMessagePublished() {
     awaitAtMost()
-      .until(() -> getMessagesForInstance(NULL_INSTANCE_ID),
+      .until(() -> getMessagesForInstance(NULL_ID),
         eventMessageMatchers.hasDeleteAllEventMessage());
   }
 

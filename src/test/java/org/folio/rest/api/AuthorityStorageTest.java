@@ -1,30 +1,36 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.http.InterfaceUrls.authoritiesStorageUrl;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForAuthority;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForAuthority;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForAuthority;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForAuthority;
+import static org.folio.rest.support.messages.AuthorityEventMessageChecks.allAuthoritiesDeletedMessagePublished;
+import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityCreatedMessagePublished;
+import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityDeletedMessagePublished;
+import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import junitparams.JUnitParamsRunner;
-import lombok.SneakyThrows;
+
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class AuthorityStorageTest extends TestBase {
@@ -51,11 +57,14 @@ public class AuthorityStorageTest extends TestBase {
   public void getById() {
     assertEquals(0, authoritiesClient.getAll().size());
     createAuthRecords(1);
+
     var response = authoritiesClient.getAll();
     assertEquals(1, response.size());
+
     var response2 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
     assertEquals("personalName0", response2.getJson().getString("personalName"));
-    assertCreateEventForAuthority(response2.getJson());
+
+    authorityCreatedMessagePublished(response2.getJson());
   }
 
   @Test
@@ -69,24 +78,32 @@ public class AuthorityStorageTest extends TestBase {
   public void deleteAll() {
     assertEquals(0, authoritiesClient.getAll().size());
     createAuthRecords(2);
+
     var response = authoritiesClient.getAll();
     assertEquals(2, response.size());
+
     authoritiesClient.deleteAll();
+
     response = authoritiesClient.getAll();
     assertEquals(0, response.size());
-    assertRemoveAllEventForAuthority();
+
+    allAuthoritiesDeletedMessagePublished();
   }
 
   @Test
   public void deleteById() {
     assertEquals(0, authoritiesClient.getAll().size());
     createAuthRecords(1);
+
     var response = authoritiesClient.getAll();
     assertEquals(1, response.size());
+
     authoritiesClient.delete(UUID.fromString(response.get(0).getString("id")));
+
     var response2 = authoritiesClient.getAll();
     assertEquals(0, response2.size());
-    assertRemoveEventForAuthority(response.get(0));
+
+    authorityDeletedMessagePublished(response.get(0));
   }
 
   @Test
@@ -107,22 +124,20 @@ public class AuthorityStorageTest extends TestBase {
   @Test
   public void putById() {
     assertEquals(0, authoritiesClient.getAll().size());
-    createAuthRecords(1);
 
-    // Clear Kafka events after create to reduce chances of
-    // CREATE messages appearing after UPDATE later on.
-    // This should be removed once the messaging problem is
-    // properly resolved.
-    removeAllEvents();
+    createAuthRecords(1);
 
     var response = authoritiesClient.getAll();
     assertEquals(1, response.size());
+
     JsonObject object = new JsonObject(response.get(0).encode());
     object.put("personalName", "changed");
     authoritiesClient.replace(UUID.fromString(object.getString("id")), object);
+
     var response2 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
     assertEquals(object.getString("personalName"), response2.getJson().getString("personalName"));
-    assertUpdateEventForAuthority(response.get(0), response2.getJson());
+
+    authorityUpdatedMessagePublished(response.get(0), response2.getJson());
   }
 
   @Test
@@ -162,13 +177,16 @@ public class AuthorityStorageTest extends TestBase {
     assertEquals("personalName0", response3.getJson().getString("personalName"));
   }
 
-  @Test(expected = AssertionError.class)
+  @Test()
   public void postWithWrongFields() {
     assertEquals(0, authoritiesClient.getAll().size());
 
-    authoritiesClient.create(new JsonObject()
+    final var response = authoritiesClient.attemptToCreate(new JsonObject()
       .put("personalName", "personalName")
       .put("wrong", "test"));
+
+    assertThat(response, statusCodeIs(UNPROCESSABLE_ENTITY));
+    assertThat(response, errorMessageContains("Unrecognized field \"wrong\""));
   }
 
   private void createAuthRecords(int quantity) {
@@ -190,5 +208,4 @@ public class AuthorityStorageTest extends TestBase {
       throw new RuntimeException(e);
     }
   }
-
 }

@@ -128,10 +128,6 @@ public final class FakeKafkaConsumer {
     boundWith.clear();
   }
 
-  public static int getAllPublishedInstanceIdsCount() {
-    return instanceEvents.size();
-  }
-
   public static Collection<JsonObject> getAllPublishedBoundWithEvents() {
     List<JsonObject> list = new ArrayList<>();
     boundWith.values().forEach(collection -> collection.forEach(record -> list.add(record.value())));
@@ -142,12 +138,15 @@ public final class FakeKafkaConsumer {
     return authorityEvents.size();
   }
 
-  public static Collection<EventMessage> getInstanceMessages() {
-    return instanceEvents.values()
+  public static Collection<EventMessage> getMessagesForAuthority(String authorityId) {
+    return authorityEvents.getOrDefault(authorityId, emptyList())
       .stream()
-      .flatMap(List::stream)
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
+  }
+
+  public static int getAllPublishedInstanceIdsCount() {
+    return instanceEvents.size();
   }
 
   public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
@@ -162,12 +161,6 @@ public final class FakeKafkaConsumer {
       .map(FakeKafkaConsumer::getMessagesForInstance)
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
-  }
-
-  public static Collection<KafkaConsumerRecord<String, JsonObject> > getAuthorityEvents(
-    String authorityId) {
-
-    return authorityEvents.getOrDefault(authorityId, emptyList());
   }
 
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getItemEvents(
@@ -209,18 +202,6 @@ public final class FakeKafkaConsumer {
 
   private static Comparator<KafkaConsumerRecord<String, JsonObject>> timestampComparator() {
     return Comparator.comparing(KafkaConsumerRecord::timestamp);
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject> getLastAuthorityEvent(
-    String id) {
-
-    return getLastEvent(getAuthorityEvents(id));
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject>  getFirstAuthorityEvent(
-    String authorityId) {
-
-    return getFirstEvent(getAuthorityEvents(authorityId));
   }
 
   public static KafkaConsumerRecord<String, JsonObject>  getLastItemEvent(
