@@ -20,7 +20,7 @@ import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceCreatedMessagesPublished;
 import static org.folio.rest.support.messages.InstanceEventMessageChecks.noInstanceMessagesPublished;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.deleteAllEventForInstancesPublished;
+import static org.folio.rest.support.messages.InstanceEventMessageChecks.allInstancesDeletedMessagePublished;
 import static org.folio.rest.support.messages.InstanceEventMessageChecks.instancedUpdatedMessagePublished;
 import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceCreatedMessagePublished;
 import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceDeletedMessagePublished;
@@ -93,7 +93,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
 import org.junit.After;
@@ -1499,7 +1498,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allInstances.size(), is(0));
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(0));
 
-    deleteAllEventForInstancesPublished();
+    allInstancesDeletedMessagePublished();
   }
 
   @Test
