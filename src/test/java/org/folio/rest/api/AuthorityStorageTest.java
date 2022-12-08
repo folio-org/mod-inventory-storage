@@ -1,13 +1,17 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
+import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
+import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.http.InterfaceUrls.authoritiesStorageUrl;
-import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityCreatedMessagePublished;
 import static org.folio.rest.support.messages.AuthorityEventMessageChecks.allAuthoritiesDeletedMessagePublished;
+import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityCreatedMessagePublished;
 import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityDeletedMessagePublished;
 import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import java.net.HttpURLConnection;
@@ -178,13 +182,16 @@ public class AuthorityStorageTest extends TestBase {
     assertEquals("personalName0", response3.getJson().getString("personalName"));
   }
 
-  @Test(expected = AssertionError.class)
+  @Test()
   public void postWithWrongFields() {
     assertEquals(0, authoritiesClient.getAll().size());
 
-    authoritiesClient.create(new JsonObject()
+    final var response = authoritiesClient.attemptToCreate(new JsonObject()
       .put("personalName", "personalName")
       .put("wrong", "test"));
+
+    assertThat(response, statusCodeIs(UNPROCESSABLE_ENTITY));
+    assertThat(response, errorMessageContains("Unrecognized field \"wrong\""));
   }
 
   private void createAuthRecords(int quantity) {
@@ -206,5 +213,4 @@ public class AuthorityStorageTest extends TestBase {
       throw new RuntimeException(e);
     }
   }
-
 }
