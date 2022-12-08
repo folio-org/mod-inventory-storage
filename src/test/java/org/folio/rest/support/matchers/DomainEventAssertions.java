@@ -9,7 +9,6 @@ import static org.folio.rest.api.TestBase.holdingsClient;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getAuthorityEvents;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstAuthorityEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstItemEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
@@ -130,15 +129,6 @@ public final class DomainEventAssertions {
 
     final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).value();
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
-  }
-
-  public static void assertCreateEventForAuthority(JsonObject authority) {
-    final String id = authority.getString("id");
-
-    awaitAtMost()
-      .until(() -> getAuthorityEvents(id).size(), greaterThan(0));
-
-    assertCreateEvent(getFirstAuthorityEvent(id), authority);
   }
 
   public static void assertRemoveEventForAuthority(JsonObject authority) {

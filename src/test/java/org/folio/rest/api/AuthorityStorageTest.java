@@ -2,7 +2,7 @@ package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.http.InterfaceUrls.authoritiesStorageUrl;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForAuthority;
+import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityCreatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForAuthority;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForAuthority;
@@ -10,21 +10,23 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.Assert.assertEquals;
 
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import junitparams.JUnitParamsRunner;
-import lombok.SneakyThrows;
+
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class AuthorityStorageTest extends TestBase {
@@ -51,11 +53,14 @@ public class AuthorityStorageTest extends TestBase {
   public void getById() {
     assertEquals(0, authoritiesClient.getAll().size());
     createAuthRecords(1);
+
     var response = authoritiesClient.getAll();
     assertEquals(1, response.size());
+
     var response2 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
     assertEquals("personalName0", response2.getJson().getString("personalName"));
-    assertCreateEventForAuthority(response2.getJson());
+
+    authorityCreatedMessagePublished(response2.getJson());
   }
 
   @Test

@@ -142,10 +142,9 @@ public final class FakeKafkaConsumer {
     return authorityEvents.size();
   }
 
-  public static Collection<EventMessage> getInstanceMessages() {
-    return instanceEvents.values()
+  public static Collection<EventMessage> getMessagesForAuthority(String authorityId) {
+    return authorityEvents.getOrDefault(authorityId, emptyList())
       .stream()
-      .flatMap(List::stream)
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
   }
