@@ -131,23 +131,11 @@ public final class DomainEventAssertions {
     assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
-  public static void assertRemoveEventForAuthority(JsonObject authority) {
-    final String id = authority.getString("id");
-
-    awaitAtMost().until(() -> hasRemoveEvent(getAuthorityEvents(id), authority));
-  }
-
   public static void assertRemoveAllEventForAuthority() {
     awaitAtMost()
       .until(() -> getAuthorityEvents(NULL_INSTANCE_ID).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastAuthorityEvent(NULL_INSTANCE_ID));
-  }
-
-  public static void assertUpdateEventForAuthority(JsonObject oldAuthority, JsonObject newAuthority) {
-    final String id = oldAuthority.getString("id");
-
-    awaitAtMost().until(() -> hasUpdateEvent(getAuthorityEvents(id), oldAuthority, newAuthority));
   }
 
   public static void assertCreateEventForItem(JsonObject item) {

@@ -22,6 +22,22 @@ public class AuthorityEventMessageChecks {
       eventMessageMatchers.hasCreateEventMessageFor(authority));
   }
 
+  public static void authorityDeletedEventMessagePublished(JsonObject authority) {
+    final String authorityId = authority.getString("id");
+
+    awaitAtMost().until(() -> FakeKafkaConsumer.getMessagesForAuthority(authorityId),
+      eventMessageMatchers.hasDeleteEventMessageFor(authority));
+  }
+
+  public static void authorityUpdatedEventPublished(JsonObject oldAuthority,
+    JsonObject newAuthority) {
+
+    final String authorityId = getId(oldAuthority);
+
+    awaitAtMost().until(() -> FakeKafkaConsumer.getMessagesForAuthority(authorityId),
+      eventMessageMatchers.hasUpdateEventMessageFor(oldAuthority, newAuthority));
+  }
+
   private static String getId(JsonObject json) {
     return json.getString("id");
   }
