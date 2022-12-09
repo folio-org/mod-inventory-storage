@@ -1,3 +1,7 @@
+## 25.0.3 2022-12-09
+
+* Add ns as an identifying code for LCNAF Source file ([MODINVSTOR-988](https://issues.folio.org/browse/MODINVSTOR-988))
+
 ## 25.0.2 2022-11-30
 
 * RMB 35.0.4, Vert.x 4.3.5, Jackson 2.14.0 fixing f\_unaccent errors ([MODINVSTOR-996](https://issues.folio.org/browse/MODINVSTOR-996)), ([FOLIO-3630](https://issues.folio.org/browse/FOLIO-3630))
