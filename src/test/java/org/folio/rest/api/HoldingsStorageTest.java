@@ -17,7 +17,6 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
@@ -25,6 +24,7 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdate
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsCreatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -45,8 +45,6 @@ import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -61,9 +59,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import lombok.SneakyThrows;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -79,13 +75,19 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.support.matchers.DomainEventAssertions;
+import org.folio.rest.support.messages.HoldingsEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
@@ -164,7 +166,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
-    assertCreateEventForHolding(holding);
+    holdingsCreatedMessagePublished(holding);
   }
 
   @Test
@@ -2052,7 +2054,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(holdingsFromGet.getString("hrid"), is(hrid));
     // Make sure a create event published vs update event
-    assertCreateEventForHolding(holdingsFromGet);
+    holdingsCreatedMessagePublished(holdingsFromGet);
     assertNoUpdateEventForHolding(instanceId.toString(), holdingsId.toString());
 
     log.info("Finished canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
@@ -2338,7 +2340,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       final JsonObject holding = (JsonObject) hrObj;
 
       assertExists(holding);
-      assertCreateEventForHolding(getById(holding.getString("id")).getJson());
+      holdingsCreatedMessagePublished(getById(holding.getString("id")).getJson());
     }
   }
 
@@ -2397,7 +2399,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .filter(id -> !id.equals(existingHrId))
       .map(this::getById)
       .map(Response::getJson)
-      .forEach(DomainEventAssertions::assertCreateEventForHolding);
+      .forEach(HoldingsEventMessageChecks::holdingsCreatedMessagePublished);
 
     await().untilAsserted(() -> {
       var newHr = getById(existingHrId).getJson();
