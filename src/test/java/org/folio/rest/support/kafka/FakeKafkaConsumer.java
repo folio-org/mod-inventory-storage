@@ -139,7 +139,7 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<EventMessage> getMessagesForAuthority(String authorityId) {
-    return authorityEvents.getOrDefault(authorityId, emptyList())
+    return getEmptyDefault(authorityEvents, authorityId)
       .stream()
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
@@ -150,7 +150,7 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return instanceEvents.getOrDefault(instanceId, emptyList())
+    return getEmptyDefault(instanceEvents, instanceId)
       .stream()
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
@@ -166,7 +166,7 @@ public final class FakeKafkaConsumer {
   public static Collection<EventMessage> getMessagesForHoldings(
     String instanceId, String holdingsId) {
 
-    return holdingsEvents.getOrDefault(instanceAndIdKey(instanceId, holdingsId), emptyList())
+    return getEmptyDefault(holdingsEvents, instanceAndIdKey(instanceId, holdingsId))
       .stream()
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
@@ -175,7 +175,13 @@ public final class FakeKafkaConsumer {
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getItemEvents(
     String instanceId, String itemId) {
 
-    return itemEvents.getOrDefault(instanceAndIdKey(instanceId, itemId), emptyList());
+    return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
+  }
+
+  private static List<KafkaConsumerRecord<String, JsonObject>> getEmptyDefault(
+    Map<String, List<KafkaConsumerRecord<String, JsonObject>>> map, String key) {
+
+    return map.getOrDefault(key, emptyList());
   }
 
   private static KafkaConsumerRecord<String, JsonObject>  getLastEvent(
