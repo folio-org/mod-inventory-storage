@@ -16,6 +16,8 @@ public class HoldingsEventMessageChecks {
   private static final EventMessageMatchers eventMessageMatchers
     = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
 
+  private HoldingsEventMessageChecks() { }
+
   public static void holdingsCreatedMessagePublished(JsonObject holdings) {
     final var holdingsId = getId(holdings);
     final var instanceId = getInstanceId(holdings);
