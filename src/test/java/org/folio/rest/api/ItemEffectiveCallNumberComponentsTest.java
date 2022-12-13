@@ -1,9 +1,7 @@
 package org.folio.rest.api;
 
 
-import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
 import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;
@@ -14,7 +12,6 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.net.HttpURLConnection;
 import java.util.Objects;
@@ -255,16 +252,8 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       itemsClient.replace(createdItem.getId(), itemAfterHoldingsUpdate.copy()
         .put(itemPropertyName, itemTargetValue));
 
-      await().untilAsserted(() -> {
-        var instanceId = holdings.getJson().getString("instanceId");
-        var itemId = createdItem.getId().toString();
-
-        var lastItemEvent = getLastItemEvent(instanceId, itemId);
-        assertTrue(lastItemEvent
-          .value().getJsonObject("new").getInteger("_version") > 1);
-        itemUpdatedMessagePublished(itemAfterHoldingsUpdate,
-            itemsClient.getById(createdItem.getId()).getJson());
-      });
+      itemUpdatedMessagePublished(itemAfterHoldingsUpdate,
+        itemsClient.getById(createdItem.getId()).getJson());
     }
 
     final JsonObject updatedItem = itemsClient.getById(createdItem.getId()).getJson();
