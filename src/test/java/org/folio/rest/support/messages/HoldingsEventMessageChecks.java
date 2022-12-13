@@ -41,6 +41,14 @@ public class HoldingsEventMessageChecks {
         eventMessageMatchers.hasNoUpdateEventMessage());
   }
 
+  public static void holdingsDeletedMessagePublished(JsonObject holdings) {
+    final var holdingsId = getId(holdings);
+    final var instanceId = getInstanceId(holdings);
+
+    awaitAtMost().until(() -> getMessagesForHoldings(instanceId, holdingsId),
+      eventMessageMatchers.hasDeleteEventMessageFor(holdings));
+  }
+  
   private static String getId(JsonObject holdings) {
     return holdings.getString("id");
   }

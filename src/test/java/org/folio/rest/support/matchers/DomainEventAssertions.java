@@ -172,13 +172,6 @@ public final class DomainEventAssertions {
     return item.copy().put("instanceId", instanceId);
   }
 
-  public static void assertRemoveEventForHolding(JsonObject hr) {
-    final String id = hr.getString("id");
-    final String instanceId = hr.getString("instanceId");
-
-    awaitAtMost().until(() -> hasRemoveEvent(getHoldingsEvents(instanceId, id), hr));
-  }
-
   public static void assertRemoveAllEventForHolding() {
     awaitAtMost()
       .until(() -> getHoldingsEvents(NULL_ID, null).size(), greaterThan(0));

@@ -19,7 +19,7 @@ import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.noHoldingsUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForHolding;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsDeletedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEvent;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
@@ -418,7 +418,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     Response getResponse = holdingsClient.getById(holdingId);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-    assertRemoveEventForHolding(holdingResource.getJson());
+    holdingsDeletedMessagePublished(holdingResource.getJson());
   }
 
   @Test
@@ -669,9 +669,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(h1);
     assertNotExists(h3);
     assertNotExists(h5);
-    assertRemoveEventForHolding(h1);
-    assertRemoveEventForHolding(h3);
-    assertRemoveEventForHolding(h5);
+    holdingsDeletedMessagePublished(h1);
+    holdingsDeletedMessagePublished(h3);
+    holdingsDeletedMessagePublished(h5);
   }
 
   @SneakyThrows
