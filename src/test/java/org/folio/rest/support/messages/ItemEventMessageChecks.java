@@ -27,14 +27,26 @@ public class ItemEventMessageChecks {
       eventMessageMatchers.hasCreateEventMessageFor(addInstanceIdForItem(item, instanceId)));
   }
 
-  private static String getId(JsonObject item) {
-    return item.getString("id");
+  public static void itemUpdatedMessagePublished(JsonObject oldItem, JsonObject newItem) {
+    final var oldInstanceId = getInstanceIdForItem(oldItem);
+
+    itemUpdatedMessagePublished(oldItem, newItem, oldInstanceId);
   }
 
-  private static String getInstanceIdForItem(JsonObject newItem) {
-    final UUID holdingsRecordId = fromString(getHoldingsRecordIdForItem(newItem));
+  public static void itemUpdatedMessagePublished(JsonObject oldItem,
+    JsonObject newItem, String oldInstanceId) {
 
-    return holdingsClient.getById(holdingsRecordId).getJson().getString("instanceId");
+    final var itemId = getId(newItem);
+    final var newInstanceId = getInstanceIdForItem(newItem);
+
+    awaitAtMost().until(() -> getMessagesForItem(newInstanceId, itemId),
+      eventMessageMatchers.hasUpdateEventMessageFor(
+        addInstanceIdForItem(oldItem, oldInstanceId),
+        addInstanceIdForItem(newItem, newInstanceId)));
+  }
+
+  private static String getId(JsonObject item) {
+    return item.getString("id");
   }
 
   private static String getHoldingsRecordIdForItem(JsonObject item) {
@@ -46,5 +58,11 @@ public class ItemEventMessageChecks {
     // old/new object, the property does not exist in schema,
     // so we have to add it manually
     return item.copy().put("instanceId", instanceId);
+  }
+
+  private static String getInstanceIdForItem(JsonObject newItem) {
+    final UUID holdingsRecordId = fromString(getHoldingsRecordIdForItem(newItem));
+
+    return holdingsClient.getById(holdingsRecordId).getJson().getString("instanceId");
   }
 }

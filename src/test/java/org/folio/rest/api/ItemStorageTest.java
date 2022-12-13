@@ -21,10 +21,10 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.rest.support.messages.ItemEventMessageChecks.itemCreatedMessagePublished;
+import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -382,9 +382,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsClient.replace(id, updatedItem);
 
     JsonObject updatedItemResponse = itemsClient.getById(id).getJson();
+
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
-    assertUpdateEventForItem(createdItem, getById(id).getJson());
     assertThat(updatedItemResponse.getJsonArray("administrativeNotes").contains(adminNote), is(true));
+
+    itemUpdatedMessagePublished(createdItem, getById(id).getJson());
   }
 
   @Test
@@ -397,19 +399,15 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(itemToCreate);
 
     JsonObject createdItem = getById(id).getJson();
-    assertThat(createdItem.getString("copyNumber"), nullValue());
 
-    // Clear Kafka events after create to reduce chances of
-    // CREATE messages appearing after UPDATE later on.
-    // This should be removed once the messaging problem is
-    // properly resolved.
-    removeAllEvents();
+    assertThat(createdItem.getString("copyNumber"), nullValue());
 
     JsonObject updatedItem = createdItem.copy()
       .put("holdingsRecordId", newHoldingsRecordId.toString());
+
     itemsClient.replace(id, updatedItem);
 
-    assertUpdateEventForItem(createdItem, getById(id).getJson());
+    itemUpdatedMessagePublished(createdItem, getById(id).getJson());
   }
 
   @Test
@@ -1178,7 +1176,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdUpsertTrue() throws Exception {
+  public void canPostSynchronousBatchWithExistingIdUpsertTrue() {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     final UUID existingItemId = UUID.randomUUID();
 
@@ -1206,7 +1204,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .map(Response::getJson)
       .forEach(ItemEventMessageChecks::itemCreatedMessagePublished);
 
-    assertUpdateEventForItem(existingItemBeforeUpdate, getById(existingItemId).getJson());
+    itemUpdatedMessagePublished(existingItemBeforeUpdate, getById(existingItemId).getJson());
   }
 
   @Test

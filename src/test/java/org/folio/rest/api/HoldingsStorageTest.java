@@ -14,7 +14,7 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUnsaf
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
+import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.allHoldingsDeletedMessagePublished;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsCreatedMessagePublished;
@@ -393,7 +393,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject newItem = item.copy()
       .put("_version", 2);
-    assertUpdateEventForItem(item, newItem, instanceId.toString());
+    itemUpdatedMessagePublished(item, newItem, instanceId.toString());
   }
 
   @Test

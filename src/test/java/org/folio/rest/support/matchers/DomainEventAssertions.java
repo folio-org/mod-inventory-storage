@@ -67,17 +67,6 @@ public final class DomainEventAssertions {
     assertHeaders(deleteEvent.headers());
   }
 
-  public static void assertUpdateEvent(
-          KafkaConsumerRecord<String, JsonObject> updateEvent, JsonObject oldRecord, JsonObject newRecord) {
-
-    assertThat(updateEvent.value().getString("type"), is("UPDATE"));
-    assertThat(updateEvent.value().getString("tenant"), is(TENANT_ID));
-    assertThat(updateEvent.value().getJsonObject("old"), is(oldRecord));
-    assertThat(updateEvent.value().getJsonObject("new"), is(newRecord));
-
-    assertHeaders(updateEvent.headers());
-  }
-
   private static void assertHeaders(List<KafkaHeader> headers) {
     final MultiMap caseInsensitiveMap = caseInsensitiveMultiMap()
       .addAll(kafkaHeadersToMap(headers));
@@ -102,32 +91,6 @@ public final class DomainEventAssertions {
       .until(() -> getItemEvents(NULL_ID, null).size(), greaterThan(0));
 
     assertRemoveAllEvent(getLastItemEvent(NULL_ID, null));
-  }
-
-  public static void assertUpdateEventForItem(JsonObject oldItem, JsonObject newItem) {
-    assertUpdateEventForItem(oldItem, newItem, getInstanceIdForItem(oldItem));
-  }
-
-  public static void assertUpdateEventForItem(JsonObject oldItem, JsonObject newItem, String oldInstanceId) {
-    final String itemId = newItem.getString("id");
-    final String instanceIdForItem = getInstanceIdForItem(newItem);
-
-    awaitAtMost().until(() -> {
-      for (var event : getItemEvents(instanceIdForItem, itemId)) {
-        try {
-          // Domain event for item has an extra 'instanceId' property for
-          // old/new object, the property does not exist in schema,
-          // so we have to add it manually
-          assertUpdateEvent(event,
-              addInstanceIdForItem(oldItem, oldInstanceId),
-              addInstanceIdForItem(newItem, instanceIdForItem));
-          return true;
-        } catch (AssertionError e) {
-          // ignore, check next event
-        }
-      }
-      return false;
-    });
   }
 
   private static String getInstanceIdForItem(JsonObject newItem) {

@@ -177,7 +177,7 @@ public final class FakeKafkaConsumer {
 
     return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
   }
-  
+
   public static Collection<EventMessage> getMessagesForItem(
     String instanceId, String itemId) {
 
