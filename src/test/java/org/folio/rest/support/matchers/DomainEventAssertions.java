@@ -9,9 +9,7 @@ import static org.folio.rest.api.TestBase.holdingsClient;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstItemEvent;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getItemEvents;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
@@ -170,12 +168,5 @@ public final class DomainEventAssertions {
 
   private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {
     return item.copy().put("instanceId", instanceId);
-  }
-
-  public static void assertRemoveAllEventForHolding() {
-    awaitAtMost()
-      .until(() -> getHoldingsEvents(NULL_ID, null).size(), greaterThan(0));
-
-    assertRemoveAllEvent(getLastHoldingEvent(NULL_ID, null));
   }
 }

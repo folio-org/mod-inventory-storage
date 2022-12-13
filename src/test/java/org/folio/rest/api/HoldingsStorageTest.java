@@ -18,7 +18,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.noHoldingsUpdatedMessagePublished;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForHolding;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.allHoldingsDeletedMessagePublished;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsDeletedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEvent;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
@@ -629,7 +629,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(allHoldings.size(), is(0));
 
-    assertRemoveAllEventForHolding();
+    allHoldingsDeletedMessagePublished();
   }
 
   @SneakyThrows
