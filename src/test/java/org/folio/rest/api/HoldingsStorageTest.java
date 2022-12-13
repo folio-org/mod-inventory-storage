@@ -17,7 +17,7 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEventForHolding;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.noHoldingsUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEvent;
@@ -2055,7 +2055,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingsFromGet.getString("hrid"), is(hrid));
     // Make sure a create event published vs update event
     holdingsCreatedMessagePublished(holdingsFromGet);
-    assertNoUpdateEventForHolding(instanceId.toString(), holdingsId.toString());
+    noHoldingsUpdatedMessagePublished(instanceId.toString(), holdingsId.toString());
 
     log.info("Finished canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
   }

@@ -17,10 +17,8 @@ import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
@@ -172,14 +170,6 @@ public final class DomainEventAssertions {
 
   private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {
     return item.copy().put("instanceId", instanceId);
-  }
-
-  public static void assertNoUpdateEventForHolding(String instanceId, String hrId) {
-    awaitAtMost()
-      .until(() -> getHoldingsEvents(instanceId, hrId), is(not(empty())));
-
-    final JsonObject updateMessage  = getLastHoldingEvent(instanceId, hrId).value();
-    assertThat(updateMessage.getString("type"), not(is("UPDATE")));
   }
 
   public static void assertRemoveEventForHolding(JsonObject hr) {

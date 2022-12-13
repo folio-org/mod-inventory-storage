@@ -1,6 +1,8 @@
 package org.folio.rest.support.messages;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
+import static org.folio.rest.support.AwaitConfiguration.awaitDuring;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForHoldings;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -29,6 +31,14 @@ public class HoldingsEventMessageChecks {
 
     awaitAtMost().until(() -> getMessagesForHoldings(instanceId, holdingsId),
       eventMessageMatchers.hasUpdateEventMessageFor(oldHoldings, newHoldings));
+  }
+
+  public static void noHoldingsUpdatedMessagePublished(String instanceId,
+    String holdingsId) {
+
+    awaitDuring(1, SECONDS)
+      .until(() -> getMessagesForHoldings(instanceId, holdingsId),
+        eventMessageMatchers.hasNoUpdateEventMessage());
   }
 
   private static String getId(JsonObject holdings) {
