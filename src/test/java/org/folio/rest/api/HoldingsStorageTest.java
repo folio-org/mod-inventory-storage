@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
@@ -15,16 +14,13 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUnsaf
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.noHoldingsUpdatedMessagePublished;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.allHoldingsDeletedMessagePublished;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsDeletedMessagePublished;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEvent;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.allHoldingsDeletedMessagePublished;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsCreatedMessagePublished;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsDeletedMessagePublished;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.noHoldingsUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -36,7 +32,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -2388,7 +2383,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsArray2.getJsonObject(1).put("id", existingHrId);
 
     final Response firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
-    final JsonObject existingHrBeforeUpdate = getById(existingHrId).getJson();
+    final JsonObject holdingsBeforeUpdate = getById(existingHrId).getJson();
     final Response secondResponse = postSynchronousBatch("?upsert=true", holdingsArray2);
 
     assertThat(firstResponse, statusCodeIs(HTTP_CREATED));
@@ -2401,19 +2396,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .map(Response::getJson)
       .forEach(HoldingsEventMessageChecks::holdingsCreatedMessagePublished);
 
-    await().untilAsserted(() -> {
-      var newHr = getById(existingHrId).getJson();
-      final String id = newHr.getString("id");
-      final String instanceId = newHr.getString("instanceId");
+    var holdingsAfterUpdate = getById(existingHrId).getJson();
 
-      assertThat(getHoldingsEvents(instanceId, id).size(), greaterThan(0));
-      assertUpdateEvent(getLastHoldingEvent(instanceId, id),
-        existingHrBeforeUpdate, newHr);
-    });
+    holdingsUpdatedMessagePublished(holdingsBeforeUpdate, holdingsAfterUpdate);
   }
 
   @Test
-  public void canSearchByDiscoverySuppressProperty() throws Exception {
+  public void canSearchByDiscoverySuppressProperty() {
     final IndividualResource instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 

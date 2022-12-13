@@ -166,16 +166,10 @@ public final class FakeKafkaConsumer {
   public static Collection<EventMessage> getMessagesForHoldings(
     String instanceId, String holdingsId) {
 
-    return getHoldingsEvents(instanceId, holdingsId)
+    return holdingsEvents.getOrDefault(instanceAndIdKey(instanceId, holdingsId), emptyList())
       .stream()
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
-  }
-
-  public static Collection<KafkaConsumerRecord<String, JsonObject> > getHoldingsEvents(
-    String instanceId, String hrId) {
-
-    return holdingsEvents.getOrDefault(instanceAndIdKey(instanceId, hrId), emptyList());
   }
 
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getItemEvents(
@@ -223,12 +217,6 @@ public final class FakeKafkaConsumer {
     String instanceId, String itemId) {
 
     return getFirstEvent(getItemEvents(instanceId, itemId));
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject>  getLastHoldingEvent(
-    String instanceId, String hrId) {
-
-    return getLastEvent(getHoldingsEvents(instanceId, hrId));
   }
 
   private static String instanceAndIdKey(String instanceId, String itemId) {
