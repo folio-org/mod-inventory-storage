@@ -19,12 +19,12 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
+import static org.folio.rest.support.messages.ItemEventMessageChecks.itemCreatedMessagePublished;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -49,8 +49,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -68,9 +66,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import lombok.SneakyThrows;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
@@ -88,7 +84,7 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.builders.StatisticalCodeBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.support.matchers.DomainEventAssertions;
+import org.folio.rest.support.messages.ItemEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -96,6 +92,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemStorageTest extends TestBaseWithInventoryUtil {
@@ -308,7 +310,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
     assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
-    assertCreateEventForItem(itemFromGet);
+    itemCreatedMessagePublished(itemFromGet);
     assertThat(itemFromGet.getString("effectiveShelvingOrder"), is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
 
     assertThat(itemFromGet.getJsonArray("statisticalCodeIds"), hasItem(statisticalCodeId.toString()));
@@ -1114,7 +1116,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray.stream()
       .map(obj -> (JsonObject) obj)
       .map(obj -> getById(obj.getString("id")).getJson())
-      .forEach(DomainEventAssertions::assertCreateEventForItem);
+      .forEach(ItemEventMessageChecks::itemCreatedMessagePublished);
   }
 
   @Test
@@ -1202,7 +1204,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .filter(id -> !id.equals(existingItemId.toString()))
       .map(this::getById)
       .map(Response::getJson)
-      .forEach(DomainEventAssertions::assertCreateEventForItem);
+      .forEach(ItemEventMessageChecks::itemCreatedMessagePublished);
 
     assertUpdateEventForItem(existingItemBeforeUpdate, getById(existingItemId).getJson());
   }

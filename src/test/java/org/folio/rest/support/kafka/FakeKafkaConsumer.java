@@ -177,6 +177,15 @@ public final class FakeKafkaConsumer {
 
     return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
   }
+  
+  public static Collection<EventMessage> getMessagesForItem(
+    String instanceId, String itemId) {
+
+    return getItemEvents(instanceId, itemId)
+      .stream()
+      .map(EventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
+  }
 
   private static <T> List<T> getEmptyDefault(Map<String, List<T>> map, String key) {
     return map.getOrDefault(key, emptyList());
@@ -197,16 +206,6 @@ public final class FakeKafkaConsumer {
       .orElse(null);
   }
 
-  private static KafkaConsumerRecord<String, JsonObject>  getFirstEvent(
-    Collection<KafkaConsumerRecord<String, JsonObject> > events) {
-
-    // See also the comment in getLastEvent() above.
-    return events.stream()
-      .sorted(timestampComparator())
-      .findFirst()
-      .orElse(null);
-  }
-
   private static Comparator<KafkaConsumerRecord<String, JsonObject>> timestampComparator() {
     return Comparator.comparing(KafkaConsumerRecord::timestamp);
   }
@@ -215,12 +214,6 @@ public final class FakeKafkaConsumer {
     String instanceId, String itemId) {
 
     return getLastEvent(getItemEvents(instanceId, itemId));
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject>  getFirstItemEvent(
-    String instanceId, String itemId) {
-
-    return getFirstEvent(getItemEvents(instanceId, itemId));
   }
 
   private static String instanceAndIdKey(String instanceId, String itemId) {

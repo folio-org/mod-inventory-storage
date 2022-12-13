@@ -8,7 +8,6 @@ import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.rest.api.TestBase.holdingsClient;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.rest.support.JsonObjectMatchers.equalsIgnoringMetadata;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getFirstItemEvent;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getItemEvents;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
@@ -18,7 +17,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
@@ -32,16 +30,6 @@ import io.vertx.kafka.client.producer.KafkaHeader;
 
 public final class DomainEventAssertions {
   private DomainEventAssertions() { }
-
-  private static void assertCreateEvent(KafkaConsumerRecord<String, JsonObject> createEvent, JsonObject newRecord) {
-    assertThat("Create event should be present", createEvent.value(), is(notNullValue()));
-    assertThat(createEvent.value().getString("type"), is("CREATE"));
-    assertThat(createEvent.value().getString("tenant"), is(TENANT_ID));
-    assertThat(createEvent.value().getJsonObject("old"), nullValue());
-    assertThat(createEvent.value().getJsonObject("new"), is(newRecord));
-
-    assertHeaders(createEvent.headers());
-  }
 
   private static void assertRemoveEvent(KafkaConsumerRecord<String, JsonObject> deleteEvent, JsonObject record) {
     assertThat(deleteEvent.value().getString("type"), is("DELETE"));
@@ -97,20 +85,6 @@ public final class DomainEventAssertions {
     assertEquals(2, caseInsensitiveMap.size());
     assertEquals(TENANT_ID, caseInsensitiveMap.get(TENANT));
     assertEquals(vertxUrl("").toString(), caseInsensitiveMap.get(URL));
-  }
-
-  public static void assertCreateEventForItem(JsonObject item) {
-    final String itemId = item.getString("id");
-    final String instanceIdForItem = getInstanceIdForItem(item);
-
-    awaitAtMost()
-      .until(() -> getItemEvents(instanceIdForItem, itemId).size(), greaterThan(0));
-
-    // Domain event for item has an extra 'instanceId' property for
-    // old/new object, the property does not exist in schema,
-    // so we have to add it manually
-    assertCreateEvent(getFirstItemEvent(instanceIdForItem, itemId),
-      addInstanceIdForItem(item, instanceIdForItem));
   }
 
   public static void assertRemoveEventForItem(JsonObject item) {
