@@ -24,7 +24,8 @@ public class ItemEventMessageChecks {
     final var instanceId = getInstanceIdForItem(item);
 
     awaitAtMost().until(() -> getMessagesForItem(instanceId, itemId),
-      eventMessageMatchers.hasCreateEventMessageFor(addInstanceIdForItem(item, instanceId)));
+      eventMessageMatchers.hasCreateEventMessageFor(
+        addInstanceIdForItem(item, instanceId)));
   }
 
   public static void itemUpdatedMessagePublished(JsonObject oldItem, JsonObject newItem) {
@@ -45,6 +46,15 @@ public class ItemEventMessageChecks {
         addInstanceIdForItem(newItem, newInstanceId)));
   }
 
+  public static void itemDeletedMessagePublished(JsonObject item) {
+    final var itemId = getId(item);
+    final var instanceId = getInstanceIdForItem(item);
+
+    awaitAtMost().until(() -> getMessagesForItem(instanceId, itemId),
+      eventMessageMatchers.hasDeleteEventMessageFor(
+        addInstanceIdForItem(item, instanceId)));
+  }
+  
   private static String getId(JsonObject item) {
     return item.getString("id");
   }

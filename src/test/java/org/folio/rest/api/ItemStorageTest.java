@@ -20,10 +20,10 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUr
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.rest.support.messages.ItemEventMessageChecks.itemCreatedMessagePublished;
+import static org.folio.rest.support.messages.ItemEventMessageChecks.itemDeletedMessagePublished;
 import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
@@ -1685,7 +1685,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response getResponse = getCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-    assertRemoveEventForItem(createdItem);
+    itemDeletedMessagePublished(createdItem);
   }
 
   @Test
@@ -2059,9 +2059,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(item1);
     assertNotExists(item3);
     assertNotExists(item5);
-    assertRemoveEventForItem(item1);
-    assertRemoveEventForItem(item3);
-    assertRemoveEventForItem(item5);
+    itemDeletedMessagePublished(item1);
+    itemDeletedMessagePublished(item3);
+    itemDeletedMessagePublished(item5);
   }
 
   @SneakyThrows
