@@ -4,6 +4,7 @@ import static java.util.UUID.fromString;
 import static org.folio.rest.api.TestBase.holdingsClient;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForItem;
+import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
@@ -54,7 +55,13 @@ public class ItemEventMessageChecks {
       eventMessageMatchers.hasDeleteEventMessageFor(
         addInstanceIdForItem(item, instanceId)));
   }
-  
+
+  public static void allItemsDeletedMessagePublished() {
+    awaitAtMost()
+      .until(() -> getMessagesForItem(NULL_ID, null),
+        eventMessageMatchers.hasDeleteAllEventMessage());
+  }
+
   private static String getId(JsonObject item) {
     return item.getString("id");
   }

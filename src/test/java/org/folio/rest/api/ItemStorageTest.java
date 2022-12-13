@@ -19,9 +19,9 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
+import static org.folio.rest.support.messages.ItemEventMessageChecks.allItemsDeletedMessagePublished;
 import static org.folio.rest.support.messages.ItemEventMessageChecks.itemCreatedMessagePublished;
 import static org.folio.rest.support.messages.ItemEventMessageChecks.itemDeletedMessagePublished;
 import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
@@ -2038,7 +2038,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allItems.size(), is(0));
     assertThat(responseBody.getInteger("totalRecords"), is(0));
 
-    assertRemoveAllEventForItem();
+    allItemsDeletedMessagePublished();
   }
 
   @SneakyThrows
