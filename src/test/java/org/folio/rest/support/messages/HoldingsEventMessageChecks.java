@@ -15,13 +15,27 @@ public class HoldingsEventMessageChecks {
 
   public static void holdingsCreatedMessagePublished(JsonObject holdings) {
     final var holdingsId = getId(holdings);
-    final var instanceId = holdings.getString("instanceId");
+    final var instanceId = getInstanceId(holdings);
 
     awaitAtMost().until(() -> getMessagesForHoldings(instanceId, holdingsId),
       eventMessageMatchers.hasCreateEventMessageFor(holdings));
   }
 
-  private static String getId(JsonObject json) {
-    return json.getString("id");
+  public static void holdingsUpdatedMessagePublished(JsonObject oldHoldings,
+    JsonObject newHoldings) {
+
+    final var holdingsId = getId(newHoldings);
+    final var instanceId = getInstanceId(newHoldings);
+
+    awaitAtMost().until(() -> getMessagesForHoldings(instanceId, holdingsId),
+      eventMessageMatchers.hasUpdateEventMessageFor(oldHoldings, newHoldings));
+  }
+
+  private static String getId(JsonObject holdings) {
+    return holdings.getString("id");
+  }
+
+  private static String getInstanceId(JsonObject holdings) {
+    return holdings.getString("instanceId");
   }
 }

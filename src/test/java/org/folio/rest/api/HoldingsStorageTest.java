@@ -21,7 +21,7 @@ import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpda
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEvent;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsCreatedMessagePublished;
@@ -357,7 +357,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(NEW_TEST_TAG));
-    assertUpdateEventForHolding(holdingResource.getJson(), holdingFromGet);
+    holdingsUpdatedMessagePublished(holdingResource.getJson(), holdingFromGet);
   }
 
   @Test
@@ -394,7 +394,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject holdingFromGet = getResponse.getJson();
 
     assertThat(holdingFromGet.getString("instanceId"), is(newInstanceId.toString()));
-    assertUpdateEventForHolding(holdingResource.getJson(), holdingFromGet);
+    holdingsUpdatedMessagePublished(holdingResource.getJson(), holdingFromGet);
 
     JsonObject newItem = item.copy()
       .put("_version", 2);
