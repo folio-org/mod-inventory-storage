@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -86,18 +87,11 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse httpServerResponse = getHttpServerResponseMock();
     when(routingContext.response()).thenReturn(httpServerResponse);
+
     new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT generate_series(1, 300)",
         routingContext, Tuple::tuple, nu -> {});
 
-    Awaitility.await()
-      .until(() -> {
-        try {
-          verify(httpServerResponse, times(300)).write(anyString());
-          return true;
-        } catch (AssertionError assertionError) {
-          return false;
-        }
-      });
+    verify(httpServerResponse, timeout(1000).times(300)).write(anyString());
   }
 
   @Test
