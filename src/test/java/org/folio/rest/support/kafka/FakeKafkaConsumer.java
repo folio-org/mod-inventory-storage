@@ -178,9 +178,7 @@ public final class FakeKafkaConsumer {
     return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
   }
 
-  private static List<KafkaConsumerRecord<String, JsonObject>> getEmptyDefault(
-    Map<String, List<KafkaConsumerRecord<String, JsonObject>>> map, String key) {
-
+  private static <T> List<T> getEmptyDefault(Map<String, List<T>> map, String key) {
     return map.getOrDefault(key, emptyList());
   }
 
