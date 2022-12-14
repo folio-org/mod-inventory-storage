@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
@@ -15,16 +14,13 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUnsaf
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getHoldingsEvents;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastHoldingEvent;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertCreateEventForHolding;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertNoUpdateEventForHolding;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveAllEventForHolding;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertRemoveEventForHolding;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEvent;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.allHoldingsDeletedMessagePublished;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsCreatedMessagePublished;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsDeletedMessagePublished;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.noHoldingsUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -36,7 +32,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -45,8 +40,6 @@ import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -61,9 +54,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import lombok.SneakyThrows;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -79,13 +70,19 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
-import org.folio.rest.support.matchers.DomainEventAssertions;
+import org.folio.rest.support.messages.HoldingsEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
@@ -164,7 +161,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
-    assertCreateEventForHolding(holding);
+    holdingsCreatedMessagePublished(holding);
   }
 
   @Test
@@ -355,7 +352,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(NEW_TEST_TAG));
-    assertUpdateEventForHolding(holdingResource.getJson(), holdingFromGet);
+    holdingsUpdatedMessagePublished(holdingResource.getJson(), holdingFromGet);
   }
 
   @Test
@@ -392,7 +389,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject holdingFromGet = getResponse.getJson();
 
     assertThat(holdingFromGet.getString("instanceId"), is(newInstanceId.toString()));
-    assertUpdateEventForHolding(holdingResource.getJson(), holdingFromGet);
+    holdingsUpdatedMessagePublished(holdingResource.getJson(), holdingFromGet);
 
     JsonObject newItem = item.copy()
       .put("_version", 2);
@@ -416,7 +413,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     Response getResponse = holdingsClient.getById(holdingId);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-    assertRemoveEventForHolding(holdingResource.getJson());
+    holdingsDeletedMessagePublished(holdingResource.getJson());
   }
 
   @Test
@@ -627,7 +624,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(allHoldings.size(), is(0));
 
-    assertRemoveAllEventForHolding();
+    allHoldingsDeletedMessagePublished();
   }
 
   @SneakyThrows
@@ -667,9 +664,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(h1);
     assertNotExists(h3);
     assertNotExists(h5);
-    assertRemoveEventForHolding(h1);
-    assertRemoveEventForHolding(h3);
-    assertRemoveEventForHolding(h5);
+    holdingsDeletedMessagePublished(h1);
+    holdingsDeletedMessagePublished(h3);
+    holdingsDeletedMessagePublished(h5);
   }
 
   @SneakyThrows
@@ -2052,8 +2049,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(holdingsFromGet.getString("hrid"), is(hrid));
     // Make sure a create event published vs update event
-    assertCreateEventForHolding(holdingsFromGet);
-    assertNoUpdateEventForHolding(instanceId.toString(), holdingsId.toString());
+    holdingsCreatedMessagePublished(holdingsFromGet);
+    noHoldingsUpdatedMessagePublished(instanceId.toString(), holdingsId.toString());
 
     log.info("Finished canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
   }
@@ -2338,7 +2335,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       final JsonObject holding = (JsonObject) hrObj;
 
       assertExists(holding);
-      assertCreateEventForHolding(getById(holding.getString("id")).getJson());
+      holdingsCreatedMessagePublished(getById(holding.getString("id")).getJson());
     }
   }
 
@@ -2386,7 +2383,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsArray2.getJsonObject(1).put("id", existingHrId);
 
     final Response firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
-    final JsonObject existingHrBeforeUpdate = getById(existingHrId).getJson();
+    final JsonObject holdingsBeforeUpdate = getById(existingHrId).getJson();
     final Response secondResponse = postSynchronousBatch("?upsert=true", holdingsArray2);
 
     assertThat(firstResponse, statusCodeIs(HTTP_CREATED));
@@ -2397,21 +2394,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .filter(id -> !id.equals(existingHrId))
       .map(this::getById)
       .map(Response::getJson)
-      .forEach(DomainEventAssertions::assertCreateEventForHolding);
+      .forEach(HoldingsEventMessageChecks::holdingsCreatedMessagePublished);
 
-    await().untilAsserted(() -> {
-      var newHr = getById(existingHrId).getJson();
-      final String id = newHr.getString("id");
-      final String instanceId = newHr.getString("instanceId");
+    var holdingsAfterUpdate = getById(existingHrId).getJson();
 
-      assertThat(getHoldingsEvents(instanceId, id).size(), greaterThan(0));
-      assertUpdateEvent(getLastHoldingEvent(instanceId, id),
-        existingHrBeforeUpdate, newHr);
-    });
+    holdingsUpdatedMessagePublished(holdingsBeforeUpdate, holdingsAfterUpdate);
   }
 
   @Test
-  public void canSearchByDiscoverySuppressProperty() throws Exception {
+  public void canSearchByDiscoverySuppressProperty() {
     final IndividualResource instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 

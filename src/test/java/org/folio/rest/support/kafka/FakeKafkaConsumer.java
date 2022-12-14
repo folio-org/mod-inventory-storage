@@ -139,7 +139,7 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<EventMessage> getMessagesForAuthority(String authorityId) {
-    return authorityEvents.getOrDefault(authorityId, emptyList())
+    return getEmptyDefault(authorityEvents, authorityId)
       .stream()
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
@@ -150,7 +150,7 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return instanceEvents.getOrDefault(instanceId, emptyList())
+    return getEmptyDefault(instanceEvents, instanceId)
       .stream()
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());
@@ -163,16 +163,23 @@ public final class FakeKafkaConsumer {
       .collect(Collectors.toList());
   }
 
+  public static Collection<EventMessage> getMessagesForHoldings(
+    String instanceId, String holdingsId) {
+
+    return getEmptyDefault(holdingsEvents, instanceAndIdKey(instanceId, holdingsId))
+      .stream()
+      .map(EventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
+  }
+
   public static Collection<KafkaConsumerRecord<String, JsonObject> > getItemEvents(
     String instanceId, String itemId) {
 
-    return itemEvents.getOrDefault(instanceAndIdKey(instanceId, itemId), emptyList());
+    return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
   }
 
-  public static Collection<KafkaConsumerRecord<String, JsonObject> > getHoldingsEvents(
-    String instanceId, String hrId) {
-
-    return holdingsEvents.getOrDefault(instanceAndIdKey(instanceId, hrId), emptyList());
+  private static <T> List<T> getEmptyDefault(Map<String, List<T>> map, String key) {
+    return map.getOrDefault(key, emptyList());
   }
 
   private static KafkaConsumerRecord<String, JsonObject>  getLastEvent(
@@ -214,18 +221,6 @@ public final class FakeKafkaConsumer {
     String instanceId, String itemId) {
 
     return getFirstEvent(getItemEvents(instanceId, itemId));
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject>  getLastHoldingEvent(
-    String instanceId, String hrId) {
-
-    return getLastEvent(getHoldingsEvents(instanceId, hrId));
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject> getFirstHoldingEvent(
-    String instanceId, String hrId) {
-
-    return getFirstEvent(getHoldingsEvents(instanceId, hrId));
   }
 
   private static String instanceAndIdKey(String instanceId, String itemId) {

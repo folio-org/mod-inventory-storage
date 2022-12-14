@@ -1,6 +1,6 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForHolding;
+import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -204,7 +204,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertThat(associatedItem.getString(EFFECTIVE_LOCATION_ID_KEY),
       is(effectiveLocation(holdingEndLoc, itemLoc)));
     assertUpdateEventForItem(createdItem, associatedItem);
-    assertUpdateEventForHolding(createdHolding,
+    holdingsUpdatedMessagePublished(createdHolding,
       holdingsClient.getById(holdingsRecordId).getJson());
   }
 
