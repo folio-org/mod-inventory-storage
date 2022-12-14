@@ -8,10 +8,8 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
 
 import java.net.URL;
-import java.util.Collection;
 import java.util.Map;
 
 import org.folio.okapi.common.XOkapiHeaders;
@@ -38,13 +36,6 @@ public class EventMessageMatchers {
       hasHeaders(),
       hasNewRepresentation(representation),
       hasNoOldRepresentation()));
-  }
-
-  @NotNull
-  public Matcher<Collection<?>> hasCreateEventMessagesFor(
-    Collection<JsonObject> representations) {
-
-    return hasSize(representations.size());
   }
 
   @NotNull
