@@ -1,19 +1,16 @@
 package org.folio.rest.api;
 
 import static org.awaitility.Awaitility.await;
+import static org.folio.rest.support.messages.BoundWithEventMessageChecks.hasPublishedBoundWithHoldingsRecordIds;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import junitparams.JUnitParamsRunner;
-import lombok.SneakyThrows;
+
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
@@ -24,6 +21,11 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
@@ -151,14 +153,5 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
         .forHolding(holdingsRecordId)
         .withMaterialType(bookMaterialTypeId)
         .withPermanentLoanType(canCirculateLoanTypeId));
-  }
-
-  private boolean hasPublishedBoundWithHoldingsRecordIds(UUID id1, UUID id2, UUID id3) {
-    List<String> holdingsRecordIds = List.of(id1.toString(), id2.toString(), id3.toString());
-    List<String> publishedHoldingsRecordIds = FakeKafkaConsumer.getAllPublishedBoundWithEvents().stream()
-        .filter(json -> json.containsKey("new"))
-        .map(json -> json.getJsonObject("new").getString("holdingsRecordId"))
-        .collect(Collectors.toList());
-    return publishedHoldingsRecordIds.containsAll(holdingsRecordIds);
   }
 }
