@@ -71,7 +71,7 @@ public class ItemEventMessageChecks {
   }
 
   private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {
-    // Domain event for item has an extra 'instanceId' property for
+    // Event for item has an extra 'instanceId' property for
     // old/new object, the property does not exist in schema,
     // so we have to add it manually
     return item.copy().put("instanceId", instanceId);

@@ -36,7 +36,7 @@ public final class FakeKafkaConsumer {
     new ConcurrentHashMap<>();
   private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> authorityEvents =
     new ConcurrentHashMap<>();
-  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> boundWith =
+  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> boundWithEvents =
     new ConcurrentHashMap<>();
 
   // Provide a strong reference to reduce the chances of deallocation before
@@ -89,8 +89,11 @@ public final class FakeKafkaConsumer {
             k -> new ArrayList<>());
           break;
         case BOUND_TOPIC_NAME:
-          storageList = boundWith.computeIfAbsent(message.key(),
+          storageList = boundWithEvents.computeIfAbsent(message.key(),
             k -> new ArrayList<>());
+
+          logger.info("Bound With Message Received: {}: {}", message.key(), message.value().encodePrettily());
+
           break;
         default:
           throw new IllegalArgumentException("Undefined topic");
@@ -124,12 +127,12 @@ public final class FakeKafkaConsumer {
     instanceEvents.clear();
     holdingsEvents.clear();
     authorityEvents.clear();
-    boundWith.clear();
+    boundWithEvents.clear();
   }
 
   public static Collection<JsonObject> getAllPublishedBoundWithEvents() {
     List<JsonObject> list = new ArrayList<>();
-    boundWith.values().forEach(collection -> collection.forEach(record -> list.add(record.value())));
+    boundWithEvents.values().forEach(collection -> collection.forEach(record -> list.add(record.value())));
     return list;
   }
 
@@ -181,6 +184,13 @@ public final class FakeKafkaConsumer {
     String instanceId, String itemId) {
 
     return getItemEvents(instanceId, itemId)
+      .stream()
+      .map(EventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
+  }
+
+  public static Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
+    return getEmptyDefault(boundWithEvents, instanceId)
       .stream()
       .map(EventMessage::fromConsumerRecord)
       .collect(Collectors.toList());

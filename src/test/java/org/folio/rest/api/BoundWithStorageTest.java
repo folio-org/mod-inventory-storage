@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static org.awaitility.Awaitility.await;
+import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithCreatedMessagePublished;
 import static org.folio.rest.support.messages.BoundWithEventMessageChecks.hasPublishedBoundWithHoldingsRecordIds;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
@@ -60,16 +61,25 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource aThirdHoldingsRecord = createHoldingsRecord(aThirdInstance.getId());
 
     // Make 'item' a bound-with
-    boundWithPartsClient.create(createBoundWithPartJson(mainHoldingsRecord.getId(),item.getId()));
-    IndividualResource secondPart = boundWithPartsClient.create(createBoundWithPartJson(anotherHoldingsRecord.getId(),item.getId()));
-    boundWithPartsClient.create(createBoundWithPartJson(aThirdHoldingsRecord.getId(),item.getId()));
+    final var firstPart = boundWithPartsClient.create(
+      createBoundWithPartJson(mainHoldingsRecord.getId(), item.getId()));
 
-    Response boundWithGETResponseForPartById = boundWithPartsClient.getById(secondPart.getId());
+    final var secondPart = boundWithPartsClient.create(
+      createBoundWithPartJson(anotherHoldingsRecord.getId(),item.getId()));
 
-    List<JsonObject> getAllPartsForBoundWithItem = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    final var thirdPart = boundWithPartsClient.create(
+      createBoundWithPartJson(aThirdHoldingsRecord.getId(), item.getId()));
+
+    final var boundWithGETResponseForPartById = boundWithPartsClient.getById(secondPart.getId());
+
+    final var getAllPartsForBoundWithItem = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
 
     assertThat(boundWithGETResponseForPartById.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getAllPartsForBoundWithItem.size(), is(3));
+
+    boundWithCreatedMessagePublished(firstPart.getJson(), mainInstance.getId().toString());
+    boundWithCreatedMessagePublished(secondPart.getJson(), anotherInstance.getId().toString());
+    boundWithCreatedMessagePublished(thirdPart.getJson(), aThirdInstance.getId().toString());
 
     await().atMost(10, TimeUnit.SECONDS)
       .until(() -> hasPublishedBoundWithHoldingsRecordIds(
@@ -98,8 +108,12 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource instance2 = createInstance("Instance 2");
     IndividualResource holdingsRecord2 = createHoldingsRecord(instance2.getId());
     IndividualResource item = createItem(holdingsRecord1.getId());
-    boundWithPartsClient.create(createBoundWithPartJson(holdingsRecord1.getId(),item.getId()));
-    IndividualResource part2Created = boundWithPartsClient.create(createBoundWithPartJson(holdingsRecord2.getId(),item.getId()));
+
+    final var partOneCreated = boundWithPartsClient.create(
+      createBoundWithPartJson(holdingsRecord1.getId(), item.getId()));
+
+    final var partTwoCreated = boundWithPartsClient.create(
+      createBoundWithPartJson(holdingsRecord2.getId(),item.getId()));
 
     List<JsonObject> getAllPartsForBoundWithItem = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
     List<JsonObject> part2 = boundWithPartsClient.getByQuery("?query=holdingsRecordId==" + holdingsRecord2.getId()+"");
@@ -108,7 +122,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource holdingsRecord3 = createHoldingsRecord(instance3.getId());
 
     Response updateResponse = boundWithPartsClient.attemptToReplace(
-      part2Created.getId(),
+      partTwoCreated.getId(),
       createBoundWithPartJson(holdingsRecord3.getId(), item.getId()));
 
     List<JsonObject> getAllPartsForBoundWithItemAgain = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
@@ -122,6 +136,9 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getAllPartsForBoundWithItemAgain.size(), is(2));
     assertThat(oldPart2Gone.size(), is(0));
     assertThat(newPart2.size(), is(1));
+
+    boundWithCreatedMessagePublished(partOneCreated.getJson(), instance1.getId().toString());
+    boundWithCreatedMessagePublished(partTwoCreated.getJson(), instance2.getId().toString());
 
     await().atMost(10, TimeUnit.SECONDS)
       .until(() -> hasPublishedBoundWithHoldingsRecordIds(
