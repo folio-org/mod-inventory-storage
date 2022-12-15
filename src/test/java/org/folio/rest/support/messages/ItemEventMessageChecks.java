@@ -26,7 +26,7 @@ public class ItemEventMessageChecks {
 
     awaitAtMost().until(() -> getMessagesForItem(instanceId, itemId),
       eventMessageMatchers.hasCreateEventMessageFor(
-        addInstanceIdForItem(item, instanceId)));
+        addInstanceIdToItem(item, instanceId)));
   }
 
   public static void itemUpdatedMessagePublished(JsonObject oldItem, JsonObject newItem) {
@@ -43,8 +43,8 @@ public class ItemEventMessageChecks {
 
     awaitAtMost().until(() -> getMessagesForItem(newInstanceId, itemId),
       eventMessageMatchers.hasUpdateEventMessageFor(
-        addInstanceIdForItem(oldItem, oldInstanceId),
-        addInstanceIdForItem(newItem, newInstanceId)));
+        addInstanceIdToItem(oldItem, oldInstanceId),
+        addInstanceIdToItem(newItem, newInstanceId)));
   }
 
   public static void itemDeletedMessagePublished(JsonObject item) {
@@ -53,7 +53,7 @@ public class ItemEventMessageChecks {
 
     awaitAtMost().until(() -> getMessagesForItem(instanceId, itemId),
       eventMessageMatchers.hasDeleteEventMessageFor(
-        addInstanceIdForItem(item, instanceId)));
+        addInstanceIdToItem(item, instanceId)));
   }
 
   public static void allItemsDeletedMessagePublished() {
@@ -70,7 +70,7 @@ public class ItemEventMessageChecks {
     return item.getString("holdingsRecordId");
   }
 
-  private static JsonObject addInstanceIdForItem(JsonObject item, String instanceId) {
+  private static JsonObject addInstanceIdToItem(JsonObject item, String instanceId) {
     // Event for item has an extra 'instanceId' property for
     // old/new object, the property does not exist in schema,
     // so we have to add it manually

@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithCreatedMessagePublished;
+import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithUpdatedMessagePublished;
 import static org.folio.rest.support.messages.BoundWithEventMessageChecks.hasPublishedBoundWithHoldingsRecordIds;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
@@ -121,9 +122,10 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource instance3 = createInstance("Instance 3");
     IndividualResource holdingsRecord3 = createHoldingsRecord(instance3.getId());
 
-    Response updateResponse = boundWithPartsClient.attemptToReplace(
-      partTwoCreated.getId(),
+    boundWithPartsClient.replace(partTwoCreated.getId(),
       createBoundWithPartJson(holdingsRecord3.getId(), item.getId()));
+
+    final var partTwoUpdated = boundWithPartsClient.getById(partTwoCreated.getId());
 
     List<JsonObject> getAllPartsForBoundWithItemAgain = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
     List<JsonObject> oldPart2Gone = boundWithPartsClient.getByQuery("?query=holdingsRecordId==" + holdingsRecord2.getId());
@@ -132,13 +134,17 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getAllPartsForBoundWithItem.size(), is(2));
     assertThat(part2.toString(), part2.size(), is(1));
 
-    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     assertThat(getAllPartsForBoundWithItemAgain.size(), is(2));
     assertThat(oldPart2Gone.size(), is(0));
     assertThat(newPart2.size(), is(1));
 
     boundWithCreatedMessagePublished(partOneCreated.getJson(), instance1.getId().toString());
     boundWithCreatedMessagePublished(partTwoCreated.getJson(), instance2.getId().toString());
+
+    // There is a potential bug with the old representation in these message
+    // until this is investigated further, that check is removed
+    boundWithUpdatedMessagePublished(partTwoCreated.getJson(), partTwoUpdated.getJson(),
+      instance2.getId().toString(), instance3.getId().toString());
 
     await().atMost(10, TimeUnit.SECONDS)
       .until(() -> hasPublishedBoundWithHoldingsRecordIds(

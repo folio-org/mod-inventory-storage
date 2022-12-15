@@ -86,7 +86,7 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  private Matcher<EventMessage> isUpdateEvent() {
+  public Matcher<EventMessage> isUpdateEvent() {
     return hasType("UPDATE");
   }
 
@@ -106,12 +106,12 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  private Matcher<EventMessage> isForTenant() {
+  public Matcher<EventMessage> isForTenant() {
     return hasProperty("tenant", is(expectedTenantId));
   }
 
   @NotNull
-  private Matcher<EventMessage> hasHeaders() {
+  public Matcher<EventMessage> hasHeaders() {
     return hasProperty("headers", allOf(
       hasTenantHeader(),
       hasUrlHeader()));
@@ -145,7 +145,8 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  private Matcher<EventMessage> hasNewRepresentation(JsonObject expectedRepresentation) {
+  public Matcher<EventMessage> hasNewRepresentation(
+    JsonObject expectedRepresentation) {
     return hasNewRepresentationThat(equalsIgnoringMetadata(expectedRepresentation));
   }
 
