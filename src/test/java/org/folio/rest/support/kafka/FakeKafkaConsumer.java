@@ -23,7 +23,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 public final class FakeKafkaConsumer {
   private final static Map<String, List<EventMessage>> itemEvents = new ConcurrentHashMap<>();
@@ -72,16 +73,11 @@ public final class FakeKafkaConsumer {
 
     consumer.handler(message -> {
       topicConsumers.forEach(topicConsumer -> {
-        if (Objects.equals(message.topic(), topicConsumer.getTopicName())) {
-
-          final var collectedMessages = topicConsumer.destination.computeIfAbsent(
-            topicConsumer.keyMap.apply(message), v -> new ArrayList<>());
-
-          collectedMessages.add(EventMessage.fromConsumerRecord(message));
+        if (topicConsumer.accepts(message)) {
+          topicConsumer.acceptMessage(message);
         }
       });
     });
-
 
     // Assign the created consumer to the class being returned.
     // The caller of this function may then be able to call unsubscribe()
@@ -177,10 +173,22 @@ public final class FakeKafkaConsumer {
     return config;
   }
 
-  @Value
+  @AllArgsConstructor
   public static class TopicConsumer {
-    String topicName;
-    Map<String, List<EventMessage>> destination;
-    Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
+    @Getter
+    private final String topicName;
+    private final Map<String, List<EventMessage>> destination;
+    private final Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
+
+    private void acceptMessage(KafkaConsumerRecord<String, JsonObject> message) {
+      final var collectedMessages = this.destination.computeIfAbsent(
+        this.keyMap.apply(message), v -> new ArrayList<>());
+
+      collectedMessages.add(EventMessage.fromConsumerRecord(message));
+    }
+
+    private boolean accepts(KafkaConsumerRecord<String, JsonObject> message) {
+      return Objects.equals(message.topic(), topicName);
+    }
   }
 }
