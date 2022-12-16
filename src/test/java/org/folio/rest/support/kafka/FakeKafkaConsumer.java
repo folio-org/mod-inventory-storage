@@ -27,11 +27,30 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public final class FakeKafkaConsumer {
-  private final static Map<String, List<EventMessage>> itemEvents = new ConcurrentHashMap<>();
+  // These definitions are deliberately separate to the production definitions
+  // This is so these can be changed independently to demonstrate
+  // tests failing for the right reason prior to changing the production code
+  final static String INSTANCE_TOPIC_NAME = "folio.test_tenant.inventory.instance";
+  final static String HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
+  final static String ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
+  final static String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
+  final static String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
+
   private final static Map<String, List<EventMessage>> instanceEvents = new ConcurrentHashMap<>();
+  private final static TopicConsumer instanceTopicConsumer = new TopicConsumer(INSTANCE_TOPIC_NAME,
+    instanceEvents, KafkaConsumerRecord::key);
   private final static Map<String, List<EventMessage>> holdingsEvents = new ConcurrentHashMap<>();
+  private final static TopicConsumer holdingsTopicConsumer = new TopicConsumer(HOLDINGS_TOPIC_NAME,
+    holdingsEvents, FakeKafkaConsumer::instanceAndIdKey);
+  private final static Map<String, List<EventMessage>> itemEvents = new ConcurrentHashMap<>();
+  private final static TopicConsumer itemTopicConsumer = new TopicConsumer(ITEM_TOPIC_NAME,
+    itemEvents, FakeKafkaConsumer::instanceAndIdKey);
   private final static Map<String, List<EventMessage>> authorityEvents = new ConcurrentHashMap<>();
+  private final static TopicConsumer authorityTopicConsumer = new TopicConsumer(AUTHORITY_TOPIC_NAME,
+    authorityEvents, KafkaConsumerRecord::key);
   private final static Map<String, List<EventMessage>> boundWithEvents = new ConcurrentHashMap<>();
+  private final static TopicConsumer boundWithTopicConsumer = new TopicConsumer(BOUND_WITH_TOPIC_NAME,
+    boundWithEvents, KafkaConsumerRecord::key);
 
   // Provide a strong reference to reduce the chances of deallocation before
   // all clients are properly unsubscribed.
@@ -39,30 +58,6 @@ public final class FakeKafkaConsumer {
 
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
-
-    // These definitions are deliberately separate to the production definitions
-    // This is so these can be changed independently to demonstrate
-    // tests failing for the right reason prior to changing the production code
-    final var INSTANCE_TOPIC_NAME = "folio.test_tenant.inventory.instance";
-    final var HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
-    final var ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
-    final var AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
-    final var BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
-
-    final var instanceTopicConsumer = new TopicConsumer(INSTANCE_TOPIC_NAME,
-      instanceEvents, KafkaConsumerRecord::key);
-
-    final var holdingsTopicConsumer = new TopicConsumer(HOLDINGS_TOPIC_NAME,
-      holdingsEvents, FakeKafkaConsumer::instanceAndIdKey);
-
-    final var itemTopicConsumer = new TopicConsumer(ITEM_TOPIC_NAME,
-      itemEvents, FakeKafkaConsumer::instanceAndIdKey);
-
-    final var authorityTopicConsumer = new TopicConsumer(AUTHORITY_TOPIC_NAME,
-      authorityEvents, KafkaConsumerRecord::key);
-
-    final var boundWithTopicConsumer = new TopicConsumer(BOUND_WITH_TOPIC_NAME,
-      boundWithEvents, KafkaConsumerRecord::key);
 
     final var topicConsumers = Set.of(instanceTopicConsumer, holdingsTopicConsumer,
       itemTopicConsumer, authorityTopicConsumer, boundWithTopicConsumer);
@@ -177,11 +172,11 @@ public final class FakeKafkaConsumer {
   public static class TopicConsumer {
     @Getter
     private final String topicName;
-    private final Map<String, List<EventMessage>> destination;
+    private final Map<String, List<EventMessage>> collectedMessages;
     private final Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
 
     private void acceptMessage(KafkaConsumerRecord<String, JsonObject> message) {
-      final var collectedMessages = this.destination.computeIfAbsent(
+      final var collectedMessages = this.collectedMessages.computeIfAbsent(
         this.keyMap.apply(message), v -> new ArrayList<>());
 
       collectedMessages.add(EventMessage.fromConsumerRecord(message));
