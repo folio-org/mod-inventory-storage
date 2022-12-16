@@ -100,7 +100,7 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<EventMessage> getMessagesForAuthority(String authorityId) {
-    return getEmptyDefault(authorityEvents, authorityId);
+    return authorityTopicConsumer.getMessagesByKey(authorityId);
   }
 
   public static int getAllPublishedInstanceIdsCount() {
@@ -108,7 +108,7 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return getEmptyDefault(instanceEvents, instanceId);
+    return instanceTopicConsumer.getMessagesByKey(instanceId);
   }
 
   public static Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
@@ -121,21 +121,17 @@ public final class FakeKafkaConsumer {
   public static Collection<EventMessage> getMessagesForHoldings(
     String instanceId, String holdingsId) {
 
-    return getEmptyDefault(holdingsEvents, instanceAndIdKey(instanceId, holdingsId));
+    return holdingsTopicConsumer.getMessagesByKey(instanceAndIdKey(instanceId, holdingsId));
   }
 
   public static Collection<EventMessage> getMessagesForItem(
     String instanceId, String itemId) {
 
-    return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
+    return itemTopicConsumer.getMessagesByKey(instanceAndIdKey(instanceId, itemId));
   }
 
   public static Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
-    return getEmptyDefault(boundWithEvents, instanceId);
-  }
-
-  private static <T> List<T> getEmptyDefault(Map<String, List<T>> map, String key) {
-    return map.getOrDefault(key, emptyList());
+    return boundWithTopicConsumer.getMessagesByKey(instanceId);
   }
 
   private static String instanceAndIdKey(String instanceId, String itemId) {
@@ -184,6 +180,10 @@ public final class FakeKafkaConsumer {
 
     private boolean accepts(KafkaConsumerRecord<String, JsonObject> message) {
       return Objects.equals(message.topic(), topicName);
+    }
+
+    private Collection<EventMessage> getMessagesByKey(String key) {
+      return collectedMessages.getOrDefault(key, emptyList());
     }
   }
 }
