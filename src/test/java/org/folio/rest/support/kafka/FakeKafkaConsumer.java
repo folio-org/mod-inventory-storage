@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,49 +177,17 @@ public final class FakeKafkaConsumer {
     return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
   }
 
+  public static Collection<EventMessage> getMessagesForItem(
+    String instanceId, String itemId) {
+
+    return getItemEvents(instanceId, itemId)
+      .stream()
+      .map(EventMessage::fromConsumerRecord)
+      .collect(Collectors.toList());
+  }
+
   private static <T> List<T> getEmptyDefault(Map<String, List<T>> map, String key) {
     return map.getOrDefault(key, emptyList());
-  }
-
-  private static KafkaConsumerRecord<String, JsonObject>  getLastEvent(
-    Collection<KafkaConsumerRecord<String, JsonObject> > events) {
-
-    // This is not the ideal implementation for getting the last event.
-    // Ideally, this should not rely on time stamps at all.
-    // The testing paradigm needs to account for the asynchronous nature rather
-    // than assuming the "first" or "last" event represent the expected
-    // response.
-
-    return events.stream()
-      .sorted(timestampComparator().reversed())
-      .findFirst()
-      .orElse(null);
-  }
-
-  private static KafkaConsumerRecord<String, JsonObject>  getFirstEvent(
-    Collection<KafkaConsumerRecord<String, JsonObject> > events) {
-
-    // See also the comment in getLastEvent() above.
-    return events.stream()
-      .sorted(timestampComparator())
-      .findFirst()
-      .orElse(null);
-  }
-
-  private static Comparator<KafkaConsumerRecord<String, JsonObject>> timestampComparator() {
-    return Comparator.comparing(KafkaConsumerRecord::timestamp);
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject>  getLastItemEvent(
-    String instanceId, String itemId) {
-
-    return getLastEvent(getItemEvents(instanceId, itemId));
-  }
-
-  public static KafkaConsumerRecord<String, JsonObject>  getFirstItemEvent(
-    String instanceId, String itemId) {
-
-    return getFirstEvent(getItemEvents(instanceId, itemId));
   }
 
   private static String instanceAndIdKey(String instanceId, String itemId) {

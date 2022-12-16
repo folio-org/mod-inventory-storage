@@ -1,29 +1,22 @@
 package org.folio.rest.api;
 
 
-import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getLastItemEvent;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
 import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;
 import static org.folio.rest.support.matchers.ItemMatchers.hasSuffix;
 import static org.folio.rest.support.matchers.ItemMatchers.hasTypeId;
+import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.Objects;
 import java.util.UUID;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import junitparams.naming.TestCaseName;
+
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData.CallNumberComponentPropertyNames;
@@ -33,6 +26,12 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.naming.TestCaseName;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventoryUtil {
@@ -246,22 +245,15 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     );
 
     var itemAfterHoldingsUpdate = getById(createdItem.getJson());
-    assertUpdateEventForItem(createdItem.getJson(), itemAfterHoldingsUpdate);
+
+    itemUpdatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
 
     if (!Objects.equals(itemInitValue, itemTargetValue)) {
       itemsClient.replace(createdItem.getId(), itemAfterHoldingsUpdate.copy()
         .put(itemPropertyName, itemTargetValue));
 
-      await().untilAsserted(() -> {
-        var instanceId = holdings.getJson().getString("instanceId");
-        var itemId = createdItem.getId().toString();
-
-        var lastItemEvent = getLastItemEvent(instanceId, itemId);
-        assertTrue(lastItemEvent
-          .value().getJsonObject("new").getInteger("_version") > 1);
-        assertUpdateEventForItem(itemAfterHoldingsUpdate,
-            itemsClient.getById(createdItem.getId()).getJson());
-      });
+      itemUpdatedMessagePublished(itemAfterHoldingsUpdate,
+        itemsClient.getById(createdItem.getId()).getJson());
     }
 
     final JsonObject updatedItem = itemsClient.getById(createdItem.getId()).getJson();

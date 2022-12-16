@@ -1,7 +1,7 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
-import static org.folio.rest.support.matchers.DomainEventAssertions.assertUpdateEventForItem;
+import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -12,18 +12,12 @@ import static org.hamcrest.Matchers.emptyString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.sqlclient.Row;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import lombok.SneakyThrows;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
@@ -35,6 +29,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.sqlclient.Row;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import lombok.SneakyThrows;
 
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented
@@ -203,7 +205,9 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     JsonObject associatedItem = itemsClient.getById(itemId).getJson();
     assertThat(associatedItem.getString(EFFECTIVE_LOCATION_ID_KEY),
       is(effectiveLocation(holdingEndLoc, itemLoc)));
-    assertUpdateEventForItem(createdItem, associatedItem);
+
+    itemUpdatedMessagePublished(createdItem, associatedItem);
+
     holdingsUpdatedMessagePublished(createdHolding,
       holdingsClient.getById(holdingsRecordId).getJson());
   }
