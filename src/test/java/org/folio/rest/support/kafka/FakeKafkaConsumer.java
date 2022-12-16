@@ -23,6 +23,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
+import lombok.Value;
 
 public final class FakeKafkaConsumer {
   private static final Logger logger = LogManager.getLogger();
@@ -47,13 +48,23 @@ public final class FakeKafkaConsumer {
     final var HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
     final var ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
     final var AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
-    final var BOUND_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
+    final var BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-    consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME, BOUND_TOPIC_NAME));
+    final var instanceTopicConsumer = new TopicConsumer(INSTANCE_TOPIC_NAME);
+    final var holdingsTopicConsumer = new TopicConsumer(HOLDINGS_TOPIC_NAME);
+    final var itemTopicConsumer = new TopicConsumer(ITEM_TOPIC_NAME);
+    final var authorityTopicConsumer = new TopicConsumer(AUTHORITY_TOPIC_NAME);
+    final var boundWithTopicConsumer = new TopicConsumer(BOUND_WITH_TOPIC_NAME);
+
+    final var topicConsumers = Set.of(instanceTopicConsumer, holdingsTopicConsumer,
+      itemTopicConsumer, authorityTopicConsumer, boundWithTopicConsumer);
+
+    consumer.subscribe(topicConsumers.stream()
+      .map(TopicConsumer::getTopicName)
+      .collect(Collectors.toSet()));
 
     consumer.handler(message -> {
       final List<EventMessage> storageList;
-
 
       switch (message.topic()) {
         case ITEM_TOPIC_NAME:
@@ -72,7 +83,7 @@ public final class FakeKafkaConsumer {
           storageList = authorityEvents.computeIfAbsent(message.key(),
             k -> new ArrayList<>());
           break;
-        case BOUND_TOPIC_NAME:
+        case BOUND_WITH_TOPIC_NAME:
           storageList = boundWithEvents.computeIfAbsent(message.key(),
             k -> new ArrayList<>());
 
@@ -179,5 +190,10 @@ public final class FakeKafkaConsumer {
     config.put("enable.auto.commit", "false");
 
     return config;
+  }
+
+  @Value
+  public static class TopicConsumer {
+    String topicName;
   }
 }
