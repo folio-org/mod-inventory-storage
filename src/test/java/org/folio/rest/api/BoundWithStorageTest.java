@@ -1,29 +1,29 @@
 package org.folio.rest.api;
 
-import static org.awaitility.Awaitility.await;
+import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithCreatedMessagePublished;
+import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import junitparams.JUnitParamsRunner;
-import lombok.SneakyThrows;
+
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.http.ResourceClient;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
@@ -47,7 +47,6 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateAndRetrieveBoundWithParts() {
-    FakeKafkaConsumer.clearAllEvents();
     IndividualResource mainInstance = createInstance("Main Instance");
     IndividualResource mainHoldingsRecord = createHoldingsRecord(mainInstance.getId());
     IndividualResource item = createItem(mainHoldingsRecord.getId());
@@ -58,20 +57,25 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource aThirdHoldingsRecord = createHoldingsRecord(aThirdInstance.getId());
 
     // Make 'item' a bound-with
-    boundWithPartsClient.create(createBoundWithPartJson(mainHoldingsRecord.getId(),item.getId()));
-    IndividualResource secondPart = boundWithPartsClient.create(createBoundWithPartJson(anotherHoldingsRecord.getId(),item.getId()));
-    boundWithPartsClient.create(createBoundWithPartJson(aThirdHoldingsRecord.getId(),item.getId()));
+    final var firstPart = boundWithPartsClient.create(
+      createBoundWithPartJson(mainHoldingsRecord.getId(), item.getId()));
 
-    Response boundWithGETResponseForPartById = boundWithPartsClient.getById(secondPart.getId());
+    final var secondPart = boundWithPartsClient.create(
+      createBoundWithPartJson(anotherHoldingsRecord.getId(),item.getId()));
 
-    List<JsonObject> getAllPartsForBoundWithItem = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    final var thirdPart = boundWithPartsClient.create(
+      createBoundWithPartJson(aThirdHoldingsRecord.getId(), item.getId()));
+
+    final var boundWithGETResponseForPartById = boundWithPartsClient.getById(secondPart.getId());
+
+    final var getAllPartsForBoundWithItem = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
 
     assertThat(boundWithGETResponseForPartById.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getAllPartsForBoundWithItem.size(), is(3));
 
-    await().atMost(10, TimeUnit.SECONDS)
-      .until(() -> hasPublishedBoundWithHoldingsRecordIds(
-          mainHoldingsRecord.getId(), anotherHoldingsRecord.getId(), aThirdHoldingsRecord.getId()));
+    boundWithCreatedMessagePublished(firstPart.getJson(), mainInstance.getId().toString());
+    boundWithCreatedMessagePublished(secondPart.getJson(), anotherInstance.getId().toString());
+    boundWithCreatedMessagePublished(thirdPart.getJson(), aThirdInstance.getId().toString());
   }
 
   @Test
@@ -90,14 +94,17 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canChangeOnePartOfABoundWith() {
-    FakeKafkaConsumer.clearAllEvents();
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource instance2 = createInstance("Instance 2");
     IndividualResource holdingsRecord2 = createHoldingsRecord(instance2.getId());
     IndividualResource item = createItem(holdingsRecord1.getId());
-    boundWithPartsClient.create(createBoundWithPartJson(holdingsRecord1.getId(),item.getId()));
-    IndividualResource part2Created = boundWithPartsClient.create(createBoundWithPartJson(holdingsRecord2.getId(),item.getId()));
+
+    final var partOneCreated = boundWithPartsClient.create(
+      createBoundWithPartJson(holdingsRecord1.getId(), item.getId()));
+
+    final var partTwoCreated = boundWithPartsClient.create(
+      createBoundWithPartJson(holdingsRecord2.getId(),item.getId()));
 
     List<JsonObject> getAllPartsForBoundWithItem = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
     List<JsonObject> part2 = boundWithPartsClient.getByQuery("?query=holdingsRecordId==" + holdingsRecord2.getId()+"");
@@ -105,9 +112,10 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource instance3 = createInstance("Instance 3");
     IndividualResource holdingsRecord3 = createHoldingsRecord(instance3.getId());
 
-    Response updateResponse = boundWithPartsClient.attemptToReplace(
-      part2Created.getId(),
+    boundWithPartsClient.replace(partTwoCreated.getId(),
       createBoundWithPartJson(holdingsRecord3.getId(), item.getId()));
+
+    final var partTwoUpdated = boundWithPartsClient.getById(partTwoCreated.getId());
 
     List<JsonObject> getAllPartsForBoundWithItemAgain = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
     List<JsonObject> oldPart2Gone = boundWithPartsClient.getByQuery("?query=holdingsRecordId==" + holdingsRecord2.getId());
@@ -116,14 +124,17 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getAllPartsForBoundWithItem.size(), is(2));
     assertThat(part2.toString(), part2.size(), is(1));
 
-    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     assertThat(getAllPartsForBoundWithItemAgain.size(), is(2));
     assertThat(oldPart2Gone.size(), is(0));
     assertThat(newPart2.size(), is(1));
 
-    await().atMost(10, TimeUnit.SECONDS)
-      .until(() -> hasPublishedBoundWithHoldingsRecordIds(
-          holdingsRecord1.getId(), holdingsRecord2.getId(), holdingsRecord3.getId()));
+    boundWithCreatedMessagePublished(partOneCreated.getJson(), instance1.getId().toString());
+    boundWithCreatedMessagePublished(partTwoCreated.getJson(), instance2.getId().toString());
+
+    // There is a potential bug with the old representation in these message
+    // until this is investigated further, that check is removed
+    boundWithUpdatedMessagePublished(partTwoCreated.getJson(), partTwoUpdated.getJson(),
+      instance2.getId().toString(), instance3.getId().toString());
   }
 
   private JsonObject createBoundWithPartJson(UUID holdingsRecordId, UUID itemId) {
@@ -151,14 +162,5 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
         .forHolding(holdingsRecordId)
         .withMaterialType(bookMaterialTypeId)
         .withPermanentLoanType(canCirculateLoanTypeId));
-  }
-
-  private boolean hasPublishedBoundWithHoldingsRecordIds(UUID id1, UUID id2, UUID id3) {
-    List<String> holdingsRecordIds = List.of(id1.toString(), id2.toString(), id3.toString());
-    List<String> publishedHoldingsRecordIds = FakeKafkaConsumer.getAllPublishedBoundWithEvents().stream()
-        .filter(json -> json.containsKey("new"))
-        .map(json -> json.getJsonObject("new").getString("holdingsRecordId"))
-        .collect(Collectors.toList());
-    return publishedHoldingsRecordIds.containsAll(holdingsRecordIds);
   }
 }
