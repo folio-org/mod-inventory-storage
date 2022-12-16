@@ -92,7 +92,7 @@ public final class FakeKafkaConsumer {
     return itemTopicConsumer.receivedMessagesByKey(instanceAndIdKey(instanceId, itemId));
   }
 
-  public static Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
+  public Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
     return boundWithTopicConsumer.receivedMessagesByKey(instanceId);
   }
 
