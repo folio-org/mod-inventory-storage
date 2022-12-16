@@ -1,6 +1,5 @@
 package org.folio.rest.support.kafka;
 
-import static io.vertx.kafka.client.consumer.KafkaConsumer.create;
 import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
@@ -8,8 +7,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,50 +31,33 @@ public final class FakeKafkaConsumer {
   final static String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
   final static String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-  private final static TopicConsumer instanceTopicConsumer = new TopicConsumer(
+  private final static MessageCollectingTopicConsumer instanceTopicConsumer = new MessageCollectingTopicConsumer(
     INSTANCE_TOPIC_NAME, KafkaConsumerRecord::key);
-  private final static TopicConsumer holdingsTopicConsumer = new TopicConsumer(
+  private final static MessageCollectingTopicConsumer holdingsTopicConsumer = new MessageCollectingTopicConsumer(
     HOLDINGS_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
-  private final static TopicConsumer itemTopicConsumer = new TopicConsumer(
+  private final static MessageCollectingTopicConsumer itemTopicConsumer = new MessageCollectingTopicConsumer(
     ITEM_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
-  private final static TopicConsumer authorityTopicConsumer = new TopicConsumer(
+  private final static MessageCollectingTopicConsumer authorityTopicConsumer = new MessageCollectingTopicConsumer(
     AUTHORITY_TOPIC_NAME, KafkaConsumerRecord::key);
-  private final static TopicConsumer boundWithTopicConsumer = new TopicConsumer(
+  private final static MessageCollectingTopicConsumer boundWithTopicConsumer = new MessageCollectingTopicConsumer(
     BOUND_WITH_TOPIC_NAME, KafkaConsumerRecord::key);
 
-  // Provide a strong reference to reduce the chances of deallocation before
-  // all clients are properly unsubscribed.
-  private KafkaConsumer<String, JsonObject> consumer;
-
   public FakeKafkaConsumer consume(Vertx vertx) {
-    final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
-
-    final var topicConsumers = Set.of(instanceTopicConsumer, holdingsTopicConsumer,
-      itemTopicConsumer, authorityTopicConsumer, boundWithTopicConsumer);
-
-    consumer.subscribe(topicConsumers.stream()
-      .map(TopicConsumer::getTopicName)
-      .collect(Collectors.toSet()));
-
-    consumer.handler(message -> {
-      topicConsumers.forEach(topicConsumer -> {
-        if (topicConsumer.accepts(message)) {
-          topicConsumer.acceptMessage(message);
-        }
-      });
-    });
-
-    // Assign the created consumer to the class being returned.
-    // The caller of this function may then be able to call unsubscribe()
-    // as needed. This ensures that the reference remains strong once
-    // this once out of the scope of this function.
-    this.setConsumer(consumer);
+    instanceTopicConsumer.subscribe(vertx);
+    holdingsTopicConsumer.subscribe(vertx);
+    itemTopicConsumer.subscribe(vertx);
+    authorityTopicConsumer.subscribe(vertx);
+    boundWithTopicConsumer.subscribe(vertx);
 
     return this;
   }
 
   public void unsubscribe() {
-    consumer.unsubscribe();
+    instanceTopicConsumer.unsubscribe();
+    holdingsTopicConsumer.unsubscribe();
+    itemTopicConsumer.unsubscribe();
+    authorityTopicConsumer.unsubscribe();
+    boundWithTopicConsumer.unsubscribe();
   }
 
   public static void discardAllMessages() {
@@ -141,28 +121,13 @@ public final class FakeKafkaConsumer {
     return instanceAndIdKey(message.key(), id);
   }
 
-  private void setConsumer(KafkaConsumer<String, JsonObject> consumer) {
-    this.consumer = consumer;
-  }
-
-  private Map<String, String> consumerProperties() {
-    Map<String, String> config = new HashMap<>();
-    config.put("bootstrap.servers", KafkaEnvironmentProperties.host() + ":" + KafkaEnvironmentProperties.port());
-    config.put("key.deserializer", StringDeserializer.class.getName());
-    config.put("value.deserializer", JsonObjectDeserializer.class.getName());
-    config.put("group.id", "folio_test");
-    config.put("auto.offset.reset", "earliest");
-    config.put("enable.auto.commit", "false");
-
-    return config;
-  }
-
-  public static class TopicConsumer {
+  public static class MessageCollectingTopicConsumer {
     private final String topicName;
     private final Map<String, List<EventMessage>> collectedMessages;
     private final Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
+    private KafkaConsumer<String, JsonObject> consumer;
 
-    public TopicConsumer(String topicName,
+    public MessageCollectingTopicConsumer(String topicName,
       Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap) {
 
       this.topicName = topicName;
@@ -170,15 +135,24 @@ public final class FakeKafkaConsumer {
       this.keyMap = keyMap;
     }
 
+    private void subscribe(Vertx vertx) {
+      consumer = KafkaConsumer.create(vertx, consumerProperties());
+
+      consumer.handler(this::acceptMessage);
+      consumer.subscribe(topicName);
+    }
+
+    public void unsubscribe() {
+      if (consumer != null) {
+        consumer.unsubscribe();
+      }
+    }
+
     private void acceptMessage(KafkaConsumerRecord<String, JsonObject> message) {
       final var collectedMessages = this.collectedMessages.computeIfAbsent(
         this.keyMap.apply(message), v -> new ArrayList<>());
 
       collectedMessages.add(EventMessage.fromConsumerRecord(message));
-    }
-
-    private boolean accepts(KafkaConsumerRecord<String, JsonObject> message) {
-      return Objects.equals(message.topic(), topicName);
     }
 
     private Collection<EventMessage> receivedMessages(String key) {
@@ -193,8 +167,16 @@ public final class FakeKafkaConsumer {
       collectedMessages.clear();
     }
 
-    private String getTopicName() {
-      return topicName;
+    private static Map<String, String> consumerProperties() {
+      Map<String, String> config = new HashMap<>();
+      config.put("bootstrap.servers", KafkaEnvironmentProperties.host() + ":" + KafkaEnvironmentProperties.port());
+      config.put("key.deserializer", StringDeserializer.class.getName());
+      config.put("value.deserializer", JsonObjectDeserializer.class.getName());
+      config.put("group.id", "folio_test");
+      config.put("auto.offset.reset", "earliest");
+      config.put("enable.auto.commit", "false");
+
+      return config;
     }
   }
 }
