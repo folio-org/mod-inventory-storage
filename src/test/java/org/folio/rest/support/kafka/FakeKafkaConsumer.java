@@ -28,16 +28,11 @@ import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 public final class FakeKafkaConsumer {
   private static final Logger logger = LogManager.getLogger();
 
-  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> itemEvents =
-    new ConcurrentHashMap<>();
-  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> instanceEvents =
-    new ConcurrentHashMap<>();
-  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> holdingsEvents =
-    new ConcurrentHashMap<>();
-  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> authorityEvents =
-    new ConcurrentHashMap<>();
-  private final static Map<String, List<KafkaConsumerRecord<String, JsonObject>>> boundWithEvents =
-    new ConcurrentHashMap<>();
+  private final static Map<String, List<EventMessage>> itemEvents = new ConcurrentHashMap<>();
+  private final static Map<String, List<EventMessage>> instanceEvents = new ConcurrentHashMap<>();
+  private final static Map<String, List<EventMessage>> holdingsEvents = new ConcurrentHashMap<>();
+  private final static Map<String, List<EventMessage>> authorityEvents = new ConcurrentHashMap<>();
+  private final static Map<String, List<EventMessage>> boundWithEvents = new ConcurrentHashMap<>();
 
   // Provide a strong reference to reduce the chances of deallocation before
   // all clients are properly unsubscribed.
@@ -60,7 +55,7 @@ public final class FakeKafkaConsumer {
     consumer.subscribe(Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, AUTHORITY_TOPIC_NAME, BOUND_TOPIC_NAME));
 
     consumer.handler(message -> {
-      final List<KafkaConsumerRecord<String, JsonObject>> storageList;
+      final List<EventMessage> storageList;
 
       // Messages that are earlier than the timestamp are stale and should be ignored.
       if (message.timestamp() < timestamp.toInstant().getMillis()) {
@@ -99,7 +94,7 @@ public final class FakeKafkaConsumer {
           throw new IllegalArgumentException("Undefined topic");
       }
 
-      storageList.add(message);
+      storageList.add(EventMessage.fromConsumerRecord(message));
     });
 
     timestamp = DateTime.now();
@@ -135,10 +130,7 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<EventMessage> getMessagesForAuthority(String authorityId) {
-    return getEmptyDefault(authorityEvents, authorityId)
-      .stream()
-      .map(EventMessage::fromConsumerRecord)
-      .collect(Collectors.toList());
+    return getEmptyDefault(authorityEvents, authorityId);
   }
 
   public static int getAllPublishedInstanceIdsCount() {
@@ -146,10 +138,7 @@ public final class FakeKafkaConsumer {
   }
 
   public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return getEmptyDefault(instanceEvents, instanceId)
-      .stream()
-      .map(EventMessage::fromConsumerRecord)
-      .collect(Collectors.toList());
+    return getEmptyDefault(instanceEvents, instanceId);
   }
 
   public static Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
@@ -162,32 +151,17 @@ public final class FakeKafkaConsumer {
   public static Collection<EventMessage> getMessagesForHoldings(
     String instanceId, String holdingsId) {
 
-    return getEmptyDefault(holdingsEvents, instanceAndIdKey(instanceId, holdingsId))
-      .stream()
-      .map(EventMessage::fromConsumerRecord)
-      .collect(Collectors.toList());
-  }
-
-  public static Collection<KafkaConsumerRecord<String, JsonObject> > getItemEvents(
-    String instanceId, String itemId) {
-
-    return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
+    return getEmptyDefault(holdingsEvents, instanceAndIdKey(instanceId, holdingsId));
   }
 
   public static Collection<EventMessage> getMessagesForItem(
     String instanceId, String itemId) {
 
-    return getItemEvents(instanceId, itemId)
-      .stream()
-      .map(EventMessage::fromConsumerRecord)
-      .collect(Collectors.toList());
+    return getEmptyDefault(itemEvents, instanceAndIdKey(instanceId, itemId));
   }
 
   public static Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
-    return getEmptyDefault(boundWithEvents, instanceId)
-      .stream()
-      .map(EventMessage::fromConsumerRecord)
-      .collect(Collectors.toList());
+    return getEmptyDefault(boundWithEvents, instanceId);
   }
 
   private static <T> List<T> getEmptyDefault(Map<String, List<T>> map, String key) {
