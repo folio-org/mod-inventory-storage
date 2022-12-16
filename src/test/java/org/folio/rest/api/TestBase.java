@@ -17,8 +17,6 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.Future;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
@@ -26,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.SneakyThrows;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.support.Response;
@@ -40,6 +38,10 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+
+import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 /**
  * When not run from StorageTestSuite then this class invokes StorageTestSuite.before() and
@@ -114,8 +116,6 @@ public abstract class TestBase {
   @SneakyThrows
   @Before
   public void removeAllEvents() {
-    kafkaConsumer.resetTimestamp();
-
     FakeKafkaConsumer.clearAllEvents();
   }
 

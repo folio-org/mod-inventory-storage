@@ -17,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.rest.support.messages.EventMessage;
-import org.joda.time.DateTime;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -38,8 +37,6 @@ public final class FakeKafkaConsumer {
   // all clients are properly unsubscribed.
   private KafkaConsumer<String, JsonObject> consumer;
 
-  private static DateTime timestamp = DateTime.now();
-
   public FakeKafkaConsumer consume(Vertx vertx) {
     final KafkaConsumer<String, JsonObject> consumer = create(vertx, consumerProperties());
 
@@ -57,14 +54,6 @@ public final class FakeKafkaConsumer {
     consumer.handler(message -> {
       final List<EventMessage> storageList;
 
-      // Messages that are earlier than the timestamp are stale and should be ignored.
-      if (message.timestamp() < timestamp.toInstant().getMillis()) {
-        logger.debug("Timestamp is " + message.timestamp()
-          + " less than " + timestamp.toInstant().getMillis()
-          + " for message: " + message.topic() + ", " + message.key() + ", "
-          + message.value().encodePrettily());
-        return;
-      }
 
       switch (message.topic()) {
         case ITEM_TOPIC_NAME:
@@ -97,7 +86,6 @@ public final class FakeKafkaConsumer {
       storageList.add(EventMessage.fromConsumerRecord(message));
     });
 
-    timestamp = DateTime.now();
 
     // Assign the created consumer to the class being returned.
     // The caller of this function may then be able to call unsubscribe()
@@ -106,11 +94,6 @@ public final class FakeKafkaConsumer {
     this.setConsumer(consumer);
 
     return this;
-  }
-
-  public void resetTimestamp() {
-    // Update the timestamp to designate ignoring stale messages.
-    timestamp = DateTime.now();
   }
 
   public void unsubscribe() {
