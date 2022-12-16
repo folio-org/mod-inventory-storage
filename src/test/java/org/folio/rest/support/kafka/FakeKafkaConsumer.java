@@ -96,19 +96,19 @@ public final class FakeKafkaConsumer {
   }
 
   public static int getAllPublishedAuthoritiesCount() {
-    return authorityEvents.size();
+    return authorityTopicConsumer.countOfReceivedKeys();
   }
 
   public static Collection<EventMessage> getMessagesForAuthority(String authorityId) {
-    return authorityTopicConsumer.getMessagesByKey(authorityId);
+    return authorityTopicConsumer.receivedMessages(authorityId);
   }
 
   public static int getAllPublishedInstanceIdsCount() {
-    return instanceEvents.size();
+    return instanceTopicConsumer.countOfReceivedKeys();
   }
 
   public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return instanceTopicConsumer.getMessagesByKey(instanceId);
+    return instanceTopicConsumer.receivedMessages(instanceId);
   }
 
   public static Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
@@ -121,17 +121,17 @@ public final class FakeKafkaConsumer {
   public static Collection<EventMessage> getMessagesForHoldings(
     String instanceId, String holdingsId) {
 
-    return holdingsTopicConsumer.getMessagesByKey(instanceAndIdKey(instanceId, holdingsId));
+    return holdingsTopicConsumer.receivedMessages(instanceAndIdKey(instanceId, holdingsId));
   }
 
   public static Collection<EventMessage> getMessagesForItem(
     String instanceId, String itemId) {
 
-    return itemTopicConsumer.getMessagesByKey(instanceAndIdKey(instanceId, itemId));
+    return itemTopicConsumer.receivedMessages(instanceAndIdKey(instanceId, itemId));
   }
 
   public static Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
-    return boundWithTopicConsumer.getMessagesByKey(instanceId);
+    return boundWithTopicConsumer.receivedMessages(instanceId);
   }
 
   private static String instanceAndIdKey(String instanceId, String itemId) {
@@ -182,8 +182,12 @@ public final class FakeKafkaConsumer {
       return Objects.equals(message.topic(), topicName);
     }
 
-    private Collection<EventMessage> getMessagesByKey(String key) {
+    private Collection<EventMessage> receivedMessages(String key) {
       return collectedMessages.getOrDefault(key, emptyList());
+    }
+
+    private int countOfReceivedKeys() {
+      return collectedMessages.size();
     }
 
     private void discardCollectedMessages() {
