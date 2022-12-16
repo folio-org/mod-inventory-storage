@@ -8,13 +8,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.rest.support.messages.EventMessage;
 
@@ -26,8 +26,6 @@ import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 import lombok.Value;
 
 public final class FakeKafkaConsumer {
-  private static final Logger logger = LogManager.getLogger();
-
   private final static Map<String, List<EventMessage>> itemEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<EventMessage>> instanceEvents = new ConcurrentHashMap<>();
   private final static Map<String, List<EventMessage>> holdingsEvents = new ConcurrentHashMap<>();
@@ -50,11 +48,20 @@ public final class FakeKafkaConsumer {
     final var AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
     final var BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-    final var instanceTopicConsumer = new TopicConsumer(INSTANCE_TOPIC_NAME);
-    final var holdingsTopicConsumer = new TopicConsumer(HOLDINGS_TOPIC_NAME);
-    final var itemTopicConsumer = new TopicConsumer(ITEM_TOPIC_NAME);
-    final var authorityTopicConsumer = new TopicConsumer(AUTHORITY_TOPIC_NAME);
-    final var boundWithTopicConsumer = new TopicConsumer(BOUND_WITH_TOPIC_NAME);
+    final var instanceTopicConsumer = new TopicConsumer(INSTANCE_TOPIC_NAME,
+      instanceEvents, KafkaConsumerRecord::key);
+
+    final var holdingsTopicConsumer = new TopicConsumer(HOLDINGS_TOPIC_NAME,
+      holdingsEvents, FakeKafkaConsumer::instanceAndIdKey);
+
+    final var itemTopicConsumer = new TopicConsumer(ITEM_TOPIC_NAME,
+      itemEvents, FakeKafkaConsumer::instanceAndIdKey);
+
+    final var authorityTopicConsumer = new TopicConsumer(AUTHORITY_TOPIC_NAME,
+      authorityEvents, KafkaConsumerRecord::key);
+
+    final var boundWithTopicConsumer = new TopicConsumer(BOUND_WITH_TOPIC_NAME,
+      boundWithEvents, KafkaConsumerRecord::key);
 
     final var topicConsumers = Set.of(instanceTopicConsumer, holdingsTopicConsumer,
       itemTopicConsumer, authorityTopicConsumer, boundWithTopicConsumer);
@@ -64,37 +71,15 @@ public final class FakeKafkaConsumer {
       .collect(Collectors.toSet()));
 
     consumer.handler(message -> {
-      final List<EventMessage> storageList;
+      topicConsumers.forEach(topicConsumer -> {
+        if (Objects.equals(message.topic(), topicConsumer.getTopicName())) {
 
-      switch (message.topic()) {
-        case ITEM_TOPIC_NAME:
-          storageList = itemEvents.computeIfAbsent(instanceAndIdKey(message),
-            k -> new ArrayList<>());
-          break;
-        case INSTANCE_TOPIC_NAME:
-          storageList = instanceEvents.computeIfAbsent(message.key(),
-            k -> new ArrayList<>());
-          break;
-        case HOLDINGS_TOPIC_NAME:
-          storageList = holdingsEvents.computeIfAbsent(instanceAndIdKey(message),
-            k -> new ArrayList<>());
-          break;
-        case AUTHORITY_TOPIC_NAME:
-          storageList = authorityEvents.computeIfAbsent(message.key(),
-            k -> new ArrayList<>());
-          break;
-        case BOUND_WITH_TOPIC_NAME:
-          storageList = boundWithEvents.computeIfAbsent(message.key(),
-            k -> new ArrayList<>());
+          final var collectedMessages = topicConsumer.destination.computeIfAbsent(
+            topicConsumer.keyMap.apply(message), v -> new ArrayList<>());
 
-          logger.info("Bound With Message Received: {}: {}", message.key(), message.value().encodePrettily());
-
-          break;
-        default:
-          throw new IllegalArgumentException("Undefined topic");
-      }
-
-      storageList.add(EventMessage.fromConsumerRecord(message));
+          collectedMessages.add(EventMessage.fromConsumerRecord(message));
+        }
+      });
     });
 
 
@@ -195,5 +180,7 @@ public final class FakeKafkaConsumer {
   @Value
   public static class TopicConsumer {
     String topicName;
+    Map<String, List<EventMessage>> destination;
+    Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
   }
 }
