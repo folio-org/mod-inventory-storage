@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
@@ -19,11 +18,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-import lombok.SneakyThrows;
+
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
@@ -31,12 +29,15 @@ import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.fixtures.InstanceIterationFixture;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
+import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.iteration.IterationJobRunner;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import io.vertx.core.Context;
+import lombok.SneakyThrows;
 
 public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
@@ -51,8 +52,11 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   private InstanceRepository instanceRepository;
   private IterationJobRunner jobRunner;
 
+  private final InstanceEventMessageChecks instanceMessageChecks
+    = new InstanceEventMessageChecks(kafkaConsumer);;
+
   @BeforeClass
-  public static void beforeClass() throws Exception {
+  public static void beforeClass() {
     TestBase.beforeAll();
 
     instanceIteration = new InstanceIterationFixture(getClient());
@@ -94,8 +98,8 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getSubmittedDate(), notNullValue());
 
     // Should be a single iteration message for each instance ID generated in the row stream
-    await().atMost(15, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
+    instanceMessageChecks.countOfAllPublishedInstancesIs(
+      greaterThanOrEqualTo(numberOfRecords));
   }
 
   @Test

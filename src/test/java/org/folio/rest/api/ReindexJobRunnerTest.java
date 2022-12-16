@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.InventoryKafkaTopic.AUTHORITY;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
@@ -33,6 +32,7 @@ import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.AuthorityEventMessageChecks;
+import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
@@ -52,6 +52,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
   private final AuthorityEventMessageChecks authorityMessageChecks
     = new AuthorityEventMessageChecks(kafkaConsumer);
+  private final InstanceEventMessageChecks instanceMessageChecks
+    = new InstanceEventMessageChecks(kafkaConsumer);
 
   @Test
   public void canReindexInstances() {
@@ -83,8 +85,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     // Should be a single reindex message for each instance ID generated in the row stream
     // The numbers should match exactly, but intermittently, the published id count is
     // greater than the number of records-no one has been able to figure out why.
-    await().atMost(10, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
+    instanceMessageChecks.countOfAllPublishedInstancesIs(
+      greaterThanOrEqualTo(numberOfRecords));
   }
 
   @Test

@@ -65,17 +65,17 @@ public final class FakeKafkaConsumer {
     return authorityTopicConsumer.receivedMessagesByKey(authorityId);
   }
 
-  public static int getAllPublishedInstanceIdsCount() {
+  public int getAllPublishedInstanceIdsCount() {
     return instanceTopicConsumer.countOfReceivedKeys();
   }
 
-  public static Collection<EventMessage> getMessagesForInstance(String instanceId) {
+  public Collection<EventMessage> getMessagesForInstance(String instanceId) {
     return instanceTopicConsumer.receivedMessagesByKey(instanceId);
   }
 
-  public static Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
+  public Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
     return instanceIds.stream()
-      .map(FakeKafkaConsumer::getMessagesForInstance)
+      .map(this::getMessagesForInstance)
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
   }
