@@ -1,9 +1,7 @@
 package org.folio.rest.api;
 
-import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithCreatedMessagePublished;
 import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithUpdatedMessagePublished;
-import static org.folio.rest.support.messages.BoundWithEventMessageChecks.hasPublishedBoundWithHoldingsRecordIds;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -11,7 +9,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
@@ -81,10 +78,6 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     boundWithCreatedMessagePublished(firstPart.getJson(), mainInstance.getId().toString());
     boundWithCreatedMessagePublished(secondPart.getJson(), anotherInstance.getId().toString());
     boundWithCreatedMessagePublished(thirdPart.getJson(), aThirdInstance.getId().toString());
-
-    await().atMost(10, TimeUnit.SECONDS)
-      .until(() -> hasPublishedBoundWithHoldingsRecordIds(
-          mainHoldingsRecord.getId(), anotherHoldingsRecord.getId(), aThirdHoldingsRecord.getId()));
   }
 
   @Test
@@ -145,10 +138,6 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     // until this is investigated further, that check is removed
     boundWithUpdatedMessagePublished(partTwoCreated.getJson(), partTwoUpdated.getJson(),
       instance2.getId().toString(), instance3.getId().toString());
-
-    await().atMost(10, TimeUnit.SECONDS)
-      .until(() -> hasPublishedBoundWithHoldingsRecordIds(
-          holdingsRecord1.getId(), holdingsRecord2.getId(), holdingsRecord3.getId()));
   }
 
   private JsonObject createBoundWithPartJson(UUID holdingsRecordId, UUID itemId) {

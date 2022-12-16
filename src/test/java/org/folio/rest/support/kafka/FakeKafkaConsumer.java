@@ -130,12 +130,6 @@ public final class FakeKafkaConsumer {
     boundWithEvents.clear();
   }
 
-  public static Collection<JsonObject> getAllPublishedBoundWithEvents() {
-    List<JsonObject> list = new ArrayList<>();
-    boundWithEvents.values().forEach(collection -> collection.forEach(record -> list.add(record.value())));
-    return list;
-  }
-
   public static int getAllPublishedAuthoritiesCount() {
     return authorityEvents.size();
   }
