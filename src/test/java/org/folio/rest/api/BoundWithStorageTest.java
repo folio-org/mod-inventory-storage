@@ -15,7 +15,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.http.ResourceClient;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -48,7 +47,6 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateAndRetrieveBoundWithParts() {
-    FakeKafkaConsumer.clearAllEvents();
     IndividualResource mainInstance = createInstance("Main Instance");
     IndividualResource mainHoldingsRecord = createHoldingsRecord(mainInstance.getId());
     IndividualResource item = createItem(mainHoldingsRecord.getId());
@@ -96,7 +94,6 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canChangeOnePartOfABoundWith() {
-    FakeKafkaConsumer.clearAllEvents();
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource instance2 = createInstance("Instance 2");
