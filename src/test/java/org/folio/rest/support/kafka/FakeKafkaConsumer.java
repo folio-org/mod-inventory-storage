@@ -23,8 +23,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 public final class FakeKafkaConsumer {
   // These definitions are deliberately separate to the production definitions
@@ -36,21 +34,16 @@ public final class FakeKafkaConsumer {
   final static String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
   final static String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-  private final static Map<String, List<EventMessage>> instanceEvents = new ConcurrentHashMap<>();
-  private final static TopicConsumer instanceTopicConsumer = new TopicConsumer(INSTANCE_TOPIC_NAME,
-    instanceEvents, KafkaConsumerRecord::key);
-  private final static Map<String, List<EventMessage>> holdingsEvents = new ConcurrentHashMap<>();
-  private final static TopicConsumer holdingsTopicConsumer = new TopicConsumer(HOLDINGS_TOPIC_NAME,
-    holdingsEvents, FakeKafkaConsumer::instanceAndIdKey);
-  private final static Map<String, List<EventMessage>> itemEvents = new ConcurrentHashMap<>();
-  private final static TopicConsumer itemTopicConsumer = new TopicConsumer(ITEM_TOPIC_NAME,
-    itemEvents, FakeKafkaConsumer::instanceAndIdKey);
-  private final static Map<String, List<EventMessage>> authorityEvents = new ConcurrentHashMap<>();
-  private final static TopicConsumer authorityTopicConsumer = new TopicConsumer(AUTHORITY_TOPIC_NAME,
-    authorityEvents, KafkaConsumerRecord::key);
-  private final static Map<String, List<EventMessage>> boundWithEvents = new ConcurrentHashMap<>();
-  private final static TopicConsumer boundWithTopicConsumer = new TopicConsumer(BOUND_WITH_TOPIC_NAME,
-    boundWithEvents, KafkaConsumerRecord::key);
+  private final static TopicConsumer instanceTopicConsumer = new TopicConsumer(
+    INSTANCE_TOPIC_NAME, KafkaConsumerRecord::key);
+  private final static TopicConsumer holdingsTopicConsumer = new TopicConsumer(
+    HOLDINGS_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
+  private final static TopicConsumer itemTopicConsumer = new TopicConsumer(
+    ITEM_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
+  private final static TopicConsumer authorityTopicConsumer = new TopicConsumer(
+    AUTHORITY_TOPIC_NAME, KafkaConsumerRecord::key);
+  private final static TopicConsumer boundWithTopicConsumer = new TopicConsumer(
+    BOUND_WITH_TOPIC_NAME, KafkaConsumerRecord::key);
 
   // Provide a strong reference to reduce the chances of deallocation before
   // all clients are properly unsubscribed.
@@ -164,12 +157,18 @@ public final class FakeKafkaConsumer {
     return config;
   }
 
-  @AllArgsConstructor
   public static class TopicConsumer {
-    @Getter
     private final String topicName;
     private final Map<String, List<EventMessage>> collectedMessages;
     private final Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
+
+    public TopicConsumer(String topicName,
+      Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap) {
+
+      this.topicName = topicName;
+      this.collectedMessages = new ConcurrentHashMap<>();
+      this.keyMap = keyMap;
+    }
 
     private void acceptMessage(KafkaConsumerRecord<String, JsonObject> message) {
       final var collectedMessages = this.collectedMessages.computeIfAbsent(
@@ -192,6 +191,10 @@ public final class FakeKafkaConsumer {
 
     private void discardCollectedMessages() {
       collectedMessages.clear();
+    }
+
+    private String getTopicName() {
+      return topicName;
     }
   }
 }
