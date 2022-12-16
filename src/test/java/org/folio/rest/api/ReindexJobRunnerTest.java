@@ -32,6 +32,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
+import org.folio.rest.support.messages.AuthorityEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
@@ -48,6 +49,9 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final CommonDomainEventPublisher<Authority> authorityEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       AUTHORITY.fullTopicName(TENANT_ID));
+
+  private final AuthorityEventMessageChecks authorityMessageChecks
+    = new AuthorityEventMessageChecks(kafkaConsumer);
 
   @Test
   public void canReindexInstances() {
@@ -110,8 +114,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
-    await().atMost(10, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedAuthoritiesCount, greaterThanOrEqualTo(numberOfRecords));
+    authorityMessageChecks.countOfAllPublishedAuthoritiesIs(
+      greaterThanOrEqualTo(numberOfRecords));
   }
 
   @Test

@@ -57,11 +57,11 @@ public final class FakeKafkaConsumer {
     boundWithTopicConsumer.discardCollectedMessages();
   }
 
-  public static int getAllPublishedAuthoritiesCount() {
+  public int getAllPublishedAuthoritiesCount() {
     return authorityTopicConsumer.countOfReceivedKeys();
   }
 
-  public static Collection<EventMessage> getMessagesForAuthority(String authorityId) {
+  public Collection<EventMessage> getMessagesForAuthority(String authorityId) {
     return authorityTopicConsumer.receivedMessagesByKey(authorityId);
   }
 
