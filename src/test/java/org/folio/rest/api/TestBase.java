@@ -104,7 +104,7 @@ public abstract class TestBase {
     instanceReindex = new InstanceReindexFixture(getClient());
     authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
-    FakeKafkaConsumer.clearAllEvents();
+    FakeKafkaConsumer.discardAllMessages();
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
@@ -116,7 +116,7 @@ public abstract class TestBase {
   @SneakyThrows
   @Before
   public void removeAllEvents() {
-    FakeKafkaConsumer.clearAllEvents();
+    FakeKafkaConsumer.discardAllMessages();
   }
 
   /**

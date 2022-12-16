@@ -21,10 +21,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Authority;
@@ -37,6 +37,8 @@ import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
 import org.folio.services.reindex.ReindexResourceName;
 import org.junit.Test;
+
+import io.vertx.core.Context;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
@@ -61,7 +63,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.clearAllEvents();
+    FakeKafkaConsumer.discardAllMessages();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
 
@@ -95,7 +97,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.clearAllEvents();
+    FakeKafkaConsumer.discardAllMessages();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
 

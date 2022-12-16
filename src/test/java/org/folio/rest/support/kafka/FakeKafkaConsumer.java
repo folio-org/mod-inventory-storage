@@ -87,12 +87,12 @@ public final class FakeKafkaConsumer {
     consumer.unsubscribe();
   }
 
-  public static void clearAllEvents() {
-    itemEvents.clear();
-    instanceEvents.clear();
-    holdingsEvents.clear();
-    authorityEvents.clear();
-    boundWithEvents.clear();
+  public static void discardAllMessages() {
+    itemTopicConsumer.discardCollectedMessages();
+    instanceTopicConsumer.discardCollectedMessages();
+    holdingsTopicConsumer.discardCollectedMessages();
+    authorityTopicConsumer.discardCollectedMessages();
+    boundWithTopicConsumer.discardCollectedMessages();
   }
 
   public static int getAllPublishedAuthoritiesCount() {
@@ -184,6 +184,10 @@ public final class FakeKafkaConsumer {
 
     private Collection<EventMessage> getMessagesByKey(String key) {
       return collectedMessages.getOrDefault(key, emptyList());
+    }
+
+    private void discardCollectedMessages() {
+      collectedMessages.clear();
     }
   }
 }

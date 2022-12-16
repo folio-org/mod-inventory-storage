@@ -13,11 +13,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 
-import io.vertx.core.json.JsonObject;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import lombok.SneakyThrows;
+
 import org.folio.rest.jaxrs.model.DereferencedItem;
 import org.folio.rest.jaxrs.model.DereferencedItems;
 import org.folio.rest.support.Response;
@@ -26,6 +25,9 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static final UUID smallAngryPlanetId = UUID.randomUUID();
@@ -49,7 +51,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     postItem(smallAngryPlanet);
     postItem(nod);
     postItem(uprooted);
-    FakeKafkaConsumer.clearAllEvents();
+    FakeKafkaConsumer.discardAllMessages();
   }
 
   @AfterClass
@@ -63,7 +65,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   public void CanGetRecordByBarcode() {
     String queryString = "barcode==036000291452";
     String queryString2 = "barcode==657670342075";
-    
+
     DereferencedItems items = findByCql(queryString);
 
     assertThat(items.getTotalRecords(), is(1));
@@ -91,7 +93,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void ReturnsEmptyCollectionWhenNoItemsFound() {
     String queryString = "barcode==647671342075";
-    
+
     DereferencedItems items = findByCql(queryString);
 
     assertThat(items.getTotalRecords(), is(0));
@@ -100,7 +102,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void Returns400WhenCqlSearchInvalid() {
     String queryString = "barcode&647671342075";
-    
+
     Response response = attemptFindByCql(queryString);
 
     assertThat(response.getStatusCode(), is(400));
@@ -116,7 +118,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void Returns404WhenNoItemFoundForId() {
     String Id = UUID.randomUUID().toString();
-    
+
     Response response = attemptFindById(Id);
 
     assertThat(response.getStatusCode(), is(404));
@@ -125,7 +127,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void Returns400WhenInvalidUUID() {
     String Id = "w325b3dc4";
-    
+
     Response response = attemptFindById(Id);
 
     assertThat(response.getStatusCode(), is(400));
@@ -173,7 +175,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private static JsonObject createItemRequest(
-    UUID id, UUID holdingsRecordId, String barcode, 
+    UUID id, UUID holdingsRecordId, String barcode,
     String materialType, Boolean includeOptionalFields) {
 
     JsonObject itemToCreate = new JsonObject();

@@ -17,18 +17,20 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import junit.framework.AssertionFailedError;
-import lombok.SneakyThrows;
+
 import org.folio.rest.support.Response;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import junit.framework.AssertionFailedError;
+import lombok.SneakyThrows;
 
 public class SampleDataTest extends TestBase {
 
@@ -44,7 +46,7 @@ public class SampleDataTest extends TestBase {
 
     removeTenant(TENANT_ID);
     prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
-    FakeKafkaConsumer.clearAllEvents();
+    FakeKafkaConsumer.discardAllMessages();
   }
 
   private void assertCount(URL url, String arrayName, int expectedCount) {
