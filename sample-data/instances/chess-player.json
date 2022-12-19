@@ -5,7 +5,9 @@
   "title": "The chess player’s mating guide Computer Datei Robert Ris",
   "alternativeTitles": [],
   "series": [
-    "Fritztrainer Tactics"
+    {
+      "value": "Fritztrainer Tactics"
+    }
   ],
   "identifiers": [
     {
@@ -28,7 +30,9 @@
     }
   ],
   "subjects": [
-    "DVD-ROM"
+    {
+      "value": "DVD-ROM"
+    }
   ],
   "classifications": [],
   "publication": [

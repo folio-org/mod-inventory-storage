@@ -60,15 +60,31 @@
       "contributorTypeText": ""
     }
   ],
-  "subjects": [
-    "Law--United States--Periodicals",
-    "Advocatuur.--gtt",
-    "Droit--Périodiques",
-    "LAW--unbist",
-    "LAWYERS--unbist",
-    "UNITED STATES--unbist",
-    "Law.--fast",
-    "United States.--fast"
+  "subjects" : [
+    {
+      "value": "Law--United States--Periodicals"
+    },
+    {
+      "value": "Advocatuur.--gtt"
+    },
+    {
+      "value": "Droit--Périodiques"
+    },
+    {
+      "value": "LAW--unbist"
+    },
+    {
+      "value": "LAWYERS--unbist"
+    },
+    {
+      "value": "UNITED STATES--unbist"
+    },
+    {
+      "value": "Law.--fast"
+    },
+    {
+      "value": "United States.--fast"
+    }
   ],
   "classifications": [
     {

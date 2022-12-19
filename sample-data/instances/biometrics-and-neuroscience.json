@@ -4,9 +4,13 @@
   "source": "FOLIO",
   "title": "Futures, biometrics and neuroscience research Luiz Moutinho, Mladen Sokele, editors",
   "alternativeTitles": [],
-  "series": [
-    "Innovative research methodologies in management  / Luiz Moutinho, Mladen Sokele ; Volume 2",
-    "Innovative research methodologies in management Volume 2"
+  "series" : [
+    {
+      "value": "Innovative research methodologies in management  / Luiz Moutinho, Mladen Sokele ; Volume 2"
+    },
+    {
+      "value": "Innovative research methodologies in management Volume 2"
+    }
   ],
   "identifiers": [
     {
@@ -48,10 +52,16 @@
       "name": "Sokele, Mladen"
     }
   ],
-  "subjects": [
-    "Betriebswirtschaftslehre",
-    "Management",
-    "Wissenschaftliche Methode"
+  "subjects" : [
+    {
+      "value": "Betriebswirtschaftslehre"
+    },
+    {
+      "value": "Management"
+    },
+    {
+      "value": "Wissenschaftliche Methode"
+    }
   ],
   "classifications": [],
   "publication": [

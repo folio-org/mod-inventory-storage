@@ -4,7 +4,9 @@
   "source": "FOLIO",
   "title": "Environment and identity politics in colonial Africa Fulani migrations and land conflict by Emmanuel M. Mbah",
   "series": [
-    "Global Africa 2"
+    {
+      "value": "Global Africa 2"
+    }
   ],
   "identifiers": [
     {
@@ -35,31 +37,81 @@
     }
   ],
   "subjects": [
-    "Fula (African people)--Cameroon--Bamenda Highlands",
-    "Fula (African people)--Land tenure",
-    "Land settlement patterns--Cameroon--Bamenda Highlands",
-    "Cattle--Environmental aspects--Cameroon--Bamenda Highlands",
-    "Grazing--Environmental aspects--Cameroon--Bamenda Highlands",
-    "Kolonie",
-    "Fulbe",
-    "Regionale Mobilität",
-    "Weidewirtschaft",
-    "Ethnische Beziehungen",
-    "Konflikt",
-    "Grundeigentum",
-    "Natürliche Ressourcen",
-    "Cameroon--Ethnic relations",
-    "Great Britain--Colonies--Africa--Administration",
-    "Großbritannien",
-    "Kamerun--Nordwest",
-    "Cameroon Ethnic relations",
-    "Great Britain Colonies Africa Administration",
-    "Cattle Environmental aspects Cameroon Bamenda Highlands",
-    "Fula (African people) Land tenure",
-    "Fula (African people) Cameroon Bamenda Highlands",
-    "Grazing Environmental aspects Cameroon Bamenda Highlands",
-    "Land settlement patterns Cameroon Bamenda Highlands",
-    "Geschichte 1916-1960"
+    {
+      "value": "Fula (African people)--Cameroon--Bamenda Highlands"
+    },
+    {
+      "value": "Fula (African people)--Land tenure"
+    },
+    {
+      "value": "Land settlement patterns--Cameroon--Bamenda Highlands"
+    },
+    {
+      "value": "Cattle--Environmental aspects--Cameroon--Bamenda Highlands"
+    },
+    {
+      "value": "Grazing--Environmental aspects--Cameroon--Bamenda Highlands"
+    },
+    {
+      "value": "Kolonie"
+    },
+    {
+      "value": "Fulbe"
+    },
+    {
+      "value": "Regionale Mobilität"
+    },
+    {
+      "value": "Weidewirtschaft"
+    },
+    {
+      "value": "Ethnische Beziehungen"
+    },
+    {
+      "value": "Konflikt"
+    },
+    {
+      "value": "Grundeigentum"
+    },
+    {
+      "value": "Natürliche Ressourcen"
+    },
+    {
+      "value": "Cameroon--Ethnic relations"
+    },
+    {
+      "value": "Great Britain--Colonies--Africa--Administration"
+    },
+    {
+      "value": "Großbritannien"
+    },
+    {
+      "value": "Kamerun--Nordwest"
+    },
+    {
+      "value": "Cameroon Ethnic relations"
+    },
+    {
+      "value": "Great Britain Colonies Africa Administration"
+    },
+    {
+      "value": "Cattle Environmental aspects Cameroon Bamenda Highlands"
+    },
+    {
+      "value": "Fula (African people) Land tenure"
+    },
+    {
+      "value": "Fula (African people) Cameroon Bamenda Highlands"
+    },
+    {
+      "value": "Grazing Environmental aspects Cameroon Bamenda Highlands"
+    },
+    {
+      "value": "Land settlement patterns Cameroon Bamenda Highlands"
+    },
+    {
+      "value": "Geschichte 1916-1960"
+    }
   ],
   "classifications": [
     {

@@ -1,3 +1,12 @@
+## 26.0.0 IN-PROGRESS
+* Extend subjects, alternativeTitles, series with authorityId ([MODINVSTOR-1010](https://issues.folio.org/browse/MODINVSTOR-1010))
+* provides `inventory-view 2.0`
+* provides `inventory-view-instance-set 2.0`
+* provides `item-storage-dereferenced 1.0`
+* provides `instance-storage 10.0`
+* provides `instance-storage-batch-sync 2.0`
+* provides `instance-storage-batch-sync-unsafe 2.0`
+* 
 ## 25.0.0 2022-10-25
 
 * Upgraded RMB to 35.0.0 ([MODINVSTOR-965](https://issues.folio.org/browse/MODINVSTOR-965))

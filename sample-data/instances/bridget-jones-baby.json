@@ -18,12 +18,22 @@
       "name": "Fielding, Helen"
     }
   ],
-  "subjects": [
-    "Jones, Bridget",
-    "Pregnant women",
-    "England",
-    "Humorous fiction",
-    "Diary fiction"
+  "subjects" : [
+    {
+      "value": "Jones, Bridget"
+    },
+    {
+      "value": "Pregnant women"
+    },
+    {
+      "value": "England"
+    },
+    {
+      "value": "Humorous fiction"
+    },
+    {
+      "value": "Diary fiction"
+    }
   ],
   "administrativeNotes": [
     "Cataloging data"

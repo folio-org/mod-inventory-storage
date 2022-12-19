@@ -5,7 +5,9 @@
   "title": "The city post-modernity edited by Alan Latham",
   "alternativeTitles": [],
   "series": [
-    "SAGE benchmarks in culture and society"
+    {
+      "value": "SAGE benchmarks in culture and society"
+    }
   ],
   "identifiers": [
     {
@@ -27,10 +29,16 @@
       "name": "Latham, Alan"
     }
   ],
-  "subjects": [
-    "Stadt",
-    "Postmoderne",
-    "Aufsatzsammlung"
+  "subjects" : [
+    {
+      "value": "Stadt"
+    },
+    {
+      "value": "Postmoderne"
+    },
+    {
+      "value": "Aufsatzsammlung"
+    }
   ],
   "classifications": [
     {

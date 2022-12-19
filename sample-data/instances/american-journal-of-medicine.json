@@ -30,10 +30,16 @@
     }
   ],
   "contributors": [],
-  "subjects": [
-    "Clinical medicine-Periodicals",
-    "Medicine",
-    "Geneeskunde"
+  "subjects" : [
+    {
+      "value": "Clinical medicine-Periodicals"
+    },
+    {
+      "value": "Medicine"
+    },
+    {
+      "value": "Geneeskunde"
+    }
   ],
   "classifications": [
     {

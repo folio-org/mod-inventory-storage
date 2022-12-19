@@ -4,7 +4,9 @@
   "source": "FOLIO",
   "title": "Umsetzung der DIN EN ISO 9001:2015 Harald Augustin (Hrsg.)",
   "series": [
-    "Berichte aus der Betriebswirtschaft"
+    {
+      "value": "Berichte aus der Betriebswirtschaft"
+    }
   ],
   "identifiers": [
     {

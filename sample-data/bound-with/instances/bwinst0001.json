@@ -3,7 +3,11 @@
   "hrid" : "bwinst0001",
   "source" : "FOLIO",
   "title" : "Rapport från inspektionsresa till svenska betongdammar i augusti 1939, med särskild hänsyn till sprickbildningsfrågan och användandet av specialcement / av S. Giertz-Hedström",
-  "series" : [ "Svenska Vattenkraftforeningens Publikationer ; 354 (1942:16)" ],
+  "series" : [
+    {
+      "value": "Svenska Vattenkraftforeningens Publikationer ; 354 (1942:16)"
+    }
+  ],
   "identifiers" : [ ],
   "contributors" : [ {
     "contributorNameTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe2a",
