@@ -40,7 +40,7 @@ public class SampleDataTest extends TestBase {
   public static void beforeAll() {
     TestBase.beforeAll();
 
-    removeTenant(TENANT_ID);
+    removeTenant(TENANT_ID);  
     prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
   }
 
