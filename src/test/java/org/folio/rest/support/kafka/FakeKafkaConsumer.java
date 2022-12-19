@@ -80,9 +80,7 @@ public final class FakeKafkaConsumer {
       .collect(Collectors.toList());
   }
 
-  public static Collection<EventMessage> getMessagesForHoldings(
-    String instanceId, String holdingsId) {
-
+  public Collection<EventMessage> getMessagesForHoldings(String instanceId, String holdingsId) {
     return holdingsTopicConsumer.receivedMessagesByKey(instanceAndIdKey(instanceId, holdingsId));
   }
 

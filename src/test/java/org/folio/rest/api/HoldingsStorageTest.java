@@ -14,13 +14,8 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUnsaf
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.allHoldingsDeletedMessagePublished;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsCreatedMessagePublished;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsDeletedMessagePublished;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.noHoldingsUpdatedMessagePublished;
+import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -89,6 +84,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
   public static final String NEW_TEST_TAG = "new test tag";
+
+  private final HoldingsEventMessageChecks holdingsMessageChecks
+    = new HoldingsEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @Before
@@ -161,7 +159,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
-    holdingsCreatedMessagePublished(holding);
+
+    holdingsMessageChecks.createdMessagePublished(holding);
   }
 
   @Test
@@ -352,7 +351,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(NEW_TEST_TAG));
-    holdingsUpdatedMessagePublished(holdingResource.getJson(), holdingFromGet);
+    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), holdingFromGet);
   }
 
   @Test
@@ -389,10 +388,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject holdingFromGet = getResponse.getJson();
 
     assertThat(holdingFromGet.getString("instanceId"), is(newInstanceId.toString()));
-    holdingsUpdatedMessagePublished(holdingResource.getJson(), holdingFromGet);
+
+    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), holdingFromGet);
 
     JsonObject newItem = item.copy()
       .put("_version", 2);
+
     itemUpdatedMessagePublished(item, newItem, instanceId.toString());
   }
 
@@ -413,16 +414,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     Response getResponse = holdingsClient.getById(holdingId);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-    holdingsDeletedMessagePublished(holdingResource.getJson());
+
+    holdingsMessageChecks.deletedMessagePublished(holdingResource.getJson());
   }
 
+  @SneakyThrows
   @Test
-  public void canGetAllHoldings()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void canGetAllHoldings() {
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
     UUID thirdInstanceId = UUID.randomUUID();
@@ -624,7 +622,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(allHoldings.size(), is(0));
 
-    allHoldingsDeletedMessagePublished();
+    holdingsMessageChecks.allHoldingsDeletedMessagePublished();
   }
 
   @SneakyThrows
@@ -664,26 +662,24 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(h1);
     assertNotExists(h3);
     assertNotExists(h5);
-    holdingsDeletedMessagePublished(h1);
-    holdingsDeletedMessagePublished(h3);
-    holdingsDeletedMessagePublished(h5);
+
+    holdingsMessageChecks.deletedMessagePublished(h1);
+    holdingsMessageChecks.deletedMessagePublished(h3);
+    holdingsMessageChecks.deletedMessagePublished(h5);
   }
 
   @SneakyThrows
   @Test
   public void cannotDeleteHoldingsWithEmptyCql() {
-
     var response = getClient().delete(holdingsStorageUrl("?query="), TENANT_ID).get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), containsString("empty"));
   }
 
+  @SneakyThrows
   @Test
-  public void tenantIsRequiredForCreatingANewHolding()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+  public void tenantIsRequiredForCreatingANewHolding() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -2048,9 +2044,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holdingsFromGet = getResponse.getJson();
 
     assertThat(holdingsFromGet.getString("hrid"), is(hrid));
+
     // Make sure a create event published vs update event
-    holdingsCreatedMessagePublished(holdingsFromGet);
-    noHoldingsUpdatedMessagePublished(instanceId.toString(), holdingsId.toString());
+    holdingsMessageChecks.createdMessagePublished(holdingsFromGet);
+    holdingsMessageChecks.noHoldingsUpdatedMessagePublished(
+      instanceId.toString(), holdingsId.toString());
 
     log.info("Finished canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
   }
@@ -2335,7 +2333,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       final JsonObject holding = (JsonObject) hrObj;
 
       assertExists(holding);
-      holdingsCreatedMessagePublished(getById(holding.getString("id")).getJson());
+
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id")).getJson());
     }
   }
 
@@ -2394,11 +2393,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .filter(id -> !id.equals(existingHrId))
       .map(this::getById)
       .map(Response::getJson)
-      .forEach(HoldingsEventMessageChecks::holdingsCreatedMessagePublished);
+      .forEach(holdingsMessageChecks::createdMessagePublished);
 
     var holdingsAfterUpdate = getById(existingHrId).getJson();
 
-    holdingsUpdatedMessagePublished(holdingsBeforeUpdate, holdingsAfterUpdate);
+    holdingsMessageChecks.updatedMessagePublished(holdingsBeforeUpdate, holdingsAfterUpdate);
   }
 
   @Test

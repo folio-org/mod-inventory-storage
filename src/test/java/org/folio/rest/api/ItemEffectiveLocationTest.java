@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.messages.HoldingsEventMessageChecks.holdingsUpdatedMessagePublished;
 import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -25,6 +24,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.http.InterfaceUrls;
+import org.folio.rest.support.messages.HoldingsEventMessageChecks;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +45,9 @@ import lombok.SneakyThrows;
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static final UUID instanceId = UUID.randomUUID();
+
+  private final HoldingsEventMessageChecks holdingsMessageChecks
+    = new HoldingsEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @Before
@@ -208,7 +211,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     itemUpdatedMessagePublished(createdItem, associatedItem);
 
-    holdingsUpdatedMessagePublished(createdHolding,
+    holdingsMessageChecks.updatedMessagePublished(createdHolding,
       holdingsClient.getById(holdingsRecordId).getJson());
   }
 
