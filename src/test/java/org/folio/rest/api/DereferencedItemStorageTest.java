@@ -21,7 +21,6 @@ import org.folio.rest.jaxrs.model.DereferencedItem;
 import org.folio.rest.jaxrs.model.DereferencedItems;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,7 +50,8 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     postItem(smallAngryPlanet);
     postItem(nod);
     postItem(uprooted);
-    FakeKafkaConsumer.discardAllMessages();
+
+    kafkaConsumer.discardAllMessages();
   }
 
   @AfterClass

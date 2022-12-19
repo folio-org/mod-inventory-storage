@@ -71,7 +71,7 @@ public abstract class TestBase {
   static ResourceClient inventoryViewClient;
   static ResourceClient statisticalCodeClient;
   static StatisticalCodeFixture statisticalCodeFixture;
-  static FakeKafkaConsumer kafkaConsumer;
+  static final FakeKafkaConsumer kafkaConsumer = new FakeKafkaConsumer();
   static InstanceReindexFixture instanceReindex;
   static AuthorityReindexFixture authorityReindex;
   static AsyncMigrationFixture asyncMigration;
@@ -96,15 +96,16 @@ public abstract class TestBase {
     statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(getClient());
-    instanceTypesClient = ResourceClient
-      .forInstanceTypes(getClient());
+    instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
     illPoliciesClient = ResourceClient.forIllPolicies(getClient());
     statisticalCodeFixture = new StatisticalCodeFixture(getClient());
-    kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
     instanceReindex = new InstanceReindexFixture(getClient());
     authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
-    FakeKafkaConsumer.discardAllMessages();
+
+    kafkaConsumer.discardAllMessages();
+    kafkaConsumer.consume(getVertx());
+
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
@@ -116,7 +117,7 @@ public abstract class TestBase {
   @SneakyThrows
   @Before
   public void removeAllEvents() {
-    FakeKafkaConsumer.discardAllMessages();
+    kafkaConsumer.discardAllMessages();
   }
 
   /**

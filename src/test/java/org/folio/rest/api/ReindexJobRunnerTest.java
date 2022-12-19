@@ -30,7 +30,6 @@ import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.AuthorityEventMessageChecks;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
@@ -69,7 +68,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.discardAllMessages();
+    kafkaConsumer.discardAllMessages();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
 
@@ -103,7 +102,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.discardAllMessages();
+    kafkaConsumer.discardAllMessages();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
 

@@ -20,25 +20,23 @@ public final class FakeKafkaConsumer {
   final static String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
   final static String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-  private final static MessageCollectingTopicConsumer instanceTopicConsumer = new MessageCollectingTopicConsumer(
+  private final MessageCollectingTopicConsumer instanceTopicConsumer = new MessageCollectingTopicConsumer(
     INSTANCE_TOPIC_NAME, KafkaConsumerRecord::key);
-  private final static MessageCollectingTopicConsumer holdingsTopicConsumer = new MessageCollectingTopicConsumer(
+  private final MessageCollectingTopicConsumer holdingsTopicConsumer = new MessageCollectingTopicConsumer(
     HOLDINGS_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
-  private final static MessageCollectingTopicConsumer itemTopicConsumer = new MessageCollectingTopicConsumer(
+  private final MessageCollectingTopicConsumer itemTopicConsumer = new MessageCollectingTopicConsumer(
     ITEM_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
-  private final static MessageCollectingTopicConsumer authorityTopicConsumer = new MessageCollectingTopicConsumer(
+  private final MessageCollectingTopicConsumer authorityTopicConsumer = new MessageCollectingTopicConsumer(
     AUTHORITY_TOPIC_NAME, KafkaConsumerRecord::key);
-  private final static MessageCollectingTopicConsumer boundWithTopicConsumer = new MessageCollectingTopicConsumer(
+  private final MessageCollectingTopicConsumer boundWithTopicConsumer = new MessageCollectingTopicConsumer(
     BOUND_WITH_TOPIC_NAME, KafkaConsumerRecord::key);
 
-  public FakeKafkaConsumer consume(Vertx vertx) {
+  public void consume(Vertx vertx) {
     instanceTopicConsumer.subscribe(vertx);
     holdingsTopicConsumer.subscribe(vertx);
     itemTopicConsumer.subscribe(vertx);
     authorityTopicConsumer.subscribe(vertx);
     boundWithTopicConsumer.subscribe(vertx);
-
-    return this;
   }
 
   public void unsubscribe() {
@@ -49,7 +47,7 @@ public final class FakeKafkaConsumer {
     boundWithTopicConsumer.unsubscribe();
   }
 
-  public static void discardAllMessages() {
+  public void discardAllMessages() {
     itemTopicConsumer.discardCollectedMessages();
     instanceTopicConsumer.discardCollectedMessages();
     holdingsTopicConsumer.discardCollectedMessages();
