@@ -21,10 +21,6 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
-import static org.folio.rest.support.messages.ItemEventMessageChecks.allItemsDeletedMessagePublished;
-import static org.folio.rest.support.messages.ItemEventMessageChecks.itemCreatedMessagePublished;
-import static org.folio.rest.support.messages.ItemEventMessageChecks.itemDeletedMessagePublished;
-import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -104,6 +100,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
+
+  private final ItemEventMessageChecks itemMessageChecks
+    = new ItemEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @Before
@@ -310,17 +309,15 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
     assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
-    itemCreatedMessagePublished(itemFromGet);
     assertThat(itemFromGet.getString("effectiveShelvingOrder"), is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
-
     assertThat(itemFromGet.getJsonArray("statisticalCodeIds"), hasItem(statisticalCodeId.toString()));
+
+    itemMessageChecks.createdMessagePublished(itemFromGet);
   }
 
+  @SneakyThrows
   @Test
-  public void canCreateAnItemWithMinimalProperties()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+  public void canCreateAnItemWithMinimalProperties() {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
 
     UUID id = UUID.randomUUID();
@@ -386,7 +383,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
     assertThat(updatedItemResponse.getJsonArray("administrativeNotes").contains(adminNote), is(true));
 
-    itemUpdatedMessagePublished(createdItem, getById(id).getJson());
+    itemMessageChecks.updatedMessagePublished(createdItem, getById(id).getJson());
   }
 
   @Test
@@ -407,7 +404,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     itemsClient.replace(id, updatedItem);
 
-    itemUpdatedMessagePublished(createdItem, getById(id).getJson());
+    itemMessageChecks.updatedMessagePublished(createdItem, getById(id).getJson());
   }
 
   @Test
@@ -1114,7 +1111,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray.stream()
       .map(obj -> (JsonObject) obj)
       .map(obj -> getById(obj.getString("id")).getJson())
-      .forEach(ItemEventMessageChecks::itemCreatedMessagePublished);
+      .forEach(itemMessageChecks::createdMessagePublished);
   }
 
   @Test
@@ -1202,9 +1199,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .filter(id -> !id.equals(existingItemId.toString()))
       .map(this::getById)
       .map(Response::getJson)
-      .forEach(ItemEventMessageChecks::itemCreatedMessagePublished);
+      .forEach(itemMessageChecks::createdMessagePublished);
 
-    itemUpdatedMessagePublished(existingItemBeforeUpdate, getById(existingItemId).getJson());
+    itemMessageChecks.updatedMessagePublished(existingItemBeforeUpdate,
+      getById(existingItemId).getJson());
   }
 
   @Test
@@ -1685,7 +1683,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response getResponse = getCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-    itemDeletedMessagePublished(createdItem);
+
+    itemMessageChecks.deletedMessagePublished(createdItem);
   }
 
   @Test
@@ -2038,7 +2037,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allItems.size(), is(0));
     assertThat(responseBody.getInteger("totalRecords"), is(0));
 
-    allItemsDeletedMessagePublished();
+    itemMessageChecks.allItemsDeletedMessagePublished();
   }
 
   @SneakyThrows
@@ -2059,9 +2058,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(item1);
     assertNotExists(item3);
     assertNotExists(item5);
-    itemDeletedMessagePublished(item1);
-    itemDeletedMessagePublished(item3);
-    itemDeletedMessagePublished(item5);
+
+    itemMessageChecks.deletedMessagePublished(item1);
+    itemMessageChecks.deletedMessagePublished(item3);
+    itemMessageChecks.deletedMessagePublished(item5);
   }
 
   @SneakyThrows

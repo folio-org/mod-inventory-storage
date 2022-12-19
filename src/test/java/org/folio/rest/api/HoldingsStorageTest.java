@@ -15,7 +15,6 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
-import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -66,6 +65,7 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.messages.HoldingsEventMessageChecks;
+import org.folio.rest.support.messages.ItemEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -87,6 +87,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(kafkaConsumer);
+
+  private final ItemEventMessageChecks itemMessageChecks
+    = new ItemEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @Before
@@ -394,7 +397,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject newItem = item.copy()
       .put("_version", 2);
 
-    itemUpdatedMessagePublished(item, newItem, instanceId.toString());
+    itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
   }
 
   @Test

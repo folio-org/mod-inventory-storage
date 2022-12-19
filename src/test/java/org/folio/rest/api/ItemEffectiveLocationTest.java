@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -25,6 +24,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.messages.HoldingsEventMessageChecks;
+import org.folio.rest.support.messages.ItemEventMessageChecks;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +48,9 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(kafkaConsumer);
+
+  private final ItemEventMessageChecks itemMessageChecks
+    = new ItemEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @Before
@@ -209,7 +212,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertThat(associatedItem.getString(EFFECTIVE_LOCATION_ID_KEY),
       is(effectiveLocation(holdingEndLoc, itemLoc)));
 
-    itemUpdatedMessagePublished(createdItem, associatedItem);
+    itemMessageChecks.updatedMessagePublished(createdItem, associatedItem);
 
     holdingsMessageChecks.updatedMessagePublished(createdHolding,
       holdingsClient.getById(holdingsRecordId).getJson());
