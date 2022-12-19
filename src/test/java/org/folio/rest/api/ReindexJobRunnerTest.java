@@ -67,9 +67,6 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    // Make sure no events are left over from test preparation
-    kafkaConsumer.discardAllMessages();
-
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
@@ -100,9 +97,6 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
-
-    // Make sure no events are left over from test preparation
-    kafkaConsumer.discardAllMessages();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
 

@@ -45,8 +45,6 @@ public class SampleDataTest extends TestBase {
 
     removeTenant(TENANT_ID);
     prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
-
-    kafkaConsumer.discardAllMessages();
   }
 
   private void assertCount(URL url, String arrayName, int expectedCount) {
