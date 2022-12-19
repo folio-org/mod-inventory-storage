@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.boundWithStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
@@ -19,16 +20,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.folio.rest.support.Response;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import junit.framework.AssertionFailedError;
 import lombok.SneakyThrows;
 
 public class SampleDataTest extends TestBase {
@@ -45,20 +42,6 @@ public class SampleDataTest extends TestBase {
 
     removeTenant(TENANT_ID);
     prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
-  }
-
-  private void assertCount(URL url, String arrayName, int expectedCount) {
-    try {
-      CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-      getClient().get(url, TENANT_ID, json(getCompleted));
-      Response response = getCompleted.get(10, SECONDS);
-      JsonObject body = response.getJson();
-      JsonArray array = body.getJsonArray(arrayName);
-      assertThat(array.size(), is(expectedCount));
-      assertThat(body.getInteger("totalRecords"), is(expectedCount));
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   @Test
@@ -84,18 +67,6 @@ public class SampleDataTest extends TestBase {
   @Test
   public void boundWithPartsCount() {
     assertCount(boundWithStorageUrl("?limit=100"), "boundWithParts", 10);
-  }
-
-  private JsonObject get(URL url) {
-    try {
-      CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-      getClient().get(url, TENANT_ID, json(getCompleted));
-      Response response = getCompleted.get(10, SECONDS);
-      assertThat(response.getStatusCode(), is(HTTP_OK));
-      return response.getJson();
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(url + ": " + e.getMessage(), e);
-    }
   }
 
   /**
@@ -137,31 +108,61 @@ public class SampleDataTest extends TestBase {
     assertMetadata(item);
   }
 
-  private JsonObject getInstanceRelationship(String id) {
-    try {
-      CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-      getClient().get(instanceRelationshipsUrl("?limit=100"), TENANT_ID, json(getCompleted));
-      Response response = getCompleted.get(10, SECONDS);
-      JsonObject body = response.getJson();
-      JsonArray array = body.getJsonArray("instanceRelationships");
-      for (int i=0; i<array.size(); i++) {
-        JsonObject ir = array.getJsonObject(i);
-        if (id.equals(ir.getString("id"))) {
-          return ir;
-        }
-      }
-      throw new AssertionFailedError("instance relationship " + id + " not found: " + body);
-    } catch (InterruptedException | ExecutionException | TimeoutException e) {
-      throw new RuntimeException(id + ": " + e.getMessage(), e);
-    }
-  }
-
   @Test
-  public void instanceRelationshipGlobalAfrica2() throws Exception {
+  public void instanceRelationshipGlobalAfrica2() {
     JsonObject ir = getInstanceRelationship("e5cea7b1-3c48-428c-bc5e-2efc9ead1924");
+
+    assertThat("Instance relationship could not be found", ir, notNullValue());
+
     assertThat(ir.getString("superInstanceId"), is("f7e82a1e-fc06-4b82-bb1d-da326cb378ce"));
     assertThat(ir.getString("subInstanceId"), is("04489a01-f3cd-4f9e-9be4-d9c198703f45"));
     assertThat(ir.getString("instanceRelationshipTypeId"), is("30773a27-b485-4dab-aeb6-b8c04fa3cb17"));
     assertMetadata(ir);
+  }
+
+  @SneakyThrows
+  private JsonObject get(URL url) {
+    final var getCompleted = new CompletableFuture<Response>();
+
+    getClient().get(url, TENANT_ID, json(getCompleted));
+
+    final var response = getCompleted.get(10, SECONDS);
+
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+
+    return response.getJson();
+  }
+
+  @SneakyThrows
+  private JsonObject getInstanceRelationship(String id) {
+    final var getCompleted = new CompletableFuture<Response>();
+
+    getClient().get(instanceRelationshipsUrl("?limit=100"), TENANT_ID, json(getCompleted));
+
+    final var response = getCompleted.get(10, SECONDS);
+    final var body = response.getJson();
+
+    final var instanceRelationships = toList(
+      body.getJsonArray("instanceRelationships"));
+
+    return instanceRelationships.stream()
+      .filter(instanceRelationship -> instanceRelationship.getString("id") == id)
+      .findFirst()
+      .orElse(null);
+  }
+
+  @SneakyThrows
+  private void assertCount(URL url, String arrayName, int expectedCount) {
+    final var getCompleted = new CompletableFuture<Response>();
+
+    getClient().get(url, TENANT_ID, json(getCompleted));
+
+    final var response = getCompleted.get(10, SECONDS);
+
+    final var body = response.getJson();
+    final var array = body.getJsonArray(arrayName);
+
+    assertThat(array.size(), is(expectedCount));
+    assertThat(body.getInteger("totalRecords"), is(expectedCount));
   }
 }
