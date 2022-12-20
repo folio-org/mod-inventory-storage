@@ -1196,10 +1196,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   public void canSearchBySubjects() throws Exception {
     JsonObject first = new JsonObject()
         .put("title", "first")
-        .put("subjects", new JsonArray().add("foo").add("bar").add("baz"));
+        .put("subjects", new JsonArray()
+          .add(new JsonObject().put("value", "foo"))
+          .add(new JsonObject().put("value", "bar"))
+          .add(new JsonObject().put("value", "baz"))
+        );
     JsonObject second = new JsonObject()
         .put("title", "second")
-        .put("subjects", new JsonArray().add("abc def ghi").add("uvw xyz"));
+        .put("subjects", new JsonArray()
+          .add(new JsonObject().put("value", "abc def ghi"))
+          .add(new JsonObject().put("value", "uvw xyz"))
+        );
 
     JsonObject [] instances = { first, second };
     for (JsonObject instance : instances) {
@@ -1208,19 +1215,19 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       createInstance(instance);
     }
 
-    matchInstanceTitles(searchForInstances("subjects=foo"), "first");
-    matchInstanceTitles(searchForInstances("subjects=bar"), "first");
-    matchInstanceTitles(searchForInstances("subjects=baz"), "first");
-    matchInstanceTitles(searchForInstances("subjects=abc"), "second");
-    matchInstanceTitles(searchForInstances("subjects=def"), "second");
-    matchInstanceTitles(searchForInstances("subjects=ghi"), "second");
-    matchInstanceTitles(searchForInstances("subjects=uvw"), "second");
-    matchInstanceTitles(searchForInstances("subjects=xyz"), "second");
+    matchInstanceTitles(searchForInstances("subjects.value=foo"), "first");
+    matchInstanceTitles(searchForInstances("subjects.value=bar"), "first");
+    matchInstanceTitles(searchForInstances("subjects.value=baz"), "first");
+    matchInstanceTitles(searchForInstances("subjects.value=abc"), "second");
+    matchInstanceTitles(searchForInstances("subjects.value=def"), "second");
+    matchInstanceTitles(searchForInstances("subjects.value=ghi"), "second");
+    matchInstanceTitles(searchForInstances("subjects.value=uvw"), "second");
+    matchInstanceTitles(searchForInstances("subjects.value=xyz"), "second");
     // phrase search
-    matchInstanceTitles(searchForInstances("subjects=\"def ghi\""), "second");
-    matchInstanceTitles(searchForInstances("subjects=\"uvw xyz\""), "second");
-    matchInstanceTitles(searchForInstances("subjects=\"baz bar\""));
-    matchInstanceTitles(searchForInstances("subjects=\"abc xyz\""));
+    matchInstanceTitles(searchForInstances("subjects.value=\"def ghi\""), "second");
+    matchInstanceTitles(searchForInstances("subjects.value=\"uvw xyz\""), "second");
+    matchInstanceTitles(searchForInstances("subjects.value=\"baz bar\""));
+    matchInstanceTitles(searchForInstances("subjects.value=\"abc xyz\""));
   }
 
   @Test
