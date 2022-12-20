@@ -4,6 +4,7 @@
 * provides `inventory-view-instance-set 2.0`
 * provides `item-storage-dereferenced 1.0`
 * provides `instance-storage 10.0`
+* provides `instance-storage-batch 2.0`
 * provides `instance-storage-batch-sync 2.0`
 * provides `instance-storage-batch-sync-unsafe 2.0`
 * 

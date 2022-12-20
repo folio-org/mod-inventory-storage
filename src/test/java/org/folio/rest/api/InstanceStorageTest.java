@@ -1196,10 +1196,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   public void canSearchBySubjects() throws Exception {
     JsonObject first = new JsonObject()
         .put("title", "first")
-        .put("subjects", new JsonArray().add("foo").add("bar").add("baz"));
+        .put("subjects", new JsonArray()
+          .add(new JsonObject().put("value", "foo"))
+          .add(new JsonObject().put("value", "bar"))
+          .add(new JsonObject().put("value", "baz"))
+        );
     JsonObject second = new JsonObject()
         .put("title", "second")
-        .put("subjects", new JsonArray().add("abc def ghi").add("uvw xyz"));
+        .put("subjects", new JsonArray()
+          .add(new JsonObject().put("value", "abc def ghi"))
+          .add(new JsonObject().put("value", "uvw xyz"))
+        );
 
     JsonObject [] instances = { first, second };
     for (JsonObject instance : instances) {

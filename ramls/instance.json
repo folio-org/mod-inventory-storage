@@ -50,8 +50,7 @@
           "authorityId": {
             "type": "string",
             "description": "UUID of authority record that controls an alternative title",
-            "$ref": "uuid.json",
-            "readonly": true
+            "$ref": "uuid.json"
           }
         }
       },
@@ -78,8 +77,7 @@
           "authorityId": {
             "type": "string",
             "description": "UUID of authority record that controls an series title",
-            "$ref": "uuid.json",
-            "readonly": true
+            "$ref": "uuid.json"
           }
         },
         "additionalProperties": false,
@@ -152,8 +150,7 @@
           "authorityId": {
             "type": "string",
             "description": "UUID of authority record that controls the contributor",
-            "$ref": "uuid.json",
-            "readonly": true
+            "$ref": "uuid.json"
           },
           "contributorNameType": {
             "type": "object",
@@ -192,8 +189,7 @@
           "authorityId": {
             "type": "string",
             "description": "UUID of authority record that controls a subject heading",
-            "$ref": "uuid.json",
-            "readonly": true
+            "$ref": "uuid.json"
           }
         },
         "additionalProperties": false,
