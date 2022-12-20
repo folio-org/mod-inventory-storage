@@ -1215,19 +1215,19 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       createInstance(instance);
     }
 
-    matchInstanceTitles(searchForInstances("subjects.value=foo"), "first");
-    matchInstanceTitles(searchForInstances("subjects.value=bar"), "first");
-    matchInstanceTitles(searchForInstances("subjects.value=baz"), "first");
-    matchInstanceTitles(searchForInstances("subjects.value=abc"), "second");
-    matchInstanceTitles(searchForInstances("subjects.value=def"), "second");
-    matchInstanceTitles(searchForInstances("subjects.value=ghi"), "second");
-    matchInstanceTitles(searchForInstances("subjects.value=uvw"), "second");
-    matchInstanceTitles(searchForInstances("subjects.value=xyz"), "second");
+    matchInstanceTitles(searchForInstances("subjects=foo"), "first");
+    matchInstanceTitles(searchForInstances("subjects=bar"), "first");
+    matchInstanceTitles(searchForInstances("subjects=baz"), "first");
+    matchInstanceTitles(searchForInstances("subjects=abc"), "second");
+    matchInstanceTitles(searchForInstances("subjects=def"), "second");
+    matchInstanceTitles(searchForInstances("subjects=ghi"), "second");
+    matchInstanceTitles(searchForInstances("subjects=uvw"), "second");
+    matchInstanceTitles(searchForInstances("subjects=xyz"), "second");
     // phrase search
-    matchInstanceTitles(searchForInstances("subjects.value=\"def ghi\""), "second");
-    matchInstanceTitles(searchForInstances("subjects.value=\"uvw xyz\""), "second");
-    matchInstanceTitles(searchForInstances("subjects.value=\"baz bar\""));
-    matchInstanceTitles(searchForInstances("subjects.value=\"abc xyz\""));
+    matchInstanceTitles(searchForInstances("subjects=\"def ghi\""), "second");
+    matchInstanceTitles(searchForInstances("subjects=\"uvw xyz\""), "second");
+    matchInstanceTitles(searchForInstances("subjects=\"baz bar\""));
+    matchInstanceTitles(searchForInstances("subjects=\"abc xyz\""));
   }
 
   @Test
