@@ -20,13 +20,13 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 
-public class MessageCollectingTopicConsumer {
+public class VertxMessageCollectingTopicConsumer {
   private final String topicName;
   private final Map<String, List<EventMessage>> collectedMessages;
   private final Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
   private KafkaConsumer<String, JsonObject> consumer;
 
-  public MessageCollectingTopicConsumer(String topicName,
+  public VertxMessageCollectingTopicConsumer(String topicName,
     Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap) {
 
     this.topicName = topicName;

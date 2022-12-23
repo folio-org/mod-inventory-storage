@@ -20,15 +20,15 @@ public final class FakeKafkaConsumer {
   final static String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
   final static String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-  private final MessageCollectingTopicConsumer instanceTopicConsumer = new MessageCollectingTopicConsumer(
+  private final VertxMessageCollectingTopicConsumer instanceTopicConsumer = new VertxMessageCollectingTopicConsumer(
     INSTANCE_TOPIC_NAME, KafkaConsumerRecord::key);
-  private final MessageCollectingTopicConsumer holdingsTopicConsumer = new MessageCollectingTopicConsumer(
+  private final VertxMessageCollectingTopicConsumer holdingsTopicConsumer = new VertxMessageCollectingTopicConsumer(
     HOLDINGS_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
-  private final MessageCollectingTopicConsumer itemTopicConsumer = new MessageCollectingTopicConsumer(
+  private final VertxMessageCollectingTopicConsumer itemTopicConsumer = new VertxMessageCollectingTopicConsumer(
     ITEM_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
-  private final MessageCollectingTopicConsumer authorityTopicConsumer = new MessageCollectingTopicConsumer(
+  private final VertxMessageCollectingTopicConsumer authorityTopicConsumer = new VertxMessageCollectingTopicConsumer(
     AUTHORITY_TOPIC_NAME, KafkaConsumerRecord::key);
-  private final MessageCollectingTopicConsumer boundWithTopicConsumer = new MessageCollectingTopicConsumer(
+  private final VertxMessageCollectingTopicConsumer boundWithTopicConsumer = new VertxMessageCollectingTopicConsumer(
     BOUND_WITH_TOPIC_NAME, KafkaConsumerRecord::key);
 
   public void consume(Vertx vertx) {
