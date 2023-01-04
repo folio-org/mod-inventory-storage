@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -22,16 +21,16 @@ import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 
 public class VertxMessageCollectingTopicConsumer {
   private final String topicName;
-  private final Map<String, List<EventMessage>> collectedMessages;
   private final Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
+  private final MessageCollector messageCollector;
   private KafkaConsumer<String, JsonObject> consumer;
 
   public VertxMessageCollectingTopicConsumer(String topicName,
     Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap) {
 
     this.topicName = topicName;
-    this.collectedMessages = new ConcurrentHashMap<>();
     this.keyMap = keyMap;
+    this.messageCollector = new MessageCollector();
   }
 
   void subscribe(Vertx vertx) {
@@ -42,7 +41,7 @@ public class VertxMessageCollectingTopicConsumer {
   }
 
   private void acceptMessage(KafkaConsumerRecord<String, JsonObject> message) {
-    final var collectedMessages = this.collectedMessages.computeIfAbsent(
+    final var collectedMessages = messageCollector.collectedMessages.computeIfAbsent(
       this.keyMap.apply(message), v -> new ArrayList<>());
 
     collectedMessages.add(EventMessage.fromConsumerRecord(message));
@@ -54,15 +53,15 @@ public class VertxMessageCollectingTopicConsumer {
   }
 
   Collection<EventMessage> receivedMessagesByKey(String key) {
-    return collectedMessages.getOrDefault(key, emptyList());
+    return messageCollector.collectedMessages.getOrDefault(key, emptyList());
   }
 
   int countOfReceivedKeys() {
-    return collectedMessages.size();
+    return messageCollector.collectedMessages.size();
   }
 
   void discardCollectedMessages() {
-    collectedMessages.clear();
+    messageCollector.collectedMessages.clear();
   }
 
   private static Map<String, String> consumerProperties() {
@@ -76,5 +75,13 @@ public class VertxMessageCollectingTopicConsumer {
     config.put("enable.auto.commit", "false");
 
     return config;
+  }
+
+  private static class MessageCollector {
+    private final Map<String, List<EventMessage>> collectedMessages;
+
+    public MessageCollector() {
+      collectedMessages = new HashMap<>();
+    }
   }
 }
