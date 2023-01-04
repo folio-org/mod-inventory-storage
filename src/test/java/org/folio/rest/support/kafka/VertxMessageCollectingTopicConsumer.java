@@ -13,11 +13,11 @@ import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 
 public class VertxMessageCollectingTopicConsumer {
   private final String topicName;
-  private final GroupedMessageCollector messageCollector;
+  private final MessageCollector messageCollector;
   private KafkaConsumer<String, JsonObject> consumer;
 
   public VertxMessageCollectingTopicConsumer(String topicName,
-    GroupedMessageCollector messageCollector) {
+    MessageCollector messageCollector) {
 
     this.topicName = topicName;
     this.messageCollector = messageCollector;

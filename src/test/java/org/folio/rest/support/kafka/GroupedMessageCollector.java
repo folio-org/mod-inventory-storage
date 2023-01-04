@@ -7,7 +7,7 @@ import org.folio.rest.support.messages.EventMessage;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
-class GroupedMessageCollector {
+class GroupedMessageCollector implements MessageCollector {
   private final Function<KafkaConsumerRecord<String, JsonObject>, String> groupKeyMap;
   private final GroupedCollectedMessages destination;
 
@@ -19,7 +19,8 @@ class GroupedMessageCollector {
     this.destination = destination;
   }
 
-  void acceptMessage(KafkaConsumerRecord<String, JsonObject> message) {
+  @Override
+  public void acceptMessage(KafkaConsumerRecord<String, JsonObject> message) {
     final var key = groupKeyMap.apply(message);
     final var eventMessage = EventMessage.fromConsumerRecord(message);
 
