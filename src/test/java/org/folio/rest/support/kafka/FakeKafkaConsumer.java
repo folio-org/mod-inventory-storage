@@ -20,16 +20,21 @@ public final class FakeKafkaConsumer {
   final static String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
   final static String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
-  private final VertxMessageCollectingTopicConsumer instanceTopicConsumer = new VertxMessageCollectingTopicConsumer(
-    INSTANCE_TOPIC_NAME, KafkaConsumerRecord::key);
-  private final VertxMessageCollectingTopicConsumer holdingsTopicConsumer = new VertxMessageCollectingTopicConsumer(
-    HOLDINGS_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
-  private final VertxMessageCollectingTopicConsumer itemTopicConsumer = new VertxMessageCollectingTopicConsumer(
-    ITEM_TOPIC_NAME, FakeKafkaConsumer::instanceAndIdKey);
-  private final VertxMessageCollectingTopicConsumer authorityTopicConsumer = new VertxMessageCollectingTopicConsumer(
-    AUTHORITY_TOPIC_NAME, KafkaConsumerRecord::key);
-  private final VertxMessageCollectingTopicConsumer boundWithTopicConsumer = new VertxMessageCollectingTopicConsumer(
-    BOUND_WITH_TOPIC_NAME, KafkaConsumerRecord::key);
+  private final VertxMessageCollectingTopicConsumer instanceTopicConsumer
+    = new VertxMessageCollectingTopicConsumer(INSTANCE_TOPIC_NAME,
+      new GroupedMessageCollector(KafkaConsumerRecord::key));
+  private final VertxMessageCollectingTopicConsumer holdingsTopicConsumer
+    = new VertxMessageCollectingTopicConsumer(HOLDINGS_TOPIC_NAME,
+      new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey));
+  private final VertxMessageCollectingTopicConsumer itemTopicConsumer
+    = new VertxMessageCollectingTopicConsumer(ITEM_TOPIC_NAME,
+      new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey));
+  private final VertxMessageCollectingTopicConsumer authorityTopicConsumer
+    = new VertxMessageCollectingTopicConsumer(AUTHORITY_TOPIC_NAME,
+      new GroupedMessageCollector(KafkaConsumerRecord::key));
+  private final VertxMessageCollectingTopicConsumer boundWithTopicConsumer
+    = new VertxMessageCollectingTopicConsumer(BOUND_WITH_TOPIC_NAME,
+      new GroupedMessageCollector(KafkaConsumerRecord::key));
 
   public void consume(Vertx vertx) {
     instanceTopicConsumer.subscribe(vertx);

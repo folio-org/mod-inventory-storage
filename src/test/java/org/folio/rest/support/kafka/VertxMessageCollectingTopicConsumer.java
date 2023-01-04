@@ -3,7 +3,6 @@ package org.folio.rest.support.kafka;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
@@ -12,7 +11,6 @@ import org.folio.rest.support.messages.EventMessage;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 
 public class VertxMessageCollectingTopicConsumer {
@@ -21,10 +19,10 @@ public class VertxMessageCollectingTopicConsumer {
   private KafkaConsumer<String, JsonObject> consumer;
 
   public VertxMessageCollectingTopicConsumer(String topicName,
-    Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap) {
+    GroupedMessageCollector messageCollector) {
 
     this.topicName = topicName;
-    this.messageCollector = new GroupedMessageCollector(keyMap);
+    this.messageCollector = messageCollector;
   }
 
   void subscribe(Vertx vertx) {
