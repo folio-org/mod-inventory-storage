@@ -28,24 +28,29 @@ public final class FakeKafkaConsumer {
 
   private final VertxMessageCollectingTopicConsumer instanceTopicConsumer
     = new VertxMessageCollectingTopicConsumer(INSTANCE_TOPIC_NAME,
-      new GroupedMessageCollector(KafkaConsumerRecord::key,
-        collectedInstanceMessages));
+      new TopicFilterIngMessageCollector(INSTANCE_TOPIC_NAME,
+        new GroupedMessageCollector(KafkaConsumerRecord::key,
+          collectedInstanceMessages)));
   private final VertxMessageCollectingTopicConsumer holdingsTopicConsumer
     = new VertxMessageCollectingTopicConsumer(HOLDINGS_TOPIC_NAME,
-      new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
-        collectedHoldingsMessages));
+      new TopicFilterIngMessageCollector(HOLDINGS_TOPIC_NAME,
+        new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
+          collectedHoldingsMessages)));
   private final VertxMessageCollectingTopicConsumer itemTopicConsumer
     = new VertxMessageCollectingTopicConsumer(ITEM_TOPIC_NAME,
-      new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
-        collectedItemMessages));
+      new TopicFilterIngMessageCollector(ITEM_TOPIC_NAME,
+        new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
+        collectedItemMessages)));
   private final VertxMessageCollectingTopicConsumer authorityTopicConsumer
     = new VertxMessageCollectingTopicConsumer(AUTHORITY_TOPIC_NAME,
-      new GroupedMessageCollector(KafkaConsumerRecord::key,
-        collectedAuthorityMessages));
+     new TopicFilterIngMessageCollector(AUTHORITY_TOPIC_NAME,
+       new GroupedMessageCollector(KafkaConsumerRecord::key,
+         collectedAuthorityMessages)));
   private final VertxMessageCollectingTopicConsumer boundWithTopicConsumer
     = new VertxMessageCollectingTopicConsumer(BOUND_WITH_TOPIC_NAME,
-      new GroupedMessageCollector(KafkaConsumerRecord::key,
-        collectedBoundWithMessages));
+      new TopicFilterIngMessageCollector(BOUND_WITH_TOPIC_NAME,
+        new GroupedMessageCollector(KafkaConsumerRecord::key,
+          collectedBoundWithMessages)));
 
   public void consume(Vertx vertx) {
     instanceTopicConsumer.subscribe(vertx);
