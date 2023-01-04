@@ -20,21 +20,32 @@ public final class FakeKafkaConsumer {
   final static String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
   final static String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
+  private final GroupedCollectedMessages collectedInstanceMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedHoldingsMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedItemMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedAuthorityMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
+
   private final VertxMessageCollectingTopicConsumer instanceTopicConsumer
     = new VertxMessageCollectingTopicConsumer(INSTANCE_TOPIC_NAME,
-      new GroupedMessageCollector(KafkaConsumerRecord::key));
+      new GroupedMessageCollector(KafkaConsumerRecord::key,
+        collectedInstanceMessages));
   private final VertxMessageCollectingTopicConsumer holdingsTopicConsumer
     = new VertxMessageCollectingTopicConsumer(HOLDINGS_TOPIC_NAME,
-      new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey));
+      new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
+        collectedHoldingsMessages));
   private final VertxMessageCollectingTopicConsumer itemTopicConsumer
     = new VertxMessageCollectingTopicConsumer(ITEM_TOPIC_NAME,
-      new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey));
+      new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
+        collectedItemMessages));
   private final VertxMessageCollectingTopicConsumer authorityTopicConsumer
     = new VertxMessageCollectingTopicConsumer(AUTHORITY_TOPIC_NAME,
-      new GroupedMessageCollector(KafkaConsumerRecord::key));
+      new GroupedMessageCollector(KafkaConsumerRecord::key,
+        collectedAuthorityMessages));
   private final VertxMessageCollectingTopicConsumer boundWithTopicConsumer
     = new VertxMessageCollectingTopicConsumer(BOUND_WITH_TOPIC_NAME,
-      new GroupedMessageCollector(KafkaConsumerRecord::key));
+      new GroupedMessageCollector(KafkaConsumerRecord::key,
+        collectedBoundWithMessages));
 
   public void consume(Vertx vertx) {
     instanceTopicConsumer.subscribe(vertx);
@@ -53,27 +64,27 @@ public final class FakeKafkaConsumer {
   }
 
   public void discardAllMessages() {
-    itemTopicConsumer.discardCollectedMessages();
-    instanceTopicConsumer.discardCollectedMessages();
-    holdingsTopicConsumer.discardCollectedMessages();
-    authorityTopicConsumer.discardCollectedMessages();
-    boundWithTopicConsumer.discardCollectedMessages();
+    collectedInstanceMessages.empty();
+    collectedHoldingsMessages.empty();
+    collectedItemMessages.empty();
+    collectedAuthorityMessages.empty();
+    collectedBoundWithMessages.empty();
   }
 
   public int getAllPublishedAuthoritiesCount() {
-    return authorityTopicConsumer.countOfReceivedKeys();
+    return collectedAuthorityMessages.groupCount();
   }
 
   public Collection<EventMessage> getMessagesForAuthority(String authorityId) {
-    return authorityTopicConsumer.receivedMessagesByKey(authorityId);
+    return collectedAuthorityMessages.messagesByGroupKey(authorityId);
   }
 
   public int getAllPublishedInstanceIdsCount() {
-    return instanceTopicConsumer.countOfReceivedKeys();
+    return collectedInstanceMessages.groupCount();
   }
 
   public Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return instanceTopicConsumer.receivedMessagesByKey(instanceId);
+    return collectedInstanceMessages.messagesByGroupKey(instanceId);
   }
 
   public Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
@@ -84,15 +95,15 @@ public final class FakeKafkaConsumer {
   }
 
   public Collection<EventMessage> getMessagesForHoldings(String instanceId, String holdingsId) {
-    return holdingsTopicConsumer.receivedMessagesByKey(instanceAndIdKey(instanceId, holdingsId));
+    return collectedHoldingsMessages.messagesByGroupKey(instanceAndIdKey(instanceId, holdingsId));
   }
 
   public Collection<EventMessage> getMessagesForItem(String instanceId, String itemId) {
-    return itemTopicConsumer.receivedMessagesByKey(instanceAndIdKey(instanceId, itemId));
+    return collectedItemMessages.messagesByGroupKey(instanceAndIdKey(instanceId, itemId));
   }
 
   public Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
-    return boundWithTopicConsumer.receivedMessagesByKey(instanceId);
+    return collectedBoundWithMessages.messagesByGroupKey(instanceId);
   }
 
   private static String instanceAndIdKey(String instanceId, String itemId) {

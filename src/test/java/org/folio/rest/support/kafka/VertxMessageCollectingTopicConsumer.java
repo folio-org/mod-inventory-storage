@@ -1,12 +1,10 @@
 package org.folio.rest.support.kafka;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.folio.rest.support.messages.EventMessage;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -36,18 +34,6 @@ public class VertxMessageCollectingTopicConsumer {
     if (consumer != null) {
       consumer.unsubscribe();
     }
-  }
-
-  Collection<EventMessage> receivedMessagesByKey(String key) {
-    return messageCollector.messagesByGroupKey(key);
-  }
-
-  int countOfReceivedKeys() {
-    return messageCollector.groupCount();
-  }
-
-  void discardCollectedMessages() {
-    messageCollector.empty();
   }
 
   private static Map<String, String> consumerProperties() {
