@@ -2,6 +2,7 @@ package org.folio.rest.support.kafka;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.folio.rest.support.messages.EventMessage;
@@ -27,27 +28,27 @@ public final class FakeKafkaConsumer {
   private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
 
   private final VertxMessageCollectingTopicConsumer instanceTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(INSTANCE_TOPIC_NAME,
+    = new VertxMessageCollectingTopicConsumer(Set.of(INSTANCE_TOPIC_NAME),
       new TopicFilterIngMessageCollector(INSTANCE_TOPIC_NAME,
         new GroupedMessageCollector(KafkaConsumerRecord::key,
           collectedInstanceMessages)));
   private final VertxMessageCollectingTopicConsumer holdingsTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(HOLDINGS_TOPIC_NAME,
+    = new VertxMessageCollectingTopicConsumer(Set.of(HOLDINGS_TOPIC_NAME),
       new TopicFilterIngMessageCollector(HOLDINGS_TOPIC_NAME,
         new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
           collectedHoldingsMessages)));
   private final VertxMessageCollectingTopicConsumer itemTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(ITEM_TOPIC_NAME,
+    = new VertxMessageCollectingTopicConsumer(Set.of(ITEM_TOPIC_NAME),
       new TopicFilterIngMessageCollector(ITEM_TOPIC_NAME,
         new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
-        collectedItemMessages)));
+          collectedItemMessages)));
   private final VertxMessageCollectingTopicConsumer authorityTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(AUTHORITY_TOPIC_NAME,
-     new TopicFilterIngMessageCollector(AUTHORITY_TOPIC_NAME,
-       new GroupedMessageCollector(KafkaConsumerRecord::key,
-         collectedAuthorityMessages)));
+    = new VertxMessageCollectingTopicConsumer(Set.of(AUTHORITY_TOPIC_NAME),
+      new TopicFilterIngMessageCollector(AUTHORITY_TOPIC_NAME,
+        new GroupedMessageCollector(KafkaConsumerRecord::key,
+          collectedAuthorityMessages)));
   private final VertxMessageCollectingTopicConsumer boundWithTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(BOUND_WITH_TOPIC_NAME,
+    = new VertxMessageCollectingTopicConsumer(Set.of(BOUND_WITH_TOPIC_NAME),
       new TopicFilterIngMessageCollector(BOUND_WITH_TOPIC_NAME,
         new GroupedMessageCollector(KafkaConsumerRecord::key,
           collectedBoundWithMessages)));

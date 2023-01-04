@@ -2,6 +2,7 @@ package org.folio.rest.support.kafka;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
@@ -12,14 +13,14 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 
 public class VertxMessageCollectingTopicConsumer {
-  private final String topicName;
+  private final Set<String> topicNames;
   private final MessageCollector messageCollector;
   private KafkaConsumer<String, JsonObject> consumer;
 
-  public VertxMessageCollectingTopicConsumer(String topicName,
+  public VertxMessageCollectingTopicConsumer(Set<String> topicNames,
     MessageCollector messageCollector) {
 
-    this.topicName = topicName;
+    this.topicNames = topicNames;
     this.messageCollector = messageCollector;
   }
 
@@ -27,7 +28,7 @@ public class VertxMessageCollectingTopicConsumer {
     consumer = KafkaConsumer.create(vertx, consumerProperties());
 
     consumer.handler(messageCollector::acceptMessage);
-    consumer.subscribe(topicName);
+    consumer.subscribe(topicNames);
   }
 
   void unsubscribe() {
