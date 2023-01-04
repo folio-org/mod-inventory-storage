@@ -21,31 +21,23 @@ import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 
 public class VertxMessageCollectingTopicConsumer {
   private final String topicName;
-  private final Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
-  private final MessageCollector messageCollector;
+  private final KeyedMessageCollector messageCollector;
   private KafkaConsumer<String, JsonObject> consumer;
 
   public VertxMessageCollectingTopicConsumer(String topicName,
     Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap) {
 
     this.topicName = topicName;
-    this.keyMap = keyMap;
-    this.messageCollector = new MessageCollector();
+    this.messageCollector = new KeyedMessageCollector(keyMap);
   }
 
   void subscribe(Vertx vertx) {
     consumer = KafkaConsumer.create(vertx, consumerProperties());
 
-    consumer.handler(this::acceptMessage);
+    consumer.handler(messageCollector::accept);
     consumer.subscribe(topicName);
   }
 
-  private void acceptMessage(KafkaConsumerRecord<String, JsonObject> message) {
-    final var collectedMessages = messageCollector.collectedMessages.computeIfAbsent(
-      this.keyMap.apply(message), v -> new ArrayList<>());
-
-    collectedMessages.add(EventMessage.fromConsumerRecord(message));
-  }
   void unsubscribe() {
     if (consumer != null) {
       consumer.unsubscribe();
@@ -77,11 +69,21 @@ public class VertxMessageCollectingTopicConsumer {
     return config;
   }
 
-  private static class MessageCollector {
+  private static class KeyedMessageCollector {
+    private final Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap;
     private final Map<String, List<EventMessage>> collectedMessages;
 
-    public MessageCollector() {
+    public KeyedMessageCollector(
+      Function<KafkaConsumerRecord<String, JsonObject>, String> keyMap) {
+      this.keyMap = keyMap;
       collectedMessages = new HashMap<>();
+    }
+
+    private void accept(KafkaConsumerRecord<String, JsonObject> message) {
+      final var keyBucket = collectedMessages.computeIfAbsent(
+        keyMap.apply(message), v -> new ArrayList<>());
+
+      keyBucket.add(EventMessage.fromConsumerRecord(message));
     }
   }
 }
