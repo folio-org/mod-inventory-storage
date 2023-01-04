@@ -3,9 +3,11 @@ package org.folio.rest.support.kafka;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.folio.rest.support.messages.EventMessage;
+import org.jetbrains.annotations.NotNull;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -27,46 +29,14 @@ public final class FakeKafkaConsumer {
   private final GroupedCollectedMessages collectedAuthorityMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
 
-  private final VertxMessageCollectingTopicConsumer instanceTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(Set.of(INSTANCE_TOPIC_NAME),
-      new TopicFilterIngMessageCollector(INSTANCE_TOPIC_NAME,
-        new GroupedMessageCollector(KafkaConsumerRecord::key,
-          collectedInstanceMessages)));
-  private final VertxMessageCollectingTopicConsumer holdingsTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(Set.of(HOLDINGS_TOPIC_NAME),
-      new TopicFilterIngMessageCollector(HOLDINGS_TOPIC_NAME,
-        new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
-          collectedHoldingsMessages)));
-  private final VertxMessageCollectingTopicConsumer itemTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(Set.of(ITEM_TOPIC_NAME),
-      new TopicFilterIngMessageCollector(ITEM_TOPIC_NAME,
-        new GroupedMessageCollector(FakeKafkaConsumer::instanceAndIdKey,
-          collectedItemMessages)));
-  private final VertxMessageCollectingTopicConsumer authorityTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(Set.of(AUTHORITY_TOPIC_NAME),
-      new TopicFilterIngMessageCollector(AUTHORITY_TOPIC_NAME,
-        new GroupedMessageCollector(KafkaConsumerRecord::key,
-          collectedAuthorityMessages)));
-  private final VertxMessageCollectingTopicConsumer boundWithTopicConsumer
-    = new VertxMessageCollectingTopicConsumer(Set.of(BOUND_WITH_TOPIC_NAME),
-      new TopicFilterIngMessageCollector(BOUND_WITH_TOPIC_NAME,
-        new GroupedMessageCollector(KafkaConsumerRecord::key,
-          collectedBoundWithMessages)));
+  private final VertxMessageCollectingTopicConsumer consumer = createConsumer();
 
   public void consume(Vertx vertx) {
-    instanceTopicConsumer.subscribe(vertx);
-    holdingsTopicConsumer.subscribe(vertx);
-    itemTopicConsumer.subscribe(vertx);
-    authorityTopicConsumer.subscribe(vertx);
-    boundWithTopicConsumer.subscribe(vertx);
+    consumer.subscribe(vertx);
   }
 
   public void unsubscribe() {
-    instanceTopicConsumer.unsubscribe();
-    holdingsTopicConsumer.unsubscribe();
-    itemTopicConsumer.unsubscribe();
-    authorityTopicConsumer.unsubscribe();
-    boundWithTopicConsumer.unsubscribe();
+    consumer.unsubscribe();
   }
 
   public void discardAllMessages() {
@@ -124,5 +94,32 @@ public final class FakeKafkaConsumer {
     final var id = oldOrNew != null ? oldOrNew.getString("id") : null;
 
     return instanceAndIdKey(message.key(), id);
+  }
+
+  private VertxMessageCollectingTopicConsumer createConsumer() {
+    return new VertxMessageCollectingTopicConsumer(
+      Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME,
+        AUTHORITY_TOPIC_NAME, BOUND_WITH_TOPIC_NAME),
+      new AggregateMessageCollector(
+        filteredAndGroupedCollector(INSTANCE_TOPIC_NAME,
+          KafkaConsumerRecord::key, collectedInstanceMessages),
+        filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME,
+          FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
+        filteredAndGroupedCollector(ITEM_TOPIC_NAME,
+          FakeKafkaConsumer::instanceAndIdKey, collectedItemMessages),
+        filteredAndGroupedCollector(AUTHORITY_TOPIC_NAME,
+          KafkaConsumerRecord::key, collectedAuthorityMessages),
+        filteredAndGroupedCollector(BOUND_WITH_TOPIC_NAME,
+          KafkaConsumerRecord::key, collectedBoundWithMessages)));
+  }
+
+  @NotNull
+  private TopicFilterIngMessageCollector filteredAndGroupedCollector(
+    String topicName,
+    Function<KafkaConsumerRecord<String, JsonObject>, String> groupKeyMap,
+    GroupedCollectedMessages collectedMessages) {
+
+    return new TopicFilterIngMessageCollector(topicName,
+      new GroupedMessageCollector(groupKeyMap, collectedMessages));
   }
 }
