@@ -10,12 +10,15 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -24,6 +27,7 @@ import static org.mockito.Mockito.spy;
 import io.vertx.core.Context;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -39,8 +43,11 @@ import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Processed;
 import org.folio.rest.jaxrs.model.Published;
+import org.folio.rest.jaxrs.model.Series;
+import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -102,6 +109,56 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     assertThat(job.getSubmittedDate(), notNullValue());
 
     postgresClient(getContext(), okapiHeaders()).delete("instances", new Criterion().addCriterion(new Criteria().addField("title").setOperation("like").setVal("test%"))).result();
+  }
+
+  @Test
+  public void canMigrateInstanceSubjectsAndSeries() {
+    var numberOfRecords = 101;
+
+    IntStream.range(0, numberOfRecords).parallel().forEach(v ->
+      instancesClient.create(new JsonObject()
+        .put("title", "test" + v)
+        .put("source", "MARC")
+        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")
+        .put("series", new JsonArray()
+          .add("Harry Potter V.1")
+          .add("Harry Potter V.2"))
+        .put("subjects", new JsonArray()
+          .add("fantasy")
+          .add("magic")
+        )));
+
+    var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
+      .withMigrations(List.of("subjectSeriesMigration")));
+
+    await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
+      .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
+
+    var job = asyncMigration.getMigrationJob(migrationJob.getId());
+
+    assertThat(job.getPublished().stream().map(Published::getCount)
+      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
+    assertThat(job.getProcessed().stream().map(Processed::getCount)
+      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
+    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
+    assertThat(job.getSubmittedDate(), notNullValue());
+
+    var selectFuture = postgresClient(getContext(), okapiHeaders()).select(
+      "select * from " + getPostgresClientFuturized().getFullTableName("instance")
+        + " where jsonb->> 'title' like 'test%'");
+    for (Row row : selectFuture.result()) {
+      var jsonInstance = row.getJsonObject("jsonb");
+      try {
+        var instance = jsonInstance.mapTo(Instance.class);
+        assertThat(instance.getSeries(), both(contains(new Series().withValue("Harry Potter V.1")))
+          .and(contains(new Series().withValue("Harry Potter V.2"))));
+        assertThat(instance.getSubjects(), both(contains(new Subject().withValue("fantasy")))
+          .and(contains(new Subject().withValue("magic"))));
+      } catch (Exception e) {
+        fail(e.getMessage());
+      }
+    }
+
   }
 
   @Test
