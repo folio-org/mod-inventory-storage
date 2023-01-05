@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.awaitility.Awaitility.await;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
@@ -14,6 +15,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+
+import javax.ws.rs.core.Response;
+
+import org.folio.rest.RestVerticle;
+import org.folio.rest.impl.AbstractInstanceRecordsAPI;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.AdditionalAnswers;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -23,19 +37,6 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.sqlclient.Tuple;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
-import javax.ws.rs.core.Response;
-import org.awaitility.Awaitility;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.impl.AbstractInstanceRecordsAPI;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.AdditionalAnswers;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 @RunWith(VertxUnitRunner.class)
 public class AbstractInstanceRecordsAPITest extends TestBase {
@@ -98,35 +99,30 @@ public class AbstractInstanceRecordsAPITest extends TestBase {
   public void canHandleWriteQueueFull() {
     Handler<?>[] drainHandler = new Handler[1];
     AtomicInteger drainCount = new AtomicInteger();
+
     RoutingContext routingContext = mock(RoutingContext.class);
+
     HttpServerResponse httpServerResponse = getHttpServerResponseMock();
     when(routingContext.response()).thenReturn(httpServerResponse);
+
     doAnswer(AdditionalAnswers.answerVoid((Handler handler) -> drainHandler[0] = handler))
-    .when(httpServerResponse).drainHandler(any());
+      .when(httpServerResponse).drainHandler(any());
+
     doAnswer(
-      new Answer() {
-        @Override
-        public Object answer(InvocationOnMock invocation) {
-          getVertx().runOnContext(run -> {
-            drainCount.getAndIncrement();
-            drainHandler[0].handle(null);
-          });
-          return true;
-        }
+      invocation -> {
+        getVertx().runOnContext(run -> {
+          drainCount.getAndIncrement();
+          drainHandler[0].handle(null);
+        });
+        return true;
       })
-    .when(httpServerResponse).writeQueueFull();
+      .when(httpServerResponse).writeQueueFull();
+
     new MyAbstractInstanceRecordsAPI().fetchRecordsByQuery("SELECT generate_series(1, 300)",
         routingContext, Tuple::tuple, nu -> {});
 
-    Awaitility.await()
-      .until(() -> {
-        try {
-          assertThat(drainCount.get(), is(300));
-          verify(httpServerResponse, times(300)).write(anyString());
-          return true;
-        } catch (AssertionError assertionError) {
-          return false;
-        }
-      });
+    await().until(drainCount::get, is(300));
+
+    verify(httpServerResponse, times(300)).write(anyString());
   }
 }
