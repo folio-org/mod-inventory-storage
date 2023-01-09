@@ -5,10 +5,6 @@ import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENT
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.http.InterfaceUrls.authoritiesStorageUrl;
-import static org.folio.rest.support.messages.AuthorityEventMessageChecks.allAuthoritiesDeletedMessagePublished;
-import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityCreatedMessagePublished;
-import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityDeletedMessagePublished;
-import static org.folio.rest.support.messages.AuthorityEventMessageChecks.authorityUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.messages.AuthorityEventMessageChecks;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +31,8 @@ import lombok.SneakyThrows;
 
 @RunWith(JUnitParamsRunner.class)
 public class AuthorityStorageTest extends TestBase {
+  private final AuthorityEventMessageChecks authorityMessageChecks
+    = new AuthorityEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @Before
@@ -64,7 +63,7 @@ public class AuthorityStorageTest extends TestBase {
     var response2 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
     assertEquals("personalName0", response2.getJson().getString("personalName"));
 
-    authorityCreatedMessagePublished(response2.getJson());
+    authorityMessageChecks.createdMessagePublished(response2.getJson());
   }
 
   @Test
@@ -87,7 +86,7 @@ public class AuthorityStorageTest extends TestBase {
     response = authoritiesClient.getAll();
     assertEquals(0, response.size());
 
-    allAuthoritiesDeletedMessagePublished();
+    authorityMessageChecks.allAuthoritiesDeletedMessagePublished();
   }
 
   @Test
@@ -103,7 +102,7 @@ public class AuthorityStorageTest extends TestBase {
     var response2 = authoritiesClient.getAll();
     assertEquals(0, response2.size());
 
-    authorityDeletedMessagePublished(response.get(0));
+    authorityMessageChecks.deletedMessagePublished(response.get(0));
   }
 
   @Test
@@ -137,7 +136,7 @@ public class AuthorityStorageTest extends TestBase {
     var response2 = authoritiesClient.getById(UUID.fromString(response.get(0).getString("id")));
     assertEquals(object.getString("personalName"), response2.getJson().getString("personalName"));
 
-    authorityUpdatedMessagePublished(response.get(0), response2.getJson());
+    authorityMessageChecks.updatedMessagePublished(response.get(0), response2.getJson());
   }
 
   @Test

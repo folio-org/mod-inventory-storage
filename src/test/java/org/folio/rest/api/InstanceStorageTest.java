@@ -18,12 +18,6 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceCreatedMessagesPublished;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.noInstanceMessagesPublished;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.allInstancesDeletedMessagePublished;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.instancedUpdatedMessagePublished;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceCreatedMessagePublished;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.instanceDeletedMessagePublished;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
@@ -93,6 +87,7 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
+import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
 import org.junit.After;
@@ -118,7 +113,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
   private static final String STAFF_SUPPRESS = "staffSuppress";
 
-  private Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
+  private final Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
+
+  private final InstanceEventMessageChecks instanceMessageChecks
+    = new InstanceEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @Before
@@ -220,7 +218,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
-    instanceCreatedMessagePublished(instanceFromGet);
+
+    instanceMessageChecks.createdMessagePublished(instanceFromGet);
 
     var storedPublicationPeriod = instance.getJsonObject("publicationPeriod")
       .mapTo(PublicationPeriod.class);
@@ -433,8 +432,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString(STATUS_UPDATED_DATE_PROPERTY),
       is(replacement.getString(STATUS_UPDATED_DATE_PROPERTY)));
     assertThat(itemFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
-    instancedUpdatedMessagePublished(createdInstance.getJson(), updatedInstance.getJson());
     assertThat(itemFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
+
+    instanceMessageChecks.updatedMessagePublished(createdInstance.getJson(),
+      updatedInstance.getJson());
   }
 
   @Test
@@ -456,7 +457,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     assertGetNotFound(url);
-    instanceDeletedMessagePublished(createdInstance.getJson());
+
+    instanceMessageChecks.deletedMessagePublished(createdInstance.getJson());
   }
 
   @SneakyThrows
@@ -490,9 +492,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertNotExists(instance3);
     assertNotExists(instance5);
     getMarcJsonNotFound(id5);
-    instanceDeletedMessagePublished(instance1);
-    instanceDeletedMessagePublished(instance3);
-    instanceDeletedMessagePublished(instance5);
+
+    instanceMessageChecks.deletedMessagePublished(instance1);
+    instanceMessageChecks.deletedMessagePublished(instance3);
+    instanceMessageChecks.deletedMessagePublished(instance5);
   }
 
   @SneakyThrows
@@ -1498,14 +1501,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allInstances.size(), is(0));
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(0));
 
-    allInstancesDeletedMessagePublished();
+    instanceMessageChecks.allInstancesDeletedMessagePublished();
   }
 
+  @SneakyThrows
   @Test
-  public void tenantIsRequiredForCreatingNewInstance()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+  public void tenantIsRequiredForCreatingNewInstance() {
     JsonObject instance = nod(UUID.randomUUID());
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
@@ -1518,13 +1519,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
+  @SneakyThrows
   @Test
-  public void tenantIsRequiredForGettingAnInstance()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+  public void tenantIsRequiredForGettingAnInstance() {
 
     URL getInstanceUrl = instancesStorageUrl(String.format("/%s",
-      UUID.randomUUID().toString()));
+      UUID.randomUUID()));
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -1536,11 +1536,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
+  @SneakyThrows
   @Test
-  public void tenantIsRequiredForGettingAllInstances()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+  public void tenantIsRequiredForGettingAllInstances() {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     getClient().get(instancesStorageUrl(""), null, ResponseHandler.any(getCompleted));
@@ -1551,9 +1549,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
   }
 
+  @SneakyThrows
   @Test
-  public void testCrossTableQueries() throws Exception {
-
+  public void testCrossTableQueries() {
     String url = instancesStorageUrl("") + "?query=";
 
     //////// create instance objects /////////////////////////////
@@ -1725,7 +1723,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertNotSuppressedFromDiscovery(instances);
 
-    instanceCreatedMessagesPublished(toList(instances));
+    instanceMessageChecks.createdMessagesPublished(toList(instances));
   }
 
   @Test
@@ -1767,9 +1765,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertNotSuppressedFromDiscovery(instances);
 
-    instanceCreatedMessagesPublished(toList(instances));
-    noInstanceMessagesPublished(firstErrorInstance.getString("id"));
-    noInstanceMessagesPublished(secondErrorInstance.getString("id"));
+    instanceMessageChecks.createdMessagesPublished(toList(instances));
+    instanceMessageChecks.noMessagesPublished(firstErrorInstance.getString("id"));
+    instanceMessageChecks.noMessagesPublished(secondErrorInstance.getString("id"));
   }
 
   @Test
@@ -1946,7 +1944,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .map(Response::getJson)
       .collect(Collectors.toList());
 
-    instanceCreatedMessagesPublished(createdInstances);
+    instanceMessageChecks.createdMessagesPublished(createdInstances);
   }
 
   @Test
@@ -2036,9 +2034,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedInstance = getResponse.getJson();
     assertThat(updatedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
 
-    instancedUpdatedMessagePublished(existingInstance.getJson(), updatedInstance);
-    instanceCreatedMessagePublished(getById(firstInstanceToCreate.getString("id")).getJson());
-    instanceCreatedMessagePublished(getById(secondInstanceToCreate.getString("id")).getJson());
+    instanceMessageChecks.updatedMessagePublished(existingInstance.getJson(), updatedInstance);
+
+    instanceMessageChecks.createdMessagePublished(
+      getById(firstInstanceToCreate.getString("id")).getJson());
+
+    instanceMessageChecks.createdMessagePublished(
+      getById(secondInstanceToCreate.getString("id")).getJson());
   }
 
   @Test
@@ -2688,7 +2690,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       getById(instance.getId()).getJson().copy().put(DISCOVERY_SUPPRESS, true));
 
     assertSuppressedFromDiscovery(instance.getId().toString());
-    instancedUpdatedMessagePublished(instance.getJson(), updateInstance.getJson());
+
+    instanceMessageChecks.updatedMessagePublished(instance.getJson(), updateInstance.getJson());
   }
 
   @Test

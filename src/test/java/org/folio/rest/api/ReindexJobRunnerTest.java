@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.InventoryKafkaTopic.AUTHORITY;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
@@ -21,22 +20,25 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
+import org.folio.rest.support.messages.AuthorityEventMessageChecks;
+import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
 import org.folio.services.reindex.ReindexResourceName;
 import org.junit.Test;
+
+import io.vertx.core.Context;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
@@ -46,6 +48,11 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final CommonDomainEventPublisher<Authority> authorityEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       AUTHORITY.fullTopicName(TENANT_ID));
+
+  private final AuthorityEventMessageChecks authorityMessageChecks
+    = new AuthorityEventMessageChecks(kafkaConsumer);
+  private final InstanceEventMessageChecks instanceMessageChecks
+    = new InstanceEventMessageChecks(kafkaConsumer);
 
   @Test
   public void canReindexInstances() {
@@ -61,7 +68,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.clearAllEvents();
+    kafkaConsumer.discardAllMessages();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
 
@@ -77,8 +84,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     // Should be a single reindex message for each instance ID generated in the row stream
     // The numbers should match exactly, but intermittently, the published id count is
     // greater than the number of records-no one has been able to figure out why.
-    await().atMost(10, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedInstanceIdsCount, greaterThanOrEqualTo(numberOfRecords));
+    instanceMessageChecks.countOfAllPublishedInstancesIs(
+      greaterThanOrEqualTo(numberOfRecords));
   }
 
   @Test
@@ -95,7 +102,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
 
     // Make sure no events are left over from test preparation
-    FakeKafkaConsumer.clearAllEvents();
+    kafkaConsumer.discardAllMessages();
 
     jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
 
@@ -108,8 +115,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
-    await().atMost(10, SECONDS)
-      .until(FakeKafkaConsumer::getAllPublishedAuthoritiesCount, greaterThanOrEqualTo(numberOfRecords));
+    authorityMessageChecks.countOfAllPublishedAuthoritiesIs(
+      greaterThanOrEqualTo(numberOfRecords));
   }
 
   @Test
