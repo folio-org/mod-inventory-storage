@@ -6,13 +6,13 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        postgres: [postgresql@12, postgresql@13, postgres]
+        postgres: [postgresql@12, postgresql@13, postgresql@14]
       fail-fast: false
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
-    - uses: actions/setup-java@v2.3.1
+    - uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '11'
@@ -25,8 +25,8 @@ jobs:
     - run: brew services start zookeeper
     - run: brew install kafka
     - run: brew services start kafka
-    - run: brew install elasticsearch
-    - run: brew services start elasticsearch
+    - run: brew install opensearch
+    - run: brew services start opensearch
     - run: >
         psql postgres
         -c "CREATE ROLE folio WITH PASSWORD 'folio123' LOGIN SUPERUSER"
@@ -43,7 +43,7 @@ jobs:
         -H "Content-type: application/json"
         -H "x-okapi-url-to: http://localhost:8081"
         -H "x-okapi-tenant: diku"
-        -d ''{ "module_to": "mod-inventory-storage-22.0.0",
+        -d ''{ "module_to": "mod-inventory-storage-99999.0.0",
                "parameters": [ { "key":"loadSample", "value":"true" },
                                { "key": "loadReference", "value": "true" } ] }''
         http://localhost:8081/_/tenant
