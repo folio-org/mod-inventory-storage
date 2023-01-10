@@ -80,10 +80,11 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   public static void testBaseWithInvUtilBeforeClass() {
     logger.info("starting @BeforeClass testBaseWithInvUtilBeforeClass()");
 
-    clearData();
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
+
+    clearData();
 
     createDefaultInstanceType();
     setupMaterialTypes();
