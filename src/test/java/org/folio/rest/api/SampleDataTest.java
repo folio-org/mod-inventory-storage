@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import org.folio.rest.support.Response;
@@ -146,9 +147,13 @@ public class SampleDataTest extends TestBase {
       body.getJsonArray("instanceRelationships"));
 
     return instanceRelationships.stream()
-      .filter(instanceRelationship -> instanceRelationship.getString("id") == id)
+      .filter(instanceRelationship -> hasId(instanceRelationship, id))
       .findFirst()
       .orElse(null);
+  }
+
+  private static boolean hasId(JsonObject instanceRelationship, String id) {
+    return Objects.equals(instanceRelationship.getString("id"), id);
   }
 
   @SneakyThrows
