@@ -21,6 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 
 import org.folio.rest.support.Response;
 import org.junit.BeforeClass;
@@ -147,13 +148,14 @@ public class SampleDataTest extends TestBase {
       body.getJsonArray("instanceRelationships"));
 
     return instanceRelationships.stream()
-      .filter(instanceRelationship -> hasId(instanceRelationship, id))
+      .filter(hasId(id))
       .findFirst()
       .orElse(null);
   }
 
-  private static boolean hasId(JsonObject instanceRelationship, String id) {
-    return Objects.equals(instanceRelationship.getString("id"), id);
+  private static Predicate<JsonObject> hasId(String id) {
+    return (JsonObject instanceRelationship) ->
+      Objects.equals(instanceRelationship.getString("id"), id);
   }
 
   @SneakyThrows
