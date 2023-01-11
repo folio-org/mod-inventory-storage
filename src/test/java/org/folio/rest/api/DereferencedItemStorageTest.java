@@ -50,8 +50,6 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     postItem(smallAngryPlanet);
     postItem(nod);
     postItem(uprooted);
-
-    kafkaConsumer.discardAllMessages();
   }
 
   @AfterClass

@@ -1,8 +1,8 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
+import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -12,6 +12,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import org.folio.rest.jaxrs.model.HoldingsItem;
 import org.folio.rest.jaxrs.model.HoldingsRecords2;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
@@ -133,10 +134,14 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   private InventoryViewInstance getInstanceById(List<IndividualResource> instances, UUID id) {
-    return instances.stream()
+    final var instance = instances.stream()
       .map(r -> r.getJson().mapTo(InventoryViewInstance.class))
       .filter(r -> r.getInstanceId().equals(id.toString()))
       .findFirst()
-      .orElseThrow(() -> new AssertionError("No instance"));
+      .orElse(null);
+
+    assertThat("Instance not found", instance, is(notNullValue()));
+
+    return instance;
   }
 }

@@ -1181,17 +1181,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     };
 
     for (String s : strings) {
-      try {
-        // full text search ignores punctuation
-        matchInstanceTitles(searchForInstances("title=\"" + s + "Uprooted\""), "Uprooted");
-        // == will return 0 results
-        matchInstanceTitles(searchForInstances("title==\"" + s + "Uprooted\""));
-        // identifier search will always return 0 results
-        matchInstanceTitles(searchForInstances("identifiers=\"" + s + "\""));
-        matchInstanceTitles(searchForInstances("identifiers==\"" + s + "\""));
-      } catch (Exception e) {
-        throw new AssertionError(s, e);
-      }
+      // full text search ignores punctuation
+      matchInstanceTitles(searchForInstances("title=\"" + s + "Uprooted\""), "Uprooted");
+      // == will return 0 results
+      matchInstanceTitles(searchForInstances("title==\"" + s + "Uprooted\""));
+      // identifier search will always return 0 results
+      matchInstanceTitles(searchForInstances("identifiers=\"" + s + "\""));
+      matchInstanceTitles(searchForInstances("identifiers==\"" + s + "\""));
     }
   }
 
