@@ -7,7 +7,6 @@ import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;
 import static org.folio.rest.support.matchers.ItemMatchers.hasSuffix;
 import static org.folio.rest.support.matchers.ItemMatchers.hasTypeId;
-import static org.folio.rest.support.messages.ItemEventMessageChecks.itemUpdatedMessagePublished;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,6 +22,7 @@ import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData.Cal
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
+import org.folio.rest.support.messages.ItemEventMessageChecks;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +39,9 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   public static final String HOLDINGS_CALL_NUMBER_TYPE_SECOND = UUID.randomUUID().toString();
   public static final String ITEM_LEVEL_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
   public static final String ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND = UUID.randomUUID().toString();
+
+  private final ItemEventMessageChecks itemMessageChecks
+    = new ItemEventMessageChecks(kafkaConsumer);
 
   @BeforeClass
   public static void createCallNumberTypes() {
@@ -246,13 +249,13 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
     var itemAfterHoldingsUpdate = getById(createdItem.getJson());
 
-    itemUpdatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
+    itemMessageChecks.updatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
 
     if (!Objects.equals(itemInitValue, itemTargetValue)) {
       itemsClient.replace(createdItem.getId(), itemAfterHoldingsUpdate.copy()
         .put(itemPropertyName, itemTargetValue));
 
-      itemUpdatedMessagePublished(itemAfterHoldingsUpdate,
+      itemMessageChecks.updatedMessagePublished(itemAfterHoldingsUpdate,
         itemsClient.getById(createdItem.getId()).getJson());
     }
 
