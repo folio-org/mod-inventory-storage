@@ -1,3 +1,7 @@
+## 25.0.4 2022-01-19
+
+* Keep LCNAF Source file translation when adding ns as an identifying code ([MODINVSTOR-1015](https://issues.folio.org/browse/MODINVSTOR-1015))
+
 ## 25.0.3 2022-12-09
 
 * Add ns as an identifying code for LCNAF Source file ([MODINVSTOR-988](https://issues.folio.org/browse/MODINVSTOR-988))
