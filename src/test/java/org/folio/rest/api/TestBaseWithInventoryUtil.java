@@ -85,6 +85,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
 
     clearData();
+
     createDefaultInstanceType();
     setupMaterialTypes();
     setupLoanTypes();
