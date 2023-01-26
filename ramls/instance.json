@@ -46,6 +46,11 @@
           "alternativeTitle": {
             "type": "string",
             "description": "An alternative title for the resource"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls an alternative title",
+            "$ref": "uuid.json"
           }
         }
       },
@@ -63,7 +68,22 @@
       "type": "array",
       "description": "List of series titles associated with the resource (e.g. Harry Potter)",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Series title value"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls an series title",
+            "$ref": "uuid.json"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value"
+        ]
       },
       "uniqueItems": true
     },
@@ -160,7 +180,22 @@
       "type": "array",
       "description": "List of subject headings",
       "items": {
-        "type": "string"
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Subject heading value"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls a subject heading",
+            "$ref": "uuid.json"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value"
+        ]
       },
       "uniqueItems": true
     },

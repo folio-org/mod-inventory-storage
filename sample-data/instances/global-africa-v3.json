@@ -4,7 +4,9 @@
   "source": "FOLIO",
   "title": "Poverty reduction strategies in Africa edited by Toyin Falola and Mike Odugbo Odey",
   "series": [
-    "Global Africa 3"
+    {
+      "value": "Global Africa 3"
+    }
   ],
   "identifiers": [
     {
@@ -35,16 +37,36 @@
     }
   ],
   "subjects": [
-    "Poverty--Government policy--Africa, Sub-Saharan",
-    "Armut",
-    "Bekämpfung",
-    "Armutsbekämpfung",
-    "Subsahara-Afrika",
-    "Westafrika",
-    "Africa, Sub-Saharan--Economic conditions--21st century",
-    "Subsaharisches Afrika",
-    "Africa, Sub-Saharan Economic conditions 21st century",
-    "Poverty Government policy Africa, Sub-Saharan"
+    {
+      "value": "Poverty--Government policy--Africa, Sub-Saharan"
+    },
+    {
+      "value": "Armut"
+    },
+    {
+      "value": "Bekämpfung"
+    },
+    {
+      "value": "Armutsbekämpfung"
+    },
+    {
+      "value": "Subsahara-Afrika"
+    },
+    {
+      "value": "Westafrika"
+    },
+    {
+      "value": "Africa, Sub-Saharan--Economic conditions--21st century"
+    },
+    {
+      "value": "Subsaharisches Afrika"
+    },
+    {
+      "value": "Africa, Sub-Saharan Economic conditions 21st century"
+    },
+    {
+      "value": "Poverty Government policy Africa, Sub-Saharan"
+    }
   ],
   "classifications": [
     {

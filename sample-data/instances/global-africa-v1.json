@@ -4,7 +4,9 @@
   "source": "FOLIO",
   "title": "Dissent, protest and dispute in Africa edited by Emmanuel M. Mbah and Toyin Falola",
   "series": [
-    "Global Africa 1"
+    {
+      "value": "Global Africa 1"
+    }
   ],
   "identifiers": [
     {
@@ -35,22 +37,54 @@
     }
   ],
   "subjects": [
-    "Social conflict--Africa--History--20th century",
-    "Social conflict--Africa--History--21st century",
-    "Political participation--Africa",
-    "Land tenure--Africa",
-    "Africa--Social conditions--20th century",
-    "Africa--Social conditions--21st century",
-    "Africa--Politics and government--20th century",
-    "Africa--Politics and government--21st century",
-    "Africa Politics and government 20th century",
-    "Africa Politics and government 21st century",
-    "Africa Social conditions 20th century",
-    "Africa Social conditions 21st century",
-    "Land tenure Africa",
-    "Political participation Africa",
-    "Social conflict Africa History 20th century",
-    "Social conflict Africa History 21st century"
+    {
+      "value": "Social conflict--Africa--History--20th century"
+    },
+    {
+      "value": "Social conflict--Africa--History--21st century"
+    },
+    {
+      "value": "Political participation--Africa"
+    },
+    {
+      "value": "Land tenure--Africa"
+    },
+    {
+      "value": "Africa--Social conditions--20th century"
+    },
+    {
+      "value": "Africa--Social conditions--21st century"
+    },
+    {
+      "value": "Africa--Politics and government--20th century"
+    },
+    {
+      "value": "Africa--Politics and government--21st century"
+    },
+    {
+      "value": "Africa Politics and government 20th century"
+    },
+    {
+      "value": "Africa Politics and government 21st century"
+    },
+    {
+      "value": "Africa Social conditions 20th century"
+    },
+    {
+      "value": "Africa Social conditions 21st century"
+    },
+    {
+      "value": "Land tenure Africa"
+    },
+    {
+      "value": "Political participation Africa"
+    },
+    {
+      "value": "Social conflict Africa History 20th century"
+    },
+    {
+      "value": "Social conflict Africa History 21st century"
+    }
   ],
   "classifications": [
     {

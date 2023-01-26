@@ -14,7 +14,9 @@
     }
   ],
   "subjects": [
-    "Monografische Reihe"
+    {
+      "value": "Monografische Reihe"
+    }
   ],
   "classifications": [
     {

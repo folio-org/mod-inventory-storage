@@ -22,7 +22,9 @@
     }
   ],
   "subjects": [
-    "Hochschulschrift"
+    {
+      "value": "Hochschulschrift"
+    }
   ],
   "classifications": [],
   "publication": [

@@ -38,8 +38,12 @@
     }
   ],
   "subjects": [
-    "World music.",
-    "Jazz"
+    {
+      "value": "World music."
+    },
+    {
+      "value": "Jazz"
+    }
   ],
   "classifications": [
     {

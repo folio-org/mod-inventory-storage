@@ -4,9 +4,15 @@
   "source": "FOLIO",
   "title": "Organisations- und Prozessentwicklung Harald Augustin (Hrsg.)",
   "series": [
-    "Umsetzung der DIN EN ISO 9001:2015  / Harald Augustin (Hrsg.) ; Band 1",
-    "Berichte aus der Betriebswirtschaft",
-    "Umsetzung der DIN EN ISO 9001:2015 Band 1"
+    {
+      "value": "Umsetzung der DIN EN ISO 9001:2015  / Harald Augustin (Hrsg.) ; Band 1"
+    },
+    {
+      "value": "Berichte aus der Betriebswirtschaft"
+    },
+    {
+      "value": "Umsetzung der DIN EN ISO 9001:2015 Band 1"
+    }
   ],
   "identifiers": [
     {
@@ -45,13 +51,27 @@
     }
   ],
   "subjects": [
-    "DIN EN ISO 9001:2015",
-    "Standard",
-    "Organisatorischer Wandel",
-    "Prozessmanagement",
-    "Einführung",
-    "Industrie",
-    "Deutschland"
+    {
+      "value": "DIN EN ISO 9001:2015"
+    },
+    {
+      "value": "Standard"
+    },
+    {
+      "value": "Organisatorischer Wandel"
+    },
+    {
+      "value": "Prozessmanagement"
+    },
+    {
+      "value": "Einführung"
+    },
+    {
+      "value": "Industrie"
+    },
+    {
+      "value": "Deutschland"
+    }
   ],
   "classifications": [
     {

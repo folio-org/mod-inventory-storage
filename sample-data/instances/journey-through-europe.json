@@ -34,13 +34,27 @@
     }
   ],
   "subjects": [
-    "Europäische Union",
-    "Hochgeschwindigkeitszug",
-    "Verkehrsnetz",
-    "Hochgeschwindigkeitsverkehr",
-    "Schienenverkehr",
-    "EU-Verkehrspolitik",
-    "EU-Staaten"
+    {
+      "value": "Europäische Union"
+    },
+    {
+      "value": "Hochgeschwindigkeitszug"
+    },
+    {
+      "value": "Verkehrsnetz"
+    },
+    {
+      "value": "Hochgeschwindigkeitsverkehr"
+    },
+    {
+      "value": "Schienenverkehr"
+    },
+    {
+      "value": "EU-Verkehrspolitik"
+    },
+    {
+      "value": "EU-Staaten"
+    }
   ],
   "classifications": [],
   "publication": [],

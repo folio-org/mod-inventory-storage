@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +123,7 @@ public class InstallUpgradeIT {
   }
 
   @Test
+  @Ignore("Disabled until the migration is implemented: https://issues.folio.org/browse/MODINVSTOR-1012")
   public void upgradeFromLotus() {
     // load database dump of Lotus (R3 2021) version of mod-inventory-storage
     postgresExec("psql", "-U", POSTGRES.getUsername(), "-d", POSTGRES.getDatabaseName(),

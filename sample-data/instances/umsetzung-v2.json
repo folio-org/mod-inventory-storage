@@ -4,9 +4,15 @@
   "source": "FOLIO",
   "title": "Agile Organisation, Risiko- und Change Management Harald Augustin (Hrsg.)",
   "series": [
-    "Umsetzung der DIN EN ISO 9001:2015  / Harald Augustin (Hrsg.) ; Band 2",
-    "Berichte aus der Betriebswirtschaft",
-    "Umsetzung der DIN EN ISO 9001:2015 Band 2"
+    {
+      "value": "Umsetzung der DIN EN ISO 9001:2015  / Harald Augustin (Hrsg.) ; Band 2"
+    },
+    {
+      "value": "Berichte aus der Betriebswirtschaft"
+    },
+    {
+      "value": "Umsetzung der DIN EN ISO 9001:2015 Band 2"
+    }
   ],
   "identifiers": [
     {
@@ -45,13 +51,27 @@
     }
   ],
   "subjects": [
-    "DIN EN ISO 9001:2015",
-    "Standard",
-    "Risikomanagement",
-    "Einführung",
-    "Organisatorischer Wandel",
-    "Industrie",
-    "Deutschland"
+    {
+      "value": "DIN EN ISO 9001:2015"
+    },
+    {
+      "value": "Standard"
+    },
+    {
+      "value": "Risikomanagement"
+    },
+    {
+      "value": "Einführung"
+    },
+    {
+      "value": "Organisatorischer Wandel"
+    },
+    {
+      "value": "Industrie"
+    },
+    {
+      "value": "Deutschland"
+    }
   ],
   "classifications": [
     {
