@@ -1,7 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithCreatedMessagePublished;
-import static org.folio.rest.support.messages.BoundWithEventMessageChecks.boundWithUpdatedMessagePublished;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -15,6 +13,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.http.ResourceClient;
+import org.folio.rest.support.messages.BoundWithEventMessageChecks;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -28,6 +27,9 @@ import lombok.SneakyThrows;
 @RunWith(JUnitParamsRunner.class)
 public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   static ResourceClient boundWithPartsClient  = ResourceClient.forBoundWithParts(getClient());
+
+  private final BoundWithEventMessageChecks boundWithEventMessageChecks
+    = new BoundWithEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @After
@@ -73,9 +75,9 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(boundWithGETResponseForPartById.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(getAllPartsForBoundWithItem.size(), is(3));
 
-    boundWithCreatedMessagePublished(firstPart.getJson(), mainInstance.getId().toString());
-    boundWithCreatedMessagePublished(secondPart.getJson(), anotherInstance.getId().toString());
-    boundWithCreatedMessagePublished(thirdPart.getJson(), aThirdInstance.getId().toString());
+    boundWithEventMessageChecks.createdMessagePublished(firstPart, mainInstance.getId());
+    boundWithEventMessageChecks.createdMessagePublished(secondPart, anotherInstance.getId());
+    boundWithEventMessageChecks.createdMessagePublished(thirdPart, aThirdInstance.getId());
   }
 
   @Test
@@ -128,13 +130,13 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(oldPart2Gone.size(), is(0));
     assertThat(newPart2.size(), is(1));
 
-    boundWithCreatedMessagePublished(partOneCreated.getJson(), instance1.getId().toString());
-    boundWithCreatedMessagePublished(partTwoCreated.getJson(), instance2.getId().toString());
+    boundWithEventMessageChecks.createdMessagePublished(partOneCreated, instance1.getId());
+    boundWithEventMessageChecks.createdMessagePublished(partTwoCreated, instance2.getId());
 
     // There is a potential bug with the old representation in these message
     // until this is investigated further, that check is removed
-    boundWithUpdatedMessagePublished(partTwoCreated.getJson(), partTwoUpdated.getJson(),
-      instance2.getId().toString(), instance3.getId().toString());
+    boundWithEventMessageChecks.updatedMessagePublished(partTwoCreated,
+      partTwoUpdated, instance2.getId(), instance3.getId());
   }
 
   private JsonObject createBoundWithPartJson(UUID holdingsRecordId, UUID itemId) {

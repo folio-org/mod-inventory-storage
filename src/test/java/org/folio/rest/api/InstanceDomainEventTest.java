@@ -4,9 +4,6 @@ import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.noInstanceUpdatedMessagePublished;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.noInstanceDeletedMessagePublished;
-import static org.folio.rest.support.messages.InstanceEventMessageChecks.noInstanceMessagesPublished;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -14,6 +11,7 @@ import java.util.UUID;
 
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
+import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,6 +19,8 @@ import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
 public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
+  private final InstanceEventMessageChecks instanceMessageChecks
+    = new InstanceEventMessageChecks(kafkaConsumer);
 
   @SneakyThrows
   @Before
@@ -45,7 +45,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
       updatedInstance);
 
     assertThat(updateInstance.getStatusCode(), is(400));
-    noInstanceUpdatedMessagePublished(instance.getId().toString());
+    instanceMessageChecks.noUpdatedMessagePublished(instance.getId().toString());
   }
 
   @Test
@@ -58,7 +58,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final var createResponse = instancesClient.attemptToCreate(instanceJson);
 
     assertThat(createResponse.getStatusCode(), is(400));
-    noInstanceMessagesPublished(instanceId.toString());
+    instanceMessageChecks.noMessagesPublished(instanceId.toString());
   }
 
   @Test
@@ -73,7 +73,8 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final Response removeResponse = instancesClient.attemptToDelete(instance.getId());
 
     assertThat(removeResponse.getStatusCode(), is(400));
-    noInstanceDeletedMessagePublished(instance.getId().toString());
+
+    instanceMessageChecks.noDeletedMessagePublished(instance.getId().toString());
   }
 
   @Test
@@ -90,5 +91,6 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final Response removeResponse = instancesClient.attemptDeleteAll();
 
     assertThat(removeResponse.getStatusCode(), is(400));
-    noInstanceDeletedMessagePublished(instance.getId().toString());
+
+    instanceMessageChecks.noDeletedMessagePublished(instance.getId().toString());
   }}
