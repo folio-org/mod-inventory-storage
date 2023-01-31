@@ -182,7 +182,7 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
               .withSubInstanceRelationships(getListSafe(instanceSetInternal.getSubInstanceRelationships(), subInstanceRelationships))
               .withSucceedingTitles(getListSafe(instanceSetInternal.getSucceedingTitles(), succeedingTitles))
               .withPrecedingTitles(getListSafe(instanceSetInternal.getPrecedingTitles(), precedingTitles))
-              .withSuperInstanceRelationships(getListSafe(instanceSetInternal.getSuperInstanceRelationships(), subInstanceRelationships))
+              .withSuperInstanceRelationships(getListSafe(instanceSetInternal.getSuperInstanceRelationships(), superInstanceRelationships))
             )
             .collect(Collectors.toList());
           var encode = Json.encode(new InstanceSets().withInstanceSets(instanceSets));
