@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -41,8 +42,8 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
   }
 
-  private static <T> List<T> nullIfEmpty(final List<T> collection) {
-    return collection == null || collection.isEmpty() ? null : collection;
+  private static <T> List<T> getListSafe(final List<T> collection, boolean returnEmptyList) {
+    return collection == null || (!returnEmptyList && collection.isEmpty()) ? null : collection;
   }
 
   private static Instance toInstance(InstanceInternal internal) {
@@ -68,7 +69,7 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
   @Override
   public Future<Instance> getById(String id) {
     return postgresClientFuturized.getById(tableName, id, InstanceInternal.class)
-      .map(InstanceInternal::toInstanceDto);
+      .map(instanceInternal -> Objects.nonNull(instanceInternal) ? instanceInternal.toInstanceDto() : null);
   }
 
   @Override
@@ -175,13 +176,13 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
           var instanceSets = instanceSetsInternal.getInstanceSets().stream()
             .map(instanceSetInternal -> new InstanceSet()
               .withId(instanceSetInternal.getId())
-              .withItems(nullIfEmpty(instanceSetInternal.getItems()))
+              .withItems(getListSafe(instanceSetInternal.getItems(), items))
               .withInstance(toInstance(instanceSetInternal.getInstance()))
-              .withHoldingsRecords(nullIfEmpty(instanceSetInternal.getHoldingsRecords()))
-              .withSubInstanceRelationships(nullIfEmpty(instanceSetInternal.getSubInstanceRelationships()))
-              .withSucceedingTitles(nullIfEmpty(instanceSetInternal.getSucceedingTitles()))
-              .withPrecedingTitles(nullIfEmpty(instanceSetInternal.getPrecedingTitles()))
-              .withSuperInstanceRelationships(nullIfEmpty(instanceSetInternal.getSuperInstanceRelationships()))
+              .withHoldingsRecords(getListSafe(instanceSetInternal.getHoldingsRecords(), holdingsRecords))
+              .withSubInstanceRelationships(getListSafe(instanceSetInternal.getSubInstanceRelationships(), subInstanceRelationships))
+              .withSucceedingTitles(getListSafe(instanceSetInternal.getSucceedingTitles(), succeedingTitles))
+              .withPrecedingTitles(getListSafe(instanceSetInternal.getPrecedingTitles(), precedingTitles))
+              .withSuperInstanceRelationships(getListSafe(instanceSetInternal.getSuperInstanceRelationships(), subInstanceRelationships))
             )
             .collect(Collectors.toList());
           var encode = Json.encode(new InstanceSets().withInstanceSets(instanceSets));
