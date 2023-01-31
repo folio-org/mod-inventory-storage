@@ -36,7 +36,7 @@
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
     <raml-module-builder-version>35.0.4</raml-module-builder-version> <!-- also update vertx.version -->
     <vertx.version>4.3.5</vertx.version>
-    <sonar.exclusions>src/main/java/org/folio/persist/entity/*Internal.java</sonar.exclusions>
+    <sonar.exclusions>src/main/java/org/folio/persist/entity/*Internal*</sonar.exclusions>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/authority-storage/authorities,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances</generate_routing_context>
     <argLine />
   </properties>
