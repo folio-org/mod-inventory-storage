@@ -22,7 +22,7 @@ import org.apache.logging.log4j.Logger;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.persist.entity.GetInstanceStorageInstancesInternalResponse;
+import org.folio.persist.entity.GetInstanceStorageInstancesResponseInternal;
 import org.folio.persist.entity.InstanceInternal;
 import org.folio.persist.entity.InstancesInternal;
 import org.folio.rest.annotations.Validate;
@@ -84,7 +84,7 @@ public class InstanceStorageAPI implements InstanceStorage {
         PreparedCQL preparedCql = handleCQL(query, limit, offset);
         PgUtil.getWithOptimizedSql(preparedCql.getTableName(), InstanceInternal.class, InstancesInternal.class,
           "title", query, offset, limit,
-          okapiHeaders, vertxContext, GetInstanceStorageInstancesInternalResponse.class, asyncResultHandler);
+          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponseInternal.class, asyncResultHandler);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(

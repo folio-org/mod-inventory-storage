@@ -103,6 +103,22 @@ public class InventoryViewInstanceInternal {
   }
 
   /**
+   * Holdings records for the instance
+   */
+  @JsonProperty("holdingsRecords")
+  public void setHoldingsRecords(List<HoldingsRecords2> holdingsRecords) {
+    this.holdingsRecords = holdingsRecords;
+  }
+
+  /**
+   * Holdings records for the instance
+   */
+  @JsonProperty("holdingsRecords")
+  public List<HoldingsRecords2> getHoldingsRecords() {
+    return holdingsRecords;
+  }
+
+  /**
    * An instance record
    * (Required)
    */
@@ -120,29 +136,6 @@ public class InventoryViewInstanceInternal {
     this.instance = instance.toInstanceDto();
   }
 
-  /**
-   * Holdings records for the instance
-   */
-  @JsonProperty("holdingsRecords")
-  public List<HoldingsRecords2> getHoldingsRecords() {
-    return holdingsRecords;
-  }
-
-  /**
-   * Holdings records for the instance
-   */
-  @JsonProperty("holdingsRecords")
-  public void setHoldingsRecords(List<HoldingsRecords2> holdingsRecords) {
-    this.holdingsRecords = holdingsRecords;
-  }
-
-  /**
-   * Items for the instance
-   */
-  @JsonProperty("items")
-  public List<HoldingsItem> getItems() {
-    return items;
-  }
 
   /**
    * Items for the instance
@@ -152,9 +145,12 @@ public class InventoryViewInstanceInternal {
     this.items = items;
   }
 
-  public InventoryViewInstanceInternal withItems(List<HoldingsItem> items) {
-    this.items = items;
-    return this;
+  /**
+   * Items for the instance
+   */
+  @JsonProperty("items")
+  public List<HoldingsItem> getItems() {
+    return items;
   }
 
   @Override
