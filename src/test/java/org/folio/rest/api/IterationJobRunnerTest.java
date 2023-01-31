@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.folio.persist.InstanceRepository;
+import org.folio.persist.InstanceInternalRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
@@ -49,7 +49,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   private static InstanceIterationFixture instanceIteration;
 
   private IterationJobRepository jobRepository;
-  private InstanceRepository instanceRepository;
+  private InstanceInternalRepository instanceRepository;
   private IterationJobRunner jobRunner;
 
   private final InstanceEventMessageChecks instanceMessageChecks
@@ -66,7 +66,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   @Before
   public void beforeEach() {
     jobRepository = new IterationJobRepository(getContext(), okapiHeaders());
-    instanceRepository = mock(InstanceRepository.class);
+    instanceRepository = mock(InstanceInternalRepository.class);
 
     var postgresClient = postgresClient(getContext(), okapiHeaders());
     jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
