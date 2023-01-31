@@ -98,19 +98,11 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
       "SELECT id FROM " + postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
   }
 
-  /**
-   * Delete by CQL. For each deleted record return a {@link io.vertx.sqlclient.Row} with the instance id String
-   * and with the instance jsonb String.
-   *
-   * <p>This automatically deletes connected marc records because the instance_source_marc foreign
-   * key has "ON DELETE CASCADE".
-   */
   public Future<RowSet<Row>> delete(String cql) {
     try {
       CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
-      String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
-        + " " + cqlWrapper.getWhereClause()
-        + " RETURNING id::text, jsonb::text";
+      String sql = String.format("DELETE FROM %s %s RETURNING id::text, jsonb::text",
+        postgresClientFuturized.getFullTableName(tableName), cqlWrapper.getWhereClause());
       return postgresClient.execute(sql);
     } catch (Exception e) {
       return Future.failedFuture(e);
@@ -126,26 +118,26 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
     try {
       StringBuilder sql = new StringBuilder(200);
       sql.append("SELECT jsonb_build_object('id', id");
-      if (instance) {
-        sql.append(", 'instance', jsonb");
-      }
       if (holdingsRecords) {
         sql.append(", 'holdingsRecords', holdings_records");
       }
-      if (items) {
-        sql.append(", 'items', items");
-      }
-      if (precedingTitles) {
-        sql.append(", 'precedingTitles', preceding_titles");
+      if (instance) {
+        sql.append(", 'instance', jsonb");
       }
       if (succeedingTitles) {
         sql.append(", 'succeedingTitles', succeeding_titles");
       }
-      if (superInstanceRelationships) {
-        sql.append(", 'superInstanceRelationships', super_instance_relationships");
+      if (precedingTitles) {
+        sql.append(", 'precedingTitles', preceding_titles");
       }
       if (subInstanceRelationships) {
         sql.append(", 'subInstanceRelationships', sub_instance_relationships");
+      }
+      if (superInstanceRelationships) {
+        sql.append(", 'superInstanceRelationships', super_instance_relationships");
+      }
+      if (items) {
+        sql.append(", 'items', items");
       }
       sql.append(")::text FROM ")
         .append(postgresClientFuturized.getFullTableName(INSTANCE_SET_VIEW))
@@ -161,14 +153,13 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
         .map(rowSet -> {
           StringBuilder json = new StringBuilder("{\"instanceSets\":[\n");
           boolean first = true;
-          var iterator = rowSet.iterator();
-          while (iterator.hasNext()) {
+          for (Row row : rowSet) {
             if (first) {
               first = false;
             } else {
               json.append(",\n");
             }
-            json.append(iterator.next().getString(0));
+            json.append(row.getString(0));
           }
           json.append("\n]}");
           var instanceSetsInternal = Json.decodeValue(json.toString(), InstanceSetsInternal.class);
