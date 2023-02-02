@@ -14,7 +14,7 @@ import org.folio.rest.persist.SQLConnection;
 public class SubjectSeriesMigrationJobRunner  extends AbstractAsyncMigrationJobRunner {
 
   private static final String SELECT_SQL = "SELECT id FROM %s " +
-    "WHERE jsonb->>'subjects' IS NOT NULL OR jsonb->>'series' IS NOT NULL";
+    "WHERE jsonb->'subjects' <> '[]' OR jsonb->'series' <> '[]'";
 
   @Override
   public String getMigrationName() {

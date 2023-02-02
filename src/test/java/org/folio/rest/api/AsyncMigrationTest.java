@@ -119,14 +119,16 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
       instancesClient.create(new JsonObject()
         .put("title", "test" + v)
         .put("source", "MARC")
-        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")
-        .put("series", new JsonArray()
-          .add("Harry Potter V.1")
-          .add("Harry Potter V.2"))
-        .put("subjects", new JsonArray()
-          .add("fantasy")
-          .add("magic")
-        )));
+        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
+
+    var updateFuture = postgresClient(getContext(), okapiHeaders()).select(
+      "UPDATE " + getPostgresClientFuturized().getFullTableName("instance")
+        + "SET jsonb = jsonb || '{\"series\":[\"Harry Potter V.1\", \"Harry Potter V.1\"], "
+        + "\"subjects\": [\"fantasy\", \"magic\"]}';");
+
+    if (updateFuture.result().rowCount() != 101) {
+      fail("Failing with data preparation");
+    }
 
     var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
       .withMigrations(List.of("subjectSeriesMigration")));

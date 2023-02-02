@@ -15,7 +15,9 @@ import org.folio.rest.persist.SQLConnection;
 
 public class SubjectSeriesMigrationService extends AsyncBaseMigrationService {
 
-  private static final String SELECT_SQL = "SELECT jsonb FROM %s WHERE id in (%s) FOR UPDATE";
+  private static final String SELECT_SQL = "SELECT jsonb FROM %s WHERE %s FOR UPDATE";
+  private static final String WHERE_CONDITION = "id in (%s)";
+
   private final PostgresClientFuturized postgresClient;
   private final InstanceRepository instanceRepository;
 
@@ -53,9 +55,17 @@ public class SubjectSeriesMigrationService extends AsyncBaseMigrationService {
   }
 
   private String selectSql() {
-    String ids = getIdsForMigration().stream()
-      .map(id -> "'" + id + "'")
-      .collect(Collectors.joining(", "));
-    return String.format(SELECT_SQL, postgresClient.getFullTableName("instance"), ids);
+    var idsForMigration = getIdsForMigration();
+    var whereCondition = "false";
+
+    if (!idsForMigration.isEmpty()) {
+      var ids = idsForMigration.stream()
+        .map(id -> "'" + id + "'")
+        .collect(Collectors.joining(", "));
+
+      whereCondition = String.format(WHERE_CONDITION, ids);
+    }
+
+    return String.format(SELECT_SQL, postgresClient.getFullTableName("instance"), whereCondition);
   }
 }
