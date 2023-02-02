@@ -22,11 +22,13 @@ import org.apache.logging.log4j.Logger;
 
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.persist.entity.GetInstanceStorageInstancesResponseInternal;
+import org.folio.persist.entity.InstanceInternal;
+import org.folio.persist.entity.InstancesInternal;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
-import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Criteria.Limit;
@@ -80,9 +82,9 @@ public class InstanceStorageAPI implements InstanceStorage {
     if (PgUtil.checkOptimizedCQL(query, "title") != null) { // Until RMB-573 is fixed
       try {
         PreparedCQL preparedCql = handleCQL(query, limit, offset);
-        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
+        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), InstanceInternal.class, InstancesInternal.class,
           "title", query, offset, limit,
-          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
+          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponseInternal.class, asyncResultHandler);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -91,7 +93,8 @@ public class InstanceStorageAPI implements InstanceStorage {
       }
       return;
     }
-    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
+
+    PgUtil.streamGet(INSTANCE_TABLE, InstanceInternal.class, query, offset, limit, null,
       "instances", routingContext, okapiHeaders, vertxContext);
   }
 
@@ -147,18 +150,18 @@ public class InstanceStorageAPI implements InstanceStorage {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get(preparedCql.getTableName(), Instance.class, fieldList, cql, true, false,
+          postgresClient.get(preparedCql.getTableName(), InstanceInternal.class, fieldList, cql, true, false,
             reply -> {
               try {
                 if (reply.succeeded()) {
-                  List<Instance> instanceList = reply.result().getResults();
+                  List<InstanceInternal> instanceList = reply.result().getResults();
                   if (instanceList.size() == 1) {
-                    Instance instance = instanceList.get(0);
+                    InstanceInternal instance = instanceList.get(0);
 
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(
                         GetInstanceStorageInstancesByInstanceIdResponse.
-                          respond200WithApplicationJson(instance)));
+                          respond200WithApplicationJson(instance.toInstanceDto())));
                   }
                   else {
                   asyncResultHandler.handle(

@@ -7,7 +7,7 @@ import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
-import org.folio.persist.InstanceRepository;
+import org.folio.persist.InstanceInternalRepository;
 import org.folio.rest.jaxrs.model.Instance;
 
 import io.vertx.core.Context;
@@ -22,7 +22,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
 
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
-    super(new InstanceRepository(context, okapiHeaders),
+    super(new InstanceInternalRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
         INSTANCE.fullTopicName(tenantId(okapiHeaders))));
   }

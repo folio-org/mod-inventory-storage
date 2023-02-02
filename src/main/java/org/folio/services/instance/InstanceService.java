@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.persist.InstanceInternalRepository;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
-import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
@@ -38,7 +38,7 @@ public class InstanceService {
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final InstanceDomainEventPublisher domainEventPublisher;
-  private final InstanceRepository instanceRepository;
+  private final InstanceInternalRepository instanceRepository;
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final InstanceEffectiveValuesService effectiveValuesService;
@@ -50,7 +50,7 @@ public class InstanceService {
     final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     hridManager = new HridManager(vertxContext, postgresClient);
     domainEventPublisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
-    instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
+    instanceRepository = new InstanceInternalRepository(vertxContext, okapiHeaders);
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
     effectiveValuesService = new InstanceEffectiveValuesService();

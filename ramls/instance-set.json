@@ -29,28 +29,28 @@
       "type": "array",
       "description": "Instances that are preceding titles of the instance",
       "items": {
-        "$ref": "instance.json"
+        "$ref": "instanceprecedingsucceedingtitle.json"
       }
     },
     "succeedingTitles": {
       "type": "array",
       "description": "Instances that are succeeding titles of the instance",
       "items": {
-        "$ref": "instance.json"
+        "$ref": "instanceprecedingsucceedingtitle.json"
       }
     },
     "superInstanceRelationships": {
       "type": "array",
       "description": "Instances that are super instances of the instance",
       "items": {
-        "$ref": "instance.json"
+        "$ref": "instancerelationship.json"
       }
     },
     "subInstanceRelationships": {
       "type": "array",
       "description": "Instances that are sub instances of the instance",
       "items": {
-        "$ref": "instance.json"
+        "$ref": "instancerelationship.json"
       }
     }
   },
